@@ -33,20 +33,26 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\Games\KSP\ksp 23.5 ARM\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral">
       <Private>False</Private>
-      <Package>D:\Games\KSP\ksp 23.5 ARM\KSP_Data\Managed\UnityEngine.dll</Package>
+      <Package>D:\Games\KSP\KSP 0.24 x64\KSP_x64_Data\Managed\UnityEngine.dll</Package>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\Games\KSP\KSP 0.24 x64\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BahaTurret.cs" />
     <Compile Include="CFEnable.cs" />
     <Compile Include="MissileLauncher.cs" />
-    <Compile Include="HomingMissile.cs" />
     <Compile Include="Misc.cs" />
+    <Compile Include="ShellCasing.cs" />
+    <Compile Include="BombTargeter.cs" />
+    <Compile Include="BDArmorySettings.cs" />
+    <Compile Include="BahaTurretBullet.cs" />
+    <Compile Include="CannonShell.cs" />
+    <Compile Include="ExplosionFX.cs" />
+    <Compile Include="BulletHitFX.cs" />
   </ItemGroup>
 </Project>
