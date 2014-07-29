@@ -8,21 +8,37 @@ namespace BahaTurret
 		
 		public float timeStart = -1;
 		public float timeIndex = 0;
-		public float thrust = 25;
-		public float cruiseThrust = 2;
+		
+		[KSPField(isPersistant = false)]
+		public float thrust = 30;
+		[KSPField(isPersistant = false)]
+		public float cruiseThrust = 3;
+		[KSPField(isPersistant = false)]
 		public float dropTime = 0.4f;
+		[KSPField(isPersistant = false)]
 		public float boostTime = 2.2f;
+		[KSPField(isPersistant = false)]
 		public float cruiseTime = 45;
+		[KSPField(isPersistant = false)]
 		public bool guidanceActive = true;
-		public bool hasFired = false;
+		
 		
 		[KSPField(isPersistant = false)]
 		public float blastRadius = 150;
 		[KSPField(isPersistant = false)]
 		public float blastPower = 25;
+		[KSPField(isPersistant = false)]
+		public float maxTurnRateDPS = 20;
 		
-		public float maxTurnRateDPS = 50;
+		[KSPField(isPersistant = false)]
+		public string audioClipPath = "";
+		
+		[KSPField(isPersistant = false)]
+		public int explosionSize = 1;
+		
+		
 		bool checkMiss = false;
+		bool hasExploded = false;
 		private float prevDistance = -1;
 		private AudioSource audioSource;
 		KSPParticleEmitter[] pEmitters;
@@ -30,12 +46,13 @@ namespace BahaTurret
 		private Vector3 initialObtVelocity;
 		
 		public Vessel target = null;
-		
+		public bool hasFired = false;
 		//collision raycasting
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
 		
-		//LineRenderer LR;
+		LineRenderer LR;
+		bool debug = false;
 		
 		
 		public override void OnStart (PartModule.StartState state)
@@ -43,36 +60,37 @@ namespace BahaTurret
 			if(HighLogic.LoadedSceneIsFlight)
 			{
 				pEmitters = part.FindModelComponents<KSPParticleEmitter>();
-				audioSource = gameObject.AddComponent<AudioSource>();
-				AudioClip clip = GameDatabase.Instance.GetAudioClip("BDArmory/Parts/aim-120/sounds/rocketLoop");
-				audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
-				audioSource.minDistance = 1;
-				audioSource.maxDistance = 1000;
-				audioSource.clip = clip;
-				audioSource.loop = true;
+				if(audioClipPath!="")
+				{
+					audioSource = gameObject.AddComponent<AudioSource>();
+					AudioClip clip = GameDatabase.Instance.GetAudioClip(audioClipPath);
+					audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+					audioSource.minDistance = 1;
+					audioSource.maxDistance = 1000;
+					audioSource.clip = clip;
+					audioSource.loop = true;
+				}
 				//part.PhysicsSignificance = 1;
 				part.force_activate();
 				part.OnJustAboutToBeDestroyed += new Callback(Detonate);
 				
-				/*
-				if(!gameObject.GetComponent<LineRenderer>())
+				if(debug)
 				{
-					LR = gameObject.AddComponent<LineRenderer>();
-				}else
-				{
-					LR = gameObject.GetComponent<LineRenderer>();
+					if(!gameObject.GetComponent<LineRenderer>())
+					{
+						LR = gameObject.AddComponent<LineRenderer>();
+					}else
+					{
+						LR = gameObject.GetComponent<LineRenderer>();
+					}
+					LR.SetVertexCount(2);
+					LR.SetPosition(0, transform.position);
+					LR.SetPosition(1, transform.position);
+					LR.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
+					LR.material.SetColor("_EmissiveColor", Color.red);
 				}
-				LR.SetVertexCount(2);
-				LR.SetPosition(0, transform.position);
-				LR.SetPosition(1, transform.position);
-				*/
 			}
-			
-			
 		}
-		
-		
-		
 		
 		[KSPAction("Fire Missile")]
 		public void AGFire(KSPActionParam param)
@@ -96,14 +114,12 @@ namespace BahaTurret
 				try{
 					target = vessel.targetObject.GetVessel();
 				}catch(NullReferenceException){}
-				part.decouple(2);
-				part.rigidbody.velocity = sourceVessel.rigidbody.velocity;
-				part.rigidbody.AddRelativeForce(Vector3.down * 2, ForceMode.VelocityChange);
+				part.decouple(5);
+				//part.rigidbody.velocity = sourceVessel.rigidbody.velocity;
+				//part.rigidbody.velocity += 5 * -part.transform.up;
 				
 				if(timeStart == -1) timeStart = Time.time;
 				hasFired = true;
-				
-				
 			}
 			
 		}
@@ -114,6 +130,11 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate()
 		{
+			if(hasExploded)
+			{
+				part.explode();
+			}
+			
 			
 			if(hasFired)
 			{
@@ -139,7 +160,7 @@ namespace BahaTurret
 				if(timeIndex > dropTime && timeIndex < dropTime + boostTime + cruiseTime) //all thrust
 				{
 					//light, sound & particle fx
-					if(!audioSource.isPlaying)	
+					if(audioClipPath!="" && !audioSource.isPlaying)	
 					{
 						audioSource.Play();	
 					}
@@ -147,15 +168,26 @@ namespace BahaTurret
 					{
 						light.intensity = 1.5f;	
 					}
+					
 					foreach(KSPParticleEmitter pe in pEmitters)
 					{
-						pe.EmitParticle();	
+						if(vessel.atmDensity > 0)
+						{
+							pe.emit = true;
+						}
+						else
+						{
+							pe.maxEmission = 0;
+							pe.minEmission = 0;
+						}
+						
 					}
+					
 					
 				}
 				else
 				{
-					if(audioSource.isPlaying)
+					if(audioClipPath != "" && audioSource.isPlaying)
 					{
 						audioSource.Stop ();
 					}
@@ -164,31 +196,39 @@ namespace BahaTurret
 						light.intensity = 0;	
 					}
 				}
+				if(timeIndex > dropTime + boostTime + cruiseTime)
+				{
+					foreach(KSPParticleEmitter pe in pEmitters)
+					{
+						pe.maxEmission = 0;
+						pe.minEmission = 0;
+					}	
+				}
 				
 				
 				
 				
 				if(timeIndex > dropTime) //guidance
 				{
+					part.crashTolerance = 1;
+					
 					//model transform. always points prograde
 					transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), 50*Time.fixedDeltaTime);
-					if(!FlightGlobals.RefFrameIsRotating)
+					if(!FlightGlobals.RefFrameIsRotating && timeIndex - dropTime > 0.5f && FlightGlobals.ActiveVessel!=vessel)
 					{
 						transform.rotation = Quaternion.LookRotation(rigidbody.velocity);
+						
 					}
 					//
 					
 					
-					/*
-					if (vessel.vesselType == VesselType.Debris)
-					{
-						vessel.vesselType = VesselType.Ship;	
-					}
-					*/
-					
 					if(target!=null && guidanceActive && timeIndex - dropTime > 0.5f)
 					{
 						try{
+							if(!FlightGlobals.RefFrameIsRotating && FlightGlobals.ActiveVessel==vessel)
+							{
+								FlightGlobals.ForceSetActiveVessel(target);
+							}
 							
 							Vector3 targetPosition = target.transform.position;
 							float targetDistance = (targetPosition-transform.position).magnitude;
@@ -197,34 +237,23 @@ namespace BahaTurret
 								prevDistance = targetDistance;
 							}
 							
-							
-							
-							if(targetDistance > 100) //guide towards where the target is going to be
+							if(targetDistance > 10) //guide towards where the target is going to be
 							{
-								targetPosition = target.transform.position + target.srf_velocity*(1/((target.rigidbody.velocity-rigidbody.velocity).magnitude/targetDistance));
+								targetPosition = target.transform.position + target.srf_velocity*(1/((target.srf_velocity-vessel.srf_velocity).magnitude/targetDistance));
+								if(!FlightGlobals.RefFrameIsRotating)
+								{
+									targetPosition = target.transform.position + target.rigidbody.velocity*(1/((target.rigidbody.velocity-rigidbody.velocity).magnitude/targetDistance));
+								}
 							}
 							
-							/*
-							LR.SetPosition(0, transform.position);
-							LR.SetPosition(1, targetPosition);
-							*/
-							
-							//increaseTurnRate on approach
-							float turnRateDPS = Mathf.Clamp((3/timeIndex-dropTime-.05f)*maxTurnRateDPS, 0, maxTurnRateDPS);
-							if(targetDistance<1000)
-							{
-								turnRateDPS = Mathf.Clamp (turnRateDPS+11f, 0, 90);	
-							}
+							//increaseTurnRate after launch
+							float turnRateDPS = Mathf.Clamp((0.5f*(timeIndex-dropTime))*maxTurnRateDPS, 0, maxTurnRateDPS);
 							
 							float radiansDelta = turnRateDPS*Mathf.Deg2Rad*Time.fixedDeltaTime;
 							
 							rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, targetPosition-transform.position, radiansDelta, 0);
 							
-							if(target.checkLanded() && targetDistance > (vessel.srfSpeed*12.7f)+target.altitude && vessel.verticalSpeed < 0 && vessel.altitude-target.altitude < 1000)// && vessel.altitude < 500)  //prevent from dropping to land
-							{
-								rigidbody.AddForce(FlightGlobals.upAxis * rigidbody.mass * (FlightGlobals.getGeeForceAtPosition(transform.position).magnitude + 20f));
-							}
-							if(targetDistance < 100)
+							if(targetDistance < 500)
 							{
 								checkMiss = true;	
 							}
@@ -232,13 +261,22 @@ namespace BahaTurret
 							if(checkMiss && prevDistance-targetDistance < 0) //and moving away from target??
 							{
 								//proximity detonation
-								if(targetDistance < 30) part.explode();
-								//guidanceActive = false;	
-								//Debug.Log ("Missile has overshot!");
+								if(targetDistance < 15) part.explode();
+								else
+								{
+									guidanceActive = false;
+								}
+								
 							}
 							
 							prevDistance = targetDistance;
 							
+							if(debug)
+							{
+								LR.SetPosition(0, transform.position);
+								LR.SetPosition(1, targetPosition);
+								Debug.Log ("Turn rate: "+turnRateDPS.ToString("0.00"));
+							}
 							
 							
 						}
@@ -248,13 +286,8 @@ namespace BahaTurret
 							guidanceActive = false;
 						}
 					
-						
-						
 					}
-					
-					
 				}
-				
 			}
 		}
 		
@@ -262,25 +295,49 @@ namespace BahaTurret
 		public void Detonate()
 		{
 			//Debug.Log ("===========Missile detonating============");
-			
-			Collider[] colliders = Physics.OverlapSphere(transform.position, blastRadius, 557057);
-			foreach(Collider col in colliders)
+			if(!hasExploded)
 			{
-				Rigidbody rb = null;
-				try
+				hasExploded = true;
+				Collider[] colliders = Physics.OverlapSphere(transform.position, blastRadius, 557057);
+				foreach(Collider col in colliders)
 				{
-					rb = col.gameObject.GetComponentUpwards<Rigidbody>();
-				}catch(NullReferenceException){}
-				if(rb!=null)
-				{
-					rb.AddExplosionForce(blastPower, transform.position, blastRadius, 0, ForceMode.Impulse);
-					ExplosionFX.CreateExplosion(transform.position);
-					//FXMonger.Explode(this.part, rb.transform.position, 5); 
+					Rigidbody rb = null;
+					try
+					{
+						rb = col.gameObject.GetComponentUpwards<Rigidbody>();
+					}catch(NullReferenceException){}
+					if(rb!=null && !CheckIfMissile(rb.gameObject))
+					{
+						rb.AddExplosionForce(blastPower, transform.position, blastRadius, 0, ForceMode.Impulse);
+						
+						//FXMonger.Explode(this.part, rb.transform.position, 5); 
+					}
 				}
+				ExplosionFX.CreateExplosion(transform.position, explosionSize);
 			}
-			
-			                                 
+
 		}
+		
+		public bool CheckIfMissile(GameObject go)
+		{
+			Part p = null;
+			try
+			{
+				p = Part.FromGO(go);
+			}
+			catch(NullReferenceException){}
+			
+			if(p != null)
+			{
+				if(p.FindModulesImplementing<MissileLauncher>().Count > 0)
+				{
+					return true;
+				}
+				else return false;
+			}
+			else return false;
+		}
+		
 		
 	}
 }

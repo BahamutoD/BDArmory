@@ -11,7 +11,8 @@ namespace BahaTurret
 		
 		
 		
-		public float radius = 40;
+		public float radius = 30;
+		public float blastPower = 8;
 		
 		
 		public Vector3 prevPosition;
@@ -107,7 +108,7 @@ namespace BahaTurret
 				Rigidbody rb = col.gameObject.GetComponentUpwards<Rigidbody>();
 				if(rb!=null)
 				{
-					rb.AddExplosionForce(10, position, radius, 0, ForceMode.Impulse);
+					rb.AddExplosionForce(blastPower, position, radius, 0, ForceMode.Impulse);
 				}
 			}
 			

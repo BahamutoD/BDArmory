@@ -67,6 +67,11 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public string projectileColor = "255, 0, 0, 255";
 		
+		[KSPField(isPersistant = false)]
+		public float cannonShellRadius = 30;
+		[KSPField(isPersistant = false)]
+		public float cannonShellPower = 8;
+		
 		
 		[KSPField(isPersistant = false)]
 		public float maxHeat = 3600;
@@ -96,11 +101,18 @@ namespace BahaTurret
 		public bool spinDownAnimation = false;
 		private bool spinningDown = false;
 		
+		[KSPField(isPersistant = false)]
+		public bool oneShotSound = true;
+		[KSPField(isPersistant = false)]
+		public float soundRepeatTime = 1;
+
+		
 		
 		[KSPField(isPersistant = false)]
 		public string yawTransformName = "aimRotate";
 		[KSPField(isPersistant = false)]
 		public string pitchTransformName = "aimPitch";
+
 		
 		
 		AudioClip fireSound;
@@ -123,6 +135,8 @@ namespace BahaTurret
 		private float muzzleFlashVelocity = 4;
 		
 		private VInfoBox heatGauge = null;
+		
+		private bool wasFiring = false;
 		
 		
 		
@@ -224,6 +238,7 @@ namespace BahaTurret
 				shell.transform.position = Vector3.zero;
 				shell.SetActive(true);
 				
+				
 			}
 			else if(weaponType == "laser")
 			{
@@ -290,6 +305,9 @@ namespace BahaTurret
 			if(heat>maxHeat && !isOverheated)
 			{
 				isOverheated = true;
+				audioSource.Stop ();
+				wasFiring = false;
+				audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
 				audioSource2.PlayOneShot(overheatSound);
 			}
 			if(heat < maxHeat/3 && isOverheated) //reset on cooldown
@@ -393,6 +411,13 @@ namespace BahaTurret
 					{
 						if(spinDownAnimation) spinningDown = true;
 						if(weaponType == "laser") audioSource.Stop ();
+						if(!oneShotSound && wasFiring)
+							{
+								audioSource.Stop ();
+								wasFiring = false;
+								audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
+								audioSource2.PlayOneShot(overheatSound);	
+							}
 						
 					}
 					
@@ -421,6 +446,14 @@ namespace BahaTurret
 				}	
 			}
 			
+			if(!oneShotSound &&  !Input.GetKey(BDArmorySettings.FIRE_KEY) && wasFiring)
+			{
+				wasFiring = false;
+				audioSource.Stop ();
+				audioSource2.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+				audioSource2.PlayOneShot(overheatSound);
+			}
+	
 			
 		}
 		
@@ -627,17 +660,40 @@ namespace BahaTurret
 						if(!effectsShot)
 						{
 							//sound
-							audioSource.dopplerLevel = 0;
-							audioSource.bypassListenerEffects = true;
-							audioSource.volume = 1*(Mathf.Sqrt(GameSettings.SHIP_VOLUME))/Mathf.Sqrt(numberOfGuns);
-							audioSource.PlayOneShot(fireSound);
+							if(oneShotSound)
+							{
+								audioSource.dopplerLevel = 0;
+								audioSource.bypassListenerEffects = true;
+								audioSource.volume = 1*(Mathf.Sqrt(GameSettings.SHIP_VOLUME))/Mathf.Sqrt(numberOfGuns);
+								audioSource.PlayOneShot(fireSound);
+							}
+							else
+							{
+								wasFiring = true;
+								if(!audioSource.isPlaying)
+								{
+									audioSource.clip = fireSound;
+									audioSource.dopplerLevel = 0;
+									audioSource.bypassListenerEffects = true;
+									audioSource.volume = 1*(Mathf.Sqrt(GameSettings.SHIP_VOLUME))/Mathf.Sqrt(numberOfGuns);
+									audioSource.loop = false;
+									audioSource.Play();	
+								}
+								else
+								{
+									if (audioSource.time >= fireSound.length)
+									{
+										audioSource.time = soundRepeatTime;	
+									}
+								}
+							}
 							
 							//animation
 							if(hasFireAnimation)
 							{
 								foreach(AnimationState anim in fireStates)
 								{
-									fireAnimSpeed = Mathf.Clamp ((roundsPerMinute*anim.length)/60, 1, Mathf.Infinity);
+									fireAnimSpeed = Mathf.Clamp ((roundsPerMinute*anim.length)/60, 1, 5);
 									anim.enabled = true;
 									anim.normalizedTime = 0;
 									anim.speed = fireAnimSpeed;
@@ -685,6 +741,8 @@ namespace BahaTurret
 						{
 							firedBullet.AddComponent<CannonShell>();
 							firedBullet.GetComponent<CannonShell>().sourceVessel = this.vessel;
+							firedBullet.GetComponent<CannonShell>().blastPower = cannonShellPower;
+							firedBullet.GetComponent<CannonShell>().radius = cannonShellRadius;
 						}
 						
 						
@@ -701,6 +759,13 @@ namespace BahaTurret
 					else
 					{
 						spinningDown = true;
+						if(!oneShotSound && wasFiring)
+						{
+							audioSource.Stop ();
+							wasFiring = false;
+							audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
+							audioSource2.PlayOneShot(overheatSound);	
+						}
 					}
 				}
 				
