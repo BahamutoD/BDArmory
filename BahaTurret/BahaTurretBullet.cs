@@ -16,6 +16,8 @@ namespace BahaTurret
 		
 		public bool instakill = false;
 		
+		
+		
 		void Start()
 		{
 			startTime = Time.time;

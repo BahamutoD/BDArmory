@@ -10,6 +10,9 @@ namespace BahaTurret
 		float startTime;
 		AudioClip exSound;
 		AudioSource audioSource;
+		float maxTime = 0;
+		
+		
 		
 		
 		void Start()
@@ -20,6 +23,10 @@ namespace BahaTurret
 			{
 				pe.emit = true;	
 				pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
+				if(pe.maxEnergy > maxTime)
+				{
+					maxTime = pe.maxEnergy;	
+				}
 			}
 			lightFX = gameObject.AddComponent<Light>();
 			lightFX.color = Misc.ParseColor255("255,238,184,255");
@@ -37,7 +44,7 @@ namespace BahaTurret
 		void FixedUpdate()
 		{
 			lightFX.intensity -= 12 * Time.fixedDeltaTime;
-			if(Time.time-startTime > 0.03f)
+			if(Time.time-startTime > 0.09f)
 			{
 				foreach(KSPParticleEmitter pe in pEmitters)
 				{
@@ -46,25 +53,32 @@ namespace BahaTurret
 				
 				
 			}
-			if(Time.time-startTime > 5.03f)
+			if(Time.time-startTime > maxTime)
 			{
 				GameObject.Destroy(gameObject);	
 			}
 		}
 		
-		public static void CreateExplosion(Vector3 position)
+		public static void CreateExplosion(Vector3 position, int size)
 		{
-			GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/explosion/explosion");
+			GameObject go;
+			if(size == 2)
+			{
+				go = GameDatabase.Instance.GetModel("BDArmory/Models/explosion/explosionLarge");
+			}
+			else
+			{
+				go = GameDatabase.Instance.GetModel("BDArmory/Models/explosion/explosion");
+			}
 			GameObject newExplosion = (GameObject)	GameObject.Instantiate(go, position, Quaternion.identity);
 			newExplosion.SetActive(true);
 			newExplosion.AddComponent<ExplosionFX>();
-			/*
 			foreach(KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
 			{
 				pe.emit = true;	
-				pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
+				//pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
 			}
-			*/
+			
 		}
 	}
 }

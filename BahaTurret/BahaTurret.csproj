@@ -54,5 +54,6 @@
     <Compile Include="CannonShell.cs" />
     <Compile Include="ExplosionFX.cs" />
     <Compile Include="BulletHitFX.cs" />
+    <Compile Include="MissileFire.cs" />
   </ItemGroup>
 </Project>
