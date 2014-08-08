@@ -60,17 +60,23 @@ namespace BahaTurret
 			if(HighLogic.LoadedSceneIsFlight)
 			{
 				pEmitters = part.FindModelComponents<KSPParticleEmitter>();
+				audioSource = gameObject.AddComponent<AudioSource>();
+				audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+				audioSource.minDistance = 1;
+				audioSource.maxDistance = 1000;
+				audioSource.loop = true;
 				if(audioClipPath!="")
 				{
-					audioSource = gameObject.AddComponent<AudioSource>();
+					
 					AudioClip clip = GameDatabase.Instance.GetAudioClip(audioClipPath);
-					audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
-					audioSource.minDistance = 1;
-					audioSource.maxDistance = 1000;
 					audioSource.clip = clip;
-					audioSource.loop = true;
+
 				}
-				//part.PhysicsSignificance = 1;
+				
+				
+				
+				
+				
 				part.force_activate();
 				part.OnJustAboutToBeDestroyed += new Callback(Detonate);
 				
@@ -109,6 +115,7 @@ namespace BahaTurret
 		{
 			if(!hasFired)
 			{
+				audioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
 				part.force_activate();
 				Vessel sourceVessel = vessel;
 				try{
@@ -138,6 +145,8 @@ namespace BahaTurret
 			
 			if(hasFired)
 			{
+				
+				
 				timeIndex = Time.time - timeStart;
 				
 				if(timeIndex < dropTime) //drop phase
@@ -213,7 +222,7 @@ namespace BahaTurret
 					part.crashTolerance = 1;
 					
 					//model transform. always points prograde
-					transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), 50*Time.fixedDeltaTime);
+					transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);
 					if(!FlightGlobals.RefFrameIsRotating && timeIndex - dropTime > 0.5f && FlightGlobals.ActiveVessel!=vessel)
 					{
 						transform.rotation = Quaternion.LookRotation(rigidbody.velocity);
@@ -247,7 +256,12 @@ namespace BahaTurret
 							}
 							
 							//increaseTurnRate after launch
-							float turnRateDPS = Mathf.Clamp((0.5f*(timeIndex-dropTime))*maxTurnRateDPS, 0, maxTurnRateDPS);
+							float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS, 0, maxTurnRateDPS);
+							//decrease turn rate after thrust cuts out
+							if(timeIndex > dropTime+boostTime+cruiseTime)
+							{
+								turnRateDPS = Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*2), 1, maxTurnRateDPS);	
+							}
 							
 							float radiansDelta = turnRateDPS*Mathf.Deg2Rad*Time.fixedDeltaTime;
 							
@@ -294,6 +308,7 @@ namespace BahaTurret
 		
 		public void Detonate()
 		{
+			if(BDACameraTools.lastProjectileFired==this.part) BDACameraTools.lastProjectileFired = null;
 			//Debug.Log ("===========Missile detonating============");
 			if(!hasExploded)
 			{

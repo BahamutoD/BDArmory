@@ -34,7 +34,7 @@ namespace BahaTurret
 			light.intensity = 8;
 			
 			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.minDistance = 0.01f;
+			audioSource.minDistance = 0.1f;
 			audioSource.maxDistance = 75;
 			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/shellWhistle");
 			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);// * 0.85f;
