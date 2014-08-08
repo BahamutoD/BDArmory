@@ -140,6 +140,8 @@ namespace BahaTurret
 		
 		
 		
+		
+		
 		[KSPAction("Toggle Turret")]
 		public void AGToggle(KSPActionParam param)
 		{
@@ -159,7 +161,7 @@ namespace BahaTurret
 		{
 			if(deployAnimName!="")
 			{
-				deployStates = SetUpAnimation("deploy", this.part);
+				deployStates = SetUpAnimation(deployAnimName, this.part);
 			}
 			if(hasFireAnimation)
 			{
@@ -175,6 +177,8 @@ namespace BahaTurret
 				KSPParticleEmitter pEmitter = mtf.gameObject.GetComponent<KSPParticleEmitter>();
 				muzzleFlashVelocity = pEmitter.worldVelocity.z;	
 			}
+			
+			
 			
 			
 			
@@ -215,6 +219,7 @@ namespace BahaTurret
 				shell = GameDatabase.Instance.GetModel("BDArmory/Models/shell/model");
 				shell.name = "shell";
 				shell.transform.position = Vector3.zero;
+				shell.transform.localScale = 0.001f * Vector3.one;
 				shell.SetActive(true);
 				
 			}
@@ -236,6 +241,7 @@ namespace BahaTurret
 				shell = GameDatabase.Instance.GetModel("BDArmory/Models/shell/model");
 				shell.name = "shell";
 				shell.transform.position = Vector3.zero;
+				shell.transform.localScale = 0.001f * Vector3.one;
 				shell.SetActive(true);
 				
 				
@@ -557,11 +563,7 @@ namespace BahaTurret
 					}
 				}
 				
-				foreach(Part p in part.children)
-				{
-					p.transform.RotateAround(yawTransform.position, yawAxis, rotationSpeedYaw);	
-					
-				}
+				
 			
 			
 				//pitch movement
@@ -647,7 +649,7 @@ namespace BahaTurret
 				Transform[] fireTransforms = part.FindModelTransforms("fireTransform");
 				foreach(Transform tf in fireTransforms)
 				{
-					if(part.RequestResource(ammoName, requestResourceAmount)>0)
+					if(part.RequestResource(ammoName, requestResourceAmount)>0 || BDArmorySettings.INFINITE_AMMO)
 					{
 						spinningDown = false;
 						
@@ -786,7 +788,7 @@ namespace BahaTurret
 		private bool FireLaser()
 		{
 			float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
-			if(inTurretRange && !isOverheated && part.RequestResource(ammoName, chargeAmount)>=chargeAmount)
+			if(inTurretRange && !isOverheated && (part.RequestResource(ammoName, chargeAmount)>=chargeAmount || BDArmorySettings.INFINITE_AMMO))
 			{
 				if(!audioSource.isPlaying)
 				{
