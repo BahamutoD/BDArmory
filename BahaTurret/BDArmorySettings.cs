@@ -20,8 +20,11 @@ namespace BahaTurret
 		
 		public string physicsRangeGui;
 		
+		float physRangeTimer;
+		
 		void Start()
 		{
+			physRangeTimer = Time.time;
 			LoadConfig();
 			
 		}
@@ -29,20 +32,42 @@ namespace BahaTurret
 		void Update()
 		{
 			
-			if(PHYSICS_RANGE > 0)
+			if(Time.time - physRangeTimer > 1)
 			{
-				Vessel.unloadDistance = PHYSICS_RANGE;
-				Vessel.loadDistance = PHYSICS_RANGE+500;
-				
-				
-				foreach(Vessel v in FlightGlobals.Vessels)
+				if(PHYSICS_RANGE > 0)
 				{
-					v.distancePackThreshold = PHYSICS_RANGE;
-					v.distanceUnpackThreshold = PHYSICS_RANGE+500;
-					v.distanceLandedPackThreshold = PHYSICS_RANGE;
-					v.distanceLandedUnpackThreshold = PHYSICS_RANGE+500;
+					Vessel.unloadDistance = PHYSICS_RANGE-250;
+					Vessel.loadDistance = PHYSICS_RANGE;
+					
+					
+					foreach(Vessel v in FlightGlobals.Vessels)
+					{
+						
+						v.distancePackThreshold = PHYSICS_RANGE;
+						v.distanceUnpackThreshold = PHYSICS_RANGE-4800;
+						v.distanceLandedPackThreshold = PHYSICS_RANGE-150;
+						v.distanceLandedUnpackThreshold = PHYSICS_RANGE;
+					}
+					
+					physRangeTimer = Time.time;
 				}
-			}	
+				else
+				{
+					Vessel.unloadDistance = 2250;
+					Vessel.loadDistance = 2500;
+					
+					
+					foreach(Vessel v in FlightGlobals.Vessels)
+					{
+						v.distancePackThreshold = 5000;
+						v.distanceUnpackThreshold = 200;
+						v.distanceLandedPackThreshold = 350;
+						v.distanceLandedUnpackThreshold = 200;
+					}
+					
+					physRangeTimer = Time.time;	
+				}
+			}
 			
 			
 			if(Input.GetKey(KeyCode.LeftAlt))
@@ -88,10 +113,12 @@ namespace BahaTurret
 					{
 						INFINITE_AMMO = Boolean.Parse(cfg.GetValue("INFINITE_AMMO"));
 					}
+					/*
 					if(cfg.HasValue("CAMERA_TOOLS"))
 					{
 						CAMERA_TOOLS = Boolean.Parse(cfg.GetValue("CAMERA_TOOLS"));
 					}
+					*/
 				}
 			}
 			catch(NullReferenceException)
@@ -113,7 +140,7 @@ namespace BahaTurret
 					cfg.SetValue("PHYSICS_RANGE", PHYSICS_RANGE.ToString());
 					cfg.SetValue("EJECT_SHELLS", EJECT_SHELLS.ToString());
 					cfg.SetValue("INFINITE_AMMO", INFINITE_AMMO.ToString());
-					cfg.SetValue("CAMERA_TOOLS", CAMERA_TOOLS.ToString());
+					//cfg.SetValue("CAMERA_TOOLS", CAMERA_TOOLS.ToString());
 				}
 			}
 			catch(NullReferenceException)
@@ -150,7 +177,7 @@ namespace BahaTurret
 			BULLET_HITS = GUI.Toggle(new Rect(leftMargin, top + 3*spacer, width-2*spacer, spacer), BULLET_HITS, "Bullet Hits");
 			EJECT_SHELLS = GUI.Toggle(new Rect(leftMargin, top + 4*spacer, width-2*spacer, spacer), EJECT_SHELLS, "Eject Shells");
 			INFINITE_AMMO = GUI.Toggle(new Rect(leftMargin, top + 5*spacer, width-2*spacer, spacer), INFINITE_AMMO, "Infinte Ammo");
-			CAMERA_TOOLS = GUI.Toggle(new Rect(leftMargin, top + 6*spacer, width-2*spacer, spacer), CAMERA_TOOLS, "Camera Tools");
+			//CAMERA_TOOLS = GUI.Toggle(new Rect(leftMargin, top + 6*spacer, width-2*spacer, spacer), CAMERA_TOOLS, "Camera Tools");
 			
 			FIRE_KEY = GUI.TextField(new Rect(Screen.width/2, top + 7*spacer, width/2 - spacer, spacer), FIRE_KEY);
 			GUI.Label(new Rect(leftMargin, top + 7*spacer, width-2*spacer, spacer), "Gun Fire Key");

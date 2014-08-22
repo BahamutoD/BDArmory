@@ -59,7 +59,7 @@ namespace BahaTurret
 			}
 		}
 		
-		public static void CreateExplosion(Vector3 position, int size)
+		public static void CreateExplosion(Vector3 position, int size, float radius, float power)
 		{
 			GameObject go;
 			if(size == 2)
@@ -76,7 +76,29 @@ namespace BahaTurret
 			foreach(KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
 			{
 				pe.emit = true;	
-				//pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
+			}
+			
+			RaycastHit[] hits = Physics.SphereCastAll(position, radius, FlightGlobals.getUpAxis(), 1, 557057);
+			foreach(RaycastHit hitExplosion in hits)
+			{
+				Part explodePart = null;
+				try
+				{
+					explodePart = Part.FromGO(hitExplosion.rigidbody.gameObject);
+				}catch(NullReferenceException){}
+				if(explodePart!=null && !MissileLauncher.CheckIfMissile(explodePart))
+				{
+					Debug.Log ("ExplosionFX applied to: "+explodePart.name);
+					float random = UnityEngine.Random.Range(0f,100f);
+					float chance = Vector3.Distance(explodePart.transform.position, position)*100/radius;
+					chance *= 0.75f;
+					if(random<chance * 0.8f) explodePart.explode();
+					
+					explodePart.rigidbody.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);
+					
+					//random = UnityEngine.Random.Range(0f,100f);
+					//if(random<chance * 0.8f) explodePart.explode(); 
+				}
 			}
 			
 		}
