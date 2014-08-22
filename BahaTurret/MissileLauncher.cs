@@ -47,12 +47,10 @@ namespace BahaTurret
 		
 		public Vessel target = null;
 		public bool hasFired = false;
-		//collision raycasting
-		public Vector3 prevPosition;
-		public Vector3 currPosition;
 		
 		LineRenderer LR;
 		bool debug = false;
+		float cmTimer;
 		
 		
 		public override void OnStart (PartModule.StartState state)
@@ -75,7 +73,7 @@ namespace BahaTurret
 				
 				
 				
-				
+				cmTimer = Time.time;
 				
 				part.force_activate();
 				part.OnJustAboutToBeDestroyed += new Callback(Detonate);
@@ -230,6 +228,11 @@ namespace BahaTurret
 					}
 					//
 					
+					if(Time.time-cmTimer > 1)
+					{
+						LookForCountermeasure();
+						cmTimer = Time.time;
+					}
 					
 					if(target!=null && guidanceActive && timeIndex - dropTime > 0.5f)
 					{
@@ -313,44 +316,39 @@ namespace BahaTurret
 			if(!hasExploded)
 			{
 				hasExploded = true;
-				Collider[] colliders = Physics.OverlapSphere(transform.position, blastRadius, 557057);
-				foreach(Collider col in colliders)
-				{
-					Rigidbody rb = null;
-					try
-					{
-						rb = col.gameObject.GetComponentUpwards<Rigidbody>();
-					}catch(NullReferenceException){}
-					if(rb!=null && !CheckIfMissile(rb.gameObject))
-					{
-						rb.AddExplosionForce(blastPower, transform.position, blastRadius, 0, ForceMode.Impulse);
-						
-						//FXMonger.Explode(this.part, rb.transform.position, 5); 
-					}
-				}
-				ExplosionFX.CreateExplosion(transform.position, explosionSize);
+				
+				ExplosionFX.CreateExplosion(transform.position, explosionSize, blastRadius, blastPower);
 			}
 
 		}
 		
-		public bool CheckIfMissile(GameObject go)
+		public static bool CheckIfMissile(Part p)
 		{
-			Part p = null;
-			try
-			{
-				p = Part.FromGO(go);
-			}
-			catch(NullReferenceException){}
 			
-			if(p != null)
+			if(p.FindModulesImplementing<MissileLauncher>().Count > 0)
 			{
-				if(p.FindModulesImplementing<MissileLauncher>().Count > 0)
-				{
-					return true;
-				}
-				else return false;
+				return true;
 			}
 			else return false;
+			
+		}
+		
+		void LookForCountermeasure()
+		{
+			RaycastHit hitInfo;
+			if(Physics.SphereCast(transform.position, 300, transform.forward, out hitInfo, 1500, 557057))
+			{
+				CMFlare flare = null;
+				foreach(CMFlare ff in hitInfo.collider.gameObject.GetComponents<CMFlare>())
+				{
+					flare = ff;	
+				}
+				if(flare!=null)
+				{
+					Debug.Log ("CMflare detected");
+					guidanceActive = false;
+				}
+			}	
 		}
 		
 		

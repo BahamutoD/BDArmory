@@ -81,16 +81,7 @@ namespace BahaTurret
 					}
 				}
 				
-				Detonate (hit.point);
-				
-				//hit effects
-				if(BDArmorySettings.BULLET_HITS)
-				{
-					//Part dummyPart = new Part();
-					//FXMonger.Explode (dummyPart, hit.point, 50000f);
-					GameObject newExplosion = (GameObject) GameObject.Instantiate(explosion, hit.point, Quaternion.identity);
-					newExplosion.AddComponent<ExplosionFX>();
-				}
+				ExplosionFX.CreateExplosion(hit.point, 1, radius, blastPower);
 				
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}
@@ -98,22 +89,6 @@ namespace BahaTurret
 			prevPosition = currPosition;
 		}
 		
-		public void Detonate(Vector3 position)
-		{
-			//Debug.Log ("===========Missile detonating============");
-			
-			Collider[] colliders = Physics.OverlapSphere(transform.position, radius, 557057);
-			foreach(Collider col in colliders)
-			{
-				Rigidbody rb = col.gameObject.GetComponentUpwards<Rigidbody>();
-				if(rb!=null)
-				{
-					rb.AddExplosionForce(blastPower, position, radius, 0, ForceMode.Impulse);
-				}
-			}
-			
-			                                 
-		}
 	
 	}
 }

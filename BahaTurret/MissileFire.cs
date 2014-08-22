@@ -6,22 +6,66 @@ namespace BahaTurret
 {
 	public class MissileFire : PartModule
 	{
+		//weapons
 		private List<string> weaponTypes = new List<string>();
 		private string[] weaponArray;
 		private int weaponIndex = 0;
 		
 		ScreenMessage selectionMessage;
+		ScreenMessage armedMessage;
 		string selectionText = "";
 		Transform cameraTransform;
-		MissileLauncher lastFiredSym = null;
+		Part lastFiredSym = null;
+		
+		float rippleTimer;
+		float rippleRPM = 650;
+		float triggerTimer;
+		
+		public float triggerHoldTime = 0.5f;
+		
+		bool hasSingleFired = false;
+		//
 		
 		
+		//bomb aimer
 		bool bombAimerActive = true;
 		GameObject bombAimer = null;
+		Part bombPart = null;
+		//
 		
-		bool targetAcquireActive = true;
 		
-		//LineRenderer foof;
+		//targeting
+		private List<Vessel> loadedVessels = new List<Vessel>();
+		float targetListTimer;
+		
+		
+		
+		[KSPField(isPersistant = false, guiActive = true, guiName = "Armed")]
+		public bool isArmed = false;
+		
+		[KSPEvent(guiActive = true, guiName = "Arm/Disarm", active = true)]
+		public void ToggleArm()
+		{
+			isArmed = !isArmed;
+			if(isArmed)
+			{
+				ScreenMessages.RemoveMessage(armedMessage);
+				armedMessage = new ScreenMessage("Weapon System ARMED", 25000, ScreenMessageStyle.UPPER_RIGHT);
+				ScreenMessages.PostScreenMessage(armedMessage, true);
+			}
+			else
+			{
+				ScreenMessages.RemoveMessage(armedMessage);
+				armedMessage = new ScreenMessage("Weapon System Disarmed", 2, ScreenMessageStyle.UPPER_RIGHT);
+				ScreenMessages.PostScreenMessage(armedMessage, true);
+			}
+		}
+		
+		[KSPAction("Arm/Disarm")]
+		public void AGToggleArm(KSPActionParam param)
+		{
+			ToggleArm();
+		}
 		
 		
 		[KSPEvent(guiActive = true, guiName = "Toggle Bomb Aimer", active = true)]
@@ -68,33 +112,25 @@ namespace BahaTurret
 				
 				cameraTransform = part.FindModelTransform("BDARPMCameraTransform");
 				
-				//ScreenMessages.PostScreenMessage(selectionMessage, true);
-				
-				/*
-				foof = gameObject.AddComponent<LineRenderer>();
-				foof.SetVertexCount(2);
-				foof.SetPosition(0, transform.position);
-				foof.SetPosition(1, transform.position);
-				foof.SetWidth(.2f, 1);
-				foof.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
-				foof.material.SetColor("_EmissiveColor", Color.red) ;
-				*/
+				part.force_activate();
+				rippleTimer = Time.time;
+				targetListTimer = Time.time;
+				triggerTimer = Time.time;
 			}
-			
-			
-			
 		}
 		
 		public override void OnUpdate ()
 		{
 			
-			
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				if(weaponIndex >= weaponArray.Length) weaponIndex--;
+				if(weaponIndex >= weaponArray.Length) 
+				{
+					weaponIndex--;
+					hasSingleFired = true;
+				}
 				if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
-				
-				
+				weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
 			}
 			
 			if(selectedWeapon.Contains("Bomb"))
@@ -110,57 +146,49 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate ()
 		{
+			if(Input.GetKeyDown(KeyCode.Keypad0))
+			{ 
+				
+			}
+			
+			if(isArmed && Input.GetKeyDown(BDArmorySettings.FIRE_KEY))
+			{
+				triggerTimer = Time.time;	
+			}
+			
+			//ripple firing rockets==
+			if(isArmed && Input.GetKey(BDArmorySettings.FIRE_KEY) && selectedWeapon.Contains("Rocket") && !MapView.MapIsEnabled && Time.time-triggerTimer > triggerHoldTime && !hasSingleFired)
+			{
+				if(Time.time - rippleTimer > 60/rippleRPM)
+				{
+				FireMissile();
+				rippleTimer = Time.time;
+				}
+			}
+			//==
+			
+			//single firing missiles===
+			if(isArmed && Input.GetKey(BDArmorySettings.FIRE_KEY) && (selectedWeapon.Contains("Missile") || selectedWeapon.Contains("Bomb")) && !MapView.MapIsEnabled && Time.time-triggerTimer > triggerHoldTime && !hasSingleFired)
+			{
+				FireMissile();
+				hasSingleFired = true;
+			}
+			if(isArmed && Input.GetKeyUp(BDArmorySettings.FIRE_KEY) && hasSingleFired)
+			{
+				hasSingleFired = false;	
+			}
+			//========
+			
 			TargetAcquire();
-			if(HighLogic.LoadedSceneIsFlight)
+			
+			if(HighLogic.LoadedSceneIsFlight && vessel.targetObject!=null)
 			{
-				TargetCam();
+				//TargetCam();
 			}
-			if(bombAimerActive && vessel.verticalSpeed < 10 && vessel.altitude > 150 && selectedWeapon.Contains("Bomb"))
-			{
-				
-				float vAccel = (float)FlightGlobals.getGeeForceAtPosition(transform.position).magnitude;
-				float riseTime = Mathf.Clamp ((float)vessel.verticalSpeed/vAccel, 0, Mathf.Infinity);
-				float riseHeight = 0.5f * (float)vessel.verticalSpeed*(float)vessel.verticalSpeed / vAccel;
-				float fallTime = Mathf.Sqrt(2 * (float)(riseHeight+vessel.altitude) / vAccel);
-				Vector3 targetPosition = transform.position + rigidbody.velocity*Time.fixedDeltaTime - (vessel.altitude * FlightGlobals.getUpAxis()) + (vessel.srf_velocity * 1.10f*(riseTime + fallTime));
-				
-				//foof.SetPosition(0, transform.position + rigidbody.velocity*Time.fixedDeltaTime);
-				//foof.SetPosition(1, targetPosition);
-				
-				Ray ray = new Ray(transform.position, targetPosition - transform.position);
-				RaycastHit hitInfo;
-				if(Physics.Raycast(ray, out hitInfo, 8000, 1<<15))
-				{
-					if(bombAimer == null)
-					{
-						
-						bombAimer = GameDatabase.Instance.GetModel("BDArmory/Models/bombAimer/model");
-						bombAimer.SetActive(true);
-						bombAimer.name = "BombAimer";
-						bombAimer.transform.rotation = Quaternion.LookRotation(FlightGlobals.getUpAxis()) * Quaternion.Euler(90, 0, 0);
-						bombAimer.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
-						
-						bombAimer = (GameObject) Instantiate(bombAimer);
-					}
-					if(bombAimer != null)
-					{
-						bombAimer.transform.position = hitInfo.point + (50-Mathf.Clamp(FlightGlobals.getAltitudeAtPos(hitInfo.point), -Mathf.Infinity, 0))*FlightGlobals.getUpAxis();
-						float aimerScale = Mathf.Clamp(hitInfo.distance/5, 5, 1000);
-						bombAimer.transform.localScale = new Vector3(aimerScale, 0.001f, aimerScale);
-					}
-				}
-				else
-				{
-					GameObject.Destroy(bombAimer);
-					bombAimer = null;	
-				}
-			}
-			else
-			{
-				GameObject.Destroy(bombAimer);
-				bombAimer = null;
-			}
+			
+			BombAimer();
 		}
+		
 		
 		public void UpdateList()
 		{
@@ -173,6 +201,21 @@ namespace BahaTurret
 					weaponTypes.Add(weaponName);	
 				}
 			}
+			
+			foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
+			{
+				bool hasRocket = false;
+				foreach(PartResource r in rl.part.Resources.list)
+				{
+					if(r.amount>0) hasRocket = true;
+				}	
+				string weaponName = rl.part.partInfo.title;
+				if(!weaponTypes.Contains(weaponName) && hasRocket)
+				{
+					weaponTypes.Add(weaponName);	
+				}
+			}
+			
 			weaponTypes.Sort ();
 			weaponArray = new string[weaponTypes.Count];
 			int i = 0;
@@ -189,28 +232,71 @@ namespace BahaTurret
 			UpdateList();
 			weaponIndex++;
 			if(weaponIndex >= weaponArray.Length) weaponIndex = 0; //wrap
-			
 			if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
+			
 			
 			ScreenMessages.RemoveMessage(selectionMessage);
 			selectionText = "Selected Weapon: "+selectedWeapon;
 			selectionMessage.message = selectionText;
 			ScreenMessages.PostScreenMessage(selectionMessage, true);
+			
+			//bomb stuff
+			if(selectedWeapon.Contains("Bomb"))
+			{
+				foreach(Part p in vessel.Parts)
+				{
+					if(p.partInfo.title == selectedWeapon)
+					{
+						bombPart = p;
+					}
+				}
+			}
 		}
 		
 		
 		public void FireMissile()
 		{
-			if(lastFiredSym != null && lastFiredSym.part.partInfo.title == selectedWeapon)
+			if(lastFiredSym != null && lastFiredSym.partInfo.title == selectedWeapon)
 			{
-				MissileLauncher nextML = FindSymML(lastFiredSym.part);
-				lastFiredSym.FireMissile();	
-				if(BDACameraTools.lastProjectileFired != null) BDACameraTools.lastProjectileFired.OnJustAboutToBeDestroyed -= new Callback(BDACameraTools.PostProjectileCamera);
-				BDACameraTools.lastProjectileFired = lastFiredSym.part;
-				lastFiredSym = nextML;
-				UpdateList ();
-				if(weaponIndex >= weaponArray.Length) weaponIndex = Mathf.Clamp(weaponArray.Length - 1, 0, 999999);
-				return;
+				Part nextPart;
+				if(FindSym(lastFiredSym)!=null) nextPart = FindSym(lastFiredSym);
+				else nextPart = null;
+				
+				foreach(MissileLauncher ml in lastFiredSym.FindModulesImplementing<MissileLauncher>())
+				{
+					ml.FireMissile();
+					if(BDACameraTools.lastProjectileFired != null)
+					{
+						BDACameraTools.lastProjectileFired.OnJustAboutToBeDestroyed -= new Callback(BDACameraTools.PostProjectileCamera);
+					}
+					BDACameraTools.lastProjectileFired = lastFiredSym;
+					lastFiredSym = nextPart;
+					
+					UpdateList ();
+					weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
+					return;
+				}	
+				
+				foreach(RocketLauncher rl in lastFiredSym.FindModulesImplementing<RocketLauncher>())
+				{
+					rl.FireRocket();
+					rippleRPM = rl.rippleRPM;
+					if(nextPart!=null)
+					{
+						foreach(PartResource r in nextPart.Resources.list)
+						{
+							if(r.amount>0) lastFiredSym = nextPart;
+							else lastFiredSym = null;
+						}	
+					}
+					
+					UpdateList ();
+					
+					weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
+					
+					return;
+				}
+				
 			}
 			else
 			{
@@ -218,55 +304,90 @@ namespace BahaTurret
 				{
 					if(ml.part.partInfo.title == selectedWeapon)
 					{
-						lastFiredSym = FindSymML(ml.part);
+						lastFiredSym = FindSym(ml.part);
 						ml.FireMissile();
-						if(BDACameraTools.lastProjectileFired != null) BDACameraTools.lastProjectileFired.OnJustAboutToBeDestroyed -= new Callback(BDACameraTools.PostProjectileCamera);
+						if(BDACameraTools.lastProjectileFired != null)
+						{
+							BDACameraTools.lastProjectileFired.OnJustAboutToBeDestroyed -= new Callback(BDACameraTools.PostProjectileCamera);
+						}
 						BDACameraTools.lastProjectileFired = ml.part;
 						UpdateList ();
 						if(weaponIndex >= weaponArray.Length) weaponIndex = Mathf.Clamp(weaponArray.Length - 1, 0, 999999);
 						return;
 					}
 				}
+				
+				foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
+				{
+					bool hasRocket = false;
+					foreach(PartResource r in rl.part.Resources.list)
+					{
+						if(r.amount>0) hasRocket = true;
+					}	
+					
+					if(rl.part.partInfo.title == selectedWeapon && hasRocket)
+					{
+						lastFiredSym = FindSym(rl.part);
+						rl.FireRocket();
+						rippleRPM = rl.rippleRPM;
+						
+						UpdateList();
+						if(weaponIndex >= weaponArray.Length) weaponIndex = Mathf.Clamp(weaponArray.Length - 1, 0, 999999);
+						return;
+					}
+				}
+				UpdateList();
+				if(weaponIndex >= weaponArray.Length) weaponIndex = Mathf.Clamp(weaponArray.Length - 1, 0, 999999);
 			}
 			
 			lastFiredSym = null;
 		}
 		
 		//finds the a symmetry partner
-		public MissileLauncher FindSymML(Part p)
+		public Part FindSym(Part p)
 		{
 			foreach(Part pSym in p.symmetryCounterparts)
 			{
-				foreach(MissileLauncher ml in pSym.GetComponentsInChildren<MissileLauncher>())
-				{
-					return ml;	
-				}
+				return pSym;
 			}
 			
 			return null;
 		}
 		
 		
-		public void TargetAcquire() //not working..
+		public void TargetAcquire() 
 		{
-			if(targetAcquireActive)// && vessel.targetObject != null)
+			if(isArmed)
 			{
-				Vector3 origin = vessel.transform.position;
-				float radius = 50;
-				Vector3 direction = vessel.ReferenceTransform.up;
-				RaycastHit hitInfo;
-				float distance = 2500;
-				if(BDArmorySettings.PHYSICS_RANGE > 0) distance = BDArmorySettings.PHYSICS_RANGE;
-				int layerMask = 1<<19; //"Disconnected Parts"
 				Vessel acquiredTarget = null;
-				if(Physics.SphereCast(origin, radius, direction, out hitInfo, distance, layerMask))
+				float smallestAngle = 8;
+				
+				if(Time.time-targetListTimer > 1)
 				{
-					acquiredTarget = Part.FromGO(hitInfo.collider.gameObject).vessel;
-					Debug.Log ("found target! : "+Part.FromGO(hitInfo.collider.gameObject).vessel.name);
+					loadedVessels.Clear();
+					
+					foreach(Vessel v in FlightGlobals.Vessels)
+					{
+						float viewAngle = Vector3.Angle(vessel.ReferenceTransform.up, v.transform.position-transform.position);
+						if(v.loaded && viewAngle < smallestAngle) loadedVessels.Add(v);
+					}
 				}
-				if(acquiredTarget != null)
+			
+				foreach(Vessel v in loadedVessels)
 				{
-					vessel.orbitTargeter.SetTarget(acquiredTarget.GetOrbitDriver());
+					float viewAngle = Vector3.Angle(vessel.ReferenceTransform.up, v.transform.position-transform.position);
+					//if(v!= vessel && v.loaded) Debug.Log ("view angle: "+viewAngle);
+					if(v != vessel && v.loaded && viewAngle < smallestAngle)
+					{
+						acquiredTarget = v;
+						smallestAngle = viewAngle;
+					}
+				}
+				
+				if(acquiredTarget != null && acquiredTarget != (Vessel)FlightGlobals.fetch.VesselTarget)
+				{
+					Debug.Log ("found target! : "+acquiredTarget.name);
+					FlightGlobals.fetch.SetVesselTarget(acquiredTarget);
 				}
 			}
 		}
@@ -287,6 +408,58 @@ namespace BahaTurret
 			}
 		}
 		#endregion
+		
+		void BombAimer()
+		{
+			if(bombAimerActive && vessel.verticalSpeed < 10 && vessel.altitude > 200 && selectedWeapon.Contains("Bomb"))
+			{
+				float vAccel = (float)FlightGlobals.getGeeForceAtPosition(transform.position).magnitude;
+				Vector3 horizVelocity = vessel.srf_velocity - (vessel.verticalSpeed * FlightGlobals.getUpAxis());
+				float angle = Vector3.Angle(horizVelocity, vessel.srf_velocity) * Mathf.Deg2Rad * Mathf.Sign((float)vessel.verticalSpeed);
+				Debug.Log ("Angle: "+angle*Mathf.Rad2Deg+", horizVelocity: "+horizVelocity.magnitude+", horizontalSrfSpeed: "+vessel.horizontalSrfSpeed);
+				float v = (float)vessel.srfSpeed;
+				float distance = (v*Mathf.Cos(angle)/vAccel)*(v*Mathf.Sin(angle) + Mathf.Sqrt(v * v * Mathf.Sin(angle) * Mathf.Sin(angle) + 2 * vAccel * vessel.heightFromTerrain));
+				
+				Vector3 dragForce = Vector3.zero;
+				if(bombPart!=null)
+				{
+					dragForce = 0.008f * bombPart.mass * part.maximum_drag * 0.5f * vessel.srf_velocity.magnitude * vessel.srf_velocity.magnitude * vessel.atmDensity * vessel.srf_velocity.normalized;
+				}
+				Vector3 targetPosition = (transform.position) - (vessel.heightFromTerrain * FlightGlobals.getUpAxis()) + (horizVelocity.normalized*distance*0.95f) - ((dragForce.magnitude*horizVelocity.normalized) * (distance/(float)vessel.srfSpeed));
+				Ray ray = new Ray(transform.position, targetPosition - transform.position);
+				RaycastHit hitInfo;
+				if(Physics.Raycast(ray, out hitInfo, 8000, 1<<15))
+				{
+					if(bombAimer == null)
+					{
+						
+						bombAimer = GameDatabase.Instance.GetModel("BDArmory/Models/bombAimer/model");
+						
+						bombAimer.name = "BombAimer";
+						bombAimer.transform.rotation = Quaternion.LookRotation(FlightGlobals.getUpAxis()) * Quaternion.Euler(90, 0, 0);
+						//bombAimer.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+						bombAimer = (GameObject) Instantiate(bombAimer);
+						bombAimer.SetActive(true);
+					}
+					if(bombAimer != null)
+					{
+						bombAimer.transform.position = hitInfo.point + (50-Mathf.Clamp(FlightGlobals.getAltitudeAtPos(hitInfo.point), -Mathf.Infinity, 0))*FlightGlobals.getUpAxis();
+						float aimerScale = Mathf.Clamp(hitInfo.distance/5, 5, 1000);
+						bombAimer.transform.localScale = new Vector3(aimerScale, 0.001f, aimerScale);
+					}
+				}
+				else
+				{
+					GameObject.Destroy(bombAimer);
+					bombAimer = null;	
+				}
+			}
+			else
+			{
+				GameObject.Destroy(bombAimer);
+				bombAimer = null;
+			}
+		}
 		
 	}
 }

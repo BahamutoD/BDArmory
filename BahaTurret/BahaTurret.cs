@@ -200,6 +200,7 @@ namespace BahaTurret
 			audioSource2.bypassListenerEffects = true;
 			audioSource2.minDistance = 1;
 			audioSource2.maxDistance = 1000;
+			audioSource2.dopplerLevel = 0;
 			
 			if(weaponType == "ballistic")
 			{
@@ -211,10 +212,11 @@ namespace BahaTurret
 				TrailRenderer bulletTrail = bullet.AddComponent<TrailRenderer>();
 				bulletTrail.startWidth = 0.05f;
 				bulletTrail.endWidth = 0.005f;
-				bulletTrail.material = new Material(Shader.Find ("KSP/Emissive/Diffuse"));
-				bulletTrail.material.SetColor("_EmissiveColor", Misc.ParseColor255(projectileColor));
-				
+				bulletTrail.material = new Material(Shader.Find ("KSP/Particles/Additive"));
+				bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
+				bulletTrail.material.SetColor("_TintColor", Misc.ParseColor255(projectileColor));
 				bulletTrail.time = 0.02f;
+				
 				
 				shell = GameDatabase.Instance.GetModel("BDArmory/Models/shell/model");
 				shell.name = "shell";
@@ -233,8 +235,9 @@ namespace BahaTurret
 				TrailRenderer bulletTrail = bullet.AddComponent<TrailRenderer>();
 				bulletTrail.startWidth = 0.8f;
 				bulletTrail.endWidth = 0.01f;
-				bulletTrail.material = new Material(Shader.Find ("KSP/Emissive/Diffuse"));
-				bulletTrail.material.SetColor("_EmissiveColor", Misc.ParseColor255(projectileColor));
+				bulletTrail.material = new Material(Shader.Find ("KSP/Particles/Additive"));
+				bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
+				bulletTrail.material.SetColor("_TintColor", Misc.ParseColor255(projectileColor));
 				
 				bulletTrail.time = 0.02f;
 				
@@ -476,10 +479,10 @@ namespace BahaTurret
 			if(autoLockCapable)
 			{
 				targetVessel = null;
-				try
+				if(vessel.targetObject!=null)
 				{
 					targetVessel = vessel.targetObject.GetVessel();
-				}catch(NullReferenceException){}
+				}
 				if(targetVessel!=null)
 				{
 					target = targetVessel.transform.position;
@@ -595,7 +598,6 @@ namespace BahaTurret
 			float yaw = yawTransform.localRotation.Roll() * Mathf.Rad2Deg;
 			float pitch = pitchTransform.localRotation.Yaw () * Mathf.Rad2Deg;
 			
-			//Debug.Log ("Pitch: "+pitch*Mathf.Rad2Deg+", Yaw: "+yaw*Mathf.Rad2Deg);
 			
 			if(yaw > 1 || yaw < -1)
 			{
@@ -747,14 +749,6 @@ namespace BahaTurret
 							firedBullet.GetComponent<CannonShell>().radius = cannonShellRadius;
 						}
 						
-						
-						if(BDArmorySettings.INSTAKILL)
-						{
-							firedBullet.GetComponent<BahaTurretBullet>().instakill = true;	
-						}
-						
-						
-						
 						//heat
 						heat += heatPerShot;
 					}
@@ -857,26 +851,28 @@ namespace BahaTurret
 		//checks if you're about to shoot yourself (prevents it)
 		private void CheckTarget()
 		{
-			Vector3 targetDirection = pitchTransform.right;
-			Ray ray = new Ray(pitchTransform.position, targetDirection);
-			RaycastHit hit;
-			if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+			foreach(var fireTr in part.FindModelTransforms("fireTransform"))
 			{
-				try{
-					Part p = Part.FromGO(hit.rigidbody.gameObject);
-					hitPart = p;
-					if(p.vessel == this.vessel)
-					{
-						inTurretRange = false;
+				Ray ray = new Ray(fireTr.position, fireTr.forward);
+				RaycastHit hit;
+				if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+				{
+					try{
+						Part p = Part.FromGO(hit.rigidbody.gameObject);
+						hitPart = p;
+						if(p.vessel == this.vessel)
+						{
+							inTurretRange = false;
+						}
 					}
+					catch(NullReferenceException)
+					{}
+					
 				}
-				catch(NullReferenceException)
-				{}
-				
-			}
-			else
-			{
-				hitPart = null;
+				else
+				{
+					hitPart = null;
+				}
 			}
 			
 		}

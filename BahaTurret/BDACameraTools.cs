@@ -46,7 +46,7 @@ namespace BahaTurret
 		
 		void Update()
 		{
-			if(CheckForManager() && BDArmorySettings.CAMERA_TOOLS)
+			if(CheckForManager() && BDArmorySettings.CAMERA_TOOLS && true==false)
 			{
 					
 				#region targetCamera
@@ -188,7 +188,6 @@ namespace BahaTurret
 					float cameraDistance = Vector3.Distance(vessel.transform.position, flightCamera.transform.position);
 					float targetFoV = Mathf.Clamp((7000/(cameraDistance+100)) - 4, lowerLimit, 60);
 					flightCamera.SetFoV(targetFoV);
-					Debug.Log ("Distance from cam: "+Vector3.Distance(vessel.transform.position, flightCamera.transform.position)+", targetFoV : "+targetFoV);
 					
 				}
 				#endregion
