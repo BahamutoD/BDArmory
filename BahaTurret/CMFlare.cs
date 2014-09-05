@@ -37,11 +37,13 @@ namespace BahaTurret
 				rigidbody.useGravity = false;
 			}
 			
+			BDArmorySettings.Flares.Add(this.gameObject);
 		}
 		
 		void FixedUpdate()
 		{
 			if(useGravity) Forces ();
+			
 			
 			if(Time.time -startTime > 0.3f && gameObject.collider==null)
 			{
@@ -65,6 +67,7 @@ namespace BahaTurret
 			
 			if(Time.time - startTime > 8) //delete object after 6 seconds
 			{
+				BDArmorySettings.Flares.Remove(this.gameObject);
 				Destroy(gameObject);	
 			}
 			

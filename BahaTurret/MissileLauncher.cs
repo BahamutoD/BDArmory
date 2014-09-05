@@ -52,6 +52,8 @@ namespace BahaTurret
 		bool debug = false;
 		float cmTimer;
 		
+		bool hasUpdatedPhysRange = false;
+		
 		
 		public override void OnStart (PartModule.StartState state)
 		{
@@ -125,6 +127,7 @@ namespace BahaTurret
 				
 				if(timeStart == -1) timeStart = Time.time;
 				hasFired = true;
+				
 			}
 			
 		}
@@ -143,7 +146,15 @@ namespace BahaTurret
 			
 			if(hasFired)
 			{
-				
+				if(!hasUpdatedPhysRange)
+				{
+					BDArmorySettings.ApplyPhysRange();
+					hasUpdatedPhysRange = true;
+				}
+				rigidbody.isKinematic = false;
+				vessel.vesselType = VesselType.Probe;
+				if(!vessel.loaded) vessel.Load();
+				vessel.ResumeTarget();
 				
 				timeIndex = Time.time - timeStart;
 				
@@ -335,20 +346,18 @@ namespace BahaTurret
 		
 		void LookForCountermeasure()
 		{
-			RaycastHit hitInfo;
-			if(Physics.SphereCast(transform.position, 300, transform.forward, out hitInfo, 1500, 557057))
+			foreach(GameObject flare in BDArmorySettings.Flares)
 			{
-				CMFlare flare = null;
-				foreach(CMFlare ff in hitInfo.collider.gameObject.GetComponents<CMFlare>())
-				{
-					flare = ff;	
-				}
-				if(flare!=null)
+				float angle = Vector3.Angle(transform.forward, flare.transform.position-transform.position);
+				if(angle < 10 && Vector3.Distance(flare.transform.position, transform.position) < 1800)
 				{
 					Debug.Log ("CMflare detected");
 					guidanceActive = false;
+					return;
 				}
-			}	
+			}
+			
+			
 		}
 		
 		
