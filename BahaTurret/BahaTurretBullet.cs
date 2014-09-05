@@ -6,17 +6,17 @@ namespace BahaTurret
 	public class BahaTurretBullet : MonoBehaviour
 	{
 		public float startTime;
-		public float bulletLifeTime = 3;
+		public float bulletLifeTime = 10;
 		public Vessel sourceVessel;
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
+		public Color projectileColor;
 		
 		
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
 		
-		
-		
-		
+		LineRenderer bulletTrail;
+		AudioSource audioSource;
 		
 		void Start()
 		{
@@ -28,15 +28,42 @@ namespace BahaTurret
 			light.color = lightColor;
 			light.range = 8;
 			light.intensity = 1;
+			
+			bulletTrail = gameObject.AddComponent<LineRenderer>();
+			bulletTrail.SetVertexCount(2);
+			bulletTrail.SetPosition(0, transform.position);
+			bulletTrail.SetPosition(1, transform.position);
+			bulletTrail.SetWidth(0.07f, 0.005f);
+			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Additive"));
+			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
+			bulletTrail.material.SetColor("_TintColor", projectileColor);
+			
+			audioSource = gameObject.AddComponent<AudioSource>();
+			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/whizz");
+			audioSource.loop = true;
+			audioSource.pitch = 3;
+			audioSource.dopplerLevel = 0.07f;
+			audioSource.minDistance = 0.1f;
+			audioSource.maxDistance = 75;
+			audioSource.volume = GameSettings.SHIP_VOLUME;
+			audioSource.Play();
+			
+			
+			
 		}
 		
 		void FixedUpdate()
 		{
+			bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
+			bulletTrail.SetPosition(1, transform.position);
+			
+			
 			currPosition = gameObject.transform.position;
 			if(Time.time - startTime > bulletLifeTime)
 			{
 				GameObject.Destroy(gameObject);
 			}
+			
 			if(Time.time - startTime > 0.01f)
 			{
 				light.intensity = 0;	

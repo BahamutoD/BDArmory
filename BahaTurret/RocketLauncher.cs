@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace BahaTurret
 {
@@ -31,6 +32,17 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public float rippleRPM;
 		
+		public bool drawAimer = false;
+		
+		Vector3 rocketPrediction = Vector3.zero;
+		Texture2D aimerTexture;
+		
+		
+		
+		
+		
+		
+		
 		[KSPAction("Fire")]
 		public void AGFire(KSPActionParam param)
 		{
@@ -49,9 +61,14 @@ namespace BahaTurret
 			
 			part.force_activate();
 			
+			aimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
+			
 		}
 		
-		
+		public override void OnFixedUpdate ()
+		{
+			SimulateTrajectory();
+		}
 		
 		public void FireRocket()
 		{
@@ -72,6 +89,111 @@ namespace BahaTurret
 				rocket.sourceVessel = vessel;
 				rocketObj.SetActive(true);
 				rocketObj.transform.SetParent(transform);
+				
+			}
+		}
+		
+		
+		void SimulateTrajectory()
+		{
+			if(BDArmorySettings.AIM_ASSIST && drawAimer && vessel.isActiveVessel)
+			{
+				float gAccel = (float) FlightGlobals.getGeeForceAtPosition(transform.position).magnitude;
+				float simTime = 0;
+				Transform fireTransform = part.transform;
+				Vector3 pointingDirection = fireTransform.forward;
+				Vector3 simVelocity = rigidbody.velocity;
+				Vector3 simCurrPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+				Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+				Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+				bool simulating = true;
+				
+				List<Vector3> pointPositions = new List<Vector3>();
+				pointPositions.Add(simCurrPos);
+				
+				while(simulating)
+				{
+					
+					RaycastHit hit;
+					simVelocity -= gAccel*FlightGlobals.getUpAxis()*Time.fixedDeltaTime;
+					if(simTime > 0.04f && simTime < thrustTime)
+					{
+						pointingDirection = Vector3.RotateTowards(pointingDirection, simVelocity, (0.5f*(simTime)) * 50*Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
+						simVelocity += thrust/rocketMass * Time.fixedDeltaTime * pointingDirection;
+					}
+					simCurrPos += simVelocity * Time.fixedDeltaTime;
+					pointPositions.Add(simCurrPos);
+					if(simTime > 0.1f && Physics.Raycast(simPrevPos,simCurrPos-simPrevPos, out hit, Vector3.Distance(simPrevPos,simCurrPos), 557057))
+					{
+						rocketPrediction = hit.point;
+						simulating = false;
+						break;
+					}
+					
+					
+					simPrevPos = simCurrPos;
+					
+					if(Vector3.Distance(simStartPos,simCurrPos)>2500)
+					{
+						rocketPrediction = simStartPos + (simCurrPos-simStartPos).normalized*2500;
+						simulating = false;
+					}
+					simTime += Time.fixedDeltaTime;
+				}
+				
+				Debug.Log ("Rocket simulation frames: "+pointPositions.Count);
+				
+				if(BDArmorySettings.DRAW_DEBUG_LINES)
+				{
+					Vector3[] pointsArray = pointPositions.ToArray();
+					if(gameObject.GetComponent<LineRenderer>()==null)
+					{
+						LineRenderer lr = gameObject.AddComponent<LineRenderer>();
+						lr.SetWidth(.1f, .1f);
+						lr.SetVertexCount(pointsArray.Length);
+						for(int i = 0; i<pointsArray.Length; i++)
+						{
+							lr.SetPosition(i, pointsArray[i]);	
+						}
+					}
+					else
+					{
+						LineRenderer lr = gameObject.GetComponent<LineRenderer>();
+						lr.enabled = true;
+						lr.SetVertexCount(pointsArray.Length);
+						for(int i = 0; i<pointsArray.Length; i++)
+						{
+							lr.SetPosition(i, pointsArray[i]);	
+						}	
+					}
+				}
+				else
+				{
+					if(gameObject.GetComponent<LineRenderer>()!=null)
+					{
+						gameObject.GetComponent<LineRenderer>().enabled = false;	
+					}
+				}
+			}
+				
+		}
+		
+		void OnGUI()
+		{
+			if(drawAimer && vessel.isActiveVessel)
+			{
+				float size = 30;
+				
+				Vector3 aimPosition;
+				//if(BDArmorySettings.AIM_ASSIST) 
+				aimPosition = Camera.main.WorldToViewportPoint(rocketPrediction);
+				//else aimPosition = Camera.main.WorldToViewportPoint(pointingAtPosition);
+				
+				Rect drawRect = new Rect(aimPosition.x*Screen.width-(0.5f*size), (1-aimPosition.y)*Screen.height-(0.5f*size), size, size);
+				float cameraAngle = Vector3.Angle(Camera.main.transform.forward, rocketPrediction-Camera.main.transform.position);
+				if(cameraAngle<90) GUI.DrawTexture(drawRect, aimerTexture);
+				
+				
 				
 			}
 			

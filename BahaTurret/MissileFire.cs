@@ -39,6 +39,43 @@ namespace BahaTurret
 		float targetListTimer;
 		
 		
+		//rocket aimer handling
+		RocketLauncher nextRocket = null;
+		
+		
+		//guard mode vars
+		float targetScanTimer = 0;
+		float targetScanInterval = 8;
+		
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Field of View"),
+        	UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
+		public float guardAngle = 100f;
+		
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Guard Range"),
+        	UI_FloatRange(minValue = 100f, maxValue = 5000f, stepIncrement = 100f, scene = UI_Scene.All)]
+        public float guardRange = 1500f;
+		
+		[KSPField(isPersistant = true, guiActive = true, guiName = "Guard Mode")]
+		public bool guardMode = false;
+		
+		[KSPEvent(guiActive = true, guiName = "Toggle Guard Mode", active = true)]
+		public void GuiToggleGuardMode()
+		{
+			guardMode = !guardMode;	
+			Fields["guardRange"].guiActive = guardMode;
+			Fields["guardAngle"].guiActive = guardMode;
+		}
+		
+		[KSPField(guiActiveEditor = true, isPersistant = true, guiActive = true, guiName = "Team")]
+		public string team = "A";
+		
+		[KSPEvent(guiActiveEditor = true, guiActive = true, guiName = "Toggle Team", active = true)]
+		public void GuiToggleTeam()
+		{
+			if(team == "A") team = "B";
+			else team = "A";
+		}
+		
 		
 		[KSPField(isPersistant = false, guiActive = true, guiName = "Armed")]
 		public bool isArmed = false;
@@ -53,7 +90,7 @@ namespace BahaTurret
 				armedMessage = new ScreenMessage("Weapon System ARMED", 25000, ScreenMessageStyle.UPPER_RIGHT);
 				ScreenMessages.PostScreenMessage(armedMessage, true);
 			}
-			else
+			else 
 			{
 				ScreenMessages.RemoveMessage(armedMessage);
 				armedMessage = new ScreenMessage("Weapon System Disarmed", 2, ScreenMessageStyle.UPPER_RIGHT);
@@ -116,6 +153,9 @@ namespace BahaTurret
 				rippleTimer = Time.time;
 				targetListTimer = Time.time;
 				triggerTimer = Time.time;
+				
+				Fields["guardRange"].guiActive = guardMode;
+				Fields["guardAngle"].guiActive = guardMode;
 			}
 		}
 		
@@ -142,14 +182,14 @@ namespace BahaTurret
 				Events["GuiBombAimer"].guiActive = false;
 			}
 			
+			//finding next rocket to shoot (for aimer)
+			FindNextRocket();
+			
 		}
 		
 		public override void OnFixedUpdate ()
 		{
-			if(Input.GetKeyDown(KeyCode.Keypad0))
-			{ 
-				
-			}
+			GuardMode();
 			
 			if(isArmed && Input.GetKeyDown(BDArmorySettings.FIRE_KEY))
 			{
@@ -166,6 +206,8 @@ namespace BahaTurret
 				}
 			}
 			//==
+			
+			
 			
 			//single firing missiles===
 			if(isArmed && Input.GetKey(BDArmorySettings.FIRE_KEY) && (selectedWeapon.Contains("Missile") || selectedWeapon.Contains("Bomb")) && !MapView.MapIsEnabled && Time.time-triggerTimer > triggerHoldTime && !hasSingleFired)
@@ -458,6 +500,92 @@ namespace BahaTurret
 			{
 				GameObject.Destroy(bombAimer);
 				bombAimer = null;
+			}
+		}
+		
+		void FindNextRocket()
+		{
+			if(selectedWeapon.Contains("Rocket"))
+			{
+				if(lastFiredSym!=null && lastFiredSym.partInfo.title == selectedWeapon)	
+				{
+					foreach(RocketLauncher rl in lastFiredSym.FindModulesImplementing<RocketLauncher>())
+					{
+						if(nextRocket!=null) nextRocket.drawAimer = false;
+						rl.drawAimer = true;	
+						nextRocket = rl;
+						return;
+					}
+				}
+				else
+				{
+					foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
+					{
+						bool hasRocket = false;
+						foreach(PartResource r in rl.part.Resources.list)
+						{
+							if(r.amount>0) hasRocket = true;
+							else
+							{
+								rl.drawAimer = false;	
+							}
+						}	
+						
+						if(rl.part.partInfo.title == selectedWeapon && hasRocket)
+						{
+							if(nextRocket!=null) nextRocket.drawAimer = false;
+							rl.drawAimer = true;
+							nextRocket = rl;
+							return;
+						}
+					}
+				}
+			}
+			else
+			{
+				foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
+				{
+					rl.drawAimer = false;
+					nextRocket = null;
+				}
+			}
+		}
+		
+		void GuardMode()
+		{
+			if(guardMode)
+			{
+				if(Time.time-targetScanTimer > targetScanInterval)
+				{
+					targetScanTimer = Time.time;
+					if(vessel.targetObject!=null)
+					{
+						Debug.Log ("Firing on target: "+vessel.targetObject.GetName());
+						FireMissile();
+						vessel.targetObject = null;
+					}
+					
+					//get a target
+					float angle = 0;
+					foreach(Vessel v in FlightGlobals.Vessels)
+					{
+						if(v.loaded && Vector3.Distance(transform.position, v.transform.position) < guardRange)
+						{
+							angle = Vector3.Angle (-transform.forward, v.transform.position-transform.position);
+							foreach(var mF in v.FindPartModulesImplementing<MissileFire>())
+							{
+								if(angle < guardAngle/2 && mF.team != team)
+								{
+									vessel.targetObject = v;
+									return;
+								}
+							}
+						}
+					}
+					
+					
+				}
+				
 			}
 		}
 		

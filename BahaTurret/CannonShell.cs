@@ -9,6 +9,7 @@ namespace BahaTurret
 		public float bulletLifeTime = 8;
 		public Vessel sourceVessel;
 		
+		public Color projectileColor;
 		
 		
 		public float radius = 30;
@@ -22,6 +23,8 @@ namespace BahaTurret
 		
 		private AudioSource audioSource;
 		private GameObject explosion;
+		
+		LineRenderer bulletTrail;
 		
 		void Start()
 		{
@@ -43,10 +46,22 @@ namespace BahaTurret
 			explosion = GameDatabase.Instance.GetModel("BDArmory/Models/explosion/explosion");
 			explosion.SetActive(true);
 			
+			bulletTrail = gameObject.AddComponent<LineRenderer>();
+			bulletTrail.SetVertexCount(2);
+			bulletTrail.SetPosition(0, transform.position);
+			bulletTrail.SetPosition(1, transform.position);
+			bulletTrail.SetWidth(0.8f, 0.01f);
+			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Additive"));
+			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
+			bulletTrail.material.SetColor("_TintColor", projectileColor);
+			
 		}
 		
 		void FixedUpdate()
 		{
+			bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
+			bulletTrail.SetPosition(1, transform.position);
+			
 			if(!audioSource.isPlaying)
 			{
 				audioSource.Play();	
