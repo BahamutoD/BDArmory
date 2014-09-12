@@ -5,6 +5,7 @@ namespace BahaTurret
 {
 	public class MissileLauncher : PartModule
 	{
+		public string team;
 		
 		public float timeStart = -1;
 		public float timeIndex = 0;
@@ -45,8 +46,10 @@ namespace BahaTurret
 		
 		private Vector3 initialObtVelocity;
 		
-		public Vessel target = null;
+		public GameObject target = null;
+		public Vessel targetVessel = null;
 		public bool hasFired = false;
+		Vector3 targetPosition;
 		
 		LineRenderer LR;
 		bool debug = false;
@@ -65,6 +68,7 @@ namespace BahaTurret
 				audioSource.minDistance = 1;
 				audioSource.maxDistance = 1000;
 				audioSource.loop = true;
+				audioSource.dopplerLevel = 0.3f;
 				if(audioClipPath!="")
 				{
 					
@@ -95,6 +99,7 @@ namespace BahaTurret
 					LR.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
 					LR.material.SetColor("_EmissiveColor", Color.red);
 				}
+				
 			}
 		}
 		
@@ -115,21 +120,43 @@ namespace BahaTurret
 		{
 			if(!hasFired)
 			{
+				foreach(var wpm in vessel.FindPartModulesImplementing<MissileFire>())
+				{
+					team = wpm.team;	
+				}
+				
 				audioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
 				part.force_activate();
 				Vessel sourceVessel = vessel;
 				try{
-					target = vessel.targetObject.GetVessel();
+					target = vessel.targetObject.GetVessel().gameObject;
 				}catch(NullReferenceException){}
-				part.decouple(5);
-				//part.rigidbody.velocity = sourceVessel.rigidbody.velocity;
-				//part.rigidbody.velocity += 5 * -part.transform.up;
+				part.decouple(50);
+				
 				
 				if(timeStart == -1) timeStart = Time.time;
 				hasFired = true;
-				
 			}
-			
+		}
+		
+		public void FireMissileOnTarget(Vessel v)
+		{
+			if(!hasFired)
+			{
+				foreach(var wpm in vessel.FindPartModulesImplementing<MissileFire>())
+				{
+					team = wpm.team;	
+				}
+				
+				audioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
+				part.force_activate();
+				Vessel sourceVessel = vessel;
+				target = v.gameObject;
+				part.decouple(5);
+				
+				if(timeStart == -1) timeStart = Time.time;
+				hasFired = true;
+			}
 		}
 		
 	
@@ -150,6 +177,7 @@ namespace BahaTurret
 				{
 					BDArmorySettings.ApplyPhysRange();
 					hasUpdatedPhysRange = true;
+					vessel.vesselName = part.partInfo.title + " (fired)";
 				}
 				rigidbody.isKinematic = false;
 				vessel.vesselType = VesselType.Probe;
@@ -195,8 +223,8 @@ namespace BahaTurret
 						}
 						else
 						{
-							pe.maxEmission = 0;
-							pe.minEmission = 0;
+							if(pe.useWorldSpace) pe.emit = false;
+							else pe.emit = true;
 						}
 						
 					}
@@ -230,30 +258,34 @@ namespace BahaTurret
 				{
 					part.crashTolerance = 1;
 					
-					//model transform. always points prograde
-					transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);
+					//guidance and attitude stabilisation scales to atmospheric density.
+					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position))); 
+					
+					//model transform attitude stabilisation 
+					transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);
 					if(!FlightGlobals.RefFrameIsRotating && timeIndex - dropTime > 0.5f && FlightGlobals.ActiveVessel!=vessel)
 					{
-						transform.rotation = Quaternion.LookRotation(rigidbody.velocity);
+						transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rigidbody.velocity), atmosMultiplier/2.5f);
 						
 					}
 					//
 					
-					if(Time.time-cmTimer > 1)
-					{
-						LookForCountermeasure();
-						cmTimer = Time.time;
-					}
+					
 					
 					if(target!=null && guidanceActive && timeIndex - dropTime > 0.5f)
 					{
-						try{
+						WarnTarget();
+						
+						if(Vector3.Distance(target.transform.position, transform.position) < BDArmorySettings.PHYSICS_RANGE){
+							/*
 							if(!FlightGlobals.RefFrameIsRotating && FlightGlobals.ActiveVessel==vessel)
 							{
 								FlightGlobals.ForceSetActiveVessel(target);
 							}
+							*/
+							targetPosition = target.transform.position;
+							LookForCountermeasure();
 							
-							Vector3 targetPosition = target.transform.position;
 							float targetDistance = (targetPosition-transform.position).magnitude;
 							if(prevDistance == -1)
 							{
@@ -262,7 +294,7 @@ namespace BahaTurret
 							
 							if(targetDistance > 10) //guide towards where the target is going to be
 							{
-								targetPosition = target.transform.position + target.srf_velocity*(1/((target.srf_velocity-vessel.srf_velocity).magnitude/targetDistance));
+								targetPosition = targetPosition + target.rigidbody.velocity*(1/((target.rigidbody.velocity-vessel.rigidbody.velocity).magnitude/targetDistance));
 								if(!FlightGlobals.RefFrameIsRotating)
 								{
 									targetPosition = target.transform.position + target.rigidbody.velocity*(1/((target.rigidbody.velocity-rigidbody.velocity).magnitude/targetDistance));
@@ -270,11 +302,11 @@ namespace BahaTurret
 							}
 							
 							//increaseTurnRate after launch
-							float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS, 0, maxTurnRateDPS);
+							float turnRateDPS = atmosMultiplier * Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS, 0, maxTurnRateDPS);
 							//decrease turn rate after thrust cuts out
 							if(timeIndex > dropTime+boostTime+cruiseTime)
 							{
-								turnRateDPS = Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*2), 1, maxTurnRateDPS);	
+								turnRateDPS = atmosMultiplier * Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*2), 1, maxTurnRateDPS);	
 							}
 							
 							float radiansDelta = turnRateDPS*Mathf.Deg2Rad*Time.fixedDeltaTime;
@@ -308,9 +340,9 @@ namespace BahaTurret
 							
 							
 						}
-						catch(NullReferenceException)
+						else
 						{
-							Debug.Log ("NRE: Missile guidance fail. Target out of range or unloaded");
+							Debug.Log ("Missile guidance fail. Target out of range or unloaded");
 							guidanceActive = false;
 						}
 					
@@ -318,6 +350,7 @@ namespace BahaTurret
 				}
 			}
 		}
+		
 		
 		
 		public void Detonate()
@@ -348,16 +381,36 @@ namespace BahaTurret
 		{
 			foreach(GameObject flare in BDArmorySettings.Flares)
 			{
-				float angle = Vector3.Angle(transform.forward, flare.transform.position-transform.position);
-				if(angle < 10 && Vector3.Distance(flare.transform.position, transform.position) < 1800)
+				if(flare!=null)
 				{
-					Debug.Log ("CMflare detected");
-					guidanceActive = false;
-					return;
+					float angle = Vector3.Angle(transform.forward, flare.transform.position-transform.position);
+					if(angle < 20 && Vector3.Distance(flare.transform.position, transform.position) < 2000)
+					{
+						//Debug.Log ("CMflare detected");
+						targetPosition = flare.transform.position;
+						return;
+					}
 				}
 			}
 			
 			
+		}
+		
+		void WarnTarget()
+		{
+			if(targetVessel == null)
+			{
+				if(FlightGlobals.ActiveVessel.gameObject == target) targetVessel = FlightGlobals.ActiveVessel;	
+			}
+			
+			if(targetVessel!=null)
+			{
+				foreach(var wpm in targetVessel.FindPartModulesImplementing<MissileFire>())
+				{
+					wpm.MissileWarning();
+					break;
+				}
+			}
 		}
 		
 		

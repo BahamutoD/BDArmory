@@ -15,6 +15,7 @@ namespace BahaTurret
 		public float radius = 30;
 		public float blastPower = 8;
 		
+		public bool bulletDrop = true;
 		
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
@@ -25,6 +26,9 @@ namespace BahaTurret
 		private GameObject explosion;
 		
 		LineRenderer bulletTrail;
+		public float tracerStartWidth = 1;
+		public float tracerEndWidth = 1;
+		public float tracerLength = 0;
 		
 		void Start()
 		{
@@ -50,16 +54,34 @@ namespace BahaTurret
 			bulletTrail.SetVertexCount(2);
 			bulletTrail.SetPosition(0, transform.position);
 			bulletTrail.SetPosition(1, transform.position);
-			bulletTrail.SetWidth(0.8f, 0.01f);
+			bulletTrail.SetWidth(tracerStartWidth, tracerEndWidth);
 			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Additive"));
 			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
 			bulletTrail.material.SetColor("_TintColor", projectileColor);
+			
+			
+			rigidbody.useGravity = false;
 			
 		}
 		
 		void FixedUpdate()
 		{
-			bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
+			
+			if(bulletDrop && FlightGlobals.RefFrameIsRotating)
+			{
+				rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+			}
+			
+			
+			if(tracerLength == 0)
+			{
+				bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
+			}
+			else
+			{
+				bulletTrail.SetPosition(0, transform.position + (rigidbody.velocity.normalized * tracerLength));	
+			}
+			
 			bulletTrail.SetPosition(1, transform.position);
 			
 			if(!audioSource.isPlaying)

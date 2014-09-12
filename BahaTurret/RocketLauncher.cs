@@ -96,9 +96,8 @@ namespace BahaTurret
 		
 		void SimulateTrajectory()
 		{
-			if(BDArmorySettings.AIM_ASSIST && drawAimer && vessel.isActiveVessel)
+			if(BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel && vessel.altitude < 5000)
 			{
-				float gAccel = (float) FlightGlobals.getGeeForceAtPosition(transform.position).magnitude;
 				float simTime = 0;
 				Transform fireTransform = part.transform;
 				Vector3 pointingDirection = fireTransform.forward;
@@ -107,21 +106,24 @@ namespace BahaTurret
 				Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
 				Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
 				bool simulating = true;
-				
+				float simDeltaTime = 0.01f;
 				List<Vector3> pointPositions = new List<Vector3>();
 				pointPositions.Add(simCurrPos);
 				
 				while(simulating)
 				{
+					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(simCurrPos)));
 					
 					RaycastHit hit;
-					simVelocity -= gAccel*FlightGlobals.getUpAxis()*Time.fixedDeltaTime;
+					simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
 					if(simTime > 0.04f && simTime < thrustTime)
 					{
-						pointingDirection = Vector3.RotateTowards(pointingDirection, simVelocity, (0.5f*(simTime)) * 50*Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
-						simVelocity += thrust/rocketMass * Time.fixedDeltaTime * pointingDirection;
+						simDeltaTime = 0.1f;
+						if(simTime < 0.5f) pointingDirection = Vector3.RotateTowards(pointingDirection, simVelocity, atmosMultiplier * (0.5f*(simTime)) * 50*simDeltaTime * Mathf.Deg2Rad, 0);
+						else pointingDirection = Vector3.Lerp(pointingDirection, simVelocity.normalized, atmosMultiplier/2.5f);
+						simVelocity += thrust/rocketMass * simDeltaTime * pointingDirection;
 					}
-					simCurrPos += simVelocity * Time.fixedDeltaTime;
+					simCurrPos += simVelocity * simDeltaTime;
 					pointPositions.Add(simCurrPos);
 					if(simTime > 0.1f && Physics.Raycast(simPrevPos,simCurrPos-simPrevPos, out hit, Vector3.Distance(simPrevPos,simCurrPos), 557057))
 					{
@@ -133,17 +135,17 @@ namespace BahaTurret
 					
 					simPrevPos = simCurrPos;
 					
-					if(Vector3.Distance(simStartPos,simCurrPos)>2500)
+					if(Vector3.Distance(simStartPos,simCurrPos)>4000)
 					{
 						rocketPrediction = simStartPos + (simCurrPos-simStartPos).normalized*2500;
 						simulating = false;
 					}
-					simTime += Time.fixedDeltaTime;
+					simTime += simDeltaTime;
 				}
 				
-				Debug.Log ("Rocket simulation frames: "+pointPositions.Count);
+				//Debug.Log ("Rocket simulation frames: "+pointPositions.Count);
 				
-				if(BDArmorySettings.DRAW_DEBUG_LINES)
+				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
 				{
 					Vector3[] pointsArray = pointPositions.ToArray();
 					if(gameObject.GetComponent<LineRenderer>()==null)
@@ -175,19 +177,31 @@ namespace BahaTurret
 					}
 				}
 			}
+			
+			//for straight aimer
+			else if(BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel)
+			{
+				RaycastHit hit;
+				float distance = 2500;
+				if(Physics.Raycast(transform.position,transform.forward, out hit, distance, 557057))
+				{
+					rocketPrediction = hit.point;
+				}
+				else
+				{
+					rocketPrediction = transform.position+(transform.forward*distance);	
+				}
+			}
 				
 		}
 		
 		void OnGUI()
 		{
-			if(drawAimer && vessel.isActiveVessel)
+			if(drawAimer && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS)
 			{
 				float size = 30;
 				
-				Vector3 aimPosition;
-				//if(BDArmorySettings.AIM_ASSIST) 
-				aimPosition = Camera.main.WorldToViewportPoint(rocketPrediction);
-				//else aimPosition = Camera.main.WorldToViewportPoint(pointingAtPosition);
+				Vector3 aimPosition = Camera.main.WorldToViewportPoint(rocketPrediction);
 				
 				Rect drawRect = new Rect(aimPosition.x*Screen.width-(0.5f*size), (1-aimPosition.y)*Screen.height-(0.5f*size), size, size);
 				float cameraAngle = Vector3.Angle(Camera.main.transform.forward, rocketPrediction-Camera.main.transform.position);
@@ -218,11 +232,25 @@ namespace BahaTurret
 		Vector3 prevPosition;
 		Vector3 currPosition;
 		
+		Vector3 relativePos;
+		
 		float stayTime = 0.04f;
 		float lifeTime = 10;
 		
+		KSPParticleEmitter[] pEmitters;
+		
 		void Start()
 		{
+			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
+			
+			foreach(var pe in pEmitters)
+			{
+				if(FlightGlobals.getStaticPressure(transform.position)==0 && pe.useWorldSpace) 
+				{
+					pe.emit = false;
+				}
+			}
+			
 			prevPosition = transform.position;
 			currPosition = transform.position;
 			startTime = Time.time;
@@ -239,20 +267,39 @@ namespace BahaTurret
 			audioSource.dopplerLevel = 0.02f;
 			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
 			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
+			
+			rigidbody.useGravity = false;
 		}
 		
 		void FixedUpdate()
 		{
+			//floatingOrigin fix
+			if(sourceVessel!=null && Vector3.Distance(transform.position-sourceVessel.transform.position, relativePos) > 800)
+			{
+				transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
+			}
+			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
+			//
+			
+			if(FlightGlobals.RefFrameIsRotating)
+			{
+				rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+			}
+			
+			
 			if(!audioSource.isPlaying)
 			{
 				audioSource.Play ();	
 			}
 			
+			//guidance and attitude stabilisation scales to atmospheric density.
+			float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position)));
+			
 			//model transform. always points prograde
-			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
+			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
 			if(!FlightGlobals.RefFrameIsRotating && Time.time-startTime > 0.5f)
 			{
-				transform.rotation = Quaternion.LookRotation(rigidbody.velocity);
+				transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rigidbody.velocity), atmosMultiplier/2.5f);
 				
 			}
 			//

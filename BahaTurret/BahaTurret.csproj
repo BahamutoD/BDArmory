@@ -59,5 +59,6 @@
     <Compile Include="CMFlare.cs" />
     <Compile Include="CMDropper.cs" />
     <Compile Include="RocketLauncher.cs" />
+    <Compile Include="ParticleTurbulence.cs" />
   </ItemGroup>
 </Project>

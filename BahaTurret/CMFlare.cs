@@ -6,6 +6,10 @@ namespace BahaTurret
 	public class CMFlare : MonoBehaviour
 	{
 		
+		
+		public Vessel sourceVessel;
+		Vector3 relativePos;
+		
 		KSPParticleEmitter[] pEmitters;
 		Light[] lights;
 		float startTime;
@@ -13,6 +17,7 @@ namespace BahaTurret
 		public Vector3 startVelocity;
 		
 		public bool alive = true;
+		
 		
 		void Start()
 		{
@@ -38,10 +43,44 @@ namespace BahaTurret
 			}
 			
 			BDArmorySettings.Flares.Add(this.gameObject);
+			
+			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
 		}
 		
 		void FixedUpdate()
 		{
+			
+			transform.rotation = Quaternion.LookRotation(rigidbody.velocity, FlightGlobals.getUpAxis());
+			
+			//downforce
+			Vector3 downForce;
+			if(sourceVessel != null) downForce = (Mathf.Clamp((float)sourceVessel.srfSpeed, 0.1f, 150)/150) * Mathf.Clamp01(20/Vector3.Distance(sourceVessel.transform.position,transform.position)) * 20 * -FlightGlobals.getUpAxis();
+			else downForce = Vector3.zero;
+			
+			//turbulence?
+			foreach(var pe in pEmitters)
+			{
+				if(pe.useWorldSpace) 
+				{
+					pe.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
+					if(FlightGlobals.getStaticPressure(transform.position) == 0) pe.emit = false;
+				}
+			}
+			
+			
+			
+			
+			
+			
+			//floatingOrigin fix
+			if(sourceVessel!=null && Vector3.Distance(transform.position-sourceVessel.transform.position, relativePos) > 800)
+			{
+				transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
+			}
+			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
+			//
+			
+			
 			if(useGravity) Forces ();
 			
 			
@@ -51,9 +90,10 @@ namespace BahaTurret
 			}
 			
 			
-			if(Time.time - startTime > 3) //stop emitting after 3 seconds
+			if(Time.time - startTime > 4) //stop emitting after 3 seconds
 			{
 				alive = false;
+				BDArmorySettings.Flares.Remove(this.gameObject);
 				
 				foreach(var pe in pEmitters)
 				{
@@ -65,9 +105,9 @@ namespace BahaTurret
 				}
 			}
 			
-			if(Time.time - startTime > 8) //delete object after 6 seconds
+			if(Time.time - startTime > 15) //delete object after x seconds
 			{
-				BDArmorySettings.Flares.Remove(this.gameObject);
+				
 				Destroy(gameObject);	
 			}
 			

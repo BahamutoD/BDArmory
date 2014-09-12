@@ -21,6 +21,7 @@ namespace BahaTurret
 		public static bool DRAW_DEBUG_LINES = false;
 		public static bool DRAW_AIMERS = true;
 		public static bool AIM_ASSIST = true;
+		public static bool REMOTE_SHOOTING = false;
 		
 		public string physicsRangeGui;
 		
@@ -30,6 +31,7 @@ namespace BahaTurret
 		Texture2D cursorTexture;	
 	
 		public static List<GameObject> Flares = new List<GameObject>();
+		
 		
 		void Start()
 		{
@@ -42,6 +44,7 @@ namespace BahaTurret
 		
 		void Update()
 		{
+			
 			
 			if(Time.time - physRangeTimer > 1)
 			{
@@ -183,7 +186,11 @@ namespace BahaTurret
 			line++;
 			AIM_ASSIST = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), AIM_ASSIST, "Aim Assist");
 			line++;
+			DRAW_AIMERS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_AIMERS, "Draw Aimers");
+			line++;
 			DRAW_DEBUG_LINES = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_DEBUG_LINES, "Draw Debug Lines");
+			line++;
+			REMOTE_SHOOTING = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), REMOTE_SHOOTING, "Allow Remote Firing");
 			line++;
 			
 			FIRE_KEY = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), FIRE_KEY);
@@ -221,14 +228,13 @@ namespace BahaTurret
 				
 				foreach(Vessel v in FlightGlobals.Vessels)
 				{
-					
 					v.distancePackThreshold = PHYSICS_RANGE;
-					v.distanceUnpackThreshold = PHYSICS_RANGE-50;//-4800;
-					v.distanceLandedPackThreshold = PHYSICS_RANGE-50;//-150;
+					v.distanceUnpackThreshold = PHYSICS_RANGE*0.97f;//-4800;
+					v.distanceLandedPackThreshold = PHYSICS_RANGE*0.97f;//-150;
 					v.distanceLandedUnpackThreshold = PHYSICS_RANGE;
 				}
 				
-				
+				FloatingOrigin.fetch.threshold = (PHYSICS_RANGE + 2500) * (PHYSICS_RANGE + 2500);
 			}
 			else
 			{
@@ -244,6 +250,7 @@ namespace BahaTurret
 					v.distanceLandedUnpackThreshold = 200;
 				}
 				
+				FloatingOrigin.fetch.threshold = 6000 * 6000;
 					
 			}
 		}
