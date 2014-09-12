@@ -11,17 +11,26 @@ namespace BahaTurret
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
 		public Color projectileColor;
 		
+		public bool bulletDrop = true;
+		
+		public float tracerStartWidth = 1;
+		public float tracerEndWidth = 1;
+		public float tracerLength = 0;
+		
 		
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
 		
 		LineRenderer bulletTrail;
-		AudioSource audioSource;
+		
+		Vector3 sourceOriginalV;
 		
 		void Start()
 		{
 			startTime = Time.time;
 			prevPosition = gameObject.transform.position;
+			
+			sourceOriginalV = sourceVessel.rigidbody.velocity;
 			
 			Light light = gameObject.AddComponent<Light>();
 			light.type = LightType.Point;
@@ -33,30 +42,32 @@ namespace BahaTurret
 			bulletTrail.SetVertexCount(2);
 			bulletTrail.SetPosition(0, transform.position);
 			bulletTrail.SetPosition(1, transform.position);
-			bulletTrail.SetWidth(0.07f, 0.005f);
-			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Additive"));
+			bulletTrail.SetWidth(tracerStartWidth, tracerEndWidth);
+			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
 			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
 			bulletTrail.material.SetColor("_TintColor", projectileColor);
 			
-			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/whizz");
-			audioSource.loop = true;
-			audioSource.pitch = 3;
-			audioSource.dopplerLevel = 0.07f;
-			audioSource.minDistance = 0.1f;
-			audioSource.maxDistance = 75;
-			audioSource.volume = GameSettings.SHIP_VOLUME;
-			audioSource.Play();
-			
-			
+			rigidbody.useGravity = false;
 			
 		}
 		
 		void FixedUpdate()
 		{
-			bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
-			bulletTrail.SetPosition(1, transform.position);
+			if(bulletDrop && FlightGlobals.RefFrameIsRotating)
+			{
+				rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+			}
 			
+			if(tracerLength == 0)
+			{
+				bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
+			}
+			else
+			{
+				bulletTrail.SetPosition(0, transform.position + ((rigidbody.velocity-sourceOriginalV).normalized * tracerLength));	
+			}
+			
+			bulletTrail.SetPosition(1, transform.position);
 			
 			currPosition = gameObject.transform.position;
 			if(Time.time - startTime > bulletLifeTime)
@@ -88,7 +99,7 @@ namespace BahaTurret
 						Debug.Log ("Hit! chance of destroy: "+destroyChance);
 						if(UnityEngine.Random.Range (0f,100f)<destroyChance)
 						{
-							if(hitPart.vessel != sourceVessel) hitPart.explode();
+							if(hitPart.vessel != sourceVessel) hitPart.temperature = hitPart.maxTemp + 100;
 						}
 					}
 					if(hitPart==null || (hitPart!=null && hitPart.vessel!=sourceVessel))

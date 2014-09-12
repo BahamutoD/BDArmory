@@ -88,16 +88,15 @@ namespace BahaTurret
 				}catch(NullReferenceException){}
 				if(explodePart!=null && !MissileLauncher.CheckIfMissile(explodePart))
 				{
-					Debug.Log ("ExplosionFX applied to: "+explodePart.name);
+					//Debug.Log ("ExplosionFX applied to: "+explodePart.name);
 					float random = UnityEngine.Random.Range(0f,100f);
 					float chance = Vector3.Distance(explodePart.transform.position, position)*100/radius;
 					chance *= 0.75f;
-					if(random<chance * 0.8f) explodePart.explode();
+					if(random<chance * 0.8f) explodePart.temperature = explodePart.maxTemp+100;
 					
 					explodePart.rigidbody.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);
 					
-					//random = UnityEngine.Random.Range(0f,100f);
-					//if(random<chance * 0.8f) explodePart.explode(); 
+					 
 				}
 			}
 			
