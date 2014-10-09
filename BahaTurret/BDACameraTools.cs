@@ -43,7 +43,7 @@ namespace BahaTurret
 			
 		}
 		
-		
+		/*
 		void Update()
 		{
 			if(CheckForManager() && BDArmorySettings.CAMERA_TOOLS && true==false)
@@ -193,6 +193,7 @@ namespace BahaTurret
 				#endregion
 			}
 		}
+		*/
 		
 		void TargetFreeCamera()
 		{

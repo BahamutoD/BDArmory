@@ -5,7 +5,7 @@ namespace BahaTurret
 {
 	public class CMFlare : MonoBehaviour
 	{
-		
+		public float acquireDice;
 		
 		public Vessel sourceVessel;
 		Vector3 relativePos;
@@ -13,7 +13,7 @@ namespace BahaTurret
 		KSPParticleEmitter[] pEmitters;
 		Light[] lights;
 		float startTime;
-		bool useGravity;
+		
 		public Vector3 startVelocity;
 		
 		public bool alive = true;
@@ -21,6 +21,8 @@ namespace BahaTurret
 		
 		void Start()
 		{
+			acquireDice = UnityEngine.Random.Range(0f,100f);
+			
 			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 			lights = gameObject.GetComponentsInChildren<Light>();
 			startTime = Time.time;
@@ -33,14 +35,16 @@ namespace BahaTurret
 			rigidbody.velocity = startVelocity;
 			if(!FlightGlobals.RefFrameIsRotating)
 			{
-				useGravity = false;
 				rigidbody.useGravity = false;
 			}
 			else
 			{
-				useGravity = true;	
+				gameObject.AddComponent<KSPForceApplier>();
+				gameObject.GetComponent<KSPForceApplier>().drag = 0.4f;
 				rigidbody.useGravity = false;
 			}
+			
+			rigidbody.mass = 0.001f;
 			
 			BDArmorySettings.Flares.Add(this.gameObject);
 			
@@ -57,7 +61,7 @@ namespace BahaTurret
 			if(sourceVessel != null) downForce = (Mathf.Clamp((float)sourceVessel.srfSpeed, 0.1f, 150)/150) * Mathf.Clamp01(20/Vector3.Distance(sourceVessel.transform.position,transform.position)) * 20 * -FlightGlobals.getUpAxis();
 			else downForce = Vector3.zero;
 			
-			//turbulence?
+			//turbulence
 			foreach(var pe in pEmitters)
 			{
 				if(pe.useWorldSpace) 
@@ -81,7 +85,7 @@ namespace BahaTurret
 			//
 			
 			
-			if(useGravity) Forces ();
+			//if(useGravity) Forces ();
 			
 			
 			if(Time.time -startTime > 0.3f && gameObject.collider==null)
@@ -113,19 +117,7 @@ namespace BahaTurret
 			
 		}
 		
-		void Forces()
-		{
-			if(FlightGlobals.ActiveVessel!=null)
-			{
-				rigidbody.AddForce(FlightGlobals.getGeeForceAtPosition(FlightGlobals.ActiveVessel.GetWorldPos3D()), ForceMode.Acceleration);
-				
-				rigidbody.AddForce(0.3f * -rigidbody.velocity * (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(FlightGlobals.ActiveVessel.GetWorldPos3D())));
-			}
-			else
-			{
-				rigidbody.AddForce(FlightGlobals.getGeeForceAtPosition(transform.position), ForceMode.Acceleration);	
-			}
-		}
+		
 		
 		
 	}

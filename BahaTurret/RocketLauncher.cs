@@ -39,7 +39,7 @@ namespace BahaTurret
 		
 		
 		
-		
+		AudioSource sfAudioSource;
 		
 		
 		
@@ -62,6 +62,13 @@ namespace BahaTurret
 			part.force_activate();
 			
 			aimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
+			
+			sfAudioSource = gameObject.AddComponent<AudioSource>();
+			sfAudioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+			sfAudioSource.minDistance = 1;
+			sfAudioSource.maxDistance = 2000;
+			sfAudioSource.dopplerLevel = 0;
+			sfAudioSource.priority = 230;
 			
 		}
 		
@@ -89,6 +96,8 @@ namespace BahaTurret
 				rocket.sourceVessel = vessel;
 				rocketObj.SetActive(true);
 				rocketObj.transform.SetParent(transform);
+				
+				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
 				
 			}
 		}
@@ -143,7 +152,6 @@ namespace BahaTurret
 					simTime += simDeltaTime;
 				}
 				
-				//Debug.Log ("Rocket simulation frames: "+pointPositions.Count);
 				
 				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
 				{
@@ -197,14 +205,14 @@ namespace BahaTurret
 		
 		void OnGUI()
 		{
-			if(drawAimer && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS)
+			if(drawAimer && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !MapView.MapIsEnabled)
 			{
 				float size = 30;
 				
-				Vector3 aimPosition = Camera.main.WorldToViewportPoint(rocketPrediction);
+				Vector3 aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(rocketPrediction);
 				
 				Rect drawRect = new Rect(aimPosition.x*Screen.width-(0.5f*size), (1-aimPosition.y)*Screen.height-(0.5f*size), size, size);
-				float cameraAngle = Vector3.Angle(Camera.main.transform.forward, rocketPrediction-Camera.main.transform.position);
+				float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, rocketPrediction-FlightCamera.fetch.mainCamera.transform.position);
 				if(cameraAngle<90) GUI.DrawTexture(drawRect, aimerTexture);
 				
 				
@@ -237,6 +245,9 @@ namespace BahaTurret
 		float stayTime = 0.04f;
 		float lifeTime = 10;
 		
+		
+		
+		
 		KSPParticleEmitter[] pEmitters;
 		
 		void Start()
@@ -265,7 +276,8 @@ namespace BahaTurret
 			audioSource.minDistance = 1;
 			audioSource.maxDistance = 1000;
 			audioSource.dopplerLevel = 0.02f;
-			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+			audioSource.volume = 0.9f * Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+			audioSource.pitch = 1.4f;
 			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
 			
 			rigidbody.useGravity = false;
@@ -291,6 +303,7 @@ namespace BahaTurret
 			{
 				audioSource.Play ();	
 			}
+			
 			
 			//guidance and attitude stabilisation scales to atmospheric density.
 			float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position)));
@@ -326,6 +339,7 @@ namespace BahaTurret
 
 			if(Time.time - startTime > 0.1f+stayTime)
 			{
+				audioSource.pitch = Mathf.Lerp(audioSource.pitch, 1f, 0.2f);
 				currPosition = transform.position;
 				float dist = (currPosition-prevPosition).magnitude;
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
@@ -340,15 +354,14 @@ namespace BahaTurret
 					
 					if(hitPart!=null)
 					{
-						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * 8000;
+						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * BDArmorySettings.DMG_MULTIPLIER;
 						if(BDArmorySettings.INSTAKILL)
 						{
 							destroyChance = 100;	
 						}
-						Debug.Log ("Hit part: "+hitPart.name+", chance of destroy: "+destroyChance);
 						if(UnityEngine.Random.Range (0f,100f)<destroyChance)
 						{
-							if(hitPart.vessel != sourceVessel) hitPart.explode();
+							if(hitPart.vessel != sourceVessel) hitPart.temperature = hitPart.maxTemp + 100;
 						}
 					}
 					if(hitPart==null || (hitPart!=null && hitPart.vessel!=sourceVessel))
@@ -356,6 +369,10 @@ namespace BahaTurret
 						Detonate(hit.point);
 					}
 				}
+			}
+			else if(FlightGlobals.getAltitudeAtPos(currPosition)<=0)
+			{
+				Detonate(currPosition);
 			}
 			prevPosition = currPosition;
 			
@@ -374,7 +391,7 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
-			ExplosionFX.CreateExplosion(pos, 1, blastRadius, blastForce);
+			ExplosionFX.CreateExplosion(pos, 1, blastRadius, blastForce, sourceVessel);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}
 		
