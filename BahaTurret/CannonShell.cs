@@ -118,7 +118,21 @@ namespace BahaTurret
 					}
 				}
 				
-				ExplosionFX.CreateExplosion(hit.point, 1, radius, blastPower);
+				//hitting a Building
+				DestructibleBuilding hitBuilding = null;
+				try{
+					hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+				}
+				catch(NullReferenceException){}
+				if(hitBuilding!=null && hitBuilding.IsIntact)
+				{
+					float damageToBuilding = rigidbody.mass * rigidbody.velocity.sqrMagnitude * 0.018f;
+					hitBuilding.AddDamage(damageToBuilding);
+					if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold) hitBuilding.Demolish();
+					if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("CannonShell hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
+				}
+			
+				ExplosionFX.CreateExplosion(hit.point, 1, radius, blastPower, sourceVessel);
 				
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}

@@ -39,7 +39,7 @@
       <Package>D:\Games\KSP\KSP 0.24.2 32 bit\KSP_Data\Managed\UnityEngine.dll</Package>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\Games\KSP\KSP 0.24 x64\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\Games\KSP\KSP 0.25.0 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -60,5 +60,11 @@
     <Compile Include="CMDropper.cs" />
     <Compile Include="RocketLauncher.cs" />
     <Compile Include="ParticleTurbulence.cs" />
+    <Compile Include="ClusterBomb.cs" />
+    <Compile Include="KSPForceApplier.cs" />
+    <Compile Include="BDExplosivePart.cs" />
+    <Compile Include="BDModularGuidance.cs" />
+    <Compile Include="BDMMLauncher.cs" />
+    <Compile Include="BDAdjustableRail.cs" />
   </ItemGroup>
 </Project>

@@ -83,7 +83,7 @@ namespace BahaTurret
 				RaycastHit hit;
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
-					
+					//hitting a vessel Part
 					Part hitPart =  null;
 					try{
 						hitPart = Part.FromGO(hit.rigidbody.gameObject);
@@ -91,7 +91,7 @@ namespace BahaTurret
 					
 					if(hitPart!=null)
 					{
-						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * 8000;
+						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * BDArmorySettings.DMG_MULTIPLIER;
 						if(BDArmorySettings.INSTAKILL)
 						{
 							destroyChance = 100;	
@@ -102,7 +102,23 @@ namespace BahaTurret
 							if(hitPart.vessel != sourceVessel) hitPart.temperature = hitPart.maxTemp + 100;
 						}
 					}
-					if(hitPart==null || (hitPart!=null && hitPart.vessel!=sourceVessel))
+					
+					
+					//hitting a Building
+					DestructibleBuilding hitBuilding = null;
+					try{
+						hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+					}
+					catch(NullReferenceException){}
+					if(hitBuilding!=null && hitBuilding.IsIntact)
+					{
+						float damageToBuilding = rigidbody.mass * rigidbody.velocity.sqrMagnitude * 0.010f;
+						hitBuilding.AddDamage(damageToBuilding);
+						if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold) hitBuilding.Demolish();
+						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("bullet hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
+					}
+					
+					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
 					{
 						//hit effects
 						if(BDArmorySettings.BULLET_HITS)

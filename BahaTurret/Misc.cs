@@ -1,16 +1,11 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BahaTurret
 {
 	public class Misc
 	{
-		public static void CreateSmoke(Vector3 position)
-		{
-			GameObject gameObject = new GameObject("smokeHit");
-			gameObject.transform.position = position;
-			
-		}
 		
 		public static Color ParseColor255(string color)
 		{
@@ -25,7 +20,37 @@ namespace BahaTurret
 			return outputColor;
 		}
 		
+		public static AnimationState[] SetUpAnimation(string animationName, Part part)  //Thanks Majiir!
+        {
+            var states = new List<AnimationState>();
+            foreach (var animation in part.FindModelAnimators(animationName))
+            {
+                var animationState = animation[animationName];
+                animationState.speed = 0;
+                animationState.enabled = true;
+                animationState.wrapMode = WrapMode.ClampForever;
+                animation.Blend(animationName);
+                states.Add(animationState);
+            }
+            return states.ToArray();
+        }
 		
+		public static bool CheckMouseIsOnGui()
+		{
+			Vector3 inverseMousePos = new Vector3(Input.mousePosition.x, Screen.height-Input.mousePosition.y, 0);
+			Rect topGui = new Rect(0,0, Screen.width, 65);
+			
+			return 
+			(
+				BDArmorySettings.GAME_UI_ENABLED && 
+				(
+					(BDArmorySettings.toolbarGuiEnabled && BDArmorySettings.Instance.toolbarWindowRect.Contains(inverseMousePos)) || 
+					topGui.Contains(inverseMousePos)
+				)
+			);	
+		}
+		
+	
 	}
 }
 
