@@ -132,7 +132,7 @@ namespace BahaTurret
 					if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("CannonShell hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
 				}
 			
-				ExplosionFX.CreateExplosion(hit.point, 1, radius, blastPower, sourceVessel);
+				ExplosionFX.CreateExplosion(hit.point, 1, radius, blastPower, sourceVessel, rigidbody.velocity.normalized);
 				
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}

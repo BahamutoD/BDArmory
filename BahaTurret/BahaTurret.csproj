@@ -55,7 +55,6 @@
     <Compile Include="ExplosionFX.cs" />
     <Compile Include="BulletHitFX.cs" />
     <Compile Include="MissileFire.cs" />
-    <Compile Include="BDACameraTools.cs" />
     <Compile Include="CMFlare.cs" />
     <Compile Include="CMDropper.cs" />
     <Compile Include="RocketLauncher.cs" />

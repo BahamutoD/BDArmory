@@ -6,7 +6,6 @@ namespace BahaTurret
 	public class BahaTurretBullet : MonoBehaviour
 	{
 		public float startTime;
-		public float bulletLifeTime = 10;
 		public Vessel sourceVessel;
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
 		public Color projectileColor;
@@ -49,6 +48,8 @@ namespace BahaTurret
 			
 			rigidbody.useGravity = false;
 			
+			
+			
 		}
 		
 		void FixedUpdate()
@@ -70,7 +71,7 @@ namespace BahaTurret
 			bulletTrail.SetPosition(1, transform.position);
 			
 			currPosition = gameObject.transform.position;
-			if(Time.time - startTime > bulletLifeTime)
+			if(Vector3.Distance(transform.position, FlightGlobals.ActiveVessel.transform.position) > BDArmorySettings.PHYSICS_RANGE)
 			{
 				GameObject.Destroy(gameObject);
 			}
