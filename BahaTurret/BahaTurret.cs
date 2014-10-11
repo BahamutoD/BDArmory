@@ -570,11 +570,7 @@ namespace BahaTurret
 						
 					}catch(NullReferenceException){}
 					
-					//explosionFx testing
-					if(Input.GetKeyDown(KeyCode.Keypad1)) FXMonger.Explode(part, hit.point, 0.1f);
-					if(Input.GetKeyDown(KeyCode.Keypad2)) FXMonger.Explode(part, hit.point, 0.3f);
-					if(Input.GetKeyDown(KeyCode.Keypad3)) FXMonger.Explode(part, hit.point, 0.6f);
-					if(Input.GetKeyDown(KeyCode.Keypad4)) FXMonger.Explode(part, hit.point, 0.8f);
+					
 					
 				}else
 				{

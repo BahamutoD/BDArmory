@@ -43,7 +43,7 @@ namespace BahaTurret
 				hasDetonated = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position+rigidbody.velocity*Time.fixedDeltaTime;
-				ExplosionFX.CreateExplosion(position, explosionFxSize, blastRadius, blastPower, vessel);
+				ExplosionFX.CreateExplosion(position, explosionFxSize, blastRadius, blastPower, vessel, FlightGlobals.getUpAxis());
 			}
 		}
 	}

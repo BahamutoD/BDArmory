@@ -30,6 +30,10 @@ namespace BahaTurret
 		public float blastForce;
 		
 		[KSPField(isPersistant = false)]
+		public bool descendingOrder = true;
+		
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Ripple RPM"),
+        	UI_FloatRange(minValue = 60f, maxValue = 1200, stepIncrement = 10f, scene = UI_Scene.Editor)]
 		public float rippleRPM;
 		
 		public bool drawAimer = false;
@@ -37,9 +41,11 @@ namespace BahaTurret
 		Vector3 rocketPrediction = Vector3.zero;
 		Texture2D aimerTexture;
 		
-		
+		Transform[] rockets;
 		
 		AudioSource sfAudioSource;
+		
+		double lastRocketsLeft = 0;
 		
 		
 		
@@ -70,23 +76,47 @@ namespace BahaTurret
 			sfAudioSource.dopplerLevel = 0;
 			sfAudioSource.priority = 230;
 			
+			MakeRocketArray();
+			UpdateRocketScales();
+			
+			
 		}
 		
 		public override void OnFixedUpdate ()
 		{
 			SimulateTrajectory();
+			
+			if(GetRocketResource().amount != lastRocketsLeft)
+			{
+				UpdateRocketScales();
+				lastRocketsLeft = GetRocketResource().amount;
+			}
+			
 		}
 		
 		public void FireRocket()
 		{
-			if(part.RequestResource(rocketType, 1) >= 1)
+			PartResource rocketResource = GetRocketResource();
+			
+			if(rocketResource == null)
 			{
+				Debug.Log (part.partName+" doesn't carry the rocket resource it was meant to");	
+				return;
+			}
+			
+			int rocketsLeft = (int) Math.Floor(rocketResource.amount);
+			
+			if(rocketsLeft >= 1)
+			{
+				Transform currentRocketTfm = rockets[rocketsLeft-1];
+				
 				GameObject rocketObj = GameDatabase.Instance.GetModel(rocketModelPath);
-				rocketObj = (GameObject) Instantiate(rocketObj, transform.position+(rigidbody.velocity*Time.fixedDeltaTime), transform.rotation);
+				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position+(rigidbody.velocity*Time.fixedDeltaTime), transform.rotation);
 				rocketObj.transform.rotation = part.transform.rotation;
 				rocketObj.transform.localScale = part.rescaleFactor * Vector3.one;
+				currentRocketTfm.localScale = Vector3.zero;
 				Rocket rocket = rocketObj.AddComponent<Rocket>();
-				//rocket.startVelocity = rigidbody.velocity;
+				rocket.spawnTransform = currentRocketTfm;
 				rocket.mass = rocketMass;
 				rocket.blastForce = blastForce;
 				rocket.blastRadius = blastRadius;
@@ -98,7 +128,9 @@ namespace BahaTurret
 				rocketObj.transform.SetParent(transform);
 				
 				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
+				rocketResource.amount--;
 				
+				lastRocketsLeft = rocketResource.amount;
 			}
 		}
 		
@@ -215,17 +247,57 @@ namespace BahaTurret
 				float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, rocketPrediction-FlightCamera.fetch.mainCamera.transform.position);
 				if(cameraAngle<90) GUI.DrawTexture(drawRect, aimerTexture);
 				
-				
-				
 			}
 			
 		}
 		
+		void MakeRocketArray()
+		{
+			Transform rocketsTransform = part.FindModelTransform("rockets");
+			int numOfRockets = rocketsTransform.childCount;
+			rockets = new Transform[numOfRockets];
+				
+			for(int i = 0; i < numOfRockets; i++)
+			{
+				string rocketName = rocketsTransform.GetChild(i).name;
+				int rocketIndex = int.Parse(rocketName.Substring(7))-1;
+				rockets[rocketIndex] = rocketsTransform.GetChild(i);
+			}
+			
+			if(!descendingOrder) Array.Reverse(rockets);
+		}
+		
+		
+		public PartResource GetRocketResource()
+		{
+			foreach(var res in part.Resources.list)
+			{
+				if(res.resourceName == rocketType) return res;	
+			}
+			
+			return null;
+			
+		}
+		
+		void UpdateRocketScales()
+		{
+			PartResource rocketResource = GetRocketResource();
+			double rocketsLeft = Math.Floor(rocketResource.amount);
+			double rocketsMax = rocketResource.maxAmount;
+			for(int i = 0; i <rocketsMax; i++)
+			{
+				if (i<rocketsLeft) rockets[i].localScale = Vector3.one;
+				else rockets[i].localScale = Vector3.zero;
+			}
+		}
 		
 	}
 	
+	
+	
 	public class Rocket : MonoBehaviour
 	{
+		public Transform spawnTransform;
 		public Vessel targetVessel = null;
 		public Vessel sourceVessel;
 		public Vector3 startVelocity;
@@ -239,6 +311,7 @@ namespace BahaTurret
 		
 		Vector3 prevPosition;
 		Vector3 currPosition;
+		
 		
 		Vector3 relativePos;
 		
@@ -319,7 +392,7 @@ namespace BahaTurret
 			if(Time.time - startTime < stayTime && transform.parent!=null)
 			{
 				transform.rotation = transform.parent.rotation;		
-				transform.position = transform.parent.position+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
+				transform.position = spawnTransform.position+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
 			}
 			
 			if(Time.time - startTime < thrustTime && Time.time-startTime > stayTime)
@@ -391,10 +464,9 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
-			ExplosionFX.CreateExplosion(pos, 1, blastRadius, blastForce, sourceVessel);
+			ExplosionFX.CreateExplosion(pos, 1, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}
-		
 		
 		
 		

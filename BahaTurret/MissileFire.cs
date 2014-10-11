@@ -953,7 +953,6 @@ namespace BahaTurret
 					if(guardTarget!=null)
 					{
 						
-						
 						//check sight line to target
 						Vector3 direction = (transform.position-guardTarget.transform.position).normalized;
 						float distance = Vector3.Distance(transform.position, guardTarget.transform.position);
@@ -976,6 +975,9 @@ namespace BahaTurret
 						if(canSeeTarget)
 						{
 							targetScanTimer = Time.time;
+							
+							//pick a weapon
+							SwitchToGuardWeapon();
 							
 							if(selectedWeapon.Contains("Missile"))
 							{
@@ -1076,6 +1078,67 @@ namespace BahaTurret
 			}
 		}
 		
+		void SwitchToGuardWeapon()
+		{
+			if(!CheckWeaponForGuard())
+			{
+				string startingWeapon = selectedWeapon;
+				while(true)
+				{
+					CycleWeapon(true);
+					if(startingWeapon == selectedWeapon || CheckWeaponForGuard()) return;
+				}
+			}
+			else return;
+		}
+		
+		
+		bool CheckWeaponForGuard()
+		{
+			int turretStatus = CheckTurret();
+			
+			return (selectedWeapon != "None" && !selectedWeapon.Contains("Bomb") && !selectedWeapon.Contains("Rocket") && turretStatus > 0);	
+		}
+		
+		//0: weapon is a turret and fixed, 1: weapon is a turret and not fixed, 2: weapon is not a turret -1: turret is good but out of ammo
+		int CheckTurret()
+		{
+			foreach(var turret in vessel.FindPartModulesImplementing<BahaTurret>())
+			{
+				if(turret.part.partInfo.title == selectedWeapon)
+				{
+					
+					if (turret.yawRange > 25 || turret.yawRange == -1)
+					{
+						if(CheckAmmo(turret)) return 1;
+						else return -1;
+					}
+					else return 0;
+				}
+			}
+			return 2;
+		}
+		
+		bool CheckAmmo(BahaTurret turret)
+		{
+			string ammoName = turret.ammoName;
+			double amount = 0;
+			
+			foreach(Part p in vessel.parts)
+			{
+				foreach(var resource in p.Resources.list)	
+				{
+					if(resource.resourceName == ammoName)
+					{
+						amount += resource.amount;	
+					}
+				}
+			}
+			Debug.Log ("Checked for turret ammo.  Amount: "+amount);
+			
+			return (amount > 0);
+		}
+		
 		void ToggleTurret()
 		{
 			foreach(var turret in vessel.FindPartModulesImplementing<BahaTurret>())
@@ -1130,6 +1193,8 @@ namespace BahaTurret
 		
 		bool CheckBombClearance(MissileLauncher ml)
 		{
+			if(!BDArmorySettings.BOMB_CLEARANCE_CHECK) return true;
+			
 			float radius = 0.385f/2;
 			//Vector3 direction = -FlightGlobals.getUpAxis();
 			Vector3 direction = FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration;

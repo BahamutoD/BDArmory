@@ -22,7 +22,7 @@ namespace BahaTurret
 		public static bool DRAW_AIMERS = true;
 		public static bool AIM_ASSIST = true;
 		public static bool REMOTE_SHOOTING = false;
-		//public static bool BOMB_CLEARANCE_CHECK = true;
+		public static bool BOMB_CLEARANCE_CHECK = true;
 		public static float DMG_MULTIPLIER = 6000;
 		public static float FLARE_CHANCE_FACTOR = 25;
 		//==================
@@ -192,6 +192,8 @@ namespace BahaTurret
 				if(cfg.HasValue("DMG_MULTIPLIER")) DMG_MULTIPLIER = float.Parse(cfg.GetValue("DMG_MULTIPLIER"));
 				
 				if(cfg.HasValue("FLARE_CHANCE_FACTOR")) FLARE_CHANCE_FACTOR = float.Parse(cfg.GetValue("FLARE_CHANCE_FACTOR"));
+				
+				if(cfg.HasValue("BOMB_CLEARANCE_CHECK")) BOMB_CLEARANCE_CHECK = Boolean.Parse(cfg.GetValue("BOMB_CLEARANCE_CHECK"));
 					
 				
 			}
@@ -220,6 +222,7 @@ namespace BahaTurret
 				cfg.SetValue("REMOTE_SHOOTING", REMOTE_SHOOTING.ToString());
 				cfg.SetValue("DMG_MULTIPLIER", DMG_MULTIPLIER.ToString());
 				cfg.SetValue("FLARE_CHANCE_FACTOR", FLARE_CHANCE_FACTOR.ToString());
+				cfg.SetValue("BOMB_CLEARANCE_CHECK", BOMB_CLEARANCE_CHECK.ToString());
 				
 				
 				
@@ -469,7 +472,8 @@ namespace BahaTurret
 			line++;
 			REMOTE_SHOOTING = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), REMOTE_SHOOTING, "Allow Remote Firing");
 			line++;
-			
+			BOMB_CLEARANCE_CHECK = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), BOMB_CLEARANCE_CHECK, "Bomb Clearance Check");
+			line++;
 			
 			FIRE_KEY = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), FIRE_KEY);
 			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), "Gun Fire Key");

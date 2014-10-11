@@ -9,7 +9,7 @@ namespace BahaTurret
 		Light lightFX;
 		float startTime;
 		public AudioClip exSound;
-		AudioSource audioSource;
+		public AudioSource audioSource;
 		float maxTime = 0;
 		
 		
@@ -34,9 +34,8 @@ namespace BahaTurret
 			lightFX.range = 50;
 			
 			
-			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.minDistance = 20;
-			audioSource.maxDistance = 1000;
+			
+			
 			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
 			
 			audioSource.PlayOneShot(exSound);
@@ -67,7 +66,7 @@ namespace BahaTurret
 		 * 2: large, regular sound (like mk82 bomb)
 		 * 3: small, pop sound (like cluster submunition)
 		 */
-		public static void CreateExplosion(Vector3 position, int size, float radius, float power, Vessel sourceVessel)
+		public static void CreateExplosion(Vector3 position, int size, float radius, float power, Vessel sourceVessel, Vector3 direction)
 		{
 			GameObject go;
 			AudioClip soundClip;
@@ -91,14 +90,26 @@ namespace BahaTurret
 			newExplosion.SetActive(true);
 			newExplosion.AddComponent<ExplosionFX>();
 			newExplosion.GetComponent<ExplosionFX>().exSound = soundClip;
+			newExplosion.GetComponent<ExplosionFX>().audioSource = newExplosion.AddComponent<AudioSource>();
+			newExplosion.GetComponent<ExplosionFX>().audioSource.minDistance = 20;
+			newExplosion.GetComponent<ExplosionFX>().audioSource.maxDistance = 1000;
+			
+			if(size==3)
+			{
+				newExplosion.GetComponent<ExplosionFX>().audioSource.minDistance = 4f;
+				newExplosion.GetComponent<ExplosionFX>().audioSource.maxDistance = 1000;
+				newExplosion.GetComponent<ExplosionFX>().audioSource.priority = 9999;
+			}
 			foreach(KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
 			{
 				pe.emit = true;	
 			}
 			
-			RaycastHit[] hits = Physics.SphereCastAll(position, radius, FlightGlobals.getUpAxis(), 1, 557057);
+			RaycastHit[] hits = Physics.SphereCastAll(position+(radius*Vector3.right), radius, (2*radius*Vector3.left), 2*radius, 557057);
 			foreach(RaycastHit hitExplosion in hits)
 			{
+				//Debug.Log ("Explosion Raycast hit something: "+hitExplosion.collider.gameObject.name+", layer: "+hitExplosion.collider.gameObject.layer);
+				
 				//hitting parts
 				Part explodePart = null;
 				try
@@ -108,8 +119,9 @@ namespace BahaTurret
 				if(explodePart!=null && !explodePart.partInfo.name.Contains("Strut"))
 				{
 					
-					if(!MissileLauncher.CheckIfMissile(explodePart))
+					if(!MissileLauncher.CheckIfMissile(explodePart) || (explodePart.GetComponent<MissileLauncher>().sourceVessel != sourceVessel || explodePart.GetComponent<MissileLauncher>().sourceVessel==null))
 					{
+						//Debug.Log ("Explosion hit part from vessel: "+explodePart.vessel.vesselName);
 						float random = UnityEngine.Random.Range(0f,100f);
 						float chance = (radius-Vector3.Distance(explodePart.transform.position, position))/radius * 2 * 100;
 						chance *= 0.75f;
@@ -118,16 +130,9 @@ namespace BahaTurret
 						{
 							explodePart.rigidbody.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);	
 						}
-					}
-					else if(MissileLauncher.CheckIfMissile(explodePart) && (explodePart.GetComponent<MissileLauncher>().sourceVessel != sourceVessel || explodePart.GetComponent<MissileLauncher>().sourceVessel==null))
-					{
-						explodePart.GetComponent<MissileLauncher>().Detonate();
+						
 					}
 					
-					if(MissileLauncher.CheckIfMissile(explodePart))
-					{
-						Debug.Log ("Explosion hit missile. Missile source: "+explodePart.GetComponent<MissileLauncher>().sourceVessel+", explosionSource: "+sourceVessel);	
-					}
 				}
 				else
 				{

@@ -49,9 +49,10 @@ namespace BahaTurret
 		KSPParticleEmitter leftRCS;
 		KSPParticleEmitter rightRCS;
 		KSPParticleEmitter forwardRCS;
+		float rcsAudioMinInterval = 0.06f;
+		float rcsAudioTimer = 0;
 		
-		
-		public Vessel sourceVessel;
+		public Vessel sourceVessel = null;
 		bool checkMiss = false;
 		bool hasExploded = false;
 		bool targetInView = false;
@@ -86,6 +87,8 @@ namespace BahaTurret
 		public float deployedTime;
 		
 		AnimationState[] deployStates;
+		
+		bool hasPlayedFlyby = false;
 		
 		
 		
@@ -185,12 +188,26 @@ namespace BahaTurret
 				}
 				
 				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
-				part.force_activate();
+				
 				sourceVessel = vessel;
 				
-				if(vessel.targetObject!=null) target = vessel.targetObject.GetVessel().gameObject;
+				if(vessel.targetObject!=null)
+				{
+					try
+					{
+						target = vessel.targetObject.GetVessel().gameObject;
+					}
+					catch(NullReferenceException)
+					{
+						vessel.targetObject = null;
+						target = null;
+					}
+					
+				}
 				
 				part.decouple(0);
+				
+				part.force_activate();
 				
 				vessel.rigidbody.velocity += decoupleSpeed * -part.transform.up;
 				
@@ -224,6 +241,16 @@ namespace BahaTurret
 			if(hasFired && !hasExploded && part!=null)
 			{
 				
+				//flybyaudio
+				float mCamDistance = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, transform.position);
+				float mCamRelV = Vector3.Distance(FlightGlobals.ActiveVessel.srf_velocity, vessel.srf_velocity);
+				if(!hasPlayedFlyby && FlightGlobals.ActiveVessel != vessel && mCamDistance < 400 && mCamRelV > 343  && mCamRelV < 800 && Vector3.Angle(rigidbody.velocity, FlightGlobals.ActiveVessel.transform.position-transform.position)<60)
+				{
+					Debug.LogWarning ("mCamRelV: "+mCamRelV);
+					sfAudioSource.PlayOneShot (GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/missileFlyby"));	
+					hasPlayedFlyby = true;
+				}
+				
 				
 				rigidbody.isKinematic = false;
 				if(!vessel.loaded) vessel.Load();
@@ -256,6 +283,15 @@ namespace BahaTurret
 				
 				if(timeIndex > dropTime && timeIndex < boostTime) //boost phase
 				{
+					//light, sound & particle fx
+					if(audioClipPath!="" && !audioSource.isPlaying)	
+					{
+						audioSource.Play();	
+					}
+					foreach(Light light in gameObject.GetComponentsInChildren<Light>())
+					{
+						light.intensity = 1.5f;	
+					}
 					rigidbody.AddRelativeForce(thrust * Vector3.forward);
 					if(hasRCS) forwardRCS.emit = true;
 					if(!startedEngine && thrust > 0)
@@ -269,22 +305,19 @@ namespace BahaTurret
 				if(timeIndex > dropTime + boostTime && timeIndex < dropTime + boostTime + cruiseTime) //cruise phase
 				{
 					if(!hasRCS) rigidbody.AddRelativeForce(cruiseThrust * Vector3.forward);
-					else forwardRCS.emit = false;
+					else
+					{
+						forwardRCS.emit = false;
+						audioSource.Stop();
+					}
 				}
 				
 				if(timeIndex > dropTime && timeIndex < dropTime + boostTime + cruiseTime) //all thrust
 				{
+					
 					if(timeIndex > dropTime + .1f) audioSource.pitch = Mathf.Lerp(audioSource.pitch, 1f, 0.2f);
 					
-					//light, sound & particle fx
-					if(audioClipPath!="" && !audioSource.isPlaying)	
-					{
-						audioSource.Play();	
-					}
-					foreach(Light light in gameObject.GetComponentsInChildren<Light>())
-					{
-						light.intensity = 1.5f;	
-					}
+					
 					
 					if(!hasRCS)
 					{
@@ -410,10 +443,7 @@ namespace BahaTurret
 							if(targetDistance > 10 && targetInView) //guide towards where the target is going to be
 							{
 								targetPosition = targetPosition + target.rigidbody.velocity*(1/((target.rigidbody.velocity-vessel.rigidbody.velocity).magnitude/targetDistance));
-								//if(!FlightGlobals.RefFrameIsRotating)
-								//{
-									
-								//}
+								
 							}
 							
 							//increaseTurnRate after launch
@@ -429,6 +459,7 @@ namespace BahaTurret
 							
 							if(hasRCS)
 							{
+								
 								if(turnRateDPS > 0) DoRCS();
 								else KillRCS();
 							}
@@ -442,6 +473,7 @@ namespace BahaTurret
 							//proximity detonation
 							if(((targetIsVessel && !tVessel.Landed) || !targetIsVessel) && targetDistance < blastRadius/3) 
 							{
+								//Debug.Log("Proximity detonating! Target Distance: "+Vector3.Distance(target.transform.position, transform.position)+", blast radius: "+blastRadius);
 								Detonate();
 								return;
 							}
@@ -487,6 +519,11 @@ namespace BahaTurret
 						}
 					
 					}
+					
+					if(hasRCS && !guidanceActive)
+					{
+						KillRCS();	
+					}
 				}
 			}
 		}
@@ -500,7 +537,8 @@ namespace BahaTurret
 				hasExploded = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position+rigidbody.velocity*Time.fixedDeltaTime;
-				ExplosionFX.CreateExplosion(position, explosionSize, blastRadius, blastPower, sourceVessel);
+				if(sourceVessel==null) sourceVessel = vessel;
+				ExplosionFX.CreateExplosion(position, explosionSize, blastRadius, blastPower, sourceVessel, transform.forward);
 				
 			}
 
@@ -564,16 +602,27 @@ namespace BahaTurret
 			Quaternion velRotation = Quaternion.LookRotation(rigidbody.velocity, transform.up);
 			Vector3 offset = Quaternion.Inverse(velRotation) * (targetPosition-transform.position);
 			
+			bool playRcsAudio = (Time.time-rcsAudioTimer > rcsAudioMinInterval);
+			
+			
 			if(offset.x > 1)
 			{
-				if(!rightRCS.emit) sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+				if(!rightRCS.emit && playRcsAudio) 
+				{
+					sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+					rcsAudioTimer = Time.time;
+				}
 				
 				rightRCS.emit = true;
 				leftRCS.emit = false;
 			}
 			else if(offset.x < -1)
 			{
-				if(!leftRCS.emit) sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+				if(!leftRCS.emit && playRcsAudio)
+				{
+					sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+					rcsAudioTimer = Time.time;
+				}
 				rightRCS.emit = false;
 				leftRCS.emit = true;
 			}
@@ -585,13 +634,21 @@ namespace BahaTurret
 			
 			if(offset.y > 1)
 			{
-				if(!upRCS.emit) sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+				if(!upRCS.emit && playRcsAudio) 
+				{
+					sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+					rcsAudioTimer = Time.time;
+				}
 				upRCS.emit = true;
 				downRCS.emit = false;
 			}
 			else if(offset.y < -1)
 			{
-				if(!downRCS.emit) sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+				if(!downRCS.emit && playRcsAudio) 
+				{
+					sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
+					rcsAudioTimer = Time.time;
+				}
 				upRCS.emit = false;
 				downRCS.emit = true;
 			}
@@ -601,7 +658,7 @@ namespace BahaTurret
 				downRCS.emit = false;
 			}
 			
-			Debug.Log ("offset: "+offset.ToString());
+			//Debug.Log ("offset: "+offset.x.ToString("0.000")+", "+offset.y.ToString("0.000"));
 		}
 		
 		void KillRCS()
