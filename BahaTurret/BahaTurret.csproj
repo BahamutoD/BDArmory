@@ -36,7 +36,7 @@
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral">
       <Private>False</Private>
-      <Package>D:\Games\KSP\KSP 0.24.2 32 bit\KSP_Data\Managed\UnityEngine.dll</Package>
+      <Package>D:\Games\KSP\KSP 0.25.0 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</Package>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\Games\KSP\KSP 0.25.0 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
