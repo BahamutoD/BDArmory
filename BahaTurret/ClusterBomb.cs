@@ -121,7 +121,7 @@ namespace BahaTurret
 			double asl = vessel.mainBody.GetAltitude(vessel.findWorldCenterOfMass());
 			double radarAlt = asl - vessel.terrainAltitude;
 			
-			return radarAlt < deployAltitude || asl < deployAltitude;
+			return (radarAlt < deployAltitude || asl < deployAltitude) && vessel.verticalSpeed < 0;
 		}
 		
 	}
