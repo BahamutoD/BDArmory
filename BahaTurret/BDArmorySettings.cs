@@ -37,6 +37,8 @@ namespace BahaTurret
 		
 		//settings gui
 		public bool settingsGuiEnabled = false;
+		public string physicsRangeGui;
+		public string fireKeyGui;
 		
 		
 		
@@ -53,7 +55,8 @@ namespace BahaTurret
 		public bool missileWarning = false;
 		public float missileWarningTime = 0;
 		
-		public string physicsRangeGui;
+		
+		
 		
 		float physRangeTimer;
 		
@@ -80,6 +83,8 @@ namespace BahaTurret
 			GAME_UI_ENABLED = true;
 			
 			ApplyPhysRange();
+			
+			fireKeyGui = FIRE_KEY;
 			
 		}
 		
@@ -475,8 +480,27 @@ namespace BahaTurret
 			BOMB_CLEARANCE_CHECK = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), BOMB_CLEARANCE_CHECK, "Bomb Clearance Check");
 			line++;
 			
-			FIRE_KEY = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), FIRE_KEY);
-			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), "Gun Fire Key");
+			fireKeyGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), fireKeyGui);
+			string gunFireKeyLabel = "Gun Fire Key";
+			try
+			{
+				if(Input.GetKey(fireKeyGui))
+				{
+				}
+				
+			}
+			catch(UnityException e)
+			{
+				if(e.Message.Contains("Input"))	
+				{
+					gunFireKeyLabel += " INVALID";
+				}
+			}
+			if(!gunFireKeyLabel.Contains("INVALID"))
+			{
+				FIRE_KEY = fireKeyGui;	
+			}
+			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), gunFireKeyLabel);
 			line++;
 			
 			physicsRangeGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), physicsRangeGui);
@@ -485,7 +509,9 @@ namespace BahaTurret
 			GUI.Label(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, 2*spacer), "Warning: Risky if set high");
 			if(GUI.Button(new Rect(leftMargin, top + line*spacer, width/2 - 2*spacer+8, spacer), "Apply Phys Distance"))
 			{
-				PHYSICS_RANGE = Mathf.Clamp(float.Parse(physicsRangeGui), 2500, 100000);
+				float physRangeSetting = float.Parse(physicsRangeGui);
+				PHYSICS_RANGE = (physRangeSetting>=2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
+				physicsRangeGui = PHYSICS_RANGE.ToString();
 			}
 			
 			line++;
@@ -500,9 +526,10 @@ namespace BahaTurret
 		
 		#endregion
 		
-		public static void ApplyPhysRange()
+		public void ApplyPhysRange()
 		{
-			if(PHYSICS_RANGE < 2500) PHYSICS_RANGE = 2500;
+			if(PHYSICS_RANGE < 2500 && PHYSICS_RANGE > 0) PHYSICS_RANGE = 0;
+			
 			
 			if(PHYSICS_RANGE > 0)
 			{

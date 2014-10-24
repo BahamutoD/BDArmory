@@ -119,16 +119,27 @@ namespace BahaTurret
 				if(explodePart!=null && !explodePart.partInfo.name.Contains("Strut"))
 				{
 					
-					if(!MissileLauncher.CheckIfMissile(explodePart) || (explodePart.GetComponent<MissileLauncher>().sourceVessel != sourceVessel || explodePart.GetComponent<MissileLauncher>().sourceVessel==null))
+					if(!MissileLauncher.CheckIfMissile(explodePart) || ((explodePart.GetComponent<MissileLauncher>().sourceVessel != sourceVessel || explodePart.GetComponent<MissileLauncher>().sourceVessel==null) && explodePart.GetComponent<MissileLauncher>().hasFired))
 					{
 						//Debug.Log ("Explosion hit part from vessel: "+explodePart.vessel.vesselName);
-						float random = UnityEngine.Random.Range(0f,100f);
-						float chance = (radius-Vector3.Distance(explodePart.transform.position, position))/radius * 2 * 100;
-						chance *= 0.75f;
-						if(random < chance) explodePart.temperature = explodePart.maxTemp+500;
+						
+						
+						RaycastHit expCheck;
+						if(Physics.Raycast(position, explodePart.transform.position-position, out expCheck, radius, 557057) && expCheck.rigidbody.gameObject == hitExplosion.rigidbody.gameObject)
+						{
+							float random = UnityEngine.Random.Range(0f,100f);
+							float distance = Vector3.Distance(explodePart.transform.position, position);
+							float chance = (((radius-distance)/radius)/(distance/4)) * 100;
+							if(random < chance) explodePart.temperature = explodePart.maxTemp+500;
+							else
+							{
+								explodePart.rigidbody.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);	
+							}
+						}
 						else
 						{
-							explodePart.rigidbody.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);	
+							explodePart.rigidbody.AddExplosionForce(power/5, position, radius, 0, ForceMode.Impulse);		
+							
 						}
 						
 					}
