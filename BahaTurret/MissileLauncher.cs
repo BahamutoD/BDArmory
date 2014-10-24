@@ -211,7 +211,7 @@ namespace BahaTurret
 				
 				vessel.rigidbody.velocity += decoupleSpeed * -part.transform.up;
 				
-				BDArmorySettings.ApplyPhysRange();
+				BDArmorySettings.Instance.ApplyPhysRange();
 				vessel.vesselName = part.partInfo.title + " (fired)";
 				vessel.vesselType = VesselType.Probe;
 				
