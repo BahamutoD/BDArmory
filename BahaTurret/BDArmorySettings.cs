@@ -79,6 +79,7 @@ namespace BahaTurret
 			
 			GameEvents.onHideUI.Add(HideGameUI);
 			GameEvents.onShowUI.Add(ShowGameUI);
+			GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
 			
 			GAME_UI_ENABLED = true;
 			
@@ -539,10 +540,10 @@ namespace BahaTurret
 				
 				foreach(Vessel v in FlightGlobals.Vessels)
 				{
-					v.distancePackThreshold = PHYSICS_RANGE;
-					v.distanceUnpackThreshold = PHYSICS_RANGE*0.97f;//-4800;
-					v.distanceLandedPackThreshold = PHYSICS_RANGE*0.97f;//-150;
-					v.distanceLandedUnpackThreshold = PHYSICS_RANGE;
+					v.distancePackThreshold = PHYSICS_RANGE*1.5f;
+					v.distanceUnpackThreshold = PHYSICS_RANGE*0.97f;
+					v.distanceLandedPackThreshold = PHYSICS_RANGE * 0.8f;
+					v.distanceLandedUnpackThreshold = PHYSICS_RANGE*0.75f;
 				}
 				
 				FloatingOrigin.fetch.threshold = (PHYSICS_RANGE + 3500) * (PHYSICS_RANGE + 3500);
@@ -602,6 +603,16 @@ namespace BahaTurret
 		
 		void Dummy()
 		{}
+		
+		void OnVesselGoOffRails(Vessel v)
+		{
+			if(v.Landed)
+			{
+				Debug.Log ("Loaded vessel: "+v.vesselName+", Velocity: "+v.srf_velocity);
+				//v.SetWorldVelocity(Vector3d.zero);	
+			}
+			
+		}
 		
 	}
 }

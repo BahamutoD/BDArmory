@@ -68,10 +68,13 @@ namespace BahaTurret
 				bulletTrail.SetPosition(0, transform.position + ((rigidbody.velocity-sourceOriginalV).normalized * tracerLength));	
 			}
 			
+			
 			bulletTrail.SetPosition(1, transform.position);
 			
 			currPosition = gameObject.transform.position;
-			if(Vector3.Distance(transform.position, FlightGlobals.ActiveVessel.transform.position) > BDArmorySettings.PHYSICS_RANGE)
+			float maxDistance = BDArmorySettings.PHYSICS_RANGE;
+			if(BDArmorySettings.PHYSICS_RANGE == 0) maxDistance = 2500;
+			if(Vector3.Distance(transform.position, FlightGlobals.ActiveVessel.transform.position) > maxDistance)
 			{
 				GameObject.Destroy(gameObject);
 			}
