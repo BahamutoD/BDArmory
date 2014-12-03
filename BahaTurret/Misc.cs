@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
-	public class Misc
+	public class Misc : MonoBehaviour
 	{
 		
 		public static Color ParseColor255(string color)
@@ -50,6 +50,19 @@ namespace BahaTurret
 				)
 			);	
 		}
+		
+		//Thanks FlowerChild
+		//refreshes part action window
+		public static void RefreshAssociatedWindows(Part part)
+        {
+			foreach ( UIPartActionWindow window in FindObjectsOfType( typeof( UIPartActionWindow ) ) ) 
+            {
+				if ( window.part == part )
+                {
+                    window.displayDirty = true;
+                }
+            }
+        }
 		
 	
 	}

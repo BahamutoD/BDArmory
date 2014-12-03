@@ -41,6 +41,9 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\Games\KSP\KSP 0.25.0 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\Games\KSP\KSP 0.25.0 - Mod Dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BahaTurret.cs" />
@@ -65,5 +68,12 @@
     <Compile Include="BDModularGuidance.cs" />
     <Compile Include="BDMMLauncher.cs" />
     <Compile Include="BDAdjustableRail.cs" />
+    <Compile Include="BDAGaplessParticleEmitter.cs" />
+    <Compile Include="MissileGuidance.cs" />
+    <Compile Include="Animation\BDAScaleByDistance.cs" />
+    <Compile Include="Animation\BDALookConstraintUp.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Animation\" />
   </ItemGroup>
 </Project>

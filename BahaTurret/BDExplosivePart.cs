@@ -10,8 +10,7 @@ namespace BahaTurret
 		public float blastRadius = 50;
 		[KSPField(isPersistant = false)]
 		public float blastPower = 25;
-		[KSPField(isPersistant = false)]
-		int explosionFxSize = 1;
+
 		
 		[KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Proxy Detonate")]
 		public bool proximityDetonation = false;
@@ -43,7 +42,7 @@ namespace BahaTurret
 				hasDetonated = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position+rigidbody.velocity*Time.fixedDeltaTime;
-				ExplosionFX.CreateExplosion(position, explosionFxSize, blastRadius, blastPower, vessel, FlightGlobals.getUpAxis());
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, vessel, FlightGlobals.getUpAxis(), "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 			}
 		}
 	}

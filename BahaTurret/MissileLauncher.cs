@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BahaTurret
@@ -24,10 +25,21 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public bool guidanceActive = true;
 		
+		[KSPField(isPersistant = false)]
+		public float maxAoA = 35;
+		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
-        	UI_FloatRange(minValue = 0f, maxValue = 8f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+        	UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
 		public float decoupleSpeed = 0;
 		
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Direction: "), 
+			UI_Toggle(disabledText = "Lateral", enabledText = "Forward")]
+		public bool decoupleForward = false;
+		
+		[KSPField(isPersistant = false)]
+		public string homingType = "AAM";
+		[KSPField(isPersistant = false)]
+		public float optimumAirspeed = 220;
 		
 		[KSPField(isPersistant = false)]
 		public float blastRadius = 150;
@@ -39,8 +51,15 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public string audioClipPath = "";
 		
+		
 		[KSPField(isPersistant = false)]
-		public int explosionSize = 1;
+		public string explModelPath = "BDArmory/Models/explosion/explosion";
+		
+		public string explSoundPath = "BDArmory/Sounds/explode1";
+			
+		
+		[KSPField(isPersistant = false)]
+		public bool spoolEngine = false;
 		
 		[KSPField(isPersistant = false)]
 		public bool hasRCS = false;
@@ -59,7 +78,8 @@ namespace BahaTurret
 		private float prevDistance = -1;
 		private AudioSource audioSource;
 		public AudioSource sfAudioSource;
-		KSPParticleEmitter[] pEmitters;
+		List<KSPParticleEmitter> pEmitters;
+		List<BDAGaplessParticleEmitter> gaplessEmitters;
 		
 		private Vector3 initialObtVelocity;
 		
@@ -83,6 +103,8 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public float deployTime = 0.2f;
 		
+		float currentThrust = 0;
+		
 		public bool deployed;
 		public float deployedTime;
 		
@@ -90,13 +112,36 @@ namespace BahaTurret
 		
 		bool hasPlayedFlyby = false;
 		
+		Quaternion previousRotation;
 		
+		float debugTurnRate = 0;
+		float debugSurfaceDistance = 0;
+		string debugString = "";
+		
+		Vector3 randomOffset = Vector3.zero;
 		
 		public override void OnStart (PartModule.StartState state)
 		{
+			gaplessEmitters = new List<BDAGaplessParticleEmitter>();
+			pEmitters = new List<KSPParticleEmitter>();
+			
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				pEmitters = part.FindModelComponents<KSPParticleEmitter>();
+				foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
+				{
+					if(emitter.useWorldSpace)
+					{
+						BDAGaplessParticleEmitter gaplessEmitter = emitter.gameObject.AddComponent<BDAGaplessParticleEmitter>();	
+						gaplessEmitter.part = part;
+						gaplessEmitters.Add (gaplessEmitter);
+					}
+					else
+					{
+						pEmitters.Add(emitter);	
+					}
+				}
+				//pEmitters = part.FindModelComponents<KSPParticleEmitter>();
+				
 				audioSource = gameObject.AddComponent<AudioSource>();
 				audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
 				audioSource.minDistance = 1;
@@ -105,6 +150,8 @@ namespace BahaTurret
 				audioSource.dopplerLevel = 0.1f;
 				audioSource.pitch = 1.6f;
 				audioSource.priority = 255;
+				
+				previousRotation = transform.rotation;
 			
 				if(audioClipPath!="")
 				{
@@ -209,7 +256,14 @@ namespace BahaTurret
 				
 				part.force_activate();
 				
-				vessel.rigidbody.velocity += decoupleSpeed * -part.transform.up;
+				if(decoupleForward)
+				{
+					vessel.rigidbody.velocity += decoupleSpeed * part.transform.forward;
+				}
+				else
+				{
+					vessel.rigidbody.velocity += decoupleSpeed * -part.transform.up;
+				}
 				
 				BDArmorySettings.Instance.ApplyPhysRange();
 				vessel.vesselName = part.partInfo.title + " (fired)";
@@ -218,6 +272,7 @@ namespace BahaTurret
 				if(timeStart == -1) timeStart = Time.time;
 				hasFired = true;
 				
+				previousRotation = transform.rotation;
 				
 			}
 		}
@@ -237,7 +292,7 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate()
 		{
-			
+			debugString = "";
 			if(hasFired && !hasExploded && part!=null)
 			{
 				
@@ -292,7 +347,16 @@ namespace BahaTurret
 					{
 						light.intensity = 1.5f;	
 					}
-					rigidbody.AddRelativeForce(thrust * Vector3.forward);
+					if(spoolEngine) 
+					{
+						currentThrust = Mathf.MoveTowards(currentThrust, thrust, thrust/10);
+					}
+					else
+					{
+						currentThrust = thrust;	
+					}
+					
+					rigidbody.AddRelativeForce(currentThrust * Vector3.forward);
 					if(hasRCS) forwardRCS.emit = true;
 					if(!startedEngine && thrust > 0)
 					{
@@ -304,12 +368,26 @@ namespace BahaTurret
 				
 				if(timeIndex > dropTime + boostTime && timeIndex < dropTime + boostTime + cruiseTime) //cruise phase
 				{
+					if(spoolEngine)
+					{
+						currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, thrust/10);
+					}
+					else
+					{
+						currentThrust = cruiseThrust;	
+					}
+					
 					if(!hasRCS) rigidbody.AddRelativeForce(cruiseThrust * Vector3.forward);
 					else
 					{
 						forwardRCS.emit = false;
 						audioSource.Stop();
 					}
+				}
+				
+				if(timeIndex > dropTime + boostTime)
+				{
+					part.crashTolerance = 1;	
 				}
 				
 				if(timeIndex > dropTime && timeIndex < dropTime + boostTime + cruiseTime) //all thrust
@@ -323,17 +401,19 @@ namespace BahaTurret
 					{
 						foreach(KSPParticleEmitter pe in pEmitters)
 						{
+							pe.emit = true;
+						}
+						foreach(var gpe in gaplessEmitters)
+						{
 							if(vessel.atmDensity > 0)
 							{
-								pe.emit = true;
+								gpe.emit = true;
 								
 							}
 							else
 							{
-								if(pe.useWorldSpace) pe.emit = false;
-								else pe.emit = true;
-							}
-							
+								gpe.emit = false;
+							}	
 						}
 					}
 					
@@ -364,7 +444,12 @@ namespace BahaTurret
 					{
 						pe.maxEmission = 0;
 						pe.minEmission = 0;
-					}	
+					}
+					foreach(var gpe in gaplessEmitters)
+					{
+						gpe.pEmitter.maxSize = Mathf.MoveTowards(gpe.pEmitter.maxSize, 0, 0.005f);
+						gpe.pEmitter.minSize = Mathf.MoveTowards(gpe.pEmitter.minSize, 0, 0.008f);
+					}
 				}
 				
 				
@@ -372,11 +457,19 @@ namespace BahaTurret
 				
 				if(timeIndex > dropTime) //guidance
 				{
-					part.crashTolerance = 1;
+					
+					/*
+					float rotationAngle = Quaternion.Angle(previousRotation, transform.rotation);
+					rigidbody.velocity -= rigidbody.velocity.normalized * Mathf.Clamp(rotationAngle/2, 0, (float) vessel.srfSpeed/2);
+					previousRotation = transform.rotation;
+					*/
 					
 					//guidance and attitude stabilisation scales to atmospheric density.
 					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position))); 
+					float optimumSpeedFactor = (float)vessel.srfSpeed/(2*optimumAirspeed);
+					float controlAuthority = Mathf.Clamp01(atmosMultiplier * (-Mathf.Abs(2*optimumSpeedFactor-1) + 1));
 					
+					/*
 					//model transform attitude stabilisation 
 					if(!hasRCS)
 					{
@@ -393,25 +486,18 @@ namespace BahaTurret
 						{
 							transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rigidbody.velocity), atmosMultiplier/2.5f);
 						}
-						
 					}
 					//
+					*/
 					
 					
-					
-					if(target!=null && guidanceActive && timeIndex - dropTime > 0.5f)
+					if(target!=null && guidanceActive)// && timeIndex - dropTime > 0.5f)
 					{
 						WarnTarget();
 						
-						if(Vector3.Distance(target.transform.position, transform.position) < BDArmorySettings.PHYSICS_RANGE){
-							/*
-							if(!FlightGlobals.RefFrameIsRotating && FlightGlobals.ActiveVessel==vessel)
-							{
-								FlightGlobals.ForceSetActiveVessel(target);
-							}
-							*/
+						if(Vector3.Distance(target.transform.position, transform.position) < BDArmorySettings.PHYSICS_RANGE)
+						{
 							targetPosition = target.transform.position + target.rigidbody.velocity*Time.fixedDeltaTime;
-							
 							
 							//target CoM
 							bool targetIsVessel = false;
@@ -440,20 +526,17 @@ namespace BahaTurret
 								prevDistance = targetDistance;
 							}
 							
-							if(targetDistance > 10 && targetInView) //guide towards where the target is going to be
-							{
-								targetPosition = targetPosition + target.rigidbody.velocity*(1/((target.rigidbody.velocity-vessel.rigidbody.velocity).magnitude/targetDistance));
-								
-							}
+							
 							
 							//increaseTurnRate after launch
-							float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS, 0, maxTurnRateDPS);
-							if(!hasRCS) turnRateDPS *= atmosMultiplier;
+							float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS * 25f, 0, maxTurnRateDPS);
+							float turnRatePointDPS = turnRateDPS;
+							if(!hasRCS) turnRateDPS *= controlAuthority;
 							
 							//decrease turn rate after thrust cuts out
 							if(timeIndex > dropTime+boostTime+cruiseTime)
 							{
-								turnRateDPS = atmosMultiplier * Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*1.4f), 1, maxTurnRateDPS);	
+								turnRateDPS = atmosMultiplier * Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*0.45f), 1, maxTurnRateDPS);	
 								if(hasRCS) turnRateDPS = 0;
 							}
 							
@@ -463,12 +546,78 @@ namespace BahaTurret
 								if(turnRateDPS > 0) DoRCS();
 								else KillRCS();
 							}
-							
+							debugTurnRate = turnRateDPS;
 							float radiansDelta = turnRateDPS*Mathf.Deg2Rad*Time.fixedDeltaTime;
 							
-							if(hasRCS) transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), turnRateDPS);
+							//if(hasRCS) transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), turnRateDPS);
 							
-							rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, targetPosition-transform.position, radiansDelta, 0);
+							
+							if(homingType == "AAM")
+							{
+								if(targetDistance > 10 && targetInView) //guide towards where the target is going to be
+								{
+									targetPosition = targetPosition + target.rigidbody.velocity*(1/((target.rigidbody.velocity-vessel.rigidbody.velocity).magnitude/targetDistance));
+									
+								}
+								
+								float clampedSpeed = Mathf.Clamp((float) vessel.srfSpeed, 1, 1000);
+								float limitAoA = Mathf.Clamp(3500/clampedSpeed, 5, maxAoA);
+								
+								if(targetVessel!=null && targetVessel.Landed)
+								{
+									if(randomOffset == Vector3.zero)
+									{
+										randomOffset = UnityEngine.Random.insideUnitSphere;
+									}
+									targetPosition += randomOffset * blastRadius * 3f;	
+								}
+									
+								if(!hasRCS && Vector3.Angle (transform.forward, rigidbody.velocity) < limitAoA)
+								{
+									transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(targetPosition-transform.position, transform.up), 2*turnRateDPS*Time.fixedDeltaTime);
+								}
+								else
+								{
+									transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), 2*turnRateDPS*Time.fixedDeltaTime);
+								}
+								
+								if(!hasRCS)
+								{
+									rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, transform.forward, radiansDelta, 0);
+								}
+								else
+								{
+									rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, targetPosition-transform.position, radiansDelta, 0);	
+								}
+							}
+							else if(homingType == "AGM")
+							{
+								if(targetViewAngle > 50) guidanceActive = false;
+								Vector3 agmTarget = Vector3.zero;
+								if(targetVessel!=null)
+								{
+									agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, targetVessel);
+								
+									float clampedSpeed = Mathf.Clamp((float) vessel.srfSpeed, 1, 1000);
+									float limitAoA = Mathf.Clamp(3500/clampedSpeed, 5, maxAoA);
+									
+									debugString += "\n limitAoA: "+limitAoA.ToString("0.0");
+									
+									if(Vector3.Angle (transform.forward, rigidbody.velocity) < limitAoA)
+									{
+										transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(agmTarget-transform.position, transform.up), 3*turnRatePointDPS*Time.fixedDeltaTime);
+									}
+									else
+									{
+										transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), 2*turnRatePointDPS*Time.fixedDeltaTime);
+									}
+									
+									
+									rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, transform.forward, radiansDelta, 0);
+									
+								}
+								
+							}
 							
 							//proximity detonation
 							if(((targetIsVessel && !tVessel.Landed) || !targetIsVessel) && targetDistance < blastRadius/3) 
@@ -486,8 +635,10 @@ namespace BahaTurret
 							//kill guidance if missile has missed
 							if(checkMiss && prevDistance-targetDistance < 0) 
 							{
-									guidanceActive = false;
-									if(hasRCS) KillRCS();
+								guidanceActive = false;
+								if(hasRCS) KillRCS();
+								if(targetDistance < blastRadius*0.75) Detonate();
+								return;
 							}
 							
 							prevDistance = targetDistance;
@@ -519,6 +670,10 @@ namespace BahaTurret
 						}
 					
 					}
+					else
+					{
+						transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), 10*Time.fixedDeltaTime);	
+					}
 					
 					if(hasRCS && !guidanceActive)
 					{
@@ -532,13 +687,35 @@ namespace BahaTurret
 		
 		public void Detonate()
 		{
-			if(!hasExploded)
+			if(!hasExploded && hasFired)
 			{
 				hasExploded = true;
+				
+				if(targetVessel == null)
+				{
+					if(target!=null && FlightGlobals.ActiveVessel.gameObject == target)
+					{
+						targetVessel = FlightGlobals.ActiveVessel;
+					}
+					else if(target!=null && !BDArmorySettings.Flares.Contains(target))
+					{
+						targetVessel = Part.FromGO(target).vessel;
+					}
+					
+				}
+				
+				if(targetVessel!=null)
+				{
+					foreach(var wpm in targetVessel.FindPartModulesImplementing<MissileFire>())
+					{
+						wpm.missileIsIncoming = false;
+					}
+				}
+				
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position+rigidbody.velocity*Time.fixedDeltaTime;
 				if(sourceVessel==null) sourceVessel = vessel;
-				ExplosionFX.CreateExplosion(position, explosionSize, blastRadius, blastPower, sourceVessel, transform.forward);
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath);
 				
 			}
 
@@ -584,7 +761,15 @@ namespace BahaTurret
 		{
 			if(targetVessel == null)
 			{
-				if(FlightGlobals.ActiveVessel.gameObject == target) targetVessel = FlightGlobals.ActiveVessel;	
+				if(FlightGlobals.ActiveVessel.gameObject == target)
+				{
+					targetVessel = FlightGlobals.ActiveVessel;
+				}
+				else if(target!=null && !BDArmorySettings.Flares.Contains(target))
+				{
+					targetVessel = Part.FromGO(target).vessel;
+				}
+				
 			}
 			
 			if(targetVessel!=null)
@@ -667,6 +852,18 @@ namespace BahaTurret
 			downRCS.emit = false;
 			leftRCS.emit = false;
 			rightRCS.emit = false;
+		}
+		
+		void OnGUI()
+		{
+			
+			
+			if(hasFired)	
+			{
+				GUI.Label(new Rect(200,200,200,200), debugString);	
+			}
+			
+			
 		}
 		
 		

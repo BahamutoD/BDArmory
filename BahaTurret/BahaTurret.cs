@@ -31,12 +31,22 @@ namespace BahaTurret
 		
 		
 		//Gun specs
-		[KSPField(isPersistant = false)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Min Pitch"),
+        	UI_FloatRange(minValue = 1f, maxValue = 0f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float minPitch = -5;
-		[KSPField(isPersistant = false)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Pitch"),
+        	UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float maxPitch = 80;
-		[KSPField(isPersistant = false)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Yaw Range"),
+        	UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float yawRange = -1;
+		[KSPField(isPersistant = true)]
+		public float minPitchLimit = 400;
+		[KSPField(isPersistant = true)]
+		public float maxPitchLimit = 400;
+		[KSPField(isPersistant = true)]
+		public float yawRangeLimit = 400;
+		
 		[KSPField(isPersistant = false)]
 		public float rotationSpeed = 2;
 		
@@ -58,7 +68,8 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public bool hasRecoil = true;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"), 
+			UI_Toggle(disabledText = "None", enabledText = "In range")]
 		public bool onlyFireInRange = true;
 		
 		[KSPField(isPersistant = false)]
@@ -75,7 +86,13 @@ namespace BahaTurret
 		public bool autoLockCapable = false;
 		
 		[KSPField(isPersistant = false)]
-		public string projectileColor = "255, 0, 0, 255";
+		public string projectileColor = "255, 130, 0, 255";
+		Color projectileColorC;
+		[KSPField(isPersistant = false)]
+		public bool fadeColor = false;
+		[KSPField(isPersistant = false)]
+		public string startColor = "255, 160, 0, 200";
+		Color startColorC;
 		
 		[KSPField(isPersistant = false)]
 		public float cannonShellRadius = 30;
@@ -91,14 +108,23 @@ namespace BahaTurret
 		public float heatLoss = 250;
 		
 		[KSPField(isPersistant = false)]
-		public float tracerStartWidth = 0.07f;
+		public float tracerStartWidth = 0.25f;
 		[KSPField(isPersistant = false)]
-		public float tracerEndWidth = 0.005f;
+		public float tracerEndWidth = 0.2f;
 		//
 		
 		
 		public float heat = 0;
 		public bool isOverheated = false;
+		
+		[KSPField(isPersistant = false)]
+		public string bulletTexturePath = "BDArmory/Textures/bullet";
+		
+		[KSPField(isPersistant = false)]
+		public string explModelPath = "BDArmory/Models/explosion/explosion";
+		
+		[KSPField(isPersistant = false)]
+		public string explSoundPath = "BDArmory/Sounds/explode1";
 		
 		[KSPField(isPersistant = false)]
 		public string fireSoundPath = "BDArmory/Parts/50CalTurret/sounds/shot";
@@ -172,7 +198,8 @@ namespace BahaTurret
 		LineRenderer lineRenderer;
 		
 		
-		
+		//gapless particles
+		List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
 		
 		
 		
@@ -197,6 +224,23 @@ namespace BahaTurret
 		
 		public override void OnStart (PartModule.StartState state)
 		{
+			
+			SetupTweakables();
+			
+			
+			foreach(var pe in part.FindModelComponents<KSPParticleEmitter>())
+			{
+				if(pe.useWorldSpace)	
+				{
+					BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();	
+					gpe.part = part;
+					gaplessEmitters.Add(gpe);
+				}
+			}
+			
+			projectileColorC = Misc.ParseColor255(projectileColor);
+			startColorC = Misc.ParseColor255(startColor);
+			
 			//debug linerenderer
 			lineRenderer = gameObject.AddComponent<LineRenderer>();
 			lineRenderer.SetVertexCount(2);
@@ -295,8 +339,11 @@ namespace BahaTurret
 				foreach(Transform tf in part.FindModelTransforms("fireTransform"))
 				{
 					LineRenderer lr = tf.gameObject.AddComponent<LineRenderer>();
-					lr.material = new Material(Shader.Find ("KSP/Emissive/Diffuse"));
-					lr.material.SetColor("_EmissiveColor", Misc.ParseColor255(projectileColor));
+					Color laserColor = Misc.ParseColor255(projectileColor);
+					laserColor.a = laserColor.a/2;
+					lr.material = new Material(Shader.Find ("KSP/Particles/Alpha Blended"));
+					lr.material.SetColor("_TintColor", laserColor);
+					lr.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser", false);
 					lr.castShadows = false;
 					lr.receiveShadows = false;
 					lr.SetWidth(tracerStartWidth, tracerEndWidth);
@@ -311,6 +358,15 @@ namespace BahaTurret
 			
 			part.force_activate();
 			
+		}
+		
+		void Update()
+		{
+			if(HighLogic.LoadedSceneIsEditor && maxPitch == 0 && minPitch == 0 && yawRange == 0 && onlyFireInRange)	
+			{
+				onlyFireInRange = false;
+				Misc.RefreshAssociatedWindows(part);
+			}
 		}
 		
 		
@@ -517,6 +573,7 @@ namespace BahaTurret
 		
 		private void Aim()
 		{
+			
 			inTurretRange = true;
 			
 			Vector3 target = Vector3.zero;
@@ -630,12 +687,15 @@ namespace BahaTurret
 			float rotationSpeedYaw = Mathf.Clamp (Mathf.Abs (10*targetYawOffset.x/Mathf.Clamp (targetDistance,10, maxTargetingRange)), 0, rotationSpeed);
 			float rotationSpeedPitch = Mathf.Clamp (Mathf.Abs (10*targetPitchOffset.z/Mathf.Clamp (targetDistance,10, maxTargetingRange)), 0, rotationSpeed);
 			
+			//lerp-less rotation TEST
+			//(todo) 
+			
 			targetPosition = target;
 			
 			if(TimeWarp.WarpMode!=TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1)
 			{
 				//yaw movement
-				if(yawRange >= 0)
+				if(yawRange >= 0 && yawRange < 360)
 				{
 					
 					float minYaw = -(yawRange/2);
@@ -646,10 +706,7 @@ namespace BahaTurret
 						/*
 						if(moveChildren)
 						{
-							foreach(var p in part.children)	
-							{
-								p.attachJoint.Joint.targetRotation *= Quaternion.AngleAxis(rotationSpeedYaw, yawAxis);	
-							}
+							
 						}
 						*/
 					}
@@ -659,10 +716,7 @@ namespace BahaTurret
 						/*
 						if(moveChildren)
 						{
-							foreach(var p in part.children)	
-							{
-								p.attachJoint.Joint.targetRotation *= Quaternion.AngleAxis(-rotationSpeedYaw, yawAxis);	
-							}
+							
 						}
 						*/
 						 
@@ -847,9 +901,15 @@ namespace BahaTurret
 							foreach(Transform mtf in part.FindModelTransforms("muzzleTransform"))
 							{
 								KSPParticleEmitter pEmitter = mtf.gameObject.GetComponent<KSPParticleEmitter>();
-								//pEmitter.worldVelocity = rigidbody.velocity/1.1f;
-								pEmitter.worldVelocity = mtf.rotation * new Vector3(0,0,muzzleFlashVelocity);
-								pEmitter.EmitParticle();
+								if(!pEmitter.useWorldSpace)
+								{
+									pEmitter.worldVelocity = mtf.rotation * new Vector3(0,0,muzzleFlashVelocity);
+									pEmitter.EmitParticle();
+								}
+							}
+							foreach(var gpe in gaplessEmitters)
+							{
+								gpe.EmitParticles();	
 							}
 							
 							//shell ejection
@@ -892,7 +952,10 @@ namespace BahaTurret
 						{
 							BahaTurretBullet bulletScript = firedBullet.AddComponent<BahaTurretBullet>();
 							bulletScript.sourceVessel = this.vessel;
-							bulletScript.projectileColor = Misc.ParseColor255(projectileColor);
+							bulletScript.bulletTexturePath = bulletTexturePath;
+							bulletScript.projectileColor = projectileColorC;
+							bulletScript.startColor = startColorC;
+							bulletScript.fadeColor = fadeColor;
 							bulletScript.tracerStartWidth = tracerStartWidth;
 							bulletScript.tracerEndWidth = tracerEndWidth;
 							bulletScript.tracerLength = tracerLength;
@@ -901,10 +964,13 @@ namespace BahaTurret
 						if(weaponType == "cannon")
 						{
 							CannonShell firedShell = firedBullet.AddComponent<CannonShell>();
+							firedShell.explModelPath = explModelPath;
+							firedShell.explSoundPath = explSoundPath;
+							firedShell.bulletTexturePath = bulletTexturePath;
 							firedShell.sourceVessel = this.vessel;
 							firedShell.blastPower = cannonShellPower;
 							firedShell.radius = cannonShellRadius;
-							firedShell.projectileColor = Misc.ParseColor255(projectileColor);
+							firedShell.projectileColor = projectileColorC;
 							firedShell.tracerEndWidth = tracerEndWidth;
 							firedShell.tracerStartWidth = tracerStartWidth;
 							firedShell.tracerLength = tracerLength;
@@ -978,7 +1044,7 @@ namespace BahaTurret
 						lr.SetPosition(1, hit.point);
 						if(Time.time-timeCheck > 60/1200 && BDArmorySettings.BULLET_HITS)
 						{
-							BulletHitFX.CreateBulletHit(hit.point, hit.normal);	
+							BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);	
 						}
 						try
 						{
@@ -1044,7 +1110,7 @@ namespace BahaTurret
 			//trajectory simulation
 			if(BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && weaponType != "laser")
 			{
-				float simDeltaTime = 0.1f;
+				float simDeltaTime = 0.15f;
 				
 				Transform fireTransform = part.FindModelTransform("fireTransform");
 				Vector3 simVelocity = rigidbody.velocity+(bulletVelocity*fireTransform.forward);
@@ -1254,6 +1320,60 @@ namespace BahaTurret
 				return true;	
 			}
 		}
+		
+		void SetupTweakables()
+		{
+			var minPitchRange = (UI_FloatRange) Fields["minPitch"].uiControlEditor;
+			if(minPitchLimit > 90)
+			{
+				minPitchLimit = minPitch;
+			}
+			if(minPitchLimit == 0)
+			{
+				Fields["minPitch"].guiActiveEditor = false;	
+			}
+			minPitchRange.minValue = minPitchLimit;
+			minPitchRange.maxValue = 0;
+			
+			var maxPitchRange = (UI_FloatRange) Fields["maxPitch"].uiControlEditor;
+			if(maxPitchLimit > 90)
+			{
+				maxPitchLimit = maxPitch;
+			}
+			if(maxPitchLimit == 0)
+			{
+				Fields["maxPitch"].guiActiveEditor = false;	
+			}
+			maxPitchRange.maxValue = maxPitchLimit;
+			maxPitchRange.minValue = 0;
+			
+			var yawRangeEd = (UI_FloatRange) Fields["yawRange"].uiControlEditor;
+			if(yawRangeLimit > 360)
+			{
+				yawRangeLimit = yawRange;	
+			}
+			
+			if(yawRangeLimit == 0)
+			{
+				Fields["yawRange"].guiActiveEditor = false;
+				onlyFireInRange = false;
+				Fields["onlyFireInRange"].guiActiveEditor = false;
+			}
+			else if(yawRangeLimit < 0)
+			{
+				yawRangeEd.minValue = 0;
+				yawRangeEd.maxValue = 360;
+				
+				if(yawRange < 0) yawRange = 360;
+			}
+			else
+			{
+				yawRangeEd.minValue = 0;
+				yawRangeEd.maxValue = yawRangeLimit;
+			}
+		}
+		
+		
 		
 	}
 	

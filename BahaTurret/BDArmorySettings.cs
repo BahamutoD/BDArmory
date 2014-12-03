@@ -25,6 +25,8 @@ namespace BahaTurret
 		public static bool BOMB_CLEARANCE_CHECK = true;
 		public static float DMG_MULTIPLIER = 6000;
 		public static float FLARE_CHANCE_FACTOR = 25;
+		public static bool SMART_GUARDS = true;
+		public static float MAX_BULLET_RANGE = 5000;
 		//==================
 		
 		
@@ -542,8 +544,8 @@ namespace BahaTurret
 				{
 					v.distancePackThreshold = PHYSICS_RANGE*1.5f;
 					v.distanceUnpackThreshold = PHYSICS_RANGE*0.97f;
-					v.distanceLandedPackThreshold = PHYSICS_RANGE * 0.8f;
-					v.distanceLandedUnpackThreshold = PHYSICS_RANGE*0.75f;
+					v.distanceLandedPackThreshold = Mathf.Clamp(PHYSICS_RANGE * 0.95f, 0, 11400);
+					v.distanceLandedUnpackThreshold = Mathf.Clamp(PHYSICS_RANGE*0.9f, 0, 10800);
 				}
 				
 				FloatingOrigin.fetch.threshold = (PHYSICS_RANGE + 3500) * (PHYSICS_RANGE + 3500);
@@ -608,7 +610,7 @@ namespace BahaTurret
 		{
 			if(v.Landed)
 			{
-				Debug.Log ("Loaded vessel: "+v.vesselName+", Velocity: "+v.srf_velocity);
+				//Debug.Log ("Loaded vessel: "+v.vesselName+", Velocity: "+v.srf_velocity);
 				//v.SetWorldVelocity(Vector3d.zero);	
 			}
 			

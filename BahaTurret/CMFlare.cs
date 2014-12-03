@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace BahaTurret
 {
@@ -10,7 +11,9 @@ namespace BahaTurret
 		public Vessel sourceVessel;
 		Vector3 relativePos;
 		
-		KSPParticleEmitter[] pEmitters;
+		List<KSPParticleEmitter> pEmitters = new List<KSPParticleEmitter>();
+		List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
+		
 		Light[] lights;
 		float startTime;
 		
@@ -21,28 +24,39 @@ namespace BahaTurret
 		
 		void Start()
 		{
+			gameObject.AddComponent<Rigidbody>();
 			acquireDice = UnityEngine.Random.Range(0f,100f);
 			
-			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
+			foreach(var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
+			{
+				if(pe.useWorldSpace)	
+				{
+					BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
+					gpe.rb = rigidbody;
+					gaplessEmitters.Add (gpe);
+				}
+				else
+				{
+					pEmitters.Add(pe);	
+				}
+			}
 			lights = gameObject.GetComponentsInChildren<Light>();
 			startTime = Time.time;
 			foreach(var pe in pEmitters)
 			{
 				pe.emit = true;	
 			}
-			gameObject.AddComponent<Rigidbody>();
-			rigidbody.useGravity = false;
+			foreach(var gpe in gaplessEmitters)
+			{
+				gpe.emit = true;	
+			}
+			
 			rigidbody.velocity = startVelocity;
-			if(!FlightGlobals.RefFrameIsRotating)
-			{
-				rigidbody.useGravity = false;
-			}
-			else
-			{
-				gameObject.AddComponent<KSPForceApplier>();
-				gameObject.GetComponent<KSPForceApplier>().drag = 0.4f;
-				rigidbody.useGravity = false;
-			}
+			
+			gameObject.AddComponent<KSPForceApplier>();
+			gameObject.GetComponent<KSPForceApplier>().drag = 0.4f;
+			rigidbody.useGravity = false;
+		
 			
 			rigidbody.mass = 0.001f;
 			
@@ -62,13 +76,12 @@ namespace BahaTurret
 			else downForce = Vector3.zero;
 			
 			//turbulence
-			foreach(var pe in pEmitters)
+			foreach(var pe in gaplessEmitters)
 			{
-				if(pe.useWorldSpace) 
-				{
-					pe.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
-					if(FlightGlobals.getStaticPressure(transform.position) == 0) pe.emit = false;
-				}
+				
+				pe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
+				if(FlightGlobals.getStaticPressure(transform.position) == 0) pe.emit = false;
+				
 			}
 			
 			
@@ -102,6 +115,10 @@ namespace BahaTurret
 				foreach(var pe in pEmitters)
 				{
 					pe.emit = false;
+				}
+				foreach(var gpe in gaplessEmitters)
+				{
+					gpe.emit = false;	
 				}
 				foreach(var lgt in lights)
 				{

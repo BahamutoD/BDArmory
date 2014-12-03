@@ -13,7 +13,11 @@ namespace BahaTurret
 
 		bool deployed = false;
 		
+		[KSPField(isPersistant = false)]
+		public string subExplModelPath = "BDArmory/Models/explosion/explosion";
 		
+		[KSPField(isPersistant = false)]
+		public string subExplSoundPath = "BDArmory/Sounds/subExplode";
 		
 		
 		[KSPField(isPersistant = false)]
@@ -81,7 +85,7 @@ namespace BahaTurret
 			}
 			
 			missileLauncher.sfAudioSource.priority = 999;
-			missileLauncher.explosionSize = 3;
+			//missileLauncher.explosionSize = 3;
 			
 			foreach(var sub in submunitions)
 			{
@@ -90,12 +94,14 @@ namespace BahaTurret
 				sub.rigidbody.isKinematic = false;
 				sub.rigidbody.velocity = rigidbody.velocity + (UnityEngine.Random.Range(submunitionMaxSpeed/10, submunitionMaxSpeed) * direction);
 				
-				sub.AddComponent<Submunition>();
-				sub.GetComponent<Submunition>().enabled = true;
-				sub.GetComponent<Submunition>().deployed = true;
-				sub.GetComponent<Submunition>().sourceVessel = missileLauncher.sourceVessel;
-				sub.GetComponent<Submunition>().blastForce = missileLauncher.blastPower;
-				sub.GetComponent<Submunition>().blastRadius = missileLauncher.blastRadius;
+				Submunition subScript = sub.AddComponent<Submunition>();
+				subScript.enabled = true;
+				subScript.deployed = true;
+				subScript.sourceVessel = missileLauncher.sourceVessel;
+				subScript.blastForce = missileLauncher.blastPower;
+				subScript.blastRadius = missileLauncher.blastRadius;
+				subScript.subExplModelPath = subExplModelPath;
+				subScript.subExplSoundPath = subExplSoundPath;
 				sub.AddComponent<KSPForceApplier>();
 			}
 			
@@ -132,6 +138,8 @@ namespace BahaTurret
 		public bool deployed = false;
 		public float blastRadius;
 		public float blastForce;
+		public string subExplModelPath;
+		public string subExplSoundPath;
 		public Vessel sourceVessel;
 		Vector3 currPosition;
 		Vector3 prevPosition;
@@ -205,7 +213,7 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
-			ExplosionFX.CreateExplosion(pos, 3, blastRadius, blastForce, sourceVessel, FlightGlobals.getUpAxis());
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, FlightGlobals.getUpAxis(), subExplModelPath, subExplSoundPath);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}
 		

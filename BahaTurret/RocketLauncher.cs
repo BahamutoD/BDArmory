@@ -14,6 +14,8 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public string rocketModelPath;
 		
+		
+		
 		[KSPField(isPersistant = false)]
 		public float rocketMass;
 		
@@ -31,6 +33,13 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = false)]
 		public bool descendingOrder = true;
+		
+		[KSPField(isPersistant = false)]
+		public string explModelPath = "BDArmory/Models/explosion/explosion";
+		
+		
+		[KSPField(isPersistant = false)]
+		public string explSoundPath = "BDArmory/Sounds/explode1";
 		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Ripple RPM"),
         	UI_FloatRange(minValue = 60f, maxValue = 1200, stepIncrement = 10f, scene = UI_Scene.Editor)]
@@ -116,6 +125,8 @@ namespace BahaTurret
 				rocketObj.transform.localScale = part.rescaleFactor * Vector3.one;
 				currentRocketTfm.localScale = Vector3.zero;
 				Rocket rocket = rocketObj.AddComponent<Rocket>();
+				rocket.explModelPath = explModelPath;
+				rocket.explSoundPath = explSoundPath;
 				rocket.spawnTransform = currentRocketTfm;
 				rocket.mass = rocketMass;
 				rocket.blastForce = blastForce;
@@ -159,7 +170,7 @@ namespace BahaTurret
 					simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
 					if(simTime > 0.04f && simTime < thrustTime)
 					{
-						simDeltaTime = 0.1f;
+						simDeltaTime = 0.2f;
 						if(simTime < 0.5f) pointingDirection = Vector3.RotateTowards(pointingDirection, simVelocity, atmosMultiplier * (0.5f*(simTime)) * 50*simDeltaTime * Mathf.Deg2Rad, 0);
 						else pointingDirection = Vector3.Lerp(pointingDirection, simVelocity.normalized, atmosMultiplier/2.5f);
 						simVelocity += thrust/rocketMass * simDeltaTime * pointingDirection;
@@ -306,6 +317,8 @@ namespace BahaTurret
 		public float thrustTime;
 		public float blastRadius;
 		public float blastForce;
+		public string explModelPath;
+		public string explSoundPath;
 		float startTime;
 		AudioSource audioSource;
 		
@@ -318,6 +331,7 @@ namespace BahaTurret
 		float stayTime = 0.04f;
 		float lifeTime = 10;
 		
+		//bool isThrusting = true;
 		
 		
 		
@@ -325,6 +339,7 @@ namespace BahaTurret
 		
 		void Start()
 		{
+			gameObject.AddComponent<Rigidbody>();
 			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 			
 			foreach(var pe in pEmitters)
@@ -333,12 +348,18 @@ namespace BahaTurret
 				{
 					pe.emit = false;
 				}
+				else if(pe.useWorldSpace)
+				{
+					BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
+					gpe.rb = rigidbody;
+					gpe.emit = true;
+				}
 			}
 			
 			prevPosition = transform.position;
 			currPosition = transform.position;
 			startTime = Time.time;
-			gameObject.AddComponent<Rigidbody>();
+			
 			rigidbody.mass = mass;
 			rigidbody.Sleep();
 			//rigidbody.velocity = startVelocity;
@@ -409,6 +430,30 @@ namespace BahaTurret
 				rigidbody.WakeUp();
 				rigidbody.velocity = startVelocity;
 			}
+			
+			if(Time.time - startTime > thrustTime)
+			{
+				//isThrusting = false;
+				foreach(var pEmitter in pEmitters)
+				{
+					if(pEmitter.useWorldSpace)
+					{
+						pEmitter.minSize = Mathf.MoveTowards(pEmitter.minSize, 0.1f, 0.05f);
+						pEmitter.maxSize = Mathf.MoveTowards(pEmitter.maxSize, 0.2f, 0.05f);
+					}
+					else
+					{
+						pEmitter.minSize = Mathf.MoveTowards(pEmitter.minSize, 0, 0.1f);
+						pEmitter.maxSize = Mathf.MoveTowards(pEmitter.maxSize, 0, 0.1f);
+						if(pEmitter.maxSize == 0)
+						{
+							pEmitter.emit = false;	
+						
+						}
+					}
+					
+				}
+			}
 
 			if(Time.time - startTime > 0.1f+stayTime)
 			{
@@ -464,7 +509,7 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
-			ExplosionFX.CreateExplosion(pos, 1, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized);
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}
 		

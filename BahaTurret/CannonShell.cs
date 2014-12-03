@@ -17,6 +17,11 @@ namespace BahaTurret
 		
 		public bool bulletDrop = true;
 		
+		public string explModelPath;
+		public string explSoundPath;
+		
+		public string bulletTexturePath;
+		
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
 		
@@ -30,8 +35,15 @@ namespace BahaTurret
 		public float tracerEndWidth = 1;
 		public float tracerLength = 0;
 		
+		float maxDistance;
+		
 		void Start()
 		{
+			
+			float maxLimit = Mathf.Clamp(BDArmorySettings.MAX_BULLET_RANGE, 0, 8000);
+			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, maxLimit);
+			
+			
 			startTime = Time.time;
 			prevPosition = gameObject.transform.position;
 			
@@ -50,13 +62,14 @@ namespace BahaTurret
 			explosion = GameDatabase.Instance.GetModel("BDArmory/Models/explosion/explosion");
 			explosion.SetActive(true);
 			
+			projectileColor.a = projectileColor.a/2;
 			bulletTrail = gameObject.AddComponent<LineRenderer>();
 			bulletTrail.SetVertexCount(2);
 			bulletTrail.SetPosition(0, transform.position);
 			bulletTrail.SetPosition(1, transform.position);
 			bulletTrail.SetWidth(tracerStartWidth, tracerEndWidth);
 			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Additive"));
-			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
+			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture(bulletTexturePath, false);
 			bulletTrail.material.SetColor("_TintColor", projectileColor);
 			
 			
@@ -81,17 +94,20 @@ namespace BahaTurret
 			{
 				bulletTrail.SetPosition(0, transform.position + (rigidbody.velocity.normalized * tracerLength));	
 			}
-			
 			bulletTrail.SetPosition(1, transform.position);
+			
 			
 			if(!audioSource.isPlaying)
 			{
 				audioSource.Play();	
 			}
-			if(Time.time - startTime > bulletLifeTime)
+			
+			if(Vector3.Distance(transform.position, FlightGlobals.ActiveVessel.transform.position) > maxDistance)
 			{
 				GameObject.Destroy(gameObject);
+				return;
 			}
+			
 			currPosition = gameObject.transform.position;
 			float dist = (currPosition-prevPosition).magnitude;
 			Ray ray = new Ray(prevPosition, currPosition-prevPosition);
@@ -132,7 +148,7 @@ namespace BahaTurret
 					if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("CannonShell hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
 				}
 			
-				ExplosionFX.CreateExplosion(hit.point, 1, radius, blastPower, sourceVessel, rigidbody.velocity.normalized);
+				ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
 				
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}
