@@ -490,12 +490,13 @@ namespace BahaTurret
 					//
 					*/
 					
+					AntiSpin();
 					
 					if(target!=null && guidanceActive)// && timeIndex - dropTime > 0.5f)
 					{
 						WarnTarget();
 						
-						if(Vector3.Distance(target.transform.position, transform.position) < BDArmorySettings.PHYSICS_RANGE)
+						if(Vector3.Distance(target.transform.position, transform.position) < Vessel.loadDistance)
 						{
 							targetPosition = target.transform.position + target.rigidbody.velocity*Time.fixedDeltaTime;
 							
@@ -574,11 +575,11 @@ namespace BahaTurret
 									
 								if(!hasRCS && Vector3.Angle (transform.forward, rigidbody.velocity) < limitAoA)
 								{
-									transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(targetPosition-transform.position, transform.up), 2*turnRateDPS*Time.fixedDeltaTime);
+									transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(targetPosition-transform.position, transform.up), 1.3f*turnRateDPS*Time.fixedDeltaTime);
 								}
 								else
 								{
-									transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), 2*turnRateDPS*Time.fixedDeltaTime);
+									transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), 1.3f*turnRateDPS*Time.fixedDeltaTime);
 								}
 								
 								if(!hasRCS)
@@ -609,7 +610,7 @@ namespace BahaTurret
 									}
 									else
 									{
-										transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), 2*turnRatePointDPS*Time.fixedDeltaTime);
+										transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), 2*turnRatePointDPS*Time.fixedDeltaTime);
 									}
 									
 									
@@ -672,7 +673,10 @@ namespace BahaTurret
 					}
 					else
 					{
-						transform.rotation = Quaternion.RotateTowards (transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), 10*Time.fixedDeltaTime);	
+						if(!hasRCS)	
+						{
+							transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
+						}
 					}
 					
 					if(hasRCS && !guidanceActive)
@@ -857,13 +861,20 @@ namespace BahaTurret
 		void OnGUI()
 		{
 			
-			
+			/*
 			if(hasFired)	
 			{
 				GUI.Label(new Rect(200,200,200,200), debugString);	
 			}
+			*/
 			
-			
+		}
+		
+		void AntiSpin()
+		{
+			Vector3 spin = Vector3.Project(rigidbody.angularVelocity, part.transform.forward);
+			rigidbody.angularVelocity -= spin;
+			rigidbody.angularVelocity -= 0.5f * rigidbody.angularVelocity;
 		}
 		
 		
