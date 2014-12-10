@@ -30,7 +30,8 @@ namespace BahaTurret
 		//==================
 		
 		
-		
+		//particle optimization
+		public static int numberOfParticleEmitters = 0;
 		
 		
 		public static BDArmorySettings Instance;
@@ -111,7 +112,7 @@ namespace BahaTurret
 			
 			DrawAimerCursor();
 			
-			if(Input.GetKey(KeyCode.LeftAlt))
+			if(Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
 			{
 				if(Input.GetKeyDown(KeyCode.B))
 				{
@@ -270,6 +271,14 @@ namespace BahaTurret
 					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "");
 				}
 			}
+			
+			if(DRAW_DEBUG_LINES)
+			{
+				GUI.Label(new Rect(200,200,600,600), "floating origin continuous: "+FloatingOrigin.fetch.continuous
+					+"\n Forced center tf name:  "+(FloatingOrigin.fetch.forcedCenterTransform !=null? FloatingOrigin.fetch.forcedCenterTransform.name : "")
+					+"\n Floating threshold: "+FloatingOrigin.fetch.threshold
+					);
+			}
 		}
 		
 		void ToolbarGUI(int windowID)
@@ -413,7 +422,7 @@ namespace BahaTurret
 					
 					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Guard Range", leftLabel);
 					float guardRange = wpnMgr.guardRange;
-					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, BDArmorySettings.PHYSICS_RANGE);
+					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, Vessel.loadDistance);
 					guardRange = guardRange/100;
 					guardRange = Mathf.Round(guardRange);
 					wpnMgr.guardRange = guardRange * 100;

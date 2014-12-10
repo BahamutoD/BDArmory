@@ -131,26 +131,45 @@ namespace BahaTurret
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
 					bool penetrated = false;
+					
 					//hitting a vessel Part
-					Part hitPart =  null;
+					
+					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+					Part hitPart =  null;   //determine when bullet collides with a target
 					try{
 						hitPart = Part.FromGO(hit.rigidbody.gameObject);
 					}catch(NullReferenceException){}
 					
-					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))
+					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)
 					{
-						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * BDArmorySettings.DMG_MULTIPLIER;
-						if(BDArmorySettings.INSTAKILL)
+                        float ricochetChance = 30;  //chance to bounce off, potentially doing more damage to another part in the trajectory
+						float heatDamage = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+						if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
 						{
-							destroyChance = 100;	
+                            heatDamage = hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 						}
-						Debug.Log ("Hit! chance of destroy: "+destroyChance);
-						if(UnityEngine.Random.Range (0f,100f)<destroyChance)
-						{
-							penetrated = true;
-							if(hitPart.vessel != sourceVessel) hitPart.temperature = hitPart.maxTemp + 100;
+                        if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
+
+                        if (hitPart.mass <= 0.01)   //if part mass is below 0.01, instakill it and do minor collateral (anti-exploit and to keep people from abusing near massless or massless crap as armor)
+                        {
+                            if (hitPart.vessel != sourceVessel) hitPart.temperature += hitPart.maxTemp + 500;  //make heat damage equal to the part's max temperture, and add 500 extra heat damage which should do minor collateral to teh surrounding parts
+                        }
+                        else    //apply damage normally if no special case present
+                        {
+                            if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
+                        }
+						if(UnityEngine.Random.Range (0f,100f)>ricochetChance)   //dont ricochet if the random range is higher then the ricochet chance
+                        {
+                            penetrated = true;  //disable ricochet if true
 						}
 					}
+
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE END////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					
 					
 					//hitting a Building

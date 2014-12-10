@@ -339,6 +339,8 @@ namespace BahaTurret
 		
 		void Start()
 		{
+			BDArmorySettings.numberOfParticleEmitters++;
+			
 			gameObject.AddComponent<Rigidbody>();
 			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 			
@@ -368,8 +370,8 @@ namespace BahaTurret
 			audioSource = gameObject.AddComponent<AudioSource>();
 			audioSource.loop = true;
 			audioSource.minDistance = 1;
-			audioSource.maxDistance = 1000;
-			audioSource.dopplerLevel = 0.02f;
+			audioSource.maxDistance = 2000;
+			audioSource.dopplerLevel = 0.5f;
 			audioSource.volume = 0.9f * Mathf.Sqrt(GameSettings.SHIP_VOLUME);
 			audioSource.pitch = 1.4f;
 			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
@@ -457,7 +459,7 @@ namespace BahaTurret
 
 			if(Time.time - startTime > 0.1f+stayTime)
 			{
-				audioSource.pitch = Mathf.Lerp(audioSource.pitch, 1f, 0.2f);
+				//audioSource.pitch = SoundUtil.getDopplerPitchFactor(rigidbody.velocity, transform.position)*1.4f;
 				currPosition = transform.position;
 				float dist = (currPosition-prevPosition).magnitude;
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
@@ -509,6 +511,8 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
+			BDArmorySettings.numberOfParticleEmitters--;
+			
 			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}

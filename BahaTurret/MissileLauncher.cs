@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace BahaTurret
 {
+	public enum MissileStates{Idle, Drop, Boost, Cruise, PostThrust}
+	
 	public class MissileLauncher : PartModule
 	{
 		public bool team;
@@ -115,10 +117,11 @@ namespace BahaTurret
 		Quaternion previousRotation;
 		
 		float debugTurnRate = 0;
-		float debugSurfaceDistance = 0;
 		string debugString = "";
 		
 		Vector3 randomOffset = Vector3.zero;
+		
+		public MissileStates MissileState = MissileStates.Idle;
 		
 		public override void OnStart (PartModule.StartState state)
 		{
@@ -143,12 +146,12 @@ namespace BahaTurret
 				//pEmitters = part.FindModelComponents<KSPParticleEmitter>();
 				
 				audioSource = gameObject.AddComponent<AudioSource>();
-				audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
-				audioSource.minDistance = 1;
-				audioSource.maxDistance = 2000;
+				audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME)+0.1f;
+				audioSource.minDistance = 5;
+				audioSource.maxDistance = 2500;
 				audioSource.loop = true;
-				audioSource.dopplerLevel = 0.1f;
-				audioSource.pitch = 1.6f;
+				audioSource.dopplerLevel = 0.5f;
+				audioSource.pitch = 1f;
 				audioSource.priority = 255;
 				
 				previousRotation = transform.rotation;
@@ -229,6 +232,8 @@ namespace BahaTurret
 		{
 			if(!hasFired)
 			{
+				BDArmorySettings.numberOfParticleEmitters++;
+				
 				foreach(var wpm in vessel.FindPartModulesImplementing<MissileFire>())
 				{
 					team = wpm.team;	
@@ -274,6 +279,8 @@ namespace BahaTurret
 				
 				previousRotation = transform.rotation;
 				
+				MissileState = MissileStates.Drop;
+				
 			}
 		}
 		
@@ -310,8 +317,30 @@ namespace BahaTurret
 				rigidbody.isKinematic = false;
 				if(!vessel.loaded) vessel.Load();
 				
-				
+				//Missile State
 				timeIndex = Time.time - timeStart;
+				if(timeIndex < dropTime)
+				{
+					MissileState = MissileStates.Drop;
+				}
+				else if(timeIndex < dropTime + boostTime)
+				{
+					MissileState = MissileStates.Boost;	
+				}
+				else if(timeIndex < dropTime+boostTime+cruiseTime)
+				{
+					MissileState = MissileStates.Cruise;	
+				}
+				else
+				{
+					MissileState = MissileStates.PostThrust;	
+				}
+				
+				
+				
+				
+				
+				
 				
 				//deploy stuff
 				if(deployAnimationName != "" && timeIndex > deployTime && !deployed)
@@ -330,13 +359,14 @@ namespace BahaTurret
 					}	
 				}
 				
-				if(timeIndex < dropTime) //drop phase
+				
+				
+				if(MissileState == MissileStates.Drop) //drop phase
 				{
 					//transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(rigidbody.velocity), .05f);
 					initialObtVelocity = vessel.obt_velocity;
 				}
-				
-				if(timeIndex > dropTime && timeIndex < boostTime) //boost phase
+				else if(MissileState == MissileStates.Boost) //boost phase
 				{
 					//light, sound & particle fx
 					if(audioClipPath!="" && !audioSource.isPlaying)	
@@ -365,9 +395,10 @@ namespace BahaTurret
 					}
 					
 				}
-				
-				if(timeIndex > dropTime + boostTime && timeIndex < dropTime + boostTime + cruiseTime) //cruise phase
+				else if(MissileState == MissileStates.Cruise) //cruise phase
 				{
+					part.crashTolerance = 1;
+					
 					if(spoolEngine)
 					{
 						currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, thrust/10);
@@ -385,17 +416,10 @@ namespace BahaTurret
 					}
 				}
 				
-				if(timeIndex > dropTime + boostTime)
-				{
-					part.crashTolerance = 1;	
-				}
 				
-				if(timeIndex > dropTime && timeIndex < dropTime + boostTime + cruiseTime) //all thrust
+				
+				if(MissileState != MissileStates.Idle && MissileState != MissileStates.PostThrust) //all thrust
 				{
-					
-					if(timeIndex > dropTime + .1f) audioSource.pitch = Mathf.Lerp(audioSource.pitch, 1f, 0.2f);
-					
-					
 					
 					if(!hasRCS)
 					{
@@ -421,11 +445,9 @@ namespace BahaTurret
 					{
 						if(!pe.gameObject.name.Contains("rcs") && !pe.useWorldSpace)
 						{
-							pe.sizeGrow = Mathf.Lerp(pe.sizeGrow, 1, 0.3f);
+							pe.sizeGrow = Mathf.Lerp(pe.sizeGrow, 1, 0.4f);
 						}
 					}
-					
-					
 				}
 				else
 				{
@@ -455,40 +477,16 @@ namespace BahaTurret
 				
 				
 				
-				if(timeIndex > dropTime) //guidance
+				if(MissileState != MissileStates.Idle && MissileState != MissileStates.Drop) //guidance
 				{
 					
-					/*
-					float rotationAngle = Quaternion.Angle(previousRotation, transform.rotation);
-					rigidbody.velocity -= rigidbody.velocity.normalized * Mathf.Clamp(rotationAngle/2, 0, (float) vessel.srfSpeed/2);
-					previousRotation = transform.rotation;
-					*/
 					
 					//guidance and attitude stabilisation scales to atmospheric density.
 					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position))); 
 					float optimumSpeedFactor = (float)vessel.srfSpeed/(2*optimumAirspeed);
 					float controlAuthority = Mathf.Clamp01(atmosMultiplier * (-Mathf.Abs(2*optimumSpeedFactor-1) + 1));
 					
-					/*
-					//model transform attitude stabilisation 
-					if(!hasRCS)
-					{
-						transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);
-					}
-					else
-					{
-						transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);
-					}
 					
-					if(!FlightGlobals.RefFrameIsRotating && timeIndex - dropTime > 0.5f && FlightGlobals.ActiveVessel!=vessel)
-					{
-						if(!hasRCS)
-						{
-							transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rigidbody.velocity), atmosMultiplier/2.5f);
-						}
-					}
-					//
-					*/
 					
 					AntiSpin();
 					
@@ -693,6 +691,8 @@ namespace BahaTurret
 		{
 			if(!hasExploded && hasFired)
 			{
+				BDArmorySettings.numberOfParticleEmitters--;
+				
 				hasExploded = true;
 				
 				if(targetVessel == null)

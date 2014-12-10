@@ -24,6 +24,8 @@ namespace BahaTurret
 		
 		void Start()
 		{
+			BDArmorySettings.numberOfParticleEmitters++;
+			
 			gameObject.AddComponent<Rigidbody>();
 			acquireDice = UnityEngine.Random.Range(0f,100f);
 			
@@ -98,13 +100,13 @@ namespace BahaTurret
 			//
 			
 			
-			//if(useGravity) Forces ();
-			
-			
+
+			/*
 			if(Time.time -startTime > 0.3f && gameObject.collider==null)
 			{
 				gameObject.AddComponent<SphereCollider>();	
 			}
+			*/
 			
 			
 			if(Time.time - startTime > 4) //stop emitting after 3 seconds
@@ -128,7 +130,7 @@ namespace BahaTurret
 			
 			if(Time.time - startTime > 15) //delete object after x seconds
 			{
-				
+				BDArmorySettings.numberOfParticleEmitters--;
 				Destroy(gameObject);	
 			}
 			
