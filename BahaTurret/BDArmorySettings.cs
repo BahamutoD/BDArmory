@@ -573,10 +573,10 @@ namespace BahaTurret
 				
 				foreach(Vessel v in FlightGlobals.Vessels)
 				{
-					v.distancePackThreshold = PHYSICS_RANGE*1.5f;
-					v.distanceUnpackThreshold = PHYSICS_RANGE*0.97f;
-					v.distanceLandedPackThreshold = Mathf.Clamp(PHYSICS_RANGE * 0.95f, 0, 11400);
-					v.distanceLandedUnpackThreshold = Mathf.Clamp(PHYSICS_RANGE*0.9f, 0, 10800);
+					v.distancePackThreshold = PHYSICS_RANGE*2f;
+					v.distanceUnpackThreshold = PHYSICS_RANGE*0.6f;
+					v.distanceLandedPackThreshold = Mathf.Clamp(PHYSICS_RANGE * 0.65f, 0, 11400);
+					v.distanceLandedUnpackThreshold = Mathf.Clamp(PHYSICS_RANGE*0.5f, 0, 10800);
 				}
 				
 				FloatingOrigin.fetch.threshold = (PHYSICS_RANGE + 3500) * (PHYSICS_RANGE + 3500);

@@ -1,15 +1,17 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="BahaTurret.cs">
     <Files>
-      <File FileName="BahaTurret.cs" Line="1" Column="1" />
-      <File FileName="MissileLauncher.cs" Line="159" Column="48" />
+      <File FileName="BahaTurret.cs" Line="1057" Column="8" />
+      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
       <File FileName="RocketLauncher.cs" Line="1" Column="1" />
       <File FileName="ExplosionFX.cs" Line="1" Column="1" />
       <File FileName="KSPForceApplier.cs" Line="1" Column="1" />
       <File FileName="MissileFire.cs" Line="1" Column="1" />
-      <File FileName="BDArmorySettings.cs" Line="4" Column="34" />
+      <File FileName="BDArmorySettings.cs" Line="566" Column="4" />
       <File FileName="BDInputUtils.cs" Line="1" Column="1" />
+      <File FileName="MissileGuidance.cs" Line="36" Column="3" />
+      <File FileName="BahaTurretBullet.cs" Line="117" Column="85" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
