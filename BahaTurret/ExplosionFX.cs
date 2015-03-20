@@ -124,15 +124,15 @@ namespace BahaTurret
 							RaycastHit expCheck;
 							if(Physics.Raycast(position, explodePart.transform.position-position, out expCheck, radius, 557057) && expCheck.rigidbody.gameObject == hitExplosion.rigidbody.gameObject)
 							{
-								if(MissileLauncher.CheckIfMissile(explodePart) && explodePart.GetComponent<MissileLauncher>().hasFired && expCheck.distance < radius/2)
+								if(MissileLauncher.CheckIfMissile(explodePart) && explodePart.GetComponent<MissileLauncher>().hasFired && (expCheck.point-position).sqrMagnitude < (radius*radius)/2)
 								{
 									explodePart.temperature = explodePart.maxTemp + 500;	//immediate destroy intercepted missiles
 								}
 								else
 								{
 									float random = UnityEngine.Random.Range(0f,100f);
-									float distance = Vector3.Distance(explodePart.transform.position, position);
-									float chance = (((radius-distance)/radius)/(distance/4)) * (BDArmorySettings.DMG_MULTIPLIER/explodePart.crashTolerance) * 0.0064f * 100;
+									float sqrDistance = (explodePart.transform.position-position).sqrMagnitude;
+									float chance = (((radius*radius)-sqrDistance)/(radius*radius)) * (BDArmorySettings.DMG_MULTIPLIER/explodePart.crashTolerance) * 0.0064f * 100;
 									//Debug.LogWarning("Hitting part: "+explodePart.partInfo.title+", explode chance: "+chance.ToString("0.0")+"%");
 									if(random < chance)
 									{
@@ -164,7 +164,8 @@ namespace BahaTurret
 						catch(NullReferenceException){}
 						if(hitBuilding!=null && hitBuilding.IsIntact)
 						{
-							float damageToBuilding = (power*radius/Vector3.Distance(hitExplosion.point, position)) * 5f;
+							float sqrDistance = (hitExplosion.point-position).sqrMagnitude;
+							float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER/200) * power*(((radius*radius)-sqrDistance)/(radius*radius));
 							if(damageToBuilding > hitBuilding.impactMomentumThreshold/10) hitBuilding.AddDamage(damageToBuilding);
 							if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold) hitBuilding.Demolish();
 							if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("explosion hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);

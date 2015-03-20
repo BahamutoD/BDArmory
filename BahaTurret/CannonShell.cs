@@ -35,6 +35,8 @@ namespace BahaTurret
 		public float tracerEndWidth = 1;
 		public float tracerLength = 0;
 		
+		public float initialSpeed;
+		
 		float maxDistance;
 		
 		void Start()
@@ -102,14 +104,14 @@ namespace BahaTurret
 				audioSource.Play();	
 			}
 			
-			if(Vector3.Distance(transform.position, FlightGlobals.ActiveVessel.transform.position) > maxDistance)
+			if((transform.position-FlightGlobals.ActiveVessel.transform.position).sqrMagnitude > maxDistance*maxDistance)
 			{
 				GameObject.Destroy(gameObject);
 				return;
 			}
 			
 			currPosition = gameObject.transform.position;
-			float dist = (currPosition-prevPosition).magnitude;
+			float dist = initialSpeed*TimeWarp.fixedDeltaTime;
 			Ray ray = new Ray(prevPosition, currPosition-prevPosition);
 			RaycastHit hit;
 			if(Physics.Raycast(ray, out hit, dist, 557057))
@@ -122,7 +124,7 @@ namespace BahaTurret
 				
 				if(hitPart!=null)
 				{
-					float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * 8000;
+					float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * initialSpeed * 8000;
 					if(instakill)
 					{
 						destroyChance = 100;	
@@ -142,7 +144,7 @@ namespace BahaTurret
 				catch(NullReferenceException){}
 				if(hitBuilding!=null && hitBuilding.IsIntact)
 				{
-					float damageToBuilding = rigidbody.mass * rigidbody.velocity.sqrMagnitude * 0.018f;
+					float damageToBuilding = rigidbody.mass * initialSpeed;
 					hitBuilding.AddDamage(damageToBuilding);
 					if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold) hitBuilding.Demolish();
 					if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("CannonShell hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);

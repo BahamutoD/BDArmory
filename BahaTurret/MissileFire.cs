@@ -730,7 +730,18 @@ namespace BahaTurret
 		
 		void BombAimer()
 		{
-			if(bombPart!=null && bombPart.partInfo.title != selectedWeapon)
+			
+			if(bombPart == null)
+			{
+				foreach(Part p in vessel.Parts)
+				{
+					if(p.partInfo.title == selectedWeapon)
+					{
+						bombPart = p;
+					}
+				}
+			}
+			else if(bombPart.partInfo.title != selectedWeapon)
 			{
 				bombPart = null;
 				foreach(Part p in vessel.Parts)
@@ -760,7 +771,7 @@ namespace BahaTurret
 				Vector3 dragForce = Vector3.zero;
 				Vector3 prevPos = transform.position;
 				Vector3 currPos = transform.position;
-				Vector3 simVelocity = rigidbody.velocity;
+				Vector3 simVelocity = vessel.rigidbody.velocity;
 				simVelocity += bombPart.GetComponent<MissileLauncher>().decoupleSpeed * -bombPart.transform.up;
 				
 				List<Vector3> pointPositions = new List<Vector3>();
@@ -855,15 +866,7 @@ namespace BahaTurret
 		
 		void OnGUI()
 		{
-			/*
-			if(guardMode)
-			{
-				GUI.Label(new Rect(50, 50, 200, 200), "smartTargetMissiles: "+smartTargetMissiles
-					+"\n Guard interval: "+(100*(Time.time-targetScanTimer)/targetScanInterval).ToString("0")+"%"
-					
-					);	
-			}
-			*/
+		
 			
 			if(vessel == FlightGlobals.ActiveVessel && BDArmorySettings.GAME_UI_ENABLED)
 			{
@@ -976,10 +979,6 @@ namespace BahaTurret
 				{
 					bool canSeeTarget = false;
 					
-					
-					
-					
-					
 					if(guardTarget!=null)
 					{
 						
@@ -1016,7 +1015,6 @@ namespace BahaTurret
 							//pick a weapon
 							if(BDArmorySettings.SMART_GUARDS)
 							{
-								
 								if(distance < 2000 || (smartTargetMissiles && distance < 5000))
 								{
 									SwitchToTurret();	
@@ -1095,8 +1093,8 @@ namespace BahaTurret
 				{
 					if(v.loaded)
 					{
-						float distance = Vector3.Distance(transform.position, v.transform.position);
-						if(distance < guardRange)
+						float sqrDistance = (transform.position-v.transform.position).sqrMagnitude;
+						if(sqrDistance < guardRange*guardRange)
 						{
 							angle = Vector3.Angle (-transform.forward, v.transform.position-transform.position);
 							foreach(var missile in v.FindPartModulesImplementing<MissileLauncher>())
@@ -1118,7 +1116,7 @@ namespace BahaTurret
 			{
 				foreach(Vessel v in FlightGlobals.Vessels)
 				{
-					if(v.loaded && Vector3.Distance(transform.position, v.transform.position) < guardRange)
+					if(v.loaded && (transform.position-v.transform.position).sqrMagnitude < guardRange*guardRange)
 					{
 						angle = Vector3.Angle (-transform.forward, v.transform.position-transform.position);
 						foreach(var mF in v.FindPartModulesImplementing<MissileFire>())
@@ -1160,12 +1158,15 @@ namespace BahaTurret
 			{
 				string startingWeapon = selectedWeapon;
 				int noneCounter = 0;
+				Debug.Log("Starting switch to turret cycle");
 				while(true)
 				{
 					CycleWeapon(true);
 					if(selectedWeapon == "None") noneCounter++;
-					if(startingWeapon == selectedWeapon || CheckTurret() == 1 || noneCounter >=2) return;
+					if(startingWeapon == selectedWeapon || CheckTurret() == 1 || noneCounter >=2) break;
+					
 				}
+				Debug.Log ("Completed switch to turret cycle");
 			}
 			else return;
 		}
@@ -1216,7 +1217,6 @@ namespace BahaTurret
 		bool CheckAmmo(BahaTurret turret)
 		{
 			string ammoName = turret.ammoName;
-			double amount = 0;
 			
 			foreach(Part p in vessel.parts)
 			{
@@ -1224,13 +1224,15 @@ namespace BahaTurret
 				{
 					if(resource.resourceName == ammoName)
 					{
-						amount += resource.amount;	
+						if(resource.amount > 0)
+						{
+							return true;	
+						}
 					}
 				}
 			}
-			Debug.Log ("Checked for turret ammo.  Amount: "+amount);
 			
-			return (amount > 0);
+			return false;
 		}
 		
 		void ToggleTurret()

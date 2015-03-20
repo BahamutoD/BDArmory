@@ -951,6 +951,7 @@ namespace BahaTurret
 						if(weaponType == "ballistic")
 						{
 							BahaTurretBullet bulletScript = firedBullet.AddComponent<BahaTurretBullet>();
+							bulletScript.initialSpeed = bulletVelocity;
 							bulletScript.sourceVessel = this.vessel;
 							bulletScript.bulletTexturePath = bulletTexturePath;
 							bulletScript.projectileColor = projectileColorC;
@@ -975,6 +976,7 @@ namespace BahaTurret
 							firedShell.tracerStartWidth = tracerStartWidth;
 							firedShell.tracerLength = tracerLength;
 							firedShell.bulletDrop = bulletDrop;
+							firedShell.initialSpeed = bulletVelocity;
 						}
 						
 						//heat
@@ -1108,95 +1110,113 @@ namespace BahaTurret
 			
 			
 			//trajectory simulation
-			if(BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && weaponType != "laser")
+			if(BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS)
 			{
-				float simDeltaTime = 0.15f;
-				
 				Transform fireTransform = part.FindModelTransform("fireTransform");
-				Vector3 simVelocity = rigidbody.velocity+(bulletVelocity*fireTransform.forward);
-				Vector3 simCurrPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-				Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-				Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-				bool simulating = true;
-				
-				List<Vector3> pointPositions = new List<Vector3>();
-				pointPositions.Add(simCurrPos);
-				
-				while(simulating)
+				if(weaponType != "laser")
 				{
+					float simDeltaTime = 0.15f;
 					
-					RaycastHit hit;
-					if(bulletDrop) simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
-					simCurrPos += simVelocity * simDeltaTime;
+
+					Vector3 simVelocity = rigidbody.velocity+(bulletVelocity*fireTransform.forward);
+					Vector3 simCurrPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+					Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+					Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+					bool simulating = true;
+					
+					List<Vector3> pointPositions = new List<Vector3>();
 					pointPositions.Add(simCurrPos);
-					if(Physics.Raycast(simPrevPos,simCurrPos-simPrevPos, out hit, Vector3.Distance(simPrevPos,simCurrPos), 557057))
+					
+					while(simulating)
 					{
-						Vessel hitVessel = null;
-						try
-						{
-							hitVessel = Part.FromGO(hit.rigidbody.gameObject).vessel;	
-						}
-						catch(NullReferenceException){}
 						
-						if(hitVessel==null || (hitVessel!=null && hitVessel != vessel))
+						RaycastHit hit;
+						if(bulletDrop) simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
+						simCurrPos += simVelocity * simDeltaTime;
+						pointPositions.Add(simCurrPos);
+						if(Physics.Raycast(simPrevPos,simCurrPos-simPrevPos, out hit, Vector3.Distance(simPrevPos,simCurrPos), 557057))
 						{
-							bulletPrediction = hit.point;
+							Vessel hitVessel = null;
+							try
+							{
+								hitVessel = Part.FromGO(hit.rigidbody.gameObject).vessel;	
+							}
+							catch(NullReferenceException){}
+							
+							if(hitVessel==null || (hitVessel!=null && hitVessel != vessel))
+							{
+								bulletPrediction = hit.point;
+								simulating = false;
+							}
+							
+						}
+						
+						
+						simPrevPos = simCurrPos;
+						
+						if(targetVessel!=null && targetVessel.loaded && !targetVessel.Landed && Vector3.Distance(simStartPos,simCurrPos) > targetLeadDistance)
+						{
+							bulletPrediction = simStartPos + (simCurrPos-simStartPos).normalized*targetLeadDistance;
 							simulating = false;
 						}
 						
-					}
-					
-					
-					simPrevPos = simCurrPos;
-					
-					if(targetVessel!=null && targetVessel.loaded && !targetVessel.Landed && Vector3.Distance(simStartPos,simCurrPos) > targetLeadDistance)
-					{
-						bulletPrediction = simStartPos + (simCurrPos-simStartPos).normalized*targetLeadDistance;
-						simulating = false;
-					}
-					
-					if(Vector3.Distance(simStartPos,simCurrPos) > maxTargetingRange)
-					{
-						bulletPrediction = simStartPos + (simCurrPos-simStartPos).normalized*maxTargetingRange/4;
-						simulating = false;
-					}
-				}
-				
-				
-				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
-				{
-					Vector3[] pointsArray = pointPositions.ToArray();
-					if(gameObject.GetComponent<LineRenderer>()==null)
-					{
-						LineRenderer lr = gameObject.AddComponent<LineRenderer>();
-						lr.SetWidth(.1f, .1f);
-						lr.SetVertexCount(pointsArray.Length);
-						for(int i = 0; i<pointsArray.Length; i++)
+						if(Vector3.Distance(simStartPos,simCurrPos) > maxTargetingRange)
 						{
-							lr.SetPosition(i, pointsArray[i]);	
+							bulletPrediction = simStartPos + (simCurrPos-simStartPos).normalized*maxTargetingRange/4;
+							simulating = false;
+						}
+					}
+					
+					
+					if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
+					{
+						Vector3[] pointsArray = pointPositions.ToArray();
+						if(gameObject.GetComponent<LineRenderer>()==null)
+						{
+							LineRenderer lr = gameObject.AddComponent<LineRenderer>();
+							lr.SetWidth(.1f, .1f);
+							lr.SetVertexCount(pointsArray.Length);
+							for(int i = 0; i<pointsArray.Length; i++)
+							{
+								lr.SetPosition(i, pointsArray[i]);	
+							}
+						}
+						else
+						{
+							LineRenderer lr = gameObject.GetComponent<LineRenderer>();
+							lr.enabled = true;
+							lr.SetVertexCount(pointsArray.Length);
+							for(int i = 0; i<pointsArray.Length; i++)
+							{
+								lr.SetPosition(i, pointsArray[i]);	
+							}	
 						}
 					}
 					else
 					{
-						LineRenderer lr = gameObject.GetComponent<LineRenderer>();
-						lr.enabled = true;
-						lr.SetVertexCount(pointsArray.Length);
-						for(int i = 0; i<pointsArray.Length; i++)
+						if(gameObject.GetComponent<LineRenderer>()!=null)
 						{
-							lr.SetPosition(i, pointsArray[i]);	
-						}	
+							gameObject.GetComponent<LineRenderer>().enabled = false;	
+						}
 					}
+					
 				}
 				else
 				{
-					if(gameObject.GetComponent<LineRenderer>()!=null)
+					Ray ray = new Ray(fireTransform.position, fireTransform.forward);
+					RaycastHit rayHit;
+					if(Physics.Raycast(ray, out rayHit,  maxTargetingRange, 557057))
 					{
-						gameObject.GetComponent<LineRenderer>().enabled = false;	
+						bulletPrediction = rayHit.point;
 					}
+					else
+					{
+						bulletPrediction = ray.GetPoint(maxTargetingRange);
+					}
+
+					pointingAtPosition = ray.GetPoint(maxTargetingRange);
 				}
-				
 			}
-			
 			
 		}
 		
@@ -1240,18 +1260,29 @@ namespace BahaTurret
 				float size = 30;
 				
 				Vector3 aimPosition;
-				if(BDArmorySettings.AIM_ASSIST && weaponType != "laser" && vessel.altitude < 5000) aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(bulletPrediction);
-				else aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(pointingAtPosition);
+				if(BDArmorySettings.AIM_ASSIST && vessel.altitude < 5000)
+				{
+					aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(bulletPrediction);
+				}
+				else
+				{
+					aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(pointingAtPosition);
+				}
+
 				if(targetVessel!=null && targetVessel.loaded && !targetVessel.Landed)
 				{
 					aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(pointingAtPosition+fixedLeadOffset);
 				}
+
 				Texture2D texture;
 				if(Vector3.Angle(pointingAtPosition-transform.position,targetPosition-transform.position) < 0.3f)
 				{
 					texture = greenCircle;
 				}
-				else texture = grayCircle;
+				else
+				{
+					texture = grayCircle;
+				}
 				Rect drawRect = new Rect(aimPosition.x*Screen.width-(0.5f*size), (1-aimPosition.y)*Screen.height-(0.5f*size), size, size);
 				
 				float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, bulletPrediction-FlightCamera.fetch.mainCamera.transform.position);
@@ -1264,20 +1295,7 @@ namespace BahaTurret
 			
 		}
 		
-		/*/moving attached parts - not working
-		void AttachChildren()
-		{
-			foreach(var p in part.children)
-			{
-				Debug.Log (p.partInfo.title+" joint ===========");// connectedbody: "+p.attachJoint.Joint.connectedBody.gameObject.name);
-				p.attachJoint.Joint.angularXMotion = ConfigurableJointMotion.Free;
-				p.attachJoint.Joint.angularYMotion = ConfigurableJointMotion.Free;
-				p.attachJoint.Joint.angularZMotion = ConfigurableJointMotion.Free;
-				p.attachJoint.Joint.rotationDriveMode = RotationDriveMode.XYAndZ;
-				
-			}
-		}
-		*/
+
 		
 		//from howlingmoonsoftware.com
 		//calculates how long it will take for a target to be where it will be when a bullet fired now can reach it.
@@ -1352,7 +1370,7 @@ namespace BahaTurret
 			{
 				yawRangeLimit = yawRange;	
 			}
-			
+
 			if(yawRangeLimit == 0)
 			{
 				Fields["yawRange"].guiActiveEditor = false;

@@ -22,6 +22,8 @@ namespace BahaTurret
 		public float tracerEndWidth = 1;
 		public float tracerLength = 0;
 		
+		public float initialSpeed;
+		
 		
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
@@ -70,14 +72,11 @@ namespace BahaTurret
 			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture(bulletTexturePath, false);
 			bulletTrail.material.SetColor("_TintColor", currentColor);
 			
-			/*
-			lineMat = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
-			lineMat.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/bullet", false);
-			*/
+			
 			
 			rigidbody.useGravity = false;
 			
-			//Vector.SetCamera3D(FlightCamera.fetch.mainCamera);
+		
 			
 		}
 		
@@ -85,13 +84,13 @@ namespace BahaTurret
 		{
 			if(bulletDrop && FlightGlobals.RefFrameIsRotating)
 			{
-				rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+				rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.fixedDeltaTime;
 			}
 			
 			
 			if(tracerLength == 0)
 			{
-				bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * Time.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime));
+				bulletTrail.SetPosition(0, transform.position+(rigidbody.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rigidbody.velocity*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{
@@ -115,8 +114,7 @@ namespace BahaTurret
 			
 			currPosition = gameObject.transform.position;
 			
-			
-			if(Vector3.Distance(transform.position, FlightGlobals.ActiveVessel.transform.position) > maxDistance)
+			if((currPosition-FlightGlobals.ActiveVessel.transform.position).sqrMagnitude > maxDistance*maxDistance)
 			{
 				GameObject.Destroy(gameObject);
 				return;
@@ -125,7 +123,8 @@ namespace BahaTurret
 			if(Time.time - startTime > 0.01f)
 			{
 				light.intensity = 0;	
-				float dist = (currPosition-prevPosition).magnitude;
+				float dist = initialSpeed*TimeWarp.fixedDeltaTime;
+				
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
 				RaycastHit hit;
 				if(Physics.Raycast(ray, out hit, dist, 557057))
@@ -146,7 +145,7 @@ namespace BahaTurret
 					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)
 					{
                         float ricochetChance = 30;  //chance to bounce off, potentially doing more damage to another part in the trajectory
-						float heatDamage = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+						float heatDamage = (rigidbody.mass/hitPart.crashTolerance) * initialSpeed * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
 						if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
 						{
                             heatDamage = hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
@@ -171,7 +170,7 @@ namespace BahaTurret
                     /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE END////////////////////////////////////////////////////////////////
                     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					
-					
+
 					//hitting a Building
 					DestructibleBuilding hitBuilding = null;
 					try{
@@ -180,7 +179,7 @@ namespace BahaTurret
 					catch(NullReferenceException){}
 					if(hitBuilding!=null && hitBuilding.IsIntact)
 					{
-						float damageToBuilding = rigidbody.mass * rigidbody.velocity.sqrMagnitude * 0.010f;
+						float damageToBuilding = rigidbody.mass * initialSpeed * BDArmorySettings.DMG_MULTIPLIER/120;
 						hitBuilding.AddDamage(damageToBuilding);
 						if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
 						{
@@ -232,38 +231,15 @@ namespace BahaTurret
 			prevPosition = currPosition;
 		}
 		
-		/*
-		public void LateUpdate()
-		{
-			Vector.DestroyLine(ref bulletVectorLine);
-			
-			Vector3[] pointsArray = new Vector3[2];
-			pointsArray[1] = transform.position;
-			if(tracerLength == 0)
-			{
-				pointsArray[0] = transform.position+(rigidbody.velocity * Time.fixedDeltaTime * 0.95f)-(FlightGlobals.ActiveVessel.rigidbody.velocity*Time.fixedDeltaTime);
-			}
-			else
-			{
-				pointsArray[0] = transform.position + ((rigidbody.velocity-sourceOriginalV).normalized * tracerLength);
-			}
-			
-			bulletVectorLine = new VectorLine("bulletVectorLine", pointsArray, lineMat, 50*tracerStartWidth, LineType.Continuous);
-			
-			if(fadeColor)
-			{
-				FadeColor ();	
-			}
-			Vector.SetColor(bulletVectorLine, currentColor);;
-			Vector.DrawLine3D(bulletVectorLine);	
-		}
-		*/
+	
+	
 		
 		void FadeColor()
 		{
 			Vector4 currentColorV = new Vector4(currentColor.r, currentColor.g, currentColor.b, currentColor.a);
 			Vector4 endColorV = new Vector4(projectileColor.r, projectileColor.g, projectileColor.b, projectileColor.a);
-			float delta = (Vector4.Distance(currentColorV, endColorV)/0.15f) * TimeWarp.fixedDeltaTime;
+			//float delta = (Vector4.Distance(currentColorV, endColorV)/0.15f) * TimeWarp.fixedDeltaTime;
+			float delta = TimeWarp.fixedDeltaTime;
 			Vector4 finalColorV = Vector4.MoveTowards(currentColor, endColorV, delta);
 			currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, finalColorV.w);
 		}

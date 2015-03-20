@@ -158,7 +158,7 @@ namespace BahaTurret
 				Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
 				Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
 				bool simulating = true;
-				float simDeltaTime = 0.01f;
+				float simDeltaTime = 0.02f;
 				List<Vector3> pointPositions = new List<Vector3>();
 				pointPositions.Add(simCurrPos);
 				
@@ -183,11 +183,17 @@ namespace BahaTurret
 						simulating = false;
 						break;
 					}
+					else if(FlightGlobals.getAltitudeAtPos(simCurrPos)<0)
+					{
+						rocketPrediction = simCurrPos;
+						simulating = false;
+						break;
+					}
 					
 					
 					simPrevPos = simCurrPos;
 					
-					if(Vector3.Distance(simStartPos,simCurrPos)>4000)
+					if((simStartPos-simCurrPos).sqrMagnitude>4000*4000)
 					{
 						rocketPrediction = simStartPos + (simCurrPos-simStartPos).normalized*2500;
 						simulating = false;
@@ -382,7 +388,7 @@ namespace BahaTurret
 		void FixedUpdate()
 		{
 			//floatingOrigin fix
-			if(sourceVessel!=null && Vector3.Distance(transform.position-sourceVessel.transform.position, relativePos) > 800)
+			if(sourceVessel!=null && (transform.position-sourceVessel.transform.position-relativePos).sqrMagnitude > 800*800)
 			{
 				transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
 			}
@@ -472,22 +478,15 @@ namespace BahaTurret
 						hitPart = Part.FromGO(hit.rigidbody.gameObject);
 					}catch(NullReferenceException){}
 					
-					if(hitPart!=null)
-					{
-						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * BDArmorySettings.DMG_MULTIPLIER;
-						if(BDArmorySettings.INSTAKILL)
-						{
-							destroyChance = 100;	
-						}
-						if(UnityEngine.Random.Range (0f,100f)<destroyChance)
-						{
-							if(hitPart.vessel != sourceVessel) hitPart.temperature = hitPart.maxTemp + 100;
-						}
-					}
+					
 					if(hitPart==null || (hitPart!=null && hitPart.vessel!=sourceVessel))
 					{
 						Detonate(hit.point);
 					}
+				}
+				else if(FlightGlobals.getAltitudeAtPos(transform.position)<0)
+				{
+					Detonate(transform.position);
 				}
 			}
 			else if(FlightGlobals.getAltitudeAtPos(currPosition)<=0)
@@ -502,7 +501,7 @@ namespace BahaTurret
 			}
 			
 			//proxy detonation
-			if(targetVessel!=null && Vector3.Distance(transform.position, targetVessel.transform.position)< 0.5f*blastRadius)
+			if(targetVessel!=null && (transform.position-targetVessel.transform.position).sqrMagnitude < 0.5f*blastRadius*blastRadius)
 			{
 				Detonate(transform.position);	
 			}
@@ -514,7 +513,7 @@ namespace BahaTurret
 			BDArmorySettings.numberOfParticleEmitters--;
 			
 			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
-			GameObject.Destroy(gameObject); //destroy bullet on collision
+			GameObject.Destroy(gameObject); //destroy rocket on collision
 		}
 		
 		

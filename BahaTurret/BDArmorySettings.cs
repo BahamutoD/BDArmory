@@ -9,7 +9,7 @@ namespace BahaTurret
 	public class BDArmorySettings : MonoBehaviour
 	{
 		
-		
+
 		//=======configurable settings
 		public static string FIRE_KEY = "mouse 0";
 		public static bool INSTAKILL = false;
@@ -32,6 +32,9 @@ namespace BahaTurret
 		
 		//particle optimization
 		public static int numberOfParticleEmitters = 0;
+		
+		//gun volume management
+		public static int numberOfGunsFiring = 0;
 		
 		
 		public static BDArmorySettings Instance;
@@ -67,6 +70,9 @@ namespace BahaTurret
 		Texture2D cursorTexture;	
 	
 		public static List<GameObject> Flares = new List<GameObject>();
+
+		bool isRecordingInput = false;
+		bool recordMouseUp = false;
 		
 		
 		void Start()
@@ -83,11 +89,12 @@ namespace BahaTurret
 			GameEvents.onHideUI.Add(HideGameUI);
 			GameEvents.onShowUI.Add(ShowGameUI);
 			GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
+			GameEvents.OnGameSettingsApplied.Add(SaveVolumeSettings);
 			
 			GAME_UI_ENABLED = true;
 			
 			ApplyPhysRange();
-			
+			SaveVolumeSettings();
 			fireKeyGui = FIRE_KEY;
 			
 		}
@@ -203,6 +210,8 @@ namespace BahaTurret
 				if(cfg.HasValue("FLARE_CHANCE_FACTOR")) FLARE_CHANCE_FACTOR = float.Parse(cfg.GetValue("FLARE_CHANCE_FACTOR"));
 				
 				if(cfg.HasValue("BOMB_CLEARANCE_CHECK")) BOMB_CLEARANCE_CHECK = Boolean.Parse(cfg.GetValue("BOMB_CLEARANCE_CHECK"));
+
+				if(cfg.HasValue("SMART_GUARDS")) SMART_GUARDS = Boolean.Parse(cfg.GetValue("SMART_GUARDS"));
 					
 				
 			}
@@ -232,7 +241,8 @@ namespace BahaTurret
 				cfg.SetValue("DMG_MULTIPLIER", DMG_MULTIPLIER.ToString());
 				cfg.SetValue("FLARE_CHANCE_FACTOR", FLARE_CHANCE_FACTOR.ToString());
 				cfg.SetValue("BOMB_CLEARANCE_CHECK", BOMB_CLEARANCE_CHECK.ToString());
-				
+				cfg.SetValue("SMART_GUARDS", SMART_GUARDS.ToString());
+
 				
 				
 				
@@ -465,7 +475,7 @@ namespace BahaTurret
 		void SettingsGUI()
 		{
 			float width = 360;
-			float height = 400;
+			float height = 450;
 			float left = Screen.width/2 - width/2;
 			float top = Screen.height/2 - height/2;
 			float spacer = 24;
@@ -491,30 +501,42 @@ namespace BahaTurret
 			line++;
 			BOMB_CLEARANCE_CHECK = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), BOMB_CLEARANCE_CHECK, "Bomb Clearance Check");
 			line++;
-			
-			fireKeyGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), fireKeyGui);
-			string gunFireKeyLabel = "Gun Fire Key";
-			try
+			SMART_GUARDS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), SMART_GUARDS, "Smart Guards");
+			line++;
+
+			//fireKeyGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), fireKeyGui);
+			string gunFireKeyLabel;
+			if(isRecordingInput)
 			{
-				if(Input.GetKey(fireKeyGui))
+				gunFireKeyLabel = "Press a key or button.";
+
+				string inputString = BDInputUtils.GetInputString();
+				if(inputString.Length > 0 && recordMouseUp)
 				{
+					FIRE_KEY = inputString;
+					isRecordingInput = false;
 				}
-				
-			}
-			catch(UnityException e)
-			{
-				if(e.Message.Contains("Input"))	
+
+				if(Input.GetKeyUp (KeyCode.Mouse0))
 				{
-					gunFireKeyLabel += " INVALID";
+					recordMouseUp = true;
 				}
 			}
-			if(!gunFireKeyLabel.Contains("INVALID"))
+			else
 			{
-				FIRE_KEY = fireKeyGui;	
+				gunFireKeyLabel = "Fire key: "+FIRE_KEY;
+
+				if(GUI.Button(new Rect(leftMargin + 200, top + line*spacer, 100-(leftMargin-left), spacer), "Set Key"))
+				{
+					recordMouseUp = false;
+					isRecordingInput = true;
+				}
 			}
 			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), gunFireKeyLabel);
 			line++;
-			
+
+
+
 			physicsRangeGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), physicsRangeGui);
 			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), "Physics Load Distance");
 			line++;
@@ -623,6 +645,13 @@ namespace BahaTurret
 				//v.SetWorldVelocity(Vector3d.zero);	
 			}
 			
+		}
+		
+		public void SaveVolumeSettings()
+		{
+			SeismicChargeFX.originalShipVolume = GameSettings.SHIP_VOLUME;
+			SeismicChargeFX.originalMusicVolume = GameSettings.MUSIC_VOLUME;
+			SeismicChargeFX.originalAmbienceVolume = GameSettings.AMBIENCE_VOLUME;	
 		}
 		
 	}
