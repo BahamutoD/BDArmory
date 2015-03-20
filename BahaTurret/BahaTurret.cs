@@ -159,7 +159,11 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public bool moveChildren = false;
 
-		
+		//Used for scaling laser damage down based on distance.
+		[KSPField(isPersistant = false)]
+		public float tanAngle = 0.0001f;
+		//Angle of divergeance/2. Theoretical minimum value calculated using θ = (1.22 L/RL)/2, 
+		//where L is laser's wavelength and RL is the radius of the mirror (=gun).
 		
 		AudioClip fireSound;
 		AudioClip overheatSound;
@@ -1011,6 +1015,9 @@ namespace BahaTurret
 		
 		private bool FireLaser()
 		{
+			float maxDistance = BDArmorySettings.PHYSICS_RANGE;
+			if(BDArmorySettings.PHYSICS_RANGE == 0) maxDistance = 2500;
+
 			float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
 			if(!CheckMouseIsOnGui() && WMgrAuthorized() && inTurretRange && !isOverheated && (part.RequestResource(ammoName, chargeAmount)>=chargeAmount || BDArmorySettings.INFINITE_AMMO))
 			{
@@ -1026,7 +1033,7 @@ namespace BahaTurret
 					
 					LineRenderer lr = tf.gameObject.GetComponent<LineRenderer>();
 					lr.SetPosition(0, tf.position + rigidbody.velocity*Time.fixedDeltaTime);
-					lr.SetPosition(1, (tf.forward*maxTargetingRange)+tf.position);
+					lr.SetPosition(1, (tf.forward*maxDistance)+tf.position);
 					Vector3 rayDirection = tf.forward;
 					
 					Vector3 targetDirection = Vector3.zero;  //autoTrack enhancer
@@ -1041,7 +1048,7 @@ namespace BahaTurret
 					
 					Ray ray = new Ray(tf.position, rayDirection);
 					RaycastHit hit;
-					if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+					if(Physics.Raycast(ray, out hit, maxDistance, 557057))
 					{
 						lr.SetPosition(1, hit.point);
 						if(Time.time-timeCheck > 60/1200 && BDArmorySettings.BULLET_HITS)
@@ -1053,8 +1060,9 @@ namespace BahaTurret
 							Part p = Part.FromGO(hit.rigidbody.gameObject);
 							if(p.vessel!=this.vessel)
 							{
-								p.temperature += laserDamage*TimeWarp.fixedDeltaTime;
-								
+								float distance = hit.distance;
+								p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),2))
+
 								if(BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
 								
 							}
