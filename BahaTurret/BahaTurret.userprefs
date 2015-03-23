@@ -1,18 +1,34 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BahaTurret.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="ExplosionFX.cs">
     <Files>
-      <File FileName="BahaTurret.cs" Line="1057" Column="8" />
-      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
+      <File FileName="BahaTurret.cs" Line="1051" Column="60" />
+      <File FileName="MissileLauncher.cs" Line="789" Column="66" />
       <File FileName="RocketLauncher.cs" Line="1" Column="1" />
-      <File FileName="ExplosionFX.cs" Line="1" Column="1" />
+      <File FileName="ExplosionFX.cs" Line="115" Column="38" />
       <File FileName="KSPForceApplier.cs" Line="1" Column="1" />
       <File FileName="MissileFire.cs" Line="1" Column="1" />
-      <File FileName="BDArmorySettings.cs" Line="566" Column="4" />
+      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
       <File FileName="BDInputUtils.cs" Line="1" Column="1" />
-      <File FileName="MissileGuidance.cs" Line="36" Column="3" />
-      <File FileName="BahaTurretBullet.cs" Line="117" Column="85" />
+      <File FileName="MissileGuidance.cs" Line="80" Column="7" />
+      <File FileName="BahaTurretBullet.cs" Line="1" Column="1" />
+      <File FileName="Misc.cs" Line="75" Column="4" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="BahaTurret" expanded="True">
+            <Node name="ExplosionFX.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

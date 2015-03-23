@@ -63,6 +63,16 @@ namespace BahaTurret
                 }
             }
         }
+
+		public static Vector3 ProjectOnPlane(Vector3 point, Vector3 planePoint, Vector3 planeNormal)
+		{
+			planeNormal = planeNormal.normalized;
+			
+			Plane plane = new Plane(planeNormal, planePoint);
+			float distance = plane.GetDistanceToPoint(point);
+			
+			return point - (distance*planeNormal);
+		}
 		
 	
 	}
