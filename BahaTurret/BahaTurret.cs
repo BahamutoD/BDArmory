@@ -246,7 +246,11 @@ namespace BahaTurret
 			startColorC = Misc.ParseColor255(startColor);
 			
 			//debug linerenderer
-			lineRenderer = gameObject.AddComponent<LineRenderer>();
+			lineRenderer = gameObject.GetComponent<LineRenderer>();
+			if(!lineRenderer)
+			{
+				lineRenderer = gameObject.AddComponent<LineRenderer>();
+			}
 			lineRenderer.SetVertexCount(2);
 			lineRenderer.SetPosition(0, transform.position);
 			lineRenderer.SetPosition(1, transform.position);
