@@ -1,34 +1,21 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="ExplosionFX.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MissileFire.cs">
     <Files>
-      <File FileName="BahaTurret.cs" Line="1051" Column="60" />
-      <File FileName="MissileLauncher.cs" Line="789" Column="66" />
-      <File FileName="RocketLauncher.cs" Line="1" Column="1" />
-      <File FileName="ExplosionFX.cs" Line="115" Column="38" />
-      <File FileName="KSPForceApplier.cs" Line="1" Column="1" />
-      <File FileName="MissileFire.cs" Line="1" Column="1" />
-      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
-      <File FileName="BDInputUtils.cs" Line="1" Column="1" />
-      <File FileName="MissileGuidance.cs" Line="80" Column="7" />
-      <File FileName="BahaTurretBullet.cs" Line="1" Column="1" />
-      <File FileName="Misc.cs" Line="75" Column="4" />
+      <File FileName="MissileLauncher.cs" Line="675" Column="6" />
+      <File FileName="MissileFire.cs" Line="1626" Column="12" />
+      <File FileName="BahaTurretBullet.cs" Line="291" Column="44" />
+      <File FileName="ExplosionFX.cs" Line="133" Column="10" />
+      <File FileName="BDArmorySettings.cs" Line="152" Column="1" />
+      <File FileName="MissileGuidance.cs" Line="40" Column="64" />
+      <File FileName="BDModularGuidance.cs" Line="43" Column="52" />
+      <File FileName="BDModulePilotAI.cs" Line="382" Column="4" />
+      <File FileName="Misc.cs" Line="82" Column="22" />
+      <File FileName="BahaTurret.cs" Line="799" Column="17" />
+      <File FileName="BDATargetManager.cs" Line="67" Column="25" />
+      <File FileName="TargetInfo.cs" Line="121" Column="47" />
+      <File FileName="CMFlare.cs" Line="115" Column="4" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="BahaTurret" expanded="True">
-            <Node name="ExplosionFX.cs" selected="True" />
-          </Node>
-        </State>
-      </Pad>
-      <Pad Id="ClassPad">
-        <State expanded="True" selected="True" />
-      </Pad>
-      <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State />
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

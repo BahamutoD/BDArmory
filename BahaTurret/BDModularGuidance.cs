@@ -5,183 +5,173 @@ namespace BahaTurret
 {
 	public class BDModularGuidance : PartModule
 	{
-		
-		public GameObject target = null;
-		
-		//float timeFired = 0;
+		//public GameObject target = null;
+
 		public bool hasFired = false;
-		bool guidanceActive = false;
-		bool hasFiredEngine = false;
 		
-		Vector3 targetPosition;
-		Vector3 targetDirection;
+		public bool guidanceActive = false;
+
 		Vessel targetVessel;
-		bool targetInView = false;
-		float prevDistance = -1;
-		bool checkMiss = false;
-		
-		float startTime = -1;
-		
-		LineRenderer LR;
-		
+		Vessel parentVessel;
+
 		Transform vesselTransform;
+		Transform velocityTransform;
+
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerFactor"),
+		 UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
+		public float steerMult = 10;
+		
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerLimiter"),
+		 UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)]
+		public float maxSteer = 1;
+		
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerDamping"),
+		 UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.All)]
+		public float steerDamping = 5;
+		
+		[KSPField(isPersistant = true)]
+		public int guidanceMode = 1;
+		[KSPField(guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
+		public string guidanceLabel = "AAM";
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"),
+		 UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)]
+		public float cruiseAltitude = 500;
+
+
+		[KSPAction("Start Guidance")]
+		public void AGStartGuidance(KSPActionParam param)
+		{
+			StartGuidance();
+		}
+
+		[KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Start Guidance", active = true)]
+		public void StartGuidance()
+		{
+			if(hasFired)
+			{
+				return;
+			}
+
+			if(vessel.targetObject!=null && vessel.targetObject.GetVessel()!=null)
+			{
+				targetVessel = vessel.targetObject.GetVessel();
+			}
+			else if(parentVessel!=null && parentVessel.targetObject!=null && parentVessel.targetObject.GetVessel()!=null)
+			{
+				targetVessel = parentVessel.targetObject.GetVessel();
+			}
+			else
+			{
+				return;
+			}
+
+			if(!hasFired && targetVessel!=null)
+			{
+				hasFired = true;
+				guidanceActive = true;
+				vessel.OnFlyByWire += GuidanceSteer;
+				vessel.SetReferenceTransform(part);
+				GameObject velocityObject = new GameObject("velObject");
+				velocityObject.transform.position = transform.position;
+				velocityObject.transform.parent = transform;
+				velocityTransform = velocityObject.transform;
+
+				Events["StartGuidance"].guiActive = false;
+				Misc.RefreshAssociatedWindows(part);
+
+				vessel.OnJustAboutToBeDestroyed += RemoveGuidance;
+				part.OnJustAboutToBeDestroyed += RemoveGuidance;
+			}
+		}
+
+
+
+
+		[KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "GuidanceMode", active = true)]
+		public void SwitchGuidanceMode()
+		{
+			guidanceMode++;
+			if(guidanceMode > 3)
+			{
+				guidanceMode = 1;
+			}
+
+			RefreshGuidanceMode();
+		}
+
+		void RefreshGuidanceMode()
+		{
+			switch(guidanceMode)
+			{
+			case 1:
+				guidanceLabel = "AAM";
+				break;
+			case 2:
+				guidanceLabel = "AGM/STS";
+				break;
+			case 3:
+				guidanceLabel = "Cruise";
+				break;
+			}
+			
+			Fields["cruiseAltitude"].guiActive = (guidanceMode == 3);
+			Fields["cruiseAltitude"].guiActiveEditor = (guidanceMode == 3);
+			
+			
+			Misc.RefreshAssociatedWindows(part);
+		}
+
 		
 		public override void OnStart (PartModule.StartState state)
 		{
 			part.force_activate();
 			vesselTransform = part.FindModelTransform("vesselTransform");
+			if(vesselTransform!=null)
+			{
+				part.SetReferenceTransform(vesselTransform);
+			}
+			parentVessel = vessel;
+
+			RefreshGuidanceMode();
+
 		}
-		
-		public override void OnFixedUpdate ()
+
+		void RemoveGuidance()
 		{
-			if(hasFired && startTime == -1)
+			vessel.OnFlyByWire -= GuidanceSteer;
+		}
+
+		public void GuidanceSteer(FlightCtrlState s)
+		{
+			if(guidanceActive && targetVessel!=null && vessel!=null && vesselTransform!=null && velocityTransform!=null)
 			{
-				startTime = Time.time;	
-			}
-			
-			if(hasFired && Time.time-startTime > 0.6f && !hasFiredEngine)
-			{
-				Debug.Log("===========BDMM Guidance Started==============");
-				Part p = null;
-				foreach(var pt in vessel.FindPartModulesImplementing<ModuleCommand>())
+				velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vesselTransform.forward);
+				Vector3 targetPosition = targetVessel.transform.position;
+				Vector3 localAngVel = vessel.angularVelocity;
+
+				if(guidanceMode == 1)
 				{
-					if(!pt.part.FindModuleImplementing<BDModularGuidance>()) p = pt.part;
+					targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, vessel, targetVessel);
 				}
-				if (p!=null)vessel.SetReferenceTransform(p);
-				hasFiredEngine = true;
-				guidanceActive = true;
-				vessel.ActionGroups.groups[3] = true; //enable rcs
-				//vessel.ActionGroups.groups[4] = true; //enable sas
-				foreach(var engine in vessel.FindPartModulesImplementing<ModuleEngines>())
+				else if(guidanceMode == 2)
 				{
-					engine.part.force_activate();
-					engine.Activate();
-					
-				}
-				foreach(var engine in vessel.FindPartModulesImplementing<ModuleEnginesFX>())
-				{
-					engine.part.force_activate();
-					engine.Activate();	
-				}
-				vessel.OnFlyByWire += new FlightInputCallback(GuidanceSteer);
-			}
-			
-			if(hasFired && target!=null && guidanceActive)
-			{
-				WarnTarget();
-				
-				if(Vector3.Distance(target.transform.position, transform.position) < BDArmorySettings.PHYSICS_RANGE){
-					
-					targetPosition = target.transform.position + target.rigidbody.velocity*Time.fixedDeltaTime;
-					
-					//target CoM
-					Part p = null;
-					Vector3 targetCoMPos;
-					try
-					{
-						p = Part.FromGO(target);	
-					}
-					catch(NullReferenceException){}
-					if(p!=null)
-					{
-						targetCoMPos = p.vessel.findWorldCenterOfMass();
-						targetPosition = targetCoMPos+target.rigidbody.velocity*Time.fixedDeltaTime;
-					}
-					float targetViewAngle = Vector3.Angle(transform.forward, targetPosition-transform.position);
-					targetInView = (targetViewAngle < 20);
-					//LookForCountermeasure();
-					
-					float targetDistance = Vector3.Distance(targetPosition, transform.position+rigidbody.velocity*Time.fixedDeltaTime);
-					if(prevDistance == -1)
-					{
-						prevDistance = targetDistance;
-					}
-					
-					if(targetDistance > 10 && targetInView) //guide towards where the target is going to be
-					{
-						targetPosition = targetPosition + target.rigidbody.velocity*(1/((target.rigidbody.velocity-vessel.rigidbody.velocity).magnitude/targetDistance));
-						
-					}
-					
-					//Control goes here
-					
-					
-					
-					////
-					
-					
-					
-					if(targetDistance < 500)
-					{
-						checkMiss = true;	
-					}
-					
-					if(checkMiss && prevDistance-targetDistance < 0) //and moving away from target??
-					{
-							guidanceActive = false;
-					}
-					
-					prevDistance = targetDistance;
-					
-					if(BDArmorySettings.DRAW_DEBUG_LINES)
-					{
-						if(!gameObject.GetComponent<LineRenderer>())
-						{
-							LR = gameObject.AddComponent<LineRenderer>();
-							LR.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
-							LR.material.SetColor("_EmissiveColor", Color.red);
-						}else
-						{
-							LR = gameObject.GetComponent<LineRenderer>();
-						}
-						LR.SetVertexCount(4);
-						
-						LR.SetPosition(0, transform.position + rigidbody.velocity*Time.fixedDeltaTime);
-						LR.SetPosition(1, transform.position + rigidbody.velocity*Time.fixedDeltaTime + (vessel.ctrlState.yaw *10)*transform.right);
-						LR.SetPosition(2, transform.position + rigidbody.velocity*Time.fixedDeltaTime);
-						LR.SetPosition(3, transform.position + rigidbody.velocity*Time.fixedDeltaTime + (vessel.ctrlState.pitch *10)*transform.up);
-						
-						
-					}
-					
-					
+					targetPosition = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, targetVessel, 1.85f);
 				}
 				else
 				{
-					Debug.Log ("Missile guidance fail. Target out of range or unloaded");
-					guidanceActive = false;
+					targetPosition = MissileGuidance.GetCruiseTarget(targetPosition, vessel, targetVessel, cruiseAltitude);
 				}
-			}
-					
-		}
+
+				Vector3 targetDirection = velocityTransform.InverseTransformPoint(targetPosition).normalized;
+				targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 		
-		void WarnTarget()
-		{
-			if(targetVessel == null)
-			{
-				if(FlightGlobals.ActiveVessel.gameObject == target) targetVessel = FlightGlobals.ActiveVessel;	
-			}
-			
-			if(targetVessel!=null)
-			{
-				foreach(var wpm in targetVessel.FindPartModulesImplementing<MissileFire>())
-				{
-					wpm.MissileWarning();
-					break;
-				}
-			}
-		}
-		
-		public void GuidanceSteer(FlightCtrlState s)
-		{
-			if(guidanceActive)
-			{
-				targetDirection = (targetPosition-transform.position).normalized;
-						
-				Quaternion velRotation = Quaternion.LookRotation(rigidbody.velocity, transform.up);
-				Vector3 offset = Quaternion.Inverse(velRotation) * (targetPosition-transform.position);
-				s.yaw = Mathf.Clamp(offset.x/10, -1, 1);
-				s.pitch = Mathf.Clamp(offset.y/10, -1, 1);
+				float steerYaw = (steerMult * targetDirection.x) - (steerDamping * -localAngVel.z);
+				float steerPitch = (steerMult * targetDirection.y) - (steerDamping * -localAngVel.x);
+
+				s.yaw = Mathf.Clamp(steerYaw, -maxSteer, maxSteer);
+				s.pitch = Mathf.Clamp(steerPitch, -maxSteer, maxSteer);
+
 				s.mainThrottle = 1;
 			}
 		}

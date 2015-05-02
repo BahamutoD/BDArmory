@@ -5,6 +5,9 @@ namespace BahaTurret
 {
 	public class BahaTurretBullet : MonoBehaviour
 	{
+		public enum BulletTypes{Standard, Explosive}
+
+		public BulletTypes bulletType;
 		public float startTime;
 		public Vessel sourceVessel;
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
@@ -27,7 +30,19 @@ namespace BahaTurret
 		
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
+
+		//explosive parameters
+		public float radius = 30;
+		public float blastPower = 8;
 		
+		public string explModelPath;
+		public string explSoundPath;
+		//
+
+		Vector3 startPosition;
+		public bool airDetonation = false;
+		public float detonationRange = 3500;
+
 		LineRenderer bulletTrail;
 	//	VectorLine bulletVectorLine;
 		//Material lineMat;
@@ -37,9 +52,13 @@ namespace BahaTurret
 		bool hasBounced = false;
 		
 		float maxDistance;
+
+		//bool isUnderwater = false;
 		
 		void Start()
 		{
+			startPosition = transform.position;
+
 			float maxLimit = Mathf.Clamp(BDArmorySettings.MAX_BULLET_RANGE, 0, 8000);
 			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, maxLimit);
 			projectileColor.a = projectileColor.a/2;
@@ -114,7 +133,7 @@ namespace BahaTurret
 			
 			currPosition = gameObject.transform.position;
 			
-			if((currPosition-FlightGlobals.ActiveVessel.transform.position).sqrMagnitude > maxDistance*maxDistance)
+			if((currPosition-startPosition).sqrMagnitude > maxDistance*maxDistance)
 			{
 				GameObject.Destroy(gameObject);
 				return;
@@ -129,7 +148,8 @@ namespace BahaTurret
 				RaycastHit hit;
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
-					bool penetrated = false;
+					bool penetrated = true;
+
 					
 					//hitting a vessel Part
 					
@@ -141,14 +161,32 @@ namespace BahaTurret
 					try{
 						hitPart = Part.FromGO(hit.rigidbody.gameObject);
 					}catch(NullReferenceException){}
-					
-					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)
+
+					float hitAngle = Vector3.Angle(rigidbody.velocity, -hit.normal);
+					if(hitPart!=null) //see if it will ricochet of the part
 					{
-                        float ricochetChance = 30;  //chance to bounce off, potentially doing more damage to another part in the trajectory
-						float heatDamage = (rigidbody.mass/hitPart.crashTolerance) * initialSpeed * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+						penetrated = !RicochetOnPart(hitPart, hitAngle);
+					}
+					else //see if it will ricochet off scenery
+					{
+						float reflectRandom = UnityEngine.Random.Range(-100f, 90f);
+						if(reflectRandom > 90-hitAngle)
+						{
+							penetrated = false;
+						}
+					}
+
+
+					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
+					{
+						float heatDamage = (rigidbody.mass/hitPart.crashTolerance) * rigidbody.velocity.magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+						if(!penetrated)
+						{
+							heatDamage = heatDamage/8;
+						}
 						if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
 						{
-                            heatDamage = hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
+                            heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 						}
                         if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
 
@@ -160,10 +198,7 @@ namespace BahaTurret
                         {
                             if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
                         }
-						if(UnityEngine.Random.Range (0f,100f)>ricochetChance)   //dont ricochet if the random range is higher then the ricochet chance
-                        {
-                            penetrated = true;  //disable ricochet if true
-						}
+
 					}
 
                     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,10 +215,13 @@ namespace BahaTurret
 					if(hitBuilding!=null && hitBuilding.IsIntact)
 					{
 						float damageToBuilding = rigidbody.mass * initialSpeed * BDArmorySettings.DMG_MULTIPLIER/120;
+						if(!penetrated)
+						{
+							damageToBuilding = damageToBuilding/8;
+						}
 						hitBuilding.AddDamage(damageToBuilding);
 						if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
 						{
-							penetrated = true;
 							hitBuilding.Demolish();
 						}
 						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("bullet hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
@@ -191,15 +229,15 @@ namespace BahaTurret
 					
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
 					{
-						
-						
-						//ricochet
-						float reflectRandom = UnityEngine.Random.Range(-300f, 90f);
-						float hitAngle = Vector3.Angle(rigidbody.velocity, -hit.normal);
-						bool ricochetHit = false;
-						if(!penetrated && reflectRandom > 90-hitAngle && !hasBounced)
+						if(!penetrated && !hasBounced)
 						{
-							ricochetHit = true;
+							//ricochet
+							hasBounced = true;
+							if(BDArmorySettings.BULLET_HITS)
+							{
+								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+							}	
+
 							transform.position = hit.point;
 							rigidbody.velocity = Vector3.Reflect(rigidbody.velocity, hit.normal);
 							rigidbody.velocity = hitAngle/150 * rigidbody.velocity * 0.75f;
@@ -208,28 +246,59 @@ namespace BahaTurret
 							
 							rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, randomDirection, UnityEngine.Random.Range(0f,5f)*Mathf.Deg2Rad, 0);
 						}
-						
-						if(ricochetHit && !hasBounced)
-						{
-							hasBounced = true;
-							if(BDArmorySettings.BULLET_HITS)
-							{
-								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
-							}	
-						}
 						else
 						{
 							if(BDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
 							}
+
+							if(bulletType == BulletTypes.Explosive)
+							{
+								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+							}
+
 							GameObject.Destroy(gameObject); //destroy bullet on collision
 						}
 					}
 				}
+
+				/*
+				if(isUnderwater)
+				{
+					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
+					{
+						isUnderwater = false;
+					}
+					else
+					{
+						rigidbody.AddForce(-rigidbody.velocity * 0.15f);
+					}
+				}
+				else
+				{
+					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
+					{
+						isUnderwater = true;
+						//FXMonger.Splash(transform.position, 1);
+						//make a custom splash here
+					}
+				}
+				*/
 			}
+
+			if(airDetonation && (transform.position-startPosition).sqrMagnitude > Mathf.Pow(detonationRange, 2))
+			{
+				//detonate
+				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+				GameObject.Destroy(gameObject); //destroy bullet on collision
+			}
+
+
 			prevPosition = currPosition;
 		}
+
+
 		
 	
 	
@@ -242,6 +311,22 @@ namespace BahaTurret
 			float delta = TimeWarp.fixedDeltaTime;
 			Vector4 finalColorV = Vector4.MoveTowards(currentColor, endColorV, delta);
 			currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, finalColorV.w);
+		}
+
+		bool RicochetOnPart(Part p, float angleFromNormal)
+		{
+			float hitTolerance = p.crashTolerance;
+			float chance = ((angleFromNormal/90) * (hitTolerance/100)) * 100;
+			float random = UnityEngine.Random.Range(0f,100f);
+			//Debug.Log ("Ricochet chance: "+chance);
+			if(random < chance)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
 }

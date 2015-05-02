@@ -11,13 +11,14 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public float blastPower = 25;
 
-		
+		/*
 		[KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Proxy Detonate")]
 		public bool proximityDetonation = false;
+		*/
+
+		//public GameObject target = null;
 		
-		public GameObject target = null;
-		
-		bool hasFired = false;
+	//	bool hasFired = false;
 		bool hasDetonated = false;
 		
 		public override void OnStart (PartModule.StartState state)
@@ -29,10 +30,12 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate()
 		{
+			/*
 			if(hasFired && proximityDetonation && Vector3.Distance(target.transform.position, transform.position+rigidbody.velocity*Time.fixedDeltaTime) < blastRadius/2)
 			{
 				Detonate();
 			}
+			*/
 		}
 		
 		public void Detonate()

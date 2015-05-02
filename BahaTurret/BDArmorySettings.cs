@@ -19,6 +19,7 @@ namespace BahaTurret
 		public static bool INFINITE_AMMO = false;
 		//public static bool CAMERA_TOOLS = true;
 		public static bool DRAW_DEBUG_LINES = false;
+		public static bool DRAW_DEBUG_LABELS = false;
 		public static bool DRAW_AIMERS = true;
 		public static bool AIM_ASSIST = true;
 		public static bool REMOTE_SHOOTING = false;
@@ -27,6 +28,8 @@ namespace BahaTurret
 		public static float FLARE_CHANCE_FACTOR = 25;
 		public static bool SMART_GUARDS = true;
 		public static float MAX_BULLET_RANGE = 5000;
+		public static float TRIGGER_HOLD_TIME = 0.3f;
+		public static float BDARMORY_VOLUME = 0.5f; //TODO
 		//==================
 		
 		
@@ -63,7 +66,8 @@ namespace BahaTurret
 		
 		
 		
-		
+		//load range stuff
+		VesselRanges combatVesselRanges = new VesselRanges();
 		float physRangeTimer;
 		
 		bool drawCursor = false;
@@ -74,7 +78,20 @@ namespace BahaTurret
 		bool isRecordingInput = false;
 		bool recordMouseUp = false;
 		
-		
+		//gui styles
+		GUIStyle centerLabel;
+		GUIStyle centerLabelRed;
+		GUIStyle centerLabelOrange;
+		GUIStyle centerLabelBlue;
+		GUIStyle leftLabel;
+		GUIStyle leftLabelRed;
+		GUIStyle rightLabelRed;
+		GUIStyle leftLabelGray;
+
+		public enum BDATeams{A, B};
+
+
+
 		void Start()
 		{	
 			Instance = this;
@@ -90,33 +107,81 @@ namespace BahaTurret
 			GameEvents.onShowUI.Add(ShowGameUI);
 			GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
 			GameEvents.OnGameSettingsApplied.Add(SaveVolumeSettings);
+			GameEvents.onVesselCreate.Add(ApplyNewVesselRanges);
 			
 			GAME_UI_ENABLED = true;
 			
 			ApplyPhysRange();
 			SaveVolumeSettings();
 			fireKeyGui = FIRE_KEY;
+
+			//setup gui styles
+			centerLabel = new GUIStyle();
+			centerLabel.alignment = TextAnchor.UpperCenter;
+			centerLabel.normal.textColor = Color.white;
 			
+			centerLabelRed = new GUIStyle();
+			centerLabelRed.alignment = TextAnchor.UpperCenter;
+			centerLabelRed.normal.textColor = Color.red;
+			
+			centerLabelOrange = new GUIStyle();
+			centerLabelOrange.alignment = TextAnchor.UpperCenter;
+			centerLabelOrange.normal.textColor = XKCDColors.BloodOrange;
+			
+			centerLabelBlue = new GUIStyle();
+			centerLabelBlue.alignment = TextAnchor.UpperCenter;
+			centerLabelBlue.normal.textColor = XKCDColors.AquaBlue;
+			
+			leftLabel = new GUIStyle();
+			leftLabel.alignment = TextAnchor.UpperLeft;
+			leftLabel.normal.textColor = Color.white;
+			
+			leftLabelRed = new GUIStyle();
+			leftLabelRed.alignment = TextAnchor.UpperLeft;
+			leftLabelRed.normal.textColor = Color.red;
+			
+			rightLabelRed = new GUIStyle();
+			rightLabelRed.alignment = TextAnchor.UpperRight;
+			rightLabelRed.normal.textColor = Color.red;
+			
+			leftLabelGray = new GUIStyle();
+			leftLabelGray.alignment = TextAnchor.UpperLeft;
+			leftLabelGray.normal.textColor = Color.gray;
+			//
+
+
 		}
 		
 		void Update()
 		{
-			if(missileWarning && Time.time - missileWarningTime > 1.7f)
+			if(missileWarning && Time.time - missileWarningTime > 1.5f)
 			{
 				missileWarning = false;	
 			}
-			
-			if(Time.time - physRangeTimer > 1)
+
+			if(Input.GetKeyDown(KeyCode.Keypad1))
 			{
-				ApplyPhysRange();
-				physRangeTimer = Time.time;
+				VesselRanges vr = FlightGlobals.ActiveVessel.vesselRanges;
+				Debug.Log ("Flying: ");
+				Debug.Log ("load: " + vr.flying.load);
+				Debug.Log ("unload: " + vr.flying.unload);
+				Debug.Log ("pack: " + vr.flying.pack);
+				Debug.Log ("unpack" + vr.flying.unpack);
+
+				Debug.Log ("Landed: ");
+				Debug.Log ("load: " + vr.landed.load);
+				Debug.Log ("unload: " + vr.landed.unload);
+				Debug.Log ("pack: " + vr.landed.pack);
+				Debug.Log ("unpack" + vr.landed.unpack);
+
+				Debug.Log ("Splashed: ");
+				Debug.Log ("load: " + vr.splashed.load);
+				Debug.Log ("unload: " + vr.splashed.unload);
+				Debug.Log ("pack: " + vr.splashed.pack);
+				Debug.Log ("unpack" + vr.splashed.unpack);
+
 			}
-			
-			if(Vessel.unloadDistance < PHYSICS_RANGE - 250 || Vessel.loadDistance < PHYSICS_RANGE)
-			{
-				ApplyPhysRange();
-			}
-			
+
 			DrawAimerCursor();
 			
 			if(Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
@@ -212,8 +277,10 @@ namespace BahaTurret
 				if(cfg.HasValue("BOMB_CLEARANCE_CHECK")) BOMB_CLEARANCE_CHECK = Boolean.Parse(cfg.GetValue("BOMB_CLEARANCE_CHECK"));
 
 				if(cfg.HasValue("SMART_GUARDS")) SMART_GUARDS = Boolean.Parse(cfg.GetValue("SMART_GUARDS"));
-					
-				
+
+				if(cfg.HasValue("TRIGGER_HOLD_TIME")) TRIGGER_HOLD_TIME = float.Parse(cfg.GetValue("TRIGGER_HOLD_TIME"));
+
+
 			}
 			catch(NullReferenceException)
 			{
@@ -228,20 +295,21 @@ namespace BahaTurret
 				Debug.Log("== BDArmory : Saving settings.cfg ==	");
 				ConfigNode cfg = ConfigNode.Load("GameData/BDArmory/settings.cfg");
 				
-				cfg.SetValue("FireKey", FIRE_KEY);
-				cfg.SetValue("INSTAKILL", INSTAKILL.ToString());
-				cfg.SetValue("BULLET_HITS", BULLET_HITS.ToString());
-				cfg.SetValue("PHYSICS_RANGE", PHYSICS_RANGE.ToString());
-				cfg.SetValue("EJECT_SHELLS", EJECT_SHELLS.ToString());
-				cfg.SetValue("INFINITE_AMMO", INFINITE_AMMO.ToString());
-				cfg.SetValue("DRAW_DEBUG_LINES", DRAW_DEBUG_LINES.ToString());
-				cfg.SetValue("DRAW_AIMERS", DRAW_AIMERS.ToString());
-				cfg.SetValue("AIM_ASSIST", AIM_ASSIST.ToString());
-				cfg.SetValue("REMOTE_SHOOTING", REMOTE_SHOOTING.ToString());
-				cfg.SetValue("DMG_MULTIPLIER", DMG_MULTIPLIER.ToString());
-				cfg.SetValue("FLARE_CHANCE_FACTOR", FLARE_CHANCE_FACTOR.ToString());
-				cfg.SetValue("BOMB_CLEARANCE_CHECK", BOMB_CLEARANCE_CHECK.ToString());
-				cfg.SetValue("SMART_GUARDS", SMART_GUARDS.ToString());
+				cfg.SetValue("FireKey", FIRE_KEY, true);
+				cfg.SetValue("INSTAKILL", INSTAKILL.ToString(), true);
+				cfg.SetValue("BULLET_HITS", BULLET_HITS.ToString(), true);
+				cfg.SetValue("PHYSICS_RANGE", PHYSICS_RANGE.ToString(), true);
+				cfg.SetValue("EJECT_SHELLS", EJECT_SHELLS.ToString(), true);
+				cfg.SetValue("INFINITE_AMMO", INFINITE_AMMO.ToString(), true);
+				cfg.SetValue("DRAW_DEBUG_LINES", DRAW_DEBUG_LINES.ToString(), true);
+				cfg.SetValue("DRAW_AIMERS", DRAW_AIMERS.ToString(), true);
+				cfg.SetValue("AIM_ASSIST", AIM_ASSIST.ToString(), true);
+				cfg.SetValue("REMOTE_SHOOTING", REMOTE_SHOOTING.ToString(), true);
+				cfg.SetValue("DMG_MULTIPLIER", DMG_MULTIPLIER.ToString(), true);
+				cfg.SetValue("FLARE_CHANCE_FACTOR", FLARE_CHANCE_FACTOR.ToString(), true);
+				cfg.SetValue("BOMB_CLEARANCE_CHECK", BOMB_CLEARANCE_CHECK.ToString(), true);
+				cfg.SetValue("SMART_GUARDS", SMART_GUARDS.ToString(), true);
+				cfg.SetValue("TRIGGER_HOLD_TIME", TRIGGER_HOLD_TIME.ToString(), true);
 
 				
 				
@@ -284,50 +352,19 @@ namespace BahaTurret
 			
 			if(DRAW_DEBUG_LINES)
 			{
+				/*
 				GUI.Label(new Rect(200,200,600,600), "floating origin continuous: "+FloatingOrigin.fetch.continuous
 					+"\n Forced center tf name:  "+(FloatingOrigin.fetch.forcedCenterTransform !=null? FloatingOrigin.fetch.forcedCenterTransform.name : "")
 					+"\n Floating threshold: "+FloatingOrigin.fetch.threshold
 					);
+					*/
 			}
 		}
 		
 		void ToolbarGUI(int windowID)
 		{
 			GUI.DragWindow(new Rect(0,0,toolWindowWidth, 30));
-			
-			GUIStyle centerLabel = new GUIStyle();
-			centerLabel.alignment = TextAnchor.UpperCenter;
-			centerLabel.normal.textColor = Color.white;
-			
-			GUIStyle centerLabelRed = new GUIStyle();
-			centerLabelRed.alignment = TextAnchor.UpperCenter;
-			centerLabelRed.normal.textColor = Color.red;
-			
-			GUIStyle centerLabelOrange = new GUIStyle();
-			centerLabelOrange.alignment = TextAnchor.UpperCenter;
-			centerLabelOrange.normal.textColor = XKCDColors.BloodOrange;
-			
-			GUIStyle centerLabelBlue = new GUIStyle();
-			centerLabelBlue.alignment = TextAnchor.UpperCenter;
-			centerLabelBlue.normal.textColor = XKCDColors.AquaBlue;
-			
-			GUIStyle leftLabel = new GUIStyle();
-			leftLabel.alignment = TextAnchor.UpperLeft;
-			leftLabel.normal.textColor = Color.white;
-			
-			GUIStyle leftLabelRed = new GUIStyle();
-			leftLabelRed.alignment = TextAnchor.UpperLeft;
-			leftLabelRed.normal.textColor = Color.red;
-			
-			GUIStyle rightLabelRed = new GUIStyle();
-			rightLabelRed.alignment = TextAnchor.UpperRight;
-			rightLabelRed.normal.textColor = Color.red;
-			
-			GUIStyle leftLabelGray = new GUIStyle();
-			leftLabelGray.alignment = TextAnchor.UpperLeft;
-			leftLabelGray.normal.textColor = Color.gray;
-			
-			
+
 			float line = 0;
 			float leftIndent = 10;
 			float contentWidth = (toolWindowWidth) - (2*leftIndent);
@@ -384,6 +421,18 @@ namespace BahaTurret
 				string selectionText = "Weapon: "+wpnMgr.selectedWeapon;
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), selectionText, centerLabel);
 				line++;
+
+				//if weapon can ripple, show option and slider.
+				if(wpnMgr.canRipple)
+				{
+					string rippleText = wpnMgr.rippleFire ? "Ripple: ON - "+wpnMgr.rippleRPM.ToString("0")+" RPM" : "Ripple: OFF";
+					wpnMgr.rippleFire = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), wpnMgr.rippleFire, rippleText, leftLabel);
+					if(wpnMgr.rippleFire)
+					{
+						wpnMgr.rippleRPM = GUI.HorizontalSlider(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), wpnMgr.rippleRPM, 100, 1600);
+					}
+				}
+				line++;
 				
 				showWeaponList = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), showWeaponList, " Show Weapon List");
 				showGuardMenu = GUI.Toggle(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), showGuardMenu, " Show Guard Menu");
@@ -432,7 +481,7 @@ namespace BahaTurret
 					
 					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Guard Range", leftLabel);
 					float guardRange = wpnMgr.guardRange;
-					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, Vessel.loadDistance);
+					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, Mathf.Clamp(PHYSICS_RANGE, 2500, 100000));
 					guardRange = guardRange/100;
 					guardRange = Mathf.Round(guardRange);
 					wpnMgr.guardRange = guardRange * 100;
@@ -501,7 +550,9 @@ namespace BahaTurret
 			line++;
 			BOMB_CLEARANCE_CHECK = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), BOMB_CLEARANCE_CHECK, "Bomb Clearance Check");
 			line++;
-			SMART_GUARDS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), SMART_GUARDS, "Smart Guards");
+			//SMART_GUARDS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), SMART_GUARDS, "Smart Guards");
+			//line++;
+			DRAW_DEBUG_LABELS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_DEBUG_LABELS, "Debug Labels");
 			line++;
 
 			//fireKeyGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), fireKeyGui);
@@ -535,6 +586,9 @@ namespace BahaTurret
 			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), gunFireKeyLabel);
 			line++;
 
+			GUI.Label(new Rect(leftMargin, top + line*spacer, (width-2*spacer)/2, spacer), "Trigger Hold: "+TRIGGER_HOLD_TIME.ToString("0.00")+"s");
+			TRIGGER_HOLD_TIME = GUI.HorizontalSlider(new Rect(leftMargin+((width-2*spacer)/2), top + line*spacer, (width-2*spacer)/2, spacer),TRIGGER_HOLD_TIME, 0.02f, 1f);
+			line++;
 
 
 			physicsRangeGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), physicsRangeGui);
@@ -546,6 +600,7 @@ namespace BahaTurret
 				float physRangeSetting = float.Parse(physicsRangeGui);
 				PHYSICS_RANGE = (physRangeSetting>=2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
 				physicsRangeGui = PHYSICS_RANGE.ToString();
+				ApplyPhysRange();
 			}
 			
 			line++;
@@ -562,46 +617,80 @@ namespace BahaTurret
 		
 		public void ApplyPhysRange()
 		{
-			if(PHYSICS_RANGE < 2500 && PHYSICS_RANGE > 0) PHYSICS_RANGE = 0;
+			if(PHYSICS_RANGE <= 2500) PHYSICS_RANGE = 0;
 			
 			
 			if(PHYSICS_RANGE > 0)
 			{
-				Vessel.unloadDistance = PHYSICS_RANGE-250;
-				Vessel.loadDistance = PHYSICS_RANGE;
+				float pack = PHYSICS_RANGE;
+				float unload = PHYSICS_RANGE * 0.9f;
+				float load = unload * 0.9f;
+				float unpack = load * 0.9f;
+
+				VesselRanges defaultRanges = PhysicsGlobals.Instance.VesselRangesDefault;
+				VesselRanges.Situation combatSituation = new VesselRanges.Situation(load, unload, pack, unpack);
+
 				
 				
+				VesselRanges.Situation combatFlyingSituation = ClampedSituation(combatSituation, defaultRanges.flying);
+				VesselRanges.Situation combatLandedSituation = ClampedSituationLanded(combatSituation, defaultRanges.landed);
+				VesselRanges.Situation combatSplashedSituation = ClampedSituation(combatSituation, defaultRanges.splashed);
+				VesselRanges.Situation combatOrbitSituation = ClampedSituation(combatSituation, defaultRanges.orbit);
+				VesselRanges.Situation combatSubOrbitSituation = ClampedSituation(combatSituation, defaultRanges.subOrbital);
+				VesselRanges.Situation combatPrelaunchSituation = ClampedSituation(combatSituation, defaultRanges.prelaunch);
+
+				combatVesselRanges.flying = combatFlyingSituation;
+				combatVesselRanges.landed = combatLandedSituation;
+				combatVesselRanges.splashed = combatSplashedSituation;
+				combatVesselRanges.orbit = combatOrbitSituation;
+				combatVesselRanges.subOrbital = combatSubOrbitSituation;
+				combatVesselRanges.prelaunch = combatPrelaunchSituation;
+
 				foreach(Vessel v in FlightGlobals.Vessels)
 				{
-					v.distancePackThreshold = PHYSICS_RANGE*2f;
-					v.distanceUnpackThreshold = PHYSICS_RANGE*0.6f;
-					v.distanceLandedPackThreshold = Mathf.Clamp(PHYSICS_RANGE * 0.65f, 0, 11400);
-					v.distanceLandedUnpackThreshold = Mathf.Clamp(PHYSICS_RANGE*0.5f, 0, 10800);
+					v.vesselRanges = new VesselRanges(combatVesselRanges);
 				}
 				
-				FloatingOrigin.fetch.threshold = (PHYSICS_RANGE + 3500) * (PHYSICS_RANGE + 3500);
-				
-				
+				FloatingOrigin.fetch.threshold = Mathf.Pow(PHYSICS_RANGE + 3500, 2);
 			}
 			else
 			{
-				Vessel.unloadDistance = 2250;
-				Vessel.loadDistance = 2500;
-				
-				
 				foreach(Vessel v in FlightGlobals.Vessels)
 				{
-					v.distancePackThreshold = 5000;
-					v.distanceUnpackThreshold = 200;
-					v.distanceLandedPackThreshold = 350;
-					v.distanceLandedUnpackThreshold = 200;
+					v.vesselRanges = PhysicsGlobals.Instance.VesselRangesDefault;
 				}
 				
-				FloatingOrigin.fetch.threshold = 6000 * 6000;
-					
+				FloatingOrigin.fetch.threshold = Mathf.Pow(6000, 2);
 			}
+		}
+
+		private VesselRanges.Situation ClampedSituation(VesselRanges.Situation input, VesselRanges.Situation minSituation)
+		{
+			float load = Mathf.Clamp(input.load, minSituation.load, 81000);
+			float unload = Mathf.Clamp(input.unload, minSituation.unload, 90000);
+			float pack = Mathf.Clamp(input.pack, minSituation.pack, 100000);
+			float unpack = Mathf.Clamp(input.unpack, minSituation.unpack, 72900);
+		
+			VesselRanges.Situation output = new VesselRanges.Situation(load, unload, pack, unpack);
+			return output;
+		
+		}
+
+		private VesselRanges.Situation ClampedSituationLanded(VesselRanges.Situation input, VesselRanges.Situation minSituation)
+		{
+			float maxLanded = 11000;
+			float load = Mathf.Clamp(input.load, minSituation.load, maxLanded*.9f*.9f);
+			float unload = Mathf.Clamp(input.unload, minSituation.unload, maxLanded*.9f);
+			float pack = Mathf.Clamp(input.pack, minSituation.pack, maxLanded);
+			float unpack = Mathf.Clamp(input.unpack, minSituation.unpack, maxLanded*.9f*.9f*.9f);
 			
-			
+			VesselRanges.Situation output = new VesselRanges.Situation(load, unload, pack, unpack);
+			return output;
+		}
+
+		public void ApplyNewVesselRanges(Vessel v)
+		{
+			v.vesselRanges = new VesselRanges(combatVesselRanges);
 		}
 		
 		void HideGameUI()
@@ -639,12 +728,11 @@ namespace BahaTurret
 		
 		void OnVesselGoOffRails(Vessel v)
 		{
-			if(v.Landed)
+			if(v.Landed && BDArmorySettings.DRAW_DEBUG_LABELS)
 			{
-				//Debug.Log ("Loaded vessel: "+v.vesselName+", Velocity: "+v.srf_velocity);
+				Debug.Log ("Loaded vessel: "+v.vesselName+", Velocity: "+v.srf_velocity+", packed: "+v.packed);
 				//v.SetWorldVelocity(Vector3d.zero);	
 			}
-			
 		}
 		
 		public void SaveVolumeSettings()

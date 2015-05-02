@@ -17,7 +17,7 @@ namespace BahaTurret
 				//atmospheric drag (stock)
 				float simSpeedSquared = rigidbody.velocity.sqrMagnitude;
 				Vector3 currPos = transform.position;
-				Vector3 dragForce = (0.008f * rigidbody.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos)) * rigidbody.velocity.normalized;
+				Vector3 dragForce = (0.008f * rigidbody.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * rigidbody.velocity.normalized;
 				
 				rigidbody.velocity -= (dragForce/rigidbody.mass)*Time.fixedDeltaTime;
 				//

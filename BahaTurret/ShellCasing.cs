@@ -21,6 +21,7 @@ namespace BahaTurret
 			{
 				rigidbody.useGravity = false;
 			}
+
 		}
 		
 		void FixedUpdate()

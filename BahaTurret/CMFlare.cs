@@ -6,7 +6,7 @@ namespace BahaTurret
 {
 	public class CMFlare : MonoBehaviour
 	{
-		public float acquireDice;
+		public float acquireDice = 0;
 		
 		public Vessel sourceVessel;
 		Vector3 relativePos;
@@ -21,12 +21,16 @@ namespace BahaTurret
 		
 		public bool alive = true;
 		
-		
+		Vector3 upDirection;
+
+		Rigidbody rb;
+
 		void Start()
 		{
 			BDArmorySettings.numberOfParticleEmitters++;
 			
-			gameObject.AddComponent<Rigidbody>();
+			rb = gameObject.AddComponent<Rigidbody>();
+
 			acquireDice = UnityEngine.Random.Range(0f,100f);
 			
 			foreach(var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
@@ -34,71 +38,95 @@ namespace BahaTurret
 				if(pe.useWorldSpace)	
 				{
 					BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
-					gpe.rb = rigidbody;
+					gpe.rb = rb;
 					gaplessEmitters.Add (gpe);
+					gpe.emit = true;
 				}
 				else
 				{
 					pEmitters.Add(pe);	
+					pe.emit = true;
 				}
 			}
 			lights = gameObject.GetComponentsInChildren<Light>();
 			startTime = Time.time;
-			foreach(var pe in pEmitters)
-			{
-				pe.emit = true;	
-			}
-			foreach(var gpe in gaplessEmitters)
-			{
-				gpe.emit = true;	
-			}
-			
-			rigidbody.velocity = startVelocity;
-			
-			gameObject.AddComponent<KSPForceApplier>();
-			gameObject.GetComponent<KSPForceApplier>().drag = 0.4f;
-			rigidbody.useGravity = false;
 		
-			
-			rigidbody.mass = 0.001f;
-			
+			rb.velocity = startVelocity;
+			rb.useGravity = false;
+			rb.mass = 0.001f;
+
+			//ksp force applier
+			gameObject.AddComponent<KSPForceApplier>().drag = 0.4f;
+
+
 			BDArmorySettings.Flares.Add(this.gameObject);
 			
-			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
+			if(sourceVessel!=null)
+			{
+				relativePos = transform.position-sourceVessel.transform.position;
+			}
+
+			upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
 		}
 		
 		void FixedUpdate()
 		{
-			
-			transform.rotation = Quaternion.LookRotation(rigidbody.velocity, FlightGlobals.getUpAxis());
-			
+
+			transform.rotation = Quaternion.LookRotation(rb.velocity, upDirection);
+
+
+			Vector3 downForce = Vector3.zero;
 			//downforce
-			Vector3 downForce;
-			if(sourceVessel != null) downForce = (Mathf.Clamp((float)sourceVessel.srfSpeed, 0.1f, 150)/150) * Mathf.Clamp01(20/Vector3.Distance(sourceVessel.transform.position,transform.position)) * 20 * -FlightGlobals.getUpAxis();
-			else downForce = Vector3.zero;
+
+			if(sourceVessel != null)
+			{
+				downForce = (Mathf.Clamp((float)sourceVessel.srfSpeed, 0.1f, 150)/150) * Mathf.Clamp01(20/Vector3.Distance(sourceVessel.transform.position,transform.position)) * 20 * -upDirection;
+			}
+
+
 			
 			//turbulence
 			foreach(var pe in gaplessEmitters)
 			{
-				
-				pe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
-				if(FlightGlobals.getStaticPressure(transform.position) == 0) pe.emit = false;
-				
+				if(pe && pe.pEmitter)
+				{
+					try{
+					pe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
+					}
+					catch(NullReferenceException)
+					{
+						Debug.LogWarning("CMFlare NRE setting worldVelocity");
+					}
+
+					try
+					{
+					if(FlightGlobals.ActiveVessel && FlightGlobals.ActiveVessel.atmDensity <= 0)
+					{
+						pe.emit = false;
+					}
+					}
+					catch(NullReferenceException)
+					{
+						Debug.LogWarning ("CMFlare NRE checking density");
+					}
+				}
 			}
-			
-			
-			
-			
-			
-			
+
+
+
+
 			//floatingOrigin fix
-			if(sourceVessel!=null && Vector3.Distance(transform.position-sourceVessel.transform.position, relativePos) > 800)
+			if(sourceVessel!=null)
 			{
-				transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
+				if(((transform.position-sourceVessel.transform.position)-relativePos).sqrMagnitude > 800 * 800)
+				{
+					transform.position = sourceVessel.transform.position+relativePos + (rb.velocity * Time.fixedDeltaTime);
+				}
+
+				relativePos = transform.position-sourceVessel.transform.position;
 			}
-			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
 			//
-			
+
 			
 
 			/*
@@ -108,11 +136,11 @@ namespace BahaTurret
 			}
 			*/
 			
-			
-			if(Time.time - startTime > 4) //stop emitting after 3 seconds
+
+			if(Time.time - startTime > 4) //stop emitting after 4 seconds
 			{
 				alive = false;
-				BDArmorySettings.Flares.Remove(this.gameObject);
+				BDArmorySettings.Flares.Remove(gameObject);
 				
 				foreach(var pe in pEmitters)
 				{
@@ -124,16 +152,18 @@ namespace BahaTurret
 				}
 				foreach(var lgt in lights)
 				{
-					lgt.intensity = 0;		
+					lgt.enabled = false;		
 				}
 			}
-			
+
+
+
 			if(Time.time - startTime > 15) //delete object after x seconds
 			{
 				BDArmorySettings.numberOfParticleEmitters--;
 				Destroy(gameObject);	
 			}
-			
+
 		}
 		
 		

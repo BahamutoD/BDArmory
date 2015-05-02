@@ -56,6 +56,8 @@ namespace BahaTurret
 		public float roundsPerMinute = 850;
 		[KSPField(isPersistant = false)]
 		public float accuracy = 4;
+		[KSPField(isPersistant = false)]
+		public float maxEffectiveDistance = 2500;
 		
 		[KSPField(isPersistant = false)]
 		public float bulletMass = 5.40133e-5f;
@@ -178,8 +180,8 @@ namespace BahaTurret
 		private Vessel targetVessel;
 		private Vector3 targetPrevVel;
 		private Part hitPart;
-		private GameObject bullet;
-		private GameObject shell;
+		//private GameObject bullet;
+		//private GameObject shell;
 		
 		private int numberOfGuns = 0;
 		
@@ -204,7 +206,16 @@ namespace BahaTurret
 		
 		//gapless particles
 		List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
-		
+
+		[KSPField(isPersistant = false)]
+		public bool airDetonation = false;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Pitch"),
+		 UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
+		public float defaultDetonationRange = 3500;
+
+		float detonationRange = 2000;
+
 		
 		
 		[KSPAction("Toggle Turret")]
@@ -218,7 +229,14 @@ namespace BahaTurret
 		{
 			turretEnabled = !turretEnabled;	
 			guardMode = false;
-			if(!turretEnabled) Screen.showCursor = true;
+			if(turretEnabled)
+			{
+				turretZeroed = false;
+			}
+			else
+			{
+				Screen.showCursor = true;
+			}
 		}
 		
 		
@@ -307,37 +325,7 @@ namespace BahaTurret
 			audioSource2.dopplerLevel = 0;
 			audioSource2.priority = 10;
 			
-			if(weaponType == "ballistic")
-			{
-				bullet = new GameObject("Bullet");
-				bullet.SetActive(true);
-				bullet.AddComponent<Rigidbody>();
-				bullet.rigidbody.mass = bulletMass;
-				
-				shell = GameDatabase.Instance.GetModel("BDArmory/Models/shell/model");
-				shell.name = "shell";
-				shell.transform.position = Vector3.zero;
-				shell.transform.localScale = 0.001f * Vector3.one;
-				shell.SetActive(true);
-				
-			}
-			else if(weaponType == "cannon")
-			{	
-				bullet = new GameObject("Bullet");
-				bullet.SetActive(true);
-				Rigidbody bulletRB = bullet.AddComponent<Rigidbody>();
-				bullet.rigidbody.mass = bulletMass;
-				
-				
-				shell = GameDatabase.Instance.GetModel("BDArmory/Models/shell/model");
-				shell.name = "shell";
-				shell.transform.position = Vector3.zero;
-				shell.transform.localScale = 0.001f * Vector3.one;
-				shell.SetActive(true);
-				
-				
-			}
-			else if(weaponType == "laser")
+			if(weaponType == "laser")
 			{
 				chargeSound = GameDatabase.Instance.GetAudioClip(chargeSoundPath);
 				if(HighLogic.LoadedSceneIsFlight)
@@ -370,7 +358,7 @@ namespace BahaTurret
 		
 		void Update()
 		{
-			if(HighLogic.LoadedSceneIsEditor && maxPitch == 0 && minPitch == 0 && yawRange == 0 && onlyFireInRange)	
+			if(HighLogic.LoadedSceneIsEditor && ((maxPitch - minPitch < 0.1f) || yawRange < 0.1f) && onlyFireInRange)	
 			{
 				onlyFireInRange = false;
 				Misc.RefreshAssociatedWindows(part);
@@ -447,7 +435,12 @@ namespace BahaTurret
 				numberOfGuns = 1;	
 			}
 			//
-			
+
+			if(!turretEnabled && !turretZeroed)
+			{
+				deployed = false;
+				ReturnTurret();
+			}
 			
 			//animation handling
 			if(deployAnimName!="")
@@ -485,7 +478,7 @@ namespace BahaTurret
 					if(!turretEnabled)
 					{
 						deployed = false;
-						ReturnTurret();
+						//ReturnTurret();
 					
 						if(turretZeroed)
 						{
@@ -505,52 +498,48 @@ namespace BahaTurret
 			//aim+shooting
 			if(deployed && (TimeWarp.WarpMode!=TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 			{
-				//if(vessel.isActiveVessel)
-				//{
-					
-					Aim ();	
-					CheckTarget ();
-					
-					if(((Input.GetKey(BDArmorySettings.FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !guardMode) || autoFire) && inTurretRange)
+				Aim ();	
+				CheckTarget ();
+
+				bool userFiring = (Input.GetKey(BDArmorySettings.FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !guardMode);
+				
+				if((userFiring || autoFire) && inTurretRange)
+				{
+					if(weaponType == "ballistic" || weaponType == "cannon") Fire ();
+					else if(weaponType == "laser")
 					{
-						if(weaponType == "ballistic" || weaponType == "cannon") Fire ();
-						else if(weaponType == "laser")
+						if(!FireLaser ())
 						{
-							if(!FireLaser ())
-							{
-								audioSource.Stop ();	
-							}
+							audioSource.Stop ();	
 						}
 					}
-					else
-					{
-						if(spinDownAnimation) spinningDown = true;
-						if(weaponType == "laser") audioSource.Stop ();
-						if(!oneShotSound && wasFiring)
-							{
-								audioSource.Stop ();
-								wasFiring = false;
-								audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
-								audioSource2.PlayOneShot(overheatSound);	
-							}
-						
-					}
-					
-					if(spinningDown && spinDownAnimation)
-					{
-						foreach(AnimationState anim in fireStates)
+				}
+				else
+				{
+					if(spinDownAnimation) spinningDown = true;
+					if(weaponType == "laser") audioSource.Stop ();
+					if(!oneShotSound && wasFiring)
 						{
-							if(anim.normalizedTime>1) anim.normalizedTime = 0;
-							anim.speed = fireAnimSpeed;
-							fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
+							audioSource.Stop ();
+							wasFiring = false;
+							audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
+							audioSource2.PlayOneShot(overheatSound);	
 						}
+					
+				}
+				
+				if(spinningDown && spinDownAnimation)
+				{
+					foreach(AnimationState anim in fireStates)
+					{
+						if(anim.normalizedTime>1) anim.normalizedTime = 0;
+						anim.speed = fireAnimSpeed;
+						fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
 					}
+				}
+				
 					
-					
-				//}else
-				//{
-				//	turretEnabled = false;
-				//}
+
 			}
 			else
 			{
@@ -584,7 +573,7 @@ namespace BahaTurret
 			
 			inTurretRange = true;
 			
-			Vector3 target = Vector3.zero;
+			Vector3 target;
 			Vector3 targetYawOffset;
 			Vector3 targetPitchOffset;
 			
@@ -595,61 +584,69 @@ namespace BahaTurret
 			}
 			
 			//auto target tracking
-			if(autoLockCapable && !guardMode)
+			if(guardMode)
 			{
-				if(targetVessel != null)
+				if(autoFireTarget)
+				{
+					target = autoFireTarget.transform.position;	
+					
+					targetVessel = autoFireTarget;
+					
+					target += targetVessel.rigidbody.velocity * Time.fixedDeltaTime;
+				}
+				else
+				{
+					target = Vector3.zero;
+					autoFire = false;
+					return;
+				}
+			}
+			else
+			{
+				if(autoLockCapable && targetVessel != null)
 				{
 					target = targetVessel.transform.position + targetVessel.rigidbody.velocity * Time.fixedDeltaTime;
 				}
-			}
-			else if(guardMode && autoFireTarget!=null)
-			{
-				target = autoFireTarget.transform.position;	
-				
-				targetVessel = autoFireTarget;
-				
-				target += targetVessel.rigidbody.velocity * Time.fixedDeltaTime;
-				
-			}
-			else if(guardMode && autoFireTarget == null)
-			{
-				autoFire = false;
-				return;
-			}
-			//
-			
-			if (target == Vector3.zero && !guardMode)  //if no target from autoLock Target, use mouse aim
-			{
-				Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
-				Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
-				RaycastHit hit;
-				if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+				else
 				{
-					target = hit.point;
-					try{
-						Part p = Part.FromGO(hit.rigidbody.gameObject);
-						if(p.vessel == this.vessel)
-						{
-							target = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;		
-						}
-						
-					}catch(NullReferenceException){}
-					
-					
-					
-				}else
-				{
-					target = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;	
-					if(targetVessel!=null && targetVessel.loaded)
+					//mouse aiming
+					Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
+					Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
+					RaycastHit hit;
+					if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
 					{
-						target = ray.direction * Vector3.Distance(targetVessel.transform.position, FlightCamera.fetch.mainCamera.transform.position) + FlightCamera.fetch.mainCamera.transform.position;	
+						target = hit.point;
+						try{
+							Part p = Part.FromGO(hit.rigidbody.gameObject);
+							if(p.vessel == this.vessel)
+							{
+								target = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;		
+							}
+							
+						}catch(NullReferenceException){}
+						
+						
+						
+					}else
+					{
+						target = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;	
+						if(targetVessel!=null && targetVessel.loaded)
+						{
+							target = ray.direction * Vector3.Distance(targetVessel.transform.position, FlightCamera.fetch.mainCamera.transform.position) + FlightCamera.fetch.mainCamera.transform.position;	
+						}
 					}
 				}
 			}
-			
+			//
+
+			//airDetonation
+			detonationRange = defaultDetonationRange;
+
+
+
 			targetDistance = Vector3.Distance(target, transform.position);
 			//target leading
-			if(BDArmorySettings.AIM_ASSIST && weaponType != "laser")
+			if((BDArmorySettings.AIM_ASSIST || guardMode) && weaponType != "laser")
 			{
 				float gAccel = (float) FlightGlobals.getGeeForceAtPosition(target).magnitude;
 				float time = targetDistance/(bulletVelocity);
@@ -657,7 +654,8 @@ namespace BahaTurret
 				
 				if(targetVessel!=null && targetVessel.loaded)
 				{
-					Vector3 acceleration = (targetVessel.rigidbody.velocity - targetPrevVel)/Time.fixedDeltaTime;
+					//Vector3 acceleration = (targetVessel.rigidbody.velocity - targetPrevVel)/Time.fixedDeltaTime;
+					Vector3 acceleration = targetVessel.acceleration;
 					float time2 = CalculateLeadTime(target-transform.position, targetVessel.rigidbody.velocity-rigidbody.velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
 					target += (targetVessel.rigidbody.velocity-rigidbody.velocity) * time; //target vessel relative velocity compensation
@@ -680,8 +678,13 @@ namespace BahaTurret
 				{
 					fixedLeadOffset = originalTarget-target; //for aiming fixed guns to moving target	
 				}
+
+				//airdetonation
+				detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, target), 500, 3500) - 55f;
 				
 			}
+
+			detonationRange *= UnityEngine.Random.Range(0.95f, 1.05f);
 			
 			targetYawOffset = yawTransform.position - target;
 			targetYawOffset = Quaternion.Inverse(yawTransform.rotation) * targetYawOffset; //sets offset relative to the turret's rotation
@@ -779,6 +782,10 @@ namespace BahaTurret
 				{
 					autoFire = true;
 				}
+				else
+				{
+					autoFire = false;
+				}
 			}
 			else
 			{	
@@ -789,6 +796,7 @@ namespace BahaTurret
 		//returns turret to default position when turned off
 		private void ReturnTurret()
 		{
+			//Debug.Log ("Returning turret");
 			float returnSpeed = Mathf.Clamp (rotationSpeed, 0.1f, 6f);
 			bool yawReturned = false;
 			bool pitchReturned = false;
@@ -925,7 +933,8 @@ namespace BahaTurret
 							{
 								foreach(Transform sTf in part.FindModelTransforms("shellEject"))
 								{
-									GameObject ejectedShell = GameObject.Instantiate(shell, sTf.position + rigidbody.velocity*(Time.fixedDeltaTime), sTf.rotation) as GameObject;
+									GameObject ejectedShell = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"), sTf.position + rigidbody.velocity*(Time.fixedDeltaTime), sTf.rotation);
+									ejectedShell.SetActive(true);
 									ejectedShell.transform.localScale = Vector3.one * shellScale;
 									ShellCasing shellComponent = ejectedShell.AddComponent<ShellCasing>();
 									shellComponent.initialV = rigidbody.velocity;
@@ -941,14 +950,21 @@ namespace BahaTurret
 						Vector3 aimDirection = fireTransform.forward;
 						
 						
-						GameObject firedBullet = GameObject.Instantiate(bullet, tf.position, tf.rotation) as GameObject;
+						//GameObject firedBullet = GameObject.Instantiate(bullet, tf.position, tf.rotation) as GameObject;
+						GameObject firedBullet = new GameObject("bullet");
+						firedBullet.transform.position = tf.position;
+						firedBullet.transform.rotation = tf.rotation;
+						firedBullet.AddComponent<Rigidbody>();
+						firedBullet.rigidbody.mass = bulletMass;
+
+
 						Vector3 firedVelocity = fireTransform.rotation * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
 						
 						if(targetVessel!=null && targetVessel.loaded && (autoLockCapable || guardMode))
 						{
 							Vector3 targetDirection = targetPosition-fireTransform.position;
 							
-							if(Vector3.Angle(aimDirection, targetDirection) < 2f)
+							if(Vector3.Angle(aimDirection, targetDirection) < 3f)
 							{
 								firedVelocity = Quaternion.LookRotation(targetDirection) * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
 							}
@@ -956,7 +972,7 @@ namespace BahaTurret
 						firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
 						firedBullet.transform.position += rigidbody.velocity * Time.fixedDeltaTime;
 						firedBullet.rigidbody.AddForce(this.rigidbody.velocity + firedVelocity, ForceMode.VelocityChange);
-						if(weaponType == "ballistic")
+						if(weaponType != "laser")
 						{
 							BahaTurretBullet bulletScript = firedBullet.AddComponent<BahaTurretBullet>();
 							bulletScript.initialSpeed = bulletVelocity;
@@ -969,24 +985,19 @@ namespace BahaTurret
 							bulletScript.tracerEndWidth = tracerEndWidth;
 							bulletScript.tracerLength = tracerLength;
 							bulletScript.bulletDrop = bulletDrop;
+
+							if(weaponType == "cannon")
+							{
+								bulletScript.bulletType = BahaTurretBullet.BulletTypes.Explosive;
+								bulletScript.explModelPath = explModelPath;
+								bulletScript.explSoundPath = explSoundPath;
+								bulletScript.blastPower = cannonShellPower;
+								bulletScript.radius = cannonShellRadius;
+								bulletScript.airDetonation = airDetonation;
+								bulletScript.detonationRange = detonationRange;
+							}
 						}
-						if(weaponType == "cannon")
-						{
-							CannonShell firedShell = firedBullet.AddComponent<CannonShell>();
-							firedShell.explModelPath = explModelPath;
-							firedShell.explSoundPath = explSoundPath;
-							firedShell.bulletTexturePath = bulletTexturePath;
-							firedShell.sourceVessel = this.vessel;
-							firedShell.blastPower = cannonShellPower;
-							firedShell.radius = cannonShellRadius;
-							firedShell.projectileColor = projectileColorC;
-							firedShell.tracerEndWidth = tracerEndWidth;
-							firedShell.tracerStartWidth = tracerStartWidth;
-							firedShell.tracerLength = tracerLength;
-							firedShell.bulletDrop = bulletDrop;
-							firedShell.initialSpeed = bulletVelocity;
-						}
-						
+
 						//heat
 						heat += heatPerShot;
 					}
@@ -1065,7 +1076,7 @@ namespace BahaTurret
 							if(p.vessel!=this.vessel)
 							{
 								float distance = hit.distance;
-								p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),2))
+								p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),
 
 								if(BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
 								
@@ -1074,9 +1085,6 @@ namespace BahaTurret
 						catch(NullReferenceException){}
 					
 					}
-				
-					
-					
 				}
 				heat += heatPerShot * TimeWarp.CurrentRate;
 				
@@ -1287,7 +1295,7 @@ namespace BahaTurret
 				}
 
 				Texture2D texture;
-				if(Vector3.Angle(pointingAtPosition-transform.position,targetPosition-transform.position) < 0.3f)
+				if(Vector3.Angle(pointingAtPosition-transform.position, targetPosition-transform.position) < 0.3f)
 				{
 					texture = greenCircle;
 				}

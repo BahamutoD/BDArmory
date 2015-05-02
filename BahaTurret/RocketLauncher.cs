@@ -164,7 +164,7 @@ namespace BahaTurret
 				
 				while(simulating)
 				{
-					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(simCurrPos)));
+					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(simCurrPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
 					
 					RaycastHit hit;
 					simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
@@ -408,7 +408,7 @@ namespace BahaTurret
 			
 			
 			//guidance and attitude stabilisation scales to atmospheric density.
-			float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position)));
+			float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
 			
 			//model transform. always points prograde
 			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);

@@ -22,6 +22,7 @@ namespace BahaTurret
 			{
 				cmResource.amount--;
 				Debug.Log("Dropping counterMeasure");
+				audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
 				audioSource.PlayOneShot(deploySound);
 				GameObject cm = GameDatabase.Instance.GetModel("BDArmory/Models/CMFlare/model");
 				cm = (GameObject) Instantiate(cm, transform.position, transform.rotation);
@@ -41,6 +42,22 @@ namespace BahaTurret
 			audioSource.minDistance = 1;
 			audioSource.maxDistance = 1000;
 		}
+
+		public override void OnUpdate ()
+		{
+			if(audioSource)
+			{
+				if(vessel.isActiveVessel)
+				{
+					audioSource.dopplerLevel = 0;
+				}
+				else
+				{
+					audioSource.dopplerLevel = 1;
+				}
+			}
+		}
+
 		
 		PartResource GetCMResource()
 		{

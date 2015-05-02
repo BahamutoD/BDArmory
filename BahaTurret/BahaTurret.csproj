@@ -35,13 +35,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\Games\KSP\KSP 0.90 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\Games\KSP\KSP 0.90 - Mod Dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>C:\Games\KSP 1.01 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\Games\KSP\KSP 0.90 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>C:\Games\KSP 1.01 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -52,7 +49,6 @@
     <Compile Include="ShellCasing.cs" />
     <Compile Include="BDArmorySettings.cs" />
     <Compile Include="BahaTurretBullet.cs" />
-    <Compile Include="CannonShell.cs" />
     <Compile Include="ExplosionFX.cs" />
     <Compile Include="BulletHitFX.cs" />
     <Compile Include="MissileFire.cs" />
@@ -72,6 +68,9 @@
     <Compile Include="Animation\BDALookConstraintUp.cs" />
     <Compile Include="SeismicChargeFX.cs" />
     <Compile Include="BDInputUtils.cs" />
+    <Compile Include="TargetInfo.cs" />
+    <Compile Include="BDATargetManager.cs" />
+    <Compile Include="BDModulePilotAI.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />

@@ -70,7 +70,6 @@ namespace BahaTurret
 		{
 			try
 			{
-				
 				GameObject go;
 				AudioClip soundClip;
 				
@@ -102,7 +101,7 @@ namespace BahaTurret
 				foreach(RaycastHit hitExplosion in hits)
 				{
 					//Debug.Log ("Explosion Raycast hit something: "+hitExplosion.collider.gameObject.name+", layer: "+hitExplosion.collider.gameObject.layer);
-					
+
 					//hitting parts
 					Part explodePart = null;
 					try
@@ -110,6 +109,10 @@ namespace BahaTurret
 						if(hitExplosion.rigidbody)
 						{
 							explodePart = Part.FromGO(hitExplosion.rigidbody.gameObject);
+							if(!explodePart.vessel.loaded)
+							{
+								explodePart.vessel.Unload();
+							}
 							explodePart.Unpack();
 						}
 					}catch(NullReferenceException){}

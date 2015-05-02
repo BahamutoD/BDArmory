@@ -28,11 +28,11 @@ namespace BahaTurret
 			foreach(var bdmm in vessel.FindPartModulesImplementing<BDModularGuidance>())
 			{
 				bdmm.hasFired = true;
-				bdmm.target = target;
+				//bdmm.target = target;
 			}
 			foreach(var bde in vessel.FindPartModulesImplementing<BDExplosivePart>())
 			{
-				bde.target = target;
+				//bde.target = target;
 			}
 		}
 		
