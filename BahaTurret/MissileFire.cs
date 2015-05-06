@@ -663,6 +663,10 @@ namespace BahaTurret
 				
 			}
 
+			if(lastFiredSym && lastFiredSym.partInfo.title != selectedWeapon)
+			{
+				lastFiredSym = null;
+			}
 
 			if(!hasFired && lastFiredSym == null)
 			{
@@ -1118,7 +1122,7 @@ namespace BahaTurret
 				return false;
 			}
 			float distance = Vector3.Distance(transform.position+vessel.srf_velocity, target.position+target.velocity); //take velocity into account (test)
-			if((vessel.Landed && (distance < turretRange || (target.isMissile && distance < turretRange*1.65f))) || (!vessel.Landed && distance < 400))
+			if(distance < turretRange || (target.isMissile && distance < turretRange*1.65f))
 			{
 				if(SwitchToLaser())
 				{
@@ -1536,11 +1540,12 @@ namespace BahaTurret
 				return 2;
 			}
 			Debug.Log ("Checking turrets");
+			float finalDistance = vessel.Landed ? distance : distance/2; //decrease distance requirement if airborne
 			foreach(var turret in vessel.FindPartModulesImplementing<BahaTurret>())
 			{
 				if(turret.part.partInfo.title == selectedWeapon)
 				{
-					if((TargetInTurretRange(turret, 15)) && turret.maxEffectiveDistance >= distance)
+					if(((!vessel.Landed && pilotAI) || (TargetInTurretRange(turret, 15))) && turret.maxEffectiveDistance >= finalDistance)
 					{
 						if(CheckAmmo(turret))
 						{

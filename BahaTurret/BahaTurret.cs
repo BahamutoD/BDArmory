@@ -210,7 +210,7 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public bool airDetonation = false;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Pitch"),
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
 		 UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float defaultDetonationRange = 3500;
 
@@ -680,7 +680,10 @@ namespace BahaTurret
 				}
 
 				//airdetonation
-				detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, target), 500, 3500) - 55f;
+				if(targetVessel!=null)
+				{
+					detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, target), 500, 3500) - 50f;
+				}
 				
 			}
 
@@ -1214,10 +1217,13 @@ namespace BahaTurret
 					}
 					else
 					{
+						/*
 						if(gameObject.GetComponent<LineRenderer>()!=null)
 						{
 							gameObject.GetComponent<LineRenderer>().enabled = false;	
 						}
+
+					*/
 					}
 					
 				}
@@ -1409,6 +1415,11 @@ namespace BahaTurret
 				yawRangeEd.minValue = 0;
 				yawRangeEd.maxValue = yawRangeLimit;
 			}
+
+			//air detonation slider
+			Fields["defaultDetonationRange"].guiActive = airDetonation;
+			Fields["defaultDetonationRange"].guiActiveEditor = airDetonation;
+
 		}
 		
 		

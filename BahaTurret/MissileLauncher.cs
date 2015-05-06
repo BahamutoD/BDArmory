@@ -968,9 +968,16 @@ namespace BahaTurret
 					else
 					{
 						targetMf = null;
-						if(!hasRCS && !useSimpleDrag)	
+						if(!aero)
 						{
-							transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
+							if(!hasRCS && !useSimpleDrag)	
+							{
+								transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
+							}
+						}
+						else
+						{
+							aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + 20*transform.forward, liftArea, 0, aeroTorque, maxTorque, maxAoA);
 						}
 					}
 					

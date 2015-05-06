@@ -38,9 +38,10 @@ namespace BahaTurret
 			if(targetVessel.rigidbody)
 			{
 				leadTime = (1/((targetVessel.rigidbody.velocity-missileVessel.rigidbody.velocity).magnitude/targetDistance));
+				leadTime = Mathf.Clamp(leadTime, 0f, 5f);
 				targetPosition = targetPosition + (targetVessel.rigidbody.velocity*leadTime);
 			}
-			if(targetDistance < 800)
+			if(targetDistance < 1600)
 			{
 				targetPosition += (Vector3)targetVessel.acceleration * 0.025f * Mathf.Pow(leadTime,2);
 			}
@@ -51,9 +52,11 @@ namespace BahaTurret
 			Vector3 targetSurfacePos = targetVessel.transform.position - ((float)targetVessel.altitude*upDirection);
 			float distanceToTarget = Vector3.Distance(surfacePos, targetSurfacePos);
 
-			Vector3 finalTarget = targetPosition +(Mathf.Clamp((distanceToTarget-250)*0.22f, 0, 250) * upDirection);
+			//Vector3 finalTarget = targetPosition +(Mathf.Clamp((distanceToTarget-800)*0.05f, 0, 250) * upDirection);
 
-			return targetPosition;
+			Vector3 finalTarget = targetPosition + Mathf.Clamp((float)(targetVessel.altitude-missileVessel.altitude)/4, 0, 1500)*upDirection;
+
+			return finalTarget;
 		}
 
 		public static Vector3 GetAirToAirFireSolution(MissileLauncher missile, Vessel targetVessel)
@@ -155,9 +158,11 @@ namespace BahaTurret
 			if(DefaultLiftCurve == null)
 			{
 				DefaultLiftCurve = new FloatCurve();
-				DefaultLiftCurve.Add(0, 0);
-				DefaultLiftCurve.Add(25, 1);
-				DefaultLiftCurve.Add(30, 0.5f);
+				DefaultLiftCurve.Add(0, .1f);
+				DefaultLiftCurve.Add(8, .55f);
+				DefaultLiftCurve.Add(19, 1);
+				DefaultLiftCurve.Add(23, 1);
+				DefaultLiftCurve.Add(29, 0.85f);
 				DefaultLiftCurve.Add(65, .1f);
 				DefaultLiftCurve.Add(90, .1f);
 			}
@@ -166,9 +171,10 @@ namespace BahaTurret
 			{
 				DefaultDragCurve = new FloatCurve();
 				DefaultDragCurve.Add(0, 0);
-				DefaultDragCurve.Add(15, .045f);
-				DefaultDragCurve.Add(45, .145f);
-				DefaultDragCurve.Add(90, .65f);
+				DefaultDragCurve.Add(5, -.015f);
+				DefaultDragCurve.Add(15, .015f);
+				DefaultDragCurve.Add(45, .085f);
+				DefaultDragCurve.Add(90, .5f);
 			}
 
 
@@ -194,7 +200,6 @@ namespace BahaTurret
 			{
 				Vector3 targetDirection = (targetPosition-ml.transform.position);
 				//debugString += "\nSurface Distance: "+surfaceDistance.ToString("0.0");
-				
 
 				Vector3 torqueDirection = -Vector3.Cross(targetDirection, ml.transform.forward).normalized;
 				torqueDirection = ml.transform.InverseTransformDirection(torqueDirection);
