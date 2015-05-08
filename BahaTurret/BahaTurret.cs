@@ -8,6 +8,9 @@ namespace BahaTurret
 	{
 		[KSPField(isPersistant = true)]
 		public bool turretEnabled = false;  //user initiated
+
+		[KSPField(isPersistant = false)]
+		public bool autoReturnTurret = true;
 		
 		public bool deployed = false;  //actual status
 		
@@ -477,9 +480,6 @@ namespace BahaTurret
 					//retracting
 					if(!turretEnabled)
 					{
-						deployed = false;
-						//ReturnTurret();
-					
 						if(turretZeroed)
 						{
 							anim.enabled = true;
@@ -799,6 +799,12 @@ namespace BahaTurret
 		//returns turret to default position when turned off
 		private void ReturnTurret()
 		{
+			if(!autoReturnTurret)
+			{
+				turretZeroed = true;
+				return;
+			}
+
 			//Debug.Log ("Returning turret");
 			float returnSpeed = Mathf.Clamp (rotationSpeed, 0.1f, 6f);
 			bool yawReturned = false;

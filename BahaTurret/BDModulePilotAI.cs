@@ -14,7 +14,9 @@ namespace BahaTurret
 {
 	public class BDModulePilotAI : PartModule
 	{
-		bool pilotEnabled = false;
+		[KSPField(isPersistant = true)]
+		public bool pilotEnabled = false;
+
 		bool startedLanded = false;
 		bool extending = false;
 
@@ -62,6 +64,11 @@ namespace BahaTurret
 
 				part.OnJustAboutToBeDestroyed += DeactivatePilot;
 				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
+
+				if(pilotEnabled)
+				{
+					ActivatePilot();
+				}
 			}
 
 			RefreshPartWindow();
@@ -121,7 +128,7 @@ namespace BahaTurret
 		{
 			Events["TogglePilot"].guiName = pilotEnabled ? "Deactivate Pilot" : "Activate Pilot";
 
-			Misc.RefreshAssociatedWindows(part);
+			//Misc.RefreshAssociatedWindows(part);
 		}
 
 
