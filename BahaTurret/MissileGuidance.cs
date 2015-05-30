@@ -16,7 +16,7 @@ namespace BahaTurret
 			
 			if(missileVessel.srfSpeed < 75 && missileVessel.verticalSpeed < 10)//gain altitude if launching from stationary
 			{
-				return missileVessel.transform.position + (5*missileVessel.transform.forward) + (7 * upDirection);	
+				return missileVessel.transform.position + (5*missileVessel.transform.forward) + (1 * upDirection);	
 			}
 			
 			Vector3 finalTarget = targetPosition +(Mathf.Clamp((distanceToTarget-((float)missileVessel.srfSpeed*descentRatio))*0.22f, 0, 2000) * upDirection);
@@ -54,7 +54,7 @@ namespace BahaTurret
 
 			//Vector3 finalTarget = targetPosition +(Mathf.Clamp((distanceToTarget-800)*0.05f, 0, 250) * upDirection);
 
-			Vector3 finalTarget = targetPosition + Mathf.Clamp((float)(targetVessel.altitude-missileVessel.altitude)/4, 0, 1500)*upDirection;
+			Vector3 finalTarget = targetPosition + Mathf.Clamp((float)(targetVessel.altitude-missileVessel.altitude)/6, -20, 1500)*upDirection;
 
 			return finalTarget;
 		}
@@ -142,19 +142,6 @@ namespace BahaTurret
 		public static FloatCurve DefaultDragCurve = null;
 		public static Vector3 DoAeroForces(MissileLauncher ml, Vector3 targetPosition, float liftArea, float steerMult, Vector3 previousTorque, float maxTorque, float maxAoA)
 		{
-			Rigidbody rb = ml.rigidbody;
-			double airDensity = ml.vessel.atmDensity;
-			double airSpeed = ml.vessel.srfSpeed;
-
-			//temp values
-			Vector3 CoL = new Vector3(0, 0, -1f);
-			//float liftArea = 0.015f;
-			float liftCoefficient = 0.1f;
-			//float steerMult = .55f;
-			//float maxDeflectionForce = 10;
-			//float maxAoA = ml.maxAoA;
-
-
 			if(DefaultLiftCurve == null)
 			{
 				DefaultLiftCurve = new FloatCurve();
@@ -170,10 +157,10 @@ namespace BahaTurret
 			if(DefaultDragCurve == null)
 			{
 				DefaultDragCurve = new FloatCurve();
-				DefaultDragCurve.Add(0, 0);
-				DefaultDragCurve.Add(5, -.015f);
-				DefaultDragCurve.Add(15, .015f);
-				DefaultDragCurve.Add(45, .085f);
+				DefaultDragCurve.Add(0, 0f);
+				DefaultDragCurve.Add(5, .002f);
+				DefaultDragCurve.Add(15, .007f);
+				DefaultDragCurve.Add(45, .025f);
 				DefaultDragCurve.Add(90, .5f);
 			}
 
@@ -181,8 +168,23 @@ namespace BahaTurret
 			FloatCurve liftCurve = DefaultLiftCurve;
 			FloatCurve dragCurve = DefaultDragCurve;
 
+			return DoAeroForces(ml, targetPosition, liftArea, steerMult, previousTorque, maxTorque, maxAoA, liftCurve, dragCurve);
+		}
 
-
+		public static Vector3 DoAeroForces(MissileLauncher ml, Vector3 targetPosition, float liftArea, float steerMult, Vector3 previousTorque, float maxTorque, float maxAoA, FloatCurve liftCurve, FloatCurve dragCurve)
+		{
+			Rigidbody rb = ml.rigidbody;
+			double airDensity = ml.vessel.atmDensity;
+			double airSpeed = ml.vessel.srfSpeed;
+			
+			//temp values
+			Vector3 CoL = new Vector3(0, 0, -1f);
+			//float liftArea = 0.015f;
+			float liftCoefficient = 0.1f;
+			//float steerMult = .55f;
+			//float maxDeflectionForce = 10;
+			//float maxAoA = ml.maxAoA;
+			
 			//lift
 			float AoA = Mathf.Clamp(Vector3.Angle(ml.transform.forward, rb.velocity.normalized), 0, 90);
 			if(AoA > 0)
@@ -190,7 +192,7 @@ namespace BahaTurret
 				double liftForce = 0.5 * airDensity * Math.Pow(airSpeed, 2) * liftArea * liftCoefficient * liftCurve.Evaluate(AoA);
 				Vector3 forceDirection = Vector3.ProjectOnPlane(-rb.velocity, ml.transform.forward).normalized;
 				rb.AddForceAtPosition((float)liftForce * forceDirection, ml.transform.TransformPoint(CoL));
-
+				
 				//extra drag
 				double dragForce = 0.5 * airDensity * Math.Pow(airSpeed, 2) * liftArea * liftCoefficient * dragCurve.Evaluate(AoA);
 				rb.AddForceAtPosition((float)dragForce * -rb.velocity.normalized, ml.transform.TransformPoint(CoL));
@@ -200,26 +202,24 @@ namespace BahaTurret
 			{
 				Vector3 targetDirection = (targetPosition-ml.transform.position);
 				//debugString += "\nSurface Distance: "+surfaceDistance.ToString("0.0");
-
+				
 				Vector3 torqueDirection = -Vector3.Cross(targetDirection, ml.transform.forward).normalized;
 				torqueDirection = ml.transform.InverseTransformDirection(torqueDirection);
-				float targetAngle = Vector3.Angle(ml.rigidbody.velocity.normalized, targetDirection);
+				float targetAngle = Vector3.Angle(ml.rigidbody.velocity.normalized, targetDirection) * 8;
 				float torque = Mathf.Clamp(targetAngle * steerMult, 0, maxTorque);
-				Vector3 finalTorque = Vector3.ProjectOnPlane(Vector3.Lerp(previousTorque, torqueDirection*torque, 0.1f), Vector3.forward);
-
+				Vector3 finalTorque = Vector3.ProjectOnPlane(Vector3.Lerp(previousTorque, torqueDirection*torque, 0.25f), Vector3.forward);
+				
 				rb.AddRelativeTorque(finalTorque);
-
+				
 				//anti-spin
 				/*
 				Vector3 localAngVel = rb.transform.InverseTransformDirection(rb.angularVelocity);
 				localAngVel -= localAngVel.z * Vector3.forward;
 				rb.angularVelocity = rb.transform.TransformDirection(localAngVel);
 				*/
-
+				
 				return finalTorque;
 				
-			//	Vector3 dragOffsetTarget = Vector3.ClampMagnitude(steerMult * Vector3.ProjectOnPlane(targetDirection, transform.forward), maxSteer);
-			//	dragOffset = Vector3.MoveTowards(dragOffset, dragOffsetTarget, 60*Time.fixedDeltaTime);
 			}
 			else
 			{

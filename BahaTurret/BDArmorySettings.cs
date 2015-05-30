@@ -312,7 +312,7 @@ namespace BahaTurret
 				cfg.SetValue("TRIGGER_HOLD_TIME", TRIGGER_HOLD_TIME.ToString(), true);
 
 				
-				
+
 				
 				cfg.Save ("GameData/BDArmory/settings.cfg");
 				

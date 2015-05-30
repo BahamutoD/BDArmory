@@ -102,6 +102,32 @@ namespace BahaTurret
 				}
 			}
 		}
+
+		public BahaTurret currentTurret
+		{
+			get
+			{
+				if(selectedWeapon!="None")
+				{
+					foreach(var bt in vessel.FindPartModulesImplementing<BahaTurret>())
+					{
+						if(bt!=null)
+						{
+							return bt;
+						}
+						else
+						{
+							return null;
+						}
+					}
+					return null;
+				}
+				else
+				{
+					return null;
+				}
+			}
+		}
 		//BahaTurret currentTurret = null;
 		
 		//KSP fields and events
@@ -192,6 +218,11 @@ namespace BahaTurret
 			foreach(var wpnMgr in vessel.FindPartModulesImplementing<MissileFire>())
 			{
 				wpnMgr.team = team;	
+			}
+			if(vessel.GetComponent<TargetInfo>())
+			{
+				vessel.GetComponent<TargetInfo>().RemoveFromDatabases();
+				Destroy(vessel.GetComponent<TargetInfo>());
 			}
 		}
 		
@@ -1015,6 +1046,7 @@ namespace BahaTurret
 				{
 					turret.turretEnabled = true;
 					turret.guardMode = true;
+					turret.maxAutoFireAngle = vessel.Landed ? 2 : 10;
 				}
 			}
 			
@@ -1122,28 +1154,23 @@ namespace BahaTurret
 				return false;
 			}
 			float distance = Vector3.Distance(transform.position+vessel.srf_velocity, target.position+target.velocity); //take velocity into account (test)
-			if(distance < turretRange || (target.isMissile && distance < turretRange*1.65f))
+			if(distance < turretRange || (target.isMissile && distance < turretRange*1.5f))
 			{
-				if(SwitchToLaser())
+				if((target.isMissile) && SwitchToLaser()) //need to favor ballistic for ground units
 				{
 					return true;
 				}
-				else if(SwitchToTurret(distance))
+				else if(!(target.isMissile && !vessel.Landed) && SwitchToTurret(distance))
 				{
-					if(target.isMissile && !vessel.Landed) //dont fire on missiles if airborne unless equipped with laser
-					{
-						return false;
-					}
+					//dont fire on missiles if airborne unless equipped with laser
+					return true;
+				}
 
-					return true;
-				}
-				else
-				{
-					return false;
-				}
 			}
-			else //missiles
+
+			if(distance > turretRange || !vessel.Landed)
 			{
+				//missiles
 				if(!target.isLanded)
 				{
 					if(target.isMissile && !vessel.Landed) //don't fire on missiles if airborne
@@ -1158,6 +1185,9 @@ namespace BahaTurret
 					return SwitchToGroundMissile();
 				}
 			}
+
+			return false;
+
 		}
 
 		public bool CanSeeTarget(Vessel target)
@@ -1246,7 +1276,7 @@ namespace BahaTurret
 				{
 					targetsTried.Add(potentialAirTarget);
 					SetTarget(potentialAirTarget);
-					if(SmartPickWeapon(potentialAirTarget, 800))
+					if(SmartPickWeapon(potentialAirTarget, 500))
 					{
 						Debug.Log (vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
 						return;
@@ -1431,7 +1461,7 @@ namespace BahaTurret
 					{
 						return false;
 					}
-					if(CheckTurret(distance) == 1)
+					if(CheckTurret(distance) == 1 && !selectedWeapon.Contains("Laser"))//sloppy fix.....
 					{
 						return true;
 					}
@@ -1545,7 +1575,8 @@ namespace BahaTurret
 			{
 				if(turret.part.partInfo.title == selectedWeapon)
 				{
-					if(((!vessel.Landed && pilotAI) || (TargetInTurretRange(turret, 15))) && turret.maxEffectiveDistance >= finalDistance)
+					float gimbalTolerance = vessel.Landed ? 0 : 15;
+					if(((!vessel.Landed && pilotAI) || (TargetInTurretRange(turret, gimbalTolerance))) && turret.maxEffectiveDistance >= finalDistance)
 					{
 						if(CheckAmmo(turret))
 						{
@@ -1581,20 +1612,27 @@ namespace BahaTurret
 				return true;
 			}
 
-			Vector3 direction = guardTarget.transform.position-turret.transform.position;
-			Vector3 directionYaw = Vector3.ProjectOnPlane(direction, turret.transform.up);
-			Vector3 directionPitch = Vector3.ProjectOnPlane(direction, turret.transform.right);
+			Transform turretTransform = turret.referenceTransform;
+			Vector3 direction = guardTarget.transform.position-turretTransform.position;
+			Vector3 directionYaw = Vector3.ProjectOnPlane(direction, turretTransform.forward);
+			Vector3 directionPitch = Vector3.ProjectOnPlane(direction, turretTransform.up);
 
-			float angleYaw = Vector3.Angle(-turret.transform.forward, directionYaw);
-			float anglePitch = Vector3.Angle(-turret.transform.forward, directionPitch);
-			if(angleYaw < (turret.yawRange/2)+tolerance && anglePitch < (turret.maxPitch-turret.minPitch)+tolerance)
+			float angleYaw = Vector3.Angle(turretTransform.right, directionYaw);
+			//float anglePitch = Vector3.Angle(-turret.transform.forward, directionPitch);
+			float signedAnglePitch = Misc.SignedAngle(turretTransform.right, directionPitch, turretTransform.forward);
+			if(Mathf.Abs(signedAnglePitch) > 90)
 			{
-				Debug.Log ("Checking turret range - target is within gimbal limits");
+				signedAnglePitch -= Mathf.Sign(signedAnglePitch)*180;
+			}
+			bool withinPitchRange = (signedAnglePitch > turret.minPitch && signedAnglePitch < turret.maxPitch);
+			if(angleYaw < (turret.yawRange/2)+tolerance && withinPitchRange)
+			{
+				Debug.Log ("Checking turret range - target is INSIDE gimbal limits! signedAnglePitch: "+signedAnglePitch+", minPitch: "+turret.minPitch+", maxPitch: "+turret.maxPitch);
 				return true;
 			}
 			else
 			{
-				Debug.Log ("Checking turret range - target is outside gimbal limits!");
+				Debug.Log ("Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: "+signedAnglePitch+", minPitch: "+turret.minPitch+", maxPitch: "+turret.maxPitch+", angleYaw: "+angleYaw);
 				return false;
 			}
 		}

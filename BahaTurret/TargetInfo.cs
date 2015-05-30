@@ -82,7 +82,6 @@ namespace BahaTurret
 
 		void Start()
 		{
-			hasStarted = true;
 			if(!vessel)
 			{
 				vessel = GetComponent<Vessel>();
@@ -124,7 +123,11 @@ namespace BahaTurret
 			}
 
 			friendliesEngaging = new List<MissileFire>();
-			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
+			if(!hasStarted)
+			{
+				vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
+			}
+			hasStarted = true;
 		}
 
 		void Update()
@@ -167,7 +170,7 @@ namespace BahaTurret
 		
 		void AboutToBeDestroyed()
 		{
-			BDATargetManager.TargetDatabase[team].Remove(this);
+			RemoveFromDatabases();
 			Destroy(this);
 		}
 
@@ -176,6 +179,12 @@ namespace BahaTurret
 			float thisSqrDist = (position-myMf.transform.position).sqrMagnitude;
 			float otherSqrDist = (otherTarget.position-myMf.transform.position).sqrMagnitude;
 			return thisSqrDist < otherSqrDist;
+		}
+
+		public void RemoveFromDatabases()
+		{
+			BDATargetManager.TargetDatabase[team].Remove(this);
+			BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Remove(this);
 		}
 	}
 }

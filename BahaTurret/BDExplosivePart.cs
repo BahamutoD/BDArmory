@@ -11,6 +11,13 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public float blastPower = 25;
 
+		[KSPAction("Detonate")]
+		public void DetonateAG(KSPActionParam param)
+		{
+			Detonate ();
+		}
+	
+
 		/*
 		[KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Proxy Detonate")]
 		public bool proximityDetonation = false;

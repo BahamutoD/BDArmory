@@ -81,6 +81,21 @@ namespace BahaTurret
 			float finalAngle = sign * angle;
 			return finalAngle;
 		}
+
+		public static FloatCurve ParseCurve(string curveString)
+		{
+			string[] pairs = curveString.Split(new char[]{','});
+			Keyframe[] keys = new Keyframe[pairs.Length]; 
+			for(int p = 0; p < pairs.Length; p++)
+			{
+				string[] pair = pairs[p].Split(new char[]{':'});
+				keys[p] = new Keyframe(float.Parse(pair[0]),float.Parse(pair[1]));
+			}
+
+			FloatCurve curve = new FloatCurve(keys);
+
+			return curve;
+		}
 		
 	
 	}

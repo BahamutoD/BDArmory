@@ -1,40 +1,9 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BahaTurretBullet.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="BDModulePilotAI.cs">
     <Files>
-      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
-      <File FileName="MissileFire.cs" Line="1" Column="1" />
-      <File FileName="BahaTurretBullet.cs" Line="69" Column="5" />
-      <File FileName="ExplosionFX.cs" Line="1" Column="1" />
-      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
-      <File FileName="MissileGuidance.cs" Line="1" Column="1" />
-      <File FileName="BDModularGuidance.cs" Line="1" Column="1" />
-      <File FileName="BDModulePilotAI.cs" Line="1" Column="1" />
-      <File FileName="BahaTurret.cs" Line="1" Column="1" />
-      <File FileName="BDATargetManager.cs" Line="1" Column="1" />
-      <File FileName="TargetInfo.cs" Line="1" Column="1" />
-      <File FileName="CMFlare.cs" Line="1" Column="1" />
-      <File FileName="ParticleTurbulence.cs" Line="1" Column="1" />
-      <File FileName="BDAGaplessParticleEmitter.cs" Line="1" Column="1" />
-      <File FileName="BDExplosivePart.cs" Line="1" Column="1" />
-      <File FileName="CMDropper.cs" Line="1" Column="1" />
-      <File FileName="Misc.cs" Line="1" Column="1" />
+      <File FileName="BDModulePilotAI.cs" Line="368" Column="25" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="BahaTurret" expanded="True">
-            <Node name="BahaTurretBullet.cs" selected="True" />
-          </Node>
-        </State>
-      </Pad>
-      <Pad Id="ClassPad">
-        <State expanded="True" selected="True" />
-      </Pad>
-      <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State />
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

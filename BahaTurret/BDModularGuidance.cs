@@ -165,6 +165,8 @@ namespace BahaTurret
 
 				Vector3 targetDirection = velocityTransform.InverseTransformPoint(targetPosition).normalized;
 				targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
+
+
 		
 				float steerYaw = (steerMult * targetDirection.x) - (steerDamping * -localAngVel.z);
 				float steerPitch = (steerMult * targetDirection.y) - (steerDamping * -localAngVel.x);

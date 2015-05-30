@@ -28,6 +28,7 @@ namespace BahaTurret
 		
 		private Transform pitchTransform;
 		private Transform yawTransform;
+		public Transform referenceTransform;
 		private Vector3 yawAxis;
 		private Vector3 pitchAxis;
 		private float timeCheck = 0;
@@ -160,7 +161,17 @@ namespace BahaTurret
 		public string pitchTransformName = "aimPitch";
 		[KSPField(isPersistant = false)]
 		public float tracerLength = 0;
-		
+
+		[KSPField(isPersistant = false)]
+		public bool showReloadMeter = false;
+
+		[KSPField(isPersistant = false)]
+		public string reloadAudioPath = string.Empty;
+		AudioClip reloadAudioClip;
+		[KSPField(isPersistant = false)]
+		public string reloadCompletePath = string.Empty;
+		AudioClip reloadCompleteAudioClip;
+
 		[KSPField(isPersistant = false)]
 		public bool moveChildren = false;
 
@@ -191,9 +202,12 @@ namespace BahaTurret
 		private float muzzleFlashVelocity = 4;
 		
 		private VInfoBox heatGauge = null;
+
+		private VInfoBox reloadBar = null;
 		
 		private bool wasFiring = false;
-		
+
+		public float maxAutoFireAngle = 2;
 		
 		//aimer textures
 		Vector3 pointingAtPosition;
@@ -309,6 +323,7 @@ namespace BahaTurret
 			
 			pitchTransform = part.FindModelTransform(pitchTransformName);
 			yawTransform = part.FindModelTransform(yawTransformName);
+			referenceTransform = yawTransform.parent;
 			yawAxis = new Vector3(0,0,1);
 			pitchAxis = new Vector3(0,-1,0);
 			hitPart = null;
@@ -327,7 +342,16 @@ namespace BahaTurret
 			audioSource2.maxDistance = 1000;
 			audioSource2.dopplerLevel = 0;
 			audioSource2.priority = 10;
-			
+
+			if(reloadAudioPath != string.Empty)
+			{
+				reloadAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadAudioPath);
+			}
+			if(reloadCompletePath != string.Empty)
+			{
+				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
+			}
+
 			if(weaponType == "laser")
 			{
 				chargeSound = GameDatabase.Instance.GetAudioClip(chargeSoundPath);
@@ -387,20 +411,48 @@ namespace BahaTurret
 					lr.SetPosition(1, tf.position);
 				}
 			}
-			
-			//heat
-			if(heat > maxHeat/3)
+
+			if(showReloadMeter)
 			{
-				if(heatGauge == null)
+				if(Time.time-timeCheck < (60/roundsPerMinute) && Time.time-timeCheck > 0.1f)
 				{
-					heatGauge = InitHeatGauge(part);
+					if(reloadBar == null)
+					{
+						reloadBar = InitReloadBar(part);
+						if(reloadAudioClip)
+						{
+							audioSource.PlayOneShot(reloadAudioClip);
+						}
+					}
+					reloadBar.SetValue(Time.time-timeCheck, 0, 60/roundsPerMinute);
 				}
-				heatGauge.SetValue(heat, maxHeat/3, maxHeat);
+				else if(reloadBar != null)
+				{
+					part.stackIcon.ClearInfoBoxes();
+					reloadBar = null;
+					if(reloadCompleteAudioClip)
+					{
+						audioSource.PlayOneShot(reloadCompleteAudioClip);
+					}
+
+				}
 			}
-			else if(heatGauge != null && heat < maxHeat/4)
+			else
 			{
-				part.stackIcon.ClearInfoBoxes();
-				heatGauge = null;
+				//heat
+				if(heat > maxHeat/3)
+				{
+					if(heatGauge == null)
+					{
+						heatGauge = InitHeatGauge(part);
+					}
+					heatGauge.SetValue(heat, maxHeat/3, maxHeat);
+				}
+				else if(heatGauge != null && heat < maxHeat/4)
+				{
+					part.stackIcon.ClearInfoBoxes();
+					heatGauge = null;
+				}
 			}
 			
 			heat = Mathf.Clamp(heat - heatLoss * TimeWarp.fixedDeltaTime, 0, Mathf.Infinity);
@@ -570,7 +622,6 @@ namespace BahaTurret
 		
 		private void Aim()
 		{
-			
 			inTurretRange = true;
 			
 			Vector3 target;
@@ -588,8 +639,8 @@ namespace BahaTurret
 			{
 				if(autoFireTarget)
 				{
-					target = autoFireTarget.transform.position;	
-					
+					target = autoFireTarget.CoM;	
+
 					targetVessel = autoFireTarget;
 					
 					target += targetVessel.rigidbody.velocity * Time.fixedDeltaTime;
@@ -605,7 +656,7 @@ namespace BahaTurret
 			{
 				if(autoLockCapable && targetVessel != null)
 				{
-					target = targetVessel.transform.position + targetVessel.rigidbody.velocity * Time.fixedDeltaTime;
+					target = targetVessel.CoM + targetVessel.rigidbody.velocity * Time.fixedDeltaTime;
 				}
 				else
 				{
@@ -625,11 +676,10 @@ namespace BahaTurret
 							
 						}catch(NullReferenceException){}
 						
-						
-						
-					}else
+					}
+					else
 					{
-						target = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;	
+						target = (ray.direction * maxTargetingRange) + FlightCamera.fetch.mainCamera.transform.position;	
 						if(targetVessel!=null && targetVessel.loaded)
 						{
 							target = ray.direction * Vector3.Distance(targetVessel.transform.position, FlightCamera.fetch.mainCamera.transform.position) + FlightCamera.fetch.mainCamera.transform.position;	
@@ -781,7 +831,7 @@ namespace BahaTurret
 				Transform fireTransform = part.FindModelTransform("fireTransform");
 				Vector3 targetDirection = targetPosition-fireTransform.position;
 				Vector3 aimDirection = fireTransform.forward;
-				if(Vector3.Angle(aimDirection, targetDirection) < 2)
+				if(Vector3.Angle(aimDirection, targetDirection) < maxAutoFireAngle)
 				{
 					autoFire = true;
 				}
@@ -866,7 +916,7 @@ namespace BahaTurret
 				Transform[] fireTransforms = part.FindModelTransforms("fireTransform");
 				foreach(Transform tf in fireTransforms)
 				{
-					if(!CheckMouseIsOnGui() && WMgrAuthorized() && (part.RequestResource(ammoName, requestResourceAmount)>0 || BDArmorySettings.INFINITE_AMMO))
+					if(!CheckMouseIsOnGui() && WMgrAuthorized() && (BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount)>0))
 					{
 						spinningDown = false;
 						
@@ -1056,25 +1106,29 @@ namespace BahaTurret
 				{
 					
 					LineRenderer lr = tf.gameObject.GetComponent<LineRenderer>();
-					lr.SetPosition(0, tf.position + rigidbody.velocity*Time.fixedDeltaTime);
-					lr.SetPosition(1, (tf.forward*maxDistance)+tf.position);
+					lr.SetPosition(0, tf.position + (rigidbody.velocity*Time.fixedDeltaTime));
+
 					Vector3 rayDirection = tf.forward;
 					
 					Vector3 targetDirection = Vector3.zero;  //autoTrack enhancer
+					Vector3 targetDirectionLR = tf.forward;
+					Vector3 physStepFix = Vector3.zero;
 					if(targetVessel!=null && targetVessel.loaded)
 					{
-						targetDirection = targetVessel.transform.position - tf.position;
-					}
-					if(targetVessel!=null && targetVessel.loaded && autoLockCapable && Vector3.Angle(rayDirection, targetDirection) < 2)
-					{
-						rayDirection = targetDirection;
+						targetDirection = (targetVessel.CoM+(targetVessel.rigidbody.velocity*Time.fixedDeltaTime)) - tf.position;
+						physStepFix = targetVessel.rigidbody.velocity*Time.fixedDeltaTime;
+						if(autoLockCapable && Vector3.Angle(rayDirection, targetDirection) < 3)
+						{
+							rayDirection = targetDirection;
+							targetDirectionLR = (targetVessel.CoM+(2*targetVessel.rigidbody.velocity*Time.fixedDeltaTime)) - tf.position;
+						}
 					}
 					
 					Ray ray = new Ray(tf.position, rayDirection);
 					RaycastHit hit;
 					if(Physics.Raycast(ray, out hit, maxDistance, 557057))
 					{
-						lr.SetPosition(1, hit.point);
+						lr.SetPosition(1, hit.point + (physStepFix));
 						if(Time.time-timeCheck > 60/1200 && BDArmorySettings.BULLET_HITS)
 						{
 							BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);	
@@ -1093,6 +1147,10 @@ namespace BahaTurret
 						}
 						catch(NullReferenceException){}
 					
+					}
+					else
+					{
+						lr.SetPosition(1, (targetDirectionLR*maxDistance)+tf.position);
 					}
 				}
 				heat += heatPerShot * TimeWarp.CurrentRate;
@@ -1253,7 +1311,7 @@ namespace BahaTurret
 		}
 		
 		//overheat gauge
-		static public VInfoBox InitHeatGauge(Part p)  //thanks DYJ
+		public static VInfoBox InitHeatGauge(Part p)  //thanks DYJ
         {
             VInfoBox v = p.stackIcon.DisplayInfo();
 
@@ -1265,7 +1323,19 @@ namespace BahaTurret
 
             return v;
         }
-		
+
+		public static VInfoBox InitReloadBar(Part p)
+		{
+			VInfoBox v = p.stackIcon.DisplayInfo();
+
+			v.SetMsgBgColor(XKCDColors.DarkGrey);
+			v.SetMsgTextColor(XKCDColors.White);
+			v.SetMessage("Reloading");
+			v.SetProgressBarBgColor(XKCDColors.DarkGrey);
+			v.SetProgressBarColor(XKCDColors.Silver);
+
+			return v;
+		}
 		
 		
 		//Animation Setup
@@ -1429,7 +1499,10 @@ namespace BahaTurret
 		}
 		
 		
-		
+		public Vector3 GetLeadOffset()
+		{
+			return fixedLeadOffset;
+		}
 	}
 	
 	

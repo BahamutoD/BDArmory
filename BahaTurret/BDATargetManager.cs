@@ -152,7 +152,7 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel))
+				if(target && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
 					if(finalTarget == null || (target.IsCloser(finalTarget, mf)))
 					{
@@ -187,7 +187,7 @@ namespace BahaTurret
 			
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel))
+				if(target && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
 					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
 					{
