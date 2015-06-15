@@ -199,6 +199,8 @@ namespace BahaTurret
                             if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
                         }
 
+                        HitManager.FireHitHooks (hitPart);
+
 					}
 
                     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,7 +237,7 @@ namespace BahaTurret
 							hasBounced = true;
 							if(BDArmorySettings.BULLET_HITS)
 							{
-								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, true);
 							}	
 
 							transform.position = hit.point;
@@ -250,12 +252,12 @@ namespace BahaTurret
 						{
 							if(BDArmorySettings.BULLET_HITS)
 							{
-								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
+								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false, true);
 							}
 
 							if(bulletType == BulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+                                ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
 							}
 
 							GameObject.Destroy(gameObject); //destroy bullet on collision
@@ -290,7 +292,7 @@ namespace BahaTurret
 			if(airDetonation && (transform.position-startPosition).sqrMagnitude > Mathf.Pow(detonationRange, 2))
 			{
 				//detonate
-				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+                ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}
 

@@ -66,10 +66,16 @@ namespace BahaTurret
 		 * 2: large, regular sound (like mk82 bomb)
 		 * 3: small, pop sound (like cluster submunition)
 		 */
-		public static void CreateExplosion(Vector3 position, float radius, float power, Vessel sourceVessel, Vector3 direction, string explModelPath, string soundPath)
+        public static void CreateExplosion(Vector3 position, float radius, float power, Vessel sourceVessel, Vector3 direction, string explModelPath, string soundPath, bool fireExplosionHooks)
 		{
 			try
 			{
+                if (fireExplosionHooks)
+                {
+                    ExplosionObject explosionObj = new ExplosionObject(position, radius, power, sourceVessel, direction, explModelPath, soundPath);
+                    HitManager.FireExplosionHooks(explosionObj);
+                }
+
 				GameObject go;
 				AudioClip soundClip;
 				

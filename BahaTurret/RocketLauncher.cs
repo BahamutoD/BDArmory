@@ -512,7 +512,7 @@ namespace BahaTurret
 		{
 			BDArmorySettings.numberOfParticleEmitters--;
 			
-			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+            ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
 			GameObject.Destroy(gameObject); //destroy rocket on collision
 		}
 		

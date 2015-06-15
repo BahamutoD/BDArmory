@@ -71,6 +71,7 @@
     <Compile Include="TargetInfo.cs" />
     <Compile Include="BDATargetManager.cs" />
     <Compile Include="BDModulePilotAI.cs" />
+    <Compile Include="HitManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />

@@ -1131,7 +1131,7 @@ namespace BahaTurret
 						lr.SetPosition(1, hit.point + (physStepFix));
 						if(Time.time-timeCheck > 60/1200 && BDArmorySettings.BULLET_HITS)
 						{
-							BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);	
+							BulletHitFX.CreateBulletHit(hit.point, hit.normal, false, true);	
 						}
 						try
 						{
@@ -1143,6 +1143,7 @@ namespace BahaTurret
 
 								if(BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
 								
+                                HitManager.FireHitHooks(p);
 							}
 						}
 						catch(NullReferenceException){}
