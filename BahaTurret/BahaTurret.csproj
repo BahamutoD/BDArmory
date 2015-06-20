@@ -40,6 +40,7 @@
     <Reference Include="UnityEngine">
       <HintPath>C:\Games\KSP 1.01 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BahaTurret.cs" />

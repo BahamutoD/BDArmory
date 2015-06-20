@@ -124,7 +124,13 @@ namespace BahaTurret
 					}catch(NullReferenceException){}
 					if(explodePart!=null && !explodePart.partInfo.name.Contains("Strut") && !explodePart.packed)
 					{
-						
+                        if (!HitManager.ShouldAllowDamageHooks(explodePart.vessel.id))
+                        {
+                            //Continue if not allowed to damage the part
+                            continue;
+                        }
+
+
 						if(!MissileLauncher.CheckIfMissile(explodePart) || ((explodePart.GetComponent<MissileLauncher>().sourceVessel != sourceVessel || explodePart.GetComponent<MissileLauncher>().sourceVessel==null) && explodePart.GetComponent<MissileLauncher>().hasFired))
 						{
 							//Debug.Log ("Explosion hit part from vessel: "+explodePart.vessel.vesselName);
