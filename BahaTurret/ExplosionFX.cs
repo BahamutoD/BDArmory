@@ -66,10 +66,16 @@ namespace BahaTurret
 		 * 2: large, regular sound (like mk82 bomb)
 		 * 3: small, pop sound (like cluster submunition)
 		 */
-		public static void CreateExplosion(Vector3 position, float radius, float power, Vessel sourceVessel, Vector3 direction, string explModelPath, string soundPath)
+        public static void CreateExplosion(Vector3 position, float radius, float power, Vessel sourceVessel, Vector3 direction, string explModelPath, string soundPath, bool fireExplosionHooks)
 		{
 			try
 			{
+                if (fireExplosionHooks)
+                {
+                    ExplosionObject explosionObj = new ExplosionObject(position, radius, power, sourceVessel, direction, explModelPath, soundPath);
+                    HitManager.FireExplosionHooks(explosionObj);
+                }
+
 				GameObject go;
 				AudioClip soundClip;
 				
@@ -118,7 +124,13 @@ namespace BahaTurret
 					}catch(NullReferenceException){}
 					if(explodePart!=null && !explodePart.partInfo.name.Contains("Strut") && !explodePart.packed)
 					{
-						
+                        if (!HitManager.ShouldAllowDamageHooks(explodePart.vessel.id))
+                        {
+                            //Continue if not allowed to damage the part
+                            continue;
+                        }
+
+
 						if(!MissileLauncher.CheckIfMissile(explodePart) || ((explodePart.GetComponent<MissileLauncher>().sourceVessel != sourceVessel || explodePart.GetComponent<MissileLauncher>().sourceVessel==null) && explodePart.GetComponent<MissileLauncher>().hasFired))
 						{
 							//Debug.Log ("Explosion hit part from vessel: "+explodePart.vessel.vesselName);

@@ -132,9 +132,12 @@ namespace BahaTurret
 			
 			
 			currPosition = gameObject.transform.position;
+
+            HitManager.FireTracerHooks (this);
 			
 			if((currPosition-startPosition).sqrMagnitude > maxDistance*maxDistance)
 			{
+                HitManager.FireTracerDestroyHooks (this);
 				GameObject.Destroy(gameObject);
 				return;
 			}
@@ -177,7 +180,7 @@ namespace BahaTurret
 					}
 
 
-					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
+                    if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut") && HitManager.ShouldAllowDamageHooks(hitPart.vessel.id))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
 					{
 						float heatDamage = (rigidbody.mass/hitPart.crashTolerance) * rigidbody.velocity.magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
 						if(!penetrated)
@@ -198,6 +201,8 @@ namespace BahaTurret
                         {
                             if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
                         }
+
+                        HitManager.FireHitHooks (hitPart);
 
 					}
 
@@ -235,7 +240,7 @@ namespace BahaTurret
 							hasBounced = true;
 							if(BDArmorySettings.BULLET_HITS)
 							{
-								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, true);
 							}	
 
 							transform.position = hit.point;
@@ -245,19 +250,23 @@ namespace BahaTurret
 							Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
 							
 							rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, randomDirection, UnityEngine.Random.Range(0f,5f)*Mathf.Deg2Rad, 0);
+
+                            //Fire HitManager hooks again
+                            HitManager.FireTracerHooks(this);
 						}
 						else
 						{
 							if(BDArmorySettings.BULLET_HITS)
 							{
-								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
+								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false, true);
 							}
 
 							if(bulletType == BulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+                                ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
 							}
 
+                            HitManager.FireTracerDestroyHooks (this);
 							GameObject.Destroy(gameObject); //destroy bullet on collision
 						}
 					}
@@ -290,7 +299,8 @@ namespace BahaTurret
 			if(airDetonation && (transform.position-startPosition).sqrMagnitude > Mathf.Pow(detonationRange, 2))
 			{
 				//detonate
-				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+                ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
+                HitManager.FireTracerDestroyHooks (this);
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}
 

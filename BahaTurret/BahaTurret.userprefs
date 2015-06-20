@@ -1,8 +1,28 @@
-﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BDModulePilotAI.cs">
+﻿<Properties StartupItem="BahaTurret.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench>
     <Files>
-      <File FileName="BDModulePilotAI.cs" Line="368" Column="25" />
+      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
+      <File FileName="MissileFire.cs" Line="1" Column="1" />
+      <File FileName="BahaTurretBullet.cs" Line="241" Column="36" />
+      <File FileName="ExplosionFX.cs" Line="130" Column="38" />
+      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
+      <File FileName="MissileGuidance.cs" Line="1" Column="1" />
+      <File FileName="BDModularGuidance.cs" Line="1" Column="1" />
+      <File FileName="BDModulePilotAI.cs" Line="1" Column="1" />
+      <File FileName="BahaTurret.cs" Line="1041" Column="46" />
+      <File FileName="BDATargetManager.cs" Line="1" Column="1" />
+      <File FileName="TargetInfo.cs" Line="1" Column="1" />
+      <File FileName="CMFlare.cs" Line="1" Column="1" />
+      <File FileName="ParticleTurbulence.cs" Line="1" Column="1" />
+      <File FileName="BDAGaplessParticleEmitter.cs" Line="1" Column="1" />
+      <File FileName="BDExplosivePart.cs" Line="1" Column="1" />
+      <File FileName="CMDropper.cs" Line="1" Column="1" />
+      <File FileName="Misc.cs" Line="1" Column="1" />
+      <File FileName="HitManager.cs" Line="17" Column="40" />
+      <File FileName="BulletHitFX.cs" Line="67" Column="45" />
+      <File FileName="RocketLauncher.cs" Line="1" Column="1" />
+      <File FileName="ClusterBomb.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

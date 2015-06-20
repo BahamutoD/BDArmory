@@ -14,8 +14,8 @@ namespace BahaTurret
 		
 		//static GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit"); //===TODO: static object wont load after scene reload
 		
-		void Start()
-		{
+        void Start()
+        {
 			startTime = Time.time;
 			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 			audioSource = gameObject.AddComponent<AudioSource>();
@@ -58,10 +58,11 @@ namespace BahaTurret
 			}
 		}	
 		
-		public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet)
+        public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet, bool fireHooks)
 		{
 			GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
 			GameObject newExplosion = (GameObject) GameObject.Instantiate(go, position, Quaternion.LookRotation(normalDirection));
+            //Debug.Log ("CreateBulletHit instantiating at position X: " + position.x + " Y: " + position.y + " Z: " + position.z);
 			newExplosion.SetActive(true);
 			newExplosion.AddComponent<BulletHitFX>();
 			newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;
@@ -70,6 +71,12 @@ namespace BahaTurret
 				pe.emit = true;	
 				pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
 			}
+
+            if (fireHooks)
+            {
+                BulletObject bulletObj = new BulletObject (position, normalDirection, ricochet);
+                HitManager.FireBulletHooks (bulletObj);
+            }
 		}
 		
 	}

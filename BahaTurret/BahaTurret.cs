@@ -1131,18 +1131,19 @@ namespace BahaTurret
 						lr.SetPosition(1, hit.point + (physStepFix));
 						if(Time.time-timeCheck > 60/1200 && BDArmorySettings.BULLET_HITS)
 						{
-							BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);	
+							BulletHitFX.CreateBulletHit(hit.point, hit.normal, false, true);	
 						}
 						try
 						{
 							Part p = Part.FromGO(hit.rigidbody.gameObject);
-							if(p.vessel!=this.vessel)
-							{
+                            if(p.vessel!=this.vessel && HitManager.ShouldAllowDamageHooks(p.vessel.id))
+                            {
 								float distance = hit.distance;
 								p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),
 
 								if(BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
 								
+                                HitManager.FireHitHooks(p);
 							}
 						}
 						catch(NullReferenceException){}

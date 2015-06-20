@@ -44,3 +44,6 @@ TDx*
 UnityEngine.dll
 *.pdb
 *.jar
+
+# obj folder
+BahaTurret/obj/

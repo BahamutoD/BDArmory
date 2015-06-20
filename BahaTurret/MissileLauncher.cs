@@ -1017,7 +1017,7 @@ namespace BahaTurret
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 				if(sourceVessel==null) sourceVessel = vessel;
-				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath);
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath, true);
 				
 			}
 
