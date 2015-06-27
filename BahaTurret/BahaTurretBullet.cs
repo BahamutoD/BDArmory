@@ -133,11 +133,11 @@ namespace BahaTurret
 			
 			currPosition = gameObject.transform.position;
 
-            HitManager.FireTracerHooks (this);
+            HitManager.FireTracerHooks (this.bulletTrail);
 			
 			if((currPosition-startPosition).sqrMagnitude > maxDistance*maxDistance)
 			{
-                HitManager.FireTracerDestroyHooks (this);
+                HitManager.FireTracerDestroyHooks (this.bulletTrail);
 				GameObject.Destroy(gameObject);
 				return;
 			}
@@ -250,9 +250,6 @@ namespace BahaTurret
 							Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
 							
 							rigidbody.velocity = Vector3.RotateTowards(rigidbody.velocity, randomDirection, UnityEngine.Random.Range(0f,5f)*Mathf.Deg2Rad, 0);
-
-                            //Fire HitManager hooks again
-                            HitManager.FireTracerHooks(this);
 						}
 						else
 						{
@@ -266,7 +263,7 @@ namespace BahaTurret
                                 ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
 							}
 
-                            HitManager.FireTracerDestroyHooks (this);
+                            HitManager.FireTracerDestroyHooks (this.bulletTrail);
 							GameObject.Destroy(gameObject); //destroy bullet on collision
 						}
 					}
@@ -300,7 +297,7 @@ namespace BahaTurret
 			{
 				//detonate
                 ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath, true);
-                HitManager.FireTracerDestroyHooks (this);
+                HitManager.FireTracerDestroyHooks (this.bulletTrail);
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}
 

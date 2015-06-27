@@ -12,8 +12,8 @@ namespace BahaTurret
         private static readonly List<Action<Part>> hitHooks = new List<Action<Part>> ();
         private static readonly List<Action<ExplosionObject>> explosionHooks = new List<Action<ExplosionObject>> ();
         private static readonly List<Action<BulletObject>> bulletHooks = new List<Action<BulletObject>> ();
-        private static readonly List<Action<BahaTurretBullet>> tracerHooks = new List<Action<BahaTurretBullet>> ();
-        private static readonly List<Action<BahaTurretBullet>> tracerDestroyHooks = new List<Action<BahaTurretBullet>> ();
+        private static readonly List<Action<LineRenderer>> tracerHooks = new List<Action<LineRenderer>> ();
+        private static readonly List<Action<LineRenderer>> tracerDestroyHooks = new List<Action<LineRenderer>> ();
         private static readonly List<Func<Guid, bool>> allowDamageHooks = new List<Func<Guid, bool>> ();
 
         public HitManager ()
@@ -45,7 +45,7 @@ namespace BahaTurret
             }
         }
 
-        public static void RegisterTracerHook(Action<BahaTurretBullet> tracerHook)
+        public static void RegisterTracerHook(Action<LineRenderer> tracerHook)
         {
             if (!tracerHooks.Contains (tracerHook))
             {
@@ -53,7 +53,7 @@ namespace BahaTurret
             }
         }
 
-        public static void RegisterTracerDestroyHook(Action<BahaTurretBullet> tracerDestroyHook)
+        public static void RegisterTracerDestroyHook(Action<LineRenderer> tracerDestroyHook)
         {
             if (!tracerDestroyHooks.Contains (tracerDestroyHook))
             {
@@ -93,17 +93,17 @@ namespace BahaTurret
             }
         }
 
-        public static void  FireTracerHooks(BahaTurretBullet tracer)
+        public static void  FireTracerHooks(LineRenderer tracer)
         {
-            foreach (Action<BahaTurretBullet> tracerHook in tracerHooks)
+            foreach (Action<LineRenderer> tracerHook in tracerHooks)
             {
                 tracerHook (tracer);
             }
         }
 
-        public static void  FireTracerDestroyHooks(BahaTurretBullet tracer)
+        public static void  FireTracerDestroyHooks(LineRenderer tracer)
         {
-            foreach (Action<BahaTurretBullet> tracerHook in tracerDestroyHooks)
+            foreach (Action<LineRenderer> tracerHook in tracerDestroyHooks)
             {
                 tracerHook (tracer);
             }
