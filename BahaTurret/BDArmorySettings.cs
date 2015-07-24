@@ -29,6 +29,15 @@ namespace BahaTurret
 		public static bool SMART_GUARDS = true;
 		public static float MAX_BULLET_RANGE = 5000;
 		public static float TRIGGER_HOLD_TIME = 0.3f;
+
+		public static bool ALLOW_LEGACY_TARGETING = true;
+
+		public static float TARGET_CAM_RESOLUTION = 360;
+		public static bool BW_TARGET_CAM = true;
+		public static float SMOKE_DEFLECTION_FACTOR = 10;
+
+		public static float FLARE_THERMAL = 1900;
+
 		public static float BDARMORY_VOLUME = 0.5f; //TODO
 		//==================
 		
@@ -59,8 +68,10 @@ namespace BahaTurret
 		public Rect toolbarWindowRect;
 		bool showWeaponList = false;
 		bool showGuardMenu = false;
-		
-		public MissileFire wpnMgr = null;
+		bool showModules = false;
+		int numberOfModules = 0;
+
+		public MissileFire ActiveWeaponManager = null;
 		public bool missileWarning = false;
 		public float missileWarningTime = 0;
 		
@@ -73,7 +84,7 @@ namespace BahaTurret
 		bool drawCursor = false;
 		Texture2D cursorTexture;	
 	
-		public static List<GameObject> Flares = new List<GameObject>();
+		public static List<CMFlare> Flares = new List<CMFlare>();
 
 		bool isRecordingInput = false;
 		bool recordMouseUp = false;
@@ -89,6 +100,124 @@ namespace BahaTurret
 		GUIStyle leftLabelGray;
 
 		public enum BDATeams{A, B};
+
+
+
+		//common textures
+		public static string textureDir = "BDArmory/Textures/";
+
+		private Texture2D ogs;
+		public Texture2D openGreenSquare
+		{
+			get
+			{
+				return ogs ? ogs : ogs = GameDatabase.Instance.GetTexture(textureDir + "openGreenSquare", false);
+			}
+		}
+
+		private Texture2D gdott;
+		public Texture2D greenDotTexture
+		{
+			get
+			{
+				return gdott ? gdott : gdott = GameDatabase.Instance.GetTexture(textureDir + "greenDot", false);
+			}
+		}
+
+		private Texture2D gdt;
+		public Texture2D greenDiamondTexture
+		{
+			get
+			{
+					return gdt ? gdt : gdt = GameDatabase.Instance.GetTexture(textureDir + "greenDiamond", false);
+			}
+		}
+
+		private Texture2D lgct;
+		public Texture2D largeGreenCircleTexture
+		{
+			get
+			{
+				return lgct ? lgct : lgct = GameDatabase.Instance.GetTexture(textureDir + "greenCircle3", false);
+			}
+		}
+
+		private Texture2D gct;
+		public Texture2D greenCircleTexture
+		{
+			get
+			{
+				return gct ? gct : gct = GameDatabase.Instance.GetTexture(textureDir + "greenCircle2", false);
+			}
+		}
+
+		private Texture2D gpct;
+		public Texture2D greenPointCircleTexture
+		{
+			get
+			{
+				if(gpct == null)
+				{
+					gpct = GameDatabase.Instance.GetTexture(textureDir + "greenCircle", false);
+				}
+				return gpct;
+			}
+		}
+
+		private Texture2D gspct;
+		public Texture2D greenSpikedPointCircleTexture
+		{
+			get
+			{
+				return gspct ? gspct : gspct = GameDatabase.Instance.GetTexture(textureDir + "grayCircle", false);
+			}
+		}
+
+		private Texture2D wSqr;
+		public Texture2D whiteSquareTexture
+		{
+			get
+			{
+				return wSqr ? wSqr : wSqr = GameDatabase.Instance.GetTexture(textureDir + "whiteSquare", false);
+			}
+		}
+
+		private Texture2D oWSqr;
+		public Texture2D openWhiteSquareTexture
+		{
+			get
+			{
+				return oWSqr ? oWSqr : oWSqr = GameDatabase.Instance.GetTexture(textureDir + "openWhiteSquare", false);;
+			}
+		}
+
+		private Texture2D tDir;
+		public Texture2D targetDirectionTexture
+		{
+			get
+			{
+				return tDir ? tDir : tDir = GameDatabase.Instance.GetTexture(textureDir + "targetDirectionIndicator", false);
+			}
+		}
+
+		private Texture2D hInd;
+		public Texture2D horizonIndicatorTexture
+		{
+			get
+			{
+				return hInd ? hInd : hInd = GameDatabase.Instance.GetTexture(textureDir + "horizonIndicator", false);
+			}
+		}
+		//end textures
+
+
+		public static bool GameIsPaused
+		{
+			get
+			{
+				return PauseMenu.isOpen;
+			}
+		}
 
 
 
@@ -149,7 +278,12 @@ namespace BahaTurret
 			leftLabelGray.normal.textColor = Color.gray;
 			//
 
+			foreach(var cam in FlightCamera.fetch.cameras)
+			{
+				cam.gameObject.AddComponent<CameraBulletRenderer>();
+			}
 
+			GameEvents.onVesselChange.Add(VesselChange);
 		}
 		
 		void Update()
@@ -159,6 +293,7 @@ namespace BahaTurret
 				missileWarning = false;	
 			}
 
+			/*
 			if(Input.GetKeyDown(KeyCode.Keypad1))
 			{
 				VesselRanges vr = FlightGlobals.ActiveVessel.vesselRanges;
@@ -181,15 +316,23 @@ namespace BahaTurret
 				Debug.Log ("unpack" + vr.splashed.unpack);
 
 			}
+			*/
 
-			DrawAimerCursor();
+
 			
 			if(Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
 			{
 				if(Input.GetKeyDown(KeyCode.B))
 				{
 					settingsGuiEnabled = !settingsGuiEnabled;
-					if(settingsGuiEnabled) LoadConfig();
+					if(settingsGuiEnabled)
+					{
+						LoadConfig();
+					}
+					else
+					{
+						SaveConfig();
+					}
 					physicsRangeGui = PHYSICS_RANGE.ToString();
 				}
 			}
@@ -203,13 +346,24 @@ namespace BahaTurret
 			
 			
 		}
+
+		void LateUpdate()
+		{
+			DrawAimerCursor();
+		}
 		
 		void DrawAimerCursor()
 		{
+			if(ActiveWeaponManager == null)
+			{
+				return;
+			}
+
 			Screen.showCursor = true;
 			drawCursor = false;
 			if(!MapView.MapIsEnabled && !Misc.CheckMouseIsOnGui() && !PauseMenu.isOpen)
 			{
+				/*
 				foreach(BahaTurret bt in FlightGlobals.ActiveVessel.FindPartModulesImplementing<BahaTurret>())
 				{
 					if(bt.deployed && DRAW_AIMERS && bt.maxPitch > 1)
@@ -219,12 +373,25 @@ namespace BahaTurret
 						return;
 					}
 				}
+				*/
+
+				foreach(ModuleWeapon mw in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleWeapon>())
+				{
+					if(mw.weaponState == ModuleWeapon.WeaponStates.Enabled && mw.maxPitch > 1 && !mw.slaved && !mw.aiControlled)
+					{
+						Screen.showCursor = false;
+						drawCursor = true;
+						return;
+					}
+				}
 			}
 		}
 		
-		void FixedUpdate()
+	
+
+		void VesselChange(Vessel v)
 		{
-			if(FlightGlobals.ActiveVessel != null)
+			if(v.isActiveVessel)
 			{
 				GetWeaponManager();
 			}
@@ -232,14 +399,13 @@ namespace BahaTurret
 		
 		void GetWeaponManager()
 		{
-			
 			foreach(var mf in FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>())	
 			{
-				wpnMgr = mf;
+				ActiveWeaponManager = mf;
 				return;
 			}
 			
-			wpnMgr = null;
+			ActiveWeaponManager = null;
 			return;
 		}
 		
@@ -280,6 +446,16 @@ namespace BahaTurret
 
 				if(cfg.HasValue("TRIGGER_HOLD_TIME")) TRIGGER_HOLD_TIME = float.Parse(cfg.GetValue("TRIGGER_HOLD_TIME"));
 
+				if(cfg.HasValue("ALLOW_LEGACY_TARGETING")) ALLOW_LEGACY_TARGETING = bool.Parse(cfg.GetValue("ALLOW_LEGACY_TARGETING"));
+
+				if(cfg.HasValue("TARGET_CAM_RESOLUTION")) TARGET_CAM_RESOLUTION = float.Parse(cfg.GetValue("TARGET_CAM_RESOLUTION"));
+
+				if(cfg.HasValue("BW_TARGET_CAM")) BW_TARGET_CAM = bool.Parse(cfg.GetValue("BW_TARGET_CAM"));
+
+				if(cfg.HasValue("SMOKE_DEFLECTION_FACTOR")) SMOKE_DEFLECTION_FACTOR = float.Parse(cfg.GetValue("SMOKE_DEFLECTION_FACTOR"));
+
+				if(cfg.HasValue("FLARE_THERMAL")) FLARE_THERMAL = float.Parse(cfg.GetValue("FLARE_THERMAL"));
+
 
 			}
 			catch(NullReferenceException)
@@ -310,7 +486,11 @@ namespace BahaTurret
 				cfg.SetValue("BOMB_CLEARANCE_CHECK", BOMB_CLEARANCE_CHECK.ToString(), true);
 				cfg.SetValue("SMART_GUARDS", SMART_GUARDS.ToString(), true);
 				cfg.SetValue("TRIGGER_HOLD_TIME", TRIGGER_HOLD_TIME.ToString(), true);
-
+				cfg.SetValue("ALLOW_LEGACY_TARGETING", ALLOW_LEGACY_TARGETING.ToString(), true);
+				cfg.SetValue("TARGET_CAM_RESOLUTION", TARGET_CAM_RESOLUTION.ToString(), true);
+				cfg.SetValue("BW_TARGET_CAM", BW_TARGET_CAM.ToString(), true);
+				cfg.SetValue("SMOKE_DEFLECTION_FACTOR", SMOKE_DEFLECTION_FACTOR.ToString(), true);
+				cfg.SetValue("FLARE_THERMAL", FLARE_THERMAL.ToString(), true);
 				
 
 				
@@ -380,11 +560,11 @@ namespace BahaTurret
 			line++;
 			line += 0.25f;
 			
-			if(wpnMgr!=null)
+			if(ActiveWeaponManager!=null)
 			{
 				GUIStyle armedLabelStyle;
 				string armedText = "System is ";
-				if(wpnMgr.isArmed)
+				if(ActiveWeaponManager.isArmed)
 				{
 					armedText += "ARMED.";
 					armedLabelStyle = leftLabelRed;
@@ -396,12 +576,12 @@ namespace BahaTurret
 				}
 				if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), armedText, armedLabelStyle))
 				{
-					wpnMgr.ToggleArm();
+					ActiveWeaponManager.ToggleArm();
 				}
 				
 				GUIStyle teamButtonStyle;
 				string teamText = "Team: ";
-				if(wpnMgr.team)
+				if(ActiveWeaponManager.team)
 				{
 					teamButtonStyle = centerLabelOrange;
 					teamText += "B";
@@ -414,42 +594,51 @@ namespace BahaTurret
 				
 				if(GUI.Button(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), teamText, teamButtonStyle))
 				{
-					wpnMgr.ToggleTeam();
+					ActiveWeaponManager.ToggleTeam();
 				}
 				line++;
-				
-				string selectionText = "Weapon: "+wpnMgr.selectedWeapon;
+
+				string weaponName = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
+				string selectionText = "Weapon: "+weaponName;
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), selectionText, centerLabel);
 				line++;
 
 				//if weapon can ripple, show option and slider.
-				if(wpnMgr.canRipple)
+				if(ActiveWeaponManager.canRipple)
 				{
-					string rippleText = wpnMgr.rippleFire ? "Ripple: ON - "+wpnMgr.rippleRPM.ToString("0")+" RPM" : "Ripple: OFF";
-					wpnMgr.rippleFire = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), wpnMgr.rippleFire, rippleText, leftLabel);
-					if(wpnMgr.rippleFire)
+					string rippleText = ActiveWeaponManager.rippleFire ? "Ripple: ON - "+ActiveWeaponManager.rippleRPM.ToString("0")+" RPM" : "Ripple: OFF";
+					ActiveWeaponManager.rippleFire = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), ActiveWeaponManager.rippleFire, rippleText, leftLabel);
+					if(ActiveWeaponManager.rippleFire)
 					{
-						wpnMgr.rippleRPM = GUI.HorizontalSlider(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), wpnMgr.rippleRPM, 100, 1600);
+						ActiveWeaponManager.rippleRPM = GUI.HorizontalSlider(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), ActiveWeaponManager.rippleRPM, 100, 1600);
 					}
 				}
 				line++;
 				
-				showWeaponList = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), showWeaponList, " Show Weapon List");
-				showGuardMenu = GUI.Toggle(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), showGuardMenu, " Show Guard Menu");
+				showWeaponList = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/3, entryHeight), showWeaponList, "Weapons");
+				showGuardMenu = GUI.Toggle(new Rect(leftIndent+(contentWidth/3), contentTop+(line*entryHeight), contentWidth/3, entryHeight), showGuardMenu, "Guard Menu");
+				showModules = GUI.Toggle(new Rect(leftIndent+(2*contentWidth/3), contentTop+(line*entryHeight), contentWidth/3, entryHeight), showModules, "Modules");
 				line++;
 				
 				if(showWeaponList)
 				{
 					line += 0.25f;
-					GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, wpnMgr.weaponArray.Length * entryHeight),""); //darker box
-					for(int i = 0; i < wpnMgr.weaponArray.Length; i++)
+					GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, ActiveWeaponManager.weaponArray.Length * entryHeight),""); //darker box
+					for(int i = 0; i < ActiveWeaponManager.weaponArray.Length; i++)
 					{
 						GUIStyle wpnListStyle;
-						if(i == wpnMgr.weaponIndex) wpnListStyle = centerLabelOrange;
-						else wpnListStyle = centerLabel;
-						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), wpnMgr.weaponArray[i], wpnListStyle))
+						if(i == ActiveWeaponManager.weaponIndex)
 						{
-							wpnMgr.CycleWeapon(i);
+							wpnListStyle = centerLabelOrange;
+						}
+						else 
+						{
+							wpnListStyle = centerLabel;
+						}
+						string label = ActiveWeaponManager.weaponArray[i] == null ? "None" : ActiveWeaponManager.weaponArray[i].GetShortName();
+						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, wpnListStyle))
+						{
+							ActiveWeaponManager.CycleWeapon(i);
 						}
 						line++;
 					}
@@ -461,35 +650,35 @@ namespace BahaTurret
 					GUI.Box(new Rect(5, contentTop+(line*entryHeight), toolWindowWidth-10, 5*entryHeight), "");
 					contentWidth -= 16;
 					leftIndent += 3;
-					wpnMgr.guardMode =  GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), wpnMgr.guardMode, " Guard Mode");
+					ActiveWeaponManager.guardMode =  GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), ActiveWeaponManager.guardMode, " Guard Mode");
 					line++;
 					
 					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Scan Interval", leftLabel);
-					wpnMgr.targetScanInterval = GUI.HorizontalSlider(new Rect(leftIndent+(90), contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), wpnMgr.targetScanInterval, 1, 60);
-					wpnMgr.targetScanInterval = Mathf.Round(wpnMgr.targetScanInterval);
-					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), wpnMgr.targetScanInterval.ToString(), leftLabel);
+					ActiveWeaponManager.targetScanInterval = GUI.HorizontalSlider(new Rect(leftIndent+(90), contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), ActiveWeaponManager.targetScanInterval, 1, 60);
+					ActiveWeaponManager.targetScanInterval = Mathf.Round(ActiveWeaponManager.targetScanInterval);
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.targetScanInterval.ToString(), leftLabel);
 					line++;
 					
 					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Field of View", leftLabel);
-					float guardAngle = wpnMgr.guardAngle;
+					float guardAngle = ActiveWeaponManager.guardAngle;
 					guardAngle = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardAngle, 10, 360);
 					guardAngle = guardAngle/10;
 					guardAngle = Mathf.Round(guardAngle);
-					wpnMgr.guardAngle = guardAngle * 10;
-					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), wpnMgr.guardAngle.ToString(), leftLabel);
+					ActiveWeaponManager.guardAngle = guardAngle * 10;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.guardAngle.ToString(), leftLabel);
 					line++;
 					
 					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Guard Range", leftLabel);
-					float guardRange = wpnMgr.guardRange;
+					float guardRange = ActiveWeaponManager.guardRange;
 					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, Mathf.Clamp(PHYSICS_RANGE, 2500, 100000));
 					guardRange = guardRange/100;
 					guardRange = Mathf.Round(guardRange);
-					wpnMgr.guardRange = guardRange * 100;
-					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), wpnMgr.guardRange.ToString(), leftLabel);
+					ActiveWeaponManager.guardRange = guardRange * 100;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.guardRange.ToString(), leftLabel);
 					line++;
 					
 					string targetType = "Target Type: ";
-					if(wpnMgr.targetMissiles)
+					if(ActiveWeaponManager.targetMissiles)
 					{
 						targetType += "Missiles";	
 					}
@@ -500,18 +689,75 @@ namespace BahaTurret
 					
 					if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), targetType, leftLabel))
 					{
-						wpnMgr.ToggleTargetType();	
+						ActiveWeaponManager.ToggleTargetType();	
 					}
 					line++;
-					
+				}
+
+				if(showModules)
+				{
+					line += 0.25f;
+					if(numberOfModules > 0)
+					{
+						GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, numberOfModules * entryHeight),""); //darker box
+					}
+					numberOfModules = 0;
+
+					//TGP
+					foreach(var mtc in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+					{
+						numberOfModules++;
+						bool isEnabled = (mtc.cameraEnabled);
+						bool isActive = (mtc == ModuleTargetingCamera.activeCam);
+						GUIStyle moduleStyle = isEnabled ? centerLabelOrange : centerLabel;// = mtc 
+						string label = mtc.part.partInfo.title;
+						if(isActive)
+						{
+							moduleStyle = centerLabelRed;
+							label = "["+label+"]";
+						}
+						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
+						{
+							if(isActive)
+							{
+								mtc.ToggleCamera();
+							}
+							else
+							{
+								mtc.EnableCamera();
+							}
+						}
+						line++;
+					}
+
+					//RADAR
+					foreach(var mr in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleRadar>())
+					{
+						numberOfModules++;
+						GUIStyle moduleStyle = mr.radarEnabled ? centerLabelBlue : centerLabel;
+						string label = mr.part.partInfo.title;
+						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
+						{
+							mr.Toggle();
+						}
+						line++;
+					}
+
+
+					if(numberOfModules == 0)
+					{
+						GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, 1 * entryHeight),"");
+						GUI.Label(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, 1 * entryHeight),"No modules.", centerLabel);
+						line++;
+					}
+
 				}
 				
 			}
 			else
 			{
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "No Weapon Manager found.", centerLabel);
-				line++;
-				
+
 			}
 			
 			
@@ -524,7 +770,7 @@ namespace BahaTurret
 		void SettingsGUI()
 		{
 			float width = 360;
-			float height = 450;
+			float height = 480;
 			float left = Screen.width/2 - width/2;
 			float top = Screen.height/2 - height/2;
 			float spacer = 24;
@@ -553,6 +799,8 @@ namespace BahaTurret
 			//SMART_GUARDS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), SMART_GUARDS, "Smart Guards");
 			//line++;
 			DRAW_DEBUG_LABELS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_DEBUG_LABELS, "Debug Labels");
+			line++;
+			ALLOW_LEGACY_TARGETING = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width - 2*spacer, spacer), ALLOW_LEGACY_TARGETING, "Allow Legacy Targeting");
 			line++;
 
 			//fireKeyGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), fireKeyGui);

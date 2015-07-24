@@ -6,13 +6,11 @@ namespace BahaTurret
 {
 	public class CMFlare : MonoBehaviour
 	{
-		public float acquireDice = 0;
-		
 		public Vessel sourceVessel;
 		Vector3 relativePos;
 		
-		List<KSPParticleEmitter> pEmitters = new List<KSPParticleEmitter>();
-		List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
+		List<KSPParticleEmitter> pEmitters;// = new List<KSPParticleEmitter>();
+		List<BDAGaplessParticleEmitter> gaplessEmitters;// = new List<BDAGaplessParticleEmitter>();
 		
 		Light[] lights;
 		float startTime;
@@ -23,58 +21,92 @@ namespace BahaTurret
 		
 		Vector3 upDirection;
 
-		Rigidbody rb;
+		public Vector3 velocity;
 
-		void Start()
+		public float thermal; //heat value
+		float minThermal = BDArmorySettings.FLARE_THERMAL * 0.55f;
+
+		float lifeTime = 6;
+
+		void OnEnable()
 		{
-			BDArmorySettings.numberOfParticleEmitters++;
-			
-			rb = gameObject.AddComponent<Rigidbody>();
 
-			acquireDice = UnityEngine.Random.Range(0f,100f);
-			
-			foreach(var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
+			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.95f, 1.05f);
+
+			if(gaplessEmitters == null || pEmitters == null)
 			{
-				if(pe.useWorldSpace)	
+				gaplessEmitters = new List<BDAGaplessParticleEmitter>();
+			
+				pEmitters = new List<KSPParticleEmitter>();
+
+				foreach(var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
 				{
-					BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
-					gpe.rb = rb;
-					gaplessEmitters.Add (gpe);
-					gpe.emit = true;
-				}
-				else
-				{
-					pEmitters.Add(pe);	
-					pe.emit = true;
+					if(pe.useWorldSpace)	
+					{
+						BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
+						gaplessEmitters.Add (gpe);
+						gpe.emit = true;
+					}
+					else
+					{
+						pEmitters.Add(pe);	
+						pe.emit = true;
+					}
 				}
 			}
-			lights = gameObject.GetComponentsInChildren<Light>();
+
+			foreach(var emitter in gaplessEmitters)
+			{
+				emitter.emit = true;
+			}
+
+			foreach(var emitter in pEmitters)
+			{
+				emitter.emit = true;
+			}
+
+			BDArmorySettings.numberOfParticleEmitters++;
+
+
+			if(lights == null)
+			{
+				lights = gameObject.GetComponentsInChildren<Light>();
+			}
+
+			foreach(var lgt in lights)
+			{
+				lgt.enabled = true;		
+			}
+
 			startTime = Time.time;
 		
-			rb.velocity = startVelocity;
-			rb.useGravity = false;
-			rb.mass = 0.001f;
-
 			//ksp force applier
-			gameObject.AddComponent<KSPForceApplier>().drag = 0.4f;
+			//gameObject.AddComponent<KSPForceApplier>().drag = 0.4f;
 
 
-			BDArmorySettings.Flares.Add(this.gameObject);
+			BDArmorySettings.Flares.Add(this);
 			
 			if(sourceVessel!=null)
 			{
 				relativePos = transform.position-sourceVessel.transform.position;
 			}
 
-			upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
+			upDirection = (transform.position - FlightGlobals.currentMainBody.transform.position).normalized;
+
+			velocity = startVelocity;
 		}
 		
 		void FixedUpdate()
 		{
+			if(!gameObject.activeInHierarchy)
+			{
+				return;
+			}
 
-			transform.rotation = Quaternion.LookRotation(rb.velocity, upDirection);
+			transform.rotation = Quaternion.LookRotation(velocity, upDirection);
 
 
+			//Particle effects
 			Vector3 downForce = Vector3.zero;
 			//downforce
 
@@ -83,15 +115,14 @@ namespace BahaTurret
 				downForce = (Mathf.Clamp((float)sourceVessel.srfSpeed, 0.1f, 150)/150) * Mathf.Clamp01(20/Vector3.Distance(sourceVessel.transform.position,transform.position)) * 20 * -upDirection;
 			}
 
-
-			
 			//turbulence
 			foreach(var pe in gaplessEmitters)
 			{
 				if(pe && pe.pEmitter)
 				{
-					try{
-					pe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
+					try
+					{
+						pe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;	
 					}
 					catch(NullReferenceException)
 					{
@@ -100,10 +131,10 @@ namespace BahaTurret
 
 					try
 					{
-					if(FlightGlobals.ActiveVessel && FlightGlobals.ActiveVessel.atmDensity <= 0)
-					{
-						pe.emit = false;
-					}
+						if(FlightGlobals.ActiveVessel && FlightGlobals.ActiveVessel.atmDensity <= 0)
+						{
+							pe.emit = false;
+						}
 					}
 					catch(NullReferenceException)
 					{
@@ -111,8 +142,11 @@ namespace BahaTurret
 					}
 				}
 			}
+			//
 
 
+			//thermal decay
+			thermal = Mathf.MoveTowards(thermal, minThermal, ((BDArmorySettings.FLARE_THERMAL-minThermal)/lifeTime)*Time.fixedDeltaTime);
 
 
 			//floatingOrigin fix
@@ -120,27 +154,20 @@ namespace BahaTurret
 			{
 				if(((transform.position-sourceVessel.transform.position)-relativePos).sqrMagnitude > 800 * 800)
 				{
-					transform.position = sourceVessel.transform.position+relativePos + (rb.velocity * Time.fixedDeltaTime);
+					transform.position = sourceVessel.transform.position+relativePos;
 				}
 
 				relativePos = transform.position-sourceVessel.transform.position;
 			}
 			//
 
+	
 			
 
-			/*
-			if(Time.time -startTime > 0.3f && gameObject.collider==null)
-			{
-				gameObject.AddComponent<SphereCollider>();	
-			}
-			*/
-			
-
-			if(Time.time - startTime > 4) //stop emitting after 4 seconds
+			if(Time.time - startTime > lifeTime) //stop emitting after lifeTime seconds
 			{
 				alive = false;
-				BDArmorySettings.Flares.Remove(gameObject);
+				BDArmorySettings.Flares.Remove(this);
 				
 				foreach(var pe in pEmitters)
 				{
@@ -158,11 +185,28 @@ namespace BahaTurret
 
 
 
-			if(Time.time - startTime > 15) //delete object after x seconds
+			if(Time.time - startTime > lifeTime+11) //disable object after x seconds
 			{
 				BDArmorySettings.numberOfParticleEmitters--;
-				Destroy(gameObject);	
+				gameObject.SetActive(false);	
 			}
+
+
+			//physics
+			//atmospheric drag (stock)
+			float simSpeedSquared = velocity.sqrMagnitude;
+			Vector3 currPos = transform.position;
+			float mass = 0.001f;
+			float drag = 1f;
+			Vector3 dragForce = (0.008f * mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * velocity.normalized;
+			
+			velocity -= (dragForce/mass)*Time.fixedDeltaTime;
+			//
+			
+			//gravity
+			if(FlightGlobals.RefFrameIsRotating) velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+
+			transform.position += velocity * Time.fixedDeltaTime;
 
 		}
 		

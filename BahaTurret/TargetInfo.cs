@@ -105,6 +105,7 @@ namespace BahaTurret
 				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
 				{
 					foundMl = true;
+					isMissile = true;
 					team = ml.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 					break;
 				}

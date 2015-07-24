@@ -1,40 +1,62 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace BahaTurret
 {
 	public class CMDropper : PartModule
 	{
+		public static ObjectPool flarePool;
+		public static ObjectPool chaffPool;
+		public static ObjectPool smokePool;
+
+		public enum CountermeasureTypes{Flare, Chaff, Smoke}
+		public CountermeasureTypes cmType = CountermeasureTypes.Flare;
+		[KSPField]
+		public string countermeasureType = "flare";
+
+		[KSPField]
+		public float ejectVelocity = 30;
+
+		[KSPField]
+		public string ejectTransformName;
+		Transform ejectTransform;
+
+
 		AudioSource audioSource;
-		AudioClip deploySound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/flareSound");
+		AudioClip cmSound;
+		AudioClip smokePoofSound;
+
+		string resourceName;
 		
-		[KSPAction("Drop Countermeasure")]
+		[KSPAction("Fire Countermeasure")]
 		public void AGDropCM(KSPActionParam param)
 		{
 			DropCM();
 		}
 		
-		[KSPEvent(guiActive = true, guiName = "Drop Countermeasure", active = true)]
+		[KSPEvent(guiActive = true, guiName = "Fire Countermeasure", active = true)]
 		public void DropCM()
 		{
-			PartResource cmResource = GetCMResource();
-			if(cmResource.amount >= 1)
+			switch(cmType)
 			{
-				cmResource.amount--;
-				Debug.Log("Dropping counterMeasure");
-				audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
-				audioSource.PlayOneShot(deploySound);
-				GameObject cm = GameDatabase.Instance.GetModel("BDArmory/Models/CMFlare/model");
-				cm = (GameObject) Instantiate(cm, transform.position, transform.rotation);
-				CMFlare cmf = cm.AddComponent<CMFlare>();
-				cmf.startVelocity = rigidbody.velocity + (30*transform.up) + (UnityEngine.Random.Range(-3f,3f) * transform.forward) + (UnityEngine.Random.Range(-3f,3f) * transform.right);
-				cmf.sourceVessel = vessel;
-				cm.SetActive(true);
+			case CountermeasureTypes.Flare:
+				DropFlare();
+				break;
+			case CountermeasureTypes.Chaff:
+				break;
+			case CountermeasureTypes.Smoke:
+				PopSmoke();
+				break;
 			}
 		}
 		
 		public override void OnStart (PartModule.StartState state)
 		{
+			SetupCM();
+
+			ejectTransform = part.FindModelTransform(ejectTransformName);
+
 			part.force_activate();
 			
 			audioSource = gameObject.AddComponent<AudioSource>();
@@ -63,10 +85,104 @@ namespace BahaTurret
 		{
 			foreach(var res in part.Resources.list)
 			{
-				if(res.resourceName == "Countermeasure") return res;	
+				if(res.resourceName == resourceName) return res;	
 			}
 			
 			return null;
+		}
+
+		void SetupCM()
+		{
+			countermeasureType = countermeasureType.ToLower();
+			switch(countermeasureType)
+			{
+			case "flare":
+				cmType = CountermeasureTypes.Flare;
+				cmSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/flareSound");
+				if(!flarePool)
+				{
+					SetupFlarePool();
+				}
+				resourceName = "CMFlare";
+				break;
+			case "chaff":
+				cmType = CountermeasureTypes.Chaff;
+				resourceName = "CMChaff";
+				break;
+			case "smoke":
+				cmType = CountermeasureTypes.Smoke;
+				cmSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/smokeEject");
+				smokePoofSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/smokePoof");
+				resourceName = "CMSmoke";
+				if(smokePool == null)
+				{
+					SetupSmokePool();
+				}
+				break;
+			}
+		}
+
+		void DropFlare()
+		{
+			PartResource cmResource = GetCMResource();
+			if(cmResource && cmResource.amount >= 1)
+			{
+				cmResource.amount--;
+				audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+				audioSource.PlayOneShot(cmSound);
+
+				GameObject cm = flarePool.GetPooledObject();
+				cm.transform.position = transform.position;
+				CMFlare cmf = cm.GetComponent<CMFlare>();
+				cmf.startVelocity = part.rb.velocity + (ejectVelocity*transform.up) + (UnityEngine.Random.Range(-3f,3f) * transform.forward) + (UnityEngine.Random.Range(-3f,3f) * transform.right);
+				cmf.sourceVessel = vessel;
+
+				cm.SetActive(true);
+			}
+		}
+
+		void PopSmoke()
+		{
+			PartResource smokeResource = GetCMResource();
+			if(smokeResource.amount >= 1)
+			{
+				smokeResource.amount--;
+				audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+				audioSource.PlayOneShot(cmSound);
+
+				StartCoroutine(SmokeRoutine());
+			}
+		}
+
+		IEnumerator SmokeRoutine()
+		{
+			yield return new WaitForSeconds(0.2f);
+			GameObject smokeCMObject = smokePool.GetPooledObject();
+			smokeCMObject.SetActive(true);
+			smokeCMObject.transform.position = ejectTransform.position + (10*ejectTransform.forward);
+			foreach(var emitter in smokeCMObject.GetComponentsInChildren<KSPParticleEmitter>())
+			{
+				emitter.Emit();
+			}
+			audioSource.PlayOneShot(smokePoofSound);
+		}
+
+		void SetupFlarePool()
+		{
+			GameObject cm = (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMFlare/model"));
+			cm.SetActive(false);
+			cm.AddComponent<CMFlare>();
+			flarePool = ObjectPool.CreateObjectPool(cm, 10, true, true);
+		}
+
+		void SetupSmokePool()
+		{
+			GameObject cm = (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMSmoke/cmSmokeModel"));
+			cm.SetActive(false);
+			cm.AddComponent<CMSmoke>();
+	
+
+			smokePool = ObjectPool.CreateObjectPool(cm, 10, true, true);
 		}
 		
 	}

@@ -20,61 +20,214 @@ namespace BahaTurret
 	{
 		public static Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>> TargetDatabase;
 
+		public static List<ModuleTargetingCamera> ActiveLasers;
+
 		string debugString = string.Empty;
+
+		public static float heatScore = 0;
+		public static float flareScore = 0;
 
 		void Start()
 		{
+			//legacy targetDatabase
 			TargetDatabase = new Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>>();
 			TargetDatabase.Add(BDArmorySettings.BDATeams.A, new List<TargetInfo>());
 			TargetDatabase.Add(BDArmorySettings.BDATeams.B, new List<TargetInfo>());
 			StartCoroutine(CleanDatabaseRoutine());
+
+			//Laser points
+			ActiveLasers = new List<ModuleTargetingCamera>();
 		}
 
 		void Update()
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS)
 			{
-				debugString = string.Empty;
-				debugString+= ("Team A's targets:");
-				foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+				UpdateDebugLabels();
+			}
+		}
+
+
+		//Laser point stuff
+		public static void RegisterLaserPoint(ModuleTargetingCamera cam)
+		{
+			if(ActiveLasers.Contains(cam))
+			{
+				return;
+			}
+			else
+			{
+				ActiveLasers.Add(cam);
+			}
+		}
+
+		/// <summary>
+		/// Gets the laser target painter with the least angle off boresight. Set the missile as the reference transform.
+		/// </summary>
+		/// <returns>The laser target painter.</returns>
+		/// <param name="referenceTransform">Reference transform.</param>
+		/// <param name="maxBoreSight">Max bore sight.</param>
+		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml)
+		{
+			Transform referenceTransform = ml.transform;
+			float maxOffBoresight = ml.maxOffBoresight;
+			ModuleTargetingCamera finalCam = null;
+			float smallestAngle = 360;
+			foreach(var cam in ActiveLasers)
+			{
+				if(!cam)
 				{
-					if(targetInfo)
-					{
-						if(!targetInfo.Vessel)
-						{
-							debugString+= ("\n - A target with no vessel reference.");
-						}
-						else
-						{
-							debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
-						}
-					}
-					else
-					{
-						debugString+= ("\n - A null target info.");
-					}
+					continue;
 				}
-				debugString+= ("\nTeam B's targets:");
-				foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+
+				if(cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
 				{
-					if(targetInfo)
+					float angle = Vector3.Angle(referenceTransform.forward, cam.groundTargetPosition-referenceTransform.position);
+					if(angle < maxOffBoresight && angle < smallestAngle && ml.CanSeePosition(cam.groundTargetPosition))
 					{
-						if(!targetInfo.Vessel)
-						{
-							debugString+= ("\n - A target with no vessel reference.");
-						}
-						else
-						{
-							debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
-						}
-					}
-					else
-					{
-						debugString+= ("\n - A null target info.");
+						smallestAngle = angle;
+						finalCam = cam;
 					}
 				}
 			}
+			return finalCam;
 		}
+
+		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold)
+		{
+			float minScore = highpassThreshold;
+			float minMass = 0.5f;
+			TargetSignatureData finalData = TargetSignatureData.noTarget;
+			float finalScore = 0;
+			foreach(var vessel in FlightGlobals.Vessels)
+			{
+				if(!vessel || !vessel.loaded)
+				{
+					continue;
+				}
+				if(vessel.GetTotalMass() < minMass)
+				{
+					continue;
+				}
+				float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
+				if(angle < scanRadius)
+				{
+					float score = 0;
+					foreach(var part in vessel.Parts)
+					{
+						if(Misc.CheckSightLine(ray.origin, part.transform.position, 10000, 5))
+						{
+							float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * Mathf.Clamp01(15/angle);
+							thisScore *= Mathf.Pow(1400,2)/Mathf.Clamp((vessel.CoM-ray.origin).sqrMagnitude, 90000, 36000000);
+							score = Mathf.Max (score, thisScore);
+						}
+					}
+
+					if(vessel.LandedOrSplashed)
+					{
+						score /= 4;
+					}
+
+					score *= Mathf.Clamp(Vector3.Angle(vessel.transform.position-ray.origin, -VectorUtils.GetUpDirection(ray.origin))/90, 0.5f, 1.5f);
+
+					if(score > finalScore)
+					{
+						finalScore = score;
+						finalData = new TargetSignatureData(vessel, score);
+					}
+				}
+			}
+
+			heatScore = finalScore;//DEBUG
+			flareScore = 0; //DEBUG
+			foreach(var flare in BDArmorySettings.Flares)
+			{
+				float angle = Vector3.Angle(flare.transform.position-ray.origin, ray.direction);
+				if(angle < scanRadius)
+				{
+					float score = flare.thermal * Mathf.Clamp01(15/angle);
+					score *= Mathf.Pow(1400,2)/Mathf.Clamp((flare.transform.position-ray.origin).sqrMagnitude, 90000, 36000000);
+
+					score *= Mathf.Clamp(Vector3.Angle(flare.transform.position-ray.origin, -VectorUtils.GetUpDirection(ray.origin))/90, 0.5f, 1.5f);
+
+					if(score > finalScore)
+					{
+						flareScore = score;//DEBUG
+						finalScore = score;
+						finalData = new TargetSignatureData(flare, score);
+					}
+				}
+			}
+
+
+
+			if(finalScore < minScore)
+			{
+				finalData = TargetSignatureData.noTarget;
+			}
+
+			return finalData;
+		}
+
+
+
+
+
+
+
+
+		void UpdateDebugLabels()
+		{
+			debugString = string.Empty;
+			debugString+= ("Team A's targets:");
+			foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+			{
+				if(targetInfo)
+				{
+					if(!targetInfo.Vessel)
+					{
+						debugString+= ("\n - A target with no vessel reference.");
+					}
+					else
+					{
+						debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
+					}
+				}
+				else
+				{
+					debugString+= ("\n - A null target info.");
+				}
+			}
+			debugString+= ("\nTeam B's targets:");
+			foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+			{
+				if(targetInfo)
+				{
+					if(!targetInfo.Vessel)
+					{
+						debugString+= ("\n - A target with no vessel reference.");
+					}
+					else
+					{
+						debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
+					}
+				}
+				else
+				{
+					debugString+= ("\n - A null target info.");
+				}
+			}
+
+			debugString += "\n\nHeat score: "+heatScore;
+			debugString += "\nFlare score: "+flareScore;
+		}
+
+
+
+
+
+
+		//Legacy target managing stuff
 
 		public static BDArmorySettings.BDATeams BoolToTeam(bool team)
 		{
@@ -222,6 +375,30 @@ namespace BahaTurret
 			}
 			
 			return finalTarget;
+		}
+
+		public static TargetInfo GetUnengagedMissileTarget(MissileFire mf)
+		{
+			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+
+			foreach(var target in TargetDatabase[team])
+			{
+				if(target && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+				{
+					bool isHostile = false;
+					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)
+					{
+						isHostile = true;
+					}
+					
+					if(isHostile && target.numFriendliesEngaging == 0)
+					{
+						return target;
+					}
+				}
+			}
+			
+			return null;
 		}
 
 		public static TargetInfo GetClosestMissileTarget(MissileFire mf)

@@ -13,6 +13,17 @@ namespace BahaTurret
 		float flareTurbDelta = 0.2f;
 		float flareTurbTimer = 0;
 		
+		public static Vector3 Turbulence
+		{
+			get
+			{
+				float x = VectorUtils.FullRangePerlinNoise(Time.time*0.5F, 0);
+				float y = VectorUtils.FullRangePerlinNoise(Time.time*1.1f, 35);
+				float z = VectorUtils.FullRangePerlinNoise(Time.time*0.75f, 70);
+				return new Vector3(x,y,z) * 5;
+			}
+		}
+		
 		
 		void FixedUpdate()
 		{

@@ -146,7 +146,7 @@ namespace BahaTurret
 
 		void Update()
 		{
-			if(BDArmorySettings.DRAW_DEBUG_LINES)
+			if(BDArmorySettings.DRAW_DEBUG_LINES && pilotEnabled)
 			{
 				if(lr)
 				{
@@ -311,10 +311,10 @@ namespace BahaTurret
             	}
 				else
 				{
-					BahaTurret bt = wm.currentTurret;
-					if(bt!=null)
+					ModuleWeapon weapon = wm.currentGun;
+					if(weapon!=null)
 					{
-						target -= bt.GetLeadOffset();
+						target -= 1.25f*weapon.GetLeadOffset();
 					}
 				}
 
@@ -533,7 +533,7 @@ namespace BahaTurret
 				target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
 			}
 
-			if(Vector3.Angle(vessel.ReferenceTransform.up, target-vessel.ReferenceTransform.position) < 35)
+			if(Vector3.Angle(vessel.ReferenceTransform.up, target-vessel.ReferenceTransform.position) < 20)
 			   //|| (targetV.Landed && Vector3.Angle(vessel.ReferenceTransform.up, FlightPosition(target, (float)vessel.altitude)-vessel.ReferenceTransform.position) < 15))
 			{
 				launchAuthorized = true;

@@ -147,16 +147,16 @@ namespace BahaTurret
 			if(guidanceActive && targetVessel!=null && vessel!=null && vesselTransform!=null && velocityTransform!=null)
 			{
 				velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vesselTransform.forward);
-				Vector3 targetPosition = targetVessel.transform.position;
+				Vector3 targetPosition = targetVessel.CoM;
 				Vector3 localAngVel = vessel.angularVelocity;
 
 				if(guidanceMode == 1)
 				{
-					targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, vessel, targetVessel);
+					targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, vessel.srf_velocity, vessel.acceleration, vessel);
 				}
 				else if(guidanceMode == 2)
 				{
-					targetPosition = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, targetVessel, 1.85f);
+					targetPosition = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, 1.85f);
 				}
 				else
 				{

@@ -14,23 +14,67 @@ namespace BahaTurret
 		public Part part = null;
 		
 		public Rigidbody rb;
+
+		Vector3 internalVelocity;
+		Vector3 lastPos;
+
+		bool useInternalV = false;
+
+		Vector3 velocity
+		{
+			get
+			{
+				if(rb)
+				{
+					return rb.velocity;
+				}
+				else if(part)
+				{
+					return part.rb.velocity;
+				}
+				else
+				{
+					useInternalV = true;
+					return internalVelocity;
+				}
+			}
+		}
 		
 		void Start()
 		{
 			pEmitter = gameObject.GetComponent<KSPParticleEmitter>();	
 			pEmitter.emit = false;
 		}
+
+		void OnEnable()
+		{
+			lastPos = transform.position;
+		}
 		
 		void FixedUpdate()
 		{
+			if(!part && !rb)
+			{
+				internalVelocity = (transform.position-lastPos)/Time.fixedDeltaTime;
+				lastPos = transform.position;
+			}
+
 			if(emit)
 			{
 				maxDistance = Mathf.Clamp((pEmitter.minSize/3), 0.5f, 5) + (Mathf.Clamp((BDArmorySettings.numberOfParticleEmitters-1), 0, 20)*0.07f);
-				
-				Vector3 velocity = (part == null) ? rb.velocity : part.rigidbody.velocity;
+
 				Vector3 originalLocalPosition = gameObject.transform.localPosition;
 				Vector3 originalPosition = gameObject.transform.position;
-				Vector3 startPosition = gameObject.transform.position + (velocity * Time.fixedDeltaTime);
+
+				Vector3 startPosition = gameObject.transform.position;
+				if(useInternalV)
+				{
+					startPosition -= (velocity*Time.fixedDeltaTime);
+				}
+				else
+				{
+					startPosition += (velocity * Time.fixedDeltaTime);
+				}
 				float originalGapDistance = Vector3.Distance(originalPosition, startPosition);
 				float intermediateSteps = originalGapDistance/maxDistance;
 				
@@ -47,7 +91,6 @@ namespace BahaTurret
 		
 		public void EmitParticles()
 		{
-			Vector3 velocity = (part == null) ? rb.velocity : part.rigidbody.velocity;
 			Vector3 originalLocalPosition = gameObject.transform.localPosition;
 			Vector3 originalPosition = gameObject.transform.position;
 			Vector3 startPosition = gameObject.transform.position + (velocity * Time.fixedDeltaTime);

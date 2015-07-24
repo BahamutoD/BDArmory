@@ -34,6 +34,23 @@ namespace BahaTurret
             }
             return states.ToArray();
         }
+
+		public static AnimationState SetUpSingleAnimation(string animationName, Part part)
+		{
+			var states = new List<AnimationState>();
+
+			foreach (var animation in part.FindModelAnimators(animationName))
+			{
+				var animationState = animation[animationName];
+				animationState.speed = 0;
+				animationState.enabled = true;
+				animationState.wrapMode = WrapMode.ClampForever;
+				animation.Blend(animationName);
+				return animationState;
+			}
+
+			return null;
+		}
 		
 		public static bool CheckMouseIsOnGui()
 		{
@@ -45,8 +62,10 @@ namespace BahaTurret
 				BDArmorySettings.GAME_UI_ENABLED && 
 				BDArmorySettings.FIRE_KEY.Contains("mouse") &&
 				(
-					(BDArmorySettings.toolbarGuiEnabled && BDArmorySettings.Instance.toolbarWindowRect.Contains(inverseMousePos)) || 
-					topGui.Contains(inverseMousePos)
+					(BDArmorySettings.toolbarGuiEnabled && BDArmorySettings.Instance.toolbarWindowRect.Contains(inverseMousePos)) 
+					|| topGui.Contains(inverseMousePos)
+					|| (ModuleTargetingCamera.windowIsOpen && ModuleTargetingCamera.camWindowRect.Contains(inverseMousePos))
+					|| (BDArmorySettings.Instance.ActiveWeaponManager!=null && BDArmorySettings.Instance.ActiveWeaponManager.radar!=null && BDArmorySettings.Instance.ActiveWeaponManager.radar.radarEnabled && ModuleRadar.radarWindowRect.Contains(inverseMousePos))
 				)
 			);	
 		}
@@ -81,7 +100,12 @@ namespace BahaTurret
 			float finalAngle = sign * angle;
 			return finalAngle;
 		}
-
+		/// <summary>
+		/// Parses the string to a curve.
+		/// Format: "key:pair,key:pair"
+		/// </summary>
+		/// <returns>The curve.</returns>
+		/// <param name="curveString">Curve string.</param>
 		public static FloatCurve ParseCurve(string curveString)
 		{
 			string[] pairs = curveString.Split(new char[]{','});
@@ -96,6 +120,40 @@ namespace BahaTurret
 
 			return curve;
 		}
+
+		public static bool CheckSightLine(Vector3 a, Vector3 b, float maxDistance, float threshold)
+		{
+			float dist = maxDistance;
+			Ray ray = new Ray(a, b-a);
+			RaycastHit rayHit;
+			if(Physics.Raycast(ray, out rayHit, dist, 557057))
+			{
+				if((rayHit.point-b).sqrMagnitude < Mathf.Pow(threshold, 2))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			
+			return true;
+		}
+
+		public static float[] ParseToFloatArray(string floatString)
+		{
+			string[] floatStrings = floatString.Split(new char[]{','});
+			float[] floatArray = new float[floatStrings.Length];
+			for(int i = 0; i < floatStrings.Length; i++)
+			{
+				floatArray[i] = float.Parse(floatStrings[i]);
+			}
+
+			return floatArray;
+		}
+
+
 		
 	
 	}

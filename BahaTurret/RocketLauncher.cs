@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace BahaTurret
 {
-	public class RocketLauncher : PartModule
+	public class RocketLauncher : PartModule, IBDWeapon
 	{
 		public bool hasRocket = true;
 		
@@ -56,7 +56,19 @@ namespace BahaTurret
 		
 		double lastRocketsLeft = 0;
 		
-		
+		//weapon interface
+		public Part GetPart()
+		{
+			return part;
+		}
+		public string GetShortName()
+		{
+			return part.partInfo.title;
+		}
+		public WeaponClasses GetWeaponClass()
+		{
+			return WeaponClasses.Rocket;
+		}
 		
 		[KSPAction("Fire")]
 		public void AGFire(KSPActionParam param)
@@ -73,21 +85,22 @@ namespace BahaTurret
 		
 		public override void OnStart (PartModule.StartState state)
 		{
-			
-			part.force_activate();
-			
-			aimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
-			
-			sfAudioSource = gameObject.AddComponent<AudioSource>();
-			sfAudioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
-			sfAudioSource.minDistance = 1;
-			sfAudioSource.maxDistance = 2000;
-			sfAudioSource.dopplerLevel = 0;
-			sfAudioSource.priority = 230;
-			
-			MakeRocketArray();
-			UpdateRocketScales();
-			
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				part.force_activate();
+				
+				aimerTexture = BDArmorySettings.Instance.greenPointCircleTexture;// GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
+				
+				sfAudioSource = gameObject.AddComponent<AudioSource>();
+				sfAudioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+				sfAudioSource.minDistance = 1;
+				sfAudioSource.maxDistance = 2000;
+				sfAudioSource.dopplerLevel = 0;
+				sfAudioSource.priority = 230;
+				
+				MakeRocketArray();
+				UpdateRocketScales();
+			}
 			
 		}
 		

@@ -33,12 +33,14 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>C:\Games\KSP 1.01 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>C:\Games\KSP 1.01 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -51,7 +53,6 @@
     <Compile Include="BahaTurretBullet.cs" />
     <Compile Include="ExplosionFX.cs" />
     <Compile Include="BulletHitFX.cs" />
-    <Compile Include="MissileFire.cs" />
     <Compile Include="CMFlare.cs" />
     <Compile Include="CMDropper.cs" />
     <Compile Include="RocketLauncher.cs" />
@@ -71,8 +72,29 @@
     <Compile Include="TargetInfo.cs" />
     <Compile Include="BDATargetManager.cs" />
     <Compile Include="BDModulePilotAI.cs" />
+    <Compile Include="TargetingCamera.cs" />
+    <Compile Include="ModuleTargetingCamera.cs" />
+    <Compile Include="ModuleTurret.cs" />
+    <Compile Include="VectorUtils.cs" />
+    <Compile Include="ModuleWeapon.cs" />
+    <Compile Include="ObjectPool.cs" />
+    <Compile Include="PooledBullet.cs" />
+    <Compile Include="CameraBulletRenderer.cs" />
+    <Compile Include="BDAShaderLoader.cs" />
+    <Compile Include="IBDWeapon.cs" />
+    <Compile Include="MissileFire.cs" />
+    <Compile Include="TGPCameraEffects.cs" />
+    <Compile Include="BDGUIUtils.cs" />
+    <Compile Include="TGPCamRotator.cs" />
+    <Compile Include="CMSmoke.cs" />
+    <Compile Include="TargetSignatureData.cs" />
+    <Compile Include="ModuleRadar.cs" />
+    <Compile Include="RadarUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="GrayscaleEffectShader.shader" />
   </ItemGroup>
 </Project>

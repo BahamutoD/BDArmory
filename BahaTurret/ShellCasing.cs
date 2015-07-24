@@ -8,30 +8,48 @@ namespace BahaTurret
 		public float startTime;
 		public Vector3 initialV;
 		
-		
-		void Start()
+		Vector3 velocity;
+		Vector3 angularVelocity;
+
+		float atmDensity;
+
+		void OnEnable()
 		{
 			startTime = Time.time;	
-			gameObject.AddComponent<Rigidbody>();
-			rigidbody.mass = 0.001f;
-			rigidbody.velocity = initialV;
-			rigidbody.AddRelativeForce(new Vector3 (UnityEngine.Random.Range(-.1f,.1f), UnityEngine.Random.Range(-.1f,.1f), UnityEngine.Random.Range(6f,8f)) , ForceMode.VelocityChange);
-			rigidbody.AddRelativeTorque(new Vector3(UnityEngine.Random.Range(0f,10f),UnityEngine.Random.Range(0f,10f),UnityEngine.Random.Range(0f,10f)), ForceMode.VelocityChange);
-			if(!FlightGlobals.RefFrameIsRotating)
-			{
-				rigidbody.useGravity = false;
-			}
+			velocity = initialV;
+			velocity += transform.rotation * new Vector3 (UnityEngine.Random.Range(-.1f,.1f), UnityEngine.Random.Range(-.1f,.1f), UnityEngine.Random.Range(6f,8f));
+			angularVelocity = new Vector3(UnityEngine.Random.Range(-10f,10f),UnityEngine.Random.Range(-10f,10f),UnityEngine.Random.Range(-10f,10f)) * 10;
 
+			atmDensity = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position, FlightGlobals.currentMainBody), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody);
 		}
 		
 		void FixedUpdate()
 		{
-			//atmospheric drag
-			rigidbody.AddForce((-0.0005f) * rigidbody.velocity * (float) FlightGlobals.getStaticPressure(transform.position, FlightGlobals.currentMainBody));
-			
+			if(!gameObject.activeInHierarchy)
+			{
+				return;
+			}
+
+			//gravity
+			velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.fixedDeltaTime;
+
+			//drag
+			velocity -= 0.005f * velocity * atmDensity;
+
+			transform.rotation *= Quaternion.Euler(angularVelocity*TimeWarp.fixedDeltaTime);
+			transform.position += velocity*TimeWarp.deltaTime;
+		}
+
+		void Update()
+		{
+			if(!gameObject.activeInHierarchy)
+			{
+				return;
+			}
+
 			if (Time.time - startTime > 2)
 			{
-				GameObject.Destroy(gameObject);	
+				gameObject.SetActive(false);
 			}
 		}
 	}

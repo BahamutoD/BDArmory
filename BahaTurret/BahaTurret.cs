@@ -706,7 +706,7 @@ namespace BahaTurret
 				{
 					//Vector3 acceleration = (targetVessel.rigidbody.velocity - targetPrevVel)/Time.fixedDeltaTime;
 					Vector3 acceleration = targetVessel.acceleration;
-					float time2 = CalculateLeadTime(target-transform.position, targetVessel.rigidbody.velocity-rigidbody.velocity, bulletVelocity);
+					float time2 = VectorUtils.CalculateLeadTime(target-transform.position, targetVessel.rigidbody.velocity-rigidbody.velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
 					target += (targetVessel.rigidbody.velocity-rigidbody.velocity) * time; //target vessel relative velocity compensation
 					target += (0.5f * acceleration * time * time); //target acceleration
@@ -715,7 +715,7 @@ namespace BahaTurret
 				}
 				else if(vessel.altitude < 5000)
 				{
-					float time2 = CalculateLeadTime(target-transform.position, Vector3.zero-rigidbody.velocity, bulletVelocity);
+					float time2 = VectorUtils.CalculateLeadTime(target-transform.position, Vector3.zero-rigidbody.velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
 					target += (-rigidbody.velocity*(time+Time.fixedDeltaTime));  //this vessel velocity compensation against stationary
 				}
@@ -907,7 +907,6 @@ namespace BahaTurret
 		
 		private void Fire()
 		{
-			
 			float timeGap = (60/roundsPerMinute) * TimeWarp.CurrentRate;
 			
 			if(Time.time-timeCheck > timeGap && !isOverheated)
@@ -1192,6 +1191,8 @@ namespace BahaTurret
 					hitPart = null;
 					pointingAtPosition = fireTr.position + (ray.direction * (maxTargetingRange));
 				}
+
+
 				if(targetVessel!=null && targetVessel.loaded) pointingAtPosition = fireTr.transform.position + (ray.direction * targetLeadDistance);
 			}
 			
@@ -1311,7 +1312,7 @@ namespace BahaTurret
 		}
 		
 		//overheat gauge
-		public static VInfoBox InitHeatGauge(Part p)  //thanks DYJ
+		public VInfoBox InitHeatGauge(Part p)  //thanks DYJ
         {
             VInfoBox v = p.stackIcon.DisplayInfo();
 
@@ -1324,7 +1325,7 @@ namespace BahaTurret
             return v;
         }
 
-		public static VInfoBox InitReloadBar(Part p)
+		public VInfoBox InitReloadBar(Part p)
 		{
 			VInfoBox v = p.stackIcon.DisplayInfo();
 
@@ -1399,28 +1400,7 @@ namespace BahaTurret
 		
 
 		
-		//from howlingmoonsoftware.com
-		//calculates how long it will take for a target to be where it will be when a bullet fired now can reach it.
-		//delta = initial relative position, vr = relative velocity, muzzleV = bullet velocity.
-		public static float CalculateLeadTime(Vector3 delta, Vector3 vr, float muzzleV)
-		{
-			// Quadratic equation coefficients a*t^2 + b*t + c = 0
-  			float a = Vector3.Dot(vr, vr) - muzzleV*muzzleV;
-			float b = 2f*Vector3.Dot(vr, delta);
-			float c = Vector3.Dot(delta, delta);
-			
-			float det = b*b - 4f*a*c;
-			
-			// If the determinant is negative, then there is no solution
-			if(det > 0f)
-			{
-				return 2f*c/(Mathf.Sqrt(det) - b);
-			} 
-			else 
-			{
-				return -1f;
-			}	
-		}
+
 		
 		bool CheckMouseIsOnGui()
 		{
@@ -1429,7 +1409,7 @@ namespace BahaTurret
 		
 		bool WMgrAuthorized()
 		{
-			MissileFire manager = BDArmorySettings.Instance.wpnMgr;
+			MissileFire manager = BDArmorySettings.Instance.ActiveWeaponManager;
 			if(manager != null)
 			{
 				if(manager.hasSingleFired) return false;
