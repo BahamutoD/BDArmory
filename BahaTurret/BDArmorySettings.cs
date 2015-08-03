@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace BahaTurret
 {
-	[KSPAddon(KSPAddon.Startup.Flight, false)]
+	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class BDArmorySettings : MonoBehaviour
 	{
 		
@@ -38,9 +38,15 @@ namespace BahaTurret
 
 		public static float FLARE_THERMAL = 1900;
 
-		public static float BDARMORY_VOLUME = 0.5f; //TODO
+		public static float BDARMORY_UI_VOLUME = 0.35f; 
+		public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
+
+
+		public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
+		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
 		//==================
-		
+		public delegate void VolumeChange();
+		public static event VolumeChange OnVolumeChange;
 		
 		//particle optimization
 		public static int numberOfParticleEmitters = 0;
@@ -81,8 +87,7 @@ namespace BahaTurret
 		VesselRanges combatVesselRanges = new VesselRanges();
 		float physRangeTimer;
 		
-		bool drawCursor = false;
-		Texture2D cursorTexture;	
+			
 	
 		public static List<CMFlare> Flares = new List<CMFlare>();
 
@@ -99,12 +104,42 @@ namespace BahaTurret
 		GUIStyle rightLabelRed;
 		GUIStyle leftLabelGray;
 
-		public enum BDATeams{A, B};
+		public enum BDATeams{A, B, None};
 
 
 
 		//common textures
 		public static string textureDir = "BDArmory/Textures/";
+
+		bool drawCursor = false;
+		Texture2D cursorTexture = GameDatabase.Instance.GetTexture(textureDir + "aimer", false);
+
+		private Texture2D dti;
+		public Texture2D directionTriangleIcon
+		{
+			get
+			{
+				return dti ? dti : dti = GameDatabase.Instance.GetTexture(textureDir + "directionIcon", false);
+			}
+		}
+
+		private Texture2D cgs;
+		public Texture2D crossedGreenSquare
+		{
+			get
+			{
+				return cgs ? cgs : cgs = GameDatabase.Instance.GetTexture(textureDir + "crossedGreenSquare", false);
+			}
+		}
+
+		private Texture2D dlgs;
+		public Texture2D dottedLargeGreenCircle
+		{
+			get
+			{
+				return dlgs ? dlgs : dlgs = GameDatabase.Instance.GetTexture (textureDir + "dottedLargeGreenCircle", false);
+			}
+		}
 
 		private Texture2D ogs;
 		public Texture2D openGreenSquare
@@ -158,7 +193,7 @@ namespace BahaTurret
 			{
 				if(gpct == null)
 				{
-					gpct = GameDatabase.Instance.GetTexture(textureDir + "greenCircle", false);
+					gpct = GameDatabase.Instance.GetTexture(textureDir + "greenPointCircle", false);
 				}
 				return gpct;
 			}
@@ -169,7 +204,7 @@ namespace BahaTurret
 		{
 			get
 			{
-				return gspct ? gspct : gspct = GameDatabase.Instance.GetTexture(textureDir + "grayCircle", false);
+				return gspct ? gspct : gspct = GameDatabase.Instance.GetTexture(textureDir + "greenSpikedCircle", false);
 			}
 		}
 
@@ -224,24 +259,21 @@ namespace BahaTurret
 		void Start()
 		{	
 			Instance = this;
+
+			//settings
+			SetupSettingsSize();
+			LoadConfig();
+
+			//wmgr tolbar
 			toolbarWindowRect = new Rect(Screen.width-toolWindowWidth-4, 150, toolWindowWidth, toolWindowHeight);
-			AddToolbarButton();
+			//AddToolbarButton();
 			
 			physRangeTimer = Time.time;
-			LoadConfig();
-			
-			cursorTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/aimer", false);
-			
-			GameEvents.onHideUI.Add(HideGameUI);
-			GameEvents.onShowUI.Add(ShowGameUI);
-			GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
-			GameEvents.OnGameSettingsApplied.Add(SaveVolumeSettings);
-			GameEvents.onVesselCreate.Add(ApplyNewVesselRanges);
+
 			
 			GAME_UI_ENABLED = true;
 			
-			ApplyPhysRange();
-			SaveVolumeSettings();
+
 			fireKeyGui = FIRE_KEY;
 
 			//setup gui styles
@@ -278,48 +310,74 @@ namespace BahaTurret
 			leftLabelGray.normal.textColor = Color.gray;
 			//
 
-			foreach(var cam in FlightCamera.fetch.cameras)
+			if(HighLogic.LoadedSceneIsFlight)
 			{
-				cam.gameObject.AddComponent<CameraBulletRenderer>();
-			}
+				ApplyPhysRange();
+				SaveVolumeSettings();
 
-			GameEvents.onVesselChange.Add(VesselChange);
+				GameEvents.onHideUI.Add(HideGameUI);
+				GameEvents.onShowUI.Add(ShowGameUI);
+				GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
+				GameEvents.OnGameSettingsApplied.Add(SaveVolumeSettings);
+				GameEvents.onVesselCreate.Add(ApplyNewVesselRanges);
+
+
+				foreach(var cam in FlightCamera.fetch.cameras)
+				{
+					cam.gameObject.AddComponent<CameraBulletRenderer>();
+				}
+
+				GameEvents.onVesselChange.Add(VesselChange);
+			}
 		}
 		
 		void Update()
 		{
-			if(missileWarning && Time.time - missileWarningTime > 1.5f)
+			if(HighLogic.LoadedSceneIsFlight)
 			{
-				missileWarning = false;	
-			}
+				if(missileWarning && Time.time - missileWarningTime > 1.5f)
+				{
+					missileWarning = false;	
+				}
 
-			/*
-			if(Input.GetKeyDown(KeyCode.Keypad1))
-			{
-				VesselRanges vr = FlightGlobals.ActiveVessel.vesselRanges;
-				Debug.Log ("Flying: ");
-				Debug.Log ("load: " + vr.flying.load);
-				Debug.Log ("unload: " + vr.flying.unload);
-				Debug.Log ("pack: " + vr.flying.pack);
-				Debug.Log ("unpack" + vr.flying.unpack);
+				/*
+				if(Input.GetKeyDown(KeyCode.Keypad1))
+				{
+					VesselRanges vr = FlightGlobals.ActiveVessel.vesselRanges;
+					Debug.Log ("Flying: ");
+					Debug.Log ("load: " + vr.flying.load);
+					Debug.Log ("unload: " + vr.flying.unload);
+					Debug.Log ("pack: " + vr.flying.pack);
+					Debug.Log ("unpack" + vr.flying.unpack);
 
-				Debug.Log ("Landed: ");
-				Debug.Log ("load: " + vr.landed.load);
-				Debug.Log ("unload: " + vr.landed.unload);
-				Debug.Log ("pack: " + vr.landed.pack);
-				Debug.Log ("unpack" + vr.landed.unpack);
+					Debug.Log ("Landed: ");
+					Debug.Log ("load: " + vr.landed.load);
+					Debug.Log ("unload: " + vr.landed.unload);
+					Debug.Log ("pack: " + vr.landed.pack);
+					Debug.Log ("unpack" + vr.landed.unpack);
 
-				Debug.Log ("Splashed: ");
-				Debug.Log ("load: " + vr.splashed.load);
-				Debug.Log ("unload: " + vr.splashed.unload);
-				Debug.Log ("pack: " + vr.splashed.pack);
-				Debug.Log ("unpack" + vr.splashed.unpack);
+					Debug.Log ("Splashed: ");
+					Debug.Log ("load: " + vr.splashed.load);
+					Debug.Log ("unload: " + vr.splashed.unload);
+					Debug.Log ("pack: " + vr.splashed.pack);
+					Debug.Log ("unpack" + vr.splashed.unpack);
 
-			}
-			*/
+				}
+				*/
 
 
 			
+
+			
+			
+			
+				if(Input.GetKeyDown(KeyCode.KeypadMultiply))
+				{
+					toolbarGuiEnabled = !toolbarGuiEnabled;	
+				}
+			
+			}
+
 			if(Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
 			{
 				if(Input.GetKeyDown(KeyCode.B))
@@ -337,19 +395,14 @@ namespace BahaTurret
 				}
 			}
 			
-			
-			
-			if(Input.GetKeyDown(KeyCode.KeypadMultiply))
-			{
-				toolbarGuiEnabled = !toolbarGuiEnabled;	
-			}
-			
-			
 		}
 
 		void LateUpdate()
 		{
-			DrawAimerCursor();
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				DrawAimerCursor();
+			}
 		}
 		
 		void DrawAimerCursor()
@@ -456,7 +509,13 @@ namespace BahaTurret
 
 				if(cfg.HasValue("FLARE_THERMAL")) FLARE_THERMAL = float.Parse(cfg.GetValue("FLARE_THERMAL"));
 
+				if(cfg.HasValue("BDARMORY_UI_VOLUME")) BDARMORY_UI_VOLUME = float.Parse(cfg.GetValue("BDARMORY_UI_VOLUME"));
 
+				if(cfg.HasValue("BDARMORY_WEAPONS_VOLUME")) BDARMORY_WEAPONS_VOLUME = float.Parse(cfg.GetValue("BDARMORY_WEAPONS_VOLUME"));
+
+				if(cfg.HasValue("GLOBAL_LIFT_MULTIPLIER")) GLOBAL_LIFT_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_LIFT_MULTIPLIER"));
+
+				if(cfg.HasValue("GLOBAL_DRAG_MULTIPLIER")) GLOBAL_DRAG_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_DRAG_MULTIPLIER"));
 			}
 			catch(NullReferenceException)
 			{
@@ -491,9 +550,11 @@ namespace BahaTurret
 				cfg.SetValue("BW_TARGET_CAM", BW_TARGET_CAM.ToString(), true);
 				cfg.SetValue("SMOKE_DEFLECTION_FACTOR", SMOKE_DEFLECTION_FACTOR.ToString(), true);
 				cfg.SetValue("FLARE_THERMAL", FLARE_THERMAL.ToString(), true);
-				
+				cfg.SetValue("BDARMORY_UI_VOLUME", BDARMORY_UI_VOLUME.ToString(), true);
+				cfg.SetValue("BDARMORY_WEAPONS_VOLUME", BDARMORY_WEAPONS_VOLUME.ToString(), true);
+				cfg.SetValue("GLOBAL_LIFT_MULTIPLIER", GLOBAL_LIFT_MULTIPLIER.ToString(), true);
+				cfg.SetValue("GLOBAL_DRAG_MULTIPLIER", GLOBAL_DRAG_MULTIPLIER.ToString(), true);
 
-				
 				cfg.Save ("GameData/BDArmory/settings.cfg");
 				
 			}
@@ -524,20 +585,20 @@ namespace BahaTurret
 					GUI.DrawTexture(cursorRect, cursorTexture);	
 				}
 				
-				if(toolbarGuiEnabled)
+				if(toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
 				{
 					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "");
 				}
 			}
 			
-			if(DRAW_DEBUG_LINES)
+		
+
+			if(DRAW_DEBUG_LABELS && HighLogic.LoadedSceneIsFlight)
 			{
-				/*
-				GUI.Label(new Rect(200,200,600,600), "floating origin continuous: "+FloatingOrigin.fetch.continuous
-					+"\n Forced center tf name:  "+(FloatingOrigin.fetch.forcedCenterTransform !=null? FloatingOrigin.fetch.forcedCenterTransform.name : "")
-					+"\n Floating threshold: "+FloatingOrigin.fetch.threshold
-					);
-					*/
+				if(RadarUtils.radarRT)
+				{
+					GUI.DrawTexture(new Rect(20,20,128,128), RadarUtils.radarRT, ScaleMode.StretchToFill, true);
+				}
 			}
 		}
 		
@@ -598,7 +659,7 @@ namespace BahaTurret
 				}
 				line++;
 
-				string weaponName = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
+				string weaponName = ActiveWeaponManager.selectedWeaponString;// = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
 				string selectionText = "Weapon: "+weaponName;
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), selectionText, centerLabel);
 				line++;
@@ -703,6 +764,27 @@ namespace BahaTurret
 					}
 					numberOfModules = 0;
 
+					//RWR
+					if(ActiveWeaponManager.rwr)
+					{
+						numberOfModules++;
+						bool isEnabled = ActiveWeaponManager.rwr.rwrEnabled;
+						string label = "Radar Warning Receiver";
+						Rect rwrRect = new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth, entryHeight);
+						if(GUI.Button(rwrRect, label, isEnabled ? centerLabelOrange : centerLabel))
+						{
+							if(isEnabled)
+							{
+								ActiveWeaponManager.rwr.DisableRWR();
+							}
+							else
+							{
+								ActiveWeaponManager.rwr.EnableRWR();
+							}
+						}
+						line++;
+					}
+
 					//TGP
 					foreach(var mtc in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 					{
@@ -766,44 +848,59 @@ namespace BahaTurret
 			toolWindowHeight = contentTop + (line*entryHeight) + 5;
 			toolbarWindowRect = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
 		}
-		
+
+
+		Rect SLineRect(float line)
+		{
+			return new Rect(settingsLeftMargin, settingsTop + line * settingsSpacer, settingsWidth - 2 * settingsSpacer, settingsSpacer);
+		}
+
+		Rect SRightRect(float line)
+		{
+			return new Rect(settingsLeftMargin + ((settingsWidth - 2 * settingsSpacer) / 2), settingsTop + line * settingsSpacer, (settingsWidth - 2 * settingsSpacer) / 2, settingsSpacer);
+		}
+
+		float settingsWidth;
+		float settingsHeight;
+		float settingsLeft;
+		float settingsTop;
+		float settingsSpacer;
+		float settingsLeftMargin;
+		void SetupSettingsSize()
+		{
+			settingsWidth = 360;
+			settingsHeight = 480;
+			settingsLeft = Screen.width/2 - settingsWidth/2;
+			settingsTop = Screen.height/2 - settingsHeight/2;
+			settingsSpacer = 24;
+			settingsLeftMargin = settingsLeft+18;
+		}
+
 		void SettingsGUI()
 		{
-			float width = 360;
-			float height = 480;
-			float left = Screen.width/2 - width/2;
-			float top = Screen.height/2 - height/2;
-			float spacer = 24;
-			float leftMargin = left+18;
-			float line = 2;
-			GUI.Box(new Rect(left, top, width, height), "");
-			GUI.Box(new Rect(left, top, width, height), "BDArmory Settings");
-			INSTAKILL = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), INSTAKILL, "Instakill");
+			
+			float line = 1.25f;
+			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "");
+			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "BDArmory Settings");
+			INSTAKILL = GUI.Toggle(SLineRect(line), INSTAKILL, "Instakill");
+			INFINITE_AMMO = GUI.Toggle(SRightRect(line), INFINITE_AMMO, "Infinte Ammo");
 			line++;
-			BULLET_HITS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), BULLET_HITS, "Bullet Hits");
+			BULLET_HITS = GUI.Toggle(SLineRect(line), BULLET_HITS, "Bullet Hits");
+			EJECT_SHELLS = GUI.Toggle(SRightRect(line), EJECT_SHELLS, "Eject Shells");
 			line++;
-			EJECT_SHELLS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), EJECT_SHELLS, "Eject Shells");
+			AIM_ASSIST = GUI.Toggle(SLineRect(line), AIM_ASSIST, "Aim Assist");
+			DRAW_AIMERS = GUI.Toggle(SRightRect(line), DRAW_AIMERS, "Draw Aimers");
 			line++;
-			INFINITE_AMMO = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), INFINITE_AMMO, "Infinte Ammo");
+			DRAW_DEBUG_LINES = GUI.Toggle(SLineRect(line), DRAW_DEBUG_LINES, "Debug Lines");
+			DRAW_DEBUG_LABELS = GUI.Toggle(SRightRect(line), DRAW_DEBUG_LABELS, "Debug Labels");
 			line++;
-			AIM_ASSIST = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), AIM_ASSIST, "Aim Assist");
+			REMOTE_SHOOTING = GUI.Toggle(SLineRect(line), REMOTE_SHOOTING, "Remote Firing");
+			BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BOMB_CLEARANCE_CHECK, "Clearance Check");
 			line++;
-			DRAW_AIMERS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_AIMERS, "Draw Aimers");
+			ALLOW_LEGACY_TARGETING = GUI.Toggle(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, settingsWidth - 2*settingsSpacer, settingsSpacer), ALLOW_LEGACY_TARGETING, "Legacy Targeting");
 			line++;
-			DRAW_DEBUG_LINES = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_DEBUG_LINES, "Draw Debug Lines");
-			line++;
-			REMOTE_SHOOTING = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), REMOTE_SHOOTING, "Allow Remote Firing");
-			line++;
-			BOMB_CLEARANCE_CHECK = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), BOMB_CLEARANCE_CHECK, "Bomb Clearance Check");
-			line++;
-			//SMART_GUARDS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), SMART_GUARDS, "Smart Guards");
-			//line++;
-			DRAW_DEBUG_LABELS = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), DRAW_DEBUG_LABELS, "Debug Labels");
-			line++;
-			ALLOW_LEGACY_TARGETING = GUI.Toggle(new Rect(leftMargin, top + line*spacer, width - 2*spacer, spacer), ALLOW_LEGACY_TARGETING, "Allow Legacy Targeting");
 			line++;
 
-			//fireKeyGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), fireKeyGui);
 			string gunFireKeyLabel;
 			if(isRecordingInput)
 			{
@@ -825,25 +922,46 @@ namespace BahaTurret
 			{
 				gunFireKeyLabel = "Fire key: "+FIRE_KEY;
 
-				if(GUI.Button(new Rect(leftMargin + 200, top + line*spacer, 100-(leftMargin-left), spacer), "Set Key"))
+				if(GUI.Button(new Rect(settingsLeftMargin + 200, settingsTop + line*settingsSpacer, 100-(settingsLeftMargin-settingsLeft), settingsSpacer), "Set Key"))
 				{
 					recordMouseUp = false;
 					isRecordingInput = true;
 				}
 			}
-			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), gunFireKeyLabel);
+			GUI.Label(SLineRect(line), gunFireKeyLabel);
 			line++;
 
-			GUI.Label(new Rect(leftMargin, top + line*spacer, (width-2*spacer)/2, spacer), "Trigger Hold: "+TRIGGER_HOLD_TIME.ToString("0.00")+"s");
-			TRIGGER_HOLD_TIME = GUI.HorizontalSlider(new Rect(leftMargin+((width-2*spacer)/2), top + line*spacer, (width-2*spacer)/2, spacer),TRIGGER_HOLD_TIME, 0.02f, 1f);
+			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "Trigger Hold: "+TRIGGER_HOLD_TIME.ToString("0.00")+"s");
+			TRIGGER_HOLD_TIME = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),TRIGGER_HOLD_TIME, 0.02f, 1f);
 			line++;
 
 
-			physicsRangeGui = GUI.TextField(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, spacer), physicsRangeGui);
-			GUI.Label(new Rect(leftMargin, top + line*spacer, width-2*spacer, spacer), "Physics Load Distance");
+			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "UI Volume: "+(BDARMORY_UI_VOLUME*100).ToString("0"));
+			float uiVol = BDARMORY_UI_VOLUME;
+			uiVol = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),uiVol, 0f, 1f);
+			if(uiVol != BDARMORY_UI_VOLUME)
+			{
+				OnVolumeChange();
+			}
+			BDARMORY_UI_VOLUME = uiVol;
 			line++;
-			GUI.Label(new Rect(Screen.width/2, top + line*spacer, width/2 - spacer, 2*spacer), "Warning: Risky if set high");
-			if(GUI.Button(new Rect(leftMargin, top + line*spacer, width/2 - 2*spacer+8, spacer), "Apply Phys Distance"))
+
+			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "Weapon Volume: "+(BDARMORY_WEAPONS_VOLUME*100).ToString("0"));
+			float weaponVol = BDARMORY_WEAPONS_VOLUME;
+			weaponVol = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),weaponVol, 0f, 1f);
+			if(uiVol != BDARMORY_WEAPONS_VOLUME)
+			{
+				OnVolumeChange();
+			}
+			BDARMORY_WEAPONS_VOLUME = weaponVol;
+			line++;
+			line++;
+
+			physicsRangeGui = GUI.TextField(new Rect(Screen.width/2, settingsTop + line*settingsSpacer, settingsWidth/2 - settingsSpacer, settingsSpacer), physicsRangeGui);
+			GUI.Label(SLineRect(line), "Physics Load Distance");
+			line++;
+			GUI.Label(new Rect(Screen.width/2, settingsTop + line*settingsSpacer, settingsWidth/2 - settingsSpacer, 2*settingsSpacer), "Warning: Risky if set high");
+			if(GUI.Button(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, settingsWidth/2 - 2*settingsSpacer+8, settingsSpacer), "Apply Phys Distance"))
 			{
 				float physRangeSetting = float.Parse(physicsRangeGui);
 				PHYSICS_RANGE = (physRangeSetting>=2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
@@ -853,11 +971,14 @@ namespace BahaTurret
 			
 			line++;
 			
-			if(GUI.Button(new Rect(leftMargin, top + line*spacer +26, width/2 - 2*spacer+8, spacer), "Save and Close"))
+			if(GUI.Button(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer +26, settingsWidth/2 - 2*settingsSpacer+8, settingsSpacer), "Save and Close"))
 			{
 				SaveConfig();
 				settingsGuiEnabled = false;
 			}
+
+			line+=3;
+			settingsHeight = (line * settingsSpacer);
 		}
 		
 		
@@ -865,6 +986,11 @@ namespace BahaTurret
 		
 		public void ApplyPhysRange()
 		{
+			if(!HighLogic.LoadedSceneIsFlight)
+			{
+				return;
+			}
+
 			if(PHYSICS_RANGE <= 2500) PHYSICS_RANGE = 0;
 			
 			
@@ -951,28 +1077,9 @@ namespace BahaTurret
 			GAME_UI_ENABLED = true;	
 		}
 		
-		void AddToolbarButton()
-		{
-			if(!hasAddedButton)
-			{
-				Texture buttonTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
-				ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.FLIGHT, buttonTexture);
-				hasAddedButton = true;
-			}
-		}
+
 		
-		public void ShowToolbarGUI()
-		{
-			toolbarGuiEnabled = true;	
-		}
-		
-		public void HideToolbarGUI()
-		{
-			toolbarGuiEnabled = false;	
-		}
-		
-		void Dummy()
-		{}
+
 		
 		void OnVesselGoOffRails(Vessel v)
 		{

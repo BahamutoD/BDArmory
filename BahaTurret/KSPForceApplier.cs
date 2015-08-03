@@ -6,7 +6,13 @@ namespace BahaTurret
 	public class KSPForceApplier : MonoBehaviour
 	{
 		public float drag = 0.02f;
-		
+
+		Rigidbody rigidbody;
+
+		void Start()
+		{
+			rigidbody = GetComponent<Rigidbody>();
+		}
 		
 		void FixedUpdate()
 		{

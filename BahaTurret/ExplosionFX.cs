@@ -36,7 +36,7 @@ namespace BahaTurret
 			
 			
 			
-			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 			
 			audioSource.PlayOneShot(exSound);
 		}
@@ -143,13 +143,13 @@ namespace BahaTurret
 									}
 									else
 									{
-										explodePart.rigidbody.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);	
+										explodePart.rb.AddExplosionForce(power, position, radius, 0, ForceMode.Impulse);	
 									}
 								}
 							}
 							else
 							{
-								explodePart.rigidbody.AddExplosionForce(power/20, position, radius, 0, ForceMode.Impulse);		
+								explodePart.rb.AddExplosionForce(power/20, position, radius, 0, ForceMode.Impulse);		
 								
 							}
 							

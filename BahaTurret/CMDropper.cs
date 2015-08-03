@@ -22,6 +22,10 @@ namespace BahaTurret
 		public string ejectTransformName;
 		Transform ejectTransform;
 
+		[KSPField]
+		public string effectsTransformName = string.Empty;
+		Transform effectsTransform;
+
 
 		AudioSource audioSource;
 		AudioClip cmSound;
@@ -49,6 +53,14 @@ namespace BahaTurret
 				PopSmoke();
 				break;
 			}
+
+			if(effectsTransform)
+			{
+				foreach(var pe in effectsTransform.gameObject.GetComponentsInChildren<KSPParticleEmitter>())
+				{
+					pe.Emit();
+				}
+			}
 		}
 		
 		public override void OnStart (PartModule.StartState state)
@@ -57,12 +69,29 @@ namespace BahaTurret
 
 			ejectTransform = part.FindModelTransform(ejectTransformName);
 
+			if(effectsTransformName!=string.Empty)
+			{
+				effectsTransform = part.FindModelTransform(effectsTransformName);
+			}
+
 			part.force_activate();
 			
 			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
 			audioSource.minDistance = 1;
 			audioSource.maxDistance = 1000;
+
+			UpdateVolume();
+			BDArmorySettings.OnVolumeChange += UpdateVolume;
+		}
+
+		void UpdateVolume()
+		{
+			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+		}
+
+		void OnDestroy()
+		{
+			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 		}
 
 		public override void OnUpdate ()

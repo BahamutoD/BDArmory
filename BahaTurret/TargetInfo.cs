@@ -24,6 +24,8 @@ namespace BahaTurret
 		{
 			get
 			{
+				if(!vessel) return false;
+
 				return vessel.LandedOrSplashed;
 			}
 		}
@@ -31,6 +33,7 @@ namespace BahaTurret
 		{
 			get
 			{
+				if(!vessel) return Vector3.zero;
 				return vessel.srf_velocity;
 			}
 		}
@@ -68,6 +71,7 @@ namespace BahaTurret
 				{
 					return false;
 				}
+
 				foreach(var wm in Vessel.FindPartModulesImplementing<MissileFire>())
 				{
 					return true;
@@ -80,7 +84,7 @@ namespace BahaTurret
 
 		bool hasStarted = false;
 
-		void Start()
+		void Awake()
 		{
 			if(!vessel)
 			{
@@ -112,7 +116,8 @@ namespace BahaTurret
 
 				if(!foundMl)
 				{
-					Debug.Log("TargetInfo was added to vessel with mo WpnMgr or MissileLauncher");
+					//Debug.Log("TargetInfo was added to vessel with mo WpnMgr or MissileLauncher");
+					team = BDArmorySettings.BDATeams.None;
 					Destroy(this);
 				}
 			}
@@ -137,6 +142,14 @@ namespace BahaTurret
 			{
 				AboutToBeDestroyed();
 			}
+			else
+			{
+				if(vessel.vesselType == VesselType.Debris)
+				{
+					RemoveFromDatabases();
+					team = BDArmorySettings.BDATeams.None;
+				}
+			}
 		}
 
 		public int numFriendliesEngaging
@@ -154,10 +167,12 @@ namespace BahaTurret
 
 		public void Engage(MissileFire mf)
 		{
+			/*
 			if(!hasStarted)
 			{
 				Start();
 			}
+			*/
 			if(!friendliesEngaging.Contains(mf))
 			{
 				friendliesEngaging.Add(mf);
@@ -184,8 +199,11 @@ namespace BahaTurret
 
 		public void RemoveFromDatabases()
 		{
-			BDATargetManager.TargetDatabase[team].Remove(this);
-			BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Remove(this);
+			if(team != BDArmorySettings.BDATeams.None)
+			{
+				BDATargetManager.TargetDatabase[team].Remove(this);
+				BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Remove(this);
+			}
 		}
 	}
 }

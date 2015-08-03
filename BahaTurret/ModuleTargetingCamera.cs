@@ -383,22 +383,29 @@ namespace BahaTurret
 
 		void OnGUI()
 		{
-			if(cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready)
+			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySettings.GAME_UI_ENABLED) 
 			{
-				//window
-				if(activeCam == this && TargetingCamera.ReadyForUse)
+				
+				if (cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready) 
 				{
-					camWindowRect = GUI.Window(125452, camWindowRect, CamWindow, string.Empty, HighLogic.Skin.window);
-				}
+					//window
+					if (activeCam == this && TargetingCamera.ReadyForUse) 
+					{
+						camWindowRect = GUI.Window (125452, camWindowRect, CamWindow, string.Empty, HighLogic.Skin.window);
+					}
 
-				//locked target icon
-				if(groundStabilized)
-				{
-					Vector3 targetScreenPos = FlightCamera.fetch.mainCamera.WorldToViewportPoint(groundTargetPosition);
-					float tIconSize = 24;
-					Rect iconRect = new Rect(targetScreenPos.x*Screen.width-(0.5f*tIconSize), (1-targetScreenPos.y)*Screen.height-(0.5f*tIconSize), tIconSize, tIconSize);
-					float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, groundTargetPosition-FlightCamera.fetch.mainCamera.transform.position);
-					if(cameraAngle<90) GUI.DrawTexture(iconRect, BDArmorySettings.Instance.greenDiamondTexture);
+					//locked target icon
+					if (groundStabilized)
+					{
+						Vector3 targetScreenPos = FlightCamera.fetch.mainCamera.WorldToViewportPoint (groundTargetPosition);
+						float tIconSize = 24;
+						Rect iconRect = new Rect (targetScreenPos.x * Screen.width - (0.5f * tIconSize), (1 - targetScreenPos.y) * Screen.height - (0.5f * tIconSize), tIconSize, tIconSize);
+						float cameraAngle = Vector3.Angle (FlightCamera.fetch.GetCameraTransform ().forward, groundTargetPosition - FlightCamera.fetch.mainCamera.transform.position);
+						if (cameraAngle < 90)
+						{
+							GUI.DrawTexture (iconRect, BDArmorySettings.Instance.greenDiamondTexture);
+						}
+					}
 				}
 			}
 
@@ -408,9 +415,6 @@ namespace BahaTurret
 
 		void CamWindow(int windowID)
 		{
-			GUISkin originalSkin = GUI.skin;
-			GUI.skin.button = HighLogic.Skin.button;
-
 			if(!TargetingCamera.Instance)
 			{
 				return;
@@ -459,7 +463,7 @@ namespace BahaTurret
 			disabledStyle.normal.textColor = Color.white;
 			if(currentFovIndex < zoomFovs.Length-1)
 			{
-				if(GUI.Button(zoomInRect, "In"))
+				if(GUI.Button(zoomInRect, "In", HighLogic.Skin.button))
 				{
 					ZoomIn();
 				}
@@ -470,7 +474,7 @@ namespace BahaTurret
 			}
 			if(currentFovIndex > 0)
 			{
-				if(GUI.Button(zoomOutRect, "Out"))
+				if(GUI.Button(zoomOutRect, "Out", HighLogic.Skin.button))
 				{
 					ZoomOut();
 				}
@@ -491,14 +495,14 @@ namespace BahaTurret
 			Rect stabilizeRect = new Rect(stabilStartX, controlsStartY, 3*slewSize, 3*slewSize);
 			if(!groundStabilized)
 			{
-				if(GUI.Button(stabilizeRect, "Lock\nTarget"))
+				if(GUI.Button(stabilizeRect, "Lock\nTarget", HighLogic.Skin.button))
 				{
 					GroundStabilize();
 				}
 			}
 			else
 			{
-				if(GUI.Button(stabilizeRect, "Unlock\nTarget"))
+				if(GUI.Button(stabilizeRect, "Unlock\nTarget", HighLogic.Skin.button))
 				{
 					ClearTarget();
 				}
@@ -550,7 +554,7 @@ namespace BahaTurret
 			//reset button
 			float resetStartX = stabilStartX + stabilizeRect.width + 8;
 			Rect resetRect = new Rect(resetStartX, controlsStartY + (2*slewSize), 3*slewSize, slewSize-1);
-			if(GUI.Button(resetRect, "Reset"))
+			if(GUI.Button(resetRect, "Reset", HighLogic.Skin.button))
 			{
 				if(!resetting)
 				{
@@ -568,16 +572,16 @@ namespace BahaTurret
 			Rect slaveRect = new Rect(resetStartX, controlsStartY + slewSize, (6*slewSize) + 8, slewSize-1);
 			if(!slaveTurrets)
 			{
-				if(GUI.Button(slaveRect, "Slave Turrets"))
+				if(GUI.Button(slaveRect, "Slave Turrets", HighLogic.Skin.button))
 				{
-					slaveTurrets = true;
+					SlaveTurrets ();
 				}
 			}
 			else
 			{
-				if(GUI.Button(slaveRect, "Unslave Turrets"))
+				if(GUI.Button(slaveRect, "Unslave Turrets", HighLogic.Skin.button))
 				{
-					slaveTurrets = false;
+					UnslaveTurrets ();
 				}
 			}
 
@@ -586,7 +590,7 @@ namespace BahaTurret
 			float nvStartX = resetStartX + resetRect.width + 8;
 			Rect nvRect = new Rect(nvStartX, resetRect.y, 3*slewSize, slewSize-1);
 			string nvLabel = nvMode ? "NV Off" : "NV On";
-			if(GUI.Button(nvRect, nvLabel))
+			if(GUI.Button(nvRect, nvLabel, HighLogic.Skin.button))
 			{
 				nvMode = !nvMode;
 				TargetingCamera.Instance.nvMode = nvMode;
@@ -594,7 +598,7 @@ namespace BahaTurret
 
 			//off button
 			Rect offRect = new Rect(nvStartX + nvRect.width + 8, controlsStartY, slewSize*1.5f, 3*slewSize);
-			if(GUI.Button(offRect, "O\nF\nF"))
+			if(GUI.Button(offRect, "O\nF\nF", HighLogic.Skin.button))
 			{
 				DisableCamera();
 			}
@@ -654,6 +658,35 @@ namespace BahaTurret
 				resizing = false;
 			}
 		}
+
+		void SlaveTurrets()
+		{
+			foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			{
+				mtc.slaveTurrets = false;
+			}
+
+			foreach (var rad in vessel.FindPartModulesImplementing<ModuleRadar>())
+			{
+				rad.slaveTurrets = false;
+			}
+
+			slaveTurrets = true;
+		}
+
+		void UnslaveTurrets()
+		{
+			foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			{
+				mtc.slaveTurrets = false;
+			}
+
+			foreach (var rad in vessel.FindPartModulesImplementing<ModuleRadar>())
+			{
+				rad.slaveTurrets = false;
+			}
+		}
+
 
 		void RefreshWindowSize()
 		{
@@ -717,7 +750,7 @@ namespace BahaTurret
 				if(CoMLock)
 				{
 					Part p = rayHit.collider.GetComponentInParent<Part>();
-					if(p && p.vessel)
+					if(p && p.vessel && p.vessel.CoM!=Vector3.zero)
 					{
 						groundTargetPosition = p.vessel.CoM;
 						StartCoroutine(StabilizeNextFrame());

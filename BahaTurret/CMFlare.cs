@@ -31,7 +31,7 @@ namespace BahaTurret
 		void OnEnable()
 		{
 
-			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.95f, 1.05f);
+			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.75f, 1.25f);
 
 			if(gaplessEmitters == null || pEmitters == null)
 			{
@@ -188,7 +188,8 @@ namespace BahaTurret
 			if(Time.time - startTime > lifeTime+11) //disable object after x seconds
 			{
 				BDArmorySettings.numberOfParticleEmitters--;
-				gameObject.SetActive(false);	
+				gameObject.SetActive(false);
+				return;
 			}
 
 

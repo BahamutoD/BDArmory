@@ -44,18 +44,18 @@ namespace BahaTurret
 			foreach(var sub in part.FindModelTransforms("submunition"))
 			{
 				submunitions.Add(sub.gameObject);
-				sub.gameObject.AddComponent<Rigidbody>();
-				sub.rigidbody.isKinematic = true;
-				sub.rigidbody.mass = part.mass / part.FindModelTransforms("submunition").Length;
+				Rigidbody subRb = sub.gameObject.AddComponent<Rigidbody>();
+				subRb.isKinematic = true;
+				subRb.mass = part.mass / part.FindModelTransforms("submunition").Length;
 			}
 			
 			fairings = new List<GameObject>();
 			foreach(var fairing in part.FindModelTransforms("fairing"))
 			{
 				fairings.Add(fairing.gameObject);
-				fairing.gameObject.AddComponent<Rigidbody>();
-				fairing.rigidbody.isKinematic = true;
-				fairing.rigidbody.mass = 0.05f;
+				Rigidbody fairingRb = fairing.gameObject.AddComponent<Rigidbody>();
+				fairingRb.isKinematic = true;
+				fairingRb.mass = 0.05f;
 			}
 			
 			missileLauncher = part.GetComponent<MissileLauncher>();
@@ -73,7 +73,7 @@ namespace BahaTurret
 		void DeploySubmunitions()
 		{
 			missileLauncher.sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/flare"));
-			FXMonger.Explode(part, transform.position+rigidbody.velocity*Time.fixedDeltaTime, 0.1f);
+			FXMonger.Explode(part, transform.position+part.rb.velocity*Time.fixedDeltaTime, 0.1f);
 			
 			deployed = true;
 			if(swapCollidersOnDeploy)
@@ -92,7 +92,7 @@ namespace BahaTurret
 				sub.transform.parent = null;
 				Vector3 direction = (sub.transform.position - part.transform.position).normalized;
 				sub.rigidbody.isKinematic = false;
-				sub.rigidbody.velocity = rigidbody.velocity + (UnityEngine.Random.Range(submunitionMaxSpeed/10, submunitionMaxSpeed) * direction);
+				sub.rigidbody.velocity = part.rb.velocity + (UnityEngine.Random.Range(submunitionMaxSpeed/10, submunitionMaxSpeed) * direction);
 				
 				Submunition subScript = sub.AddComponent<Submunition>();
 				subScript.enabled = true;
@@ -109,16 +109,18 @@ namespace BahaTurret
 			{
 				Vector3 direction = (fairing.transform.position - part.transform.position).normalized;
 				fairing.rigidbody.isKinematic = false;
-				fairing.rigidbody.velocity = rigidbody.velocity + ((submunitionMaxSpeed+2) * direction);
+				fairing.rigidbody.velocity = part.rb.velocity + ((submunitionMaxSpeed+2) * direction);
 				fairing.AddComponent<KSPForceApplier>();
 				fairing.GetComponent<KSPForceApplier>().drag = 0.2f;
-				fairing.AddComponent<ClusterBombFairing>();
-				fairing.GetComponent<ClusterBombFairing>().deployed = true;
-				fairing.GetComponent<ClusterBombFairing>().sourceVessel = vessel;
+				ClusterBombFairing fairingScript = fairing.AddComponent<ClusterBombFairing>();
+				fairingScript.deployed = true;
+				fairingScript.sourceVessel = vessel;
 			}
-			part.maximum_drag = 0.2f;
-			part.minimum_drag = 0.2f;
-			part.mass = part.mass/submunitions.Count;
+				
+			part.explosionPotential = 0;
+			missileLauncher.hasFired = false;
+
+			part.temperature = part.maxTemp + 10;
 		}
 		
 		
@@ -146,13 +148,16 @@ namespace BahaTurret
 		Vector3 relativePos;
 		
 		float startTime;
-		
+
+		Rigidbody rb;
+
 		void Start()
 		{
 			startTime = Time.time;
 			relativePos = transform.position-sourceVessel.transform.position;
 			currPosition = transform.position;
 			prevPosition = transform.position;
+			rb = GetComponent<Rigidbody> ();
 		}
 		
 		void FixedUpdate()
@@ -168,7 +173,7 @@ namespace BahaTurret
 				//floatingOrigin fix
 				if(sourceVessel!=null && Vector3.Distance(transform.position-sourceVessel.transform.position, relativePos) > 800)
 				{
-					transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
+					transform.position = sourceVessel.transform.position+relativePos + (rb.velocity * Time.fixedDeltaTime);
 				}
 				if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
 				//
@@ -187,7 +192,7 @@ namespace BahaTurret
 					
 					if(hitPart!=null)
 					{
-						float destroyChance = (rigidbody.mass/hitPart.crashTolerance) * (rigidbody.velocity-hit.rigidbody.velocity).magnitude * 8000;
+						float destroyChance = (rb.mass/hitPart.crashTolerance) * (rb.velocity-hit.rigidbody.velocity).magnitude * 8000;
 						if(BDArmorySettings.INSTAKILL)
 						{
 							destroyChance = 100;	
@@ -229,13 +234,16 @@ namespace BahaTurret
 		Vector3 prevPosition;
 		Vector3 relativePos;
 		float startTime;
-		
+
+		Rigidbody rb;
+
 		void Start()
 		{
 			startTime = Time.time;
 			currPosition = transform.position;
 			prevPosition = transform.position;
 			relativePos = transform.position-sourceVessel.transform.position;
+			rb = GetComponent<Rigidbody> ();
 		}
 		
 		void FixedUpdate()
@@ -245,7 +253,7 @@ namespace BahaTurret
 				//floatingOrigin fix
 				if(sourceVessel!=null && Vector3.Distance(transform.position-sourceVessel.transform.position, relativePos) > 800)
 				{
-					transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
+					transform.position = sourceVessel.transform.position+relativePos + (rb.velocity * Time.fixedDeltaTime);
 				}
 				if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
 				//

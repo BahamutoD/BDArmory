@@ -38,7 +38,7 @@ namespace BahaTurret
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
 		 UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
-		public float steerMult = 12;
+		public float steerMult = 14;
 		//make a combat steer mult and idle steer mult
 		
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"),

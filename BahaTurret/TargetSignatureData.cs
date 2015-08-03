@@ -11,7 +11,7 @@ using System;
 using UnityEngine;
 namespace BahaTurret
 {
-	public struct TargetSignatureData
+	public struct TargetSignatureData : IEquatable<TargetSignatureData>
 	{
 		public Vector3 velocity;
 		public Vector3 geoPos;
@@ -21,6 +21,17 @@ namespace BahaTurret
 
 		public float signalStrength;
 
+		public TargetInfo targetInfo;
+
+		public bool Equals(TargetSignatureData other)
+		{
+			return 
+				exists == other.exists &&
+				geoPos == other.geoPos &&
+				timeAcquired == other.timeAcquired;
+		}
+
+
 		public TargetSignatureData(Vessel v, float _signalStrength)
 		{
 			velocity = v.srf_velocity;
@@ -29,6 +40,12 @@ namespace BahaTurret
 			exists = true;
 			timeAcquired = Time.time;
 			signalStrength = _signalStrength;
+
+			targetInfo = v.gameObject.GetComponent<TargetInfo> ();
+			if (!targetInfo)
+			{
+				targetInfo = v.gameObject.AddComponent<TargetInfo> ();
+			}
 		}
 
 		public TargetSignatureData(CMFlare flare, float _signalStrength)
@@ -39,6 +56,7 @@ namespace BahaTurret
 			acceleration = Vector3.zero;
 			timeAcquired = Time.time;
 			signalStrength = _signalStrength;
+			targetInfo = null;
 		}
 
 		public TargetSignatureData(Vector3 _velocity, Vector3 _position, Vector3 _acceleration, bool _exists, float _signalStrength)
@@ -49,6 +67,7 @@ namespace BahaTurret
 			exists = _exists;
 			timeAcquired = Time.time;
 			signalStrength = _signalStrength;
+			targetInfo = null;
 		}
 
 		public Vector3 position
@@ -75,6 +94,14 @@ namespace BahaTurret
 			}
 		}
 
+		public float age
+		{
+			get
+			{
+				return Time.time-timeAcquired;
+			}
+		}
+
 		public static TargetSignatureData noTarget
 		{
 			get
@@ -90,6 +117,8 @@ namespace BahaTurret
 				tsdArray[i] = TargetSignatureData.noTarget;
 			}
 		}
+
+
 	}
 }
 

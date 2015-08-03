@@ -17,6 +17,8 @@ namespace BahaTurret
 		float startTime;
 	
 		Transform lightFlare;
+
+		Rigidbody rb;
 		
 		void Start()
 		{
@@ -35,9 +37,9 @@ namespace BahaTurret
 			
 			audioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/seismicCharge"));
 			
-			gameObject.AddComponent<Rigidbody>();
-			rigidbody.useGravity = false;
-			rigidbody.velocity = Vector3.zero;
+			rb = gameObject.AddComponent<Rigidbody>();
+			rb.useGravity = false;
+			rb.velocity = Vector3.zero;
 			
 		}
 		

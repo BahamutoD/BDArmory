@@ -27,6 +27,8 @@ namespace BahaTurret
 		public static float heatScore = 0;
 		public static float flareScore = 0;
 
+		public static bool hasAddedButton = false;
+
 		void Start()
 		{
 			//legacy targetDatabase
@@ -37,7 +39,33 @@ namespace BahaTurret
 
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
+
+			AddToolbarButton();
 		}
+
+		void AddToolbarButton()
+		{
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				if(!hasAddedButton)
+				{
+					Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "icon", false);
+					ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.FLIGHT, buttonTexture);
+					hasAddedButton = true;
+				}
+			}
+		}
+		public void ShowToolbarGUI()
+		{
+			BDArmorySettings.toolbarGuiEnabled = true;	
+		}
+
+		public void HideToolbarGUI()
+		{
+			BDArmorySettings.toolbarGuiEnabled = false;	
+		}
+		void Dummy()
+		{}
 
 		void Update()
 		{
@@ -93,7 +121,7 @@ namespace BahaTurret
 			return finalCam;
 		}
 
-		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold)
+		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect)
 		{
 			float minScore = highpassThreshold;
 			float minMass = 0.5f;
@@ -109,18 +137,27 @@ namespace BahaTurret
 				{
 					continue;
 				}
+
+				if(RadarUtils.TerrainCheck(ray.origin, vessel.transform.position))
+				{
+					continue;
+				}
+
 				float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
 				if(angle < scanRadius)
 				{
 					float score = 0;
 					foreach(var part in vessel.Parts)
 					{
-						if(Misc.CheckSightLine(ray.origin, part.transform.position, 10000, 5))
+						if(!part) continue;
+						if(!allAspect)
 						{
-							float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * Mathf.Clamp01(15/angle);
-							thisScore *= Mathf.Pow(1400,2)/Mathf.Clamp((vessel.CoM-ray.origin).sqrMagnitude, 90000, 36000000);
-							score = Mathf.Max (score, thisScore);
+							if(!Misc.CheckSightLine(ray.origin, part.transform.position, 10000, 5, 5)) continue;
 						}
+
+						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * Mathf.Clamp01(15/angle);
+						thisScore *= Mathf.Pow(1400,2)/Mathf.Clamp((vessel.CoM-ray.origin).sqrMagnitude, 90000, 36000000);
+						score = Mathf.Max (score, thisScore);
 					}
 
 					if(vessel.LandedOrSplashed)
@@ -142,6 +179,8 @@ namespace BahaTurret
 			flareScore = 0; //DEBUG
 			foreach(var flare in BDArmorySettings.Flares)
 			{
+				if(!flare) continue;
+
 				float angle = Vector3.Angle(flare.transform.position-ray.origin, ray.direction);
 				if(angle < scanRadius)
 				{
@@ -272,7 +311,7 @@ namespace BahaTurret
 				info = newInfo;
 			}
 			BDArmorySettings.BDATeams team = BoolToTeam(reporter.team);
-			if(!TargetDatabase[team].Contains(info))
+			if(info && !TargetDatabase[team].Contains(info))
 			{
 				TargetDatabase[team].Add(info);
 			}
@@ -285,7 +324,7 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && !target.isLanded && !target.isMissile)
+				if(target && target.Vessel && !target.isLanded && !target.isMissile)
 				{
 					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
 					{
@@ -305,7 +344,7 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
 					if(finalTarget == null || (target.IsCloser(finalTarget, mf)))
 					{
@@ -340,7 +379,7 @@ namespace BahaTurret
 			
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
 					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
 					{
@@ -359,7 +398,7 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
 					bool isHostile = false;
 					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)
@@ -383,7 +422,7 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
 					bool isHostile = false;
 					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)
@@ -408,7 +447,7 @@ namespace BahaTurret
 			
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
 					bool isHostile = false;
 					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)

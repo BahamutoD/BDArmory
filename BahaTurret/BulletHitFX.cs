@@ -21,7 +21,7 @@ namespace BahaTurret
 			audioSource = gameObject.AddComponent<AudioSource>();
 			audioSource.minDistance = 1;
 			audioSource.maxDistance = 50;
-			audioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 			
 			int random = UnityEngine.Random.Range(1,3);
 			

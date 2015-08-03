@@ -121,10 +121,11 @@ namespace BahaTurret
 			return curve;
 		}
 
-		public static bool CheckSightLine(Vector3 a, Vector3 b, float maxDistance, float threshold)
+		public static bool CheckSightLine(Vector3 a, Vector3 b, float maxDistance, float threshold, float startDistance)
 		{
 			float dist = maxDistance;
 			Ray ray = new Ray(a, b-a);
+			ray.origin += ray.direction*startDistance;
 			RaycastHit rayHit;
 			if(Physics.Raycast(ray, out rayHit, dist, 557057))
 			{
@@ -140,6 +141,8 @@ namespace BahaTurret
 			
 			return true;
 		}
+
+
 
 		public static float[] ParseToFloatArray(string floatString)
 		{

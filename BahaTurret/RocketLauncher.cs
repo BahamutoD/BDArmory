@@ -7,6 +7,9 @@ namespace BahaTurret
 	public class RocketLauncher : PartModule, IBDWeapon
 	{
 		public bool hasRocket = true;
+
+		[KSPField]
+		public string shortName = string.Empty;
 		
 		[KSPField(isPersistant = false)]
 		public string rocketType;
@@ -63,13 +66,13 @@ namespace BahaTurret
 		}
 		public string GetShortName()
 		{
-			return part.partInfo.title;
+			return shortName;
 		}
 		public WeaponClasses GetWeaponClass()
 		{
 			return WeaponClasses.Rocket;
 		}
-		
+
 		[KSPAction("Fire")]
 		public void AGFire(KSPActionParam param)
 		{
@@ -92,7 +95,6 @@ namespace BahaTurret
 				aimerTexture = BDArmorySettings.Instance.greenPointCircleTexture;// GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
 				
 				sfAudioSource = gameObject.AddComponent<AudioSource>();
-				sfAudioSource.volume = Mathf.Sqrt(GameSettings.SHIP_VOLUME);
 				sfAudioSource.minDistance = 1;
 				sfAudioSource.maxDistance = 2000;
 				sfAudioSource.dopplerLevel = 0;
@@ -100,8 +102,25 @@ namespace BahaTurret
 				
 				MakeRocketArray();
 				UpdateRocketScales();
+
+				if (shortName == string.Empty)
+				{
+					shortName = part.partInfo.title;
+				}
+
+				UpdateAudio();
+				BDArmorySettings.OnVolumeChange += UpdateAudio;
 			}
-			
+		}
+
+		void UpdateAudio()
+		{
+			sfAudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+		}
+
+		void OnDestroy()
+		{
+			BDArmorySettings.OnVolumeChange -= UpdateAudio;
 		}
 		
 		public override void OnFixedUpdate ()
@@ -133,7 +152,7 @@ namespace BahaTurret
 				Transform currentRocketTfm = rockets[rocketsLeft-1];
 				
 				GameObject rocketObj = GameDatabase.Instance.GetModel(rocketModelPath);
-				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position+(rigidbody.velocity*Time.fixedDeltaTime), transform.rotation);
+				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position+(part.rb.velocity*Time.fixedDeltaTime), transform.rotation);
 				rocketObj.transform.rotation = part.transform.rotation;
 				rocketObj.transform.localScale = part.rescaleFactor * Vector3.one;
 				currentRocketTfm.localScale = Vector3.zero;
@@ -166,10 +185,10 @@ namespace BahaTurret
 				float simTime = 0;
 				Transform fireTransform = part.transform;
 				Vector3 pointingDirection = fireTransform.forward;
-				Vector3 simVelocity = rigidbody.velocity;
-				Vector3 simCurrPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-				Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-				Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+				Vector3 simVelocity = part.rb.velocity;
+				Vector3 simCurrPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
+				Vector3 simPrevPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
+				Vector3 simStartPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
 				bool simulating = true;
 				float simDeltaTime = 0.02f;
 				List<Vector3> pointPositions = new List<Vector3>();
@@ -351,7 +370,8 @@ namespace BahaTurret
 		float lifeTime = 10;
 		
 		//bool isThrusting = true;
-		
+
+		Rigidbody rb;
 		
 		
 		KSPParticleEmitter[] pEmitters;
@@ -360,7 +380,7 @@ namespace BahaTurret
 		{
 			BDArmorySettings.numberOfParticleEmitters++;
 			
-			gameObject.AddComponent<Rigidbody>();
+			rb = gameObject.AddComponent<Rigidbody>();
 			pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 			
 			foreach(var pe in pEmitters)
@@ -372,7 +392,7 @@ namespace BahaTurret
 				else if(pe.useWorldSpace)
 				{
 					BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
-					gpe.rb = rigidbody;
+					gpe.rb = rb;
 					gpe.emit = true;
 				}
 			}
@@ -381,21 +401,21 @@ namespace BahaTurret
 			currPosition = transform.position;
 			startTime = Time.time;
 			
-			rigidbody.mass = mass;
-			rigidbody.Sleep();
+			rb.mass = mass;
+			rb.isKinematic = true;
 			//rigidbody.velocity = startVelocity;
-			if(!FlightGlobals.RefFrameIsRotating) rigidbody.useGravity = false;
+			if(!FlightGlobals.RefFrameIsRotating) rb.useGravity = false;
 			
 			audioSource = gameObject.AddComponent<AudioSource>();
 			audioSource.loop = true;
 			audioSource.minDistance = 1;
 			audioSource.maxDistance = 2000;
 			audioSource.dopplerLevel = 0.5f;
-			audioSource.volume = 0.9f * Mathf.Sqrt(GameSettings.SHIP_VOLUME);
+			audioSource.volume = 0.9f * BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 			audioSource.pitch = 1.4f;
 			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
 			
-			rigidbody.useGravity = false;
+			rb.useGravity = false;
 		}
 		
 		void FixedUpdate()
@@ -403,20 +423,30 @@ namespace BahaTurret
 			//floatingOrigin fix
 			if(sourceVessel!=null && (transform.position-sourceVessel.transform.position-relativePos).sqrMagnitude > 800*800)
 			{
-				transform.position = sourceVessel.transform.position+relativePos + (rigidbody.velocity * Time.fixedDeltaTime);
+				transform.position = sourceVessel.transform.position+relativePos + (rb.velocity * Time.fixedDeltaTime);
 			}
 			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
 			//
 			
 			if(FlightGlobals.RefFrameIsRotating)
 			{
-				rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+				rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
 			}
 			
-			
-			if(!audioSource.isPlaying)
+
+			if(BDArmorySettings.GameIsPaused)
 			{
-				audioSource.Play ();	
+				if(audioSource.isPlaying)
+				{
+					audioSource.Stop();
+				}
+			}
+			else
+			{
+				if(!audioSource.isPlaying)
+				{
+					audioSource.Play();	
+				}
 			}
 			
 			
@@ -424,10 +454,10 @@ namespace BahaTurret
 			float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
 			
 			//model transform. always points prograde
-			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rigidbody.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
+			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rb.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
 			if(!FlightGlobals.RefFrameIsRotating && Time.time-startTime > 0.5f)
 			{
-				transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rigidbody.velocity), atmosMultiplier/2.5f);
+				transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rb.velocity), atmosMultiplier/2.5f);
 				
 			}
 			//
@@ -441,15 +471,15 @@ namespace BahaTurret
 			{
 				float random = UnityEngine.Random.Range(-.2f,.2f);
 				float random2 = UnityEngine.Random.Range(-.2f,.2f);
-				rigidbody.AddForce((thrust * transform.forward) + (random * transform.right) + (random2 * transform.up));
+				rb.AddForce((thrust * transform.forward) + (random * transform.right) + (random2 * transform.up));
 			}
 			
 			if(Time.time-startTime > stayTime && transform.parent!=null)
 			{
 				startVelocity = transform.parent.rigidbody.velocity;
 				transform.parent = null;	
-				rigidbody.WakeUp();
-				rigidbody.velocity = startVelocity;
+				rb.isKinematic = false;
+				rb.velocity = startVelocity;
 			}
 			
 			if(Time.time - startTime > thrustTime)
@@ -525,7 +555,7 @@ namespace BahaTurret
 		{
 			BDArmorySettings.numberOfParticleEmitters--;
 			
-			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rigidbody.velocity.normalized, explModelPath, explSoundPath);
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 			GameObject.Destroy(gameObject); //destroy rocket on collision
 		}
 		

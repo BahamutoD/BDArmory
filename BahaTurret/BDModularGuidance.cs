@@ -39,6 +39,8 @@ namespace BahaTurret
 		public float cruiseAltitude = 500;
 
 
+		public float timeToImpact;
+
 		[KSPAction("Start Guidance")]
 		public void AGStartGuidance(KSPActionParam param)
 		{
@@ -152,7 +154,7 @@ namespace BahaTurret
 
 				if(guidanceMode == 1)
 				{
-					targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, vessel.srf_velocity, vessel.acceleration, vessel);
+					targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, vessel.srf_velocity, vessel.acceleration, vessel, out timeToImpact);
 				}
 				else if(guidanceMode == 2)
 				{

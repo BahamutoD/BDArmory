@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D86F2003-1724-4F4C-BB5A-B0109CB16F35}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -42,9 +42,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BahaTurret.cs" />
     <Compile Include="CFEnable.cs" />
     <Compile Include="MissileLauncher.cs" />
     <Compile Include="Misc.cs" />
@@ -90,11 +90,19 @@
     <Compile Include="TargetSignatureData.cs" />
     <Compile Include="ModuleRadar.cs" />
     <Compile Include="RadarUtils.cs" />
+    <Compile Include="BDAEditorCategory.cs" />
+    <Compile Include="BDAExtensions.cs" />
+    <Compile Include="BDACategoryModule.cs" />
+    <Compile Include="RadarWarningReceiver.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GrayscaleEffectShader.shader" />
+    <EmbeddedResource Include="UnlitBlack.shader" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BahaTurret.cs" />
   </ItemGroup>
 </Project>

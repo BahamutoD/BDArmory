@@ -30,6 +30,34 @@ namespace BahaTurret
 			if(cameraAngle<90) GUI.DrawTexture(iconRect, texture);
 		}
 
+		public static void DrawLineBetweenWorldPositions(Vector3 worldPosA, Vector3 worldPosB, float width, Color color)
+		{
+			Vector3 screenPosA = FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosA);
+			screenPosA.x = screenPosA.x*Screen.width;
+			screenPosA.y = (1-screenPosA.y)*Screen.height;
+			Vector3 screenPosB = FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosB);
+			screenPosB.x = screenPosB.x*Screen.width;
+			screenPosB.y = (1-screenPosB.y)*Screen.height;
+
+			if(screenPosA.z < 0 && screenPosB.z < 0) return;
+			screenPosA.z = screenPosB.z = 0;
+
+			float angle = Vector2.Angle(Vector3.up, screenPosB - screenPosA);
+			if(screenPosB.x < screenPosA.x)
+			{
+				angle = -angle;
+			}
+
+			Vector2 vector = screenPosB - screenPosA;
+			float length = vector.magnitude;
+
+			Rect upRect = new Rect(screenPosA.x - (width / 2), screenPosA.y-length, width, length);
+
+			GUIUtility.RotateAroundPivot(-angle+180, screenPosA);
+			DrawRectangle(upRect, color);
+			GUI.matrix = Matrix4x4.identity;
+		}
+
 		public static void DrawRectangle(Rect rect, Color color)
 		{
 			if(pixel == null)

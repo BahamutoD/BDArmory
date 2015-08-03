@@ -1,0 +1,14 @@
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\BahaTurret.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\BahaTurret.pdb
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\Assembly-CSharp-firstpass.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\Assembly-CSharp.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\UnityEngine.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\System.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\System.Xml.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\TDx.TDxInput.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\TrackIRUnity.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\Mono.Cecil.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\Mono.Security.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\obj\x86\Debug\BahaTurret.csprojResolveAssemblyReference.cache
+D:\Plugin Projects\BahaTurret\BahaTurret\obj\x86\Debug\BahaTurret.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\obj\x86\Debug\BahaTurret.pdb

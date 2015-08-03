@@ -170,10 +170,12 @@ namespace BahaTurret
 		//used by AI to lead moving targets
 		private float targetDistance = 0;
 		private Vector3 targetPosition;
+		private Vector3 targetVelocity;
+		private Vector3 targetAcceleration;
 		Vector3 finalAimTarget;
-		public Vessel targetVessel;
-		private Vector3 targetPrevVel;
-
+		public Vessel legacyTargetVessel;
+		bool targetAcquired = false;
+		
 		//used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
 		private int numberOfGuns = 0;
 
@@ -206,6 +208,22 @@ namespace BahaTurret
 
 		//module references
 		public ModuleTurret turret;
+		MissileFire mf = null;
+		public MissileFire weaponManager
+		{
+			get
+			{
+				if (!mf)
+				{
+					foreach (var wm in vessel.FindPartModulesImplementing<MissileFire>())
+					{
+						mf = wm;
+						break;
+					}
+				}
+				return mf;
+			}
+		}
 
 		LineRenderer[] laserRenderers;
 
@@ -384,6 +402,19 @@ namespace BahaTurret
 				fireState = Misc.SetUpSingleAnimation (fireAnimName, this.part);
 				fireState.enabled = false;	
 			}
+
+			BDArmorySettings.OnVolumeChange += UpdateVolume;
+		}
+
+		void UpdateVolume()
+		{
+			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			audioSource2.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+		}
+
+		void OnDestroy()
+		{
+			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 		}
 
 		void Update()
@@ -412,7 +443,6 @@ namespace BahaTurret
 						{
 							audioSource.Stop ();
 							wasFiring = false;
-							audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
 							audioSource2.PlayOneShot(overheatSound);	
 						}
 					}
@@ -439,7 +469,7 @@ namespace BahaTurret
 
 		void FixedUpdate()
 		{
-			if(HighLogic.LoadedSceneIsFlight)
+			if(HighLogic.LoadedSceneIsFlight && !vessel.packed)
 			{
 				if(showReloadMeter)
 				{
@@ -498,7 +528,7 @@ namespace BahaTurret
 
 
 				//autofiring with AI
-				if(targetVessel != null && aiControlled)
+				if(targetAcquired && aiControlled)
 				{
 					Transform fireTransform = fireTransforms[0];
 					Vector3 targetDirection = (finalAimTarget)-fireTransform.position;
@@ -523,11 +553,12 @@ namespace BahaTurret
 				if(autoFire && Time.time-autoFireTimer > autoFireLength)
 				{
 					autoFire = false;
-					targetVessel = null;
+					legacyTargetVessel = null;
 				}
 
 			}
 		}
+			
 
 
 		//Aiming used if part has a turret module
@@ -536,33 +567,20 @@ namespace BahaTurret
 			//AI control
 			if(aiControlled)
 			{
-				if(targetVessel)
+				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
 				{
-					targetPosition = targetVessel.CoM;	
-					targetPosition += targetVessel.rb_velocity * Time.fixedDeltaTime;
+					targetPosition += legacyTargetVessel.rb_velocity * Time.fixedDeltaTime;
 				}
-				else
+				else if(!targetAcquired)
 				{
 					autoFire = false;
 					return;
 				}
 			}
 
-			slaved = false;
-			if(turret)
-			{
-				foreach(var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
-				{
-					if(mtc.slaveTurrets)
-					{
-						slaved = true;
-						targetPosition = mtc.targetPointPosition;
-						break;
-					}
-				}
-			}
 
-			if(!slaved && !aiControlled)
+
+			if(!slaved && !aiControlled && (yawRange > 0 || maxPitch-minPitch > 0))
 			{
 				//MouseControl
 				Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
@@ -582,55 +600,52 @@ namespace BahaTurret
 				else
 				{
 					targetPosition = (ray.direction * maxTargetingRange) + FlightCamera.fetch.mainCamera.transform.position;	
-					if(targetVessel!=null && targetVessel.loaded)
+					if(legacyTargetVessel!=null && legacyTargetVessel.loaded)
 					{
-						targetPosition = ray.direction * Vector3.Distance(targetVessel.transform.position, FlightCamera.fetch.mainCamera.transform.position) + FlightCamera.fetch.mainCamera.transform.position;	
+						targetPosition = ray.direction * Vector3.Distance(legacyTargetVessel.transform.position, FlightCamera.fetch.mainCamera.transform.position) + FlightCamera.fetch.mainCamera.transform.position;	
 					}
 				}
 			}
 
 
 			//aim assist
-			Vector3 target = targetPosition;
-			targetDistance = Vector3.Distance(target, transform.position);
+			Vector3 finalTarget = targetPosition;
+			Vector3 originalTarget = targetPosition;
+			targetDistance = Vector3.Distance(finalTarget, transform.position);
 
 			if((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType!=WeaponTypes.Laser)
 			{
-				float gAccel = (float) FlightGlobals.getGeeForceAtPosition(target).magnitude;
+				float gAccel = (float) FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude;
 				float time = targetDistance/(bulletVelocity);
-				Vector3 originalTarget = target;
-				
-				if(targetVessel!=null && targetVessel.loaded)
+
+				if(targetAcquired)
 				{
-					//Vector3 acceleration = (targetVessel.rigidbody.velocity - targetPrevVel)/Time.fixedDeltaTime;
-					Vector3 acceleration = targetVessel.acceleration;
-					float time2 = VectorUtils.CalculateLeadTime(target-transform.position, targetVessel.rb_velocity-part.rb.velocity, bulletVelocity);
+					Vector3 acceleration = targetAcceleration;
+					float time2 = VectorUtils.CalculateLeadTime(finalTarget-transform.position, targetVelocity-vessel.srf_velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
-					target += (targetVessel.rb_velocity-part.rb.velocity) * time; //target vessel relative velocity compensation
-					target += (0.5f * acceleration * time * time); //target acceleration
-					targetPrevVel = targetVessel.rb_velocity;
-					
+					finalTarget += (targetVelocity-vessel.srf_velocity) * time; //target vessel relative velocity compensation
+					finalTarget += (0.5f * acceleration * time * time); //target acceleration
 				}
-				else if(vessel.altitude < 5000)
+				else if(vessel.altitude < 6000)
 				{
-					float time2 = VectorUtils.CalculateLeadTime(target-transform.position, Vector3.zero-rigidbody.velocity, bulletVelocity);
+					float time2 = VectorUtils.CalculateLeadTime(finalTarget-transform.position, Vector3.zero-part.rb.velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
-					target += (-rigidbody.velocity*(time+Time.fixedDeltaTime));  //this vessel velocity compensation against stationary
+					finalTarget += (-part.rb.velocity*(time+Time.fixedDeltaTime));  //this vessel velocity compensation against stationary
 				}
-				if(bulletDrop && vessel.rb_velocity.sqrMagnitude > Mathf.Pow(750,2)) target += (0.5f*gAccel*time*time * FlightGlobals.getUpAxis());  //gravity compensation
+				if(bulletDrop && vessel.srf_velocity.sqrMagnitude < Mathf.Pow(750,2)) finalTarget += (0.5f*gAccel*time*time * FlightGlobals.getUpAxis());  //gravity compensation
 				
-				targetLeadDistance = Vector3.Distance(target, transform.position);
-				fixedLeadOffset = originalTarget-pointingAtPosition;
+				targetLeadDistance = Vector3.Distance(finalTarget, transform.position);
+				//fixedLeadOffset = originalTarget-pointingAtPosition;
 				
-				if(yawRange == 0)
-				{
-					fixedLeadOffset = originalTarget-target; //for aiming fixed guns to moving target	
-				}
+				//if(yawRange < 1)
+				//{
+					fixedLeadOffset = originalTarget-finalTarget; //for aiming fixed guns to moving target	
+				//}
 				
 				//airdetonation
-				if(targetVessel!=null)
+				if(targetAcquired)
 				{
-					detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, target), 500, 3500) - 50f;
+					detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, finalTarget), 500, 3500) - 50f;
 				}
 				
 			}
@@ -640,17 +655,18 @@ namespace BahaTurret
 
 			//target -= part.rb.velocity*Time.fixedDeltaTime;
 
-			finalAimTarget = target;
+			finalAimTarget = finalTarget;
 
 			//final turret aiming
+			if(slaved && !targetAcquired) return;
 			if(turret)
 			{
 				bool origSmooth = turret.smoothRotation;
-				if(aiControlled)
+				if(aiControlled || slaved)
 				{
 					turret.smoothRotation = false;
 				}
-				turret.AimToTarget(target);
+				turret.AimToTarget(finalTarget);
 				turret.smoothRotation = origSmooth;
 			}
 		}
@@ -692,7 +708,6 @@ namespace BahaTurret
 							{
 								audioSource.dopplerLevel = 0;
 								audioSource.bypassListenerEffects = true;
-								audioSource.volume = 1*(Mathf.Sqrt(GameSettings.SHIP_VOLUME))/Mathf.Sqrt(numberOfGuns);
 								audioSource.PlayOneShot(fireSound);
 							}
 							else
@@ -703,7 +718,6 @@ namespace BahaTurret
 									audioSource.clip = fireSound;
 									audioSource.dopplerLevel = 0;
 									audioSource.bypassListenerEffects = true;
-									audioSource.volume = 1*(Mathf.Sqrt(GameSettings.SHIP_VOLUME))/Mathf.Sqrt(numberOfGuns);
 									audioSource.loop = false;
 									audioSource.time = 0;
 									audioSource.Play();	
@@ -832,7 +846,6 @@ namespace BahaTurret
 						{
 							audioSource.Stop ();
 							wasFiring = false;
-							audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
 							audioSource2.PlayOneShot(overheatSound);	
 						}
 					}
@@ -876,16 +889,16 @@ namespace BahaTurret
 					Vector3 physStepFix = Vector3.zero;
 
 
-					if(targetVessel!=null && targetVessel.loaded)
+					if(legacyTargetVessel!=null && legacyTargetVessel.loaded)
 					{
-						targetDirection = (targetVessel.CoM+(targetVessel.rigidbody.velocity*Time.fixedDeltaTime)) - tf.position;
-						physStepFix = targetVessel.rigidbody.velocity*Time.fixedDeltaTime;
+						targetDirection = (legacyTargetVessel.CoM+(legacyTargetVessel.rb_velocity*Time.fixedDeltaTime)) - tf.position;
+						physStepFix = legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
 
 
 						if(Vector3.Angle(rayDirection, targetDirection) < 1)
 						{
 							rayDirection = targetDirection;
-							targetDirectionLR = (targetVessel.CoM+(2*targetVessel.rigidbody.velocity*Time.fixedDeltaTime)) - tf.position;
+							targetDirectionLR = (legacyTargetVessel.CoM+(2*legacyTargetVessel.rb_velocity*Time.fixedDeltaTime)) - tf.position;
 						}
 					}
 					else if(slaved)
@@ -966,8 +979,6 @@ namespace BahaTurret
 				RaycastHit hit;
 				if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
 				{
-					pointingAtPosition = hit.point;
-
 					Part p = hit.collider.gameObject.GetComponentInParent<Part>();
 					if(p && p.vessel && p.vessel == vessel)
 					{
@@ -977,14 +988,17 @@ namespace BahaTurret
 				}
 				else
 				{
-					pointingAtPosition = fireTransforms[i].position + (ray.direction * (maxTargetingRange));
 					pointingAtSelf = false;
 				}
 				
 				
-				if(targetVessel!=null && targetVessel.loaded)
+				if(targetAcquired)
 				{
 					pointingAtPosition = fireTransforms[i].transform.position + (ray.direction * targetLeadDistance);
+				}
+				else
+				{
+					pointingAtPosition = fireTransforms[i].position + (ray.direction * (maxTargetingRange));
 				}
 			}
 		}
@@ -1016,10 +1030,10 @@ namespace BahaTurret
 					float simDeltaTime = 0.15f;
 					
 					
-					Vector3 simVelocity = rigidbody.velocity+(bulletVelocity*fireTransform.forward);
-					Vector3 simCurrPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-					Vector3 simPrevPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
-					Vector3 simStartPos = fireTransform.position + (rigidbody.velocity*Time.fixedDeltaTime);
+					Vector3 simVelocity = part.rb.velocity+(bulletVelocity*fireTransform.forward);
+					Vector3 simCurrPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
+					Vector3 simPrevPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
+					Vector3 simStartPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
 					bool simulating = true;
 					
 					List<Vector3> pointPositions = new List<Vector3>();
@@ -1052,7 +1066,7 @@ namespace BahaTurret
 						
 						simPrevPos = simCurrPos;
 						
-						if(targetVessel!=null && targetVessel.loaded && !targetVessel.Landed && Vector3.Distance(simStartPos,simCurrPos) > targetLeadDistance)
+						if(legacyTargetVessel!=null && legacyTargetVessel.loaded && !legacyTargetVessel.Landed && Vector3.Distance(simStartPos,simCurrPos) > targetLeadDistance)
 						{
 							bulletPrediction = simStartPos + (simCurrPos-simStartPos).normalized*targetLeadDistance;
 							simulating = false;
@@ -1189,7 +1203,6 @@ namespace BahaTurret
 				autoFire = false;
 				audioSource.Stop ();
 				wasFiring = false;
-				audioSource2.volume = Mathf.Sqrt (GameSettings.SHIP_VOLUME);
 				audioSource2.PlayOneShot(overheatSound);
 			}
 			if(heat < maxHeat/3 && isOverheated) //reset on cooldown
@@ -1270,7 +1283,7 @@ namespace BahaTurret
 				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
 			}
 
-
+			UpdateVolume();
 		}
 
 		void SetupLaserSpecifics()
@@ -1376,48 +1389,88 @@ namespace BahaTurret
 
 		void UpdateTargetVessel()
 		{
-			if(!aiControlled)
-			{
-				targetVessel = null;
-				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
-				{
-					if(vessel.targetObject!=null && vessel.targetObject.GetVessel()!=null)
-					{
-						targetVessel = vessel.targetObject.GetVessel();
-					}
-				}
+			targetAcquired = false;
+			slaved = false;
 
-				//put radar targeting here.
+			//targetVessel = null;
+			if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
+			{
+				if(vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
+				{
+					Vessel targetVessel = vessel.targetObject.GetVessel();
+					targetPosition = targetVessel.CoM;
+					targetVelocity = targetVessel.srf_velocity;
+					targetAcceleration = targetVessel.acceleration;
+					targetAcquired = true;
+					return;
+				}
 			}
+
+			//radar targeting
+			if(weaponManager && weaponManager.radar)
+			{
+				if(weaponManager.radar.locked)
+				{
+					targetPosition = weaponManager.radar.lockedTarget.predictedPosition + (weaponManager.radar.lockedTarget.velocity * Time.fixedDeltaTime);
+					targetVelocity = weaponManager.radar.lockedTarget.velocity;
+					targetAcceleration = weaponManager.radar.lockedTarget.acceleration;
+					targetAcquired = true;
+				}
+				if(weaponManager.radar.slaveTurrets && turret)
+				{
+					slaved = true;
+				}	
+				return;
+			}
+
+			//laser targeting
+			if(ModuleTargetingCamera.activeCam && ModuleTargetingCamera.activeCam.vessel == vessel && ModuleTargetingCamera.activeCam.slaveTurrets)
+			{
+				if(turret)
+				{
+					slaved = true;
+				}
+				targetPosition = ModuleTargetingCamera.activeCam.targetPointPosition;
+				targetVelocity = Vector3.zero;
+				targetAcceleration = Vector3.zero;
+				targetAcquired = true;
+				return;
+			}
+
 		}
+
+
 
 		void OnGUI()
 		{
-			if(weaponState == WeaponStates.Enabled && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled)
+			if(weaponState == WeaponStates.Enabled && vessel && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled)
 			{
 				float size = 30;
 				
-				Vector3 aimPosition;
+				Vector3 reticlePosition;
 				if(BDArmorySettings.AIM_ASSIST && vessel.srf_velocity.sqrMagnitude < Mathf.Pow(750,2))
 				{
-					if(targetVessel!=null && targetVessel.loaded && !targetVessel.Landed)
+					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{
-						aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(pointingAtPosition+fixedLeadOffset);
+						reticlePosition = pointingAtPosition+fixedLeadOffset;
+
+						BDGUIUtils.DrawLineBetweenWorldPositions(pointingAtPosition, reticlePosition, 2, new Color(0,1,0,0.6f));
+						BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 					}
 					else
 					{
-						aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(bulletPrediction);
+						reticlePosition = bulletPrediction;
 					}
 				}
 				else
 				{
-					aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(pointingAtPosition);
+					reticlePosition = pointingAtPosition;
 				}
 				
 
 				
 				Texture2D texture;
-				if(Vector3.Angle(pointingAtPosition-transform.position, targetPosition-transform.position) < 0.3f)
+				if(Vector3.Angle(pointingAtPosition-transform.position, finalAimTarget-transform.position) < 1f)
 				{
 					texture = BDArmorySettings.Instance.greenSpikedPointCircleTexture;
 				}
@@ -1425,10 +1478,7 @@ namespace BahaTurret
 				{
 					texture = BDArmorySettings.Instance.greenPointCircleTexture;
 				}
-				Rect drawRect = new Rect(aimPosition.x*Screen.width-(0.5f*size), (1-aimPosition.y)*Screen.height-(0.5f*size), size, size);
-				
-				float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, bulletPrediction-FlightCamera.fetch.mainCamera.transform.position);
-				if(cameraAngle<90) GUI.DrawTexture(drawRect, texture);
+				BDGUIUtils.DrawTextureOnWorldPos (reticlePosition, texture, new Vector2 (size, size), 0);
 			}
 		}
 
