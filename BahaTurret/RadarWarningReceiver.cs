@@ -43,20 +43,17 @@ namespace BahaTurret
 		AudioSource audioSource;
 		Rect windowRect;
 
-		public override void OnAwake()
-		{
-			if(HighLogic.LoadedSceneIsFlight)
-			{
-				pingsData = new TargetSignatureData[dataCount];
-				TargetSignatureData.ResetTSDArray(ref pingsData);
-				launchWarnings = new List<TargetSignatureData>();
-			}
-		}
+	
 
 		public override void OnStart(StartState state)
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
+
+				pingsData = new TargetSignatureData[dataCount];
+				TargetSignatureData.ResetTSDArray(ref pingsData);
+				launchWarnings = new List<TargetSignatureData>();
+
 				referenceTransform = new GameObject().transform;
 				referenceTransform.parent = transform;
 				referenceTransform.localPosition = Vector3.zero;

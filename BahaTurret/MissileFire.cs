@@ -78,8 +78,15 @@ namespace BahaTurret
 		//AIPilot
 		public BDModulePilotAI pilotAI = null;
 
+		//targeting pods
+		public List<ModuleTargetingCamera> targetingPods = new List<ModuleTargetingCamera>();
+
 		//radar
 		public ModuleRadar radar;
+		public List<ModuleRadar> radars = new List<ModuleRadar>();
+
+		//jammers
+		public List<ModuleECMJammer> jammers = new List<ModuleECMJammer>();
 
 		public RadarWarningReceiver rwr;
 

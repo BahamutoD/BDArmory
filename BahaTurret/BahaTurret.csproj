@@ -94,6 +94,10 @@
     <Compile Include="BDAExtensions.cs" />
     <Compile Include="BDACategoryModule.cs" />
     <Compile Include="RadarWarningReceiver.cs" />
+    <Compile Include="CMChaff.cs" />
+    <Compile Include="VesselChaffInfo.cs" />
+    <Compile Include="VesselECMJInfo.cs" />
+    <Compile Include="ModuleECMJammer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />

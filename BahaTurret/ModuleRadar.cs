@@ -109,7 +109,7 @@ namespace BahaTurret
 		GUIStyle radarTopStyle;
 
 		//scanning
-		[KSPField(isPersistant = true)]
+		[KSPField]
 		public bool showDirectionWhileScan = false;
 		[KSPField(isPersistant = true)]
 		public float currentAngle = 0;
@@ -237,6 +237,12 @@ namespace BahaTurret
 				rwrType = (RadarWarningReceiver.RWRThreatTypes) rwrThreatType;
 
 				unlinkNullRadar = false;
+
+				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
+				{
+					wm.radars.Add(this);
+				}
+
 				StartCoroutine(StartUpRoutine());
 
 			}
@@ -1018,14 +1024,23 @@ namespace BahaTurret
 						continue;
 					}
 
+					//jamming
+					Vector3 jammingModifier = Vector3.zero;
+					bool jammed = false;
+					if(scannedContacts[i].jammerStrength > scannedContacts[i].signalStrength)
+					{
+						jammingModifier = (scannedContacts[i].predictedPosition - transform.position).normalized * UnityEngine.Random.Range(-5000f, 8000f);
+						jammed = true;
+					}
+
 					Vector2 pingPosition;
 					if(omnidirectional || linked)
 					{
-						pingPosition = RadarUtils.WorldToRadar(scannedContacts[i].position, referenceTransform, radarRect, rIncrements[rangeIndex]);
+						pingPosition = RadarUtils.WorldToRadar(scannedContacts[i].position+jammingModifier, referenceTransform, radarRect, rIncrements[rangeIndex]);
 					}
 					else
 					{
-						pingPosition = RadarUtils.WorldToRadarRadial(scannedContacts[i].position, referenceTransform, radarRect, rIncrements[rangeIndex], directionalFieldOfView / 2);
+						pingPosition = RadarUtils.WorldToRadarRadial(scannedContacts[i].position+jammingModifier, referenceTransform, radarRect, rIncrements[rangeIndex], directionalFieldOfView / 2);
 					}
 
 					Rect pingRect;
@@ -1040,7 +1055,7 @@ namespace BahaTurret
 						GUI.color = origGUIColor;
 					}
 					//draw contacts with direction indicator
-					else if((showDirectionWhileScan || (linked&&linkedRadar&&linkedRadar.showDirectionWhileScan)) && scannedContacts[i].velocity.sqrMagnitude > 100)
+					else if(!jammed && (showDirectionWhileScan || (linked&&linkedRadar&&linkedRadar.showDirectionWhileScan)) && scannedContacts[i].velocity.sqrMagnitude > 100)
 					{
 						pingRect = new Rect(pingPosition.x - (lockIconSize / 2), pingPosition.y - (lockIconSize / 2), lockIconSize, lockIconSize);
 						float vAngle = Vector3.Angle(Vector3.ProjectOnPlane(scannedContacts[i].velocity, referenceTransform.up), referenceTransform.forward);
@@ -1070,16 +1085,30 @@ namespace BahaTurret
 
 						Color iconColor = Color.green;
 						float contactAlt = scannedContacts[i].altitude;
-						if(contactAlt - myAlt > 1000)
+						if(!omnidirectional)
 						{
-							iconColor = new Color(0, 0.6f, 1f, 1);
+							if(contactAlt - myAlt > 1000)
+							{
+								iconColor = new Color(0, 0.6f, 1f, 1);
+							}
+							else if(contactAlt - myAlt < -1000)
+							{
+								iconColor = new Color(1f, 0.68f, 0, 1);
+							}
 						}
-						else if(contactAlt - myAlt < -1000)
+
+						if(omnidirectional)
 						{
-							iconColor = new Color(1f, 0.68f, 0, 1);
+							Vector3 localPos = referenceTransform.InverseTransformPoint(scannedContacts[i].position);
+							localPos.y = 0;
+							float angleToContact = Vector3.Angle(localPos, Vector3.forward);
+							if(localPos.x < 0) angleToContact = -angleToContact;
+							GUIUtility.RotateAroundPivot(angleToContact, pingPosition);
 						}
 
 						BDGUIUtils.DrawRectangle(pingRect, iconColor - new Color(0, 0, 0, minusAlpha));
+
+						GUI.matrix = Matrix4x4.identity;
 					}
 
 

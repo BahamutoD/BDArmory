@@ -786,7 +786,7 @@ namespace BahaTurret
 					}
 
 					//TGP
-					foreach(var mtc in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+					foreach(var mtc in ActiveWeaponManager.targetingPods)
 					{
 						numberOfModules++;
 						bool isEnabled = (mtc.cameraEnabled);
@@ -813,7 +813,7 @@ namespace BahaTurret
 					}
 
 					//RADAR
-					foreach(var mr in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleRadar>())
+					foreach(var mr in ActiveWeaponManager.radars)
 					{
 						numberOfModules++;
 						GUIStyle moduleStyle = mr.radarEnabled ? centerLabelBlue : centerLabel;
@@ -821,6 +821,19 @@ namespace BahaTurret
 						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
 						{
 							mr.Toggle();
+						}
+						line++;
+					}
+
+					//JAMMERS
+					foreach(var jammer in ActiveWeaponManager.jammers)
+					{
+						numberOfModules++;
+						GUIStyle moduleStyle = jammer.jammerEnabled ? centerLabelBlue : centerLabel;
+						string label = jammer.part.partInfo.title;
+						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
+						{
+							jammer.Toggle();
 						}
 						line++;
 					}
@@ -839,7 +852,7 @@ namespace BahaTurret
 			else
 			{
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "No Weapon Manager found.", centerLabel);
-
+				line += 3;
 			}
 			
 			
@@ -858,6 +871,11 @@ namespace BahaTurret
 		Rect SRightRect(float line)
 		{
 			return new Rect(settingsLeftMargin + ((settingsWidth - 2 * settingsSpacer) / 2), settingsTop + line * settingsSpacer, (settingsWidth - 2 * settingsSpacer) / 2, settingsSpacer);
+		}
+
+		Rect SLeftRect(float line)
+		{
+			return new Rect(settingsLeftMargin, settingsTop + (line * settingsSpacer), (settingsWidth - (2*settingsSpacer))/2, settingsSpacer);
 		}
 
 		float settingsWidth;
@@ -882,22 +900,22 @@ namespace BahaTurret
 			float line = 1.25f;
 			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "");
 			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "BDArmory Settings");
-			INSTAKILL = GUI.Toggle(SLineRect(line), INSTAKILL, "Instakill");
+			INSTAKILL = GUI.Toggle(SLeftRect(line), INSTAKILL, "Instakill");
 			INFINITE_AMMO = GUI.Toggle(SRightRect(line), INFINITE_AMMO, "Infinte Ammo");
 			line++;
-			BULLET_HITS = GUI.Toggle(SLineRect(line), BULLET_HITS, "Bullet Hits");
+			BULLET_HITS = GUI.Toggle(SLeftRect(line), BULLET_HITS, "Bullet Hits");
 			EJECT_SHELLS = GUI.Toggle(SRightRect(line), EJECT_SHELLS, "Eject Shells");
 			line++;
-			AIM_ASSIST = GUI.Toggle(SLineRect(line), AIM_ASSIST, "Aim Assist");
+			AIM_ASSIST = GUI.Toggle(SLeftRect(line), AIM_ASSIST, "Aim Assist");
 			DRAW_AIMERS = GUI.Toggle(SRightRect(line), DRAW_AIMERS, "Draw Aimers");
 			line++;
-			DRAW_DEBUG_LINES = GUI.Toggle(SLineRect(line), DRAW_DEBUG_LINES, "Debug Lines");
+			DRAW_DEBUG_LINES = GUI.Toggle(SLeftRect(line), DRAW_DEBUG_LINES, "Debug Lines");
 			DRAW_DEBUG_LABELS = GUI.Toggle(SRightRect(line), DRAW_DEBUG_LABELS, "Debug Labels");
 			line++;
-			REMOTE_SHOOTING = GUI.Toggle(SLineRect(line), REMOTE_SHOOTING, "Remote Firing");
+			REMOTE_SHOOTING = GUI.Toggle(SLeftRect(line), REMOTE_SHOOTING, "Remote Firing");
 			BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BOMB_CLEARANCE_CHECK, "Clearance Check");
 			line++;
-			ALLOW_LEGACY_TARGETING = GUI.Toggle(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, settingsWidth - 2*settingsSpacer, settingsSpacer), ALLOW_LEGACY_TARGETING, "Legacy Targeting");
+			ALLOW_LEGACY_TARGETING = GUI.Toggle(SLeftRect(line), ALLOW_LEGACY_TARGETING, "Legacy Targeting");
 			line++;
 			line++;
 

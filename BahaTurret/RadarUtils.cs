@@ -21,7 +21,6 @@ namespace BahaTurret
 		public static Shader radarShader;
 		public static int radarResolution = 32;
 
-		public static Dictionary<Vessel,float> VesselBaseRadarSignatures = new Dictionary<Vessel, float>();
 
 
 		public static void SetupRadarCamera()
@@ -215,10 +214,13 @@ namespace BahaTurret
 			float notchFactor = 1;
 			float angleFromUp = Vector3.Angle(targetDirection,upVector);
 			float lookDownAngle = angleFromUp-90;
-			if(lookDownAngle > 5) notchFactor = Mathf.Clamp(targetClosureV.magnitude/60, 0.1f, 1f);
+			if(lookDownAngle > 5) notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude/Mathf.Pow(60,2), 0.1f, 1f);
 			float groundClutterFactor = Mathf.Clamp((90/angleFromUp), 0.25f, 1.85f);
 			sig *= groundClutterFactor;
 			sig *= notchFactor;
+
+			var vci = vessel.GetComponent<VesselChaffInfo>();
+			if(vci) sig *= vci.GetChaffMultiplier();
 
 			/*
 			if(Mathf.Round(Time.time)%2 == 0)
@@ -241,38 +243,7 @@ namespace BahaTurret
 
 	
 
-		public static float GetBaseRadarSignature(Vessel v)
-		{
-			if(!v.loaded)
-			{
-				return 0;
-			}
 
-			if(VesselBaseRadarSignatures.ContainsKey(v))
-			{
-				return VesselBaseRadarSignatures[v];
-			}
-			else
-			{
-				float size = 0;
-				foreach(Part part in v.Parts)
-				{
-					if(!part) continue;
-
-					if(part.mass > 0.2f)
-					{
-						foreach(var renderer in part.GetComponentsInChildren<MeshRenderer>())
-						{
-							Vector3 renderBounds = renderer.bounds.size;
-							size += Mathf.Max (Mathf.Max (renderBounds.x,renderBounds.y),renderBounds.z);
-						}
-					}
-				}
-
-				VesselBaseRadarSignatures.Add(v,size);
-				return size;
-			}
-		}
 
 		public static Vector2 WorldToRadar(Vector3 worldPosition, Transform referenceTransform, Rect radarRect, float maxDistance)
 		{

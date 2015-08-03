@@ -53,6 +53,10 @@ namespace BahaTurret
 		 UI_FloatRange(minValue = 125f, maxValue = 800f, stepIncrement = 1.0f, scene = UI_Scene.All)]
 		public float maxSpeed = 325;
 
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "TakeOff Speed"),
+			UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1.0f, scene = UI_Scene.All)]
+		public float takeOffSpeed = 70;
+
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Standby Mode"),
 		 UI_Toggle(enabledText = "On", disabledText = "Off")]
 		public bool standbyMode = false;
@@ -472,7 +476,15 @@ namespace BahaTurret
 			threatLevel = 1;
 			debugString += "\nTaking off/Gaining altitude";
 
+			if(vessel.Landed && vessel.srfSpeed < takeOffSpeed)
+			{
+				return;
+			}
+
+
 			float radarAlt = MissileGuidance.GetRadarAltitude(vessel);
+
+
 
 			if(radarAlt > 70)
 			{

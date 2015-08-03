@@ -274,6 +274,11 @@ namespace BahaTurret
 				{
 					DelayedEnable();
 				}
+
+				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
+				{
+					wm.targetingPods.Add(this);
+				}
 			}
 		}
 

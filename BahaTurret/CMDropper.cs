@@ -32,6 +32,8 @@ namespace BahaTurret
 		AudioClip smokePoofSound;
 
 		string resourceName;
+
+		VesselChaffInfo vci;
 		
 		[KSPAction("Fire Countermeasure")]
 		public void AGDropCM(KSPActionParam param)
@@ -48,6 +50,7 @@ namespace BahaTurret
 				DropFlare();
 				break;
 			case CountermeasureTypes.Chaff:
+				DropChaff();
 				break;
 			case CountermeasureTypes.Smoke:
 				PopSmoke();
@@ -65,23 +68,26 @@ namespace BahaTurret
 		
 		public override void OnStart (PartModule.StartState state)
 		{
-			SetupCM();
-
-			ejectTransform = part.FindModelTransform(ejectTransformName);
-
-			if(effectsTransformName!=string.Empty)
+			if(HighLogic.LoadedSceneIsFlight)
 			{
-				effectsTransform = part.FindModelTransform(effectsTransformName);
-			}
+				SetupCM();
 
-			part.force_activate();
+				ejectTransform = part.FindModelTransform(ejectTransformName);
+
+				if(effectsTransformName != string.Empty)
+				{
+					effectsTransform = part.FindModelTransform(effectsTransformName);
+				}
+
+				part.force_activate();
 			
-			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.minDistance = 1;
-			audioSource.maxDistance = 1000;
+				audioSource = gameObject.AddComponent<AudioSource>();
+				audioSource.minDistance = 1;
+				audioSource.maxDistance = 1000;
 
-			UpdateVolume();
-			BDArmorySettings.OnVolumeChange += UpdateVolume;
+				UpdateVolume();
+				BDArmorySettings.OnVolumeChange += UpdateVolume;
+			}
 		}
 
 		void UpdateVolume()
@@ -136,7 +142,17 @@ namespace BahaTurret
 				break;
 			case "chaff":
 				cmType = CountermeasureTypes.Chaff;
+				cmSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/smokeEject");
 				resourceName = "CMChaff";
+				vci = vessel.GetComponent<VesselChaffInfo>();
+				if(!vci)
+				{
+					vci = vessel.gameObject.AddComponent<VesselChaffInfo>();
+				}
+				if(!chaffPool)
+				{
+					SetupChaffPool();
+				}
 				break;
 			case "smoke":
 				cmType = CountermeasureTypes.Smoke;
@@ -167,6 +183,27 @@ namespace BahaTurret
 				cmf.sourceVessel = vessel;
 
 				cm.SetActive(true);
+			}
+		}
+
+		void DropChaff()
+		{
+			PartResource cmResource = GetCMResource();
+			if(cmResource && cmResource.amount >= 1)
+			{
+				cmResource.amount--;
+				audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+				audioSource.PlayOneShot(cmSound);
+
+				if(!vci)
+				{
+					vci = vessel.gameObject.AddComponent<VesselChaffInfo>();
+				}
+				vci.Chaff();
+
+				GameObject cm = chaffPool.GetPooledObject();
+				CMChaff chaff = cm.GetComponent<CMChaff>();
+				chaff.Emit(ejectTransform.position, ejectVelocity * ejectTransform.forward);
 			}
 		}
 
@@ -209,9 +246,17 @@ namespace BahaTurret
 			GameObject cm = (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMSmoke/cmSmokeModel"));
 			cm.SetActive(false);
 			cm.AddComponent<CMSmoke>();
-	
 
 			smokePool = ObjectPool.CreateObjectPool(cm, 10, true, true);
+		}
+
+		void SetupChaffPool()
+		{
+			GameObject cm = (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMChaff/model"));
+			cm.SetActive(false);
+			cm.AddComponent<CMChaff>();
+
+			chaffPool = ObjectPool.CreateObjectPool(cm, 10, true, true);
 		}
 		
 	}
