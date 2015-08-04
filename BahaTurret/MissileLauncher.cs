@@ -13,10 +13,10 @@ namespace BahaTurret
 
 		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,Cruise,STS,Bomb,RCS}
 		public GuidanceModes guidanceMode;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string homingType = "AAM";
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string targetingType = "radar";
 		public enum TargetingModes{None,Radar,Heat,Laser,GPS,AntiRad}
 		public TargetingModes targetingMode;
@@ -26,37 +26,37 @@ namespace BahaTurret
 		public float timeIndex = 0;
 
 		//aero
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool aero = false;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float liftArea = 0.015f;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float steerMult = 0.5f;
 		Vector3 aeroTorque = Vector3.zero;
 		float controlAuthority = 0;
 		float finalMaxTorque = 0;
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float maxTorque = 90;
 		//
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float thrust = 30;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float cruiseThrust = 3;
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
         	UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
 		public float dropTime = 0.4f;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float boostTime = 2.2f;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float cruiseTime = 45;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool guidanceActive = true;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float maxOffBoresight = 45;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float maxAoA = 35;
 		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
@@ -69,33 +69,35 @@ namespace BahaTurret
 		
 
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float optimumAirspeed = 220;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float blastRadius = 150;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float blastPower = 25;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float maxTurnRateDPS = 20;
+		[KSPField]
+		public bool proxyDetonate = true;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string audioClipPath = string.Empty;
 
 		AudioClip thrustAudio;
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string boostClipPath = string.Empty;
 
 		AudioClip boostAudio;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool isSeismicCharge = false;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float rndAngVel = 0;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool isTimed = false;
 		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Detonation Time"),
@@ -106,27 +108,27 @@ namespace BahaTurret
 		 UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 10f, scene = UI_Scene.All)]
 		public float cruiseAltitude = 300;
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string rotationTransformName = string.Empty;
 		Transform rotationTransform;
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool terminalManeuvering = false;
 		
 		
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
 		
 		public string explSoundPath = "BDArmory/Sounds/explode1";
 			
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool spoolEngine = false;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool hasRCS = false;
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float rcsThrust = 1;
 		float rcsRVelThreshold = 0.13f;
 		KSPParticleEmitter upRCS;
@@ -153,22 +155,22 @@ namespace BahaTurret
 		float cmTimer;
 		
 		//deploy animation
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string deployAnimationName = "";
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float deployedDrag = 0.02f;
 		
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float deployTime = 0.2f;
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public bool useSimpleDrag = false;
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public Vector3 simpleCoD = new Vector3(0,0,-1);
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public float agmDescentRatio = 1.45f;
 		
 		float currentThrust = 0;
@@ -197,11 +199,15 @@ namespace BahaTurret
 
 
 
-		[KSPField(isPersistant = false)]
+		[KSPField]
 		public string boostTransformName = string.Empty;
 		List<KSPParticleEmitter> boostEmitters;
 
 		public MissileStates MissileState = MissileStates.Idle;
+
+		[KSPField]
+		public float lockedSensorFOV = 2.5f;
+
 
 		//laser stuff
 		public ModuleTargetingCamera lockedCamera = null;
@@ -209,10 +215,6 @@ namespace BahaTurret
 		Vector3 laserStartPosition;
 		Vector3 laserStartDirection;
 
-
-
-		[KSPField]
-		public float lockedSensorFOV = 2.5f;
 
 		//heat stuff
 		public TargetSignatureData heatTarget;
@@ -231,6 +233,8 @@ namespace BahaTurret
 		public bool activeRadar = false;
 		float lastRWRPing = 0;
 
+		//GPS stuff
+		public Vector3d targetGPSCoords;
 
 		//weapon interface
 		[KSPField]
@@ -644,6 +648,10 @@ namespace BahaTurret
 				{
 					UpdateLaserTarget();
 				}
+				else if(targetingMode == TargetingModes.GPS)
+				{
+					UpdateGPSTarget();
+				}
 
 
 				
@@ -1006,14 +1014,14 @@ namespace BahaTurret
 				DrawDebugLine(transform.position+(part.rb.velocity*Time.fixedDeltaTime), targetPosition);
 
 				aamTarget = MissileGuidance.GetAirToAirTarget(targetPosition, targetVelocity, targetAcceleration, vessel, out timeToImpact);
-				if(Vector3.Angle(aamTarget-transform.position, transform.forward) > maxOffBoresight*0.85f)
+				if(Vector3.Angle(aamTarget-transform.position, transform.forward) > maxOffBoresight*0.75f)
 				{
 					aamTarget = targetPosition;
 				}
 				CheckMiss();
 
 				//proxy detonation
-				if((targetPosition-transform.position).sqrMagnitude < Mathf.Pow(blastRadius * 0.45f,2))
+				if(proxyDetonate && (targetPosition-transform.position).sqrMagnitude < Mathf.Pow(blastRadius * 0.45f,2))
 				{
 					Detonate();
 				}
@@ -1060,6 +1068,16 @@ namespace BahaTurret
 			aeroTorque = MissileGuidance.DoAeroForces(this, agmTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
 
+		void UpdateGPSTarget()
+		{
+			if(targetAcquired)
+			{
+				targetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
+				targetVelocity = Vector3.zero;
+				targetAcceleration = Vector3.zero;
+			}
+		}
+
 		void UpdateLaserTarget()
 		{
 			if(targetAcquired)
@@ -1067,7 +1085,8 @@ namespace BahaTurret
 				if(lockedCamera && lockedCamera.groundStabilized && !lockedCamera.gimbalLimitReached && lockedCamera.surfaceDetected) //active laser target
 				{
 					targetPosition = lockedCamera.groundTargetPosition;
-					//do target velocity info here
+					targetVelocity = (targetPosition - lastLaserPoint) / Time.fixedDeltaTime;
+					targetAcceleration = Vector3.zero;
 					lastLaserPoint = targetPosition;
 				}
 				else //lost active laser target, home on last known position
@@ -1077,6 +1096,8 @@ namespace BahaTurret
 						//Debug.Log("Laser missile affected by smoke countermeasure");
 						float angle = VectorUtils.FullRangePerlinNoise(0.75f * Time.time, 10) * BDArmorySettings.SMOKE_DEFLECTION_FACTOR;
 						targetPosition = VectorUtils.RotatePointAround(lastLaserPoint, transform.position, VectorUtils.GetUpDirection(transform.position), angle);
+						targetVelocity = Vector3.zero;
+						targetAcceleration = Vector3.zero;
 						lastLaserPoint = targetPosition;
 					}
 					else
@@ -1129,7 +1150,10 @@ namespace BahaTurret
 			{
 				if((radarTarget.predictedPosition-transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight*0.75f)
 				{
-					if(radar && radar.lockedTarget.exists && (radarTarget.predictedPosition-radar.lockedTarget.predictedPosition).sqrMagnitude<Mathf.Pow(100,2))
+					if(radar 
+						&& radar.lockedTarget.exists 
+						&& (radarTarget.predictedPosition-radar.lockedTarget.predictedPosition).sqrMagnitude<Mathf.Pow(100,2) 
+						&& (radar.transform.position-transform.position).sqrMagnitude < Mathf.Pow(activeRadarRange,2))
 					{
 						targetAcquired = true;
 						radarTarget = radar.lockedTarget;

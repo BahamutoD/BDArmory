@@ -507,9 +507,18 @@ namespace BahaTurret
 			}
 			else
 			{
-				if(GUI.Button(stabilizeRect, "Unlock\nTarget", HighLogic.Skin.button))
+				if(GUI.Button(new Rect(stabilizeRect.x,stabilizeRect.y,stabilizeRect.width,stabilizeRect.height/2), "Unlock", HighLogic.Skin.button))
 				{
 					ClearTarget();
+				}
+				if(weaponManager)
+				{
+					GUIStyle gpsStyle = new GUIStyle(HighLogic.Skin.button);
+					gpsStyle.fontSize = 10;
+					if(GUI.Button(new Rect(stabilizeRect.x, stabilizeRect.y + (stabilizeRect.height / 2), stabilizeRect.width, stabilizeRect.height / 2), "Send GPS", gpsStyle))
+					{
+						BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(bodyRelativeGTP);
+					}
 				}
 
 				if(!gimbalLimitReached)

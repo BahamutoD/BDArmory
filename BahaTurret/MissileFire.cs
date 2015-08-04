@@ -88,7 +88,11 @@ namespace BahaTurret
 		//jammers
 		public List<ModuleECMJammer> jammers = new List<ModuleECMJammer>();
 
+		//RWR
 		public RadarWarningReceiver rwr;
+
+		//GPS
+		public Vector3d designatedGPSCoords = Vector3d.zero;
 
 		//current weapon ref
 		MissileLauncher currMiss;
@@ -96,7 +100,7 @@ namespace BahaTurret
 		{
 			get
 			{
-				if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+				if(selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
 				{
 					if(currMiss && currMiss.part == selectedWeapon.GetPart())
 					{
@@ -893,6 +897,11 @@ namespace BahaTurret
 			{
 				ml.lockedCamera = foundCam;
 			}
+			else if(ml.targetingMode == MissileLauncher.TargetingModes.GPS)
+			{
+				ml.targetGPSCoords = designatedGPSCoords;
+				ml.targetAcquired = true;
+			}
 			else if(ml.targetingMode == MissileLauncher.TargetingModes.Heat && heatTarget.exists)
 			{
 				ml.heatTarget = heatTarget;
@@ -1091,56 +1100,68 @@ namespace BahaTurret
 				if(showBombAimer && !MapView.MapIsEnabled)
 				{
 					float size = 128;
-					BDGUIUtils.DrawTextureOnWorldPos(bombAimerPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(size,size), 0);
-					/*
-					Vector3 aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(bombAimerPosition);
-					Rect drawRect = new Rect(aimPosition.x*Screen.width-(0.5f*size), (1-aimPosition.y)*Screen.height-(0.5f*size), size, size);
-					float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, bombAimerPosition-FlightCamera.fetch.mainCamera.transform.position);
-					if(cameraAngle<90) GUI.DrawTexture(drawRect, bombAimerTexture);
-					*/
+					Texture2D texture = BDArmorySettings.Instance.greenCircleTexture;
+					if(currentMissile.targetingMode == MissileLauncher.TargetingModes.GPS)
+					{
+						texture = BDArmorySettings.Instance.largeGreenCircleTexture;
+						size = 256;
+					}
+					BDGUIUtils.DrawTextureOnWorldPos(bombAimerPosition, texture, new Vector2(size,size), 0);
 				}
 
+
+
 				//MISSILE LOCK HUD
-				if(selectedWeapon!=null && selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+				if(selectedWeapon!=null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
 				{
-					if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Laser)
+					if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Laser)
 					{
-						if (laserPointDetected)
+						if(laserPointDetected)
 						{
-							BDGUIUtils.DrawTextureOnWorldPos (foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2 (40, 40), 1);
+							BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(40, 40), 1);
 						}
 
-						foreach (var cam in BDATargetManager.ActiveLasers)
+						foreach(var cam in BDATargetManager.ActiveLasers)
 						{
-							if (cam && cam.vessel != vessel && cam.surfaceDetected && cam.groundStabilized && !cam.gimbalLimitReached)
+							if(cam && cam.vessel != vessel && cam.surfaceDetected && cam.groundStabilized && !cam.gimbalLimitReached)
 							{
-								BDGUIUtils.DrawTextureOnWorldPos (cam.groundTargetPosition, BDArmorySettings.Instance.greenDiamondTexture, new Vector2 (18, 18), 0);
+								BDGUIUtils.DrawTextureOnWorldPos(cam.groundTargetPosition, BDArmorySettings.Instance.greenDiamondTexture, new Vector2(18, 18), 0);
 							}
 						}
-					} else if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Heat)
+					}
+					else if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Heat)
 					{
-						if (heatTarget.exists)
+						if(heatTarget.exists)
 						{
-							BDGUIUtils.DrawTextureOnWorldPos (heatTarget.position, BDArmorySettings.Instance.greenCircleTexture, new Vector2 (36, 36), 3);
-							float distanceToTarget = Vector3.Distance (heatTarget.position, currentMissile.transform.position);
-							BDGUIUtils.DrawTextureOnWorldPos (currentMissile.transform.position + (distanceToTarget * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2 (128, 128), 0);
-							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution (currentMissile, heatTarget.position, heatTarget.velocity);
+							BDGUIUtils.DrawTextureOnWorldPos(heatTarget.position, BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+							float distanceToTarget = Vector3.Distance(heatTarget.position, currentMissile.transform.position);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
+							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(currentMissile, heatTarget.position, heatTarget.velocity);
 							Vector3 fsDirection = (fireSolution - currentMissile.transform.position).normalized;
-							BDGUIUtils.DrawTextureOnWorldPos (currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2 (6, 6), 0);
-						} else
-						{
-							BDGUIUtils.DrawTextureOnWorldPos (currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2 (36, 36), 3);
-							BDGUIUtils.DrawTextureOnWorldPos (currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2 (156, 156), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 						}
-					} else if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar)
-					{
-						if (radar && radar.locked)
+						else
 						{
-							float distanceToTarget = Vector3.Distance (radar.lockedTarget.predictedPosition, currentMissile.transform.position);
-							BDGUIUtils.DrawTextureOnWorldPos (currentMissile.transform.position + (distanceToTarget * currentMissile.transform.forward), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2 (128, 128), 0);
-							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution (currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
+						}
+					}
+					else if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar)
+					{
+						if(radar && radar.locked)
+						{
+							float distanceToTarget = Vector3.Distance(radar.lockedTarget.predictedPosition, currentMissile.transform.position);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * currentMissile.transform.forward), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
+							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
 							Vector3 fsDirection = (fireSolution - currentMissile.transform.position).normalized;
-							BDGUIUtils.DrawTextureOnWorldPos (currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2 (6, 6), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+						}
+					}
+					else if(currentMissile.targetingMode == MissileLauncher.TargetingModes.GPS)
+					{
+						if(designatedGPSCoords != Vector3d.zero)
+						{
+							BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(designatedGPSCoords, vessel.mainBody), BDArmorySettings.Instance.greenCircleTexture, new Vector2(24,24), 0);
 						}
 					}
 
@@ -1968,75 +1989,80 @@ namespace BahaTurret
 				return false;
 			}
 
-			//debug lines
-			LineRenderer lr = null;
-			if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
+			if(ml.dropTime > 0.3f)
 			{
-				lr = GetComponent<LineRenderer>();
-				if(!lr)
+				//debug lines
+				LineRenderer lr = null;
+				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
 				{
-					lr = gameObject.AddComponent<LineRenderer>();
+					lr = GetComponent<LineRenderer>();
+					if(!lr)
+					{
+						lr = gameObject.AddComponent<LineRenderer>();
+					}
+					lr.enabled = true;
+					lr.SetWidth(.1f, .1f);
 				}
-				lr.enabled = true;
-				lr.SetWidth(.1f, .1f);
+				else
+				{
+					if(gameObject.GetComponent<LineRenderer>())
+					{
+						gameObject.GetComponent<LineRenderer>().enabled = false;	
+					}
+				}
+
+
+				float radius = 0.28f / 2;
+				float time = ml.dropTime;
+				Vector3 direction = ((ml.decoupleForward ? ml.transform.forward : -ml.transform.up) * ml.decoupleSpeed * time) + ((FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration) * 0.5f * Mathf.Pow(time, 2));
+				Vector3 crossAxis = Vector3.Cross(direction, ml.transform.forward).normalized;
+
+				float rayDistance;
+				if(ml.thrust == 0 || ml.cruiseThrust == 0)
+				{
+					rayDistance = 8;
+				}
+				else
+				{
+					//distance till engine starts based on grav accel and vessel accel
+					rayDistance = direction.magnitude;
+				}
+
+				Ray[] rays = new Ray[] {
+					new Ray(ml.transform.position - (radius * crossAxis), direction),
+					new Ray(ml.transform.position + (radius * crossAxis), direction),
+					new Ray(ml.transform.position, direction)
+				};
+
+				if(lr)
+				{
+					lr.useWorldSpace = false;
+					lr.SetVertexCount(4);
+					lr.SetPosition(0, transform.InverseTransformPoint(rays[0].origin));
+					lr.SetPosition(1, transform.InverseTransformPoint(rays[0].GetPoint(rayDistance)));
+					lr.SetPosition(2, transform.InverseTransformPoint(rays[1].GetPoint(rayDistance)));
+					lr.SetPosition(3, transform.InverseTransformPoint(rays[1].origin));
+				}
+
+				for(int i = 0; i < rays.Length; i++)
+				{
+					RaycastHit[] hits = Physics.RaycastAll(rays[i], rayDistance, 557057);
+					for(int h = 0; h < hits.Length; h++)
+					{
+						Part p = hits[h].collider.GetComponentInParent<Part>();
+
+						if((p != null && p != ml.part) || p == null) return false;
+					}
+				}
+
+				return true;
 			}
 			else
 			{
-				if(gameObject.GetComponent<LineRenderer>())
+				//forward check for no-drop missiles
+				if(Physics.Raycast(new Ray(ml.transform.position, ml.transform.forward), 50, 557057))
 				{
-					gameObject.GetComponent<LineRenderer>().enabled = false;	
-				}
-			}
-
-
-			float radius = 0.28f/2;
-			float time = ml.dropTime;
-			Vector3 direction = ((ml.decoupleForward ? ml.transform.forward : -ml.transform.up) * ml.decoupleSpeed * time) + ((FlightGlobals.getGeeForceAtPosition(transform.position)-vessel.acceleration) * 0.5f * Mathf.Pow(time, 2));
-			Vector3 crossAxis = Vector3.Cross(direction, ml.transform.forward).normalized;
-
-			float rayDistance;
-			if(ml.thrust == 0 || ml.cruiseThrust == 0)
-			{
-				rayDistance = 8;
-			}
-			else
-			{
-				//distance till engine starts based on grav accel and vessel accel
-				rayDistance = direction.magnitude;
-			}
-
-			Ray[] rays = new Ray[]
-			{
-				new Ray(ml.transform.position - (radius * crossAxis), direction),
-				new Ray(ml.transform.position + (radius * crossAxis), direction),
-				new Ray(ml.transform.position, direction)
-			};
-
-			if(lr)
-			{
-				lr.useWorldSpace = false;
-				lr.SetVertexCount(4);
-				lr.SetPosition(0, transform.InverseTransformPoint(rays[0].origin));
-				lr.SetPosition(1, transform.InverseTransformPoint(rays[0].GetPoint(rayDistance)));
-				lr.SetPosition(2, transform.InverseTransformPoint(rays[1].GetPoint(rayDistance)));
-				lr.SetPosition(3, transform.InverseTransformPoint(rays[1].origin));
-           }
-
-			for(int i = 0; i < rays.Length; i++)
-			{
-				RaycastHit[] hits = Physics.RaycastAll(rays[i], rayDistance, 557057);
-				for(int h = 0; h < hits.Length; h++)
-				{
-					Part p;
-					try
-					{
-						p = Part.FromGO(hits[h].transform.gameObject);
-					}
-					catch(NullReferenceException)
-					{
-						p = null;
-					}
-					if((p!=null && p != ml.part) || p == null) return false;
+					return false;
 				}
 			}
 

@@ -77,6 +77,13 @@ namespace BahaTurret
 		bool showModules = false;
 		int numberOfModules = 0;
 
+		//gps window
+		bool showGPSWindow = false;
+		Rect gpsWindowRect;
+		int gpsEntryCount = 0;
+		float gpsEntryHeight = 24;
+		float gpsBorder = 5;
+
 		public MissileFire ActiveWeaponManager = null;
 		public bool missileWarning = false;
 		public float missileWarningTime = 0;
@@ -266,8 +273,7 @@ namespace BahaTurret
 
 			//wmgr tolbar
 			toolbarWindowRect = new Rect(Screen.width-toolWindowWidth-4, 150, toolWindowWidth, toolWindowHeight);
-			//AddToolbarButton();
-			
+
 			physRangeTimer = Time.time;
 
 			
@@ -326,6 +332,8 @@ namespace BahaTurret
 				{
 					cam.gameObject.AddComponent<CameraBulletRenderer>();
 				}
+
+				gpsWindowRect = new Rect(0, 0, toolbarWindowRect.width, 0);
 
 				GameEvents.onVesselChange.Add(VesselChange);
 			}
@@ -588,6 +596,14 @@ namespace BahaTurret
 				if(toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
 				{
 					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "");
+					if(showGPSWindow && ActiveWeaponManager)
+					{
+						gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
+						foreach(var coordinate in BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
+						{
+							BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(coordinate, FlightGlobals.currentMainBody), BDArmorySettings.Instance.greenDotTexture, new Vector2(5,5), 0);
+						}
+					}
 				}
 			}
 			
@@ -838,6 +854,15 @@ namespace BahaTurret
 						line++;
 					}
 
+					//GPS coordinator
+					GUIStyle gpsModuleStyle = showGPSWindow ? centerLabelBlue : centerLabel;
+					numberOfModules++;
+					if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "GPS Coordinator", gpsModuleStyle))
+					{
+						showGPSWindow = !showGPSWindow;
+					}
+					line++;
+
 
 					if(numberOfModules == 0)
 					{
@@ -852,7 +877,7 @@ namespace BahaTurret
 			else
 			{
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "No Weapon Manager found.", centerLabel);
-				line += 3;
+				line++;
 			}
 			
 			
@@ -861,6 +886,63 @@ namespace BahaTurret
 			toolWindowHeight = contentTop + (line*entryHeight) + 5;
 			toolbarWindowRect = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
 		}
+
+
+
+		//GPS window
+		void GPSWindow(int windowID)
+		{
+			gpsEntryCount = 0;
+			Rect listRect = new Rect(gpsBorder, gpsBorder, gpsWindowRect.width - (2 * gpsBorder), gpsWindowRect.height - (2 * gpsBorder));
+			GUI.BeginGroup(listRect);
+			GUI.Label(new Rect(0, 0, listRect.width, gpsEntryHeight), "Designated GPS Targets:", centerLabel);
+			gpsEntryCount++;
+			if(ActiveWeaponManager.designatedGPSCoords != Vector3d.zero)
+			{
+				GUI.Label(new Rect(0, gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), "N" + ActiveWeaponManager.designatedGPSCoords.x.ToString("0.000") + " E" + ActiveWeaponManager.designatedGPSCoords.y.ToString("0.000") + " ASL" + ActiveWeaponManager.designatedGPSCoords.z.ToString("0.0"), centerLabelOrange);
+				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X"))
+				{
+					ActiveWeaponManager.designatedGPSCoords = Vector3d.zero;
+				}
+			}
+			else
+			{
+				GUI.Label(new Rect(0, gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), "No Target", centerLabelOrange);
+			}
+			gpsEntryCount++;
+			int indexToRemove = -1;
+			int index = 0;
+			BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
+			foreach(var coordinate in BDATargetManager.GPSTargets[myTeam])
+			{
+				string label = "N" + coordinate.x.ToString("0.000") + " E" + coordinate.y.ToString("0.000") + " ASL" + coordinate.z.ToString("0.0");
+				if(GUI.Button(new Rect(0, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), label))
+				{
+					ActiveWeaponManager.designatedGPSCoords = coordinate;
+				}
+				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryCount * gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X"))
+				{
+					indexToRemove = index;
+				}
+				gpsEntryCount++;
+				index++;
+			}
+
+			GUI.EndGroup();
+
+			if(indexToRemove >= 0)
+			{
+				BDATargetManager.GPSTargets[myTeam].RemoveAt(indexToRemove);
+			}
+
+			gpsWindowRect.x = toolbarWindowRect.x;
+			gpsWindowRect.y = toolbarWindowRect.y + toolbarWindowRect.height;
+			gpsWindowRect.height = (2*gpsBorder) + (gpsEntryCount * gpsEntryHeight);
+		}
+
+
+
+
 
 
 		Rect SLineRect(float line)

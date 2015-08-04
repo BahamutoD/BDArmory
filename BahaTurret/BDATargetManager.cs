@@ -20,7 +20,11 @@ namespace BahaTurret
 	{
 		public static Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>> TargetDatabase;
 
+		public static Dictionary<BDArmorySettings.BDATeams, List<Vector3d>> GPSTargets;
+
 		public static List<ModuleTargetingCamera> ActiveLasers;
+
+
 
 		string debugString = string.Empty;
 
@@ -36,6 +40,10 @@ namespace BahaTurret
 			TargetDatabase.Add(BDArmorySettings.BDATeams.A, new List<TargetInfo>());
 			TargetDatabase.Add(BDArmorySettings.BDATeams.B, new List<TargetInfo>());
 			StartCoroutine(CleanDatabaseRoutine());
+
+			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<Vector3d>>();
+			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<Vector3d>());
+			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<Vector3d>());
 
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
