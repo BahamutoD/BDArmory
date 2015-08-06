@@ -7,29 +7,29 @@ namespace BahaTurret
 	{
 		public float drag = 0.02f;
 
-		Rigidbody rigidbody;
+		Rigidbody rb;
 
 		void Start()
 		{
-			rigidbody = GetComponent<Rigidbody>();
+			rb = GetComponent<Rigidbody>();
 		}
 		
 		void FixedUpdate()
 		{
-			if(rigidbody!=null && !rigidbody.isKinematic)
+			if(rb!=null && !rb.isKinematic)
 			{
-				rigidbody.useGravity = false;
+				rb.useGravity = false;
 				
 				//atmospheric drag (stock)
-				float simSpeedSquared = rigidbody.velocity.sqrMagnitude;
+				float simSpeedSquared = rb.velocity.sqrMagnitude;
 				Vector3 currPos = transform.position;
-				Vector3 dragForce = (0.008f * rigidbody.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * rigidbody.velocity.normalized;
+				Vector3 dragForce = (0.008f * rb.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * rb.velocity.normalized;
 				
-				rigidbody.velocity -= (dragForce/rigidbody.mass)*Time.fixedDeltaTime;
+				rb.velocity -= (dragForce/rb.mass)*Time.fixedDeltaTime;
 				//
 				
 				//gravity
-				if(FlightGlobals.RefFrameIsRotating) rigidbody.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+				if(FlightGlobals.RefFrameIsRotating) rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
 			}
 		}
 	}

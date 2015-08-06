@@ -899,7 +899,7 @@ namespace BahaTurret
 			gpsEntryCount++;
 			if(ActiveWeaponManager.designatedGPSCoords != Vector3d.zero)
 			{
-				GUI.Label(new Rect(0, gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), "N" + ActiveWeaponManager.designatedGPSCoords.x.ToString("0.000") + " E" + ActiveWeaponManager.designatedGPSCoords.y.ToString("0.000") + " ASL" + ActiveWeaponManager.designatedGPSCoords.z.ToString("0.0"), centerLabelOrange);
+				GUI.Label(new Rect(0, gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), centerLabelOrange);
 				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X"))
 				{
 					ActiveWeaponManager.designatedGPSCoords = Vector3d.zero;
@@ -915,7 +915,7 @@ namespace BahaTurret
 			BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
 			foreach(var coordinate in BDATargetManager.GPSTargets[myTeam])
 			{
-				string label = "N" + coordinate.x.ToString("0.000") + " E" + coordinate.y.ToString("0.000") + " ASL" + coordinate.z.ToString("0.0");
+				string label = Misc.FormattedGeoPos(coordinate, true); //"N" + coordinate.x.ToString("0.000") + " E" + coordinate.y.ToString("0.000") + " ASL" + coordinate.z.ToString("0.0");
 				if(GUI.Button(new Rect(0, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), label))
 				{
 					ActiveWeaponManager.designatedGPSCoords = coordinate;

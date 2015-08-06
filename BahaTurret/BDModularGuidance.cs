@@ -162,7 +162,7 @@ namespace BahaTurret
 				}
 				else
 				{
-					targetPosition = MissileGuidance.GetCruiseTarget(targetPosition, vessel, targetVessel, cruiseAltitude);
+					targetPosition = MissileGuidance.GetCruiseTarget(targetPosition, vessel, cruiseAltitude);
 				}
 
 				Vector3 targetDirection = velocityTransform.InverseTransformPoint(targetPosition).normalized;

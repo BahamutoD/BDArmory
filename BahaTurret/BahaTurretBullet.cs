@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace BahaTurret
 {
+	/// <summary>
+	/// DEPRECATED
+	/// </summary>
+	[Obsolete("All bullets should be pooled. Use PooledBullet")]
 	public class BahaTurretBullet : MonoBehaviour
 	{
 		public enum BulletTypes{Standard, Explosive}

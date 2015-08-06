@@ -50,7 +50,6 @@
     <Compile Include="Misc.cs" />
     <Compile Include="ShellCasing.cs" />
     <Compile Include="BDArmorySettings.cs" />
-    <Compile Include="BahaTurretBullet.cs" />
     <Compile Include="ExplosionFX.cs" />
     <Compile Include="BulletHitFX.cs" />
     <Compile Include="CMFlare.cs" />
@@ -98,6 +97,7 @@
     <Compile Include="VesselChaffInfo.cs" />
     <Compile Include="VesselECMJInfo.cs" />
     <Compile Include="ModuleECMJammer.cs" />
+    <Compile Include="DecoupledBooster.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
@@ -108,5 +108,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BahaTurret.cs" />
+    <None Include="BahaTurretBullet.cs" />
   </ItemGroup>
 </Project>

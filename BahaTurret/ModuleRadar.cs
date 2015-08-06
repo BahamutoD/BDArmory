@@ -555,6 +555,13 @@ namespace BahaTurret
 				return;
 			}
 
+			//unlock if over-jammed
+			if(lockedTarget.jammerStrength * 0.65f > lockedTarget.signalStrength)
+			{
+				UnlockTarget();
+				return;
+			}
+
 
 			//cycle scan direction
 			currentAngleLock += radialScanDirection*angleDelta;

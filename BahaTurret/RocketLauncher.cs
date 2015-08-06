@@ -115,7 +115,10 @@ namespace BahaTurret
 
 		void UpdateAudio()
 		{
-			sfAudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			if(sfAudioSource)
+			{
+				sfAudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			}
 		}
 
 		void OnDestroy()

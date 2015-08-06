@@ -401,9 +401,18 @@ namespace BahaTurret
 
 		void UpdateVolume()
 		{
-			audioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
-			warningAudioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
-			targetingAudioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
+			if(audioSource)
+			{
+				audioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
+			}
+			if(warningAudioSource)
+			{
+				warningAudioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
+			}
+			if(targetingAudioSource)
+			{
+				targetingAudioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
+			}
 		}
 
 		void OnDestroy()
@@ -1300,7 +1309,7 @@ namespace BahaTurret
 
 
 					float targetAngle = Vector3.Angle(-transform.forward, guardTarget.transform.position-transform.position);
-					if(targetAngle > guardAngle/2 || (pilotAI && !pilotAI.GetLaunchAuthorizion(guardTarget, this))) //dont fire yet if target out of guard angle or not AIPilot authorized
+					if(targetAngle > guardAngle/2 || (pilotAI && !pilotAI.GetLaunchAuthorization(guardTarget, this))) //dont fire yet if target out of guard angle or not AIPilot authorized
 					{
 						launchAuthorized = false;
 					}

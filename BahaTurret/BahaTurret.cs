@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
+	[Obsolete("Use ModuleWeapon and/or ModuleTurret instead")]
 	public class BahaTurret : PartModule
 	{
 		[KSPField(isPersistant = true)]

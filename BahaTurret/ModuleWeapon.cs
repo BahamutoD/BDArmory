@@ -408,8 +408,14 @@ namespace BahaTurret
 
 		void UpdateVolume()
 		{
-			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-			audioSource2.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			if(audioSource)
+			{
+				audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			}
+			if(audioSource2)
+			{
+				audioSource2.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			}
 		}
 
 		void OnDestroy()
@@ -421,6 +427,15 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
 			{
+
+				if(InternalCamera.Instance && InternalCamera.Instance.isActive)
+				{
+					lowpassFilter.enabled = true;
+				}
+				else
+				{
+					lowpassFilter.enabled = false;
+				}
 	
 				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode!=TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 				{
@@ -1256,6 +1271,7 @@ namespace BahaTurret
 			}
 		}
 
+		AudioLowPassFilter lowpassFilter;
 		void SetupAudio()
 		{
 			fireSound = GameDatabase.Instance.GetAudioClip(fireSoundPath);
@@ -1282,6 +1298,10 @@ namespace BahaTurret
 			{
 				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
 			}
+
+			lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
+			lowpassFilter.cutoffFrequency = 4000f;
+			lowpassFilter.lowpassResonaceQ = 1f;
 
 			UpdateVolume();
 		}

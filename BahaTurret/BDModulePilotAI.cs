@@ -535,7 +535,7 @@ namespace BahaTurret
 			}
 		}
 
-		public bool GetLaunchAuthorizion(Vessel targetV, MissileFire mf)
+		public bool GetLaunchAuthorization(Vessel targetV, MissileFire mf)
 		{
 			bool launchAuthorized = false;
 			Vector3 target = targetV.transform.position;

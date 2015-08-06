@@ -11,7 +11,7 @@ namespace BahaTurret
 		public enum MissileStates{Idle, Drop, Boost, Cruise, PostThrust}
 
 
-		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,Cruise,STS,Bomb,RCS}
+		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,AGMBallistic,Cruise,STS,Bomb,RCS}
 		public GuidanceModes guidanceMode;
 		[KSPField]
 		public string homingType = "AAM";
@@ -105,8 +105,8 @@ namespace BahaTurret
 		public float detonationTime = 2;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"),
-		 UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 10f, scene = UI_Scene.All)]
-		public float cruiseAltitude = 300;
+		 UI_FloatRange(minValue = 30, maxValue = 2500f, stepIncrement = 5f, scene = UI_Scene.All)]
+		public float cruiseAltitude = 500;
 
 		[KSPField]
 		public string rotationTransformName = string.Empty;
@@ -186,8 +186,15 @@ namespace BahaTurret
 		
 		float debugTurnRate = 0;
 		string debugString = "";
-		
-		Vector3 randomOffset = Vector3.zero;
+
+
+		List<GameObject> boosters;
+		bool decoupleBoosters = false;
+		bool hasDecoupledBoosters = false;
+		[KSPField]
+		public float boosterDecoupleSpeed = 5;
+		[KSPField]
+		public float boosterMass = 0;
 
 		public float timeToImpact;
 		public bool targetAcquired = false;
@@ -269,7 +276,7 @@ namespace BahaTurret
 
 
 
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart(PartModule.StartState state)
 		{
 			ParseWeaponClass();
 
@@ -350,6 +357,15 @@ namespace BahaTurret
 				}
 
 
+				boosters = new List<GameObject>();
+				foreach(var tf in part.FindModelTransforms("boosterTransform"))
+				{
+					boosters.Add(tf.gameObject);
+					decoupleBoosters = true;
+				}
+
+
+
 				
 				if(hasRCS)
 				{
@@ -423,8 +439,14 @@ namespace BahaTurret
 
 		void UpdateVolume()
 		{
-			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-			sfAudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			if(audioSource)
+			{
+				audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			}
+			if(sfAudioSource)
+			{
+				sfAudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			}
 		}
 
 		void OnDestroy()
@@ -635,8 +657,11 @@ namespace BahaTurret
 				}
 
 
-
-				if(targetingMode == TargetingModes.Heat)
+				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
+				{
+					UpdateLegacyTarget();
+				}
+				else if(targetingMode == TargetingModes.Heat)
 				{
 					UpdateHeatTarget();
 				}
@@ -783,7 +808,19 @@ namespace BahaTurret
 					{
 						foreach(var emitter in boostEmitters)
 						{
+							if(!emitter) continue;
 							emitter.emit = false;
+						}
+					}
+
+					if(decoupleBoosters && !hasDecoupledBoosters)
+					{
+						hasDecoupledBoosters = true;
+						part.mass -= boosterMass;
+						foreach(var booster in boosters)
+						{
+							if(!booster) continue;
+							(booster.AddComponent<DecoupledBooster>()).DecoupleBooster(part.rb.velocity, boosterDecoupleSpeed);
 						}
 					}
 				}
@@ -909,6 +946,10 @@ namespace BahaTurret
 						{
 							AGMGuidance();
 						}
+						else if(guidanceMode == GuidanceModes.AGMBallistic)
+						{
+							AGMBallisticGuidance();
+						}
 						else if(guidanceMode == GuidanceModes.RCS)
 						{
 							if(legacyTargetVessel!=null)
@@ -918,50 +959,7 @@ namespace BahaTurret
 						}
 						else if(guidanceMode == GuidanceModes.Cruise)
 						{
-							Vector3 cruiseTarget = Vector3.zero;
-							if(legacyTargetVessel!=null)
-							{
-								//if(terminalManeuvering && targetDistance < 4500)
-								//{
-								//	cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(targetPosition, vessel, targetVessel);
-							//	}
-							//	else
-							//	{
-								cruiseTarget = MissileGuidance.GetCruiseTarget(targetPosition, vessel, legacyTargetVessel, cruiseAltitude);
-							//	}
-
-								targetPosition = cruiseTarget;
-								
-								float clampedSpeed = Mathf.Clamp((float) vessel.srfSpeed, 1, 1000);
-								float limitAoA = Mathf.Clamp(3500/clampedSpeed, 5, maxAoA);
-								
-								//debugString += "\n limitAoA: "+limitAoA.ToString("0.0");
-
-								Vector3 upDirection = -FlightGlobals.getGeeForceAtPosition(vessel.GetWorldPos3D());
-
-								//axial rotation
-								if(rotationTransform)
-								{
-									Quaternion originalRotation = transform.rotation;
-									Quaternion originalRTrotation = rotationTransform.rotation;
-									transform.rotation = Quaternion.LookRotation(transform.forward, upDirection);
-									rotationTransform.rotation = originalRTrotation;
-									Vector3 lookUpDirection = Misc.ProjectOnPlane(vessel.acceleration, Vector3.zero, transform.forward);
-									lookUpDirection = transform.InverseTransformPoint(lookUpDirection + transform.position);
-
-									lookUpDirection = new Vector3(lookUpDirection.x, 0, 0);
-									lookUpDirection += 10*Vector3.up;
-									//Debug.Log ("lookUpDirection: "+lookUpDirection);
-								
-
-									rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.LookRotation(Vector3.forward, lookUpDirection), 0.04f);
-									Quaternion finalRotation = rotationTransform.rotation;
-									transform.rotation = originalRotation;
-									rotationTransform.rotation = finalRotation;
-								}
-
-								aeroTorque = MissileGuidance.DoAeroForces(this, cruiseTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, limitAoA); 
-							}
+							CruiseGuidance();
 						}
 					
 
@@ -1000,14 +998,69 @@ namespace BahaTurret
 			}
 		}
 
-		void AAMGuidance()
+		void CruiseGuidance()
 		{
-		
-			if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
+			Vector3 cruiseTarget = Vector3.zero;
+			float sqrDist = (targetPosition - transform.position).sqrMagnitude;
+
+			if(terminalManeuvering && sqrDist < Mathf.Pow(4500, 2))
 			{
-				UpdateLegacyTarget();
+				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(targetPosition, vessel, cruiseAltitude);
+				debugString += "\nTerminal Maneuvers";
+			}
+			else
+			{
+				float agmThreshDist = 2500;
+				if(sqrDist < Mathf.Pow(agmThreshDist, 2))
+				{
+					cruiseTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, agmDescentRatio);
+					debugString += "\nDescending On Target";
+				}
+				else
+				{
+					cruiseTarget = MissileGuidance.GetCruiseTarget(targetPosition, vessel, cruiseAltitude);
+					debugString += "\nCruising";
+				}
+			}
+					
+			float clampedSpeed = Mathf.Clamp((float)vessel.srfSpeed, 1, 1000);
+			float limitAoA = Mathf.Clamp(3500 / clampedSpeed, 5, maxAoA);
+
+			//debugString += "\n limitAoA: "+limitAoA.ToString("0.0");
+
+			Vector3 upDirection = VectorUtils.GetUpDirection(transform.position);
+
+			//axial rotation
+			if(rotationTransform)
+			{
+				Quaternion originalRotation = transform.rotation;
+				Quaternion originalRTrotation = rotationTransform.rotation;
+				transform.rotation = Quaternion.LookRotation(transform.forward, upDirection);
+				rotationTransform.rotation = originalRTrotation;
+				Vector3 accel = vessel.acceleration;
+				Vector3 tDir = (cruiseTarget - transform.position).normalized * 12;
+				Vector3 lookUpDirection = Vector3.ProjectOnPlane(tDir, transform.forward);
+				lookUpDirection = transform.InverseTransformPoint(lookUpDirection + transform.position);
+
+				lookUpDirection = new Vector3(lookUpDirection.x, 0, 0);
+				lookUpDirection += 10 * Vector3.up;
+				//Debug.Log ("lookUpDirection: "+lookUpDirection);
+
+
+				rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.LookRotation(Vector3.forward, lookUpDirection), 0.04f);
+				Quaternion finalRotation = rotationTransform.rotation;
+				transform.rotation = originalRotation;
+				rotationTransform.rotation = finalRotation;
 			}
 
+			aeroTorque = MissileGuidance.DoAeroForces(this, cruiseTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, limitAoA); 
+			CheckMiss();
+
+			debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
+		}
+
+		void AAMGuidance()
+		{
 			Vector3 aamTarget;
 			if(targetAcquired)
 			{
@@ -1042,28 +1095,45 @@ namespace BahaTurret
 
 		void AGMGuidance()
 		{
-			if(targetAcquired)
+			if(targetingMode != TargetingModes.GPS)
 			{
-				//lose lock if seeker reaches gimbal limit
-				float targetViewAngle = Vector3.Angle(transform.forward, targetPosition - transform.position);
-				
-				if(targetViewAngle > maxOffBoresight)
+				if(targetAcquired)
 				{
-					Debug.Log("AGM Missile guidance failed - target out of view");
-					guidanceActive = false;
+					//lose lock if seeker reaches gimbal limit
+					float targetViewAngle = Vector3.Angle(transform.forward, targetPosition - transform.position);
+				
+					if(targetViewAngle > maxOffBoresight)
+					{
+						Debug.Log("AGM Missile guidance failed - target out of view");
+						guidanceActive = false;
+					}
+					CheckMiss();
 				}
-
-
-
-				CheckMiss();
-			}
-			else
-			{
-				//keep going straight until found laser point
-				targetPosition = laserStartPosition + (20000 * laserStartDirection);
+				else
+				{
+					if(targetingMode == TargetingModes.Laser)
+					{
+						//keep going straight until found laser point
+						targetPosition = laserStartPosition + (20000 * laserStartDirection);
+					}
+				}
 			}
 
 			Vector3 agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, agmDescentRatio);
+
+			aeroTorque = MissileGuidance.DoAeroForces(this, agmTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
+		}
+
+		void AGMBallisticGuidance()
+		{
+			Vector3 agmTarget;
+			bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(targetPosition, vessel, true, out agmTarget);
+			if(!validSolution || Vector3.Angle(targetPosition - transform.position, agmTarget - transform.position) > maxOffBoresight)
+			{
+				Vector3 dToTarget = targetPosition - transform.position;
+				Vector3 direction = Quaternion.AngleAxis(maxOffBoresight * 0.9f, Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
+				agmTarget = transform.position + direction;
+			}
 
 			aeroTorque = MissileGuidance.DoAeroForces(this, agmTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
@@ -1133,10 +1203,6 @@ namespace BahaTurret
 				{
 					targetAcquired = false;
 				}
-			}
-			else
-			{
-				targetAcquired = false;
 			}
 		}
 
@@ -1557,6 +1623,9 @@ namespace BahaTurret
 			case "agm":
 				guidanceMode = GuidanceModes.AGM;
 				break;
+			case "agmballistic":
+				guidanceMode = GuidanceModes.AGMBallistic;
+				break;
 			case "cruise":
 				guidanceMode = GuidanceModes.Cruise;
 				break;
@@ -1585,6 +1654,7 @@ namespace BahaTurret
 				break;
 			case "gps":
 				targetingMode = TargetingModes.GPS;
+				maxOffBoresight = 360;
 				break;
 			case "antirad":
 				targetingMode = TargetingModes.AntiRad;

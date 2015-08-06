@@ -92,7 +92,10 @@ namespace BahaTurret
 
 		void UpdateVolume()
 		{
-			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			if(audioSource)
+			{
+				audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+			}
 		}
 
 		void OnDestroy()

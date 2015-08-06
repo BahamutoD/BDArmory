@@ -113,6 +113,10 @@ namespace BahaTurret
 		
 		public static Vector3 GetWorldSurfacePostion(Vector3 geoPosition, CelestialBody body)
 		{
+			if(!body)
+			{
+				return Vector3.zero;
+			}
 			return body.GetWorldSurfacePosition(geoPosition.x, geoPosition.y, geoPosition.z);
 		}
 

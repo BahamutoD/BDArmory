@@ -63,7 +63,7 @@ namespace BahaTurret
 		public Vector3 groundTargetPosition;
 
 		[KSPField(isPersistant = true)]
-		public Vector3 bodyRelativeGTP;
+		public Vector3d bodyRelativeGTP;
 
 		bool resetting = false;
 
@@ -531,11 +531,7 @@ namespace BahaTurret
 
 				//geo data
 				Rect geoRect = new Rect(imageRect.x, (camImageSize * 0.94f), camImageSize, 14);
-				float lat = bodyRelativeGTP.x;
-				string latString = "N:"+Mathf.Floor(lat)+" "+((lat-Mathf.Floor(lat))*100).ToString("0.000");
-				float longi = bodyRelativeGTP.y;
-				string longiString = " E:"+Mathf.Floor(longi)+" "+((longi-Mathf.Floor(longi))*100).ToString("0.000");
-				string geoLabel = latString+longiString;
+				string geoLabel = Misc.FormattedGeoPos(bodyRelativeGTP,false);
 				GUI.Label(geoRect, geoLabel, dataStyle);
 
 				//target data
@@ -672,6 +668,8 @@ namespace BahaTurret
 				resizing = false;
 			}
 		}
+
+
 
 		void SlaveTurrets()
 		{

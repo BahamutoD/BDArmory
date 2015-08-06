@@ -54,7 +54,10 @@ namespace BahaTurret
 
 		public static float GetRadarSnapshot(Vessel v, Vector3 origin, float camFoV)
 		{
-			if(v.Landed) return 0;
+			if(v.Landed)
+			{
+				return 0;
+			}
 			TargetInfo ti = v.GetComponent<TargetInfo>();
 			if(ti && ti.isMissile)
 			{
@@ -107,17 +110,16 @@ namespace BahaTurret
 				if(vessel.loaded)
 				{
 					if((vessel.transform.position-position).sqrMagnitude < 100) continue; //ignore self
+
 					if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
 
 					Vector3 vesselDirection = Vector3.ProjectOnPlane(vessel.CoM-position, upVector);
+
 					if(Vector3.Angle(vesselDirection,lookDirection) < fov/2)
 					{
 						float sig = GetModifiedSignature(vessel, position);
 
-						if(pingRWR && sig > minSignature * 0.66f)
-						{
-							RadarWarningReceiver.PingRWR(vessel, position, rwrType, dataPersistTime);
-						}
+						RadarWarningReceiver.PingRWR(vessel, position, rwrType, dataPersistTime);
 
 						if(sig > minSignature)
 						{

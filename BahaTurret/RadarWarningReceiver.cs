@@ -30,7 +30,7 @@ namespace BahaTurret
 
 		const int dataCount = 10;
 
-		public float rwrRange = 8000;
+		public float rwrDisplayRange = 8000;
 
 		TargetSignatureData[] pingsData;
 		List<TargetSignatureData> launchWarnings;
@@ -92,7 +92,10 @@ namespace BahaTurret
 
 		void UpdateVolume()
 		{
-			audioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
+			if(audioSource)
+			{
+				audioSource.volume = BDArmorySettings.BDARMORY_UI_VOLUME;
+			}
 		}
 
 		public void EnableRWR()
@@ -133,7 +136,7 @@ namespace BahaTurret
 			{
 				if(type == RWRThreatTypes.MissileLaunch)
 				{
-					StartCoroutine(LaunchWarningRoutine(new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrRange), Vector3.zero, true, (float)type)));
+					StartCoroutine(LaunchWarningRoutine(new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero, true, (float)type)));
 					PlayWarningSound(type);
 					return;
 				}
@@ -141,7 +144,7 @@ namespace BahaTurret
 				int openIndex = -1;
 				for(int i = 0; i < dataCount; i++)
 				{
-					if(pingsData[i].exists && ((Vector2)pingsData[i].position - RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrRange)).sqrMagnitude < Mathf.Pow(20, 2))
+					if(pingsData[i].exists && ((Vector2)pingsData[i].position - RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange)).sqrMagnitude < Mathf.Pow(20, 2))
 					{
 						break;
 					}
@@ -156,7 +159,7 @@ namespace BahaTurret
 				{
 					referenceTransform.rotation = Quaternion.LookRotation(vessel.ReferenceTransform.up, VectorUtils.GetUpDirection(transform.position));
 
-					pingsData[openIndex] = new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrRange), Vector3.zero, true, (float)type);
+					pingsData[openIndex] = new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero, true, (float)type);
 					StartCoroutine(PingLifeRoutine(openIndex, persistTime));
 
 					PlayWarningSound(type);
