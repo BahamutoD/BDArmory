@@ -98,6 +98,7 @@
     <Compile Include="VesselECMJInfo.cs" />
     <Compile Include="ModuleECMJammer.cs" />
     <Compile Include="DecoupledBooster.cs" />
+    <Compile Include="ModuleMovingPart.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />

@@ -390,7 +390,6 @@ namespace BahaTurret
 		{
 			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySettings.GAME_UI_ENABLED) 
 			{
-				
 				if (cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready) 
 				{
 					//window
@@ -402,14 +401,7 @@ namespace BahaTurret
 					//locked target icon
 					if (groundStabilized)
 					{
-						Vector3 targetScreenPos = FlightCamera.fetch.mainCamera.WorldToViewportPoint (groundTargetPosition);
-						float tIconSize = 24;
-						Rect iconRect = new Rect (targetScreenPos.x * Screen.width - (0.5f * tIconSize), (1 - targetScreenPos.y) * Screen.height - (0.5f * tIconSize), tIconSize, tIconSize);
-						float cameraAngle = Vector3.Angle (FlightCamera.fetch.GetCameraTransform ().forward, groundTargetPosition - FlightCamera.fetch.mainCamera.transform.position);
-						if (cameraAngle < 90)
-						{
-							GUI.DrawTexture (iconRect, BDArmorySettings.Instance.greenDiamondTexture);
-						}
+						BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySettings.Instance.greenPointCircleTexture, new Vector3(24, 24), 0);
 					}
 				}
 			}

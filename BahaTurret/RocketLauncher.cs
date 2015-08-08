@@ -43,11 +43,7 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = false)]
 		public string explSoundPath = "BDArmory/Sounds/explode1";
-		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Ripple RPM"),
-        	UI_FloatRange(minValue = 60f, maxValue = 1200, stepIncrement = 10f, scene = UI_Scene.Editor)]
-		public float rippleRPM;
-		
+
 		public bool drawAimer = false;
 		
 		Vector3 rocketPrediction = Vector3.zero;
@@ -83,6 +79,13 @@ namespace BahaTurret
 		public void GuiFire()
 		{
 			FireRocket();	
+		}
+
+		[KSPEvent(guiActive = true, guiName = "Jettison", active = true, guiActiveEditor = false)]
+		public void Jettison()
+		{
+			part.decouple();
+			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
 		
 		

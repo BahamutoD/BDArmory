@@ -32,7 +32,8 @@ namespace BahaTurret
 
 		public float rwrDisplayRange = 8000;
 
-		TargetSignatureData[] pingsData;
+		public TargetSignatureData[] pingsData;
+		public Vector3[] pingWorldPositions;
 		List<TargetSignatureData> launchWarnings;
 
 		Transform referenceTransform;
@@ -51,6 +52,7 @@ namespace BahaTurret
 			{
 
 				pingsData = new TargetSignatureData[dataCount];
+				pingWorldPositions = new Vector3[dataCount];
 				TargetSignatureData.ResetTSDArray(ref pingsData);
 				launchWarnings = new List<TargetSignatureData>();
 
@@ -160,6 +162,7 @@ namespace BahaTurret
 					referenceTransform.rotation = Quaternion.LookRotation(vessel.ReferenceTransform.up, VectorUtils.GetUpDirection(transform.position));
 
 					pingsData[openIndex] = new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero, true, (float)type);
+					pingWorldPositions[openIndex] = source;
 					StartCoroutine(PingLifeRoutine(openIndex, persistTime));
 
 					PlayWarningSound(type);

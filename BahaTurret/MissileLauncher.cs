@@ -229,7 +229,10 @@ namespace BahaTurret
 		public float heatThreshold = 200;
 		[KSPField]
 		public bool allAspect = false;
-		float heatFailTimer = -1;
+
+
+
+		float lockFailTimer = -1;
 
 
 		//radar stuff
@@ -520,6 +523,10 @@ namespace BahaTurret
 						targetPosition = lastLaserPoint = lockedCamera.groundTargetPosition;
 					}
 				}
+				else if(targetingMode == TargetingModes.AntiRad && targetAcquired)
+				{
+					RadarWarningReceiver.OnRadarPing += ReceiveRadarPing;
+				}
 
 				part.decouple(0);
 				part.force_activate();
@@ -578,6 +585,9 @@ namespace BahaTurret
 				MissileState = MissileStates.Drop;
 
 				part.crashTolerance = 9999;
+
+
+
 				
 			}
 		}
@@ -596,8 +606,13 @@ namespace BahaTurret
 			}
 		}
 		
-	
-		
+		void OnDisable()
+		{
+			if(targetingMode == TargetingModes.AntiRad)
+			{
+				RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
+			}
+		}
 		
 		
 		public override void OnFixedUpdate()
@@ -676,6 +691,10 @@ namespace BahaTurret
 				else if(targetingMode == TargetingModes.GPS)
 				{
 					UpdateGPSTarget();
+				}
+				else if(targetingMode == TargetingModes.AntiRad)
+				{
+					UpdateAntiRadiationTarget();
 				}
 
 
@@ -1146,6 +1165,10 @@ namespace BahaTurret
 				targetVelocity = Vector3.zero;
 				targetAcceleration = Vector3.zero;
 			}
+			else
+			{
+				guidanceActive = false;
+			}
 		}
 
 		void UpdateLaserTarget()
@@ -1205,6 +1228,47 @@ namespace BahaTurret
 				}
 			}
 		}
+
+		void UpdateAntiRadiationTarget()
+		{
+			if(FlightGlobals.ready)
+			{
+				if(lockFailTimer < 0)
+				{
+					lockFailTimer = 0;
+				}
+				lockFailTimer += Time.fixedDeltaTime;
+			}
+
+			if(lockFailTimer > 3)
+			{
+				targetPosition = Vector3.ProjectOnPlane(transform.forward, VectorUtils.GetUpDirection(transform.position)).normalized * 100;
+			}
+			else
+			{
+				targetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
+			}
+		}
+
+		void ReceiveRadarPing(Vessel v, Vector3 source, RadarWarningReceiver.RWRThreatTypes type, float persistTime)
+		{
+			if(targetingMode == TargetingModes.AntiRad && v == vessel)
+			{
+				if((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(50, 2)
+					&& Vector3.Angle(source-transform.position, transform.forward) < maxOffBoresight)
+				{
+					targetAcquired = true;
+					targetPosition = source;
+					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(targetPosition, vessel.mainBody);
+					targetVelocity = Vector3.zero;
+					targetAcceleration = Vector3.zero;
+					lockFailTimer = 0;
+
+					Debug.Log("Anti-Rad missile has received valid target ping");
+				}
+			}
+		}
+		
 
 		TargetSignatureData[] scannedTargets;
 		void UpdateRadarTarget()
@@ -1283,11 +1347,11 @@ namespace BahaTurret
 		{
 			targetAcquired = false;
 			
-			if(heatTarget.exists && heatFailTimer < 0)
+			if(heatTarget.exists && lockFailTimer < 0)
 			{
-				heatFailTimer = 0;
+				lockFailTimer = 0;
 			}
-			if(heatFailTimer >= 0 && heatFailTimer < 1)
+			if(lockFailTimer >= 0 && lockFailTimer < 1)
 			{
 				Ray lookRay = new Ray(transform.position, heatTarget.position+(heatTarget.velocity*Time.fixedDeltaTime)-transform.position);
 				heatTarget = BDATargetManager.GetHeatTarget(lookRay, lockedSensorFOV/2, heatThreshold, allAspect);
@@ -1303,7 +1367,7 @@ namespace BahaTurret
 				{
 					if(FlightGlobals.ready)
 					{
-						heatFailTimer += Time.fixedDeltaTime;
+						lockFailTimer += Time.fixedDeltaTime;
 					}
 				}
 			}

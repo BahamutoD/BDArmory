@@ -57,13 +57,7 @@ namespace BahaTurret
 				break;
 			}
 
-			if(effectsTransform)
-			{
-				foreach(var pe in effectsTransform.gameObject.GetComponentsInChildren<KSPParticleEmitter>())
-				{
-					pe.Emit();
-				}
-			}
+
 		}
 		
 		public override void OnStart (PartModule.StartState state)
@@ -114,6 +108,17 @@ namespace BahaTurret
 				else
 				{
 					audioSource.dopplerLevel = 1;
+				}
+			}
+		}
+
+		void FireParticleEffects()
+		{
+			if(effectsTransform)
+			{
+				foreach(var pe in effectsTransform.gameObject.GetComponentsInChildren<KSPParticleEmitter>())
+				{
+					pe.Emit();
 				}
 			}
 		}
@@ -186,6 +191,8 @@ namespace BahaTurret
 				cmf.sourceVessel = vessel;
 
 				cm.SetActive(true);
+
+				FireParticleEffects();
 			}
 		}
 
@@ -207,6 +214,8 @@ namespace BahaTurret
 				GameObject cm = chaffPool.GetPooledObject();
 				CMChaff chaff = cm.GetComponent<CMChaff>();
 				chaff.Emit(ejectTransform.position, ejectVelocity * ejectTransform.forward);
+
+				FireParticleEffects();
 			}
 		}
 
@@ -220,6 +229,8 @@ namespace BahaTurret
 				audioSource.PlayOneShot(cmSound);
 
 				StartCoroutine(SmokeRoutine());
+
+				FireParticleEffects();
 			}
 		}
 
@@ -229,11 +240,15 @@ namespace BahaTurret
 			GameObject smokeCMObject = smokePool.GetPooledObject();
 			smokeCMObject.SetActive(true);
 			smokeCMObject.transform.position = ejectTransform.position + (10*ejectTransform.forward);
+			float longestLife = 0;
 			foreach(var emitter in smokeCMObject.GetComponentsInChildren<KSPParticleEmitter>())
 			{
 				emitter.Emit();
+				if(emitter.maxEnergy > longestLife) longestLife = emitter.maxEnergy;
 			}
 			audioSource.PlayOneShot(smokePoofSound);
+			yield return new WaitForSeconds(longestLife);
+			smokeCMObject.SetActive(false);
 		}
 
 		void SetupFlarePool()

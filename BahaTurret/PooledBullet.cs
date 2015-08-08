@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace BahaTurret
@@ -8,7 +9,6 @@ namespace BahaTurret
 		public enum PooledBulletTypes{Standard, Explosive}
 		
 		public PooledBulletTypes bulletType;
-		public float startTime;
 		public Vessel sourceVessel;
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
 		public Color projectileColor;
@@ -42,6 +42,8 @@ namespace BahaTurret
 		Vector3 startPosition;
 		public bool airDetonation = false;
 		public float detonationRange = 3500;
+
+		float randomWidthScale = 1;
 		
 		LineRenderer bulletTrail;
 		//	VectorLine bulletVectorLine;
@@ -61,11 +63,14 @@ namespace BahaTurret
 		//physical properties
 		public Vector3 currentVelocity;
 		public float mass;
+
+		bool collisionEnabled = false;
 		
 		void OnEnable()
 		{
 			startPosition = transform.position;
-			
+			collisionEnabled = false;
+
 			float maxLimit = Mathf.Clamp(BDArmorySettings.MAX_BULLET_RANGE, 0, 8000);
 			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, maxLimit);
 			if(!wasInitiated)
@@ -79,7 +84,7 @@ namespace BahaTurret
 			{
 				currentColor = startColor;
 			}
-			startTime = Time.time;
+
 			prevPosition = gameObject.transform.position;
 			
 			sourceOriginalV = sourceVessel.rb_velocity;
@@ -88,10 +93,12 @@ namespace BahaTurret
 			{
 				lightFlash = gameObject.AddComponent<Light>();
 				light.type = LightType.Point;
+				lightFlash.range = 8;
+				lightFlash.intensity = 1;
 			}
 			lightFlash.color = lightColor;
-			lightFlash.range = 8;
-			lightFlash.intensity = 1;
+			lightFlash.enabled = true;
+
 
 			//tracer setup
 			if(!bulletTrail)
@@ -104,20 +111,39 @@ namespace BahaTurret
 			}
 			bulletTrail.SetPosition(0, transform.position);
 			bulletTrail.SetPosition(1, transform.position);
-			float width = tracerStartWidth * Vector3.Distance(transform.position, FlightCamera.fetch.mainCamera.transform.position)/50;
-			bulletTrail.SetWidth(width, width);
+
+			//float width = tracerStartWidth * Vector3.Distance(transform.position, FlightCamera.fetch.mainCamera.transform.position)/50;
+			//bulletTrail.SetWidth(width, width);
+
 			if(!wasInitiated)
 			{
 				bulletTrail.material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
+
+				randomWidthScale = UnityEngine.Random.Range(0.5f, 1f);
+				gameObject.layer = 15;
 			}
+
 			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture(bulletTexturePath, false);
 			bulletTrail.material.SetColor("_TintColor", currentColor);
-			
-			
-			
+
+			hasBounced = false;
+
+
 
 			wasInitiated = true;
+
+			StartCoroutine(FrameDelayedRoutine());
 		}
+
+		IEnumerator FrameDelayedRoutine()
+		{
+			yield return new WaitForFixedUpdate();
+			lightFlash.enabled = false;
+			collisionEnabled = true;
+		}
+
+
+			
 		
 		void FixedUpdate()
 		{
@@ -134,7 +160,7 @@ namespace BahaTurret
 			
 			if(tracerLength == 0)
 			{
-				bulletTrail.SetPosition(0, transform.position+(currentVelocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rb_velocity*TimeWarp.fixedDeltaTime));
+				bulletTrail.SetPosition(0, transform.position+(currentVelocity * 1.35f * TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate)-(FlightGlobals.ActiveVessel.rb_velocity*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{
@@ -161,9 +187,8 @@ namespace BahaTurret
 				return;
 			}
 			
-			if(Time.time - startTime > 0.01f)
+			if(collisionEnabled)
 			{
-				light.intensity = 0;	
 				float dist = initialSpeed*TimeWarp.fixedDeltaTime;
 				
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
@@ -191,7 +216,7 @@ namespace BahaTurret
 					}
 					else //see if it will ricochet off scenery
 					{
-						float reflectRandom = UnityEngine.Random.Range(-100f, 90f);
+						float reflectRandom = UnityEngine.Random.Range(-150f, 90f);
 						if(reflectRandom > 90-hitAngle)
 						{
 							penetrated = false;
@@ -262,7 +287,7 @@ namespace BahaTurret
 							
 							transform.position = hit.point;
 							currentVelocity = Vector3.Reflect(currentVelocity, hit.normal);
-							currentVelocity = (hitAngle/150) * currentVelocity * 0.75f;
+							currentVelocity = (hitAngle/150) * currentVelocity * 0.65f;
 							
 							Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
 							
@@ -311,7 +336,7 @@ namespace BahaTurret
 				*/
 			}
 			
-			if(airDetonation && (transform.position-startPosition).sqrMagnitude > Mathf.Pow(detonationRange, 2))
+			if(bulletType == PooledBulletTypes.Explosive && airDetonation && (transform.position-startPosition).sqrMagnitude > Mathf.Pow(detonationRange, 2))
 			{
 				//detonate
 				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
@@ -337,8 +362,8 @@ namespace BahaTurret
 
 			float fov = c.fieldOfView;
 			float factor = (fov/60) * resizeFactor * Mathf.Clamp(Vector3.Distance(transform.position, c.transform.position),0,3000)/50;
-			float width1 = tracerStartWidth * factor;
-			float width2 = tracerEndWidth * factor;
+			float width1 = tracerStartWidth * factor * randomWidthScale;
+			float width2 = tracerEndWidth * factor * randomWidthScale;
 			
 			bulletTrail.SetWidth(width1, width2);
 		}
@@ -367,7 +392,7 @@ namespace BahaTurret
 		bool RicochetOnPart(Part p, float angleFromNormal)
 		{
 			float hitTolerance = p.crashTolerance;
-			float chance = ((angleFromNormal/90) * (hitTolerance/100)) * 100;
+			float chance = ((angleFromNormal/90) * (hitTolerance/150)) * 100;
 			float random = UnityEngine.Random.Range(0f,100f);
 			//Debug.Log ("Ricochet chance: "+chance);
 			if(random < chance)

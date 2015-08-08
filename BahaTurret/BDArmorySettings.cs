@@ -78,6 +78,13 @@ namespace BahaTurret
 		int numberOfModules = 0;
 
 		//gps window
+		public bool showingGPSWindow
+		{
+			get
+			{
+				return showGPSWindow;
+			}
+		}
 		bool showGPSWindow = false;
 		Rect gpsWindowRect;
 		int gpsEntryCount = 0;
@@ -257,7 +264,7 @@ namespace BahaTurret
 		{
 			get
 			{
-				return PauseMenu.isOpen;
+				return PauseMenu.isOpen || Time.timeScale == 0;
 			}
 		}
 
@@ -601,7 +608,7 @@ namespace BahaTurret
 						gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
 						foreach(var coordinate in BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(coordinate, FlightGlobals.currentMainBody), BDArmorySettings.Instance.greenDotTexture, new Vector2(5,5), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(coordinate, FlightGlobals.currentMainBody), BDArmorySettings.Instance.greenDotTexture, new Vector2(8,8), 0);
 						}
 					}
 				}

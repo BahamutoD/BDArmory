@@ -109,6 +109,9 @@ namespace BahaTurret
 		[KSPField]
 		public string bulletTexturePath = "BDArmory/Textures/bullet";
 
+		[KSPField]
+		public bool oneShotWorldParticles = false;
+
 		
 		//heat
 		[KSPField]
@@ -177,7 +180,7 @@ namespace BahaTurret
 		bool targetAcquired = false;
 		
 		//used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
-		private int numberOfGuns = 0;
+		//private int numberOfGuns = 0;
 
 		//UI gauges(next to staging icon)
 		private VInfoBox heatGauge = null;
@@ -350,7 +353,7 @@ namespace BahaTurret
 					pe.shape2D *= part.rescaleFactor;
 					pe.shape1D *= part.rescaleFactor;
 
-					if(pe.useWorldSpace)	
+					if(pe.useWorldSpace && !oneShotWorldParticles)	
 					{
 						BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();	
 						gpe.part = part;
@@ -394,7 +397,7 @@ namespace BahaTurret
 			{
 				deployState = Misc.SetUpSingleAnimation(deployAnimName, this.part);
 				deployState.normalizedTime = 0;
-				deployState.normalizedSpeed = 0;
+				deployState.speed = 0;
 				deployState.enabled = true;
 			}
 			if(hasFireAnimation)
@@ -425,7 +428,7 @@ namespace BahaTurret
 
 		void Update()
 		{
-			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
+			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed)
 			{
 
 				if(InternalCamera.Instance && InternalCamera.Instance.isActive)
@@ -473,7 +476,7 @@ namespace BahaTurret
 				if(spinningDown && spinDownAnimation && hasFireAnimation)
 				{
 					if(fireState.normalizedTime>1) fireState.normalizedTime = 0;
-					fireState.normalizedSpeed = fireAnimSpeed;
+					fireState.speed = fireAnimSpeed;
 					fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
 				}
 				
@@ -614,7 +617,7 @@ namespace BahaTurret
 				}
 				else
 				{
-					targetPosition = (ray.direction * maxTargetingRange) + FlightCamera.fetch.mainCamera.transform.position;	
+					targetPosition = (ray.direction * (maxTargetingRange+(FlightCamera.fetch.Distance*0.75f))) + FlightCamera.fetch.mainCamera.transform.position;	
 					if(legacyTargetVessel!=null && legacyTargetVessel.loaded)
 					{
 						targetPosition = ray.direction * Vector3.Distance(legacyTargetVessel.transform.position, FlightCamera.fetch.mainCamera.transform.position) + FlightCamera.fetch.mainCamera.transform.position;	
@@ -661,6 +664,10 @@ namespace BahaTurret
 				if(targetAcquired)
 				{
 					detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, finalTarget), 500, 3500) - 50f;
+				}
+				else
+				{
+					detonationRange = defaultDetonationRange;
 				}
 				
 			}
@@ -756,7 +763,7 @@ namespace BahaTurret
 								{
 									fireState.normalizedTime = 0;
 								}
-								fireState.normalizedSpeed = fireAnimSpeed;
+								fireState.speed = fireAnimSpeed;
 								fireState.normalizedTime = Mathf.Repeat(fireState.normalizedTime, 1);
 							}
 							
@@ -765,7 +772,7 @@ namespace BahaTurret
 							foreach(Transform mtf in part.FindModelTransforms("muzzleTransform"))
 							{
 								KSPParticleEmitter pEmitter = mtf.gameObject.GetComponent<KSPParticleEmitter>();
-								if(!pEmitter.useWorldSpace)
+								if(!pEmitter.useWorldSpace || oneShotWorldParticles)
 								{
 									pEmitter.Emit();
 								}
@@ -846,6 +853,7 @@ namespace BahaTurret
 						else
 						{
 							pBullet.bulletType = PooledBullet.PooledBulletTypes.Standard;
+							pBullet.airDetonation = false;
 						}
 
 						pBullet.gameObject.SetActive(true);
@@ -1087,9 +1095,10 @@ namespace BahaTurret
 							simulating = false;
 						}
 						
-						if(Vector3.Distance(simStartPos,simCurrPos) > maxTargetingRange)
+						if((simStartPos-simCurrPos) .sqrMagnitude> Mathf.Pow(maxTargetingRange, 2))
 						{
-							bulletPrediction = simStartPos + (simCurrPos-simStartPos).normalized*maxTargetingRange/4;
+							
+							bulletPrediction = simStartPos + ((simCurrPos-simStartPos).normalized*maxTargetingRange);
 							simulating = false;
 						}
 					}
@@ -1153,16 +1162,17 @@ namespace BahaTurret
 		{
 			weaponState = WeaponStates.PoweringUp;
 
-			if(hasDeployAnim)
+			if(hasDeployAnim && deployState)
 			{
 				deployState.enabled = true;
-				deployState.normalizedSpeed = 1;
+				deployState.speed = 1;
 				while(deployState.normalizedTime < 1)//wait for animation here
 				{
 					yield return null;
 				}
 				deployState.normalizedTime = 1;
-				deployState.normalizedSpeed = 0;
+				deployState.speed = 0;
+				deployState.enabled = false;
 			}
 
 			weaponState = WeaponStates.Enabled;
@@ -1197,13 +1207,14 @@ namespace BahaTurret
 			if(hasDeployAnim)
 			{
 				deployState.enabled = true;
-				deployState.normalizedSpeed = -1;
+				deployState.speed = -1;
 				while(deployState.normalizedTime > 0)
 				{
 					yield return null;
 				}
 				deployState.normalizedTime = 0;
-				deployState.normalizedSpeed = 0;
+				deployState.speed = 0;
+				deployState.enabled = false;
 			}
 
 			weaponState = WeaponStates.Disabled;
@@ -1463,7 +1474,7 @@ namespace BahaTurret
 
 		void OnGUI()
 		{
-			if(weaponState == WeaponStates.Enabled && vessel && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled)
+			if(weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled)
 			{
 				float size = 30;
 				
@@ -1474,7 +1485,11 @@ namespace BahaTurret
 					{
 						reticlePosition = pointingAtPosition+fixedLeadOffset;
 
-						BDGUIUtils.DrawLineBetweenWorldPositions(pointingAtPosition, reticlePosition, 2, new Color(0,1,0,0.6f));
+						if(!slaved)
+						{
+							BDGUIUtils.DrawLineBetweenWorldPositions(pointingAtPosition, reticlePosition, 2, new Color(0, 1, 0, 0.6f));
+						}
+
 						BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 					}
 					else
