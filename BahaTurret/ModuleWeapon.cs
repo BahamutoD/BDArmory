@@ -1426,15 +1426,23 @@ namespace BahaTurret
 			//targetVessel = null;
 			if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 			{
-				if(vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
+				if(!aiControlled)
 				{
-					Vessel targetVessel = vessel.targetObject.GetVessel();
-					targetPosition = targetVessel.CoM;
-					targetVelocity = targetVessel.srf_velocity;
-					targetAcceleration = targetVessel.acceleration;
+					if(vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
+					{
+						legacyTargetVessel = vessel.targetObject.GetVessel();
+					}
+				}
+
+				if(legacyTargetVessel)
+				{
+					targetPosition = legacyTargetVessel.CoM;
+					targetVelocity = legacyTargetVessel.srf_velocity;
+					targetAcceleration = legacyTargetVessel.acceleration;
 					targetAcquired = true;
 					return;
 				}
+
 			}
 
 			//radar targeting

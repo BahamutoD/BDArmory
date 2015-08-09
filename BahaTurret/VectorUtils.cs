@@ -111,7 +111,7 @@ namespace BahaTurret
 			return Vector3.ProjectOnPlane(north, body.GetSurfaceNVector(geoPosA.x, geoPosA.y)).normalized;
 		}
 		
-		public static Vector3 GetWorldSurfacePostion(Vector3 geoPosition, CelestialBody body)
+		public static Vector3 GetWorldSurfacePostion(Vector3d geoPosition, CelestialBody body)
 		{
 			if(!body)
 			{

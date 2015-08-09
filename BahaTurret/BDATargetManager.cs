@@ -20,7 +20,7 @@ namespace BahaTurret
 	{
 		public static Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>> TargetDatabase;
 
-		public static Dictionary<BDArmorySettings.BDATeams, List<Vector3d>> GPSTargets;
+		public static Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>> GPSTargets;
 
 		public static List<ModuleTargetingCamera> ActiveLasers;
 
@@ -41,9 +41,9 @@ namespace BahaTurret
 			TargetDatabase.Add(BDArmorySettings.BDATeams.B, new List<TargetInfo>());
 			StartCoroutine(CleanDatabaseRoutine());
 
-			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<Vector3d>>();
-			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<Vector3d>());
-			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<Vector3d>());
+			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
+			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
 
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
@@ -267,6 +267,20 @@ namespace BahaTurret
 
 			debugString += "\n\nHeat score: "+heatScore;
 			debugString += "\nFlare score: "+flareScore;
+		}
+
+
+
+
+		//gps stuff
+		void SaveGPSTargets()
+		{
+			
+		}
+
+		void LoadGPSTargets()
+		{
+
 		}
 
 

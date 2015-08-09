@@ -99,6 +99,7 @@
     <Compile Include="ModuleECMJammer.cs" />
     <Compile Include="DecoupledBooster.cs" />
     <Compile Include="ModuleMovingPart.cs" />
+    <Compile Include="GPSTargetInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />

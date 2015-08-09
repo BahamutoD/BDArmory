@@ -11,7 +11,7 @@ namespace BahaTurret
 		public static event RadarPing OnRadarPing;
 
 		public enum RWRThreatTypes{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5}
-		string[] iconLabels = new string[]{"S", "F", "A", "M"};
+		string[] iconLabels = new string[]{"S", "F", "A", "M", "M", "D"};
 	
 
 		public MissileFire weaponManager;

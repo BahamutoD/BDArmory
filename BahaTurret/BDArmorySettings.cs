@@ -90,6 +90,10 @@ namespace BahaTurret
 		int gpsEntryCount = 0;
 		float gpsEntryHeight = 24;
 		float gpsBorder = 5;
+		bool editingGPSName = false;
+		int editingGPSNameIndex = 0;
+		bool hasEnteredGPSName = false;
+		string newGPSName = string.Empty;
 
 		public MissileFire ActiveWeaponManager = null;
 		public bool missileWarning = false;
@@ -608,7 +612,7 @@ namespace BahaTurret
 						gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
 						foreach(var coordinate in BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(coordinate, FlightGlobals.currentMainBody), BDArmorySettings.Instance.greenDotTexture, new Vector2(8,8), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(coordinate.worldPos, BDArmorySettings.Instance.greenDotTexture, new Vector2(8,8), 0);
 						}
 					}
 				}
@@ -922,10 +926,33 @@ namespace BahaTurret
 			BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
 			foreach(var coordinate in BDATargetManager.GPSTargets[myTeam])
 			{
-				string label = Misc.FormattedGeoPos(coordinate, true); //"N" + coordinate.x.ToString("0.000") + " E" + coordinate.y.ToString("0.000") + " ASL" + coordinate.z.ToString("0.0");
-				if(GUI.Button(new Rect(0, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), label))
+				string label = Misc.FormattedGeoPosShort(coordinate.gpsCoordinates, false);
+				float nameWidth = 100;
+				if(editingGPSName && index == editingGPSNameIndex)
 				{
-					ActiveWeaponManager.designatedGPSCoords = coordinate;
+					if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
+					{
+						editingGPSName = false;
+						hasEnteredGPSName = true;
+					}
+					else
+					{
+						newGPSName = GUI.TextField(new Rect(0, gpsEntryCount * gpsEntryHeight, nameWidth, gpsEntryHeight), newGPSName, 12);
+					}
+				}
+				else
+				{
+					if(GUI.Button(new Rect(0, gpsEntryCount * gpsEntryHeight, nameWidth, gpsEntryHeight), coordinate.name))
+					{
+						editingGPSName = true;
+						editingGPSNameIndex = index;
+						newGPSName = coordinate.name;
+					}
+				}
+				if(GUI.Button(new Rect(nameWidth, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight - nameWidth, gpsEntryHeight), label))
+				{
+					ActiveWeaponManager.designatedGPSCoords = coordinate.gpsCoordinates;
+					editingGPSName = false;
 				}
 				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryCount * gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X"))
 				{
@@ -933,6 +960,12 @@ namespace BahaTurret
 				}
 				gpsEntryCount++;
 				index++;
+			}
+			if(hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargets[myTeam].Count)
+			{
+				hasEnteredGPSName = false;
+				BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex] = new GPSTargetInfo(BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex].gpsCoordinates, newGPSName);
+				editingGPSNameIndex = 0;
 			}
 
 			GUI.EndGroup();

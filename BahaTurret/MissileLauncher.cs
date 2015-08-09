@@ -676,7 +676,8 @@ namespace BahaTurret
 				{
 					UpdateLegacyTarget();
 				}
-				else if(targetingMode == TargetingModes.Heat)
+
+				if(targetingMode == TargetingModes.Heat)
 				{
 					UpdateHeatTarget();
 				}
@@ -1093,7 +1094,7 @@ namespace BahaTurret
 				CheckMiss();
 
 				//proxy detonation
-				if(proxyDetonate && (targetPosition-transform.position).sqrMagnitude < Mathf.Pow(blastRadius * 0.45f,2))
+				if(proxyDetonate && ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position+(vessel.rb_velocity*Time.fixedDeltaTime))).sqrMagnitude < Mathf.Pow(blastRadius * 0.45f,2))
 				{
 					Detonate();
 				}
@@ -1216,16 +1217,28 @@ namespace BahaTurret
 		{
 			if(legacyTargetVessel)
 			{
+				maxOffBoresight = 90;
+				
+				if(targetingMode == TargetingModes.Radar)
+				{
+					activeRadarRange = 20000;
+					targetAcquired = true;
+					radarTarget = new TargetSignatureData(legacyTargetVessel, 500);
+					return;
+				}
+				else if(targetingMode == TargetingModes.Heat)
+				{
+					targetAcquired = true;
+					heatTarget = new TargetSignatureData(legacyTargetVessel, 500);
+					return;
+				}
+
 				targetAcquired = true;
 				targetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.rb_velocity*Time.fixedDeltaTime);
 				targetVelocity = legacyTargetVessel.srf_velocity;
 				targetAcceleration = legacyTargetVessel.acceleration;
 				lastLaserPoint = targetPosition;
-
-				if(Vector3.Angle(targetPosition - transform.position, transform.forward) > maxOffBoresight)
-				{
-					targetAcquired = false;
-				}
+				lockFailTimer = 0;
 			}
 		}
 
@@ -1297,6 +1310,7 @@ namespace BahaTurret
 					{
 						Debug.Log ("Radar guidance failed. Out of range and no data feed.");
 						radarTarget = TargetSignatureData.noTarget;
+						legacyTargetVessel = null;
 						return;
 					}
 				}
@@ -1308,6 +1322,7 @@ namespace BahaTurret
 					{
 						Debug.Log ("Radar guidance failed.  Target is out of active seeker gimbal limits.");
 						radarTarget = TargetSignatureData.noTarget;
+						legacyTargetVessel = null;
 						return;
 					}
 					else
@@ -1337,9 +1352,15 @@ namespace BahaTurret
 								return;
 							}
 						}
+						radarTarget = TargetSignatureData.noTarget;
 
 					}
 				}
+			}
+
+			if(!radarTarget.exists)
+			{
+				legacyTargetVessel = null;
 			}
 		}
 
@@ -1362,6 +1383,7 @@ namespace BahaTurret
 					targetPosition = heatTarget.position+(heatTarget.velocity*Time.fixedDeltaTime);
 					targetVelocity = heatTarget.velocity;
 					targetAcceleration = heatTarget.acceleration;
+					lockFailTimer = 0;
 				}
 				else
 				{
@@ -1371,11 +1393,15 @@ namespace BahaTurret
 					}
 				}
 			}
+			if(lockFailTimer > 1)
+			{
+				legacyTargetVessel = null;
+			}
 		}
 
 		void CheckMiss()
 		{
-			float sqrDist = (targetPosition-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
+			float sqrDist = ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
 			if(sqrDist < 200*200 || MissileState == MissileStates.PostThrust)
 			{
 				checkMiss = true;	
@@ -1531,33 +1557,8 @@ namespace BahaTurret
 			}
 			else return false;
 		}
+			
 
-		/*
-		void LookForCountermeasure(ref Vector3 flarePosition)
-		{
-			foreach(var flare in BDArmorySettings.Flares)
-			{
-				if(flare!=null)
-				{
-					float flareAcquireMaxRange = 2500;
-					float chanceFactor = BDArmorySettings.FLARE_CHANCE_FACTOR;
-					float chance = Mathf.Clamp(chanceFactor-(Vector3.Distance(flare.transform.position, transform.position)/(flareAcquireMaxRange/chanceFactor)), 0, chanceFactor);
-					chance -= UnityEngine.Random.Range(0f, chance);
-					bool chancePass = (flare.GetComponent<CMFlare>().acquireDice < chance);
-					float angle = Vector3.Angle(transform.forward, flare.transform.position-transform.position);
-					if(angle < 45 && (flare.transform.position-transform.position).sqrMagnitude < Mathf.Pow(flareAcquireMaxRange, 2) && chancePass && targetInView)
-					{
-						//Debug.Log ("=Missile deflected via flare=");
-						//target = flare;
-						flarePosition = flare.transform.position;
-						return;
-					}
-				}
-			}
-			
-			
-		}
-		*/
 		
 		void WarnTarget()
 		{

@@ -1155,7 +1155,7 @@ namespace BahaTurret
 					{
 						if(laserPointDetected)
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(40, 40), 1);
+							BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(44, 44), 1);
 						}
 
 						foreach(var cam in BDATargetManager.ActiveLasers)
@@ -1400,12 +1400,18 @@ namespace BahaTurret
 			{
 				guardFiringMissile = true;
 
-				if(ml.targetingMode == MissileLauncher.TargetingModes.Radar && radar)
+				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
+				{
+					Debug.Log("Firing on target: " + guardTarget.GetName()+", (legacy targeting)");
+					ml.FireMissileOnTarget(guardTarget);
+					UpdateList();
+				}
+				else if(ml.targetingMode == MissileLauncher.TargetingModes.Radar && radar)
 				{
 					if(!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(40, 2))
 					{
 						radar.TryLockTarget(guardTarget.transform.position);
-						yield return new WaitForSeconds(Mathf.Clamp(3, 0.2f, targetScanInterval / 2));
+						yield return new WaitForSeconds(Mathf.Clamp(2, 0.2f, targetScanInterval / 2));
 					}
 
 					if(guardTarget && radar.locked)

@@ -509,7 +509,7 @@ namespace BahaTurret
 					gpsStyle.fontSize = 10;
 					if(GUI.Button(new Rect(stabilizeRect.x, stabilizeRect.y + (stabilizeRect.height / 2), stabilizeRect.width, stabilizeRect.height / 2), "Send GPS", gpsStyle))
 					{
-						BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(bodyRelativeGTP);
+						BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
 					}
 				}
 
