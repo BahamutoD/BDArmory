@@ -293,6 +293,12 @@ namespace BahaTurret
 			return part;
 		}
 
+		[KSPAction("Toggle Weapon")]
+		public void AGToggle(KSPActionParam param)
+		{
+			Toggle();
+		}
+
 
 		//PartWindow buttons
 		[KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Toggle")]
@@ -440,32 +446,30 @@ namespace BahaTurret
 					lowpassFilter.enabled = false;
 				}
 	
-				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode!=TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
+				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 				{
 					UpdateTargetVessel();
-					Aim ();
+					Aim();
 
 					userFiring = (Input.GetKey(BDArmorySettings.FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
-					if((userFiring || autoFire) && (!turret || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
+					if((userFiring || autoFire) && (yawRange == 0 || (maxPitch-minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
 						{
-							Fire ();
+							Fire();
 						}
 					}
 					else
 					{
 						if(spinDownAnimation) spinningDown = true;
-						if(eWeaponType == WeaponTypes.Laser) audioSource.Stop ();
+						if(eWeaponType == WeaponTypes.Laser) audioSource.Stop();
 						if(!oneShotSound && wasFiring)
 						{
-							audioSource.Stop ();
+							audioSource.Stop();
 							wasFiring = false;
 							audioSource2.PlayOneShot(overheatSound);	
 						}
 					}
-
-
 				}
 				else
 				{
@@ -889,7 +893,7 @@ namespace BahaTurret
 			if(BDArmorySettings.PHYSICS_RANGE == 0) maxDistance = 2500;
 			
 			float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
-			if(!Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated && (part.RequestResource(ammoName, chargeAmount)>=chargeAmount || BDArmorySettings.INFINITE_AMMO))
+			if(!pointingAtSelf && !Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated && (part.RequestResource(ammoName, chargeAmount)>=chargeAmount || BDArmorySettings.INFINITE_AMMO))
 			{
 				if(!audioSource.isPlaying)
 				{

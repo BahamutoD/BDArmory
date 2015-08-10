@@ -399,9 +399,13 @@ namespace BahaTurret
 					}
 
 					//locked target icon
-					if (groundStabilized)
+					if(groundStabilized)
 					{
-						BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySettings.Instance.greenPointCircleTexture, new Vector3(24, 24), 0);
+						BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySettings.Instance.greenPointCircleTexture, new Vector3(20, 20), 0);
+					}
+					else
+					{
+						BDGUIUtils.DrawTextureOnWorldPos(targetPointPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector3(18, 18), 0);
 					}
 				}
 			}

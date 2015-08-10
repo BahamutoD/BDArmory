@@ -909,8 +909,15 @@ namespace BahaTurret
 					//guidance and attitude stabilisation scales to atmospheric density. //use part.atmDensity
 					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody)); 
 
-					float optimumSpeedFactor = (float)vessel.srfSpeed/(2*optimumAirspeed);
-					controlAuthority = Mathf.Clamp01(atmosMultiplier * (-Mathf.Abs(2*optimumSpeedFactor-1) + 1));
+					if(vessel.srfSpeed < optimumAirspeed)
+					{
+						float optimumSpeedFactor = (float)vessel.srfSpeed / (2 * optimumAirspeed);
+						controlAuthority = Mathf.Clamp01(atmosMultiplier * (-Mathf.Abs(2 * optimumSpeedFactor - 1) + 1));
+					}
+					else
+					{
+						controlAuthority = Mathf.Clamp01(atmosMultiplier);
+					}
 					debugString += "\ncontrolAuthority: "+controlAuthority;
 
 					if(guidanceActive)// && timeIndex - dropTime > 0.5f)
@@ -1058,7 +1065,7 @@ namespace BahaTurret
 				transform.rotation = Quaternion.LookRotation(transform.forward, upDirection);
 				rotationTransform.rotation = originalRTrotation;
 				Vector3 accel = vessel.acceleration;
-				Vector3 tDir = (cruiseTarget - transform.position).normalized * 12;
+				Vector3 tDir = (cruiseTarget - transform.position).normalized * 20;
 				Vector3 lookUpDirection = Vector3.ProjectOnPlane(tDir, transform.forward);
 				lookUpDirection = transform.InverseTransformPoint(lookUpDirection + transform.position);
 
@@ -1235,6 +1242,7 @@ namespace BahaTurret
 
 				targetAcquired = true;
 				targetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.rb_velocity*Time.fixedDeltaTime);
+				targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(targetPosition, vessel.mainBody);
 				targetVelocity = legacyTargetVessel.srf_velocity;
 				targetAcceleration = legacyTargetVessel.acceleration;
 				lastLaserPoint = targetPosition;

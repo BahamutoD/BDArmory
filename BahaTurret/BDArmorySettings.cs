@@ -1079,7 +1079,7 @@ namespace BahaTurret
 			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "UI Volume: "+(BDARMORY_UI_VOLUME*100).ToString("0"));
 			float uiVol = BDARMORY_UI_VOLUME;
 			uiVol = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),uiVol, 0f, 1f);
-			if(uiVol != BDARMORY_UI_VOLUME)
+			if(uiVol != BDARMORY_UI_VOLUME && OnVolumeChange != null)
 			{
 				OnVolumeChange();
 			}
@@ -1089,7 +1089,7 @@ namespace BahaTurret
 			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "Weapon Volume: "+(BDARMORY_WEAPONS_VOLUME*100).ToString("0"));
 			float weaponVol = BDARMORY_WEAPONS_VOLUME;
 			weaponVol = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),weaponVol, 0f, 1f);
-			if(uiVol != BDARMORY_WEAPONS_VOLUME)
+			if(uiVol != BDARMORY_WEAPONS_VOLUME && OnVolumeChange != null)
 			{
 				OnVolumeChange();
 			}

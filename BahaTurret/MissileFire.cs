@@ -1155,7 +1155,7 @@ namespace BahaTurret
 					{
 						if(laserPointDetected)
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(44, 44), 1);
+							BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(48, 48), 1);
 						}
 
 						foreach(var cam in BDATargetManager.ActiveLasers)
