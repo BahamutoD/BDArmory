@@ -188,12 +188,7 @@ namespace BahaTurret
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
 
-			//brake and cut throttle if exceeding max speed
-			if(vessel.srfSpeed > maxSpeed)
-			{
-				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-				s.mainThrottle = 0;
-			}
+
 
 
 			GetGuardTarget();
@@ -230,7 +225,7 @@ namespace BahaTurret
 					}
 				}
 
-				if(wm && wm.missileIsIncoming)
+				if(wm && (wm.missileIsIncoming || wm.isChaffing || wm.isFlaring))
 				{
 					Evasive(s);
 					turningTimer = 0;
@@ -297,6 +292,13 @@ namespace BahaTurret
 					debugString += "\nExtending";
 					FlyExtend(s, lastTargetPosition);
 				}
+			}
+
+			//brake and cut throttle if exceeding max speed
+			if(vessel.srfSpeed > maxSpeed)
+			{
+				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+				s.mainThrottle = 0;
 			}
 
 			debugString += "\nthreatLevel: "+threatLevel;
@@ -369,10 +371,10 @@ namespace BahaTurret
 			Vector3 targetDirectionYaw = vessel.ReferenceTransform.InverseTransformPoint(vesselTransform.position+vessel.srf_velocity);
 			float angleYaw = Misc.SignedAngle(Vector3.up, targetDirectionYaw, Vector3.right);
 			
-			float steerYaw = (.07f * angleYaw);
+			float steerYaw = (.02f * angleYaw);
 			if(Mathf.Sign (steerYaw) == Mathf.Sign (-localAngVel.z))
 			{
-				steerYaw -= (1.35f*steerDamping * -localAngVel.z);
+				steerYaw -= (.5f*steerDamping * -localAngVel.z);
 			}
 
 			//float anglePitch = Misc.SignedAngle(Vector3.up, targetDirection, Vector3.back);
@@ -464,9 +466,15 @@ namespace BahaTurret
 		{
 			debugString += "\nEvasive";
 			threatLevel = 1f;
-			Vector3 target = DefaultAltPosition() 
-				+ (Quaternion.AngleAxis(Mathf.Sin (Time.time) * 80, upDirection) * Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 750, upDirection))
-				+ (Mathf.Sin (Time.time/2) * upDirection * defaultAltitude/3);
+			Vector3 target = (vessel.srfSpeed < 200) ? FlightPosition(transform.position, minAltitude) : DefaultAltPosition();
+			target +=
+				 (Quaternion.AngleAxis(Mathf.Sin (Time.time/2) * 80, upDirection) * Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 750, upDirection))
+				+ (Mathf.Sin (Time.time/3) * upDirection * minAltitude/3);
+
+			if(wm.isFlaring && vessel.srfSpeed > 125)
+			{
+				s.mainThrottle = 0.5f;
+			}
 
 			FlyToPosition(s, target);
 		}
@@ -542,13 +550,20 @@ namespace BahaTurret
 			MissileLauncher missile = mf.currentMissile;
 			if(missile != null)
 			{
-				target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
-			}
+				if(targetV.Landed)
+				{
+					target = FlightPosition(target, minAltitude);
+				}
+				else
+				{
+					target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
+				}
 
-			if(Vector3.Angle(vessel.ReferenceTransform.up, target-vessel.ReferenceTransform.position) < 20)
+				if(Vector3.Angle(vessel.ReferenceTransform.up, target - vessel.ReferenceTransform.position) < missile.maxOffBoresight * 0.8f)
 			   //|| (targetV.Landed && Vector3.Angle(vessel.ReferenceTransform.up, FlightPosition(target, (float)vessel.altitude)-vessel.ReferenceTransform.position) < 15))
-			{
-				launchAuthorized = true;
+				{
+					launchAuthorized = true;
+				}
 			}
 
 			return launchAuthorized;

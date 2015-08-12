@@ -61,7 +61,7 @@ namespace BahaTurret
 			TargetInfo ti = v.GetComponent<TargetInfo>();
 			if(ti && ti.isMissile)
 			{
-				return 110;
+				return 600;
 			}
 
 			float distance = (v.transform.position - origin).magnitude;
@@ -97,7 +97,7 @@ namespace BahaTurret
 		}
 
 
-		public static void ScanInDirection(float directionAngle, Transform referenceTransform, float fov, Vector3 position, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType)
+		public static void ScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, Vector3 position, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType)
 		{
 			Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
 			Vector3 forwardVector = referenceTransform.forward;
@@ -117,16 +117,20 @@ namespace BahaTurret
 
 					if(Vector3.Angle(vesselDirection,lookDirection) < fov/2)
 					{
-						float sig = GetModifiedSignature(vessel, position);
+						float sig = float.MaxValue;
+						if(minSignature > 0) sig = GetModifiedSignature(vessel, position);
 
 						RadarWarningReceiver.PingRWR(vessel, position, rwrType, dataPersistTime);
 
 						if(sig > minSignature)
 						{
-							TargetInfo ti = vessel.GetComponent<TargetInfo>();
-							if(!ti)
+							if(vessel.vesselType == VesselType.Debris)
 							{
 								vessel.gameObject.AddComponent<TargetInfo>();
+							}
+							else if(myWpnManager != null)
+							{
+								BDATargetManager.ReportVessel(vessel, myWpnManager);
 							}
 
 							while(dataIndex < dataArray.Length-1)
@@ -168,12 +172,6 @@ namespace BahaTurret
 
 						if(sig > minSignature)
 						{
-							TargetInfo ti = vessel.GetComponent<TargetInfo>();
-							if(!ti)
-							{
-								vessel.gameObject.AddComponent<TargetInfo>();
-							}
-
 							while(dataIndex < dataArray.Length-1)
 							{
 								if((dataArray[dataIndex].exists && Time.time-dataArray[dataIndex].timeAcquired > dataPersistTime) || !dataArray[dataIndex].exists)
@@ -186,6 +184,67 @@ namespace BahaTurret
 							dataArray[dataIndex] = new TargetSignatureData(vessel, sig);
 							dataIndex++;
 							if(dataIndex >= dataArray.Length) break;
+						}
+					}
+				}
+			}
+		}
+
+		public static void GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
+		{
+			results = new ViewScanResults();
+			results.foundHeatMissile = false;
+			results.foundLaserMissile = false;
+
+			if(!myWpnManager || !referenceTransform)
+			{
+				return;
+			}
+
+			Vector3 position = referenceTransform.position;
+			Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
+			Vector3 forwardVector = referenceTransform.forward;
+			Vector3 upVector = referenceTransform.up;
+			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
+
+
+
+			foreach(var vessel in FlightGlobals.Vessels)
+			{
+				if(vessel.loaded)
+				{
+					if(vessel == myWpnManager.vessel) continue; //ignore self
+
+					if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+
+					Vector3 vesselDirection = Vector3.ProjectOnPlane(vessel.CoM-position, upVector);
+
+					if(Vector3.Angle(vesselDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle &&(vessel.transform.position-position).sqrMagnitude < Mathf.Pow(maxDistance,2))
+					{
+						//Debug.Log("Found vessel: " + vessel.vesselName);
+						
+						BDATargetManager.ReportVessel(vessel, myWpnManager);
+
+						foreach(var missile in vessel.FindPartModulesImplementing<MissileLauncher>())
+						{
+							if(missile.hasFired && (missile.targetPosition-(myWpnManager.vessel.CoM+(myWpnManager.vessel.rb_velocity*Time.fixedDeltaTime))).sqrMagnitude < Mathf.Pow(60,2))
+							{
+								//Debug.Log("found missile targeting me");
+								if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+								{
+									results.foundHeatMissile = true;
+									break;
+								}
+								else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
+								{
+									results.foundLaserMissile = true;
+									break;
+								}
+							}
+							else
+							{
+								break;
+							}
 						}
 					}
 				}

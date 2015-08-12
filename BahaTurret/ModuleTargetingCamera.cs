@@ -51,7 +51,7 @@ namespace BahaTurret
 		public bool slaveTurrets = false;
 
 		[KSPField(isPersistant = true)]
-		bool CoMLock = false;
+		public bool CoMLock = false;
 
 		float controlPanelHeight = 80;
 
@@ -182,7 +182,7 @@ namespace BahaTurret
 			cameraEnabled = false;
 			groundStabilized = false;
 			slaveTurrets = false;
-			StopResetting();
+			//StopResetting();
 
 			if(!TargetingCamera.Instance)
 			{
@@ -860,11 +860,37 @@ namespace BahaTurret
 
 			while(Vector3.Angle(cameraParentTransform.forward, cameraParentTransform.parent.forward) > 0.1f)
 			{
-				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.forward, cameraParentTransform.parent.forward, 40*Mathf.Deg2Rad*Time.deltaTime, 0);
+				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.forward, cameraParentTransform.parent.forward, 60*Mathf.Deg2Rad*Time.deltaTime, 0);
 				cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+				gimbalLimitReached = false;
 				yield return null;
 			}
 			resetting = false;
+		}
+
+		public IEnumerator PointToPositionRoutine(Vector3 position)
+		{
+			StopResetting();
+			ClearTarget();
+			while(Vector3.Angle(cameraParentTransform.transform.forward, position - (cameraParentTransform.transform.position+(part.rb.velocity*Time.fixedDeltaTime))) > 0.75f)
+			{
+				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.transform.forward, position - cameraParentTransform.transform.position, 60 * Mathf.Deg2Rad * Time.fixedDeltaTime, 0);
+				cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+
+				yield return new WaitForFixedUpdate();
+				if(gimbalLimitReached)
+				{
+					ClearTarget();
+					StartCoroutine("ResetCamera");
+					yield break;
+				}
+			}
+			if(surfaceDetected)
+			{
+				cameraParentTransform.transform.rotation = Quaternion.LookRotation(position - cameraParentTransform.position, VectorUtils.GetUpDirection(transform.position));
+				GroundStabilize();
+			}
+			yield break;
 		}
 
 		void StopResetting()

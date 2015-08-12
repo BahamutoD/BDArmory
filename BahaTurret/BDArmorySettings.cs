@@ -41,13 +41,19 @@ namespace BahaTurret
 		public static float BDARMORY_UI_VOLUME = 0.35f; 
 		public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
 
+		public static float MAX_GUARD_VISUAL_RANGE = 3500;
+
 
 		public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
 		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
 		//==================
+		//EVENTS
 		public delegate void VolumeChange();
 		public static event VolumeChange OnVolumeChange;
-		
+
+		public delegate void SavedSettings();
+		public static event SavedSettings OnSavedSettings;
+
 		//particle optimization
 		public static int numberOfParticleEmitters = 0;
 		
@@ -575,6 +581,11 @@ namespace BahaTurret
 				cfg.SetValue("GLOBAL_DRAG_MULTIPLIER", GLOBAL_DRAG_MULTIPLIER.ToString(), true);
 
 				cfg.Save ("GameData/BDArmory/settings.cfg");
+
+				if(OnSavedSettings!=null)
+				{
+					OnSavedSettings();
+				}
 				
 			}
 			catch(NullReferenceException)
@@ -740,8 +751,9 @@ namespace BahaTurret
 					leftIndent += 3;
 					ActiveWeaponManager.guardMode =  GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), ActiveWeaponManager.guardMode, " Guard Mode");
 					line++;
-					
-					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Scan Interval", leftLabel);
+
+					string scanLabel = ALLOW_LEGACY_TARGETING ? "Scan Interval" : "Firing Interval";
+					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), scanLabel, leftLabel);
 					ActiveWeaponManager.targetScanInterval = GUI.HorizontalSlider(new Rect(leftIndent+(90), contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), ActiveWeaponManager.targetScanInterval, 1, 60);
 					ActiveWeaponManager.targetScanInterval = Mathf.Round(ActiveWeaponManager.targetScanInterval);
 					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.targetScanInterval.ToString(), leftLabel);
@@ -755,10 +767,12 @@ namespace BahaTurret
 					ActiveWeaponManager.guardAngle = guardAngle * 10;
 					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.guardAngle.ToString(), leftLabel);
 					line++;
-					
-					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Guard Range", leftLabel);
+
+					string rangeLabel = ALLOW_LEGACY_TARGETING ? "Guard Range" : "Visual Range";
+					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), rangeLabel, leftLabel);
 					float guardRange = ActiveWeaponManager.guardRange;
-					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, Mathf.Clamp(PHYSICS_RANGE, 2500, 100000));
+					float maxVisRange = ALLOW_LEGACY_TARGETING ? Mathf.Clamp(PHYSICS_RANGE, 2500, 100000) : BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
+					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, maxVisRange);
 					guardRange = guardRange/100;
 					guardRange = Mathf.Round(guardRange);
 					ActiveWeaponManager.guardRange = guardRange * 100;

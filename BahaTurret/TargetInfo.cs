@@ -82,7 +82,6 @@ namespace BahaTurret
 
 		List<MissileFire> friendliesEngaging;
 
-		bool hasStarted = false;
 
 		void Awake()
 		{
@@ -94,46 +93,49 @@ namespace BahaTurret
 			{
 				Debug.Log ("TargetInfo was added to a non-vessel");
 				Destroy (this);
+				return;
 			}
+
+			foreach(var otherInfo in vessel.gameObject.GetComponents<TargetInfo>())
+			{
+				if(otherInfo != this)
+				{
+					Destroy(this);
+					return;
+				}
+			}
+
+			team = BDArmorySettings.BDATeams.None;
 
 			bool foundMf = false;
 			foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
 			{
 				foundMf = true;
-				team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+				team = BDATargetManager.BoolToTeam(mf.team);
 				break;
 			}
-			bool foundMl = false;
 			if(!foundMf)
 			{
 				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
 				{
-					foundMl = true;
 					isMissile = true;
-					team = ml.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+					missileModule = ml;
+					team = BDATargetManager.BoolToTeam(ml.team);
 					break;
 				}
-
-				if(!foundMl)
-				{
-					//Debug.Log("TargetInfo was added to vessel with mo WpnMgr or MissileLauncher");
-					team = BDArmorySettings.BDATeams.None;
-					Destroy(this);
-				}
 			}
-
-
-			if(!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(this))
+				
+			if(team != BDArmorySettings.BDATeams.None)
 			{
-				BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(this);
+				if(!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(this))
+				{
+					BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(this);
+				}
 			}
 
 			friendliesEngaging = new List<MissileFire>();
-			if(!hasStarted)
-			{
-				vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
-			}
-			hasStarted = true;
+
+			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
 		}
 
 		void Update()
@@ -199,11 +201,8 @@ namespace BahaTurret
 
 		public void RemoveFromDatabases()
 		{
-			if(team != BDArmorySettings.BDATeams.None)
-			{
-				BDATargetManager.TargetDatabase[team].Remove(this);
-				BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Remove(this);
-			}
+			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.A].Remove(this);
+			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.B].Remove(this);
 		}
 	}
 }

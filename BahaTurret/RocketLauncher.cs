@@ -470,7 +470,7 @@ namespace BahaTurret
 			if(Time.time - startTime < stayTime && transform.parent!=null)
 			{
 				transform.rotation = transform.parent.rotation;		
-				transform.position = spawnTransform.position+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
+				transform.position = spawnTransform.position;//+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
 			}
 			
 			if(Time.time - startTime < thrustTime && Time.time-startTime > stayTime)

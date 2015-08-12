@@ -24,6 +24,8 @@ namespace BahaTurret
 
 		public static List<ModuleTargetingCamera> ActiveLasers;
 
+		public static List<MissileLauncher> FiredMissiles;
+
 
 
 		string debugString = string.Empty;
@@ -47,6 +49,8 @@ namespace BahaTurret
 
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
+
+			FiredMissiles = new List<MissileLauncher>();
 
 			AddToolbarButton();
 		}
@@ -324,18 +328,33 @@ namespace BahaTurret
 		public static void ReportVessel(Vessel v, MissileFire reporter)
 		{
 			if(!v) return;
+			if(!reporter) return;
+
 
 			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
 			if(!info)
 			{
-				TargetInfo newInfo = v.gameObject.AddComponent<TargetInfo>();
-				newInfo.Vessel = v;
-				info = newInfo;
-			}
-			BDArmorySettings.BDATeams team = BoolToTeam(reporter.team);
-			if(info && !TargetDatabase[team].Contains(info))
-			{
-				TargetDatabase[team].Add(info);
+				foreach(var mf in v.FindPartModulesImplementing<MissileFire>())
+				{
+					if(mf.team != reporter.team)
+					{
+						info = v.gameObject.AddComponent<TargetInfo>();
+					}
+					return;
+				}
+
+				foreach(var ml in v.FindPartModulesImplementing<MissileLauncher>())
+				{
+					if(ml.hasFired)
+					{
+						if(ml.team != reporter.team)
+						{
+							info = v.gameObject.AddComponent<TargetInfo>();
+						}
+					}
+
+					return;
+				}
 			}
 		}
 

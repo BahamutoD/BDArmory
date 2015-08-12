@@ -198,11 +198,11 @@ namespace BahaTurret
 
 		public float timeToImpact;
 		public bool targetAcquired = false;
-		Vector3 targetPosition = Vector3.zero;
+		public Vector3 targetPosition = Vector3.zero;
 		Vector3 targetVelocity = Vector3.zero;
 		Vector3 targetAcceleration = Vector3.zero;
 
-		Vessel legacyTargetVessel;
+		public Vessel legacyTargetVessel;
 
 
 
@@ -333,7 +333,7 @@ namespace BahaTurret
 				cmTimer = Time.time;
 				
 				part.force_activate();
-				part.OnJustAboutToBeDestroyed += new Callback(Detonate);
+				//part.OnJustAboutToBeDestroyed += new Callback(Detonate);
 				
 			
 				
@@ -403,6 +403,16 @@ namespace BahaTurret
 				deployedDrag = part.maximum_drag;	
 			}
 		}
+
+		/*
+		void OnCollisionEnter(Collision col)
+		{
+			if(!hasExploded && hasFired && Time.time - timeFired > 1)
+			{
+				Detonate();
+			}
+		}
+		*/
 
 		void SetupAudio()
 		{
@@ -483,6 +493,12 @@ namespace BahaTurret
 		{
 			if(!hasFired)
 			{
+				hasFired = true;
+
+				GameEvents.onPartDie.Add(PartDie);
+
+				BDATargetManager.FiredMissiles.Add(this);
+
 				if(GetComponentInChildren<KSPParticleEmitter>())
 				{
 					BDArmorySettings.numberOfParticleEmitters++;
@@ -538,16 +554,17 @@ namespace BahaTurret
 				part.dragModel = Part.DragModel.NONE;
 
 				//add target info to vessel
-				if(legacyTargetVessel!=null && !vessel.gameObject.GetComponent<TargetInfo>())
+				if(!vessel.gameObject.GetComponent<TargetInfo>())
 				{
 					TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
-					info.isMissile = true;
-					info.missileModule = this;
 
-					foreach(var mf in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
+					if(legacyTargetVessel)
 					{
-						targetMf = mf;
-						break;
+						foreach(var mf in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
+						{
+							targetMf = mf;
+							break;
+						}
 					}
 				}
 
@@ -571,7 +588,7 @@ namespace BahaTurret
 
 				
 				timeFired = Time.time;
-				hasFired = true;
+
 				
 				previousRotation = transform.rotation;
 
@@ -733,7 +750,7 @@ namespace BahaTurret
 					//light, sound & particle fx
 					if(boostAudio||thrustAudio)	
 					{
-						if(!PauseMenu.isOpen)
+						if(!BDArmorySettings.GameIsPaused)
 						{
 							if(!audioSource.isPlaying)
 							{
@@ -782,6 +799,7 @@ namespace BahaTurret
 					{
 						startedEngine = true;
 						sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
+						RadarWarningReceiver.WarnMissileLaunch(transform.position, transform.forward);
 					}
 				}
 				else if(MissileState == MissileStates.Cruise) //cruise phase
@@ -790,7 +808,7 @@ namespace BahaTurret
 
 					if(thrustAudio)	
 					{
-						if(!PauseMenu.isOpen)
+						if(!BDArmorySettings.GameIsPaused)
 						{
 							if(!audioSource.isPlaying || audioSource.clip!=thrustAudio)
 							{
@@ -1018,7 +1036,9 @@ namespace BahaTurret
 				//Timed detonation
 				if(isTimed && timeIndex > detonationTime)
 				{
-					Detonate();
+					//part.temperature = part.maxTemp + 100;
+					part.Die();
+					//Detonate();
 				}
 				
 				
@@ -1101,9 +1121,10 @@ namespace BahaTurret
 				CheckMiss();
 
 				//proxy detonation
-				if(proxyDetonate && ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position+(vessel.rb_velocity*Time.fixedDeltaTime))).sqrMagnitude < Mathf.Pow(blastRadius * 0.45f,2))
+				if(proxyDetonate && ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
 				{
-					Detonate();
+					//Detonate();
+					part.Die();
 				}
 			}
 			else
@@ -1155,7 +1176,7 @@ namespace BahaTurret
 		{
 			Vector3 agmTarget;
 			bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(targetPosition, vessel, true, out agmTarget);
-			if(!validSolution || Vector3.Angle(targetPosition - transform.position, agmTarget - transform.position) > maxOffBoresight)
+			if(!validSolution || Vector3.Angle(targetPosition - transform.position, agmTarget - transform.position) > Mathf.Clamp(maxOffBoresight, 0, 65))
 			{
 				Vector3 dToTarget = targetPosition - transform.position;
 				Vector3 direction = Quaternion.AngleAxis(maxOffBoresight * 0.9f, Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
@@ -1240,13 +1261,16 @@ namespace BahaTurret
 					return;
 				}
 
-				targetAcquired = true;
-				targetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.rb_velocity*Time.fixedDeltaTime);
-				targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(targetPosition, vessel.mainBody);
-				targetVelocity = legacyTargetVessel.srf_velocity;
-				targetAcceleration = legacyTargetVessel.acceleration;
-				lastLaserPoint = targetPosition;
-				lockFailTimer = 0;
+				if(targetingMode != TargetingModes.GPS || targetAcquired)
+				{
+					targetAcquired = true;
+					targetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.rb_velocity * Time.fixedDeltaTime);
+					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(targetPosition, vessel.mainBody);
+					targetVelocity = legacyTargetVessel.srf_velocity;
+					targetAcceleration = legacyTargetVessel.acceleration;
+					lastLaserPoint = targetPosition;
+					lockFailTimer = 0;
+				}
 			}
 		}
 
@@ -1284,8 +1308,6 @@ namespace BahaTurret
 					targetVelocity = Vector3.zero;
 					targetAcceleration = Vector3.zero;
 					lockFailTimer = 0;
-
-					Debug.Log("Anti-Rad missile has received valid target ping");
 				}
 			}
 		}
@@ -1351,12 +1373,12 @@ namespace BahaTurret
 								targetVelocity = radarTarget.velocity;
 								targetAcceleration = radarTarget.acceleration;
 
-								if(!activeRadar)
+								if(!activeRadar && Time.time-timeFired > 1)
 								{
-									activeRadar = true;
 									RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
 									Debug.Log ("Pitbull! Radar missile has gone active.  Radar sig strength: "+radarTarget.signalStrength.ToString("0.0"));
 								}
+								activeRadar = true;
 								return;
 							}
 						}
@@ -1423,7 +1445,7 @@ namespace BahaTurret
 				guidanceActive = false;
 				targetMf = null;
 				if(hasRCS) KillRCS();
-				if(sqrDist < Mathf.Pow(blastRadius*.45f, 2)) Detonate();
+				if(sqrDist < Mathf.Pow(blastRadius*.45f, 2)) part.Die();
 				return;
 			}
 		}
@@ -1475,6 +1497,17 @@ namespace BahaTurret
 				Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 				if(sourceVessel==null) sourceVessel = vessel;
 				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath);
+			}
+		}
+
+
+		void PartDie(Part p)
+		{
+			if(p == part)
+			{
+				Detonate();
+				BDATargetManager.FiredMissiles.Remove(this);
+				GameEvents.onPartDie.Remove(PartDie);
 			}
 		}
 

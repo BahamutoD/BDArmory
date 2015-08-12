@@ -25,6 +25,8 @@ namespace BahaTurret
 
 		public float jammerStrength;
 
+		public BDArmorySettings.BDATeams team;
+
 		public bool Equals(TargetSignatureData other)
 		{
 			return 
@@ -44,9 +46,19 @@ namespace BahaTurret
 			signalStrength = _signalStrength;
 
 			targetInfo = v.gameObject.GetComponent<TargetInfo> ();
-			if (!targetInfo)
+
+			team = BDArmorySettings.BDATeams.None;
+			if(targetInfo)
 			{
-				targetInfo = v.gameObject.AddComponent<TargetInfo> ();
+				team = targetInfo.team;
+			}
+			else
+			{
+				foreach(var mf in v.FindPartModulesImplementing<MissileFire>())
+				{
+					team = BDATargetManager.BoolToTeam(mf.team);
+					break;
+				}
 			}
 
 			VesselECMJInfo jInfo = v.gameObject.GetComponent<VesselECMJInfo>();
@@ -70,6 +82,7 @@ namespace BahaTurret
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			jammerStrength = 0;
+			team = BDArmorySettings.BDATeams.None;
 		}
 
 		public TargetSignatureData(Vector3 _velocity, Vector3 _position, Vector3 _acceleration, bool _exists, float _signalStrength)
@@ -82,6 +95,7 @@ namespace BahaTurret
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			jammerStrength = 0;
+			team = BDArmorySettings.BDATeams.None;
 		}
 
 		public Vector3 position

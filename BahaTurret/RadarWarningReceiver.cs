@@ -10,6 +10,9 @@ namespace BahaTurret
 		public delegate void RadarPing(Vessel v, Vector3 source, RWRThreatTypes type, float persistTime);
 		public static event RadarPing OnRadarPing;
 
+		public delegate void MissileLaunchWarning(Vector3 source, Vector3 direction);
+		public static event MissileLaunchWarning OnMissileLaunch;
+
 		public enum RWRThreatTypes{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5}
 		string[] iconLabels = new string[]{"S", "F", "A", "M", "M", "D"};
 	
@@ -103,18 +106,21 @@ namespace BahaTurret
 		public void EnableRWR()
 		{
 			OnRadarPing += ReceivePing;
+			OnMissileLaunch += ReceiveLaunchWarning;
 			rwrEnabled = true;
 		}
 
 		public void DisableRWR()
 		{
 			OnRadarPing -= ReceivePing;
+			OnMissileLaunch -= ReceiveLaunchWarning;
 			rwrEnabled = false;
 		}
 
 		void OnDestroy()
 		{
 			OnRadarPing -= ReceivePing;
+			OnMissileLaunch -= ReceiveLaunchWarning;
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 		}
 
@@ -132,6 +138,21 @@ namespace BahaTurret
 			launchWarnings.Remove(data);
 		}
 
+		void ReceiveLaunchWarning(Vector3 source, Vector3 direction)
+		{
+			float sqrDist = (transform.position - source).sqrMagnitude;
+			if(sqrDist < Mathf.Pow(5000, 2) && sqrDist > Mathf.Pow(100,2) && Vector3.Angle(direction, transform.position - source) < 15)
+			{
+				StartCoroutine(LaunchWarningRoutine(new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero, true, (float)RWRThreatTypes.MissileLaunch)));
+				PlayWarningSound(RWRThreatTypes.MissileLaunch);
+
+				if(weaponManager && weaponManager.guardMode)
+				{
+					weaponManager.FireAllCountermeasures(2);
+				}
+			}
+		}
+
 		void ReceivePing(Vessel v, Vector3 source, RWRThreatTypes type, float persistTime)
 		{
 			if(rwrEnabled && vessel && v == vessel)
@@ -141,6 +162,13 @@ namespace BahaTurret
 					StartCoroutine(LaunchWarningRoutine(new TargetSignatureData(Vector3.zero, RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero, true, (float)type)));
 					PlayWarningSound(type);
 					return;
+				}
+				else if(type == RWRThreatTypes.MissileLock)
+				{
+					if(!BDArmorySettings.ALLOW_LEGACY_TARGETING && weaponManager && weaponManager.guardMode)
+					{
+						weaponManager.FireChaff();
+					}
 				}
 
 				int openIndex = -1;
@@ -271,6 +299,14 @@ namespace BahaTurret
 						PingRWR(vessel, ray.origin, type, persistTime);
 					}
 				}
+			}
+		}
+
+		public static void WarnMissileLaunch(Vector3 source, Vector3 direction)
+		{
+			if(OnMissileLaunch != null)
+			{
+				OnMissileLaunch(source, direction);
 			}
 		}
 	}

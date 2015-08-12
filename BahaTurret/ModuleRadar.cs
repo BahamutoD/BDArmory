@@ -353,7 +353,7 @@ namespace BahaTurret
 			//model rotation
 			if(rotationTransform)
 			{
-				if (radarEnabled)
+				if(radarEnabled)
 				{
 					//rotationTransform
 					if(!linked)
@@ -373,7 +373,7 @@ namespace BahaTurret
 					}
 					else
 					{
-						rotationTransform.localRotation = Quaternion.Lerp (rotationTransform.localRotation, Quaternion.identity, 5*TimeWarp.fixedDeltaTime);
+						rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.identity, 5 * TimeWarp.fixedDeltaTime);
 					}
 
 					//lock turret
@@ -391,7 +391,7 @@ namespace BahaTurret
 				}
 				else
 				{
-					rotationTransform.localRotation = Quaternion.Lerp (rotationTransform.localRotation, Quaternion.identity, 5*TimeWarp.fixedDeltaTime);
+					rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.identity, 5 * TimeWarp.fixedDeltaTime);
 					if(lockingTurret)
 					{
 						lockingTurret.ReturnTurret();
@@ -409,7 +409,7 @@ namespace BahaTurret
 			}
 
 			float angleDelta = scanRotationSpeed*Time.fixedDeltaTime;
-			RadarUtils.ScanInDirection(currentAngle, referenceTransform, angleDelta, vessel.transform.position, 0.01f, ref contacts, signalPersistTime, true, rwrType);
+			RadarUtils.ScanInDirection(weaponManager, currentAngle, referenceTransform, angleDelta, vessel.transform.position, minSignalThreshold, ref contacts, signalPersistTime, true, rwrType);
 
 			if(omnidirectional)
 			{
@@ -447,7 +447,7 @@ namespace BahaTurret
 				angle = -angle;
 			}
 			//TargetSignatureData.ResetTSDArray(ref attemptedLocks);
-			RadarUtils.ScanInDirection(angle, referenceTransform, lockAttemptFOV, referenceTransform.position, minLockedSignalThreshold, ref attemptedLocks, signalPersistTime, true, rwrType);
+			RadarUtils.ScanInDirection(weaponManager, angle, referenceTransform, lockAttemptFOV, referenceTransform.position, minLockedSignalThreshold, ref attemptedLocks, signalPersistTime, true, rwrType);
 
 			for(int i = 0; i < attemptedLocks.Length; i++)
 			{
@@ -1052,7 +1052,7 @@ namespace BahaTurret
 
 					Rect pingRect;
 					//draw missiles and debris as dots
-					if(scannedContacts[i].targetInfo && (scannedContacts[i].targetInfo.isMissile || scannedContacts[i].targetInfo.team == BDArmorySettings.BDATeams.None))
+					if((scannedContacts[i].targetInfo && scannedContacts[i].targetInfo.isMissile) || scannedContacts[i].team == BDArmorySettings.BDATeams.None)
 					{
 						float mDotSize = 6;
 						pingRect = new Rect(pingPosition.x - (mDotSize / 2), pingPosition.y - (mDotSize / 2), mDotSize, mDotSize);
@@ -1073,7 +1073,7 @@ namespace BahaTurret
 						GUIUtility.RotateAroundPivot(vAngle, pingPosition);
 						Color origGUIColor = GUI.color;
 						GUI.color = Color.white - new Color(0, 0, 0, minusAlpha);
-						if(scannedContacts[i].targetInfo && weaponManager && scannedContacts[i].targetInfo.team == BDATargetManager.BoolToTeam(weaponManager.team))
+						if(weaponManager && scannedContacts[i].team == BDATargetManager.BoolToTeam(weaponManager.team))
 						{
 							GUI.DrawTexture(pingRect, friendlyContactIcon, ScaleMode.StretchToFill, true);
 						}
@@ -1089,6 +1089,12 @@ namespace BahaTurret
 					else //draw contacts as rectangles
 					{
 						pingRect = new Rect(pingPosition.x - (pingSize.x / 2), pingPosition.y - (pingSize.y / 2), pingSize.x, pingSize.y);
+
+						Rect jammedRect = new Rect(pingRect);
+						if(jammed)
+						{
+							jammedRect = new Rect(pingRect.x, pingRect.y - (pingSize.y / 4), pingSize.x, pingSize.y / 2);
+						}
 
 						Color iconColor = Color.green;
 						float contactAlt = scannedContacts[i].altitude;
@@ -1113,7 +1119,7 @@ namespace BahaTurret
 							GUIUtility.RotateAroundPivot(angleToContact, pingPosition);
 						}
 
-						BDGUIUtils.DrawRectangle(pingRect, iconColor - new Color(0, 0, 0, minusAlpha));
+						BDGUIUtils.DrawRectangle(jammedRect, iconColor - new Color(0, 0, 0, minusAlpha));
 
 						GUI.matrix = Matrix4x4.identity;
 					}
