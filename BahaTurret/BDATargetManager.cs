@@ -466,7 +466,7 @@ namespace BahaTurret
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
 					bool isHostile = false;
-					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)
+					if(target.isThreat)
 					{
 						isHostile = true;
 					}
@@ -491,7 +491,7 @@ namespace BahaTurret
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
 					bool isHostile = false;
-					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)
+					if(target.isThreat)
 					{
 						isHostile = true;
 					}

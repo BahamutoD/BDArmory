@@ -74,8 +74,21 @@ namespace BahaTurret
 
 				foreach(var wm in Vessel.FindPartModulesImplementing<MissileFire>())
 				{
+					if(wm.vessel.IsControllable)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+
+				if(isMissile && missileModule && !missileModule.hasMissed)
+				{
 					return true;
 				}
+
 				return false;
 			}
 		}
@@ -96,6 +109,7 @@ namespace BahaTurret
 				return;
 			}
 
+			//destroy this if a target info is already attached to the vessel
 			foreach(var otherInfo in vessel.gameObject.GetComponents<TargetInfo>())
 			{
 				if(otherInfo != this)

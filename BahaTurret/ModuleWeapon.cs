@@ -269,7 +269,6 @@ namespace BahaTurret
 		}
 
 		public float yawRange
-
 		{
 			get
 			{
@@ -587,9 +586,9 @@ namespace BahaTurret
 		void Aim()
 		{
 			//AI control
-			if(aiControlled)
+			if(aiControlled && !slaved)
 			{
-				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
+				if(legacyTargetVessel)
 				{
 					targetPosition += legacyTargetVessel.rb_velocity * Time.fixedDeltaTime;
 				}
@@ -657,29 +656,29 @@ namespace BahaTurret
 				if(bulletDrop && vessel.srf_velocity.sqrMagnitude < Mathf.Pow(750,2)) finalTarget += (0.5f*gAccel*time*time * FlightGlobals.getUpAxis());  //gravity compensation
 				
 				targetLeadDistance = Vector3.Distance(finalTarget, transform.position);
-				//fixedLeadOffset = originalTarget-pointingAtPosition;
-				
-				//if(yawRange < 1)
-				//{
-					fixedLeadOffset = originalTarget-finalTarget; //for aiming fixed guns to moving target	
-				//}
+
+				fixedLeadOffset = originalTarget-finalTarget; //for aiming fixed guns to moving target	
+
 				
 				//airdetonation
-				if(targetAcquired)
+				if(airDetonation)
 				{
-					detonationRange = Mathf.Clamp(Vector3.Distance(transform.position, finalTarget), 500, 3500) - 50f;
-				}
-				else
-				{
-					detonationRange = defaultDetonationRange;
+					if(targetAcquired)
+					{
+						detonationRange = Mathf.Clamp(targetLeadDistance, 500, 3500) - 50f;
+					}
+					else
+					{
+						detonationRange = defaultDetonationRange;
+					}
 				}
 				
 			}
-			
-			detonationRange *= UnityEngine.Random.Range(0.95f, 1.05f);
 
-
-			//target -= part.rb.velocity*Time.fixedDeltaTime;
+			if(airDetonation)
+			{
+				detonationRange *= UnityEngine.Random.Range(0.95f, 1.05f);
+			}
 
 			finalAimTarget = finalTarget;
 
@@ -1439,8 +1438,8 @@ namespace BahaTurret
 				}
 			}
 
-			//legacy or visual range targeting
-			if(aiControlled && weaponManager && legacyTargetVessel && (BDArmorySettings.ALLOW_LEGACY_TARGETING || (legacyTargetVessel.transform.position-transform.position).sqrMagnitude < weaponManager.guardRange))
+			//legacy or visual range guard targeting
+			if(aiControlled && weaponManager && legacyTargetVessel && (BDArmorySettings.ALLOW_LEGACY_TARGETING || (legacyTargetVessel.transform.position-transform.position).sqrMagnitude < Mathf.Pow(weaponManager.guardRange, 2)))
 			{
 				targetPosition = legacyTargetVessel.CoM;
 				targetVelocity = legacyTargetVessel.srf_velocity;

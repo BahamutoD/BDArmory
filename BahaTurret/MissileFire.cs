@@ -959,7 +959,7 @@ namespace BahaTurret
 			return null;
 		}
 
-		void SendTargetDataToMissile(MissileLauncher ml)
+		public void SendTargetDataToMissile(MissileLauncher ml)
 		{
 			if(ml.targetingMode == MissileLauncher.TargetingModes.Laser && laserPointDetected)
 			{
@@ -1496,7 +1496,7 @@ namespace BahaTurret
 
 		IEnumerator GuardTurretRoutine()
 		{
-			if(!BDArmorySettings.ALLOW_LEGACY_TARGETING && (guardTarget.transform.position - transform.position).sqrMagnitude > guardRange) //target is out of visual range, try using sensors
+			if(!BDArmorySettings.ALLOW_LEGACY_TARGETING && (guardTarget.transform.position - transform.position).sqrMagnitude > Mathf.Pow(guardRange, 2)) //target is out of visual range, try using sensors
 			{
 				if(guardTarget.Landed)
 				{
@@ -1567,6 +1567,8 @@ namespace BahaTurret
 
 		void StartGuardTurretFiring()
 		{
+			if(!guardTarget) return;
+
 			foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
 			{
 				if(weapon.part.partInfo.title == selectedWeapon.GetPart().partInfo.title)	

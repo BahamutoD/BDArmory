@@ -233,7 +233,7 @@ namespace BahaTurret
 
 
 		float lockFailTimer = -1;
-
+		public bool hasMissed = false;
 
 		//radar stuff
 		public ModuleRadar radar;
@@ -470,6 +470,7 @@ namespace BahaTurret
 		[KSPAction("Fire Missile")]
 		public void AGFire(KSPActionParam param)
 		{
+			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
 			FireMissile();	
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
@@ -477,6 +478,7 @@ namespace BahaTurret
 		[KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
 		public void GuiFire()
 		{
+			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
 			FireMissile();	
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
@@ -523,6 +525,12 @@ namespace BahaTurret
 					{
 						legacyTargetVessel = vessel.targetObject.GetVessel();
 
+						foreach(var mf in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
+						{
+							targetMf = mf;
+							break;
+						}
+
 						if(targetingMode == TargetingModes.Heat)
 						{
 							heatTarget = new TargetSignatureData(legacyTargetVessel, 9999);
@@ -554,19 +562,10 @@ namespace BahaTurret
 				part.dragModel = Part.DragModel.NONE;
 
 				//add target info to vessel
-				if(!vessel.gameObject.GetComponent<TargetInfo>())
-				{
-					TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
-
-					if(legacyTargetVessel)
-					{
-						foreach(var mf in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
-						{
-							targetMf = mf;
-							break;
-						}
-					}
-				}
+				TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
+				info.team = BDATargetManager.BoolToTeam(team);
+				info.isMissile = true;
+				info.missileModule = this;
 
 				if(decoupleForward)
 				{
@@ -1442,6 +1441,7 @@ namespace BahaTurret
 			   (Vector3.Angle(targetPosition-transform.position, vessel.srf_velocity-targetVelocity) > 45)) 
 			{
 				Debug.Log ("Missile CheckMiss showed miss");
+				hasMissed = true;
 				guidanceActive = false;
 				targetMf = null;
 				if(hasRCS) KillRCS();
