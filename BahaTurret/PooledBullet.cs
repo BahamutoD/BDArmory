@@ -71,8 +71,7 @@ namespace BahaTurret
 			startPosition = transform.position;
 			collisionEnabled = false;
 
-			float maxLimit = Mathf.Clamp(BDArmorySettings.MAX_BULLET_RANGE, 0, 8000);
-			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, maxLimit);
+			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, BDArmorySettings.MAX_BULLET_RANGE);
 			if(!wasInitiated)
 			{
 				projectileColor.a = projectileColor.a/2;
