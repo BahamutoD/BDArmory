@@ -2159,7 +2159,7 @@ namespace BahaTurret
 				{
 					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
 					{
-						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure)
+						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure || ml.guidanceMode == MissileLauncher.GuidanceModes.RCS)
 						{
 							return true;
 						}
