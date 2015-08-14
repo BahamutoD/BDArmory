@@ -1783,7 +1783,11 @@ namespace BahaTurret
 						return false;
 					}
 
-					return SwitchToAirMissile();
+					if (SwitchToAirMissile ()) //Use missiles if available
+					{
+						return true;
+					}
+					return SwitchToTurret(distance); //Long range turrets?
 				}
 				else
 				{
