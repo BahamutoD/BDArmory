@@ -698,7 +698,7 @@ namespace BahaTurret
 					UpdateLegacyTarget();
 				}
 
-				if(targetingMode == TargetingModes.Heat)
+				else if(targetingMode == TargetingModes.Heat)
 				{
 					UpdateHeatTarget();
 				}
