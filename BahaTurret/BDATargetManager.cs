@@ -26,6 +26,8 @@ namespace BahaTurret
 
 		public static List<MissileLauncher> FiredMissiles;
 
+		public static List<DestructibleBuilding> LoadedBuildings;
+
 
 
 		string debugString = string.Empty;
@@ -35,6 +37,27 @@ namespace BahaTurret
 
 		public static bool hasAddedButton = false;
 
+		void Awake()
+		{
+			GameEvents.onGameStateLoad.Add(LoadGPSTargets);
+			GameEvents.onGameStateSave.Add(SaveGPSTargets);
+			LoadedBuildings = new List<DestructibleBuilding>();
+			DestructibleBuilding.OnLoaded.Add(AddBuilding);
+		}
+
+		void OnDestroy()
+		{
+			if(GameEvents.onGameStateLoad != null && GameEvents.onGameStateSave != null)
+			{
+				GameEvents.onGameStateLoad.Remove(LoadGPSTargets);
+				GameEvents.onGameStateSave.Remove(SaveGPSTargets);
+			}
+
+			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
+			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+		}
+
 		void Start()
 		{
 			//legacy targetDatabase
@@ -43,9 +66,12 @@ namespace BahaTurret
 			TargetDatabase.Add(BDArmorySettings.BDATeams.B, new List<TargetInfo>());
 			StartCoroutine(CleanDatabaseRoutine());
 
-			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
-			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+			if(GPSTargets == null)
+			{
+				GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
+				GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
+				GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+			}
 
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
@@ -53,6 +79,17 @@ namespace BahaTurret
 			FiredMissiles = new List<MissileLauncher>();
 
 			AddToolbarButton();
+
+		}
+
+		void AddBuilding(DestructibleBuilding b)
+		{
+			if(!LoadedBuildings.Contains(b))
+			{
+				LoadedBuildings.Add(b);
+			}
+
+			LoadedBuildings.RemoveAll(x => x == null);
 		}
 
 		void AddToolbarButton()
@@ -277,15 +314,206 @@ namespace BahaTurret
 
 
 		//gps stuff
-		void SaveGPSTargets()
+		void SaveGPSTargets(ConfigNode saveNode)
 		{
-			
+			string saveTitle = HighLogic.CurrentGame.Title;
+			Debug.Log("Save title: " + saveTitle);
+			ConfigNode fileNode = ConfigNode.Load("GameData/BDArmory/gpsTargets.cfg");
+			if(fileNode == null)
+			{
+				fileNode = new ConfigNode();
+				fileNode.AddNode("BDARMORY");
+				fileNode.Save("GameData/BDArmory/gpsTargets.cfg");
+
+			}
+		
+			if(fileNode!=null && fileNode.HasNode("BDARMORY"))
+			{
+				ConfigNode node = fileNode.GetNode("BDARMORY");
+
+				if(GPSTargets == null || !FlightGlobals.ready)
+				{
+					return;
+				}
+
+				ConfigNode gpsNode = null;
+				if(node.HasNode("BDAGPSTargets"))
+				{
+					foreach(var n in node.GetNodes("BDAGPSTargets"))
+					{
+						if(n.GetValue("SaveGame") == saveTitle)
+						{
+							gpsNode = n;
+							break;
+						}
+					}
+
+					if(gpsNode == null)
+					{
+						gpsNode = node.AddNode("BDAGPSTargets");
+						gpsNode.AddValue("SaveGame", saveTitle);
+					}
+				}
+				else
+				{
+					gpsNode = node.AddNode("BDAGPSTargets");
+					gpsNode.AddValue("SaveGame", saveTitle);
+				}
+
+				if(GPSTargets[BDArmorySettings.BDATeams.A].Count == 0 && GPSTargets[BDArmorySettings.BDATeams.B].Count == 0)
+				{
+					//gpsNode.SetValue("Targets", string.Empty, true);
+					return;
+				}
+
+				string targetString = GPSListToString();
+				gpsNode.SetValue("Targets", targetString, true);
+				fileNode.Save("GameData/BDArmory/gpsTargets.cfg");
+				Debug.Log("==== Saved BDA GPS Targets ====");
+			}
 		}
 
-		void LoadGPSTargets()
-		{
+	
 
+		void LoadGPSTargets(ConfigNode saveNode)
+		{
+			ConfigNode fileNode = ConfigNode.Load("GameData/BDArmory/gpsTargets.cfg");
+
+			string saveTitle = HighLogic.CurrentGame.Title;
+
+			if(fileNode != null && fileNode.HasNode("BDARMORY"))
+			{
+				ConfigNode node = fileNode.GetNode("BDARMORY");
+
+				foreach(var gpsNode in node.GetNodes("BDAGPSTargets"))
+				{
+					if(gpsNode.HasValue("SaveGame") && gpsNode.GetValue("SaveGame") == saveTitle)
+					{
+						if(gpsNode.HasValue("Targets"))
+						{
+							string targetString = gpsNode.GetValue("Targets");
+							if(targetString == string.Empty)
+							{
+								Debug.Log("==== BDA GPS Target string was empty! ====");
+								return;
+							}
+							else
+							{
+								StringToGPSList(targetString);
+								Debug.Log("==== Loaded BDA GPS Targets ====");
+							}
+						}
+						else
+						{
+							Debug.Log("==== No BDA GPS Targets value found! ====");
+						}
+					}
+				}
+			}
 		}
+
+		//format: SAVENAME&name,lat,long,alt;name,lat,long,alt:name,lat,long,alt  (A;A;A:B;B)
+		private string GPSListToString()
+		{
+			string finalString = string.Empty;
+			string aString = string.Empty;
+			foreach(var gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
+			{
+				aString += gpsInfo.name;
+				aString += ",";
+				aString += gpsInfo.gpsCoordinates.x;
+				aString += ",";
+				aString += gpsInfo.gpsCoordinates.y;
+				aString += ",";
+				aString += gpsInfo.gpsCoordinates.z;
+				aString += ";";
+			}
+			if(aString == string.Empty)
+			{
+				aString = "null";
+			}
+			finalString += aString;
+			finalString += ":";
+
+			string bString = string.Empty;
+			foreach(var gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
+			{
+				bString += gpsInfo.name;
+				bString += ",";
+				bString += gpsInfo.gpsCoordinates.x;
+				bString += ",";
+				bString += gpsInfo.gpsCoordinates.y;
+				bString += ",";
+				bString += gpsInfo.gpsCoordinates.z;
+				bString += ";";
+			}
+			if(bString == string.Empty)
+			{
+				bString = "null";
+			}
+			finalString += bString;
+
+			return finalString;
+		}
+
+		private void StringToGPSList(string listString)
+		{
+			if(GPSTargets == null)
+			{
+				GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
+			}
+			GPSTargets.Clear();
+			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+
+			if(listString == null || listString == string.Empty)
+			{
+				Debug.Log("=== GPS List string was empty or null ===");
+				return;
+			}
+
+			string[] teams = listString.Split(new char[]{ ':' });
+
+			Debug.Log("==== Loading GPS Targets. Number of teams: " + teams.Length);
+
+			if(teams[0] != null && teams[0].Length > 0 && teams[0] != "null")
+			{
+				string[] teamACoords = teams[0].Split(new char[]{ ';' });
+				for(int i = 0; i < teamACoords.Length; i++)
+				{
+					if(teamACoords[i] != null && teamACoords[i].Length > 0)
+					{
+						string[] data = teamACoords[i].Split(new char[]{ ',' });
+						string name = data[0];
+						double lat = double.Parse(data[1]);
+						double longi = double.Parse(data[2]);
+						double alt = double.Parse(data[3]);
+						GPSTargetInfo newInfo = new GPSTargetInfo(new Vector3d(lat, longi, alt), name);
+						GPSTargets[BDArmorySettings.BDATeams.A].Add(newInfo);
+					}
+				}
+			}
+
+			if(teams[1] != null && teams[1].Length > 0 && teams[1] != "null")
+			{
+				string[] teamBCoords = teams[1].Split(new char[]{ ';' });
+				for(int i = 0; i < teamBCoords.Length; i++)
+				{
+					if(teamBCoords[i] != null && teamBCoords[i].Length > 0)
+					{
+						string[] data = teamBCoords[i].Split(new char[]{ ',' });
+						string name = data[0];
+						double lat = double.Parse(data[1]);
+						double longi = double.Parse(data[2]);
+						double alt = double.Parse(data[3]);
+						GPSTargetInfo newInfo = new GPSTargetInfo(new Vector3d(lat, longi, alt), name);
+						GPSTargets[BDArmorySettings.BDATeams.B].Add(newInfo);
+					}
+				}
+			}
+		}
+
+
 
 
 

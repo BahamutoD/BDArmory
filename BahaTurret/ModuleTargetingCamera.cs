@@ -63,7 +63,28 @@ namespace BahaTurret
 		public Vector3 groundTargetPosition;
 
 		[KSPField(isPersistant = true)]
-		public Vector3d bodyRelativeGTP;
+		public double savedLat;
+
+		[KSPField(isPersistant = true)]
+		public double savedLong;
+
+		[KSPField(isPersistant = true)]
+		public double savedAlt;
+
+		public Vector3 bodyRelativeGTP
+		{
+			get
+			{
+				return new Vector3d(savedLat, savedLong, savedAlt);
+			}
+
+			set
+			{
+				savedLat = value.x;
+				savedLong = value.y;
+				savedAlt = value.z;
+			}
+		}
 
 		bool resetting = false;
 
@@ -287,9 +308,15 @@ namespace BahaTurret
 			StartCoroutine(DelayedEnableRoutine());
 		}
 
+		bool delayedEnabling = false;
 		IEnumerator DelayedEnableRoutine()
 		{
-			//yield return new WaitForSeconds(1);
+			if(delayedEnabling) yield break;
+			delayedEnabling = true;
+
+			Vector3d savedGTP = bodyRelativeGTP;
+			Debug.Log("saved gtp: " + Misc.FormattedGeoPos(savedGTP, true));
+
 			while(TargetingCamera.Instance == null)
 			{
 				yield return null;
@@ -306,15 +333,26 @@ namespace BahaTurret
 			{
 				yield return null;
 			}
+			while(vessel.packed)
+			{
+				yield return null;
+			}
+
+			while(vessel.mainBody == null)
+			{
+				yield return null;
+			}
 
 			EnableCamera();
 			if(groundStabilized)
 			{
-				groundTargetPosition = vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
+				Debug.Log("Camera delayed enabled");
+				groundTargetPosition = VectorUtils.GetWorldSurfacePostion(savedGTP, vessel.mainBody);// vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
 				Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
-				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
+				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, VectorUtils.GetUpDirection(cameraParentTransform.transform.position));
 				GroundStabilize();
 			}
+			delayedEnabling = false;
 		}
 
 
@@ -322,8 +360,16 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
+				if(cameraEnabled && !vessel.IsControllable)
+				{
+					DisableCamera();
+				}
+
 				if(cameraEnabled && TargetingCamera.ReadyForUse && vessel.IsControllable)
 				{
+					if(delayedEnabling) return;
+
+
 					if(!TargetingCamera.Instance || FlightGlobals.currentMainBody == null)
 					{
 						return;
@@ -339,7 +385,7 @@ namespace BahaTurret
 
 					if(groundStabilized)
 					{
-						groundTargetPosition = vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
+						groundTargetPosition = VectorUtils.GetWorldSurfacePostion(bodyRelativeGTP, vessel.mainBody);//vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
 						Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
 						cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
 					}
@@ -375,6 +421,8 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
+				if(delayedEnabling) return;
+
 				if(cameraEnabled)
 				{
 					GetHitPoint();
@@ -388,7 +436,7 @@ namespace BahaTurret
 
 		void OnGUI()
 		{
-			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySettings.GAME_UI_ENABLED) 
+			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySettings.GAME_UI_ENABLED && !delayedEnabling) 
 			{
 				if (cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready) 
 				{
@@ -746,6 +794,7 @@ namespace BahaTurret
 
 		void GroundStabilize()
 		{
+			if(vessel.packed) return;
 			StopResetting();
 
 			RaycastHit rayHit;
@@ -764,8 +813,11 @@ namespace BahaTurret
 						StartCoroutine(StabilizeNextFrame());
 					}
 				}
-
-				bodyRelativeGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+				Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+				if(newGTP!=Vector3d.zero)
+				{
+					bodyRelativeGTP = newGTP;
+				}
             }
 			else
 			{
@@ -779,7 +831,11 @@ namespace BahaTurret
 					{
 						groundStabilized = true;
 						groundTargetPosition = ray.GetPoint(enter);
-						bodyRelativeGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+						Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+						if(newGTP != Vector3d.zero)
+						{
+							bodyRelativeGTP = newGTP;
+						}
 					}
 				}
 	
@@ -799,6 +855,9 @@ namespace BahaTurret
 
 		void GetHitPoint()
 		{
+			if(vessel.packed) return;
+			if(delayedEnabling) return;
+
 			RaycastHit rayHit;
 			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
 			if(Physics.Raycast(ray, out rayHit, maxRayDistance-50, 557057))
@@ -818,8 +877,11 @@ namespace BahaTurret
 							groundTargetPosition = p.vessel.CoM;
 						}
 					}
-					
-					bodyRelativeGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+					Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+					if(newGTP != Vector3d.zero)
+					{
+						bodyRelativeGTP = newGTP;
+					}
 				}
 
 				surfaceDetected = true;

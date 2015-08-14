@@ -158,7 +158,7 @@ namespace BahaTurret
 				Transform currentRocketTfm = rockets[rocketsLeft-1];
 				
 				GameObject rocketObj = GameDatabase.Instance.GetModel(rocketModelPath);
-				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position+(part.rb.velocity*Time.fixedDeltaTime), transform.rotation);
+				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position, transform.rotation);
 				rocketObj.transform.rotation = part.transform.rotation;
 				rocketObj.transform.localScale = part.rescaleFactor * Vector3.one;
 				currentRocketTfm.localScale = Vector3.zero;
@@ -433,11 +433,55 @@ namespace BahaTurret
 			}
 			if(sourceVessel!=null) relativePos = transform.position-sourceVessel.transform.position;
 			//
-			
-			if(FlightGlobals.RefFrameIsRotating)
+
+
+			if(Time.time - startTime < stayTime && transform.parent!=null)
 			{
-				rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+				transform.rotation = transform.parent.rotation;		
+				transform.position = spawnTransform.position;//+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
 			}
+			else
+			{
+				if(transform.parent != null && transform.parent.rigidbody)
+				{
+					startVelocity = transform.parent.rigidbody.velocity;
+					transform.parent = null;	
+					rb.isKinematic = false;
+					rb.velocity = startVelocity;
+				}
+			}
+
+			if(rb && !rb.isKinematic)
+			{
+				//physics
+				if(FlightGlobals.RefFrameIsRotating)
+				{
+					rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+				}
+
+				//guidance and attitude stabilisation scales to atmospheric density.
+				float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
+
+				//model transform. always points prograde
+				transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rb.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
+				if(!FlightGlobals.RefFrameIsRotating && Time.time-startTime > 0.5f)
+				{
+					transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rb.velocity), atmosMultiplier/2.5f);
+
+				}
+				//
+
+
+				if(Time.time - startTime < thrustTime && Time.time-startTime > stayTime)
+				{
+					float random = UnityEngine.Random.Range(-.2f,.2f);
+					float random2 = UnityEngine.Random.Range(-.2f,.2f);
+					rb.AddForce((thrust * transform.forward) + (random * transform.right) + (random2 * transform.up));
+				}
+
+			}
+			
+
 			
 
 			if(BDArmorySettings.GameIsPaused)
@@ -455,38 +499,7 @@ namespace BahaTurret
 				}
 			}
 			
-			
-			//guidance and attitude stabilisation scales to atmospheric density.
-			float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
-			
-			//model transform. always points prograde
-			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rb.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
-			if(!FlightGlobals.RefFrameIsRotating && Time.time-startTime > 0.5f)
-			{
-				transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rb.velocity), atmosMultiplier/2.5f);
-				
-			}
-			//
-			if(Time.time - startTime < stayTime && transform.parent!=null)
-			{
-				transform.rotation = transform.parent.rotation;		
-				transform.position = spawnTransform.position;//+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
-			}
-			
-			if(Time.time - startTime < thrustTime && Time.time-startTime > stayTime)
-			{
-				float random = UnityEngine.Random.Range(-.2f,.2f);
-				float random2 = UnityEngine.Random.Range(-.2f,.2f);
-				rb.AddForce((thrust * transform.forward) + (random * transform.right) + (random2 * transform.up));
-			}
-			
-			if(Time.time-startTime > stayTime && transform.parent!=null)
-			{
-				startVelocity = transform.parent.rigidbody.velocity;
-				transform.parent = null;	
-				rb.isKinematic = false;
-				rb.velocity = startVelocity;
-			}
+
 			
 			if(Time.time - startTime > thrustTime)
 			{

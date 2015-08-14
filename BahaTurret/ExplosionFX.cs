@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BahaTurret
@@ -95,13 +96,13 @@ namespace BahaTurret
 				pe.emit = true;	
 			}
 
-			DoExplosionSphere(position, power, radius);
+			DoExplosionDamage(position, power, radius);
 		}
 
-		public static float ExplosionHeatMultiplier = 1200;
-		public static float ExplosionImpulseMultiplier = 2;
+		public static float ExplosionHeatMultiplier = 2800;
+		public static float ExplosionImpulseMultiplier = 1;
 
-		public static void DoExplosionRay(Ray ray, float power, float maxDistance)
+		public static void DoExplosionRay(Ray ray, float power, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs)
 		{
 			RaycastHit rayHit;
 			if(Physics.Raycast(ray, out rayHit, maxDistance, 557057))
@@ -110,8 +111,9 @@ namespace BahaTurret
 				float distanceFactor = Mathf.Clamp01((Mathf.Pow(maxDistance, 2) - sqrDist) / Mathf.Pow(maxDistance, 2));
 				//parts
 				Part part = rayHit.collider.GetComponentInParent<Part>();
-				if(part && part.physicalSignificance == Part.PhysicalSignificance.FULL)
+				if(part && !ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL)
 				{
+					ignoreParts.Add(part);
 					Rigidbody rb = part.GetComponent<Rigidbody>();
 					if(rb)
 					{
@@ -126,9 +128,10 @@ namespace BahaTurret
 
 				//buildings
 				DestructibleBuilding building = rayHit.collider.GetComponentInParent<DestructibleBuilding>();
-				if(building)
+				if(building && !ignoreBldgs.Contains(building))
 				{
-					float damageToBuilding = (ExplosionHeatMultiplier/500) * power * distanceFactor;
+					ignoreBldgs.Add(building);
+					float damageToBuilding = ExplosionHeatMultiplier * 0.00685f * power * distanceFactor;
 					if(damageToBuilding > building.impactMomentumThreshold/10) building.AddDamage(damageToBuilding);
 					if(building.Damage > building.impactMomentumThreshold) building.Demolish();
 					if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("== Explosion hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+building.Damage);
@@ -136,15 +139,33 @@ namespace BahaTurret
 			}
 		}
 
-		public static void DoExplosionSphere(Vector3 position, float power, float maxDistance)
+		public static List<Part> ignoreParts = new List<Part>(); 
+		public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
+
+		public static void DoExplosionDamage(Vector3 position, float power, float maxDistance)
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("======= Doing explosion sphere =========");
-			int rays = 500;
-
-			for(int i = 0; i < rays; i++)
+			ignoreParts.Clear();
+			ignoreBuildings.Clear();
+			foreach(var vessel in FlightGlobals.Vessels)
 			{
-				Ray ray = new Ray(position, UnityEngine.Random.onUnitSphere);
-				DoExplosionRay(ray, power, maxDistance);
+				if(vessel.loaded && !vessel.packed && (vessel.transform.position - position).sqrMagnitude < Mathf.Pow(maxDistance * 4, 2))
+				{
+					foreach(var part in vessel.parts)
+					{
+						if(!part) continue;
+						DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, maxDistance, ref ignoreParts, ref ignoreBuildings);
+					}
+				}
+			}
+
+			foreach(var bldg in BDATargetManager.LoadedBuildings)
+			{
+				if(bldg == null) continue;
+				if((bldg.transform.position - position).sqrMagnitude < Mathf.Pow(maxDistance * 1000, 2))
+				{
+					DoExplosionRay(new Ray(position, bldg.transform.position - position), power, maxDistance, ref ignoreParts, ref ignoreBuildings);
+				}
 			}
 		}
 	}

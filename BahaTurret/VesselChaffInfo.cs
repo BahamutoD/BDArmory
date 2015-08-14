@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
+	[RequireComponent(typeof(Vessel))]
 	public class VesselChaffInfo : MonoBehaviour
 	{
 		Vessel vessel;

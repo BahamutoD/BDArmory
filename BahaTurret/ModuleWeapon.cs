@@ -433,16 +433,19 @@ namespace BahaTurret
 
 		void Update()
 		{
-			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed)
+			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && vessel.IsControllable)
 			{
 
-				if(InternalCamera.Instance && InternalCamera.Instance.isActive)
+				if(lowpassFilter)
 				{
-					lowpassFilter.enabled = true;
-				}
-				else
-				{
-					lowpassFilter.enabled = false;
+					if(InternalCamera.Instance && InternalCamera.Instance.isActive)
+					{
+						lowpassFilter.enabled = true;
+					}
+					else
+					{
+						lowpassFilter.enabled = false;
+					}
 				}
 	
 				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))

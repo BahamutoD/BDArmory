@@ -312,6 +312,11 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
 			{
+				if(!vessel.IsControllable && radarEnabled)
+				{
+					DisableRadar();
+				}
+
 				if(radarEnabled)
 				{
 					if(locked)
@@ -544,8 +549,6 @@ namespace BahaTurret
 					lockedTarget = linkedRadar.lockedTarget;
 					//if(lockedTarget.exists) return;
 				}
-
-
 			}
 
 			//if still failed or out of FOV, unlock.
@@ -556,7 +559,7 @@ namespace BahaTurret
 			}
 
 			//unlock if over-jammed
-			if(lockedTarget.jammerStrength * 0.65f > lockedTarget.signalStrength)
+			if(lockedTarget.vesselJammer && lockedTarget.vesselJammer.lockBreakStrength > lockedTarget.signalStrength*lockedTarget.vesselJammer.rcsReductionFactor)
 			{
 				UnlockTarget();
 				return;
@@ -999,10 +1002,10 @@ namespace BahaTurret
 			float myAlt = (float)vessel.altitude;
 			for (int i = 0; i < scannedContacts.Length; i++)
 			{
-				if(scannedContacts[i].exists && scannedContacts[i].signalStrength > minSignalThreshold)
+				if(scannedContacts[i].exists)// && scannedContacts[i].signalStrength > minSignalThreshold)
 				{
 					//ignore old target data
-					if(Time.time - scannedContacts[i].timeAcquired > signalPersistTime)
+					if(scannedContacts[i].age > signalPersistTime)
 					{
 						scannedContacts[i].exists = false;
 						continue;
@@ -1032,22 +1035,20 @@ namespace BahaTurret
 					}
 
 					//jamming
-					Vector3 jammingModifier = Vector3.zero;
 					bool jammed = false;
-					if(scannedContacts[i].jammerStrength > scannedContacts[i].signalStrength)
+					if(scannedContacts[i].vesselJammer && scannedContacts[i].vesselJammer.jammerStrength > scannedContacts[i].signalStrength)
 					{
-						jammingModifier = (scannedContacts[i].predictedPosition - transform.position).normalized * UnityEngine.Random.Range(-5000f, 8000f);
 						jammed = true;
 					}
 
 					Vector2 pingPosition;
 					if(omnidirectional || linked)
 					{
-						pingPosition = RadarUtils.WorldToRadar(scannedContacts[i].position+jammingModifier, referenceTransform, radarRect, rIncrements[rangeIndex]);
+						pingPosition = RadarUtils.WorldToRadar(scannedContacts[i].position, referenceTransform, radarRect, rIncrements[rangeIndex]);
 					}
 					else
 					{
-						pingPosition = RadarUtils.WorldToRadarRadial(scannedContacts[i].position+jammingModifier, referenceTransform, radarRect, rIncrements[rangeIndex], directionalFieldOfView / 2);
+						pingPosition = RadarUtils.WorldToRadarRadial(scannedContacts[i].position, referenceTransform, radarRect, rIncrements[rangeIndex], directionalFieldOfView / 2);
 					}
 
 					Rect pingRect;
@@ -1088,40 +1089,58 @@ namespace BahaTurret
 					}
 					else //draw contacts as rectangles
 					{
+						int drawCount = jammed ? 4 : 1;
 						pingRect = new Rect(pingPosition.x - (pingSize.x / 2), pingPosition.y - (pingSize.y / 2), pingSize.x, pingSize.y);
-
-						Rect jammedRect = new Rect(pingRect);
-						if(jammed)
+						for(int d = 0; d < drawCount; d++)
 						{
-							jammedRect = new Rect(pingRect.x, pingRect.y - (pingSize.y / 4), pingSize.x, pingSize.y / 2);
-						}
-
-						Color iconColor = Color.green;
-						float contactAlt = scannedContacts[i].altitude;
-						if(!omnidirectional)
-						{
-							if(contactAlt - myAlt > 1000)
+							Rect jammedRect = new Rect(pingRect);
+							Vector3 contactPosition = scannedContacts[i].position;
+							if(jammed)
 							{
-								iconColor = new Color(0, 0.6f, 1f, 1);
+								//jamming
+								Vector3 jammedPosition = transform.position + ((scannedContacts[i].position - transform.position).normalized * UnityEngine.Random.Range(100, rIncrements[rangeIndex]));
+								float bearingVariation = Mathf.Clamp(Mathf.Pow(32000, 2) / (scannedContacts[i].position - transform.position).sqrMagnitude, 0, 80);
+								jammedPosition = transform.position + (Quaternion.AngleAxis(UnityEngine.Random.Range(-bearingVariation, bearingVariation), referenceTransform.up) * (jammedPosition - transform.position));
+								if(omnidirectional || linked)
+								{
+									pingPosition = RadarUtils.WorldToRadar(jammedPosition, referenceTransform, radarRect, rIncrements[rangeIndex]);
+								}
+								else
+								{
+									pingPosition = RadarUtils.WorldToRadarRadial(jammedPosition, referenceTransform, radarRect, rIncrements[rangeIndex], directionalFieldOfView / 2);
+								}
+
+								jammedRect = new Rect(pingPosition.x - (pingSize.x / 2), pingPosition.y - (pingSize.y / 2) - (pingSize.y / 3), pingSize.x, pingSize.y / 3);
+								contactPosition = jammedPosition;
 							}
-							else if(contactAlt - myAlt < -1000)
+
+							Color iconColor = Color.green;
+							float contactAlt = scannedContacts[i].altitude;
+							if(!omnidirectional)
 							{
-								iconColor = new Color(1f, 0.68f, 0, 1);
+								if(contactAlt - myAlt > 1000)
+								{
+									iconColor = new Color(0, 0.6f, 1f, 1);
+								}
+								else if(contactAlt - myAlt < -1000)
+								{
+									iconColor = new Color(1f, 0.68f, 0, 1);
+								}
 							}
+
+							if(omnidirectional)
+							{
+								Vector3 localPos = referenceTransform.InverseTransformPoint(contactPosition);
+								localPos.y = 0;
+								float angleToContact = Vector3.Angle(localPos, Vector3.forward);
+								if(localPos.x < 0) angleToContact = -angleToContact;
+								GUIUtility.RotateAroundPivot(angleToContact, pingPosition);
+							}
+
+							BDGUIUtils.DrawRectangle(jammedRect, iconColor - new Color(0, 0, 0, minusAlpha));
+
+							GUI.matrix = Matrix4x4.identity;
 						}
-
-						if(omnidirectional)
-						{
-							Vector3 localPos = referenceTransform.InverseTransformPoint(scannedContacts[i].position);
-							localPos.y = 0;
-							float angleToContact = Vector3.Angle(localPos, Vector3.forward);
-							if(localPos.x < 0) angleToContact = -angleToContact;
-							GUIUtility.RotateAroundPivot(angleToContact, pingPosition);
-						}
-
-						BDGUIUtils.DrawRectangle(jammedRect, iconColor - new Color(0, 0, 0, minusAlpha));
-
-						GUI.matrix = Matrix4x4.identity;
 					}
 
 

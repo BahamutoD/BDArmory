@@ -122,7 +122,16 @@ namespace BahaTurret
 
 						RadarWarningReceiver.PingRWR(vessel, position, rwrType, dataPersistTime);
 
-						if(sig > minSignature)
+						float detectSig = sig;
+
+						VesselECMJInfo vesselJammer = vessel.GetComponent<VesselECMJInfo>();
+						if(vesselJammer)
+						{
+							sig *= vesselJammer.rcsReductionFactor;
+							detectSig += vesselJammer.jammerStrength;
+						}
+
+						if(detectSig > minSignature)
 						{
 							if(vessel.vesselType == VesselType.Debris)
 							{
@@ -282,6 +291,7 @@ namespace BahaTurret
 
 			var vci = vessel.GetComponent<VesselChaffInfo>();
 			if(vci) sig *= vci.GetChaffMultiplier();
+
 
 			/*
 			if(Mathf.Round(Time.time)%2 == 0)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BahaTurret
@@ -20,7 +21,8 @@ namespace BahaTurret
 
 		[KSPField]
 		public string stackNodePosition;
-		Vector3 originalStackNodePosition;
+
+		Dictionary<string,Vector3> originalStackNodePosition;
 		
 		public override void OnStart (PartModule.StartState state)
 		{
@@ -39,8 +41,15 @@ namespace BahaTurret
 
 		void ParseStackNodePosition()
 		{
-			string[] split = stackNodePosition.Split(new char[]{ ',' });
-			originalStackNodePosition = new Vector3(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]));
+			originalStackNodePosition = new Dictionary<string, Vector3>();
+			string[] nodes = stackNodePosition.Split(new char[]{ ';' });
+			for(int i = 0; i < nodes.Length; i++)
+			{
+				string[] split = nodes[i].Split(new char[]{ ',' });
+				string id = split[0];
+				Vector3 position = new Vector3(float.Parse(split[1]), float.Parse(split[2]), float.Parse(split[3]));
+				originalStackNodePosition.Add(id, position);
+			}
 		}
 
 
@@ -137,11 +146,11 @@ namespace BahaTurret
 		{
 			foreach(var stackNode in part.attachNodes)
 			{
-				if(stackNode.nodeType == AttachNode.NodeType.Stack)
+				if(stackNode.nodeType == AttachNode.NodeType.Stack && originalStackNodePosition.ContainsKey(stackNode.id))
 				{
 					Vector3 prevPos = stackNode.position;
 
-					stackNode.position.y = originalStackNodePosition.y + railHeight;
+					stackNode.position.y = originalStackNodePosition[stackNode.id].y + railHeight;
 
 					if(updateChild)
 					{

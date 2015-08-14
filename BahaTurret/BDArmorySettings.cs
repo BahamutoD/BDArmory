@@ -869,6 +869,8 @@ namespace BahaTurret
 					//JAMMERS
 					foreach(var jammer in ActiveWeaponManager.jammers)
 					{
+						if(jammer.alwaysOn) continue;
+
 						numberOfModules++;
 						GUIStyle moduleStyle = jammer.jammerEnabled ? centerLabelBlue : centerLabel;
 						string label = jammer.part.partInfo.title;
@@ -912,7 +914,7 @@ namespace BahaTurret
 			toolbarWindowRect = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
 		}
 
-
+		bool validGPSName = true;
 
 		//GPS window
 		void GPSWindow(int windowID)
@@ -944,14 +946,25 @@ namespace BahaTurret
 				float nameWidth = 100;
 				if(editingGPSName && index == editingGPSNameIndex)
 				{
-					if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
+					if(validGPSName && Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
 					{
 						editingGPSName = false;
 						hasEnteredGPSName = true;
 					}
 					else
 					{
+						Color origColor = GUI.color;
+						if(newGPSName.Contains(";") || newGPSName.Contains(":") || newGPSName.Contains(","))
+						{
+							validGPSName = false;
+							GUI.color = Color.red;
+						}
+						else
+						{
+							validGPSName = true;
+						}
 						newGPSName = GUI.TextField(new Rect(0, gpsEntryCount * gpsEntryHeight, nameWidth, gpsEntryHeight), newGPSName, 12);
+						GUI.color = origColor;
 					}
 				}
 				else

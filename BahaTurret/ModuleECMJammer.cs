@@ -8,12 +8,55 @@ namespace BahaTurret
 		public float jammerStrength = 700;
 
 		[KSPField]
-		public float resourceDrain = 5;
+		public float lockBreakerStrength = 500;
+
+		[KSPField]
+		public float rcsReductionFactor = 0.75f;
+
+		[KSPField]
+		public double resourceDrain = 5;
+
+		[KSPField]
+		public bool alwaysOn = false;
+
+		[KSPField]
+		public bool signalSpam = true;
+
+		[KSPField]
+		public bool lockBreaker = true;
+
+		[KSPField]
+		public bool rcsReduction = false;
 
 		[KSPField(isPersistant = true, guiActive = true, guiName = "Enabled")]
 		public bool jammerEnabled = false;
 
 		VesselECMJInfo vesselJammer;
+
+		[KSPAction("Enable")]
+		public void AGEnable(KSPActionParam param)
+		{
+			if(!jammerEnabled)
+			{
+				EnableJammer();
+			}
+		}
+
+		[KSPAction("Disable")]
+		public void AGDisable(KSPActionParam param)
+		{
+			if(jammerEnabled)
+			{
+				DisableJammer();
+			}
+		}
+
+
+		[KSPAction("Toggle")]
+		public void AGToggle(KSPActionParam param)
+		{
+			Toggle();
+		}
 
 		[KSPEvent(guiActiveEditor = false, guiActive = true, guiName = "Toggle")]
 		public void Toggle()
@@ -38,21 +81,25 @@ namespace BahaTurret
 				{
 					wm.jammers.Add(this);
 				}
+
+				GameEvents.onVesselCreate.Add(OnVesselCreate);
 			}
 		}
 
+		void OnDestroy()
+		{
+			GameEvents.onVesselCreate.Remove(OnVesselCreate);
+		}
+
+		void OnVesselCreate(Vessel v)
+		{
+			EnsureVesselJammer();
+		}
 
 		public void EnableJammer()
 		{
-			foreach(var jammer in vessel.FindPartModulesImplementing<ModuleECMJammer>())
-			{
-				jammer.DisableJammer();
-			}
-
 			EnsureVesselJammer();
-
-			vesselJammer.jammerStrength = jammerStrength;
-			vesselJammer.jammerEnabled = true;
+			vesselJammer.AddJammer(this);
 			jammerEnabled = true;
 		}
 
@@ -60,13 +107,18 @@ namespace BahaTurret
 		{
 			EnsureVesselJammer();
 		
-			vesselJammer.jammerEnabled = false;
+			vesselJammer.RemoveJammer(this);
 			jammerEnabled = false;
 		}
 
 		public override void OnFixedUpdate()
 		{
 			base.OnFixedUpdate();
+
+			if(alwaysOn && !jammerEnabled)
+			{
+				EnableJammer();
+			}
 
 			if(jammerEnabled)
 			{
@@ -78,7 +130,7 @@ namespace BahaTurret
 
 		void EnsureVesselJammer()
 		{
-			if(!vesselJammer)
+			if(!vesselJammer || vesselJammer.vessel != vessel)
 			{
 				vesselJammer = vessel.gameObject.GetComponent<VesselECMJInfo>();
 				if(!vesselJammer)
@@ -86,18 +138,29 @@ namespace BahaTurret
 					vesselJammer = vessel.gameObject.AddComponent<VesselECMJInfo>();
 				}
 			}
+
+			vesselJammer.DelayedCleanJammerList();
 		}
 
 
 		void DrainElectricity()
 		{
+			if(resourceDrain <= 0)
+			{
+				return;
+			}
+
 			double drainAmount = resourceDrain * TimeWarp.fixedDeltaTime;
-			double chargeAvailable = part.RequestResource("ElectricCharge",drainAmount, ResourceFlowMode.ALL_VESSEL);
-			if(chargeAvailable < drainAmount)
+			double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
+			if(chargeAvailable < drainAmount*0.95f)
 			{
 				DisableJammer();
 			}
 		}
+
+
+
+
 	}
 }
 

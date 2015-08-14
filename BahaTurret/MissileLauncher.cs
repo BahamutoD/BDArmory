@@ -220,7 +220,7 @@ namespace BahaTurret
 		public ModuleTargetingCamera lockedCamera = null;
 		Vector3 lastLaserPoint;
 		Vector3 laserStartPosition;
-		Vector3 laserStartDirection;
+		Vector3 startDirection;
 
 
 		//heat stuff
@@ -242,6 +242,11 @@ namespace BahaTurret
 		public float activeRadarRange = 6000;
 		public bool activeRadar = false;
 		float lastRWRPing = 0;
+		[KSPField]
+		public float activeRadarMinThresh = 100;
+		[KSPField]
+		public bool radarLOAL = false;
+		bool radarLOALSearching = false;
 
 		//GPS stuff
 		public Vector3d targetGPSCoords;
@@ -519,6 +524,7 @@ namespace BahaTurret
 
 
 				//TARGETING
+				startDirection = transform.forward;
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
 					if(vessel.targetObject!=null && vessel.targetObject.GetVessel()!=null)
@@ -540,7 +546,6 @@ namespace BahaTurret
 				if(targetingMode == TargetingModes.Laser)
 				{
 					laserStartPosition = transform.position;
-					laserStartDirection = transform.forward;
 					if(lockedCamera)
 					{
 						targetAcquired = true;
@@ -1035,9 +1040,7 @@ namespace BahaTurret
 				//Timed detonation
 				if(isTimed && timeIndex > detonationTime)
 				{
-					//part.temperature = part.maxTemp + 100;
-					part.Die();
-					//Detonate();
+					part.temperature = part.maxTemp+100;;
 				}
 				
 				
@@ -1122,8 +1125,7 @@ namespace BahaTurret
 				//proxy detonation
 				if(proxyDetonate && ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
 				{
-					//Detonate();
-					part.Die();
+					part.temperature = part.maxTemp + 100;
 				}
 			}
 			else
@@ -1161,7 +1163,7 @@ namespace BahaTurret
 					if(targetingMode == TargetingModes.Laser)
 					{
 						//keep going straight until found laser point
-						targetPosition = laserStartPosition + (20000 * laserStartDirection);
+						targetPosition = laserStartPosition + (20000 * startDirection);
 					}
 				}
 			}
@@ -1320,12 +1322,12 @@ namespace BahaTurret
 			float angleToTarget = Vector3.Angle(radarTarget.position-transform.position,transform.forward);
 			if(radarTarget.exists)
 			{
-				if((radarTarget.predictedPosition-transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight*0.75f)
+				if((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f)
 				{
-					if(radar 
-						&& radar.lockedTarget.exists 
-						&& (radarTarget.predictedPosition-radar.lockedTarget.predictedPosition).sqrMagnitude<Mathf.Pow(100,2) 
-						&& (radar.transform.position-transform.position).sqrMagnitude < Mathf.Pow(activeRadarRange,2))
+					if(radar
+					   && radar.lockedTarget.exists
+					   && (radarTarget.predictedPosition - radar.lockedTarget.predictedPosition).sqrMagnitude < Mathf.Pow(100, 2)
+					   && (radar.transform.position - transform.position).sqrMagnitude < Mathf.Pow(activeRadarRange, 2))
 					{
 						targetAcquired = true;
 						radarTarget = radar.lockedTarget;
@@ -1337,7 +1339,7 @@ namespace BahaTurret
 					}
 					else
 					{
-						Debug.Log ("Radar guidance failed. Out of range and no data feed.");
+						Debug.Log("Radar guidance failed. Out of range and no data feed.");
 						radarTarget = TargetSignatureData.noTarget;
 						legacyTargetVessel = null;
 						return;
@@ -1349,7 +1351,7 @@ namespace BahaTurret
 
 					if(angleToTarget > maxOffBoresight)
 					{
-						Debug.Log ("Radar guidance failed.  Target is out of active seeker gimbal limits.");
+						Debug.Log("Radar guidance failed.  Target is out of active seeker gimbal limits.");
 						radarTarget = TargetSignatureData.noTarget;
 						legacyTargetVessel = null;
 						return;
@@ -1358,32 +1360,103 @@ namespace BahaTurret
 					{
 						if(scannedTargets == null) scannedTargets = new TargetSignatureData[5];
 						TargetSignatureData.ResetTSDArray(ref scannedTargets);
-						Ray ray = new Ray(transform.position,radarTarget.predictedPosition-transform.position);
+						Ray ray = new Ray(transform.position, radarTarget.predictedPosition - transform.position);
 						bool pingRWR = Time.time - lastRWRPing > 0.4f;
 						if(pingRWR) lastRWRPing = Time.time;
-						RadarUtils.ScanInDirection(ray, lockedSensorFOV, 100, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock);
+						RadarUtils.ScanInDirection(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock);
+						float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(20, 2);
 						for(int i = 0; i < scannedTargets.Length; i++)
 						{
-							if(scannedTargets[i].exists && (scannedTargets[i].predictedPosition-radarTarget.predictedPosition).sqrMagnitude < Mathf.Pow(20,2))
+							if(scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
 							{
 								radarTarget = scannedTargets[i];
 								targetAcquired = true;
-								targetPosition = radarTarget.predictedPosition + (radarTarget.velocity*Time.fixedDeltaTime);
+								radarLOALSearching = false;
+								targetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
 								targetVelocity = radarTarget.velocity;
 								targetAcceleration = radarTarget.acceleration;
 
-								if(!activeRadar && Time.time-timeFired > 1)
+								if(!activeRadar && Time.time - timeFired > 1)
 								{
 									RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
-									Debug.Log ("Pitbull! Radar missile has gone active.  Radar sig strength: "+radarTarget.signalStrength.ToString("0.0"));
+									Debug.Log("Pitbull! Radar missile has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
 								}
 								activeRadar = true;
 								return;
 							}
 						}
-						radarTarget = TargetSignatureData.noTarget;
+
+						if(radarLOAL)
+						{
+							radarLOALSearching = true;
+							targetAcquired = true;
+							targetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+							targetVelocity = radarTarget.velocity;
+							targetAcceleration = Vector3.zero;
+							activeRadar = false;
+						}
+						else
+						{
+							radarTarget = TargetSignatureData.noTarget;
+						}
 
 					}
+				}
+			}
+			else if(radarLOAL && radarLOALSearching)
+			{
+				if(scannedTargets == null) scannedTargets = new TargetSignatureData[5];
+				TargetSignatureData.ResetTSDArray(ref scannedTargets);
+				Ray ray = new Ray(transform.position, transform.forward);
+				bool pingRWR = Time.time - lastRWRPing > 0.4f;
+				if(pingRWR) lastRWRPing = Time.time;
+				RadarUtils.ScanInDirection(ray, lockedSensorFOV*3, activeRadarMinThresh*2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock);
+				float sqrThresh = Mathf.Pow(300, 2);
+
+				float smallestAngle = 360;
+				TargetSignatureData lockedTarget = TargetSignatureData.noTarget;
+
+				for(int i = 0; i < scannedTargets.Length; i++)
+				{
+					if(scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
+					{
+						float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, transform.forward);
+						if(angle < smallestAngle)
+						{
+							lockedTarget = scannedTargets[i];
+							smallestAngle = angle;
+						}
+
+
+						activeRadar = true;
+						return;
+					}
+				}
+
+				if(lockedTarget.exists)
+				{
+					radarTarget = lockedTarget;
+					targetAcquired = true;
+					radarLOALSearching = false;
+					targetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+					targetVelocity = radarTarget.velocity;
+					targetAcceleration = radarTarget.acceleration;
+
+					if(!activeRadar && Time.time - timeFired > 1)
+					{
+						RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+						Debug.Log("Pitbull! Radar missile has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+					}
+					return;
+				}
+				else
+				{
+					targetAcquired = true;
+					targetPosition = transform.position + (startDirection * 500);
+					targetVelocity = Vector3.zero;
+					targetAcceleration = Vector3.zero;
+					radarLOALSearching = true;
+					return;
 				}
 			}
 
@@ -1438,17 +1511,37 @@ namespace BahaTurret
 			
 			//kill guidance if missile has missed
 			if(checkMiss && 
-			   (Vector3.Angle(targetPosition-transform.position, vessel.srf_velocity-targetVelocity) > 45)) 
+				(Vector3.Angle(targetPosition-transform.position, transform.position) > 80)) 
 			{
 				Debug.Log ("Missile CheckMiss showed miss");
 				hasMissed = true;
 				guidanceActive = false;
 				targetMf = null;
 				if(hasRCS) KillRCS();
-				if(sqrDist < Mathf.Pow(blastRadius*.45f, 2)) part.Die();
+				if(sqrDist < Mathf.Pow(blastRadius * .45f, 2)) part.temperature = part.maxTemp + 100;
+
+				isTimed = true;
+				detonationTime = Time.time - timeFired + 1.5f;
 				return;
 			}
 		}
+
+		void RayDetonator()
+		{
+			Vector3 lineStart = transform.position;
+			Vector3 lineEnd = transform.position + part.rb.velocity;
+			RaycastHit rayHit;
+			if(Physics.Linecast(lineStart, lineEnd, out rayHit, 557057))
+			{
+				if(rayHit.collider.attachedRigidbody && rayHit.collider.attachedRigidbody != part.rb)
+				{
+					part.temperature = part.temperature + 100;
+				}
+			}
+			
+		}
+
+	
 
 		void DrawDebugLine(Vector3 start, Vector3 end)
 		{

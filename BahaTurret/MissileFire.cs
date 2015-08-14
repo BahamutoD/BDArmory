@@ -443,7 +443,28 @@ namespace BahaTurret
 				BDArmorySettings.OnSavedSettings += ClampVisualRange;
 
 				StartCoroutine(StartupListUpdater());
+
+				GameEvents.onVesselCreate.Add(OnVesselCreate);
+				GameEvents.onPartJointBreak.Add(OnPartJointBreak);
+				GameEvents.onPartDie.Add(OnPartDie);
 			}
+		}
+
+		void OnPartDie(Part p)
+		{
+			RefreshModules();
+			UpdateList();
+		}
+
+		void OnVesselCreate(Vessel v)
+		{
+			RefreshModules();
+		}
+
+		void OnPartJointBreak(PartJoint j)
+		{
+			RefreshModules();
+			UpdateList();
 		}
 
 		IEnumerator StartupListUpdater()
@@ -475,6 +496,9 @@ namespace BahaTurret
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 			BDArmorySettings.OnSavedSettings -= ClampVisualRange;
+			GameEvents.onVesselCreate.Remove(OnVesselCreate);
+			GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
+			GameEvents.onPartDie.Remove(OnPartDie);
 		}
 		
 		void Update()
@@ -2664,6 +2688,13 @@ namespace BahaTurret
 			}
 
 			UpdateMaxGuardRange();
+		}
+
+		void RefreshModules()
+		{
+			radars = vessel.FindPartModulesImplementing<ModuleRadar>();
+			jammers = vessel.FindPartModulesImplementing<ModuleECMJammer>();
+			targetingPods = vessel.FindPartModulesImplementing<ModuleTargetingCamera>();
 		}
 		
 		

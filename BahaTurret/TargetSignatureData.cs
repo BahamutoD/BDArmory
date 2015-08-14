@@ -23,7 +23,7 @@ namespace BahaTurret
 
 		public TargetInfo targetInfo;
 
-		public float jammerStrength;
+		public VesselECMJInfo vesselJammer;
 
 		public BDArmorySettings.BDATeams team;
 
@@ -61,15 +61,8 @@ namespace BahaTurret
 				}
 			}
 
-			VesselECMJInfo jInfo = v.gameObject.GetComponent<VesselECMJInfo>();
-			if(jInfo && jInfo.jammerEnabled)
-			{
-				jammerStrength = jInfo.jammerStrength;
-			}
-			else
-			{
-				jammerStrength = 0;
-			}
+			vesselJammer = v.gameObject.GetComponent<VesselECMJInfo>();
+
 		}
 
 		public TargetSignatureData(CMFlare flare, float _signalStrength)
@@ -81,7 +74,7 @@ namespace BahaTurret
 			timeAcquired = Time.time;
 			signalStrength = _signalStrength;
 			targetInfo = null;
-			jammerStrength = 0;
+			vesselJammer = null;
 			team = BDArmorySettings.BDATeams.None;
 		}
 
@@ -94,7 +87,7 @@ namespace BahaTurret
 			timeAcquired = Time.time;
 			signalStrength = _signalStrength;
 			targetInfo = null;
-			jammerStrength = 0;
+			vesselJammer = null;
 			team = BDArmorySettings.BDATeams.None;
 		}
 
