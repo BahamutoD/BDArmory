@@ -538,6 +538,8 @@ namespace BahaTurret
 
 				if(cfg.HasValue("BDARMORY_WEAPONS_VOLUME")) BDARMORY_WEAPONS_VOLUME = float.Parse(cfg.GetValue("BDARMORY_WEAPONS_VOLUME"));
 
+				if(cfg.HasValue("MAX_GUARD_VISUAL_RANGE")) MAX_GUARD_VISUAL_RANGE = float.Parse(cfg.GetValue("MAX_GUARD_VISUAL_RANGE"));
+
 				if(cfg.HasValue("GLOBAL_LIFT_MULTIPLIER")) GLOBAL_LIFT_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_LIFT_MULTIPLIER"));
 
 				if(cfg.HasValue("GLOBAL_DRAG_MULTIPLIER")) GLOBAL_DRAG_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_DRAG_MULTIPLIER"));
