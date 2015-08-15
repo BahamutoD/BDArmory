@@ -1863,6 +1863,29 @@ namespace BahaTurret
 				break;
 			}
 		}
+
+		void LookForCountermeasure()
+		{
+			foreach (CMFlare flare in BDArmorySettings.Flares) {
+				if (flare != null) {
+					float flareAcquireMaxRange = 2500;
+					float targetViewAngle = Vector3.Angle (transform.forward, targetPosition-transform.position);
+					bool targetInView = (targetViewAngle < maxOffBoresight);
+					float chanceFactor = BDArmorySettings.FLARE_CHANCE_FACTOR;
+					float chance = Mathf.Clamp (chanceFactor - (Vector3.Distance (flare.transform.position, transform.position) / (flareAcquireMaxRange / chanceFactor)), 0, chanceFactor);
+					chance -= UnityEngine.Random.Range (0f, chance);
+					float acquireDice = (flare.thermal - 0.75f) * 2f; //Same as the old acquireDice
+					bool chancePass = (acquireDice < chance);
+					float angle = Vector3.Angle (transform.forward, flare.transform.position - transform.position);
+					if (angle < 45 && (flare.transform.position - transform.position).sqrMagnitude < Mathf.Pow (flareAcquireMaxRange, 2) && chancePass && targetInView) {
+						//Debug.Log ("=Missile deflected via flare=");
+						//target = flare;
+						targetPosition = flare.transform.position;
+						return;
+					}
+				}
+			}
+		}
 		
 	}
 }
