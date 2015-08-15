@@ -1257,8 +1257,19 @@ namespace BahaTurret
 				}
 				else if(targetingMode == TargetingModes.Heat)
 				{
-					targetAcquired = true;
-					heatTarget = new TargetSignatureData(legacyTargetVessel, 500);
+
+					if (!FooledByLegacyFlares ()) {
+						targetAcquired = true;
+						heatTarget = new TargetSignatureData (legacyTargetVessel, 500);
+						targetPosition = heatTarget.position + (heatTarget.velocity * Time.fixedDeltaTime);
+						targetVelocity = heatTarget.velocity;
+						targetAcceleration = heatTarget.acceleration;
+					} 
+					else 
+					{
+						targetAcquired = false;
+						legacyTargetVessel = null;
+					}
 					return;
 				}
 
