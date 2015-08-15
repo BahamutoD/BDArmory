@@ -1874,7 +1874,7 @@ namespace BahaTurret
 					float chanceFactor = BDArmorySettings.FLARE_CHANCE_FACTOR;
 					float chance = Mathf.Clamp (chanceFactor - (Vector3.Distance (flare.transform.position, transform.position) / (flareAcquireMaxRange / chanceFactor)), 0, chanceFactor);
 					chance -= UnityEngine.Random.Range (0f, chance);
-					float acquireDice = (flare.thermal - 0.75f) * 2f; //Same as the old acquireDice
+					float acquireDice = flare.legacyDice;
 					bool chancePass = (acquireDice < chance);
 					float angle = Vector3.Angle (transform.forward, flare.transform.position - transform.position);
 					if (angle < 45 && (flare.transform.position - transform.position).sqrMagnitude < Mathf.Pow (flareAcquireMaxRange, 2) && chancePass && targetInView) {
