@@ -698,7 +698,7 @@ namespace BahaTurret
 					UpdateLegacyTarget();
 				}
 
-				if(targetingMode == TargetingModes.Heat)
+				else if(targetingMode == TargetingModes.Heat)
 				{
 					UpdateHeatTarget();
 				}
@@ -1257,8 +1257,19 @@ namespace BahaTurret
 				}
 				else if(targetingMode == TargetingModes.Heat)
 				{
-					targetAcquired = true;
-					heatTarget = new TargetSignatureData(legacyTargetVessel, 500);
+
+					if (!FooledByLegacyFlares ()) {
+						targetAcquired = true;
+						heatTarget = new TargetSignatureData (legacyTargetVessel, 500);
+						targetPosition = heatTarget.position + (heatTarget.velocity * Time.fixedDeltaTime);
+						targetVelocity = heatTarget.velocity;
+						targetAcceleration = heatTarget.acceleration;
+					} 
+					else 
+					{
+						targetAcquired = false;
+						legacyTargetVessel = null;
+					}
 					return;
 				}
 
@@ -1862,6 +1873,29 @@ namespace BahaTurret
 				targetingMode = TargetingModes.None;
 				break;
 			}
+		}
+
+		bool FooledByLegacyFlares()
+		{
+			foreach (CMFlare flare in BDArmorySettings.Flares) {
+				if (flare != null) {
+					float flareAcquireMaxRange = 2500;
+					float targetViewAngle = Vector3.Angle (transform.forward, targetPosition-transform.position);
+					bool targetInView = (targetViewAngle < maxOffBoresight);
+					float chanceFactor = BDArmorySettings.FLARE_CHANCE_FACTOR;
+					float chance = Mathf.Clamp (chanceFactor - (Vector3.Distance (flare.transform.position, transform.position) / (flareAcquireMaxRange / chanceFactor)), 0, chanceFactor);
+					chance -= UnityEngine.Random.Range (0f, chance);
+					float acquireDice = flare.legacyDice;
+					bool chancePass = (acquireDice < chance);
+					float angle = Vector3.Angle (transform.forward, flare.transform.position - transform.position);
+					if (angle < 45 && (flare.transform.position - transform.position).sqrMagnitude < Mathf.Pow (flareAcquireMaxRange, 2) && chancePass && targetInView) {
+						//Debug.Log ("=Missile deflected via flare=");
+						//target = flare;
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 		
 	}
