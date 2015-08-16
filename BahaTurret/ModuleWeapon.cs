@@ -963,7 +963,8 @@ namespace BahaTurret
 						if(p && p.vessel && p.vessel!=this.vessel)
 						{
 							float distance = hit.distance;
-							p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),
+							//Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
+							p.temperature += laserDamage/(float)(1+Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; 
 							
 							if(BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
 						}
