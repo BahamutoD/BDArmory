@@ -587,6 +587,7 @@ namespace BahaTurret
 				cfg.SetValue("BDARMORY_WEAPONS_VOLUME", BDARMORY_WEAPONS_VOLUME.ToString(), true);
 				cfg.SetValue("GLOBAL_LIFT_MULTIPLIER", GLOBAL_LIFT_MULTIPLIER.ToString(), true);
 				cfg.SetValue("GLOBAL_DRAG_MULTIPLIER", GLOBAL_DRAG_MULTIPLIER.ToString(), true);
+				cfg.SetValue("IVA_LOWPASS_FREQ", IVA_LOWPASS_FREQ.ToString(), true);
 
 				cfg.Save ("GameData/BDArmory/settings.cfg");
 
