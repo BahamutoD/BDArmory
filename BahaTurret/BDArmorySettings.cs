@@ -46,6 +46,8 @@ namespace BahaTurret
 
 		public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
 		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
+
+		public static float IVA_LOWPASS_FREQ = 2500;
 		//==================
 		//EVENTS
 		public delegate void VolumeChange();
@@ -545,6 +547,8 @@ namespace BahaTurret
 				if(cfg.HasValue("GLOBAL_LIFT_MULTIPLIER")) GLOBAL_LIFT_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_LIFT_MULTIPLIER"));
 
 				if(cfg.HasValue("GLOBAL_DRAG_MULTIPLIER")) GLOBAL_DRAG_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_DRAG_MULTIPLIER"));
+
+				if(cfg.HasValue("IVA_LOWPASS_FREQ")) IVA_LOWPASS_FREQ = float.Parse(cfg.GetValue("IVA_LOWPASS_FREQ"));
 			}
 			catch(NullReferenceException)
 			{

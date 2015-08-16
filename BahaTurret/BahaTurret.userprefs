@@ -1,25 +1,10 @@
 ﻿<Properties StartupItem="BahaTurret.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BahaTurret.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="BDArmorySettings.cs">
     <Files>
-      <File FileName="RadarUtils.cs" Line="61" Column="66" />
-      <File FileName="UnlitBlack.shader" Line="1" Column="1" />
-      <File FileName="ModuleRadar.cs" Line="403" Column="66" />
-      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
-      <File FileName="MissileFire.cs" Line="968" Column="22" />
-      <File FileName="IBDWeapon.cs" Line="1" Column="1" />
-      <File FileName="ModuleWeapon.cs" Line="1" Column="1" />
-      <File FileName="BDAEditorCategory.cs" Line="44" Column="9" />
-      <File FileName="BDAExtensions.cs" Line="15" Column="2" />
-      <File FileName="BDACategoryModule.cs" Line="5" Column="32" />
-      <File FileName="ModuleTargetingCamera.cs" Line="727" Column="52" />
-      <File FileName="TargetSignatureData.cs" Line="66" Column="48" />
-      <File FileName="MissileGuidance.cs" Line="30" Column="4" />
-      <File FileName="BDModularGuidance.cs" Line="157" Column="127" />
-      <File FileName="ClusterBomb.cs" Line="130" Column="51" />
-      <File FileName="MissileLauncher.cs" Line="1494" Column="111" />
-      <File FileName="KSPForceApplier.cs" Line="21" Column="14" />
-      <File FileName="BahaTurret.cs" Line="646" Column="29" />
+      <File FileName="MissileLauncher.cs" Line="1325" Column="102" />
+      <File FileName="ModuleWeapon.cs" Line="429" Column="71" />
+      <File FileName="BDArmorySettings.cs" Line="551" Column="51" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

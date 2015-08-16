@@ -424,6 +424,10 @@ namespace BahaTurret
 			{
 				audioSource2.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 			}
+			if(lowpassFilter)
+			{
+				lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
+			}
 		}
 
 		void OnDestroy()
@@ -963,7 +967,8 @@ namespace BahaTurret
 						if(p && p.vessel && p.vessel!=this.vessel)
 						{
 							float distance = hit.distance;
-							p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),
+							//Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
+							p.temperature += laserDamage/(1+Mathf.PI*Mathf.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; 
 							
 							if(BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
 						}
@@ -1317,7 +1322,7 @@ namespace BahaTurret
 			}
 
 			lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
-			lowpassFilter.cutoffFrequency = 4000f;
+			lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
 			lowpassFilter.lowpassResonaceQ = 1f;
 
 			UpdateVolume();

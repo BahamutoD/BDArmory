@@ -64,6 +64,7 @@ namespace BahaTurret
 		AudioClip warningSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/warning");
 		AudioClip armOnSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOn");
 		AudioClip armOffSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOff");
+		AudioClip heatGrowlSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/heatGrowl");
 
 		//missile warning
 		public bool missileIsIncoming = false;
@@ -637,13 +638,18 @@ namespace BahaTurret
 				MissileLauncher ml = currentMissile;
 				if(ml.targetingMode == MissileLauncher.TargetingModes.Heat)
 				{
+					if(targetingAudioSource.clip != heatGrowlSound)
+					{
+						targetingAudioSource.clip = heatGrowlSound;
+					}
+
 					if(heatTarget.exists)
 					{
-						targetingAudioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/heatLock");
+						targetingAudioSource.pitch = Mathf.MoveTowards(targetingAudioSource.pitch, 2, 8 * Time.deltaTime);
 					}
 					else
 					{
-						targetingAudioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/heatGrowl");
+						targetingAudioSource.pitch = Mathf.MoveTowards(targetingAudioSource.pitch, 1, 8 * Time.deltaTime);
 					}
 
 					if(!targetingAudioSource.isPlaying)
@@ -661,6 +667,7 @@ namespace BahaTurret
 			}
 			else
 			{
+				targetingAudioSource.pitch = 1;
 				if(targetingAudioSource.isPlaying)
 				{
 					targetingAudioSource.Stop();
@@ -1528,7 +1535,7 @@ namespace BahaTurret
 					{
 						foreach(var tgp in targetingPods)
 						{
-							if(!tgp.enabled || !tgp.groundStabilized || (tgp.groundTargetPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(20, 2))
+							if(tgp.enabled && (!tgp.cameraEnabled || !tgp.groundStabilized || (tgp.groundTargetPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(20, 2)))
 							{
 								tgp.EnableCamera();
 								yield return StartCoroutine(tgp.PointToPositionRoutine(guardTarget.CoM));

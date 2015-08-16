@@ -524,6 +524,7 @@ namespace BahaTurret
 
 
 				//TARGETING
+				targetPosition = transform.position + (transform.forward * 5000); //set initial target position so if no target update, missile will count a miss if it nears this point or is flying post-thrust
 				startDirection = transform.forward;
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
@@ -1015,6 +1016,7 @@ namespace BahaTurret
 					}
 					else
 					{
+						CheckMiss();
 						targetMf = null;
 						if(!aero)
 						{
@@ -1120,7 +1122,6 @@ namespace BahaTurret
 				{
 					aamTarget = targetPosition;
 				}
-				CheckMiss();
 
 				//proxy detonation
 				if(proxyDetonate && ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
@@ -1139,7 +1140,7 @@ namespace BahaTurret
 				aeroTorque = MissileGuidance.DoAeroForces(this, aamTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 			}
 
-
+			CheckMiss();
 		}
 
 		void AGMGuidance()
@@ -1469,12 +1470,19 @@ namespace BahaTurret
 		void UpdateHeatTarget()
 		{
 			targetAcquired = false;
+
+			if(lockFailTimer > 1)
+			{
+				legacyTargetVessel = null;
+
+				return;
+			}
 			
 			if(heatTarget.exists && lockFailTimer < 0)
 			{
 				lockFailTimer = 0;
 			}
-			if(lockFailTimer >= 0 && lockFailTimer < 1)
+			if(lockFailTimer >= 0)
 			{
 				Ray lookRay = new Ray(transform.position, heatTarget.position+(heatTarget.velocity*Time.fixedDeltaTime)-transform.position);
 				heatTarget = BDATargetManager.GetHeatTarget(lookRay, lockedSensorFOV/2, heatThreshold, allAspect);
@@ -1495,30 +1503,28 @@ namespace BahaTurret
 					}
 				}
 			}
-			if(lockFailTimer > 1)
-			{
-				legacyTargetVessel = null;
-			}
+
+
 		}
 
 		void CheckMiss()
 		{
 			float sqrDist = ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
-			if(sqrDist < 200*200 || MissileState == MissileStates.PostThrust)
+			if(sqrDist < 200*200 || (MissileState == MissileStates.PostThrust && (guidanceMode == GuidanceModes.AAMLead || guidanceMode == GuidanceModes.AAMPure)))
 			{
 				checkMiss = true;	
 			}
 			
 			//kill guidance if missile has missed
-			if(checkMiss && 
-				(Vector3.Angle(targetPosition-transform.position, transform.position) > 80)) 
+			if(!hasMissed && checkMiss && 
+				(Vector3.Angle(targetPosition-transform.position, transform.forward) > 80)) 
 			{
 				Debug.Log ("Missile CheckMiss showed miss");
 				hasMissed = true;
 				guidanceActive = false;
 				targetMf = null;
 				if(hasRCS) KillRCS();
-				if(sqrDist < Mathf.Pow(blastRadius * .45f, 2)) part.temperature = part.maxTemp + 100;
+				if(sqrDist < Mathf.Pow(blastRadius * 0.5f, 2)) part.temperature = part.maxTemp + 100;
 
 				isTimed = true;
 				detonationTime = Time.time - timeFired + 1.5f;
