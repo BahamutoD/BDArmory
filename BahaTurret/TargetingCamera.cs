@@ -17,7 +17,8 @@ namespace BahaTurret
 		public static TargetingCamera Instance;
 		public static bool ReadyForUse = false;
 		public RenderTexture targetCamRenderTexture;
-
+		TGPCameraEffects camEffects;
+		Light nvLight;
 		public bool nvMode = false;
 
 
@@ -167,12 +168,58 @@ namespace BahaTurret
 
 			for(int i = 0; i < cameras.Length; i++)
 			{
-				cameras[i].enabled = true;
+				cameras[i].enabled = false;
 			}
 
 			cameraEnabled = true;
 
 			ReadyForUse = true;
+
+		}
+
+		void RenderCameras()
+		{
+			cameras[3].Render();
+			cameras[2].Render();
+
+			/*
+			if(ModuleWeapon.bulletPool)
+			{
+				for(int i = 0; i < ModuleWeapon.bulletPool.size; i++)
+				{
+					if(ModuleWeapon.bulletPool.GetPooledObject(i).activeInHierarchy)
+					{
+						PooledBullet pBullet = ModuleWeapon.bulletPool.GetPooledObject(i).GetComponent<PooledBullet>();
+						pBullet.UpdateWidth(cameras[1], 3);
+					}
+
+				}
+			}
+			*/
+			Color origAmbientColor = RenderSettings.ambientLight;
+			if(nvMode)
+			{
+				RenderSettings.ambientLight = new Color(0.5f,0.5f,0.5f,1);
+				nvLight.enabled = true;
+			}
+			cameras[1].Render();
+			cameras[0].Render();
+
+			nvLight.enabled = false;
+			if(nvMode)
+			{
+				RenderSettings.ambientLight = origAmbientColor;
+			}
+
+
+		}
+
+		void LateUpdate()
+		{
+			if(cameraEnabled)
+			{
+				RenderCameras();
+			}
 		}
 
 		public void DisableCamera()
@@ -216,7 +263,10 @@ namespace BahaTurret
 			if(targetCamRenderTexture == null)
 			{
 				int res = Mathf.RoundToInt(BDArmorySettings.TARGET_CAM_RESOLUTION);
-				targetCamRenderTexture = new RenderTexture(res,res,16);
+				targetCamRenderTexture = new RenderTexture(res,res,24);
+				targetCamRenderTexture.antiAliasing = 1;
+				targetCamRenderTexture.Create();
+
 			}
 
 
@@ -226,30 +276,47 @@ namespace BahaTurret
 			}
 
 			//cam setup
-			cameras = new Camera[FlightCamera.fetch.cameras.Length+2];
+			cameras = new Camera[4];
+
+
+			Camera fCamNear = FlightCamera.fetch.cameras[0];
+			Camera fCamFar = FlightCamera.fetch.cameras[1];
+
+
 			//flight cameras
-			for(int i = 0; i < FlightCamera.fetch.cameras.Length; i++)
-			{
-				Camera mainCam = FlightCamera.fetch.cameras[i];
-				GameObject camObj = new GameObject();
-				Camera newCam = camObj.AddComponent<Camera>();
-				newCam.CopyFrom(mainCam);
-				newCam.transform.parent = cameraTransform;
-				newCam.transform.localRotation = Quaternion.identity;
-				newCam.transform.localPosition = Vector3.zero;
-				newCam.transform.localScale = Vector3.one;
-				newCam.cullingMask = 557057;
-				newCam.targetTexture = targetCamRenderTexture;
-				cameras[i] = newCam;
+			//nearCam
+			GameObject cam1Obj = new GameObject();
+			Camera nearCam = cam1Obj.AddComponent<Camera>();
+			nearCam.CopyFrom(fCamNear);
+			nearCam.transform.parent = cameraTransform;
+			nearCam.transform.localRotation = Quaternion.identity;
+			nearCam.transform.localPosition = Vector3.zero;
+			nearCam.transform.localScale = Vector3.one;
+			nearCam.targetTexture = targetCamRenderTexture;
+			cameras[0] = nearCam;
 
-				var cbr = camObj.AddComponent<CameraBulletRenderer>();
-				cbr.resizeFactor = 3f;
 
-				TGPCameraEffects ge = camObj.AddComponent<TGPCameraEffects>();
-				ge.textureRamp = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayscaleRamp", false);
-				ge.rampOffset = 0;
+			TGPCameraEffects ge1 = cam1Obj.AddComponent<TGPCameraEffects>();
+			ge1.textureRamp = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayscaleRamp", false);
+			ge1.rampOffset = 0;
+			camEffects = ge1;
 
-			}
+			//farCam
+			GameObject cam2Obj = new GameObject();
+			Camera farCam = cam2Obj.AddComponent<Camera>();
+			farCam.CopyFrom(fCamFar);
+			farCam.transform.parent = cameraTransform;
+			farCam.transform.localRotation = Quaternion.identity;
+			farCam.transform.localPosition = Vector3.zero;
+			farCam.transform.localScale = Vector3.one;
+			farCam.targetTexture = targetCamRenderTexture;
+			cameras[1] = farCam;
+
+			/*
+			var cbr2 = cam2Obj.AddComponent<CameraBulletRenderer>();
+			cbr2.resizeFactor = 3f;
+			*/
+
 			//skybox camera
 			GameObject skyCamObj = new GameObject();
 			Camera skyCam = skyCamObj.AddComponent<Camera>();
@@ -262,7 +329,7 @@ namespace BahaTurret
 			skyCam.targetTexture = targetCamRenderTexture;
 			cameras[cameras.Length-2] = skyCam;
 			skyCamObj.AddComponent<TGPCamRotator>();
-			
+
 			//galaxy camera
 			GameObject galaxyCamObj = new GameObject();
 			Camera galaxyCam = galaxyCamObj.AddComponent<Camera>();
@@ -276,7 +343,16 @@ namespace BahaTurret
 			cameras[cameras.Length-1] = galaxyCam;
 			galaxyCamObj.AddComponent<TGPCamRotator>();
 
+			nvLight = new GameObject().AddComponent<Light>();
+			nvLight.transform.parent = cameraTransform;
+			nvLight.transform.localPosition = Vector3.zero;
+			nvLight.transform.localRotation = Quaternion.identity;
+			nvLight.type = LightType.Directional;
+			nvLight.intensity = 2;
+			nvLight.shadows = LightShadows.None;
 
+			nvLight.cullingMask = 1 << 0;
+			nvLight.enabled = false;
 		}
 
 

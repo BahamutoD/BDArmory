@@ -347,10 +347,12 @@ namespace BahaTurret
 				GameEvents.onVesselCreate.Add(ApplyNewVesselRanges);
 
 
+				/*
 				foreach(var cam in FlightCamera.fetch.cameras)
 				{
 					cam.gameObject.AddComponent<CameraBulletRenderer>();
 				}
+				*/
 
 				gpsWindowRect = new Rect(0, 0, toolbarWindowRect.width, 0);
 

@@ -2,11 +2,12 @@ Shader "Grayscale Effect" {
 Properties {
 	_MainTex ("Base (RGB)", 2D) = "white" {}
 	_RampTex ("Base (RGB)", 2D) = "grayscaleRamp" {}
+	_MinClamp("_MinClamp", Range(0.01,5) ) = 1
 }
 
 SubShader {
 	Pass {
-		ZTest Always Cull Off ZWrite Off
+		ZTest Always Cull Off ZWrite On
 				
 Program "vp" {
 // Vertex combos: 1
@@ -134,15 +135,13 @@ uniform sampler2D _MainTex;
 void main ()
 {
   lowp vec4 xlat_var_output_1;
-  lowp vec4 tmpvar_2;
-  tmpvar_2 = texture2D (_MainTex, xlv_TEXCOORD0);
-  lowp float tmpvar_3;
-  tmpvar_3 = dot (tmpvar_2.xyz, vec3(0.22, 0.707, 0.071));
-  mediump vec2 tmpvar_4;
-  tmpvar_4.y = 0.5;
-  tmpvar_4.x = (tmpvar_3 + _RampOffset);
-  xlat_var_output_1.xyz = texture2D (_RampTex, tmpvar_4).xyz;
-  xlat_var_output_1.w = tmpvar_2.w;
+  lowp float tmpvar_2;
+  tmpvar_2 = dot (texture2D (_MainTex, xlv_TEXCOORD0).xyz, vec3(0.22, 0.707, 0.071));
+  mediump vec2 tmpvar_3;
+  tmpvar_3.y = 0.5;
+  tmpvar_3.x = (tmpvar_2 + _RampOffset);
+  xlat_var_output_1.xyz = texture2D (_RampTex, tmpvar_3).xyz;
+  xlat_var_output_1.w = 1.0;
   gl_FragData[0] = xlat_var_output_1;
 }
 
@@ -191,15 +190,13 @@ uniform sampler2D _MainTex;
 void main ()
 {
   lowp vec4 xlat_var_output_1;
-  lowp vec4 tmpvar_2;
-  tmpvar_2 = texture2D (_MainTex, xlv_TEXCOORD0);
-  lowp float tmpvar_3;
-  tmpvar_3 = dot (tmpvar_2.xyz, vec3(0.22, 0.707, 0.071));
-  mediump vec2 tmpvar_4;
-  tmpvar_4.y = 0.5;
-  tmpvar_4.x = (tmpvar_3 + _RampOffset);
-  xlat_var_output_1.xyz = texture2D (_RampTex, tmpvar_4).xyz;
-  xlat_var_output_1.w = tmpvar_2.w;
+  lowp float tmpvar_2;
+  tmpvar_2 = dot (texture2D (_MainTex, xlv_TEXCOORD0).xyz, vec3(0.22, 0.707, 0.071));
+  mediump vec2 tmpvar_3;
+  tmpvar_3.y = 0.5;
+  tmpvar_3.x = (tmpvar_2 + _RampOffset);
+  xlat_var_output_1.xyz = texture2D (_RampTex, tmpvar_3).xyz;
+  xlat_var_output_1.w = 1.0;
   gl_FragData[0] = xlat_var_output_1;
 }
 
@@ -390,6 +387,8 @@ uniform lowp vec4 unity_ColorSpaceGrey;
 uniform sampler2D _MainTex;
 uniform sampler2D _RampTex;
 uniform mediump float _RampOffset;
+uniform highp float _MinClamp;
+#line 310
 #line 192
 highp vec2 MultiplyUV( in highp mat4 mat, in highp vec2 inUV ) {
     highp vec4 temp = vec4( inUV.x, inUV.y, 0.0, 0.0);
@@ -529,20 +528,21 @@ uniform lowp vec4 unity_ColorSpaceGrey;
 uniform sampler2D _MainTex;
 uniform sampler2D _RampTex;
 uniform mediump float _RampOffset;
+uniform highp float _MinClamp;
+#line 310
 #line 172
 lowp float Luminance( in lowp vec3 c ) {
     #line 174
     return dot( c, vec3( 0.22, 0.707, 0.071));
 }
-#line 309
+#line 310
 lowp vec4 frag( in v2f_img i ) {
-    #line 311
     lowp vec4 original = texture( _MainTex, i.uv);
     lowp float grayscale = Luminance( original.xyz);
+    #line 314
     mediump vec2 remap = vec2( (grayscale + _RampOffset), 0.5);
     lowp vec4 xlat_var_output = texture( _RampTex, remap);
-    #line 315
-    xlat_var_output.w = original.w;
+    xlat_var_output.w = 1.0;
     return xlat_var_output;
 }
 in mediump vec2 xlv_TEXCOORD0;
@@ -573,14 +573,15 @@ SetTexture 0 [_MainTex] 2D
 SetTexture 1 [_RampTex] 2D
 "!!ARBfp1.0
 # 6 ALU, 2 TEX
-PARAM c[2] = { program.local[0],
-		{ 0.2199707, 0.70703125, 0.070983887, 0.5 } };
+PARAM c[3] = { program.local[0],
+		{ 1, 0.2199707, 0.70703125, 0.070983887 },
+		{ 0.5 } };
 TEMP R0;
-TEX R0, fragment.texcoord[0], texture[0], 2D;
-DP3 R0.x, R0, c[1];
-MOV R0.y, c[1].w;
+TEX R0.xyz, fragment.texcoord[0], texture[0], 2D;
+DP3 R0.x, R0, c[1].yzww;
+MOV R0.y, c[2].x;
 ADD R0.x, R0, c[0];
-MOV result.color.w, R0;
+MOV result.color.w, c[1].x;
 TEX result.color.xyz, R0, texture[1], 2D;
 END
 # 6 instructions, 1 R-regs
@@ -597,20 +598,21 @@ SetTexture 1 [_RampTex] 2D
 dcl_2d s0
 dcl_2d s1
 def c1, 0.21997070, 0.70703125, 0.07098389, 0.50000000
+def c2, 1.00000000, 0, 0, 0
 dcl t0.xy
-texld r1, t0, s0
-dp3_pp r0.x, r1, c1
+texld r0, t0, s0
+dp3_pp r0.x, r0, c1
 mov_pp r0.y, c1.w
 add_pp r0.x, r0, c0
 texld r0, r0, s1
-mov_pp r0.w, r1
+mov_pp r0.w, c2.x
 mov_pp oC0, r0
 "
 }
 
 SubProgram "d3d11 " {
 Keywords { }
-ConstBuffer "$Globals" 32 // 20 used size, 2 vars
+ConstBuffer "$Globals" 32 // 20 used size, 3 vars
 Float 16 [_RampOffset]
 BindCB "$Globals" 0
 SetTexture 0 [_MainTex] 2D 0
@@ -620,7 +622,7 @@ SetTexture 1 [_RampTex] 2D 1
 // TEX 2 (0 load, 0 comp, 0 bias, 0 grad)
 // FLOW 1 static, 0 dynamic
 "ps_4_0
-eefiecedlfoelaeonkgeblgngkkncobbjhnbohgkabaaaaaaaaacaaaaadaaaaaa
+eefiecedmippnbcgmpdicejlmddomlikfbjbfnjeabaaaaaaaaacaaaaadaaaaaa
 cmaaaaaaieaaaaaaliaaaaaaejfdeheofaaaaaaaacaaaaaaaiaaaaaadiaaaaaa
 aaaaaaaaabaaaaaaadaaaaaaaaaaaaaaapaaaaaaeeaaaaaaaaaaaaaaaaaaaaaa
 adaaaaaaabaaaaaaadadaaaafdfgfpfaepfdejfeejepeoaafeeffiedepepfcee
@@ -631,11 +633,11 @@ aaaaaaaafkaaaaadaagabaaaabaaaaaafibiaaaeaahabaaaaaaaaaaaffffaaaa
 fibiaaaeaahabaaaabaaaaaaffffaaaagcbaaaaddcbabaaaabaaaaaagfaaaaad
 pccabaaaaaaaaaaagiaaaaacabaaaaaaefaaaaajpcaabaaaaaaaaaaaegbabaaa
 abaaaaaaeghobaaaaaaaaaaaaagabaaaaaaaaaaabaaaaaakbcaabaaaaaaaaaaa
-egacbaaaaaaaaaaaaceaaaaakoehgbdopepndedphdgijbdnaaaaaaaadgaaaaaf
-iccabaaaaaaaaaaadkaabaaaaaaaaaaaaaaaaaaibcaabaaaaaaaaaaaakaabaaa
-aaaaaaaaakiacaaaaaaaaaaaabaaaaaadgaaaaafccaabaaaaaaaaaaaabeaaaaa
-aaaaaadpefaaaaajpcaabaaaaaaaaaaaegaabaaaaaaaaaaaeghobaaaabaaaaaa
-aagabaaaabaaaaaadgaaaaafhccabaaaaaaaaaaaegacbaaaaaaaaaaadoaaaaab
+egacbaaaaaaaaaaaaceaaaaakoehgbdopepndedphdgijbdnaaaaaaaaaaaaaaai
+bcaabaaaaaaaaaaaakaabaaaaaaaaaaaakiacaaaaaaaaaaaabaaaaaadgaaaaaf
+ccaabaaaaaaaaaaaabeaaaaaaaaaaadpefaaaaajpcaabaaaaaaaaaaaegaabaaa
+aaaaaaaaeghobaaaabaaaaaaaagabaaaabaaaaaadgaaaaafhccabaaaaaaaaaaa
+egacbaaaaaaaaaaadgaaaaaficcabaaaaaaaaaaaabeaaaaaaaaaiadpdoaaaaab
 "
 }
 
@@ -656,20 +658,21 @@ SetTexture 0 [_MainTex] 2D
 SetTexture 1 [_RampTex] 2D
 "agal_ps
 c1 0.219971 0.707031 0.070984 0.5
+c2 1.0 0.0 0.0 0.0
 [bc]
-ciaaaaaaabaaapacaaaaaaoeaeaaaaaaaaaaaaaaafaababb tex r1, v0, s0 <2d wrap linear point>
-bcaaaaaaaaaaabacabaaaakeacaaaaaaabaaaaoeabaaaaaa dp3 r0.x, r1.xyzz, c1
+ciaaaaaaaaaaapacaaaaaaoeaeaaaaaaaaaaaaaaafaababb tex r0, v0, s0 <2d wrap linear point>
+bcaaaaaaaaaaabacaaaaaakeacaaaaaaabaaaaoeabaaaaaa dp3 r0.x, r0.xyzz, c1
 aaaaaaaaaaaaacacabaaaappabaaaaaaaaaaaaaaaaaaaaaa mov r0.y, c1.w
 abaaaaaaaaaaabacaaaaaaaaacaaaaaaaaaaaaoeabaaaaaa add r0.x, r0.x, c0
 ciaaaaaaaaaaapacaaaaaafeacaaaaaaabaaaaaaafaababb tex r0, r0.xyyy, s1 <2d wrap linear point>
-aaaaaaaaaaaaaiacabaaaappacaaaaaaaaaaaaaaaaaaaaaa mov r0.w, r1.w
+aaaaaaaaaaaaaiacacaaaaaaabaaaaaaaaaaaaaaaaaaaaaa mov r0.w, c2.x
 aaaaaaaaaaaaapadaaaaaaoeacaaaaaaaaaaaaaaaaaaaaaa mov o0, r0
 "
 }
 
 SubProgram "d3d11_9x " {
 Keywords { }
-ConstBuffer "$Globals" 32 // 20 used size, 2 vars
+ConstBuffer "$Globals" 32 // 20 used size, 3 vars
 Float 16 [_RampOffset]
 BindCB "$Globals" 0
 SetTexture 0 [_MainTex] 2D 0
@@ -679,30 +682,31 @@ SetTexture 1 [_RampTex] 2D 1
 // TEX 2 (0 load, 0 comp, 0 bias, 0 grad)
 // FLOW 1 static, 0 dynamic
 "ps_4_0_level_9_1
-eefiecedplcgedmbeaednaemiipjfedkhlbhlimpabaaaaaaomacaaaaaeaaaaaa
-daaaaaaabiabaaaagaacaaaaliacaaaaebgpgodjoaaaaaaaoaaaaaaaaaacpppp
-kiaaaaaadiaaaaaaabaacmaaaaaadiaaaaaadiaaacaaceaaaaaadiaaaaaaaaaa
+eefiecedjppknlgcilgfochgkbaglmpemncoofigabaaaaaaaeadaaaaaeaaaaaa
+daaaaaaadaabaaaahiacaaaanaacaaaaebgpgodjpiaaaaaapiaaaaaaaaacpppp
+maaaaaaadiaaaaaaabaacmaaaaaadiaaaaaadiaaacaaceaaaaaadiaaaaaaaaaa
 abababaaaaaaabaaabaaaaaaaaaaaaaaaaacppppfbaaaaafabaaapkakoehgbdo
-pepndedphdgijbdnaaaaaadpbpaaaaacaaaaaaiaaaaacdlabpaaaaacaaaaaaja
-aaaiapkabpaaaaacaaaaaajaabaiapkaecaaaaadaaaacpiaaaaaoelaaaaioeka
-aiaaaaadabaaciiaaaaaoeiaabaaoekaacaaaaadabaacbiaabaappiaaaaaaaka
-abaaaaacabaacciaabaappkaecaaaaadabaacpiaabaaoeiaabaioekaabaaaaac
-aaaachiaabaaoeiaabaaaaacaaaicpiaaaaaoeiappppaaaafdeieefceaabaaaa
-eaaaaaaafaaaaaaafjaaaaaeegiocaaaaaaaaaaaacaaaaaafkaaaaadaagabaaa
-aaaaaaaafkaaaaadaagabaaaabaaaaaafibiaaaeaahabaaaaaaaaaaaffffaaaa
-fibiaaaeaahabaaaabaaaaaaffffaaaagcbaaaaddcbabaaaabaaaaaagfaaaaad
-pccabaaaaaaaaaaagiaaaaacabaaaaaaefaaaaajpcaabaaaaaaaaaaaegbabaaa
-abaaaaaaeghobaaaaaaaaaaaaagabaaaaaaaaaaabaaaaaakbcaabaaaaaaaaaaa
-egacbaaaaaaaaaaaaceaaaaakoehgbdopepndedphdgijbdnaaaaaaaadgaaaaaf
-iccabaaaaaaaaaaadkaabaaaaaaaaaaaaaaaaaaibcaabaaaaaaaaaaaakaabaaa
-aaaaaaaaakiacaaaaaaaaaaaabaaaaaadgaaaaafccaabaaaaaaaaaaaabeaaaaa
-aaaaaadpefaaaaajpcaabaaaaaaaaaaaegaabaaaaaaaaaaaeghobaaaabaaaaaa
-aagabaaaabaaaaaadgaaaaafhccabaaaaaaaaaaaegacbaaaaaaaaaaadoaaaaab
-ejfdeheofaaaaaaaacaaaaaaaiaaaaaadiaaaaaaaaaaaaaaabaaaaaaadaaaaaa
-aaaaaaaaapaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaadaaaaaaabaaaaaaadadaaaa
-fdfgfpfaepfdejfeejepeoaafeeffiedepepfceeaaklklklepfdeheocmaaaaaa
-abaaaaaaaiaaaaaacaaaaaaaaaaaaaaaaaaaaaaaadaaaaaaaaaaaaaaapaaaaaa
-fdfgfpfegbhcghgfheaaklkl"
+pepndedphdgijbdnaaaaaadpfbaaaaafacaaapkaaaaaiadpaaaaaaaaaaaaaaaa
+aaaaaaaabpaaaaacaaaaaaiaaaaacdlabpaaaaacaaaaaajaaaaiapkabpaaaaac
+aaaaaajaabaiapkaecaaaaadaaaacpiaaaaaoelaaaaioekaaiaaaaadaaaacbia
+aaaaoeiaabaaoekaacaaaaadaaaacbiaaaaaaaiaaaaaaakaabaaaaacaaaaccia
+abaappkaecaaaaadaaaacpiaaaaaoeiaabaioekaabaaaaacaaaaciiaacaaaaka
+abaaaaacaaaicpiaaaaaoeiappppaaaafdeieefceaabaaaaeaaaaaaafaaaaaaa
+fjaaaaaeegiocaaaaaaaaaaaacaaaaaafkaaaaadaagabaaaaaaaaaaafkaaaaad
+aagabaaaabaaaaaafibiaaaeaahabaaaaaaaaaaaffffaaaafibiaaaeaahabaaa
+abaaaaaaffffaaaagcbaaaaddcbabaaaabaaaaaagfaaaaadpccabaaaaaaaaaaa
+giaaaaacabaaaaaaefaaaaajpcaabaaaaaaaaaaaegbabaaaabaaaaaaeghobaaa
+aaaaaaaaaagabaaaaaaaaaaabaaaaaakbcaabaaaaaaaaaaaegacbaaaaaaaaaaa
+aceaaaaakoehgbdopepndedphdgijbdnaaaaaaaaaaaaaaaibcaabaaaaaaaaaaa
+akaabaaaaaaaaaaaakiacaaaaaaaaaaaabaaaaaadgaaaaafccaabaaaaaaaaaaa
+abeaaaaaaaaaaadpefaaaaajpcaabaaaaaaaaaaaegaabaaaaaaaaaaaeghobaaa
+abaaaaaaaagabaaaabaaaaaadgaaaaafhccabaaaaaaaaaaaegacbaaaaaaaaaaa
+dgaaaaaficcabaaaaaaaaaaaabeaaaaaaaaaiadpdoaaaaabejfdeheofaaaaaaa
+acaaaaaaaiaaaaaadiaaaaaaaaaaaaaaabaaaaaaadaaaaaaaaaaaaaaapaaaaaa
+eeaaaaaaaaaaaaaaaaaaaaaaadaaaaaaabaaaaaaadadaaaafdfgfpfaepfdejfe
+ejepeoaafeeffiedepepfceeaaklklklepfdeheocmaaaaaaabaaaaaaaiaaaaaa
+caaaaaaaaaaaaaaaaaaaaaaaadaaaaaaaaaaaaaaapaaaaaafdfgfpfegbhcghgf
+heaaklkl"
 }
 
 SubProgram "gles3 " {
@@ -712,7 +716,7 @@ Keywords { }
 
 }
 
-#LINE 29
+#LINE 31
 
 
 	}

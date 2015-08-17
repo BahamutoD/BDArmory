@@ -141,7 +141,22 @@ namespace BahaTurret
 			collisionEnabled = true;
 		}
 
-
+		void OnWillRenderObject()
+		{
+			if(!gameObject.activeInHierarchy)
+			{
+				return;
+			}
+			Camera currentCam = Camera.current;
+			if(currentCam == FlightCamera.fetch.cameras[0] || currentCam == FlightCamera.fetch.cameras[1])
+			{
+				UpdateWidth(currentCam, 1);
+			}
+			else
+			{
+				UpdateWidth(currentCam, 4);
+			}
+		}
 			
 		
 		void FixedUpdate()

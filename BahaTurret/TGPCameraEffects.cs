@@ -20,7 +20,6 @@ namespace BahaTurret
 		public Texture  textureRamp;
 		public float    rampOffset;
 
-		Color origAmbientColor;
 
 		void Awake()
 		{
@@ -33,14 +32,6 @@ namespace BahaTurret
 		}
 		
 
-		void OnPreRender()
-		{
-			if(ModuleTargetingCamera.activeCam.nvMode)
-			{
-				origAmbientColor = RenderSettings.ambientLight;
-				RenderSettings.ambientLight = new Color(1,1,1,1);
-			}
-		}
 
 		void OnRenderImage (RenderTexture source, RenderTexture destination) 
 		{
@@ -49,14 +40,8 @@ namespace BahaTurret
 				Graphics.Blit (source, destination, grayscaleMaterial); //apply grayscale
 			}
 		}
+			
 
-		void OnPostRender()
-		{
-			if(ModuleTargetingCamera.activeCam.nvMode)
-			{
-				RenderSettings.ambientLight = origAmbientColor;
-			}
-		}
 	}
 }
 
