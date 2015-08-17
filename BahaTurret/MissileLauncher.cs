@@ -694,32 +694,34 @@ namespace BahaTurret
 				}
 
 
-				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
+				if(guidanceActive)
 				{
-					UpdateLegacyTarget();
-				}
+					if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
+					{
+						UpdateLegacyTarget();
+					}
 
-				if(targetingMode == TargetingModes.Heat)
-				{
-					UpdateHeatTarget();
+					if(targetingMode == TargetingModes.Heat)
+					{
+						UpdateHeatTarget();
+					}
+					else if(targetingMode == TargetingModes.Radar)
+					{
+						UpdateRadarTarget();
+					}
+					else if(targetingMode == TargetingModes.Laser)
+					{
+						UpdateLaserTarget();
+					}
+					else if(targetingMode == TargetingModes.GPS)
+					{
+						UpdateGPSTarget();
+					}
+					else if(targetingMode == TargetingModes.AntiRad)
+					{
+						UpdateAntiRadiationTarget();
+					}
 				}
-				else if(targetingMode == TargetingModes.Radar)
-				{
-					UpdateRadarTarget();
-				}
-				else if(targetingMode == TargetingModes.Laser)
-				{
-					UpdateLaserTarget();
-				}
-				else if(targetingMode == TargetingModes.GPS)
-				{
-					UpdateGPSTarget();
-				}
-				else if(targetingMode == TargetingModes.AntiRad)
-				{
-					UpdateAntiRadiationTarget();
-				}
-
 
 				
 				//Missile State
@@ -1027,7 +1029,7 @@ namespace BahaTurret
 						}
 						else
 						{
-							aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + 20*vessel.srf_velocity, liftArea, .25f, aeroTorque, maxTorque, maxAoA);
+							aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
 						}
 
 
@@ -1278,6 +1280,12 @@ namespace BahaTurret
 
 		void UpdateAntiRadiationTarget()
 		{
+			if(!targetAcquired)
+			{
+				guidanceActive = false;
+				return;
+			}
+
 			if(FlightGlobals.ready)
 			{
 				if(lockFailTimer < 0)
@@ -1287,9 +1295,10 @@ namespace BahaTurret
 				lockFailTimer += Time.fixedDeltaTime;
 			}
 
-			if(lockFailTimer > 3)
+			if(lockFailTimer > 8)
 			{
-				targetPosition = Vector3.ProjectOnPlane(transform.forward, VectorUtils.GetUpDirection(transform.position)).normalized * 100;
+				guidanceActive = false;
+				targetAcquired = false;
 			}
 			else
 			{
@@ -1299,7 +1308,7 @@ namespace BahaTurret
 
 		void ReceiveRadarPing(Vessel v, Vector3 source, RadarWarningReceiver.RWRThreatTypes type, float persistTime)
 		{
-			if(targetingMode == TargetingModes.AntiRad && v == vessel)
+			if(targetingMode == TargetingModes.AntiRad && targetAcquired && v == vessel)
 			{
 				if((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(50, 2)
 					&& Vector3.Angle(source-transform.position, transform.forward) < maxOffBoresight)
