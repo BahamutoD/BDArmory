@@ -81,11 +81,13 @@ namespace BahaTurret
 			{
 				return;
 			}
+
+			float deltaTime = Time.fixedDeltaTime;
 			
 			Vector3 localTargetYaw = yawTransform.parent.InverseTransformPoint(targetPosition - (yawTargetOffset * pitchTransform.right));
 			Vector3 targetYaw = Vector3.ProjectOnPlane(localTargetYaw, Vector3.up);
 			float targetYawAngle = VectorUtils.SignedAngle(Vector3.forward, targetYaw, Vector3.right);
-			targetYawAngle = Mathf.Clamp(targetYawAngle, -yawRange/2, yawRange/2);
+			targetYawAngle = Mathf.Clamp(targetYawAngle, -yawRange / 2, yawRange / 2);
 			
 			Vector3 localTargetPitch = pitchTransform.parent.InverseTransformPoint(targetPosition - (pitchTargetOffset * pitchTransform.up));
 			localTargetPitch.z = Mathf.Abs(localTargetPitch.z);//prevents from aiming wonky if target is behind
@@ -100,16 +102,16 @@ namespace BahaTurret
 				float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), targetYaw);
 				float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), targetPitch);
 				
-				yawSpeed = Mathf.Clamp(yawOffset*smoothMultiplier, 1f, yawSpeedDPS)*Time.deltaTime;
-				pitchSpeed = Mathf.Clamp(pitchOffset*smoothMultiplier, 1f, pitchSpeedDPS)*Time.deltaTime;
+				yawSpeed = Mathf.Clamp(yawOffset * smoothMultiplier, 1f, yawSpeedDPS) * deltaTime;
+				pitchSpeed = Mathf.Clamp(pitchOffset * smoothMultiplier, 1f, pitchSpeedDPS) * deltaTime;
 			}
 			else
 			{
-				yawSpeed = yawSpeedDPS*Time.deltaTime;
-				pitchSpeed = pitchSpeedDPS*Time.deltaTime;
+				yawSpeed = yawSpeedDPS * deltaTime;
+				pitchSpeed = pitchSpeedDPS * deltaTime;
 			}
 			
-			yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.Euler(0,targetYawAngle,0), yawSpeed);
+			yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.Euler(0, targetYawAngle, 0), yawSpeed);
 			pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.Euler(-targetPitchAngle, 0, 0), pitchSpeed);
 		}
 

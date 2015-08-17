@@ -20,7 +20,21 @@ namespace BahaTurret
 		bool startedLanded = false;
 		bool extending = false;
 
-		Transform velocityTransform;
+		GameObject vobj;
+		Transform velocityTransform
+		{
+			get
+			{
+				if(!vobj)
+				{
+					vobj = new GameObject("velObject");
+					vobj.transform.position = vessel.ReferenceTransform.position;
+					vobj.transform.parent = vessel.ReferenceTransform;
+				}
+
+				return vobj.transform;
+			}
+		}
 
 		Vessel targetVessel;
 
@@ -74,11 +88,6 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				GameObject velocityObject = new GameObject("velObject");
-				velocityObject.transform.position = transform.position;
-				velocityObject.transform.parent = transform;
-				velocityTransform = velocityObject.transform;
-
 				part.OnJustAboutToBeDestroyed += DeactivatePilot;
 				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
 
@@ -113,6 +122,7 @@ namespace BahaTurret
 		public void ActivatePilot()
 		{
 			pilotEnabled = true;
+			vessel.OnFlyByWire -= AutoPilot;
 			vessel.OnFlyByWire += AutoPilot;
 			startedLanded = vessel.Landed;
 
@@ -177,11 +187,10 @@ namespace BahaTurret
 
 		void AutoPilot(FlightCtrlState s)
 		{
-			if(!vessel || !vessel.transform)
+			if(!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
 			{
 				return;
 			}
-
 			//default brakes off full throttle
 			s.mainThrottle = 1;
 			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
@@ -190,20 +199,16 @@ namespace BahaTurret
 
 
 
-
 			GetGuardTarget();
-
 			if(vessel.Landed && standbyMode && wm && BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(wm.team)].Count == 0)
 			{
 				s.mainThrottle = 0;
 				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
 				return;
 			}
-
 			//upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
-			upDirection = (transform.position-FlightGlobals.currentMainBody.transform.position).normalized;
+			upDirection = VectorUtils.GetUpDirection(vessel.transform.position);
 			debugString = string.Empty;
-
 			if(MissileGuidance.GetRadarAltitude(vessel) < minAltitude)
 			{
 				startedLanded = true;
@@ -234,7 +239,7 @@ namespace BahaTurret
 				{
 					if(!targetVessel.Landed)
 					{
-						if(vessel.altitude < defaultAltitude && Vector3.Angle(targetVessel.transform.position-transform.position, -upDirection) < 35)
+						if(vessel.altitude < defaultAltitude && Vector3.Angle(targetVessel.transform.position-vessel.transform.position, -upDirection) < 35)
 						{
 							//dangerous if low altitude and target is far below you - don't dive into ground!
 							extending = true;
@@ -264,7 +269,7 @@ namespace BahaTurret
 					{
 						float extendDistance = Mathf.Clamp(wm.guardRange-1800, 2500, 4000);
 						Vector3 surfaceVector = GetSurfacePosition(targetVessel.transform.position)-GetSurfacePosition(vessel.transform.position);
-						if(surfaceVector.sqrMagnitude < Mathf.Pow(extendDistance, 2) && Vector3.Angle(vessel.ReferenceTransform.up, targetVessel.transform.position-transform.position) > 45)
+						if(surfaceVector.sqrMagnitude < Mathf.Pow(extendDistance, 2) && Vector3.Angle(vessel.ReferenceTransform.up, targetVessel.transform.position-vessel.transform.position) > 45)
 						{
 							extending = true;
 							lastTargetPosition = targetVessel.transform.position;
@@ -466,7 +471,7 @@ namespace BahaTurret
 		{
 			debugString += "\nEvasive";
 			threatLevel = 1f;
-			Vector3 target = (vessel.srfSpeed < 200) ? FlightPosition(transform.position, minAltitude) : DefaultAltPosition();
+			Vector3 target = (vessel.srfSpeed < 200) ? FlightPosition(vessel.transform.position, minAltitude) : DefaultAltPosition();
 			target +=
 				 (Quaternion.AngleAxis(Mathf.Sin (Time.time/2) * 80, upDirection) * Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 750, upDirection))
 				+ (Mathf.Sin (Time.time/3) * upDirection * minAltitude/3);
@@ -496,12 +501,12 @@ namespace BahaTurret
 
 			if(radarAlt > 70)
 			{
-				FlyToPosition(s, transform.position + Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 100, upDirection) + (upDirection * 50));
+				FlyToPosition(s, vessel.transform.position + Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 100, upDirection) + (upDirection * 50));
 				vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
 			}
 			else
 			{
-				FlyToPosition(s, transform.position + Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 100, upDirection) + (upDirection * 20));
+				FlyToPosition(s, vessel.transform.position + Vector3.ProjectOnPlane(vessel.ReferenceTransform.up * 100, upDirection) + (upDirection * 20));
 				vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
 			}
 
@@ -513,7 +518,7 @@ namespace BahaTurret
 
 		Vector3 DefaultAltPosition()
 		{
-			return (transform.position + (-(float)vessel.altitude*upDirection) + (defaultAltitude *upDirection));
+			return (vessel.transform.position + (-(float)vessel.altitude*upDirection) + (defaultAltitude *upDirection));
 		}
 
 		Vector3 GetSurfacePosition(Vector3 position)

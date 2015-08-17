@@ -454,15 +454,15 @@ namespace BahaTurret
 	
 				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 				{
-					UpdateTargetVessel();
-					Aim();
+					
 
 					userFiring = (Input.GetKey(BDArmorySettings.FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
 					if((userFiring || autoFire) && (yawRange == 0 || (maxPitch-minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
 						{
-							Fire();
+							finalFire = true;
+							//Fire();
 						}
 					}
 					else
@@ -494,6 +494,45 @@ namespace BahaTurret
 			}
 		}
 
+		IEnumerator AimAndFireAtEndOfFrame()
+		{
+			//yield return new WaitForEndOfFrame();
+			RunTrajectorySimulation();
+			Aim();
+			CheckWeaponSafety();
+
+			if(finalFire)
+			{
+				if(eWeaponType == WeaponTypes.Laser)
+				{
+					if(FireLaser())
+					{
+						for(int i = 0; i < laserRenderers.Length; i++)
+						{
+							laserRenderers[i].enabled = true;
+						}
+					}
+					else
+					{
+						for(int i = 0; i < laserRenderers.Length; i++)
+						{
+							laserRenderers[i].enabled = false;
+						}
+						audioSource.Stop ();	
+					}
+				}
+				else
+				{
+					Fire();
+				}
+
+				finalFire = false;
+			}
+
+			yield break;
+		}
+
+		bool finalFire = false;
 
 		void FixedUpdate()
 		{
@@ -512,13 +551,18 @@ namespace BahaTurret
 
 				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode!=TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 				{
-					CheckWeaponSafety();
-					RunTrajectorySimulation();
+					UpdateTargetVessel();
+					//Aim();
+					StartCoroutine(AimAndFireAtEndOfFrame());
+
+
 				
 					if(eWeaponType == WeaponTypes.Laser)
 					{
 						if((userFiring || autoFire) && (!turret || turret.TargetInRange(targetPosition, 10, float.MaxValue)))
 						{
+							finalFire = true;
+							/*
 							if(FireLaser())
 						   	{
 								for(int i = 0; i < laserRenderers.Length; i++)
@@ -534,6 +578,7 @@ namespace BahaTurret
 								}
 								audioSource.Stop ();	
 							}
+							*/
 						}
 						else
 						{
@@ -640,7 +685,7 @@ namespace BahaTurret
 			Vector3 finalTarget = targetPosition;
 			Vector3 originalTarget = targetPosition;
 			targetDistance = Vector3.Distance(finalTarget, transform.position);
-
+			targetLeadDistance = targetDistance;
 			if((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType!=WeaponTypes.Laser)
 			{
 				float gAccel = (float) FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude;
@@ -818,7 +863,7 @@ namespace BahaTurret
 						PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
 						firedBullet.transform.position = fireTransform.position;
 						pBullet.mass = bulletMass;
-						
+						timeFired = Time.time;
 						
 						//Vector3 firedVelocity = fireTransform.rotation * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
 						Vector3 firedVelocity = VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
@@ -884,7 +929,7 @@ namespace BahaTurret
 					}
 				}
 
-				timeFired = Time.time;
+
 			}
 			else
 			{
@@ -924,39 +969,41 @@ namespace BahaTurret
 
 					if(legacyTargetVessel!=null && legacyTargetVessel.loaded)
 					{
-						targetDirection = (legacyTargetVessel.CoM+(legacyTargetVessel.rb_velocity*Time.fixedDeltaTime)) - tf.position;
 						physStepFix = legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
+						targetDirection = (legacyTargetVessel.CoM+physStepFix) - tf.position;
 
 
 						if(Vector3.Angle(rayDirection, targetDirection) < 1)
 						{
 							rayDirection = targetDirection;
-							targetDirectionLR = (legacyTargetVessel.CoM+(2*legacyTargetVessel.rb_velocity*Time.fixedDeltaTime)) - tf.position;
+							targetDirectionLR = legacyTargetVessel.CoM+(2*physStepFix) - tf.position;
 						}
 					}
 					else if(slaved)
 					{
-						foreach(var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
-						{
-							targetDirection = mtc.targetPointPosition-tf.position;
+						physStepFix = (targetVelocity)*Time.fixedDeltaTime;
+						targetDirection = (targetPosition+physStepFix) - tf.position;
 
-							if(Vector3.Angle(rayDirection, targetDirection)<1)
-							{
-								rayDirection = targetDirection;
-								targetDirectionLR = targetDirection;
-							}
-							break;
-						}
+
+						rayDirection = targetDirection;
+						targetDirectionLR = targetDirection + physStepFix;
 					}
 					
 
 
 					Ray ray = new Ray(tf.position, rayDirection);
+					lr.useWorldSpace = false;
+					lr.SetPosition(0, Vector3.zero);
 					RaycastHit hit;
 					if(Physics.Raycast(ray, out hit, maxDistance, 557057))
 					{
-						laserPoint = hit.point + (physStepFix);
-						lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
+						lr.useWorldSpace = true;
+						laserPoint = hit.point + physStepFix;
+
+						//lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
+						lr.SetPosition(0, tf.position+(part.rb.velocity*Time.fixedDeltaTime));
+						lr.SetPosition(1, laserPoint);
+
 
 						if(Time.time-timeFired > 6/120 && BDArmorySettings.BULLET_HITS)
 						{
@@ -1455,45 +1502,62 @@ namespace BahaTurret
 				}
 			}
 
-			//legacy or visual range guard targeting
-			if(aiControlled && weaponManager && legacyTargetVessel && (BDArmorySettings.ALLOW_LEGACY_TARGETING || (legacyTargetVessel.transform.position-transform.position).sqrMagnitude < Mathf.Pow(weaponManager.guardRange, 2)))
+			if(weaponManager)
 			{
-				targetPosition = legacyTargetVessel.CoM;
-				targetVelocity = legacyTargetVessel.srf_velocity;
-				targetAcceleration = legacyTargetVessel.acceleration;
-				targetAcquired = true;
-				return;
-			}
 
-			//radar targeting
-			if(weaponManager && weaponManager.radar)
-			{
-				if(weaponManager.radar.locked)
+				//legacy or visual range guard targeting
+				if(aiControlled && weaponManager && legacyTargetVessel && (BDArmorySettings.ALLOW_LEGACY_TARGETING || (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < Mathf.Pow(weaponManager.guardRange, 2)))
 				{
-					targetPosition = weaponManager.radar.lockedTarget.predictedPosition + (weaponManager.radar.lockedTarget.velocity * Time.fixedDeltaTime);
-					targetVelocity = weaponManager.radar.lockedTarget.velocity;
-					targetAcceleration = weaponManager.radar.lockedTarget.acceleration;
+					targetPosition = legacyTargetVessel.CoM;
+					targetVelocity = legacyTargetVessel.srf_velocity;
+					targetAcceleration = legacyTargetVessel.acceleration;
 					targetAcquired = true;
+					return;
 				}
-				if(weaponManager.radar.slaveTurrets && turret)
-				{
-					slaved = true;
-				}	
-				return;
-			}
 
-			//laser targeting
-			if(ModuleTargetingCamera.activeCam && ModuleTargetingCamera.activeCam.vessel == vessel && ModuleTargetingCamera.activeCam.slaveTurrets)
-			{
-				if(turret)
+				//radar targeting
+				if(weaponManager && weaponManager.radar)
 				{
-					slaved = true;
+					if(weaponManager.radar.locked)
+					{
+						targetPosition = weaponManager.radar.lockedTarget.predictedPosition + (weaponManager.radar.lockedTarget.velocity * Time.fixedDeltaTime);
+						targetVelocity = weaponManager.radar.lockedTarget.velocity;
+						targetAcceleration = weaponManager.radar.lockedTarget.acceleration;
+						targetAcquired = true;
+						if(!weaponManager.radar.slaveTurrets || !turret)
+						{
+							return;
+						}
+					}
+
+					if(weaponManager.radar.slaveTurrets && turret)
+					{
+						slaved = true;
+						return;
+					}	
+
 				}
-				targetPosition = ModuleTargetingCamera.activeCam.targetPointPosition;
-				targetVelocity = Vector3.zero;
-				targetAcceleration = Vector3.zero;
-				targetAcquired = true;
-				return;
+
+				//laser targeting
+				if(weaponManager.mainTGP && weaponManager.mainTGP.cameraEnabled && weaponManager.mainTGP.slaveTurrets)
+				{
+					if(turret)
+					{
+						slaved = true;
+					}
+					if(weaponManager.mainTGP.groundStabilized)
+					{
+						targetPosition = weaponManager.mainTGP.groundTargetPosition;
+					}
+					else
+					{
+						targetPosition = weaponManager.mainTGP.targetPointPosition;
+					}
+					targetVelocity = Vector3.zero;
+					targetAcceleration = Vector3.zero;
+					targetAcquired = true;
+					return;
+				}
 			}
 
 		}

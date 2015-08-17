@@ -68,17 +68,26 @@ namespace BahaTurret
 
 		void OnPartDie(Part p)
 		{
-			StartCoroutine(DelayedCleanJammerListRoutine());
+			if(gameObject.activeInHierarchy)
+			{
+				StartCoroutine(DelayedCleanJammerListRoutine());
+			}
 		}
 
 		void OnVesselCreate(Vessel v)
 		{
-			StartCoroutine(DelayedCleanJammerListRoutine());
+			if(gameObject.activeInHierarchy)
+			{
+				StartCoroutine(DelayedCleanJammerListRoutine());
+			}
 		}
 
 		void OnPartJointBreak(PartJoint j)
 		{
-			StartCoroutine(DelayedCleanJammerListRoutine());
+			if(gameObject.activeInHierarchy)
+			{
+				StartCoroutine(DelayedCleanJammerListRoutine());
+			}
 		}
 
 		public void AddJammer(ModuleECMJammer jammer)

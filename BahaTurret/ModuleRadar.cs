@@ -84,7 +84,7 @@ namespace BahaTurret
 		//contacts
 		TargetSignatureData[] contacts;
 		TargetSignatureData[] attemptedLocks;
-		public TargetSignatureData lockedTarget;
+		public TargetSignatureData lockedTarget = TargetSignatureData.noTarget;
 
 		//GUI
 		bool drawGUI = false;

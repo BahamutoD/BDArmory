@@ -197,6 +197,11 @@ namespace BahaTurret
 
 			cameraEnabled = true;
 
+			if(weaponManager)
+			{
+				weaponManager.mainTGP = this;
+			}
+
 			BDATargetManager.RegisterLaserPoint(this);
 		}
 
@@ -233,6 +238,11 @@ namespace BahaTurret
 
 			}
 			BDATargetManager.ActiveLasers.Remove(this);
+
+			if(weaponManager && weaponManager.mainTGP == this)
+			{
+				weaponManager.mainTGP = FindNextActiveCamera();
+			}
 		}
 
 		ModuleTargetingCamera FindNextActiveCamera()
