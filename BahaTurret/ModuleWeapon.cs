@@ -1298,19 +1298,25 @@ namespace BahaTurret
 		{
 			fireSound = GameDatabase.Instance.GetAudioClip(fireSoundPath);
 			overheatSound = GameDatabase.Instance.GetAudioClip(overheatSoundPath);
-			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.bypassListenerEffects = true;
-			audioSource.minDistance = .3f;
-			audioSource.maxDistance = 1000;
-			audioSource.priority = 10;
-			audioSource.dopplerLevel = 0;
-			
-			audioSource2 = gameObject.AddComponent<AudioSource>();
-			audioSource2.bypassListenerEffects = true;
-			audioSource2.minDistance = .3f;
-			audioSource2.maxDistance = 1000;
-			audioSource2.dopplerLevel = 0;
-			audioSource2.priority = 10;
+			if(!audioSource)
+			{
+				audioSource = gameObject.AddComponent<AudioSource>();
+				audioSource.bypassListenerEffects = true;
+				audioSource.minDistance = .3f;
+				audioSource.maxDistance = 1000;
+				audioSource.priority = 10;
+				audioSource.dopplerLevel = 0;
+			}
+
+			if(!audioSource2)
+			{
+				audioSource2 = gameObject.AddComponent<AudioSource>();
+				audioSource2.bypassListenerEffects = true;
+				audioSource2.minDistance = .3f;
+				audioSource2.maxDistance = 1000;
+				audioSource2.dopplerLevel = 0;
+				audioSource2.priority = 10;
+			}
 			
 			if(reloadAudioPath != string.Empty)
 			{
@@ -1321,9 +1327,12 @@ namespace BahaTurret
 				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
 			}
 
-			lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
-			lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
-			lowpassFilter.lowpassResonaceQ = 1f;
+			if(!lowpassFilter)
+			{
+				lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
+				lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
+				lowpassFilter.lowpassResonaceQ = 1f;
+			}
 
 			UpdateVolume();
 		}
