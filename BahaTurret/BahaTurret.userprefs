@@ -1,10 +1,19 @@
 ﻿<Properties StartupItem="BahaTurret.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BDArmorySettings.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="TargetingCamera.cs">
     <Files>
-      <File FileName="MissileLauncher.cs" Line="1325" Column="102" />
-      <File FileName="ModuleWeapon.cs" Line="429" Column="71" />
-      <File FileName="BDArmorySettings.cs" Line="551" Column="51" />
+      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
+      <File FileName="ModuleWeapon.cs" Line="1" Column="1" />
+      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
+      <File FileName="MissileFire.cs" Line="1" Column="1" />
+      <File FileName="ModuleTargetingCamera.cs" Line="505" Column="103" />
+      <File FileName="TargetingCamera.cs" Line="182" Column="4" />
+      <File FileName="Subtractive.shader" Line="1" Column="1" />
+      <File FileName="BDAShaderLoader.cs" Line="1" Column="1" />
+      <File FileName="TGPCameraEffects.cs" Line="1" Column="1" />
+      <File FileName="GrayscaleEffectShader.shader" Line="1" Column="1" />
+      <File FileName="RadarUtils.cs" Line="1" Column="1" />
+      <File FileName="CameraBulletRenderer.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
