@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -573,14 +574,7 @@ namespace BahaTurret
 				info.isMissile = true;
 				info.missileModule = this;
 
-				if(decoupleForward)
-				{
-					part.rb.velocity += decoupleSpeed * part.transform.forward;
-				}
-				else
-				{
-					part.rb.velocity += decoupleSpeed * -part.transform.up;
-				}
+				StartCoroutine(DecoupleRoutine());
 				
 				if(rndAngVel > 0)
 				{
@@ -611,6 +605,19 @@ namespace BahaTurret
 
 
 				
+			}
+		}
+
+		IEnumerator DecoupleRoutine()
+		{
+			yield return new WaitForFixedUpdate();
+			if(decoupleForward)
+			{
+				part.rb.velocity += decoupleSpeed * part.transform.forward;
+			}
+			else
+			{
+				part.rb.velocity += decoupleSpeed * -part.transform.up;
 			}
 		}
 
