@@ -482,6 +482,7 @@ namespace BahaTurret
 					if (activeCam == this && TargetingCamera.ReadyForUse) 
 					{
 						camWindowRect = GUI.Window (125452, camWindowRect, CamWindow, string.Empty, HighLogic.Skin.window);
+						BDGUIUtils.UseMouseEventInRect(camWindowRect);
 					}
 
 					//locked target icon

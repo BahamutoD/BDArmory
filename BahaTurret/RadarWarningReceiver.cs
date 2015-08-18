@@ -244,6 +244,7 @@ namespace BahaTurret
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySettings.GAME_UI_ENABLED && vessel.isActiveVessel && rwrEnabled)
 			{
 				windowRect = GUI.Window(94353, windowRect, RWRWindow, GUIContent.none); 
+				BDGUIUtils.UseMouseEventInRect(windowRect);
 			}
 		}
 

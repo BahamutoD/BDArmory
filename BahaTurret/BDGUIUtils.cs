@@ -70,6 +70,14 @@ namespace BahaTurret
 			GUI.DrawTexture(rect, pixel);
 			GUI.color = originalColor;
 		}
+
+		public static void UseMouseEventInRect(Rect rect)
+		{
+			if(Misc.MouseIsInRect(rect) && Event.current.isMouse && (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp))
+			{
+				Event.current.Use();
+			}
+		}
 	}
 }
 

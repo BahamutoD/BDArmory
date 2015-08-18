@@ -69,6 +69,12 @@ namespace BahaTurret
 				)
 			);	
 		}
+
+		public static bool MouseIsInRect(Rect rect)
+		{
+			Vector3 inverseMousePos = new Vector3(Input.mousePosition.x, Screen.height-Input.mousePosition.y, 0);
+			return rect.Contains(inverseMousePos);
+		}
 		
 		//Thanks FlowerChild
 		//refreshes part action window

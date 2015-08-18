@@ -144,6 +144,7 @@ namespace BahaTurret
 
 		public void UpdateStackNode(bool updateChild)
 		{
+			Vector3 delta = Vector3.zero;
 			foreach(var stackNode in part.attachNodes)
 			{
 				if(stackNode.nodeType == AttachNode.NodeType.Stack && originalStackNodePosition.ContainsKey(stackNode.id))
@@ -151,16 +152,17 @@ namespace BahaTurret
 					Vector3 prevPos = stackNode.position;
 
 					stackNode.position.y = originalStackNodePosition[stackNode.id].y + railHeight;
+					delta = stackNode.position - prevPos;
 
-					if(updateChild)
-					{
-						Vector3 delta = stackNode.position - prevPos;
-						Vector3 worldDelta = part.transform.TransformVector(delta);
-						foreach(var p in part.children)
-						{
-							p.transform.position += worldDelta;
-						}
-					}
+				}
+			}
+
+			if(updateChild)
+			{
+				Vector3 worldDelta = part.transform.TransformVector(delta);
+				foreach(var p in part.children)
+				{
+					p.transform.position += worldDelta;
 				}
 			}
 		}

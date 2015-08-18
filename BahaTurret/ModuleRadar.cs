@@ -628,11 +628,14 @@ namespace BahaTurret
 			if(drawGUI)
 			{
 				radarWindowRect = GUI.Window(524314, radarWindowRect, RadarWindow, string.Empty, HighLogic.Skin.window);
+				BDGUIUtils.UseMouseEventInRect(radarWindowRect);
 
 				if(linkWindowOpen && canRecieveRadarData)
 				{
 					linkWindowRect = new Rect(radarWindowRect.x - linkRectWidth, radarWindowRect.y+16, linkRectWidth, 16 + (numberOfAvailableLinks * linkRectEntryHeight));
 					LinkRadarWindow();
+
+					BDGUIUtils.UseMouseEventInRect(linkWindowRect);
 				}
 
 				if(locked)
@@ -650,6 +653,7 @@ namespace BahaTurret
 				{
 					BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500 * transform.up), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
 				}
+
 
 			}
 		}

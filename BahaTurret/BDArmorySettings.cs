@@ -629,9 +629,11 @@ namespace BahaTurret
 				if(toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
 				{
 					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "");
+					BDGUIUtils.UseMouseEventInRect(toolbarWindowRect);
 					if(showGPSWindow && ActiveWeaponManager)
 					{
 						gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
+						BDGUIUtils.UseMouseEventInRect(gpsWindowRect);
 						foreach(var coordinate in BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
 						{
 							BDGUIUtils.DrawTextureOnWorldPos(coordinate.worldPos, BDArmorySettings.Instance.greenDotTexture, new Vector2(8,8), 0);
@@ -1058,7 +1060,8 @@ namespace BahaTurret
 		{
 			
 			float line = 1.25f;
-			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "");
+			Rect settingsRect = new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight);
+			GUI.Box(settingsRect, "");
 			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "BDArmory Settings");
 			INSTAKILL = GUI.Toggle(SLeftRect(line), INSTAKILL, "Instakill");
 			INFINITE_AMMO = GUI.Toggle(SRightRect(line), INFINITE_AMMO, "Infinte Ammo");
@@ -1157,6 +1160,7 @@ namespace BahaTurret
 
 			line+=3;
 			settingsHeight = (line * settingsSpacer);
+			BDGUIUtils.UseMouseEventInRect(settingsRect);
 		}
 		
 		
