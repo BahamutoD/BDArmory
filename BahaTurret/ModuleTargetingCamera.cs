@@ -631,6 +631,13 @@ namespace BahaTurret
 				string lrLabel = surfaceDetected ? "LR" : "NO LR";
 				Rect lrRect = new Rect(imageRect.x, imageRect.y+(camImageSize * 0.65f), camImageSize, 20);
 				GUI.Label(lrRect, lrLabel, dataStyle);
+
+				//azimuth and elevation indicator //UNFINISHED
+				/*
+				Vector2 azielPos = TargetAzimuthElevationScreenPos(imageRect, groundTargetPosition, 4);
+				Rect azielRect = new Rect(azielPos.x, azielPos.y, 4, 4);
+				GUI.DrawTexture(azielRect, BDArmorySettings.Instance.whiteSquareTexture, ScaleMode.StretchToFill, true);
+				*/
 			}
 
 
@@ -1079,6 +1086,27 @@ namespace BahaTurret
 		void OnDestroy()
 		{
 			windowIsOpen = false;
+		}
+
+		Vector2 TargetAzimuthElevationScreenPos(Rect screenRect, Vector3 targetPosition, float textureSize)
+		{
+			Vector3 localPos = vessel.ReferenceTransform.InverseTransformPoint(targetPosition);
+			Vector3 aziRef = Vector3.up;
+			Vector3 aziPos = Vector3.ProjectOnPlane(localPos, Vector3.forward);
+			float elevation = VectorUtils.SignedAngle(aziPos, localPos, Vector3.forward);
+			float normElevation = elevation / 70;
+
+
+			float azimuth = VectorUtils.SignedAngle(aziRef, aziPos, Vector3.right);
+			float normAzimuth = Mathf.Clamp(azimuth / 120, -1, 1);
+
+			float x = screenRect.x + (screenRect.width/2) + (normAzimuth * (screenRect.width / 2)) - (textureSize/2);
+			float y = screenRect.y + (screenRect.height/4) + (normElevation * (screenRect.height / 4)) - (textureSize/2);
+
+			x = Mathf.Clamp(x, textureSize / 2, screenRect.width - (textureSize / 2));
+			y = Mathf.Clamp(y, textureSize / 2, (screenRect.height) - (textureSize / 2));
+
+			return new Vector2(x, y);
 		}
 
 

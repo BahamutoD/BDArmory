@@ -637,7 +637,7 @@ namespace BahaTurret
 
 				if(locked)
 				{
-					if(lockedTarget.targetInfo && weaponManager && lockedTarget.targetInfo.team == BDATargetManager.BoolToTeam(weaponManager.team)) 
+					if(weaponManager && lockedTarget.team == BDATargetManager.BoolToTeam(weaponManager.team)) 
 					{
 						BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition, BDArmorySettings.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
 					}

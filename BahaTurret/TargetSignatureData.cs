@@ -23,9 +23,11 @@ namespace BahaTurret
 
 		public TargetInfo targetInfo;
 
-		public VesselECMJInfo vesselJammer;
-
 		public BDArmorySettings.BDATeams team;
+
+		public Vector2 pingPosition;
+
+		public VesselECMJInfo vesselJammer;
 
 		public bool Equals(TargetSignatureData other)
 		{
@@ -63,6 +65,8 @@ namespace BahaTurret
 
 			vesselJammer = v.gameObject.GetComponent<VesselECMJInfo>();
 
+			pingPosition = Vector2.zero;
+
 		}
 
 		public TargetSignatureData(CMFlare flare, float _signalStrength)
@@ -76,6 +80,7 @@ namespace BahaTurret
 			targetInfo = null;
 			vesselJammer = null;
 			team = BDArmorySettings.BDATeams.None;
+			pingPosition = Vector2.zero;
 		}
 
 		public TargetSignatureData(Vector3 _velocity, Vector3 _position, Vector3 _acceleration, bool _exists, float _signalStrength)
@@ -89,6 +94,7 @@ namespace BahaTurret
 			targetInfo = null;
 			vesselJammer = null;
 			team = BDArmorySettings.BDATeams.None;
+			pingPosition = Vector2.zero;
 		}
 
 		public Vector3 position
