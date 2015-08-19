@@ -107,6 +107,10 @@ namespace BahaTurret
 		public static Rect camWindowRect;
 		float camImageSize = 360;
 		bool resizing = false;
+
+		bool slewedCamera = false;
+		float finalSlewSpeed;
+		Vector2 slewInput = Vector2.zero;
 		
 
 		Texture2D riTex;
@@ -297,9 +301,8 @@ namespace BahaTurret
 
 
 				ParseFovs();
-				//fov = zoomFovs[currentFovIndex];
+				UpdateSlewRate();
 
-				//part.OnJustAboutToBeDestroyed += DisableCamera;
 
 
 
@@ -395,30 +398,11 @@ namespace BahaTurret
 						}
 					}
 
+
+
 					if(radarLock)
 					{
-						if(weaponManager && weaponManager.radar && weaponManager.radar.locked)
-						{
-							Vector3 radarTargetPos = weaponManager.radar.lockedTarget.predictedPosition + (weaponManager.radar.lockedTarget.velocity*Time.fixedDeltaTime);
-							Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
-							if(Vector3.Angle(radarTargetPos - cameraParentTransform.position, cameraParentTransform.forward) < 1.5f)
-							{
-								cameraParentTransform.rotation = lookRotation;
-								GroundStabilize();
-							}
-							else
-							{
-								if(groundStabilized)
-								{
-									ClearTarget();
-								}
-								cameraParentTransform.rotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 80*Time.fixedDeltaTime);
-							}
-						}
-						else
-						{
-							radarLock = false;
-						}
+						UpdateRadarLock();
 					}
 
 					if(groundStabilized)
@@ -427,6 +411,8 @@ namespace BahaTurret
 						Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
 						cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
 					}
+
+
 
 					Vector3 lookDirection = cameraParentTransform.forward;
 					if(Vector3.Angle(lookDirection, cameraParentTransform.parent.forward) > gimbalLimit)
@@ -449,6 +435,8 @@ namespace BahaTurret
 							eyeHolderTransform.rotation = Quaternion.LookRotation(projectedForward, eyeHolderTransform.parent.up);
 						}
 					}
+
+					UpdateControls();
 				
 				}
 
@@ -467,10 +455,147 @@ namespace BahaTurret
 				}
 			}
 		}
+
+		void UpdateKeyInputs()
+		{
+			if(!vessel.isActiveVessel)
+			{
+				return;
+			}
+
+			if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_LEFT))
+			{
+				slewInput.x = -1;
+			}
+			else if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_RIGHT))
+			{
+				slewInput.x = 1;
+			}
+
+			if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_UP))
+			{
+				slewInput.y = 1;
+			}
+			else if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_DOWN))
+			{
+				slewInput.y = -1;
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_IN))
+			{
+				ZoomIn();
+			}
+			else if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_OUT))
+			{
+				ZoomOut();
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_LOCK))
+			{
+				if(groundStabilized)
+				{
+					ClearTarget();
+				}
+				else
+				{
+					GroundStabilize();
+				}
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_NV))
+			{
+				ToggleNV();
+			}
+
+			if(groundStabilized && BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_SEND_GPS))
+			{
+				SendGPS();	
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_COM))
+			{
+				CoMLock = !CoMLock;
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_RADAR))
+			{
+				radarLock = !radarLock;
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_TURRETS))
+			{
+				if(slaveTurrets)
+				{
+					UnslaveTurrets();
+				}
+				else
+				{
+					SlaveTurrets();
+				}
+			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_TO_GPS))
+			{
+				PointToGPSTarget();
+			}
+		}
+
+		void ToggleNV()
+		{
+			nvMode = !nvMode;
+			TargetingCamera.Instance.nvMode = nvMode;
+		}
+
+		void UpdateControls()
+		{
+			UpdateKeyInputs();
+			UpdateSlewRate();
+			if(slewInput != Vector2.zero)
+			{
+				SlewCamera(slewInput);
+			}
+			slewInput = Vector2.zero;
+		}
 		
 
+		void UpdateSlewRate()
+		{
+			if(slewedCamera)
+			{
+				finalSlewSpeed = Mathf.Clamp(finalSlewSpeed + (0.5f * (fov/60)), 0, 80 * fov/60);
+				slewedCamera = false;
+			}
+			else
+			{
+				finalSlewSpeed = 15 * fov/60;
+			}
+		}
 
-
+		void UpdateRadarLock()
+		{
+			if(weaponManager && weaponManager.radar && weaponManager.radar.locked)
+			{
+				Vector3 radarTargetPos = weaponManager.radar.lockedTarget.predictedPosition + (weaponManager.radar.lockedTarget.velocity*Time.fixedDeltaTime);
+				Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
+				if(Vector3.Angle(radarTargetPos - cameraParentTransform.position, cameraParentTransform.forward) < 1.5f)
+				{
+					cameraParentTransform.rotation = lookRotation;
+					GroundStabilize();
+				}
+				else
+				{
+					if(groundStabilized)
+					{
+						ClearTarget();
+					}
+					cameraParentTransform.rotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 80*Time.fixedDeltaTime);
+				}
+			}
+			else
+			{
+				radarLock = false;
+			}
+		}
 
 		void OnGUI()
 		{
@@ -494,6 +619,11 @@ namespace BahaTurret
 					{
 						BDGUIUtils.DrawTextureOnWorldPos(targetPointPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector3(18, 18), 0);
 					}
+				}
+
+				if(BDArmorySettings.DRAW_DEBUG_LABELS)
+				{
+					GUI.Label(new Rect(500, 500, 500, 500), "Slew rate: " + finalSlewSpeed);
 				}
 			}
 
@@ -527,19 +657,23 @@ namespace BahaTurret
 			Rect slewRightRect = new Rect(slewStartX + (2*slewSize), controlsStartY+slewSize, slewSize, slewSize);
 			if(GUI.RepeatButton(slewUpRect, "^", HighLogic.Skin.button))
 			{
-				SlewCamera(Vector3.up);
+				//SlewCamera(Vector3.up);
+				slewInput.y = 1;
 			}
 			if(GUI.RepeatButton(slewDownRect, "v", HighLogic.Skin.button))
 			{
-				SlewCamera(Vector3.down);
+				//SlewCamera(Vector3.down);
+				slewInput.y = -1;
 			}
 			if(GUI.RepeatButton(slewLeftRect, "<", HighLogic.Skin.button))
 			{
-				SlewCamera(Vector3.left);
+				//SlewCamera(Vector3.left);
+				slewInput.x = -1;
 			}
 			if(GUI.RepeatButton(slewRightRect, ">", HighLogic.Skin.button))
 			{
-				SlewCamera(Vector3.right);
+				//SlewCamera(Vector3.right);
+				slewInput.x = 1;
 			}
 
 			//zoom buttons
@@ -603,7 +737,7 @@ namespace BahaTurret
 					gpsStyle.fontSize = 10;
 					if(GUI.Button(new Rect(stabilizeRect.x, stabilizeRect.y + (stabilizeRect.height / 2), stabilizeRect.width, stabilizeRect.height / 2), "Send GPS", gpsStyle))
 					{
-						BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
+						SendGPS();
 					}
 				}
 
@@ -717,8 +851,7 @@ namespace BahaTurret
 			GUIStyle nvStyle = nvMode ? HighLogic.Skin.box : HighLogic.Skin.button;
 			if(GUI.Button(nvRect, nvLabel, nvStyle))
 			{
-				nvMode = !nvMode;
-				TargetingCamera.Instance.nvMode = nvMode;
+				ToggleNV();
 			}
 
 			//off button
@@ -785,7 +918,13 @@ namespace BahaTurret
 			}
 		}
 
-
+		void SendGPS()
+		{
+			if(groundStabilized)
+			{
+				BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
+			}
+		}
 
 		void SlaveTurrets()
 		{
@@ -825,6 +964,7 @@ namespace BahaTurret
 
 		void SlewCamera(Vector3 direction)
 		{
+			slewedCamera = true;
 			StartCoroutine(SlewCamRoutine(direction));
 		}
 
@@ -833,7 +973,7 @@ namespace BahaTurret
 			StopResetting();
 			StopPointToPosRoutine();
 			radarLock = false;
-			float slewRate = 35 * fov/60;
+			float slewRate = finalSlewSpeed;
 			cameraParentTransform.localRotation *= Quaternion.AngleAxis(slewRate*Time.deltaTime, Quaternion.AngleAxis(90, Vector3.forward) * direction);
 
 			yield return new WaitForEndOfFrame();
@@ -1034,6 +1174,7 @@ namespace BahaTurret
 		bool slewingToPosition = false;
 		public IEnumerator PointToPositionRoutine(Vector3 position)
 		{
+			yield return StopPTPRRoutine();
 			stopPTPR = false;
 			slewingToPosition = true;
 			radarLock = false;

@@ -576,7 +576,7 @@ namespace BahaTurret
 			
 			if(vessel.isActiveVessel)
 			{
-				if(!CheckMouseIsOnGui() && isArmed && Input.GetKey(BDArmorySettings.FIRE_KEY))
+				if(!CheckMouseIsOnGui() && isArmed && Input.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY.inputString))
 				{
 					triggerTimer += Time.fixedDeltaTime;	
 				}

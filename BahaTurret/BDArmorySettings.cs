@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace BahaTurret
 {
@@ -11,7 +12,6 @@ namespace BahaTurret
 		
 
 		//=======configurable settings
-		public static string FIRE_KEY = "mouse 0";
 		public static bool INSTAKILL = false;
 		public static bool BULLET_HITS = true;
 		public static float PHYSICS_RANGE = 0;
@@ -48,7 +48,22 @@ namespace BahaTurret
 		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
 
 		public static float IVA_LOWPASS_FREQ = 2500;
+
 		//==================
+		//reflection field lists
+		FieldInfo[] iFs = null;
+		FieldInfo[] inputFields
+		{
+			get
+			{
+				if(iFs == null)
+				{
+					iFs = typeof(BDInputSettingsFields).GetFields();
+				}
+				return iFs;
+			}
+		}
+
 		//EVENTS
 		public delegate void VolumeChange();
 		public static event VolumeChange OnVolumeChange;
@@ -117,9 +132,7 @@ namespace BahaTurret
 	
 		public static List<CMFlare> Flares = new List<CMFlare>();
 
-		bool isRecordingInput = false;
-		bool recordMouseUp = false;
-		
+
 		//gui styles
 		GUIStyle centerLabel;
 		GUIStyle centerLabelRed;
@@ -129,6 +142,7 @@ namespace BahaTurret
 		GUIStyle leftLabelRed;
 		GUIStyle rightLabelRed;
 		GUIStyle leftLabelGray;
+
 
 		public enum BDATeams{A, B, None};
 
@@ -299,7 +313,7 @@ namespace BahaTurret
 			GAME_UI_ENABLED = true;
 			
 
-			fireKeyGui = FIRE_KEY;
+			fireKeyGui = BDInputSettingsFields.WEAP_FIRE_KEY.inputString;
 
 			//setup gui styles
 			centerLabel = new GUIStyle();
@@ -411,19 +425,30 @@ namespace BahaTurret
 			{
 				if(Input.GetKeyDown(KeyCode.B))
 				{
-					settingsGuiEnabled = !settingsGuiEnabled;
-					if(settingsGuiEnabled)
-					{
-						LoadConfig();
-					}
-					else
-					{
-						SaveConfig();
-					}
-					physicsRangeGui = PHYSICS_RANGE.ToString();
+					ToggleSettingsGUI();
 				}
 			}
 			
+		}
+
+		void ToggleSettingsGUI()
+		{
+			if(HighLogic.LoadedScene == GameScenes.LOADING || HighLogic.LoadedScene == GameScenes.LOADINGBUFFER)
+			{
+				return;
+			}
+
+			settingsGuiEnabled = !settingsGuiEnabled;
+			if(settingsGuiEnabled)
+			{
+				physicsRangeGui = PHYSICS_RANGE.ToString();
+				LoadConfig();
+			}
+			else
+			{
+				SaveConfig();
+			}
+
 		}
 
 		void LateUpdate()
@@ -496,9 +521,16 @@ namespace BahaTurret
 			try
 			{
 				Debug.Log ("== BDArmory : Loading settings.cfg ==");
-				ConfigNode cfg = ConfigNode.Load("GameData/BDArmory/settings.cfg");
-				
-				if(cfg.HasValue("FireKey")) FIRE_KEY = cfg.GetValue("FireKey");	
+				ConfigNode fileNode = ConfigNode.Load("GameData/BDArmory/settings.cfg");
+
+				if(!fileNode.HasNode("BDASettings"))
+				{
+					fileNode.AddNode("BDASettings");
+				}
+
+				ConfigNode cfg = fileNode.GetNode("BDASettings");
+
+				//if(cfg.HasValue("FireKey")) FIRE_KEY = cfg.GetValue("FireKey");	
 				
 				if(cfg.HasValue("INSTAKILL")) INSTAKILL = bool.Parse(cfg.GetValue("INSTAKILL"));	
 				
@@ -551,6 +583,8 @@ namespace BahaTurret
 				if(cfg.HasValue("GLOBAL_DRAG_MULTIPLIER")) GLOBAL_DRAG_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_DRAG_MULTIPLIER"));
 
 				if(cfg.HasValue("IVA_LOWPASS_FREQ")) IVA_LOWPASS_FREQ = float.Parse(cfg.GetValue("IVA_LOWPASS_FREQ"));
+
+				BDInputSettingsFields.LoadSettings(fileNode);
 			}
 			catch(NullReferenceException)
 			{
@@ -563,9 +597,18 @@ namespace BahaTurret
 			try
 			{
 				Debug.Log("== BDArmory : Saving settings.cfg ==	");
-				ConfigNode cfg = ConfigNode.Load("GameData/BDArmory/settings.cfg");
-				
-				cfg.SetValue("FireKey", FIRE_KEY, true);
+				ConfigNode fileNode = ConfigNode.Load("GameData/BDArmory/settings.cfg");
+
+
+				if(!fileNode.HasNode("BDASettings"))
+				{
+					fileNode.AddNode("BDASettings");
+				}
+
+				ConfigNode cfg = fileNode.GetNode("BDASettings");
+
+
+				//cfg.SetValue("FireKey", FIRE_KEY, true);
 				cfg.SetValue("INSTAKILL", INSTAKILL.ToString(), true);
 				cfg.SetValue("BULLET_HITS", BULLET_HITS.ToString(), true);
 				cfg.SetValue("PHYSICS_RANGE", PHYSICS_RANGE.ToString(), true);
@@ -591,7 +634,9 @@ namespace BahaTurret
 				cfg.SetValue("GLOBAL_DRAG_MULTIPLIER", GLOBAL_DRAG_MULTIPLIER.ToString(), true);
 				cfg.SetValue("IVA_LOWPASS_FREQ", IVA_LOWPASS_FREQ.ToString(), true);
 
-				cfg.Save ("GameData/BDArmory/settings.cfg");
+				BDInputSettingsFields.SaveSettings(fileNode);
+
+				fileNode.Save ("GameData/BDArmory/settings.cfg");
 
 				if(OnSavedSettings!=null)
 				{
@@ -614,7 +659,7 @@ namespace BahaTurret
 			{
 				if(settingsGuiEnabled)
 				{
-					SettingsGUI();
+					settingsRect = GUI.Window(129419, settingsRect, SettingsGUI, GUIContent.none);
 				}
 				
 				if(drawCursor)
@@ -1027,42 +1072,48 @@ namespace BahaTurret
 
 		Rect SLineRect(float line)
 		{
-			return new Rect(settingsLeftMargin, settingsTop + line * settingsSpacer, settingsWidth - 2 * settingsSpacer, settingsSpacer);
+			return new Rect(settingsMargin, line * settingsLineHeight, settingsWidth - (2 * settingsMargin), settingsLineHeight);
 		}
 
 		Rect SRightRect(float line)
 		{
-			return new Rect(settingsLeftMargin + ((settingsWidth - 2 * settingsSpacer) / 2), settingsTop + line * settingsSpacer, (settingsWidth - 2 * settingsSpacer) / 2, settingsSpacer);
+			return new Rect(settingsMargin + ((settingsWidth - 2 * settingsLineHeight) / 2), line * settingsLineHeight, (settingsWidth - (2 * settingsMargin)) / 2, settingsLineHeight);
 		}
 
 		Rect SLeftRect(float line)
 		{
-			return new Rect(settingsLeftMargin, settingsTop + (line * settingsSpacer), (settingsWidth - (2*settingsSpacer))/2, settingsSpacer);
+			return new Rect(settingsMargin, (line * settingsLineHeight), (settingsWidth - (2*settingsMargin))/2, settingsLineHeight);
 		}
 
 		float settingsWidth;
 		float settingsHeight;
 		float settingsLeft;
 		float settingsTop;
-		float settingsSpacer;
-		float settingsLeftMargin;
+		float settingsLineHeight;
+		float settingsMargin;
+		Rect settingsRect;
+		bool editKeys = false;
 		void SetupSettingsSize()
 		{
-			settingsWidth = 360;
+			settingsWidth = 420;
 			settingsHeight = 480;
 			settingsLeft = Screen.width/2 - settingsWidth/2;
-			settingsTop = Screen.height/2 - settingsHeight/2;
-			settingsSpacer = 24;
-			settingsLeftMargin = settingsLeft+18;
+			settingsTop = 100;
+			settingsLineHeight = 22;
+			settingsMargin = 18;
+			settingsRect = new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight);
 		}
 
-		void SettingsGUI()
+		void SettingsGUI(int windowID)
 		{
-			
 			float line = 1.25f;
-			Rect settingsRect = new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight);
-			GUI.Box(settingsRect, "");
-			GUI.Box(new Rect(settingsLeft, settingsTop, settingsWidth, settingsHeight), "BDArmory Settings");
+			GUI.Box(new Rect(0, 0, settingsWidth, settingsHeight), "BDArmory Settings");
+			GUI.DragWindow(new Rect(0,0,settingsWidth, 25));
+			if(editKeys)
+			{
+				InputSettings();
+				return;
+			}
 			INSTAKILL = GUI.Toggle(SLeftRect(line), INSTAKILL, "Instakill");
 			INFINITE_AMMO = GUI.Toggle(SRightRect(line), INFINITE_AMMO, "Infinte Ammo");
 			line++;
@@ -1082,44 +1133,16 @@ namespace BahaTurret
 			line++;
 			line++;
 
-			string gunFireKeyLabel;
-			if(isRecordingInput)
-			{
-				gunFireKeyLabel = "Press a key or button.";
 
-				string inputString = BDInputUtils.GetInputString();
-				if(inputString.Length > 0 && recordMouseUp)
-				{
-					FIRE_KEY = inputString;
-					isRecordingInput = false;
-				}
 
-				if(Input.GetKeyUp (KeyCode.Mouse0))
-				{
-					recordMouseUp = true;
-				}
-			}
-			else
-			{
-				gunFireKeyLabel = "Fire key: "+FIRE_KEY;
-
-				if(GUI.Button(new Rect(settingsLeftMargin + 200, settingsTop + line*settingsSpacer, 100-(settingsLeftMargin-settingsLeft), settingsSpacer), "Set Key"))
-				{
-					recordMouseUp = false;
-					isRecordingInput = true;
-				}
-			}
-			GUI.Label(SLineRect(line), gunFireKeyLabel);
-			line++;
-
-			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "Trigger Hold: "+TRIGGER_HOLD_TIME.ToString("0.00")+"s");
-			TRIGGER_HOLD_TIME = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),TRIGGER_HOLD_TIME, 0.02f, 1f);
+			GUI.Label(SLeftRect(line), "Trigger Hold: "+TRIGGER_HOLD_TIME.ToString("0.00")+"s", leftLabel);
+			TRIGGER_HOLD_TIME = GUI.HorizontalSlider(SRightRect(line),TRIGGER_HOLD_TIME, 0.02f, 1f);
 			line++;
 
 
-			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "UI Volume: "+(BDARMORY_UI_VOLUME*100).ToString("0"));
+			GUI.Label(SLeftRect(line), "UI Volume: "+(BDARMORY_UI_VOLUME*100).ToString("0"), leftLabel);
 			float uiVol = BDARMORY_UI_VOLUME;
-			uiVol = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),uiVol, 0f, 1f);
+			uiVol = GUI.HorizontalSlider(SRightRect(line),uiVol, 0f, 1f);
 			if(uiVol != BDARMORY_UI_VOLUME && OnVolumeChange != null)
 			{
 				OnVolumeChange();
@@ -1127,9 +1150,9 @@ namespace BahaTurret
 			BDARMORY_UI_VOLUME = uiVol;
 			line++;
 
-			GUI.Label(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer), "Weapon Volume: "+(BDARMORY_WEAPONS_VOLUME*100).ToString("0"));
+			GUI.Label(SLeftRect(line), "Weapon Volume: "+(BDARMORY_WEAPONS_VOLUME*100).ToString("0"), leftLabel);
 			float weaponVol = BDARMORY_WEAPONS_VOLUME;
-			weaponVol = GUI.HorizontalSlider(new Rect(settingsLeftMargin+((settingsWidth-2*settingsSpacer)/2), settingsTop + line*settingsSpacer, (settingsWidth-2*settingsSpacer)/2, settingsSpacer),weaponVol, 0f, 1f);
+			weaponVol = GUI.HorizontalSlider(SRightRect(line),weaponVol, 0f, 1f);
 			if(uiVol != BDARMORY_WEAPONS_VOLUME && OnVolumeChange != null)
 			{
 				OnVolumeChange();
@@ -1138,11 +1161,11 @@ namespace BahaTurret
 			line++;
 			line++;
 
-			physicsRangeGui = GUI.TextField(new Rect(Screen.width/2, settingsTop + line*settingsSpacer, settingsWidth/2 - settingsSpacer, settingsSpacer), physicsRangeGui);
-			GUI.Label(SLineRect(line), "Physics Load Distance");
+			physicsRangeGui = GUI.TextField(SRightRect(line), physicsRangeGui);
+			GUI.Label(SLeftRect(line), "Physics Load Distance", leftLabel);
 			line++;
-			GUI.Label(new Rect(Screen.width/2, settingsTop + line*settingsSpacer, settingsWidth/2 - settingsSpacer, 2*settingsSpacer), "Warning: Risky if set high");
-			if(GUI.Button(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer, settingsWidth/2 - 2*settingsSpacer+8, settingsSpacer), "Apply Phys Distance"))
+			GUI.Label(SLeftRect(line), "Warning: Risky if set high", centerLabel);
+			if(GUI.Button(SRightRect(line), "Apply Phys Distance"))
 			{
 				float physRangeSetting = float.Parse(physicsRangeGui);
 				PHYSICS_RANGE = (physRangeSetting>=2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
@@ -1151,18 +1174,141 @@ namespace BahaTurret
 			}
 			
 			line++;
-			
-			if(GUI.Button(new Rect(settingsLeftMargin, settingsTop + line*settingsSpacer +26, settingsWidth/2 - 2*settingsSpacer+8, settingsSpacer), "Save and Close"))
+			line++;
+			if(GUI.Button(SLineRect(line), "Edit Inputs"))
+			{
+				editKeys = true;
+			}
+			line++;
+			line++;
+			if(!BDKeyBinder.current && GUI.Button(SLineRect(line), "Save and Close"))
 			{
 				SaveConfig();
 				settingsGuiEnabled = false;
 			}
 
-			line+=3;
-			settingsHeight = (line * settingsSpacer);
+			line+=1.5f;
+			settingsHeight = (line * settingsLineHeight);
+			settingsRect.height = settingsHeight;
 			BDGUIUtils.UseMouseEventInRect(settingsRect);
 		}
-		
+
+		void InputSettings()
+		{
+			float line = 1.25f;
+			GUI.Label(SLineRect(line), "- Weapons -", centerLabel);
+			line++;
+			int inputID = 0;
+
+			//WEAPON KEYS
+			if(inputFields != null)
+			{
+				for(int i = 0; i < inputFields.Length; i++)
+				{
+					string fieldName = inputFields[i].Name;
+					if(fieldName.Contains("WEAP_"))
+					{
+						InputSettingsLine(fieldName, inputID++, ref line);
+					}
+				}
+			}
+
+			line++;
+			GUI.Label(SLineRect(line), "- Targeting Pod -", centerLabel);
+			line++;
+			if(inputFields != null)
+			{
+				for(int i = 0; i < inputFields.Length; i++)
+				{
+					string fieldName = inputFields[i].Name;
+					if(fieldName.Contains("TGP_"))
+					{
+						InputSettingsLine(fieldName, inputID++, ref line);
+					}
+				}
+			}
+
+			line++;
+			GUI.Label(SLineRect(line), "- Radar -", centerLabel);
+			line++;
+			if(inputFields != null)
+			{
+				for(int i = 0; i < inputFields.Length; i++)
+				{
+					string fieldName = inputFields[i].Name;
+					if(fieldName.Contains("RADAR_"))
+					{
+						InputSettingsLine(fieldName, inputID++, ref line);
+					}
+				}
+			}
+
+			line += 2;
+			if(!BDKeyBinder.current && GUI.Button(SLineRect(line), "Back"))
+			{
+				editKeys = false;
+			}
+
+			line+=1.5f;
+			settingsHeight = (line * settingsLineHeight);
+			settingsRect.height = settingsHeight;
+			BDGUIUtils.UseMouseEventInRect(settingsRect);
+		}
+
+		void InputSettingsLine(string fieldName, int id, ref float line)
+		{
+			GUI.Box(SLineRect(line), GUIContent.none);
+			string label = string.Empty;
+			if(BDKeyBinder.IsRecordingID(id))
+			{
+				string recordedInput;
+				if(BDKeyBinder.current.AquireInputString(out recordedInput))
+				{
+					BDInputInfo orig = (BDInputInfo)typeof(BDInputSettingsFields).GetField(fieldName).GetValue(null);
+					BDInputInfo recorded = new BDInputInfo(recordedInput, orig.description);
+					typeof(BDInputSettingsFields).GetField(fieldName).SetValue(null, recorded);
+				}
+
+				label = "Press a key or button.";
+			}
+			else
+			{
+				BDInputInfo inputInfo = new BDInputInfo();
+				try
+				{
+					inputInfo = (BDInputInfo)typeof(BDInputSettingsFields).GetField(fieldName).GetValue(null);
+
+				}
+				catch(NullReferenceException)
+				{
+					Debug.Log("Reflection failed to find input info of field: " + fieldName);
+					editKeys = false;
+					return;
+				}
+				label = " "+inputInfo.description+" : "+inputInfo.inputString;
+
+				if(GUI.Button(SSetKeyRect(line), "Set Key"))
+				{
+					BDKeyBinder.BindKey(id);
+				}
+				if(GUI.Button(SClearKeyRect(line), "Clear"))
+				{
+					typeof(BDInputSettingsFields).GetField(fieldName).SetValue(null, new BDInputInfo(inputInfo.description));
+				}
+			}
+			GUI.Label(SLeftRect(line), label);
+			line++;
+		}
+
+		Rect SSetKeyRect(float line)
+		{
+			return new Rect(settingsMargin + ((settingsWidth - 2 * settingsLineHeight) / 2), line * settingsLineHeight, (settingsWidth - 2 * settingsLineHeight) / 4, settingsLineHeight);
+		}
+
+		Rect SClearKeyRect(float line)
+		{
+			return new Rect(settingsMargin + ((settingsWidth - 2 * settingsLineHeight) / 2) + (settingsWidth - 2 * settingsLineHeight) / 4, line * settingsLineHeight, (settingsWidth - 2 * settingsLineHeight) / 4, settingsLineHeight);
+		}
 		
 		#endregion
 		

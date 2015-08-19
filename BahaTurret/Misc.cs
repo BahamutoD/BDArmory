@@ -60,7 +60,7 @@ namespace BahaTurret
 			return 
 			(
 				BDArmorySettings.GAME_UI_ENABLED && 
-				BDArmorySettings.FIRE_KEY.Contains("mouse") &&
+				BDInputSettingsFields.WEAP_FIRE_KEY.inputString.Contains("mouse") &&
 				(
 					(BDArmorySettings.toolbarGuiEnabled && BDArmorySettings.Instance.toolbarWindowRect.Contains(inverseMousePos)) 
 					|| topGui.Contains(inverseMousePos)

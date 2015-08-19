@@ -160,6 +160,16 @@ namespace BahaTurret
 			
 			return string.Empty;
 		}
+
+		public static bool GetKey(BDInputInfo input)
+		{
+			return input.inputString != string.Empty && Input.GetKey(input.inputString);
+		}
+
+		public static bool GetKeyDown(BDInputInfo input)
+		{
+			return input.inputString != string.Empty && Input.GetKeyDown(input.inputString);
+		}
 	}
 }
 

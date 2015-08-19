@@ -101,6 +101,9 @@
     <Compile Include="ModuleMovingPart.cs" />
     <Compile Include="GPSTargetInfo.cs" />
     <Compile Include="ViewScanResults.cs" />
+    <Compile Include="BDKeyBinder.cs" />
+    <Compile Include="BDInputSettingsFields.cs" />
+    <Compile Include="BDInputInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
