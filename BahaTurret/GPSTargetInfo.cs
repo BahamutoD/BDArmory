@@ -20,6 +20,12 @@ namespace BahaTurret
 			gpsCoordinates = coords;
 			this.name = name;
 		}
+	
+
+		public bool EqualsTarget(GPSTargetInfo other)
+		{
+			return (name == other.name) && (gpsCoordinates == other.gpsCoordinates);
+		}
 	}
 }
 

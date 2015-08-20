@@ -1339,12 +1339,12 @@ namespace BahaTurret
 			float angleToTarget = Vector3.Angle(radarTarget.position-transform.position,transform.forward);
 			if(radarTarget.exists)
 			{
-				if((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f)
+				if(!activeRadar && ((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f))
 				{
 					if(radar
 					   && radar.lockedTarget.exists
 					   && (radarTarget.predictedPosition - radar.lockedTarget.predictedPosition).sqrMagnitude < Mathf.Pow(100, 2)
-					   && (radar.transform.position - transform.position).sqrMagnitude < Mathf.Pow(activeRadarRange, 2))
+					   )
 					{
 						targetAcquired = true;
 						radarTarget = radar.lockedTarget;
@@ -1381,7 +1381,7 @@ namespace BahaTurret
 						bool pingRWR = Time.time - lastRWRPing > 0.4f;
 						if(pingRWR) lastRWRPing = Time.time;
 						RadarUtils.ScanInDirection(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock);
-						float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(20, 2);
+						float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(40, 2);
 						for(int i = 0; i < scannedTargets.Length; i++)
 						{
 							if(scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)

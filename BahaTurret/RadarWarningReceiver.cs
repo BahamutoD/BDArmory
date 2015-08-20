@@ -59,7 +59,8 @@ namespace BahaTurret
 		GUIStyle rwrIconLabelStyle;
 
 		AudioSource audioSource;
-		Rect windowRect;
+		public static Rect windowRect;
+		public static bool windowRectInitialized = false;
 
 	
 
@@ -92,7 +93,11 @@ namespace BahaTurret
 				BDArmorySettings.OnVolumeChange += UpdateVolume;
 
 				float size = displayRect.height + 20;
-				windowRect = new Rect(20, Screen.height-size-20, displayRect.width + 20, size);
+				if(!windowRectInitialized)
+				{
+					windowRect = new Rect(20, Screen.height - size - 20, displayRect.width + 20, size);
+					windowRectInitialized = true;
+				}
 
 				foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
 				{
@@ -243,7 +248,7 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySettings.GAME_UI_ENABLED && vessel.isActiveVessel && rwrEnabled)
 			{
-				windowRect = GUI.Window(94353, windowRect, RWRWindow, GUIContent.none); 
+				windowRect = GUI.Window(94353, windowRect, RWRWindow, GUIContent.none, HighLogic.Skin.window); 
 				BDGUIUtils.UseMouseEventInRect(windowRect);
 			}
 		}

@@ -538,6 +538,11 @@ namespace BahaTurret
 			{
 				PointToGPSTarget();
 			}
+
+			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_RESET))
+			{
+				ResetCameraButton();
+			}
 		}
 
 		void ToggleNV()
@@ -793,10 +798,7 @@ namespace BahaTurret
 			Rect resetRect = new Rect(resetStartX, controlsStartY + (2*slewSize), 3*slewSize, slewSize-1);
 			if(GUI.Button(resetRect, "Reset", HighLogic.Skin.button))
 			{
-				if(!resetting)
-				{
-					StartCoroutine("ResetCamera");
-				}
+				ResetCameraButton();
 			}
 
 
@@ -915,6 +917,14 @@ namespace BahaTurret
 			if(Input.GetMouseButtonUp(0))
 			{
 				resizing = false;
+			}
+		}
+
+		void ResetCameraButton()
+		{
+			if(!resetting)
+			{
+				StartCoroutine("ResetCamera");
 			}
 		}
 

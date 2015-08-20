@@ -101,7 +101,7 @@ namespace BahaTurret
 		{
 			Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
 			Vector3 forwardVector = referenceTransform.forward;
-			Vector3 upVector = VectorUtils.GetUpDirection(position);
+			Vector3 upVector = referenceTransform.up;//VectorUtils.GetUpDirection(position);
 			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
 
 			int dataIndex = 0;

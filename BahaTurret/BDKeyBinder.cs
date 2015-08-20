@@ -38,7 +38,7 @@ namespace BahaTurret
 			}
 		}
 
-		public bool AquireInputString(out string _inputString)
+		public bool AcquireInputString(out string _inputString)
 		{
 			if(valid)
 			{

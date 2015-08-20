@@ -578,7 +578,7 @@ namespace BahaTurret
 		{
 			if(wm!=null && wm.vessel == vessel)
 			{
-				if(wm.currentTarget!=null)
+				if(wm.guardMode && wm.currentTarget!=null)
 				{
 					targetVessel = wm.currentTarget.Vessel;
 				}

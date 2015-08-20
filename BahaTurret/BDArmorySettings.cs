@@ -73,10 +73,7 @@ namespace BahaTurret
 
 		//particle optimization
 		public static int numberOfParticleEmitters = 0;
-		
-		//gun volume management
-		public static int numberOfGunsFiring = 0;
-		
+	
 		
 		public static BDArmorySettings Instance;
 
@@ -110,7 +107,7 @@ namespace BahaTurret
 		}
 		bool showGPSWindow = false;
 		Rect gpsWindowRect;
-		int gpsEntryCount = 0;
+		float gpsEntryCount = 0;
 		float gpsEntryHeight = 24;
 		float gpsBorder = 5;
 		bool editingGPSName = false;
@@ -142,6 +139,9 @@ namespace BahaTurret
 		GUIStyle leftLabelRed;
 		GUIStyle rightLabelRed;
 		GUIStyle leftLabelGray;
+		GUIStyle rippleSliderStyle;
+		GUIStyle rippleThumbStyle;
+		GUIStyle kspTitleLabel;
 
 
 		public enum BDATeams{A, B, None};
@@ -283,6 +283,15 @@ namespace BahaTurret
 				return hInd ? hInd : hInd = GameDatabase.Instance.GetTexture(textureDir + "horizonIndicator", false);
 			}
 		}
+
+		private Texture2D si;
+		public Texture2D settingsIconTexture
+		{
+			get
+			{
+				return si ? si : si = GameDatabase.Instance.GetTexture(textureDir + "settingsIcon", false);
+			}
+		}
 		//end textures
 
 
@@ -347,6 +356,17 @@ namespace BahaTurret
 			leftLabelGray = new GUIStyle();
 			leftLabelGray.alignment = TextAnchor.UpperLeft;
 			leftLabelGray.normal.textColor = Color.gray;
+
+			rippleSliderStyle = new GUIStyle(HighLogic.Skin.horizontalSlider);
+			rippleThumbStyle = new GUIStyle(HighLogic.Skin.horizontalSliderThumb);
+			rippleSliderStyle.fixedHeight = rippleThumbStyle.fixedHeight = 0;
+
+			kspTitleLabel = new GUIStyle();
+			kspTitleLabel.normal.textColor = HighLogic.Skin.window.normal.textColor;
+			kspTitleLabel.font = HighLogic.Skin.window.font;
+			kspTitleLabel.fontSize = HighLogic.Skin.window.fontSize;
+			kspTitleLabel.fontStyle = HighLogic.Skin.window.fontStyle;
+			kspTitleLabel.alignment = TextAnchor.UpperCenter;
 			//
 
 			if(HighLogic.LoadedSceneIsFlight)
@@ -368,7 +388,7 @@ namespace BahaTurret
 				}
 				*/
 
-				gpsWindowRect = new Rect(0, 0, toolbarWindowRect.width, 0);
+				gpsWindowRect = new Rect(0, 0, toolbarWindowRect.width-10, 0);
 
 				GameEvents.onVesselChange.Add(VesselChange);
 			}
@@ -673,11 +693,11 @@ namespace BahaTurret
 				
 				if(toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
 				{
-					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "");
+					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "BDA Weapon Manager", HighLogic.Skin.window);
 					BDGUIUtils.UseMouseEventInRect(toolbarWindowRect);
 					if(showGPSWindow && ActiveWeaponManager)
 					{
-						gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
+						//gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
 						BDGUIUtils.UseMouseEventInRect(gpsWindowRect);
 						foreach(var coordinate in BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
 						{
@@ -697,55 +717,84 @@ namespace BahaTurret
 				}
 			}
 		}
-		
+
+		float rippleHeight = 0;
+		float weaponsHeight = 0;
+		float guardHeight = 0;
+		float modulesHeight = 0;
+		float gpsHeight = 0;
+		bool toolMinimized = false;
+
 		void ToolbarGUI(int windowID)
 		{
-			GUI.DragWindow(new Rect(0,0,toolWindowWidth, 30));
+			GUI.DragWindow(new Rect(30,0,toolWindowWidth-60, 30));
 
 			float line = 0;
 			float leftIndent = 10;
 			float contentWidth = (toolWindowWidth) - (2*leftIndent);
-			float contentTop = 20;
-			float entryHeight = 18;
+			float contentTop = 10;
+			float entryHeight = 20;
 			
-			GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "BDA Weapon Manager", centerLabel);
+			//GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight*1.25f), , HighLogic.Skin.label);
+			/*
 			if(missileWarning) 
 			{
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "Missile", leftLabelRed);
 				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "Lock", rightLabelRed);
 			}
-			line++;
+			*/
+			line += 1.25f;
 			line += 0.25f;
 			
 			if(ActiveWeaponManager!=null)
 			{
-				GUIStyle armedLabelStyle;
-				string armedText = "System is ";
-				if(ActiveWeaponManager.isArmed)
+				//MINIMIZE BUTTON
+				toolMinimized = GUI.Toggle(new Rect(4, 4, 26, 26), toolMinimized, "_", toolMinimized ? HighLogic.Skin.box : HighLogic.Skin.button);
+			
+				//SETTINGS BUTTON
+				if(!BDKeyBinder.current && GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
 				{
-					armedText += "ARMED.";
-					armedLabelStyle = leftLabelRed;
+					ToggleSettingsGUI();
+				}
+
+				GUIStyle armedLabelStyle;
+				Rect armedRect = new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight);
+				if(ActiveWeaponManager.guardMode)
+				{
+					if(GUI.Button(armedRect, "- Guard Mode -", HighLogic.Skin.box))
+					{
+						showGuardMenu = true;
+					}
 				}
 				else
 				{
-					armedText += "disarmed.";
-					armedLabelStyle = leftLabelGray;
-				}
-				if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), armedText, armedLabelStyle))
-				{
-					ActiveWeaponManager.ToggleArm();
+					string armedText = "Trigger is ";
+					if(ActiveWeaponManager.isArmed)
+					{
+						armedText += "ARMED.";
+						armedLabelStyle = HighLogic.Skin.box;
+					}
+					else
+					{
+						armedText += "disarmed.";
+						armedLabelStyle = HighLogic.Skin.button;
+					}
+					if(GUI.Button(armedRect, armedText, armedLabelStyle))
+					{
+						ActiveWeaponManager.ToggleArm();
+					}
 				}
 				
 				GUIStyle teamButtonStyle;
 				string teamText = "Team: ";
 				if(ActiveWeaponManager.team)
 				{
-					teamButtonStyle = centerLabelOrange;
+					teamButtonStyle = HighLogic.Skin.box;
 					teamText += "B";
 				}
 				else
 				{
-					teamButtonStyle = centerLabelBlue;	
+					teamButtonStyle = HighLogic.Skin.button;	
 					teamText += "A";
 				}
 				
@@ -754,33 +803,47 @@ namespace BahaTurret
 					ActiveWeaponManager.ToggleTeam();
 				}
 				line++;
-
+				line += 0.25f;
 				string weaponName = ActiveWeaponManager.selectedWeaponString;// = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
 				string selectionText = "Weapon: "+weaponName;
-				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), selectionText, centerLabel);
-				line++;
-
+				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight*1.25f), selectionText, HighLogic.Skin.box);
+				line += 1.25f;
+				line += 0.1f;
 				//if weapon can ripple, show option and slider.
 				if(ActiveWeaponManager.canRipple)
 				{
-					string rippleText = ActiveWeaponManager.rippleFire ? "Ripple: ON - "+ActiveWeaponManager.rippleRPM.ToString("0")+" RPM" : "Ripple: OFF";
-					ActiveWeaponManager.rippleFire = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/2, entryHeight), ActiveWeaponManager.rippleFire, rippleText, leftLabel);
+					string rippleText = ActiveWeaponManager.rippleFire ? "Ripple: " + ActiveWeaponManager.rippleRPM.ToString("0") + " RPM" : "Ripple: OFF";
+					GUIStyle rippleStyle = ActiveWeaponManager.rippleFire ? HighLogic.Skin.box : HighLogic.Skin.button;
+					ActiveWeaponManager.rippleFire = GUI.Toggle(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight * 1.25f), ActiveWeaponManager.rippleFire, rippleText, rippleStyle);
 					if(ActiveWeaponManager.rippleFire)
 					{
-						ActiveWeaponManager.rippleRPM = GUI.HorizontalSlider(new Rect(leftIndent+(contentWidth/2), contentTop+(line*entryHeight), contentWidth/2, entryHeight), ActiveWeaponManager.rippleRPM, 100, 1600);
+						Rect sliderRect = new Rect(leftIndent + (contentWidth / 2) + 2, contentTop + (line * entryHeight) + 6.5f, (contentWidth / 2) - 2, 12);
+						ActiveWeaponManager.rippleRPM = GUI.HorizontalSlider(sliderRect, ActiveWeaponManager.rippleRPM, 100, 1600, rippleSliderStyle, rippleThumbStyle);
 					}
+					rippleHeight = Mathf.Lerp(rippleHeight, 1.25f, 0.15f);
 				}
-				line++;
-				
-				showWeaponList = GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth/3, entryHeight), showWeaponList, "Weapons");
-				showGuardMenu = GUI.Toggle(new Rect(leftIndent+(contentWidth/3), contentTop+(line*entryHeight), contentWidth/3, entryHeight), showGuardMenu, "Guard Menu");
-				showModules = GUI.Toggle(new Rect(leftIndent+(2*contentWidth/3), contentTop+(line*entryHeight), contentWidth/3, entryHeight), showModules, "Modules");
-				line++;
-				
-				if(showWeaponList)
+				else
+				{
+					rippleHeight = Mathf.Lerp(rippleHeight, 0, 0.15f);
+				}
+				//line += 1.25f;
+				line+=rippleHeight;
+				line += 0.1f;
+
+				if(!toolMinimized)
+				{
+					showWeaponList = GUI.Toggle(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 3, entryHeight), showWeaponList, "Weapons", showWeaponList ? HighLogic.Skin.box : HighLogic.Skin.button);
+					showGuardMenu = GUI.Toggle(new Rect(leftIndent + (contentWidth / 3), contentTop + (line * entryHeight), contentWidth / 3, entryHeight), showGuardMenu, "Guard Menu", showGuardMenu ? HighLogic.Skin.box : HighLogic.Skin.button);
+					showModules = GUI.Toggle(new Rect(leftIndent + (2 * contentWidth / 3), contentTop + (line * entryHeight), contentWidth / 3, entryHeight), showModules, "Modules", showModules ? HighLogic.Skin.box : HighLogic.Skin.button);
+					line++;
+				}
+
+				float weaponLines = 0;
+				if(showWeaponList && !toolMinimized)
 				{
 					line += 0.25f;
-					GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, ActiveWeaponManager.weaponArray.Length * entryHeight),""); //darker box
+					GUI.BeginGroup(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, ActiveWeaponManager.weaponArray.Length * entryHeight),GUIContent.none, HighLogic.Skin.box); //darker box
+					weaponLines += 0.1f;
 					for(int i = 0; i < ActiveWeaponManager.weaponArray.Length; i++)
 					{
 						GUIStyle wpnListStyle;
@@ -793,49 +856,55 @@ namespace BahaTurret
 							wpnListStyle = centerLabel;
 						}
 						string label = ActiveWeaponManager.weaponArray[i] == null ? "None" : ActiveWeaponManager.weaponArray[i].GetShortName();
-						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, wpnListStyle))
+						if(GUI.Button(new Rect(leftIndent, (weaponLines*entryHeight), contentWidth, entryHeight), label, wpnListStyle))
 						{
 							ActiveWeaponManager.CycleWeapon(i);
 						}
-						line++;
+						weaponLines++;
 					}
+					weaponLines += 0.1f;
+					GUI.EndGroup();
 				}
-				
-				if(showGuardMenu)
+				weaponsHeight = Mathf.Lerp(weaponsHeight, weaponLines, 0.15f);
+				line += weaponsHeight;
+
+				float guardLines = 0;
+				if(showGuardMenu && !toolMinimized)
 				{
 					line += 0.25f;
-					GUI.Box(new Rect(5, contentTop+(line*entryHeight), toolWindowWidth-10, 5*entryHeight), "");
+					GUI.BeginGroup(new Rect(5, contentTop+(line*entryHeight), toolWindowWidth-10, 5.45f*entryHeight), GUIContent.none, HighLogic.Skin.box);
+					guardLines += 0.1f;
 					contentWidth -= 16;
 					leftIndent += 3;
-					ActiveWeaponManager.guardMode =  GUI.Toggle(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), ActiveWeaponManager.guardMode, " Guard Mode");
-					line++;
+					ActiveWeaponManager.guardMode =  GUI.Toggle(new Rect(leftIndent, (guardLines*entryHeight), contentWidth, entryHeight), ActiveWeaponManager.guardMode, " Guard Mode", ActiveWeaponManager.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button);
+					guardLines += 1.25f;
 
 					string scanLabel = ALLOW_LEGACY_TARGETING ? "Scan Interval" : "Firing Interval";
-					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), scanLabel, leftLabel);
-					ActiveWeaponManager.targetScanInterval = GUI.HorizontalSlider(new Rect(leftIndent+(90), contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), ActiveWeaponManager.targetScanInterval, 1, 60);
+					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), scanLabel, leftLabel);
+					ActiveWeaponManager.targetScanInterval = GUI.HorizontalSlider(new Rect(leftIndent+(90), (guardLines*entryHeight), contentWidth-90-38, entryHeight), ActiveWeaponManager.targetScanInterval, 1, 60);
 					ActiveWeaponManager.targetScanInterval = Mathf.Round(ActiveWeaponManager.targetScanInterval);
-					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.targetScanInterval.ToString(), leftLabel);
-					line++;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.targetScanInterval.ToString(), leftLabel);
+					guardLines++;
 					
-					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), "Field of View", leftLabel);
+					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Field of View", leftLabel);
 					float guardAngle = ActiveWeaponManager.guardAngle;
-					guardAngle = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardAngle, 10, 360);
+					guardAngle = GUI.HorizontalSlider(new Rect(leftIndent+90, (guardLines*entryHeight), contentWidth-90-38, entryHeight), guardAngle, 10, 360);
 					guardAngle = guardAngle/10;
 					guardAngle = Mathf.Round(guardAngle);
 					ActiveWeaponManager.guardAngle = guardAngle * 10;
-					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.guardAngle.ToString(), leftLabel);
-					line++;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.guardAngle.ToString(), leftLabel);
+					guardLines++;
 
 					string rangeLabel = ALLOW_LEGACY_TARGETING ? "Guard Range" : "Visual Range";
-					GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), 85, entryHeight), rangeLabel, leftLabel);
+					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), rangeLabel, leftLabel);
 					float guardRange = ActiveWeaponManager.guardRange;
 					float maxVisRange = ALLOW_LEGACY_TARGETING ? Mathf.Clamp(PHYSICS_RANGE, 2500, 100000) : BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
-					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, contentTop+(line*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, maxVisRange);
+					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, (guardLines*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, maxVisRange);
 					guardRange = guardRange/100;
 					guardRange = Mathf.Round(guardRange);
 					ActiveWeaponManager.guardRange = guardRange * 100;
-					GUI.Label(new Rect(leftIndent+(contentWidth-35), contentTop+(line*entryHeight), 35, entryHeight), ActiveWeaponManager.guardRange.ToString(), leftLabel);
-					line++;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.guardRange.ToString(), leftLabel);
+					guardLines++;
 					
 					string targetType = "Target Type: ";
 					if(ActiveWeaponManager.targetMissiles)
@@ -847,29 +916,32 @@ namespace BahaTurret
 						targetType += "Vessels";	
 					}
 					
-					if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), targetType, leftLabel))
+					if(GUI.Button(new Rect(leftIndent, (guardLines*entryHeight), contentWidth, entryHeight), targetType, HighLogic.Skin.button))
 					{
 						ActiveWeaponManager.ToggleTargetType();	
 					}
-					line++;
+					guardLines++;
+					GUI.EndGroup();
+					line += 0.1f;
 				}
+				guardHeight = Mathf.Lerp(guardHeight, guardLines, 0.15f);
+				line += guardHeight;
 
-				if(showModules)
+				float moduleLines = 0;
+				if(showModules && !toolMinimized)
 				{
 					line += 0.25f;
-					if(numberOfModules > 0)
-					{
-						GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, numberOfModules * entryHeight),""); //darker box
-					}
-					numberOfModules = 0;
+					GUI.BeginGroup(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, numberOfModules * entryHeight),GUIContent.none, HighLogic.Skin.box); 
 
+					numberOfModules = 0;
+					moduleLines += 0.1f;
 					//RWR
 					if(ActiveWeaponManager.rwr)
 					{
 						numberOfModules++;
 						bool isEnabled = ActiveWeaponManager.rwr.rwrEnabled;
 						string label = "Radar Warning Receiver";
-						Rect rwrRect = new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth, entryHeight);
+						Rect rwrRect = new Rect(leftIndent,  + (moduleLines * entryHeight), contentWidth, entryHeight);
 						if(GUI.Button(rwrRect, label, isEnabled ? centerLabelOrange : centerLabel))
 						{
 							if(isEnabled)
@@ -881,7 +953,7 @@ namespace BahaTurret
 								ActiveWeaponManager.rwr.EnableRWR();
 							}
 						}
-						line++;
+						moduleLines++;
 					}
 
 					//TGP
@@ -897,7 +969,7 @@ namespace BahaTurret
 							moduleStyle = centerLabelRed;
 							label = "["+label+"]";
 						}
-						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
+						if(GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight), label, moduleStyle))
 						{
 							if(isActive)
 							{
@@ -908,7 +980,7 @@ namespace BahaTurret
 								mtc.EnableCamera();
 							}
 						}
-						line++;
+						moduleLines++;
 					}
 
 					//RADAR
@@ -917,11 +989,11 @@ namespace BahaTurret
 						numberOfModules++;
 						GUIStyle moduleStyle = mr.radarEnabled ? centerLabelBlue : centerLabel;
 						string label = mr.part.partInfo.title;
-						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
+						if(GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight), label, moduleStyle))
 						{
 							mr.Toggle();
 						}
-						line++;
+						moduleLines++;
 					}
 
 					//JAMMERS
@@ -932,74 +1004,90 @@ namespace BahaTurret
 						numberOfModules++;
 						GUIStyle moduleStyle = jammer.jammerEnabled ? centerLabelBlue : centerLabel;
 						string label = jammer.part.partInfo.title;
-						if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), label, moduleStyle))
+						if(GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight), label, moduleStyle))
 						{
 							jammer.Toggle();
 						}
-						line++;
+						moduleLines++;
 					}
 
 					//GPS coordinator
 					GUIStyle gpsModuleStyle = showGPSWindow ? centerLabelBlue : centerLabel;
 					numberOfModules++;
-					if(GUI.Button(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "GPS Coordinator", gpsModuleStyle))
+					if(GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight), "GPS Coordinator", gpsModuleStyle))
 					{
 						showGPSWindow = !showGPSWindow;
 					}
-					line++;
+					moduleLines++;
 
+					GUI.EndGroup();
 
-					if(numberOfModules == 0)
-					{
-						GUI.Box(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, 1 * entryHeight),"");
-						GUI.Label(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, 1 * entryHeight),"No modules.", centerLabel);
-						line++;
-					}
-
+					line += 0.1f;
 				}
+				modulesHeight = Mathf.Lerp(modulesHeight, moduleLines, 0.15f);
+				line += modulesHeight;
+
+				float gpsLines = 0;
+				if(showGPSWindow && !toolMinimized)
+				{
+					line += 0.25f;
+					GUI.BeginGroup(new Rect(5, contentTop + (line * entryHeight), toolWindowWidth, gpsWindowRect.height));
+					GPSWindow();
+					GUI.EndGroup();
+					gpsLines = gpsWindowRect.height / entryHeight;
+				}
+				gpsHeight = Mathf.Lerp(gpsHeight, gpsLines, 0.15f);
+				line += gpsHeight;
 				
 			}
 			else
 			{
-				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "No Weapon Manager found.", centerLabel);
+				GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "No Weapon Manager found.", HighLogic.Skin.box);
 				line++;
 			}
 			
 			
 			
 			
-			toolWindowHeight = contentTop + (line*entryHeight) + 5;
-			toolbarWindowRect = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
+			toolWindowHeight = Mathf.Lerp(toolWindowHeight, contentTop + (line*entryHeight) + 5, 1);
+			toolbarWindowRect.height = toolWindowHeight;// = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
 		}
 
 		bool validGPSName = true;
 
 		//GPS window
-		void GPSWindow(int windowID)
+		void GPSWindow()
 		{
+			GUI.Box(gpsWindowRect, GUIContent.none, HighLogic.Skin.box);
 			gpsEntryCount = 0;
 			Rect listRect = new Rect(gpsBorder, gpsBorder, gpsWindowRect.width - (2 * gpsBorder), gpsWindowRect.height - (2 * gpsBorder));
 			GUI.BeginGroup(listRect);
-			GUI.Label(new Rect(0, 0, listRect.width, gpsEntryHeight), "Designated GPS Targets:", centerLabel);
-			gpsEntryCount++;
+			string targetLabel = "GPS Target: "+ActiveWeaponManager.designatedGPSInfo.name;
+			GUI.Label(new Rect(0, 0, listRect.width, gpsEntryHeight), targetLabel, kspTitleLabel);
+			gpsEntryCount+=0.85f;
 			if(ActiveWeaponManager.designatedGPSCoords != Vector3d.zero)
 			{
-				GUI.Label(new Rect(0, gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), centerLabelOrange);
-				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X"))
+				GUI.Label(new Rect(0, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), HighLogic.Skin.box);
+				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryCount * gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X", HighLogic.Skin.button))
 				{
-					ActiveWeaponManager.designatedGPSCoords = Vector3d.zero;
+					ActiveWeaponManager.designatedGPSInfo = new GPSTargetInfo();
 				}
 			}
 			else
 			{
-				GUI.Label(new Rect(0, gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), "No Target", centerLabelOrange);
+				GUI.Label(new Rect(0, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight), "No Target", HighLogic.Skin.box);
 			}
-			gpsEntryCount++;
+			gpsEntryCount+=1.35f;
 			int indexToRemove = -1;
 			int index = 0;
 			BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
 			foreach(var coordinate in BDATargetManager.GPSTargets[myTeam])
 			{
+				Color origWColor = GUI.color;
+				if(coordinate.EqualsTarget(ActiveWeaponManager.designatedGPSInfo))
+				{
+					GUI.color = XKCDColors.LightOrange;
+				}
 				string label = Misc.FormattedGeoPosShort(coordinate.gpsCoordinates, false);
 				float nameWidth = 100;
 				if(editingGPSName && index == editingGPSNameIndex)
@@ -1027,28 +1115,34 @@ namespace BahaTurret
 				}
 				else
 				{
-					if(GUI.Button(new Rect(0, gpsEntryCount * gpsEntryHeight, nameWidth, gpsEntryHeight), coordinate.name))
+					if(GUI.Button(new Rect(0, gpsEntryCount * gpsEntryHeight, nameWidth, gpsEntryHeight), coordinate.name, HighLogic.Skin.button))
 					{
 						editingGPSName = true;
 						editingGPSNameIndex = index;
 						newGPSName = coordinate.name;
 					}
 				}
-				if(GUI.Button(new Rect(nameWidth, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight - nameWidth, gpsEntryHeight), label))
+				if(GUI.Button(new Rect(nameWidth, gpsEntryCount * gpsEntryHeight, listRect.width - gpsEntryHeight - nameWidth, gpsEntryHeight), label, HighLogic.Skin.button))
 				{
-					ActiveWeaponManager.designatedGPSCoords = coordinate.gpsCoordinates;
+					ActiveWeaponManager.designatedGPSInfo = coordinate;
 					editingGPSName = false;
 				}
-				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryCount * gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X"))
+				if(GUI.Button(new Rect(listRect.width - gpsEntryHeight, gpsEntryCount * gpsEntryHeight, gpsEntryHeight, gpsEntryHeight), "X", HighLogic.Skin.button))
 				{
 					indexToRemove = index;
 				}
 				gpsEntryCount++;
 				index++;
+				GUI.color = origWColor;
 			}
 			if(hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargets[myTeam].Count)
 			{
 				hasEnteredGPSName = false;
+				GPSTargetInfo old = BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex];
+				if(ActiveWeaponManager.designatedGPSInfo.EqualsTarget(old))
+				{
+					ActiveWeaponManager.designatedGPSInfo.name = newGPSName;
+				}
 				BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex] = new GPSTargetInfo(BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex].gpsCoordinates, newGPSName);
 				editingGPSNameIndex = 0;
 			}
@@ -1060,8 +1154,8 @@ namespace BahaTurret
 				BDATargetManager.GPSTargets[myTeam].RemoveAt(indexToRemove);
 			}
 
-			gpsWindowRect.x = toolbarWindowRect.x;
-			gpsWindowRect.y = toolbarWindowRect.y + toolbarWindowRect.height;
+			//gpsWindowRect.x = toolbarWindowRect.x;
+			//gpsWindowRect.y = toolbarWindowRect.y + toolbarWindowRect.height;
 			gpsWindowRect.height = (2*gpsBorder) + (gpsEntryCount * gpsEntryHeight);
 		}
 
@@ -1196,52 +1290,22 @@ namespace BahaTurret
 		void InputSettings()
 		{
 			float line = 1.25f;
-			GUI.Label(SLineRect(line), "- Weapons -", centerLabel);
-			line++;
 			int inputID = 0;
 
-			//WEAPON KEYS
-			if(inputFields != null)
-			{
-				for(int i = 0; i < inputFields.Length; i++)
-				{
-					string fieldName = inputFields[i].Name;
-					if(fieldName.Contains("WEAP_"))
-					{
-						InputSettingsLine(fieldName, inputID++, ref line);
-					}
-				}
-			}
 
+			GUI.Label(SLineRect(line), "- Weapons -", centerLabel);
 			line++;
+			InputSettingsList("WEAP_", ref inputID, ref line);
+			line++;
+
 			GUI.Label(SLineRect(line), "- Targeting Pod -", centerLabel);
 			line++;
-			if(inputFields != null)
-			{
-				for(int i = 0; i < inputFields.Length; i++)
-				{
-					string fieldName = inputFields[i].Name;
-					if(fieldName.Contains("TGP_"))
-					{
-						InputSettingsLine(fieldName, inputID++, ref line);
-					}
-				}
-			}
-
+			InputSettingsList("TGP_", ref inputID, ref line);
 			line++;
+
 			GUI.Label(SLineRect(line), "- Radar -", centerLabel);
 			line++;
-			if(inputFields != null)
-			{
-				for(int i = 0; i < inputFields.Length; i++)
-				{
-					string fieldName = inputFields[i].Name;
-					if(fieldName.Contains("RADAR_"))
-					{
-						InputSettingsLine(fieldName, inputID++, ref line);
-					}
-				}
-			}
+			InputSettingsList("RADAR_", ref inputID, ref line);
 
 			line += 2;
 			if(!BDKeyBinder.current && GUI.Button(SLineRect(line), "Back"))
@@ -1255,6 +1319,21 @@ namespace BahaTurret
 			BDGUIUtils.UseMouseEventInRect(settingsRect);
 		}
 
+		void InputSettingsList(string prefix, ref int id, ref float line)
+		{
+			if(inputFields != null)
+			{
+				for(int i = 0; i < inputFields.Length; i++)
+				{
+					string fieldName = inputFields[i].Name;
+					if(fieldName.StartsWith(prefix, StringComparison.Ordinal))
+					{
+						InputSettingsLine(fieldName, id++, ref line);
+					}
+				}
+			}
+		}
+
 		void InputSettingsLine(string fieldName, int id, ref float line)
 		{
 			GUI.Box(SLineRect(line), GUIContent.none);
@@ -1262,14 +1341,14 @@ namespace BahaTurret
 			if(BDKeyBinder.IsRecordingID(id))
 			{
 				string recordedInput;
-				if(BDKeyBinder.current.AquireInputString(out recordedInput))
+				if(BDKeyBinder.current.AcquireInputString(out recordedInput))
 				{
 					BDInputInfo orig = (BDInputInfo)typeof(BDInputSettingsFields).GetField(fieldName).GetValue(null);
 					BDInputInfo recorded = new BDInputInfo(recordedInput, orig.description);
 					typeof(BDInputSettingsFields).GetField(fieldName).SetValue(null, recorded);
 				}
 
-				label = "Press a key or button.";
+				label = "      Press a key or button.";
 			}
 			else
 			{
@@ -1302,12 +1381,12 @@ namespace BahaTurret
 
 		Rect SSetKeyRect(float line)
 		{
-			return new Rect(settingsMargin + ((settingsWidth - 2 * settingsLineHeight) / 2), line * settingsLineHeight, (settingsWidth - 2 * settingsLineHeight) / 4, settingsLineHeight);
+			return new Rect(settingsMargin + (2*(settingsWidth - 2 * settingsMargin) / 3), line * settingsLineHeight, (settingsWidth - (2 * settingsMargin)) / 6, settingsLineHeight);
 		}
 
 		Rect SClearKeyRect(float line)
 		{
-			return new Rect(settingsMargin + ((settingsWidth - 2 * settingsLineHeight) / 2) + (settingsWidth - 2 * settingsLineHeight) / 4, line * settingsLineHeight, (settingsWidth - 2 * settingsLineHeight) / 4, settingsLineHeight);
+			return new Rect(settingsMargin + (2*(settingsWidth - 2 * settingsMargin) / 3) + (settingsWidth - 2 * settingsMargin) / 6, line * settingsLineHeight, (settingsWidth - (2 * settingsMargin)) / 6, settingsLineHeight);
 		}
 		
 		#endregion

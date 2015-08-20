@@ -109,7 +109,14 @@ namespace BahaTurret
 		}
 
 		//GPS
-		public Vector3d designatedGPSCoords = Vector3d.zero;
+		public GPSTargetInfo designatedGPSInfo;
+		public Vector3d designatedGPSCoords
+		{
+			get
+			{
+				return designatedGPSInfo.gpsCoordinates;
+			}
+		}
 
 		//Guard view scanning
 		float guardViewScanDirection = 1;
@@ -176,19 +183,20 @@ namespace BahaTurret
 		//KSP fields and events
 		#region kspFields,events,actions
 		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Scan Interval"),
-        	UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Scan Interval")]//,
+        	//UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float targetScanInterval = 12;
 		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Field of View"),
-        	UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
-		public float guardAngle = 270f;
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Field of View")]//,
+        	//UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
+		public float guardAngle = 320;
 		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Visual Range"),
-        	UI_FloatRange(minValue = 100f, maxValue = 8000f, stepIncrement = 100f, scene = UI_Scene.All)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Visual Range")]//,
+        	//UI_FloatRange(minValue = 100f, maxValue = 8000f, stepIncrement = 100f, scene = UI_Scene.All)]
         public float guardRange = 2500;
-		
-		[KSPEvent(guiActive = true, guiName = "Guard Mode: Off", active = true)]
+
+
+		//[KSPEvent(guiActive = true, guiName = "Guard Mode: Off", active = true)]
 		public void GuiToggleGuardMode()
 		{
 			guardMode = !guardMode;	
@@ -208,21 +216,23 @@ namespace BahaTurret
 			
 			Misc.RefreshAssociatedWindows(part);
 		}
-		
+
+
 		[KSPAction("Toggle Guard Mode")]
 		public void AGToggleGuardMode(KSPActionParam param)
 		{
 			GuiToggleGuardMode();	
 		}
-		
+
+
 		[KSPField(isPersistant = true)]
 		public bool guardMode = false;
 		bool wasGuardMode = true;
 
 		
-		
+		/*
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Target Type: "), 
-			UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")]
+			UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")]*/
 		public bool targetMissiles = false;
 		//bool smartTargetMissiles = false;
 		
@@ -264,7 +274,7 @@ namespace BahaTurret
 		
 		
 		
-		[KSPField(guiActiveEditor = true, isPersistant = true, guiActive = true, guiName = "Team: "), 
+		[KSPField(guiActiveEditor = true, isPersistant = true, guiActive = true, guiName = "Team"), 
 			UI_Toggle(disabledText = "A", enabledText = "B")]
 		public bool team = false;
 
@@ -291,8 +301,8 @@ namespace BahaTurret
 			}
 		}
 		
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Armed: "), 
-			UI_Toggle(disabledText = "Off", enabledText = "ARMED")]
+		[KSPField(isPersistant = true)]//, guiActive = false, guiActiveEditor = false, guiName = "Armed")]//, 
+		//	UI_Toggle(disabledText = "Off", enabledText = "ARMED")]
 		public bool isArmed = false;
 		
 		
@@ -344,35 +354,46 @@ namespace BahaTurret
 		{
 			FireMissile();	
 		}
-		
+
+		/*
 		[KSPEvent(guiActive = true, guiName = "Fire", active = true)]
 		public void GuiFire()
 		{
 			FireMissile();	
 		}
-		
+		*/
+		/*
 		[KSPEvent(guiActive = true, guiName = "Next Weapon", active = true)]
 		public void GuiCycle()
 		{
 			CycleWeapon(true);	
 		}
-		
+		*/
+
 		[KSPAction("Next Weapon")]
 		public void AGCycle(KSPActionParam param)
 		{
 			CycleWeapon(true);
 		}
-		
+
+		/*
 		[KSPEvent(guiActive = true, guiName = "Previous Weapon", active = true)]
 		public void GuiCycleBack()
 		{
 			CycleWeapon(false);	
 		}
-		
+		*/
+
 		[KSPAction("Previous Weapon")]
 		public void AGCycleBack(KSPActionParam param)
 		{
 			CycleWeapon(false);
+		}
+
+		[KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Open GUI", active = true)]
+		public void ToggleToolbarGUI()
+		{
+			BDArmorySettings.toolbarGuiEnabled = !BDArmorySettings.toolbarGuiEnabled;
 		}
 		
 		#endregion
@@ -383,7 +404,7 @@ namespace BahaTurret
 		
 		public override void OnStart (PartModule.StartState state)
 		{
-			UpdateMaxGuardRange();
+			//UpdateMaxGuardRange();
 			
 			startTime = Time.time;
 
@@ -391,6 +412,7 @@ namespace BahaTurret
 			{
 				part.force_activate();
 
+				/*
 				if(guardMode)
 				{
 					Events["GuiToggleGuardMode"].guiName = "Guard Mode: ON";
@@ -399,7 +421,8 @@ namespace BahaTurret
 				{
 					Events["GuiToggleGuardMode"].guiName = "Guard Mode: Off";
 				}
-				
+				*/
+
 				selectionMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
 				
 				UpdateList();
@@ -412,10 +435,10 @@ namespace BahaTurret
 				rippleTimer = Time.time;
 				targetListTimer = Time.time;
 				
-				Fields["guardRange"].guiActive = guardMode;
-				Fields["guardAngle"].guiActive = guardMode;
-				Fields["targetMissiles"].guiActive = guardMode;
-				Fields["targetScanInterval"].guiActive = guardMode;
+				//Fields["guardRange"].guiActive = guardMode;
+				//Fields["guardAngle"].guiActive = guardMode;
+				//Fields["targetMissiles"].guiActive = guardMode;
+				//Fields["targetScanInterval"].guiActive = guardMode;
 
 				audioSource = gameObject.AddComponent<AudioSource>();
 				audioSource.minDistance = 500;
@@ -474,6 +497,10 @@ namespace BahaTurret
 			while(vessel.packed || !FlightGlobals.ready)
 			{
 				yield return null;
+				if(vessel.isActiveVessel)
+				{
+					BDArmorySettings.Instance.ActiveWeaponManager = this;
+				}
 			}
 			UpdateList();
 		}
@@ -576,7 +603,7 @@ namespace BahaTurret
 			
 			if(vessel.isActiveVessel)
 			{
-				if(!CheckMouseIsOnGui() && isArmed && Input.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY.inputString))
+				if(!CheckMouseIsOnGui() && isArmed && BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY))
 				{
 					triggerTimer += Time.fixedDeltaTime;	
 				}
@@ -1688,7 +1715,7 @@ namespace BahaTurret
 				}
 				else if(ml.targetingMode == MissileLauncher.TargetingModes.GPS)
 				{
-					designatedGPSCoords = VectorUtils.WorldPositionToGeoCoords(guardTarget.CoM, vessel.mainBody);
+					designatedGPSInfo = new GPSTargetInfo(VectorUtils.WorldPositionToGeoCoords(guardTarget.CoM, vessel.mainBody), guardTarget.vesselName.Substring(0, Mathf.Min(12, guardTarget.vesselName.Length)));
 					SendTargetDataToMissile(ml);
 					ml.FireMissile();
 					UpdateList();
@@ -2779,7 +2806,7 @@ namespace BahaTurret
 				guardRange = Mathf.Clamp(guardRange, 0, BDArmorySettings.MAX_GUARD_VISUAL_RANGE);
 			}
 
-			UpdateMaxGuardRange();
+			//UpdateMaxGuardRange();
 		}
 
 		void RefreshModules()

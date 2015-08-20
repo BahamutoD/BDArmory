@@ -23,9 +23,9 @@ namespace BahaTurret
 
 		bool unlinkNullRadar = false;
 
-		bool linkWindowOpen = false;
+		public bool linkWindowOpen = false;
 		float numberOfAvailableLinks = 0;
-		Rect linkWindowRect;
+		public Rect linkWindowRect = new Rect(0,0,0,0);
 		float linkRectWidth = 200;
 		float linkRectEntryHeight = 26;
 			
@@ -307,7 +307,7 @@ namespace BahaTurret
 				else
 				{
 					referenceTransform.position = vessel.transform.position;
-					referenceTransform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.up, VectorUtils.GetUpDirection(referenceTransform.position)), VectorUtils.GetUpDirection(referenceTransform.position));
+					referenceTransform.rotation = Quaternion.LookRotation(part.transform.up, VectorUtils.GetUpDirection(referenceTransform.position));
 				}
 				UpdateInputs();
 			}
@@ -961,7 +961,6 @@ namespace BahaTurret
 				{
 					GUI.Label (radarRect, "TURRETS\n\n", lockStyle);
 				}
-
 			}
 
 
@@ -991,49 +990,27 @@ namespace BahaTurret
 			//=========================================
 
 
-
-			float controlsStartY = headerHeight + radarScreenSize + windowBorder + windowBorder;
 			float buttonWidth = 70;
-			if(GUI.Button(new Rect(windowBorder, controlsStartY, buttonWidth, 24), "Range +", HighLogic.Skin.button))
+			float gap = 2;
+			float buttonHeight = (controlsHeight / 2) - (2*gap);
+			float controlsStartY = headerHeight + radarScreenSize + windowBorder + windowBorder;
+			float controlsStartY2 = controlsStartY + buttonHeight + gap;
+
+			Rect rangeUpRect = new Rect(windowBorder, controlsStartY, buttonWidth, buttonHeight);
+			if(GUI.Button(rangeUpRect, "Range +", HighLogic.Skin.button))
 			{
 				IncreaseRange();
 			}
-			if(GUI.Button(new Rect(windowBorder + 2 + buttonWidth, controlsStartY, buttonWidth, 24), "Range -", HighLogic.Skin.button))
+			Rect rangeDnRect = new Rect(rangeUpRect.x, controlsStartY2, rangeUpRect.width, rangeUpRect.height);
+			if(GUI.Button(rangeDnRect, "Range -", HighLogic.Skin.button))
 			{
 				DecreaseRange();
 			}
-			if (locked)
-			{
-				if (GUI.Button (new Rect (windowBorder + 2 + buttonWidth + 2 + buttonWidth, controlsStartY, buttonWidth, 24), "Unlock", HighLogic.Skin.button))
-				{
-					UnlockTarget ();
-				}
-			}
-			else if (!omnidirectional)
-			{
-				string boresightToggle = boresightScan ? "Scan" : "Boresight";
-				if (GUI.Button (new Rect (windowBorder + 2 + buttonWidth + 2 + buttonWidth, controlsStartY, buttonWidth, 24), boresightToggle, HighLogic.Skin.button))
-				{
-					boresightScan = !boresightScan;
-				}
-			}
 
-			//slave button
-			if (GUI.Button (new Rect (windowBorder + 2 + buttonWidth + 2 + buttonWidth + 2 + buttonWidth, controlsStartY, buttonWidth*1.5f, 24), slaveTurrets ? "Unslave Turrets" : "Slave Turrets", HighLogic.Skin.button))
-			{
-				if (slaveTurrets)
-				{
-					UnslaveTurrets ();
-				} else
-				{
-					SlaveTurrets ();
-				}
-			}
-
-			float controlsStartY2 = controlsStartY + 24 + 2;
+			Rect dataLinkRect = new Rect(rangeUpRect.x + gap + rangeUpRect.width, rangeUpRect.y, buttonWidth, buttonHeight);
 			if(canRecieveRadarData)
 			{
-				if(GUI.Button(new Rect(windowBorder, controlsStartY2, buttonWidth, 24), linked ? "Unlink" : "Data Link", HighLogic.Skin.button))
+				if(GUI.Button(dataLinkRect, linked ? "Unlink" : "Data Link", linkWindowOpen ? HighLogic.Skin.box : HighLogic.Skin.button))
 				{
 					if(linkWindowOpen)
 					{
@@ -1051,6 +1028,52 @@ namespace BahaTurret
 						}
 					}
 				}
+			}
+			else
+			{
+				Color oCol = GUI.color;
+				GUI.color = new Color(1, 1, 1, 0.35f);
+				GUI.Box(dataLinkRect, "Link N/A", HighLogic.Skin.button);
+				GUI.color = oCol;
+			}
+
+			Rect unlockRect = new Rect(windowBorder + gap + buttonWidth + gap + buttonWidth, controlsStartY, buttonWidth, buttonHeight);
+			if (locked)
+			{
+				if (GUI.Button (unlockRect, "Unlock", HighLogic.Skin.button))
+				{
+					UnlockTarget ();
+				}
+			}
+			else if (!omnidirectional) //SCAN MODE SELECTOR
+			{
+				string boresightToggle = boresightScan ? "Scan" : "Boresight";
+				if (GUI.Button (unlockRect, boresightToggle, HighLogic.Skin.button))
+				{
+					boresightScan = !boresightScan;
+				}
+			}
+			Rect slaveRect = new Rect(unlockRect.x + gap + unlockRect.width, unlockRect.y, buttonWidth * 1.5f, buttonHeight);
+			//slave button
+			if (GUI.Button (slaveRect, slaveTurrets ? "Unslave Turrets" : "Slave Turrets", slaveTurrets ? HighLogic.Skin.box : HighLogic.Skin.button))
+			{
+				if (slaveTurrets)
+				{
+					UnslaveTurrets ();
+				} else
+				{
+					SlaveTurrets ();
+				}
+			}
+
+
+
+
+			Rect offRect = new Rect(slaveRect.x + gap + slaveRect.width, controlsStartY, 0, (2*buttonHeight)+gap);
+			offRect.width = radarWindowRect.width - offRect.x - windowBorder;
+			if(GUI.Button(offRect, "O\nF\nF", HighLogic.Skin.button))
+			{
+				DisableRadar();
 			}
 		}
 
@@ -1283,7 +1306,7 @@ namespace BahaTurret
 
 							Color iconColor = Color.green;
 							float contactAlt = scannedContacts[i].altitude;
-							if(!omnidirectional)
+							if(!omnidirectional && !jammed)
 							{
 								if(contactAlt - myAlt > 1000)
 								{
@@ -1314,6 +1337,10 @@ namespace BahaTurret
 					if(GUI.RepeatButton(pingRect, GUIContent.none, GUIStyle.none))
 					{
 						TryLockTarget(scannedContacts[i].predictedPosition);
+						if(Event.current.isMouse && Event.current.type == EventType.mouseDown)
+						{
+							Event.current.Use();
+						}
 					}
 
 					if(BDArmorySettings.DRAW_DEBUG_LABELS)

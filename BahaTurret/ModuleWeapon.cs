@@ -456,7 +456,7 @@ namespace BahaTurret
 				{
 					
 
-					userFiring = (Input.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY.inputString) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
+					userFiring = (BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
 					if((userFiring || autoFire) && (yawRange == 0 || (maxPitch-minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
