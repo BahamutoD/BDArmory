@@ -33,6 +33,8 @@ namespace BahaTurret
 		public float liftArea = 0.015f;
 		[KSPField]
 		public float steerMult = 0.5f;
+		[KSPField]
+		public float torqueRampUp = 30f;
 		Vector3 aeroTorque = Vector3.zero;
 		float controlAuthority = 0;
 		float finalMaxTorque = 0;
@@ -995,7 +997,7 @@ namespace BahaTurret
 						debugTurnRate = turnRateDPS;
 						float radiansDelta = turnRateDPS*Mathf.Deg2Rad*Time.fixedDeltaTime;
 
-						finalMaxTorque = Mathf.Clamp((timeIndex-dropTime)*30, 0, maxTorque); //ramp up torque
+						finalMaxTorque = Mathf.Clamp((timeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
 
 						if(guidanceMode == GuidanceModes.AAMLead)
 						{
