@@ -97,105 +97,119 @@ namespace BahaTurret
 		}
 
 
-		public static void ScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, Vector3 position, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType)
+		public static void ScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, Vector3 position, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType, bool radarSnapshot)
 		{
+	
+
 			Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
 			Vector3 forwardVector = referenceTransform.forward;
 			Vector3 upVector = referenceTransform.up;//VectorUtils.GetUpDirection(position);
 			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
 
 			int dataIndex = 0;
-			foreach(var vessel in FlightGlobals.Vessels)
+			foreach(var vessel in BDATargetManager.LoadedVessels)
 			{
-				if(vessel.loaded)
+				if(vessel == null) continue;
+				if(!vessel.loaded) continue;
+
+
+				if(myWpnManager)
 				{
-					if((vessel.transform.position-position).sqrMagnitude < 100) continue; //ignore self
+					if(vessel == myWpnManager.vessel) continue; //ignore self
+				}
+				else if((vessel.transform.position - position).sqrMagnitude > 3600) continue;
 
-					if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+				if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
 
-					Vector3 vesselDirection = Vector3.ProjectOnPlane(vessel.CoM-position, upVector);
+				Vector3 vesselDirection = Vector3.ProjectOnPlane(vessel.CoM - position, upVector);
 
-					if(Vector3.Angle(vesselDirection,lookDirection) < fov/2)
+				if(Vector3.Angle(vesselDirection, lookDirection) < fov / 2)
+				{
+					float sig = float.MaxValue;
+					if(radarSnapshot && minSignature > 0) sig = GetModifiedSignature(vessel, position);
+
+					RadarWarningReceiver.PingRWR(vessel, position, rwrType, dataPersistTime);
+
+					float detectSig = sig;
+
+					VesselECMJInfo vesselJammer = vessel.GetComponent<VesselECMJInfo>();
+					if(vesselJammer)
 					{
-						float sig = float.MaxValue;
-						if(minSignature > 0) sig = GetModifiedSignature(vessel, position);
+						sig *= vesselJammer.rcsReductionFactor;
+						detectSig += vesselJammer.jammerStrength;
+					}
 
-						RadarWarningReceiver.PingRWR(vessel, position, rwrType, dataPersistTime);
-
-						float detectSig = sig;
-
-						VesselECMJInfo vesselJammer = vessel.GetComponent<VesselECMJInfo>();
-						if(vesselJammer)
+					if(detectSig > minSignature)
+					{
+						if(vessel.vesselType == VesselType.Debris)
 						{
-							sig *= vesselJammer.rcsReductionFactor;
-							detectSig += vesselJammer.jammerStrength;
+							vessel.gameObject.AddComponent<TargetInfo>();
+						}
+						else if(myWpnManager != null)
+						{
+							BDATargetManager.ReportVessel(vessel, myWpnManager);
 						}
 
-						if(detectSig > minSignature)
+						while(dataIndex < dataArray.Length - 1)
 						{
-							if(vessel.vesselType == VesselType.Debris)
+							if((dataArray[dataIndex].exists && Time.time - dataArray[dataIndex].timeAcquired > dataPersistTime) || !dataArray[dataIndex].exists)
 							{
-								vessel.gameObject.AddComponent<TargetInfo>();
+								break;
 							}
-							else if(myWpnManager != null)
-							{
-								BDATargetManager.ReportVessel(vessel, myWpnManager);
-							}
-
-							while(dataIndex < dataArray.Length-1)
-							{
-								if((dataArray[dataIndex].exists && Time.time-dataArray[dataIndex].timeAcquired > dataPersistTime) || !dataArray[dataIndex].exists)
-								{
-									break;
-								}
-								dataIndex++;
-							}
-							if(dataIndex >= dataArray.Length) break;
-							dataArray[dataIndex] = new TargetSignatureData(vessel, sig);
 							dataIndex++;
-							if(dataIndex >= dataArray.Length) break;
 						}
+						if(dataIndex >= dataArray.Length) break;
+						dataArray[dataIndex] = new TargetSignatureData(vessel, sig);
+						dataIndex++;
+						if(dataIndex >= dataArray.Length) break;
 					}
 				}
 			}
+
 		}
 
-		public static void ScanInDirection(Ray ray, float fov, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType)
+		public static void ScanInDirection(Ray ray, float fov, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType, bool radarSnapshot)
 		{
 			int dataIndex = 0;
-			foreach(var vessel in FlightGlobals.Vessels)
+			foreach(var vessel in BDATargetManager.LoadedVessels)
 			{
-				if(vessel && vessel.loaded && !vessel.Landed)
+				if(vessel == null) continue;
+				if(!vessel.loaded) continue;
+				if(vessel.Landed) continue;
+
+				Vector3 vectorToTarget = vessel.transform.position - ray.origin;
+				if((vectorToTarget).sqrMagnitude < 10) continue; //ignore self
+
+				if(Vector3.Dot(vectorToTarget, ray.direction) < 0) continue; //ignore behind ray
+
+				if(Vector3.Angle(vessel.CoM - ray.origin, ray.direction) < fov / 2)
 				{
-					if((vessel.transform.position-ray.origin).sqrMagnitude < 10) continue; //ignore self
 					if(TerrainCheck(ray.origin, vessel.transform.position)) continue; //blocked by terrain
+					float sig = float.MaxValue;
+					if(radarSnapshot) sig = GetModifiedSignature(vessel, ray.origin);
 
-					if(Vector3.Angle(vessel.CoM-ray.origin, ray.direction) < fov/2)
+					if(pingRWR && sig > minSignature * 0.66f)
 					{
-						float sig = GetModifiedSignature(vessel, ray.origin);
+						RadarWarningReceiver.PingRWR(vessel, ray.origin, rwrType, dataPersistTime);
+					}
 
-						if(pingRWR && sig > minSignature * 0.66f)
+					if(sig > minSignature)
+					{
+						while(dataIndex < dataArray.Length - 1)
 						{
-							RadarWarningReceiver.PingRWR(vessel, ray.origin, rwrType, dataPersistTime);
-						}
-
-						if(sig > minSignature)
-						{
-							while(dataIndex < dataArray.Length-1)
+							if((dataArray[dataIndex].exists && Time.time - dataArray[dataIndex].timeAcquired > dataPersistTime) || !dataArray[dataIndex].exists)
 							{
-								if((dataArray[dataIndex].exists && Time.time-dataArray[dataIndex].timeAcquired > dataPersistTime) || !dataArray[dataIndex].exists)
-								{
-									break;
-								}
-								dataIndex++;
+								break;
 							}
-							if(dataIndex >= dataArray.Length) break;
-							dataArray[dataIndex] = new TargetSignatureData(vessel, sig);
 							dataIndex++;
-							if(dataIndex >= dataArray.Length) break;
 						}
+						if(dataIndex >= dataArray.Length) break;
+						dataArray[dataIndex] = new TargetSignatureData(vessel, sig);
+						dataIndex++;
+						if(dataIndex >= dataArray.Length) break;
 					}
 				}
+
 			}
 		}
 
@@ -218,41 +232,50 @@ namespace BahaTurret
 
 
 
-			foreach(var vessel in FlightGlobals.Vessels)
+			foreach(var vessel in BDATargetManager.LoadedVessels)
 			{
+				if(vessel == null) continue;
+
 				if(vessel.loaded)
 				{
 					if(vessel == myWpnManager.vessel) continue; //ignore self
 
-					if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+					Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(vessel.transform.position-position, upVector);
+					Vector3 vesselDirection = vessel.transform.position - position;
 
-					Vector3 vesselDirection = Vector3.ProjectOnPlane(vessel.CoM-position, upVector);
+					if(Vector3.Dot(vesselDirection, lookDirection) < 0) continue;
 
-					if(Vector3.Angle(vesselDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle &&(vessel.transform.position-position).sqrMagnitude < Mathf.Pow(maxDistance,2))
+					if((vessel.transform.position-position).magnitude < maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
 					{
 						//Debug.Log("Found vessel: " + vessel.vesselName);
-						
+						if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+
 						BDATargetManager.ReportVessel(vessel, myWpnManager);
 
-						foreach(var missile in vessel.FindPartModulesImplementing<MissileLauncher>())
+						TargetInfo tInfo;
+						if((tInfo = vessel.GetComponent<TargetInfo>()) && tInfo.isMissile)
 						{
-							if(missile.hasFired && (missile.targetPosition-(myWpnManager.vessel.CoM+(myWpnManager.vessel.rb_velocity*Time.fixedDeltaTime))).sqrMagnitude < Mathf.Pow(60,2))
+							MissileLauncher missile;
+							if(missile = tInfo.missileModule)
 							{
-								//Debug.Log("found missile targeting me");
-								if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+								if(missile.hasFired && (missile.targetPosition-(myWpnManager.vessel.CoM+(myWpnManager.vessel.rb_velocity*Time.fixedDeltaTime))).sqrMagnitude < 3600)
 								{
-									results.foundHeatMissile = true;
+									//Debug.Log("found missile targeting me");
+									if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+									{
+										results.foundHeatMissile = true;
+										break;
+									}
+									else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
+									{
+										results.foundLaserMissile = true;
+										break;
+									}
+								}
+								else
+								{
 									break;
 								}
-								else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
-								{
-									results.foundLaserMissile = true;
-									break;
-								}
-							}
-							else
-							{
-								break;
 							}
 						}
 					}

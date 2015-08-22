@@ -43,8 +43,8 @@ namespace BahaTurret
 					float enter;
 					if(smokePlane.Raycast(ray, out enter))
 					{
-						float sqrDist = (ray.GetPoint(enter)-smokeTf.position).sqrMagnitude;
-						if(sqrDist < Mathf.Pow(16,2))
+						float dist = (ray.GetPoint(enter)-smokeTf.position).magnitude;
+						if(dist < 16)
 						{
 							return true;
 						}

@@ -705,7 +705,7 @@ namespace BahaTurret
 					if(time2 > 0) time = time2;
 					finalTarget += (-part.rb.velocity*(time+Time.fixedDeltaTime));  //this vessel velocity compensation against stationary
 				}
-				if(bulletDrop && vessel.srf_velocity.sqrMagnitude < Mathf.Pow(750,2)) finalTarget += (0.5f*gAccel*time*time * FlightGlobals.getUpAxis());  //gravity compensation
+				if(bulletDrop && vessel.srfSpeed < 750) finalTarget += (0.5f*gAccel*time*time * FlightGlobals.getUpAxis());  //gravity compensation
 				
 				targetLeadDistance = Vector3.Distance(finalTarget, transform.position);
 
@@ -1040,7 +1040,7 @@ namespace BahaTurret
 		bool WMgrAuthorized()
 		{
 			MissileFire manager = BDArmorySettings.Instance.ActiveWeaponManager;
-			if(manager != null)
+			if(manager != null && manager.vessel == vessel)
 			{
 				if(manager.hasSingleFired) return false;
 				else return true;
@@ -1153,7 +1153,7 @@ namespace BahaTurret
 							simulating = false;
 						}
 						
-						if((simStartPos-simCurrPos) .sqrMagnitude> Mathf.Pow(maxTargetingRange, 2))
+						if((simStartPos-simCurrPos).magnitude> maxTargetingRange)
 						{
 							
 							bulletPrediction = simStartPos + ((simCurrPos-simStartPos).normalized*maxTargetingRange);

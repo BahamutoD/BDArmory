@@ -107,6 +107,8 @@ namespace BahaTurret
 		
 		void FixedUpdate()
 		{
+			float distanceFromStart = Vector3.Distance(transform.position, startPosition);
+
 			if(bulletDrop && FlightGlobals.RefFrameIsRotating)
 			{
 				rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.fixedDeltaTime;
@@ -139,7 +141,7 @@ namespace BahaTurret
 			
 			currPosition = gameObject.transform.position;
 			
-			if((currPosition-startPosition).sqrMagnitude > maxDistance*maxDistance)
+			if(distanceFromStart > maxDistance)
 			{
 				GameObject.Destroy(gameObject);
 				return;
@@ -293,7 +295,7 @@ namespace BahaTurret
 				*/
 			}
 
-			if(airDetonation && (transform.position-startPosition).sqrMagnitude > Mathf.Pow(detonationRange, 2))
+			if(airDetonation && distanceFromStart > detonationRange)
 			{
 				//detonate
 				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);

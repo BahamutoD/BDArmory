@@ -1133,6 +1133,7 @@ namespace BahaTurret
 
 			showBombAimer = 
 			(
+				!MapView.MapIsEnabled &&
 				vessel.isActiveVessel && 
 				selectedWeapon !=null && 
 				selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb && 
@@ -1243,7 +1244,7 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && vessel == FlightGlobals.ActiveVessel && BDArmorySettings.GAME_UI_ENABLED)
 			{
-				if(showBombAimer && !MapView.MapIsEnabled)
+				if(showBombAimer)
 				{
 					MissileLauncher ml = currentMissile;
 					if(ml)
@@ -1438,7 +1439,7 @@ namespace BahaTurret
 					{
 						weapon.EnableWeapon();
 						weapon.aiControlled = true;
-						weapon.maxAutoFireAngle = vessel.Landed ? 3 : 10;
+						weapon.maxAutoFireAngle = vessel.Landed ? 2 : 4;
 					}
 				}
 
@@ -1447,7 +1448,7 @@ namespace BahaTurret
 			if(guardTarget)
 			{
 				//release target if out of range
-				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && (guardTarget.transform.position-transform.position).sqrMagnitude > Mathf.Pow(guardRange, 2)) 
+				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && (guardTarget.transform.position-transform.position).magnitude > guardRange) 
 				{
 					SetTarget(null);
 				}
@@ -1504,15 +1505,16 @@ namespace BahaTurret
 					bool pilotAuthorized = (!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this));
 
 					float targetAngle = Vector3.Angle(-transform.forward, guardTarget.transform.position-transform.position);
+					float targetDistance = Vector3.Distance(currentTarget.position, transform.position);
 					if(targetAngle > guardAngle/2) //dont fire yet if target out of guard angle
 					{
 						launchAuthorized = false;
 					}
-					else if((vessel.Landed || guardTarget.Landed) && (currentTarget.position-transform.position).sqrMagnitude < Mathf.Pow(1000, 2))  //fire the missile only if target is further than 1000m
+					else if((vessel.Landed || guardTarget.Landed) && targetDistance < 1000)  //fire the missile only if target is further than 1000m
 					{
 						launchAuthorized = false;
 					}
-					else if(!vessel.Landed && !guardTarget.Landed && (currentTarget.position-transform.position).sqrMagnitude < Mathf.Pow(400, 2)) //if air2air only fire if futher than 400m
+					else if(!vessel.Landed && !guardTarget.Landed && targetDistance < 400) //if air2air only fire if futher than 400m
 					{
 						launchAuthorized = false;
 					}
@@ -1563,7 +1565,7 @@ namespace BahaTurret
 
 		IEnumerator GuardTurretRoutine()
 		{
-			if(gameObject.activeInHierarchy && !BDArmorySettings.ALLOW_LEGACY_TARGETING && (guardTarget.transform.position - transform.position).sqrMagnitude > Mathf.Pow(guardRange, 2)) //target is out of visual range, try using sensors
+			if(gameObject.activeInHierarchy && !BDArmorySettings.ALLOW_LEGACY_TARGETING && (guardTarget.transform.position - transform.position).magnitude > guardRange) //target is out of visual range, try using sensors
 			{
 				if(guardTarget.Landed)
 				{
@@ -1571,13 +1573,13 @@ namespace BahaTurret
 					{
 						foreach(var tgp in targetingPods)
 						{
-							if(tgp.enabled && (!tgp.cameraEnabled || !tgp.groundStabilized || (tgp.groundTargetPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(20, 2)))
+							if(tgp.enabled && (!tgp.cameraEnabled || !tgp.groundStabilized || (tgp.groundTargetPosition - guardTarget.transform.position).magnitude > 20))
 							{
 								tgp.EnableCamera();
 								yield return StartCoroutine(tgp.PointToPositionRoutine(guardTarget.CoM));
 								if(tgp)
 								{
-									if(tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < Mathf.Pow(20, 2))
+									if(tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
 									{
 										tgp.slaveTurrets = true;
 										StartGuardTurretFiring();
@@ -1609,7 +1611,7 @@ namespace BahaTurret
 						}
 					}
 
-					if(radar && (!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(40, 2)))
+					if(radar && (!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).magnitude >40))
 					{
 						radar.TryLockTarget(guardTarget.transform.position);
 						yield return new WaitForSeconds(0.5f);
@@ -1666,7 +1668,7 @@ namespace BahaTurret
 				}
 				else if(ml.targetingMode == MissileLauncher.TargetingModes.Radar && radar)
 				{
-					if(!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(40, 2))
+					if(!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).magnitude > 40)
 					{
 						radar.TryLockTarget(guardTarget.transform.position);
 						yield return new WaitForSeconds(Mathf.Clamp(2, 0.2f, targetScanInterval / 2));
@@ -1687,7 +1689,7 @@ namespace BahaTurret
 				{
 					float attemptStartTime = Time.time;
 					float attemptDuration = targetScanInterval * 0.75f;
-					while(ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(40, 2)))
+					while(ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).magnitude >40))
 					{
 						yield return null;
 					}
@@ -1695,7 +1697,7 @@ namespace BahaTurret
 					//try uncaged IR lock with radar
 					if(guardTarget && !heatTarget.exists && radar && radar.radarEnabled)
 					{
-						if(!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).sqrMagnitude > Mathf.Pow(40, 2))
+						if(!radar.locked || (radar.lockedTarget.predictedPosition - guardTarget.transform.position).magnitude > 40)
 						{
 							radar.TryLockTarget(guardTarget.transform.position);
 							yield return new WaitForSeconds(Mathf.Clamp(1, 0.1f, (targetScanInterval * 0.25f) / 2));
@@ -1729,12 +1731,12 @@ namespace BahaTurret
 
 					float attemptStartTime = Time.time;
 					float attemptDuration = targetScanInterval * 0.75f;
-					while(Time.time - attemptStartTime < attemptDuration && (!antiRadTargetAcquired || (antiRadiationTarget - guardTarget.CoM).sqrMagnitude > Mathf.Pow(20, 2)))
+					while(Time.time - attemptStartTime < attemptDuration && (!antiRadTargetAcquired || (antiRadiationTarget - guardTarget.CoM).magnitude > 20))
 					{
 						yield return null;
 					}
 
-					if(ml && antiRadTargetAcquired && (antiRadiationTarget - guardTarget.CoM).sqrMagnitude < Mathf.Pow(20, 2))
+					if(ml && antiRadTargetAcquired && (antiRadiationTarget - guardTarget.CoM).magnitude < 20)
 					{
 						SendTargetDataToMissile(ml);
 						ml.FireMissile();
@@ -1752,7 +1754,7 @@ namespace BahaTurret
 
 							if(tgp)
 							{
-								if(tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < Mathf.Pow(20, 2))
+								if(tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
 								{
 									break;
 								}
@@ -1767,12 +1769,12 @@ namespace BahaTurret
 					//search for a laser point that corresponds with target vessel
 					float attemptStartTime = Time.time;
 					float attemptDuration = targetScanInterval * 0.75f;
-					while(Time.time - attemptStartTime < attemptDuration && (!laserPointDetected || (foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).sqrMagnitude > Mathf.Pow(20, 2))))
+					while(Time.time - attemptStartTime < attemptDuration && (!laserPointDetected || (foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).magnitude >20)))
 					{
 						yield return null;
 					}
 
-					if(ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).sqrMagnitude < Mathf.Pow(20, 2))
+					if(ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).magnitude < 20)
 					{
 						SendTargetDataToMissile(ml);
 						ml.FireMissile();
@@ -1896,8 +1898,8 @@ namespace BahaTurret
 			{
 				if(v.loaded)
 				{
-					float sqrDistance = (transform.position-v.transform.position).sqrMagnitude;
-					if(sqrDistance < Mathf.Pow(guardRange, 2) && CanSeeTarget(v))
+					float distance = (transform.position-v.transform.position).magnitude;
+					if(distance < guardRange && CanSeeTarget(v))
 					{
 						float angle = Vector3.Angle (-transform.forward, v.transform.position-transform.position);
 						if(angle < guardAngle/2)
@@ -2143,7 +2145,7 @@ namespace BahaTurret
 			{
 				for(int i = 0; i < rwr.pingsData.Length; i++)
 				{
-					if(rwr.pingsData[i].exists && (rwr.pingWorldPositions[i] - v.position).sqrMagnitude < Mathf.Pow(20, 2))
+					if(rwr.pingsData[i].exists && (rwr.pingWorldPositions[i] - v.position).magnitude < 20)
 					{
 						matchFound = true;
 						break;
@@ -2554,7 +2556,7 @@ namespace BahaTurret
 
 				float radius = 0.28f / 2;
 				float time = ml.dropTime;
-				Vector3 direction = ((ml.decoupleForward ? ml.transform.forward : -ml.transform.up) * ml.decoupleSpeed * time) + ((FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration) * 0.5f * Mathf.Pow(time, 2));
+				Vector3 direction = ((ml.decoupleForward ? ml.transform.forward : -ml.transform.up) * ml.decoupleSpeed * time) + ((FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration) * 0.5f * time*time);
 				Vector3 crossAxis = Vector3.Cross(direction, ml.transform.forward).normalized;
 
 				float rayDistance;

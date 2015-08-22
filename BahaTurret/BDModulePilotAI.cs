@@ -14,6 +14,10 @@ namespace BahaTurret
 {
 	public class BDModulePilotAI : PartModule
 	{
+		public enum SteerModes{Normal, Aiming}
+		SteerModes steerMode = SteerModes.Normal;
+
+
 		[KSPField(isPersistant = true)]
 		public bool pilotEnabled = false;
 
@@ -126,6 +130,9 @@ namespace BahaTurret
 			vessel.OnFlyByWire += AutoPilot;
 			startedLanded = vessel.Landed;
 
+			GameEvents.onVesselDestroy.Remove(RemoveAutopilot);
+			GameEvents.onVesselDestroy.Add(RemoveAutopilot);
+
 			RefreshPartWindow();
 		}
 
@@ -134,6 +141,14 @@ namespace BahaTurret
 			pilotEnabled = false;
 			vessel.OnFlyByWire -= AutoPilot;
 			RefreshPartWindow();
+		}
+
+		void RemoveAutopilot(Vessel v)
+		{
+			if(v == vessel)
+			{
+				v.OnFlyByWire -= AutoPilot;
+			}
 		}
 
 
@@ -196,7 +211,7 @@ namespace BahaTurret
 			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
-
+			steerMode = SteerModes.Normal;
 
 
 			GetGuardTarget();
@@ -268,8 +283,9 @@ namespace BahaTurret
 					else //extend if too close for agm attack
 					{
 						float extendDistance = Mathf.Clamp(wm.guardRange-1800, 2500, 4000);
-						Vector3 surfaceVector = GetSurfacePosition(targetVessel.transform.position)-GetSurfacePosition(vessel.transform.position);
-						if(surfaceVector.sqrMagnitude < Mathf.Pow(extendDistance, 2) && Vector3.Angle(vessel.ReferenceTransform.up, targetVessel.transform.position-vessel.transform.position) > 45)
+						float srfDist = Vector3.Distance(GetSurfacePosition(targetVessel.transform.position), GetSurfacePosition(vessel.transform.position));
+
+						if(srfDist < extendDistance && Vector3.Angle(vessel.ReferenceTransform.up, targetVessel.transform.position-vessel.transform.position) > 45)
 						{
 							extending = true;
 							lastTargetPosition = targetVessel.transform.position;
@@ -311,8 +327,10 @@ namespace BahaTurret
 
 		void FlyToTargetVessel(FlightCtrlState s, Vessel v)
 		{
-			Vector3 target = v.transform.position;
+			Vector3 target = v.CoM;
 			MissileLauncher missile = null;
+			Vector3 vectorToTarget = v.transform.position - vessel.ReferenceTransform.position;
+			float distanceToTarget = vectorToTarget.magnitude;
 			if(wm)
 			{
 				missile = wm.currentMissile;
@@ -325,7 +343,18 @@ namespace BahaTurret
 					ModuleWeapon weapon = wm.currentGun;
 					if(weapon!=null)
 					{
-						target -= 1.25f*weapon.GetLeadOffset();
+						//target -= 1.30f*weapon.GetLeadOffset();
+						Vector3 leadOffset = weapon.GetLeadOffset();
+
+						float targetAngVel = 1.65f * Vector3.Angle(v.transform.position - vessel.transform.position, v.transform.position + (vessel.srf_velocity) - vessel.transform.position);
+						debugString += "\ntargetAngVel: " + targetAngVel;
+						float magnifier = Mathf.Clamp(targetAngVel, 1.25f, 5);
+						target -= magnifier * leadOffset;
+						float angleToLead = Vector3.Angle(vessel.ReferenceTransform.up, target - vessel.ReferenceTransform.position);
+						if(distanceToTarget < 1600 &&  angleToLead < 20)
+						{
+							steerMode = SteerModes.Aiming; //steer to aim
+						}
 					}
 				}
 
@@ -334,9 +363,10 @@ namespace BahaTurret
 
 			FlyToPosition(s, target);
 
+			
 			//try airbrake if in front of enemy
-			if(Vector3.Angle(vessel.ReferenceTransform.up, v.transform.position-vessel.transform.position) > 120 //angle to enemy is greater than 120
-			   && (v.transform.position-vessel.transform.position).sqrMagnitude < Mathf.Pow(800, 2) //distance is less than 800m
+			if(Vector3.Dot(vessel.ReferenceTransform.up, v.transform.position-vessel.transform.position) < 0  
+				&& distanceToTarget < 800 //distance is less than 800m
 			   && vessel.srfSpeed > 200) //airspeed is more than 200 
 			{
 				debugString += ("\nEnemy on tail. Braking");
@@ -344,7 +374,7 @@ namespace BahaTurret
 			}
 			if(missile!=null 
 			   && Vector3.Angle(vessel.ReferenceTransform.up, v.transform.position-vessel.transform.position) <45
-			   && (v.transform.position-vessel.transform.position).sqrMagnitude < Mathf.Pow(300, 2)
+				&& distanceToTarget < 300
 			   && vessel.srfSpeed > 130)
 			{
 				extending = true;
@@ -367,49 +397,73 @@ namespace BahaTurret
 
 			Transform vesselTransform = vessel.ReferenceTransform;
 			velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vesselTransform.forward);
+			velocityTransform.rotation = Quaternion.AngleAxis(90, velocityTransform.right) * velocityTransform.rotation;
 			Vector3 localAngVel = vessel.angularVelocity;
 
 
-			Vector3 targetDirection = velocityTransform.InverseTransformPoint(targetPosition).normalized;
-			targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
-
-			Vector3 targetDirectionYaw = vessel.ReferenceTransform.InverseTransformPoint(vesselTransform.position+vessel.srf_velocity);
-			float angleYaw = Misc.SignedAngle(Vector3.up, targetDirectionYaw, Vector3.right);
-			
-			float steerYaw = (.02f * angleYaw);
-			if(Mathf.Sign (steerYaw) == Mathf.Sign (-localAngVel.z))
+			Vector3 targetDirection;
+			Vector3 targetDirectionYaw;
+			float yawError;
+			float pitchError;
+			float postYawFactor;
+			float postPitchFactor;
+			if(steerMode == SteerModes.Normal)
 			{
-				steerYaw -= (.5f*steerDamping * -localAngVel.z);
+				targetDirection = velocityTransform.InverseTransformDirection(targetPosition-velocityTransform.position).normalized;
+				targetDirection = Vector3.RotateTowards(Vector3.up, targetDirection, 45 * Mathf.Deg2Rad, 0);
+
+				targetDirectionYaw = vesselTransform.InverseTransformDirection(vessel.srf_velocity).normalized;
+				targetDirectionYaw = Vector3.RotateTowards(Vector3.up, targetDirectionYaw, 45 * Mathf.Deg2Rad, 0);
+
+				pitchError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirection, Vector3.right), Vector3.back);
+				yawError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirectionYaw, Vector3.forward), Vector3.right);
+
+				postYawFactor = 1;
+				postPitchFactor = 1;
+			}
+			else//aiming
+			{
+				targetDirection = vesselTransform.InverseTransformDirection(targetPosition-vesselTransform.position).normalized;
+				targetDirection = Vector3.RotateTowards(Vector3.up, targetDirection, 45 * Mathf.Deg2Rad, 0);
+				targetDirectionYaw = targetDirection;
+
+				pitchError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirection, Vector3.right), Vector3.back);
+				yawError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirectionYaw, Vector3.forward), Vector3.right);
+
+				postYawFactor = 1.6f;
+				postPitchFactor = 2.4f;
 			}
 
-			//float anglePitch = Misc.SignedAngle(Vector3.up, targetDirection, Vector3.back);
-			float steerPitch = (steerMult * targetDirection.y) - (steerDamping * -localAngVel.x);
 
 			float finalMaxSteer = threatLevel * maxSteer;
 
-			float yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
-			s.yaw = yaw;
+			float steerPitch = (postPitchFactor * 0.015f * steerMult * pitchError) - (postPitchFactor * steerDamping * -localAngVel.x);
+			float steerYaw = (postYawFactor * 0.022f * steerMult * yawError) - (postPitchFactor * steerDamping * -localAngVel.z);
+	
 
-			s.pitch = Mathf.Clamp(steerPitch, Mathf.Max(-finalMaxSteer, -0.25f), finalMaxSteer);
+			s.yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
+			s.pitch = Mathf.Clamp(steerPitch, Mathf.Min(-finalMaxSteer, -0.25f), finalMaxSteer);
 
 
 			//roll
 			Vector3 rollTarget = Vector3.ProjectOnPlane(upDirection, vesselTransform.up);
-			if(Vector3.Angle(vesselTransform.up, targetPosition-vesselTransform.position) > 3)
+			if(steerMode == SteerModes.Aiming || Vector3.Angle(vesselTransform.up, targetPosition-vesselTransform.position) > 3)
 			{
-				rollTarget = Vector3.ProjectOnPlane((targetPosition+(45f*upDirection))-vesselTransform.position, vesselTransform.up);
+				rollTarget = Vector3.ProjectOnPlane((targetPosition+((steerMode == SteerModes.Aiming ? 10 : 45f)*upDirection))-vesselTransform.position, vesselTransform.up);
 			}
 
 
 
 			Vector3 currentRoll = -vesselTransform.forward;
-			float rollOffset = Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
-			debugString += "\nRoll offset: "+rollOffset;
-			float steerRoll = (steerMult * 0.0015f * rollOffset);
+			float rollError = Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
+			debugString += "\nRoll offset: "+rollError;
+			float steerRoll = (steerMult * 0.0015f * rollError);
 			debugString += "\nSteerRoll: "+steerRoll;
 			float rollDamping = (.10f * steerDamping * -localAngVel.y);
 			steerRoll -= rollDamping;
 			debugString += "\nRollDamping: "+rollDamping;
+
+
 
 			float roll = Mathf.Clamp(steerRoll, -maxSteer/2, maxSteer/2);
 			s.roll = roll;
@@ -426,10 +480,11 @@ namespace BahaTurret
 					extendDistance = 800;
 				}
 
-				Vector3 surfaceVector = GetSurfacePosition(tPosition)-GetSurfacePosition(vessel.transform.position);
-				if(surfaceVector.sqrMagnitude < Mathf.Pow(extendDistance, 2))
+				Vector3 srfVector = (GetSurfacePosition(tPosition)-GetSurfacePosition(vessel.transform.position));
+				float srfDist = srfVector.magnitude;
+				if(srfDist < extendDistance)
 				{
-					Vector3 target = FlightPosition(tPosition + ((-surfaceVector).normalized*extendDistance), defaultAltitude);
+					Vector3 target = FlightPosition(tPosition + ((-srfVector).normalized*extendDistance), defaultAltitude);
 					FlyToPosition(s, target);
 					flyingToPosition = target;
 				}
@@ -555,16 +610,12 @@ namespace BahaTurret
 			MissileLauncher missile = mf.currentMissile;
 			if(missile != null)
 			{
-				if(targetV.Landed)
-				{
-					target = FlightPosition(target, minAltitude);
-				}
-				else
+				if(!targetV.Landed)
 				{
 					target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
 				}
 
-				if(Vector3.Angle(vessel.ReferenceTransform.up, target - vessel.ReferenceTransform.position) < missile.maxOffBoresight * 0.8f)
+				if(Vector3.Angle(missile.transform.forward, target - missile.transform.position) < missile.maxOffBoresight * 0.75f)
 			   //|| (targetV.Landed && Vector3.Angle(vessel.ReferenceTransform.up, FlightPosition(target, (float)vessel.altitude)-vessel.ReferenceTransform.position) < 15))
 				{
 					launchAuthorized = true;

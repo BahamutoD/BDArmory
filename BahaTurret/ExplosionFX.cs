@@ -108,7 +108,8 @@ namespace BahaTurret
 			if(Physics.Raycast(ray, out rayHit, maxDistance, 557057))
 			{
 				float sqrDist = (rayHit.point - ray.origin).sqrMagnitude;
-				float distanceFactor = Mathf.Clamp01((Mathf.Pow(maxDistance, 2) - sqrDist) / Mathf.Pow(maxDistance, 2));
+				float sqrMaxDist = maxDistance * maxDistance;
+				float distanceFactor = Mathf.Clamp01((sqrMaxDist - sqrDist) / sqrMaxDist);
 				//parts
 				Part part = rayHit.collider.GetComponentInParent<Part>();
 				if(part && !ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL)
@@ -147,9 +148,10 @@ namespace BahaTurret
 			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("======= Doing explosion sphere =========");
 			ignoreParts.Clear();
 			ignoreBuildings.Clear();
-			foreach(var vessel in FlightGlobals.Vessels)
+			foreach(var vessel in BDATargetManager.LoadedVessels)
 			{
-				if(vessel.loaded && !vessel.packed && (vessel.transform.position - position).sqrMagnitude < Mathf.Pow(maxDistance * 4, 2))
+				if(vessel == null) continue;
+				if(vessel.loaded && !vessel.packed && (vessel.transform.position - position).magnitude < maxDistance * 4)
 				{
 					foreach(var part in vessel.parts)
 					{
@@ -162,7 +164,7 @@ namespace BahaTurret
 			foreach(var bldg in BDATargetManager.LoadedBuildings)
 			{
 				if(bldg == null) continue;
-				if((bldg.transform.position - position).sqrMagnitude < Mathf.Pow(maxDistance * 1000, 2))
+				if((bldg.transform.position - position).magnitude < maxDistance * 1000)
 				{
 					DoExplosionRay(new Ray(position, bldg.transform.position - position), power, maxDistance, ref ignoreParts, ref ignoreBuildings);
 				}

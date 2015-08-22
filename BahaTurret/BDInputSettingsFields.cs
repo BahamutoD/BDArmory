@@ -8,7 +8,7 @@ namespace BahaTurret
 	public class BDInputSettingsFields
 	{
 		//MAIN
-		public static BDInputInfo WEAP_FIRE_KEY = new BDInputInfo("mouse 0", "Slew Right");
+		public static BDInputInfo WEAP_FIRE_KEY = new BDInputInfo("mouse 0", "Fire");
 		//TGP
 		public static BDInputInfo TGP_SLEW_RIGHT = new BDInputInfo("Slew Right");
 		public static BDInputInfo TGP_SLEW_LEFT = new BDInputInfo("Slew Left");

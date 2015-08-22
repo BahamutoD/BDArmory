@@ -146,7 +146,7 @@ namespace BahaTurret
 			RaycastHit rayHit;
 			if(Physics.Raycast(ray, out rayHit, dist, 557057))
 			{
-				if((rayHit.point-target).sqrMagnitude < Mathf.Pow(threshold, 2))
+				if(rayHit.distance < threshold)
 				{
 					return true;
 				}

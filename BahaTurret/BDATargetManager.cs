@@ -28,6 +28,8 @@ namespace BahaTurret
 
 		public static List<DestructibleBuilding> LoadedBuildings;
 
+		public static List<Vessel> LoadedVessels;
+
 
 
 		string debugString = string.Empty;
@@ -43,6 +45,11 @@ namespace BahaTurret
 			GameEvents.onGameStateSave.Add(SaveGPSTargets);
 			LoadedBuildings = new List<DestructibleBuilding>();
 			DestructibleBuilding.OnLoaded.Add(AddBuilding);
+			LoadedVessels = new List<Vessel>();
+			GameEvents.onVesselLoaded.Add(AddVessel);
+			GameEvents.onVesselGoOnRails.Add(RemoveVessel);
+			GameEvents.onVesselCreate.Add(AddVessel);
+			GameEvents.onVesselDestroy.Add(CleanVesselList);
 		}
 
 		void OnDestroy()
@@ -90,6 +97,30 @@ namespace BahaTurret
 			}
 
 			LoadedBuildings.RemoveAll(x => x == null);
+		}
+
+		void AddVessel(Vessel v)
+		{
+			if(!LoadedVessels.Contains(v))
+			{
+				LoadedVessels.Add(v);
+			}
+			CleanVesselList(v);
+		}
+
+		void RemoveVessel(Vessel v)
+		{
+			if(v != null)
+			{
+				LoadedVessels.Remove(v);
+			}
+			CleanVesselList(v);
+		}
+
+		void CleanVesselList(Vessel v)
+		{
+			LoadedVessels.RemoveAll(ves => ves == null);
+			LoadedVessels.RemoveAll(ves => ves.loaded == false);
 		}
 
 		void AddToolbarButton()
@@ -308,6 +339,15 @@ namespace BahaTurret
 
 			debugString += "\n\nHeat score: "+heatScore;
 			debugString += "\nFlare score: "+flareScore;
+
+			debugString += "\n\nLoaded vessels: ";
+			foreach(var v in LoadedVessels)
+			{
+				if(v)
+				{
+					debugString += "\n" + v.vesselName;
+				}
+			}
 		}
 
 

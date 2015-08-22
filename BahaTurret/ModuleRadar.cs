@@ -548,7 +548,7 @@ namespace BahaTurret
 			}
 
 			float angleDelta = scanRotationSpeed*Time.fixedDeltaTime;
-			RadarUtils.ScanInDirection(weaponManager, currentAngle, referenceTransform, angleDelta, vessel.transform.position, minSignalThreshold, ref contacts, signalPersistTime, true, rwrType);
+			RadarUtils.ScanInDirection(weaponManager, currentAngle, referenceTransform, angleDelta, vessel.transform.position, minSignalThreshold, ref contacts, signalPersistTime, true, rwrType, true);
 
 			if(omnidirectional)
 			{
@@ -586,7 +586,7 @@ namespace BahaTurret
 				angle = -angle;
 			}
 			//TargetSignatureData.ResetTSDArray(ref attemptedLocks);
-			RadarUtils.ScanInDirection(weaponManager, angle, referenceTransform, lockAttemptFOV, referenceTransform.position, minLockedSignalThreshold, ref attemptedLocks, signalPersistTime, true, rwrType);
+			RadarUtils.ScanInDirection(weaponManager, angle, referenceTransform, lockAttemptFOV, referenceTransform.position, minLockedSignalThreshold, ref attemptedLocks, signalPersistTime, true, rwrType, true);
 
 			for(int i = 0; i < attemptedLocks.Length; i++)
 			{
@@ -606,7 +606,7 @@ namespace BahaTurret
 		void BoresightScan()
 		{
 			currentAngle = Mathf.Lerp(currentAngle, 0, 0.08f);
-			RadarUtils.ScanInDirection (new Ray (transform.position, transform.up), boresightFOV, minSignalThreshold * 5, ref attemptedLocks, Time.fixedDeltaTime, true, rwrType);
+			RadarUtils.ScanInDirection (new Ray (transform.position, transform.up), boresightFOV, minSignalThreshold * 5, ref attemptedLocks, Time.fixedDeltaTime, true, rwrType, true);
 
 			for(int i = 0; i < attemptedLocks.Length; i++)
 			{
@@ -622,7 +622,7 @@ namespace BahaTurret
 		}
 
 
-
+		int snapshotTicker = 0;
 		void UpdateLock()
 		{
 			if(!canLock && linked && linkedRadar && linkedRadar.locked)
@@ -664,7 +664,16 @@ namespace BahaTurret
 			float angleDelta = lockRotationSpeed*Time.fixedDeltaTime;
 			float lockedSignalPersist = lockRotationAngle/lockRotationSpeed;
 			//RadarUtils.ScanInDirection(lockScanAngle, referenceTransform, angleDelta, referenceTransform.position, minLockedSignalThreshold, ref attemptedLocks, lockedSignalPersist);
-			RadarUtils.ScanInDirection (new Ray (referenceTransform.position, lockedTarget.predictedPosition - referenceTransform.position), lockRotationAngle * 2, minLockedSignalThreshold, ref attemptedLocks, lockedSignalPersist, true, rwrType);
+			bool radarSnapshot = (snapshotTicker > 30);
+			if(radarSnapshot)
+			{
+				snapshotTicker = 0;
+			}
+			else
+			{
+				snapshotTicker++;
+			}
+			RadarUtils.ScanInDirection (new Ray (referenceTransform.position, lockedTarget.predictedPosition - referenceTransform.position), lockRotationAngle * 2, minLockedSignalThreshold, ref attemptedLocks, lockedSignalPersist, true, rwrType, radarSnapshot);
 			TargetSignatureData prevLock = lockedTarget;
 			lockedTarget = TargetSignatureData.noTarget;
 			for(int i = 0; i < attemptedLocks.Length; i++)

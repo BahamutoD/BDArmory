@@ -1063,9 +1063,9 @@ namespace BahaTurret
 		void CruiseGuidance()
 		{
 			Vector3 cruiseTarget = Vector3.zero;
-			float sqrDist = (targetPosition - transform.position).sqrMagnitude;
+			float distance = Vector3.Distance(targetPosition, transform.position);
 
-			if(terminalManeuvering && sqrDist < Mathf.Pow(4500, 2))
+			if(terminalManeuvering && distance < 4500)
 			{
 				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(targetPosition, vessel, cruiseAltitude);
 				debugString += "\nTerminal Maneuvers";
@@ -1073,7 +1073,7 @@ namespace BahaTurret
 			else
 			{
 				float agmThreshDist = 2500;
-				if(sqrDist < Mathf.Pow(agmThreshDist, 2))
+				if(distance <agmThreshDist)
 				{
 					cruiseTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, agmDescentRatio);
 					debugString += "\nDescending On Target";
@@ -1332,7 +1332,7 @@ namespace BahaTurret
 			}
 		}
 		
-
+		int snapshotTicker;
 		TargetSignatureData[] scannedTargets;
 		void UpdateRadarTarget()
 		{
@@ -1382,7 +1382,16 @@ namespace BahaTurret
 						Ray ray = new Ray(transform.position, radarTarget.predictedPosition - transform.position);
 						bool pingRWR = Time.time - lastRWRPing > 0.4f;
 						if(pingRWR) lastRWRPing = Time.time;
-						RadarUtils.ScanInDirection(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock);
+						bool radarSnapshot = (snapshotTicker > 30);
+						if(radarSnapshot)
+						{
+							snapshotTicker = 0;
+						}
+						else
+						{
+							snapshotTicker++;
+						}
+						RadarUtils.ScanInDirection(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
 						float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(40, 2);
 						for(int i = 0; i < scannedTargets.Length; i++)
 						{
@@ -1429,7 +1438,16 @@ namespace BahaTurret
 				Ray ray = new Ray(transform.position, transform.forward);
 				bool pingRWR = Time.time - lastRWRPing > 0.4f;
 				if(pingRWR) lastRWRPing = Time.time;
-				RadarUtils.ScanInDirection(ray, lockedSensorFOV*3, activeRadarMinThresh*2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock);
+				bool radarSnapshot = (snapshotTicker > 6);
+				if(radarSnapshot)
+				{
+					snapshotTicker = 0;
+				}
+				else
+				{
+					snapshotTicker++;
+				}
+				RadarUtils.ScanInDirection(ray, lockedSensorFOV*3, activeRadarMinThresh*2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
 				float sqrThresh = Mathf.Pow(300, 2);
 
 				float smallestAngle = 360;
@@ -1528,14 +1546,14 @@ namespace BahaTurret
 		void CheckMiss()
 		{
 			float sqrDist = ((targetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
-			if(sqrDist < 200*200 || (MissileState == MissileStates.PostThrust && (guidanceMode == GuidanceModes.AAMLead || guidanceMode == GuidanceModes.AAMPure)))
+			if(sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (guidanceMode == GuidanceModes.AAMLead || guidanceMode == GuidanceModes.AAMPure)))
 			{
 				checkMiss = true;	
 			}
 			
 			//kill guidance if missile has missed
 			if(!hasMissed && checkMiss && 
-				(Vector3.Angle(targetPosition-transform.position, transform.forward) > 80)) 
+				Vector3.Dot(targetPosition-transform.position,transform.forward)<0) 
 			{
 				Debug.Log ("Missile CheckMiss showed miss");
 				hasMissed = true;

@@ -36,13 +36,16 @@ namespace BahaTurret
 			Vector3 up = VectorUtils.GetUpDirection(missileVessel.transform.position);
 			Vector3 forward = Vector3.ProjectOnPlane(targetPosition - missileVessel.transform.position, up);
 			float speed = (float)missileVessel.srfSpeed;
+			float sqrSpeed = speed * speed;
+			float sqrSpeedSqr = sqrSpeed * sqrSpeed;
 			float g = (float)FlightGlobals.getGeeForceAtPosition(missileVessel.transform.position).magnitude;
 			float height = FlightGlobals.getAltitudeAtPos(targetPosition)-FlightGlobals.getAltitudeAtPos(missileVessel.transform.position);
-			float range = forward.magnitude;
+			float sqrRange = forward.sqrMagnitude;
+			float range = Mathf.Sqrt(sqrRange);
 
 			float plusOrMinus = direct ? -1 : 1;
 
-			float top = Mathf.Pow(speed, 2) + (plusOrMinus * Mathf.Sqrt(Mathf.Pow(speed, 4) - (g * ((g * Mathf.Pow(range, 2) + (2 * height * Mathf.Pow(speed, 2)))))));
+			float top = sqrSpeed + (plusOrMinus * Mathf.Sqrt(sqrSpeedSqr - (g * ((g * sqrRange + (2 * height * sqrSpeed))))));
 			float bottom = g * range;
 			float theta = Mathf.Atan(top / bottom);
 
@@ -99,13 +102,13 @@ namespace BahaTurret
 			float targetDistance = Vector3.Distance(targetVessel.transform.position, missile.transform.position);
  
 			Vector3 simMissileVel = missile.optimumAirspeed * (targetPosition-missile.transform.position).normalized;
-			leadTime = (float)(1/((targetVessel.srf_velocity-simMissileVel).magnitude/targetDistance));
+			leadTime = targetDistance/(float)(targetVessel.srf_velocity-simMissileVel).magnitude;
 			leadTime = Mathf.Clamp (leadTime, 0f, 8f);
 			targetPosition = targetPosition + (targetVessel.srf_velocity*leadTime);
 
 			if(targetVessel && targetDistance < 800)
 			{
-				targetPosition += (Vector3)targetVessel.acceleration * 0.05f * Mathf.Pow(leadTime,2);
+				targetPosition += (Vector3)targetVessel.acceleration * 0.05f * leadTime * leadTime;
 			}
 			
 			return targetPosition;
@@ -117,7 +120,7 @@ namespace BahaTurret
 			float targetDistance = Vector3.Distance(targetPosition, missile.transform.position);
 
 			Vector3 simMissileVel = missile.optimumAirspeed * (targetPosition-missile.transform.position).normalized;
-			leadTime = (1/((targetVelocity-simMissileVel).magnitude/targetDistance));
+			leadTime = targetDistance/(targetVelocity-simMissileVel).magnitude;
 			leadTime = Mathf.Clamp (leadTime, 0f, 8f);
 
 			targetPosition = targetPosition + (targetVelocity*leadTime);
@@ -176,7 +179,7 @@ namespace BahaTurret
 			float sinAmplitude = Mathf.Clamp(Vector3.Distance(targetPosition, missileVessel.transform.position)-650, 0, 4500);
 			Vector3 targetSin = (Mathf.Sin(1.5f*Time.time) * sinAmplitude * crossAxis)+targetPosition;
 			Vector3 finalTarget;
-			if((targetPosition - missileVessel.transform.position).sqrMagnitude > Mathf.Pow(1000+GetRadarAltitude(missileVessel), 2))
+			if(Vector3.Distance(targetPosition,missileVessel.transform.position) > (1000+GetRadarAltitude(missileVessel)))
 			{
 				finalTarget = GetCruiseTarget(targetSin, missileVessel, radarAlt);
 			}

@@ -142,7 +142,7 @@ namespace BahaTurret
 				return false;
 			}
 			bool withinView = Vector3.Angle(targetPosition-pitchTransform.position, pitchTransform.forward) < thresholdDegrees;
-			bool withinDistance = (targetPosition-pitchTransform.position).sqrMagnitude < Mathf.Pow(maxDistance, 2);
+			bool withinDistance = (targetPosition-pitchTransform.position).magnitude < maxDistance;
 			return (withinView && withinDistance);
 		}
 
