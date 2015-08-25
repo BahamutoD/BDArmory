@@ -609,6 +609,8 @@ namespace BahaTurret
 
 				if(cfg.HasValue("IVA_LOWPASS_FREQ")) IVA_LOWPASS_FREQ = float.Parse(cfg.GetValue("IVA_LOWPASS_FREQ"));
 
+				if(cfg.HasValue("PEACE_MODE")) PEACE_MODE = bool.Parse(cfg.GetValue("PEACE_MODE"));
+
 				BDInputSettingsFields.LoadSettings(fileNode);
 			}
 			catch(NullReferenceException)
@@ -659,6 +661,7 @@ namespace BahaTurret
 				cfg.SetValue("GLOBAL_DRAG_MULTIPLIER", GLOBAL_DRAG_MULTIPLIER.ToString(), true);
 				cfg.SetValue("IVA_LOWPASS_FREQ", IVA_LOWPASS_FREQ.ToString(), true);
 				cfg.SetValue("MAX_BULLET_RANGE", MAX_BULLET_RANGE.ToString(), true);
+				cfg.SetValue("PEACE_MODE", PEACE_MODE.ToString(), true);
 
 				BDInputSettingsFields.SaveSettings(fileNode);
 
