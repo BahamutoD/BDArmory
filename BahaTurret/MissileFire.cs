@@ -1174,7 +1174,7 @@ namespace BahaTurret
 
 					simVelocity += FlightGlobals.getGeeForceAtPosition(currPos) * simDeltaTime;
 					float simSpeedSquared = simVelocity.sqrMagnitude;
-					float drag = bombPart.minimum_drag;
+					float drag = ml.simpleDrag;
 					if(simTime > ml.deployTime)
 					{
 						drag = 	ml.deployedDrag;

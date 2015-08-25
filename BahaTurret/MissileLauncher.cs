@@ -171,6 +171,8 @@ namespace BahaTurret
 
 		[KSPField]
 		public bool useSimpleDrag = false;
+		[KSPField]
+		public float simpleDrag = 0.02f;
 
 		[KSPField]
 		public Vector3 simpleCoD = new Vector3(0,0,-1);
@@ -410,7 +412,7 @@ namespace BahaTurret
 			}
 			else
 			{
-				deployedDrag = part.maximum_drag;	
+				deployedDrag = simpleDrag;	
 			}
 		}
 
@@ -626,7 +628,7 @@ namespace BahaTurret
 				part.rb.velocity += decoupleSpeed * -part.transform.up;
 			}
 
-			Misc.RemoveFARModule(part);
+			//Misc.RemoveFARModule(part);
 		}
 
 		/// <summary>
@@ -673,11 +675,9 @@ namespace BahaTurret
 					foreach(var anim in deployStates)
 					{
 						anim.speed = 1;
-						part.maximum_drag = deployedDrag;
-						part.minimum_drag = deployedDrag;
 					}
-
 				}
+		
 
 				//simpleDrag
 				if(useSimpleDrag)
@@ -1875,7 +1875,8 @@ namespace BahaTurret
 			part.dragModel = Part.DragModel.NONE;
 			float simSpeedSquared = (float)vessel.srf_velocity.sqrMagnitude;
 			Vector3 currPos = transform.position;
-			Vector3 dragForce = (0.008f * part.rb.mass) * part.minimum_drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * vessel.srf_velocity.normalized;
+			float drag = deployed ? deployedDrag : simpleDrag;
+			Vector3 dragForce = (0.008f * part.rb.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * vessel.srf_velocity.normalized;
 			part.rb.AddForceAtPosition(-dragForce, transform.TransformPoint(simpleCoD));
 
 		}
