@@ -18,6 +18,9 @@ namespace BahaTurret
 		public static void DrawTextureOnWorldPos(Vector3 worldPos, Texture texture, Vector2 size, float wobble)
 		{
 			Vector3 screenPos = FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPos);
+			if(screenPos.z < 0) return; //dont draw if point is behind camera
+			if(screenPos.x != Mathf.Clamp01(screenPos.x)) return; //dont draw if off screen
+			if(screenPos.y != Mathf.Clamp01(screenPos.y)) return;
 			float xPos = screenPos.x*Screen.width-(0.5f*size.x);
 			float yPos = (1-screenPos.y)*Screen.height-(0.5f*size.y);
 			if(wobble > 0)
@@ -26,8 +29,8 @@ namespace BahaTurret
 				yPos += UnityEngine.Random.Range(-wobble/2, wobble/2);
 			}
 			Rect iconRect = new Rect(xPos, yPos, size.x, size.y);
-			float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward, worldPos-FlightCamera.fetch.mainCamera.transform.position);
-			if(cameraAngle<90) GUI.DrawTexture(iconRect, texture);
+
+			GUI.DrawTexture(iconRect, texture);
 		}
 
 		public static void DrawLineBetweenWorldPositions(Vector3 worldPosA, Vector3 worldPosB, float width, Color color)

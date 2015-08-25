@@ -112,19 +112,18 @@ namespace BahaTurret
 				if(vessel == null) continue;
 				if(!vessel.loaded) continue;
 
-
 				if(myWpnManager)
 				{
 					if(vessel == myWpnManager.vessel) continue; //ignore self
 				}
-				else if((vessel.transform.position - position).sqrMagnitude > 3600) continue;
-
-				if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+				else if((vessel.transform.position - position).sqrMagnitude < 3600) continue;
 
 				Vector3 vesselDirection = Vector3.ProjectOnPlane(vessel.CoM - position, upVector);
 
 				if(Vector3.Angle(vesselDirection, lookDirection) < fov / 2)
 				{
+					if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+
 					float sig = float.MaxValue;
 					if(radarSnapshot && minSignature > 0) sig = GetModifiedSignature(vessel, position);
 

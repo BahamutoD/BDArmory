@@ -211,10 +211,10 @@ namespace BahaTurret
 			if(DefaultDragCurve == null)
 			{
 				DefaultDragCurve = new FloatCurve();
-				DefaultDragCurve.Add(0, 0.0015f);
+				DefaultDragCurve.Add(0, 0.0020f);
 				DefaultDragCurve.Add(5, .0035f);
 				DefaultDragCurve.Add(15, .015f);
-				DefaultDragCurve.Add(29, .015f);
+				DefaultDragCurve.Add(29, .025f);
 				DefaultDragCurve.Add(55, .3f);
 				DefaultDragCurve.Add(90, .5f);
 			}
@@ -311,7 +311,7 @@ namespace BahaTurret
 			RaycastHit rayHit;
 			if(Physics.Raycast(ray, out rayHit, rayDistance, 1<<15)) 
 			{
-				return Vector3.Distance(position, rayHit.point);
+				return rayHit.distance;
 			}
 			else
 			{

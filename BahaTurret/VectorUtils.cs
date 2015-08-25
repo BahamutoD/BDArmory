@@ -71,7 +71,8 @@ namespace BahaTurret
 
 		public static Vector3 WeightedDirectionDeviation(Vector3 direction, float maxAngle)
 		{
-			float maxRotate = maxAngle*(Mathf.Pow(UnityEngine.Random.Range(0f,1f), 2));
+			float random = UnityEngine.Random.Range(0f, 1f);
+			float maxRotate = maxAngle*(random * random);
 			maxRotate = Mathf.Clamp(maxRotate, 0, maxAngle)*Mathf.Deg2Rad;
 			return Vector3.RotateTowards(direction, Vector3.ProjectOnPlane(UnityEngine.Random.onUnitSphere, direction), maxRotate, 0).normalized;
 		}

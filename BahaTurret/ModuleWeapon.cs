@@ -496,11 +496,11 @@ namespace BahaTurret
 
 		IEnumerator AimAndFireAtEndOfFrame()
 		{
-			//yield return new WaitForEndOfFrame();
 			RunTrajectorySimulation();
 			Aim();
 			CheckWeaponSafety();
 
+			if(eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
 			if(finalFire)
 			{
 				if(eWeaponType == WeaponTypes.Laser)
@@ -783,8 +783,6 @@ namespace BahaTurret
 							//sound
 							if(oneShotSound)
 							{
-								audioSource.dopplerLevel = 0;
-								audioSource.bypassListenerEffects = true;
 								audioSource.PlayOneShot(fireSound);
 							}
 							else
@@ -793,8 +791,6 @@ namespace BahaTurret
 								if(!audioSource.isPlaying)
 								{
 									audioSource.clip = fireSound;
-									audioSource.dopplerLevel = 0;
-									audioSource.bypassListenerEffects = true;
 									audioSource.loop = false;
 									audioSource.time = 0;
 									audioSource.Play();	
@@ -867,18 +863,7 @@ namespace BahaTurret
 						
 						//Vector3 firedVelocity = fireTransform.rotation * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
 						Vector3 firedVelocity = VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
-							
-						/*
-						if(targetVessel!=null && targetVessel.loaded && (autoLockCapable || guardMode))
-						{
-							Vector3 targetDirection = targetPosition-fireTransform.position;
-							
-							if(Vector3.Angle(aimDirection, targetDirection) < 3f)
-							{
-								firedVelocity = Quaternion.LookRotation(targetDirection) * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
-							}
-						}
-						*/
+					
 
 						//firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
 						firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;

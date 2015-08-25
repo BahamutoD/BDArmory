@@ -1264,9 +1264,10 @@ namespace BahaTurret
 
 
 				//MISSILE LOCK HUD
-				if(currentMissile)
+				MissileLauncher missile = currentMissile;
+				if(missile)
 				{
-					if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Laser)
+					if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
 					{
 						if(laserPointDetected && foundCam)
 						{
@@ -1281,7 +1282,7 @@ namespace BahaTurret
 							}
 						}
 					}
-					else if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Heat)
+					else if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
 					{
 						if(heatTarget.exists)
 						{
@@ -1298,7 +1299,7 @@ namespace BahaTurret
 							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
 						}
 					}
-					else if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar)
+					else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
 					{
 						if(radar && radar.locked)
 						{
@@ -1309,13 +1310,13 @@ namespace BahaTurret
 							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 						}
 					}
-					else if(currentMissile.targetingMode == MissileLauncher.TargetingModes.AntiRad)
+					else if(missile.targetingMode == MissileLauncher.TargetingModes.AntiRad)
 					{
 						if(rwr && rwr.rwrEnabled)
 						{
 							for(int i = 0; i < rwr.pingsData.Length; i++)
 							{
-								if(rwr.pingsData[i].exists &&  (rwr.pingsData[i].signalStrength == 0 || rwr.pingsData[i].signalStrength == 5))
+								if(rwr.pingsData[i].exists &&  (rwr.pingsData[i].signalStrength == 0 || rwr.pingsData[i].signalStrength == 5) && Vector3.Dot(rwr.pingWorldPositions[i]-missile.transform.position, missile.transform.forward) > 0)
 								{
 									BDGUIUtils.DrawTextureOnWorldPos(rwr.pingWorldPositions[i], BDArmorySettings.Instance.greenDiamondTexture, new Vector2(22, 22), 0);
 								}
@@ -1329,7 +1330,7 @@ namespace BahaTurret
 					}
 				}
 
-				if((currentMissile && currentMissile.targetingMode == MissileLauncher.TargetingModes.GPS) || BDArmorySettings.Instance.showingGPSWindow)
+				if((missile && missile.targetingMode == MissileLauncher.TargetingModes.GPS) || BDArmorySettings.Instance.showingGPSWindow)
 				{
 					if(designatedGPSCoords != Vector3d.zero)
 					{
@@ -1407,6 +1408,11 @@ namespace BahaTurret
 		void GuardMode()
 		{
 			if(!gameObject.activeInHierarchy)
+			{
+				return;
+			}
+
+			if(BDArmorySettings.PEACE_MODE)
 			{
 				return;
 			}
@@ -2792,9 +2798,9 @@ namespace BahaTurret
 			}
 
 			Vector3 direction = 
-				heatTarget.exists && Vector3.Angle(heatTarget.position-ml.transform.position, ml.transform.forward) < maxOffBoresight ? 
-					heatTarget.position-ml.transform.position 
-					: ml.transform.forward;
+				heatTarget.exists && Vector3.Angle(heatTarget.position - ml.transform.position, ml.transform.forward) < maxOffBoresight ? 
+				heatTarget.predictedPosition - ml.transform.position 
+				: ml.transform.forward;
 
 			float heatThresh = radarSlaved ? ml.heatThreshold*0.75f : ml.heatThreshold;
 

@@ -207,7 +207,7 @@ namespace BahaTurret
 			float minMass = 0.5f;
 			TargetSignatureData finalData = TargetSignatureData.noTarget;
 			float finalScore = 0;
-			foreach(var vessel in FlightGlobals.Vessels)
+			foreach(var vessel in BDATargetManager.LoadedVessels)
 			{
 				if(!vessel || !vessel.loaded)
 				{
@@ -598,7 +598,6 @@ namespace BahaTurret
 			if(!v) return;
 			if(!reporter) return;
 
-
 			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
 			if(!info)
 			{
@@ -624,6 +623,12 @@ namespace BahaTurret
 					return;
 				}
 			}
+		}
+
+		public static void ClearDatabase()
+		{
+			TargetDatabase[BDArmorySettings.BDATeams.A].Clear();
+			TargetDatabase[BDArmorySettings.BDATeams.B].Clear();
 		}
 
 		public static TargetInfo GetAirToAirTarget(MissileFire mf)

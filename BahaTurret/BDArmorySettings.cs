@@ -27,12 +27,12 @@ namespace BahaTurret
 		public static float DMG_MULTIPLIER = 6000;
 		public static float FLARE_CHANCE_FACTOR = 25;
 		public static bool SMART_GUARDS = true;
-		public static float MAX_BULLET_RANGE = 5000;
+		public static float MAX_BULLET_RANGE = 8000;
 		public static float TRIGGER_HOLD_TIME = 0.3f;
 
 		public static bool ALLOW_LEGACY_TARGETING = true;
 
-		public static float TARGET_CAM_RESOLUTION = 360;
+		public static float TARGET_CAM_RESOLUTION = 1024;
 		public static bool BW_TARGET_CAM = true;
 		public static float SMOKE_DEFLECTION_FACTOR = 10;
 
@@ -48,6 +48,8 @@ namespace BahaTurret
 		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
 
 		public static float IVA_LOWPASS_FREQ = 2500;
+
+		public static bool PEACE_MODE = false;
 
 		//==================
 		//reflection field lists
@@ -70,6 +72,9 @@ namespace BahaTurret
 
 		public delegate void SavedSettings();
 		public static event SavedSettings OnSavedSettings;
+
+		public delegate void PeaceEnabled();
+		public static event PeaceEnabled OnPeaceEnabled;
 
 		//particle optimization
 		public static int numberOfParticleEmitters = 0;
@@ -653,6 +658,7 @@ namespace BahaTurret
 				cfg.SetValue("GLOBAL_LIFT_MULTIPLIER", GLOBAL_LIFT_MULTIPLIER.ToString(), true);
 				cfg.SetValue("GLOBAL_DRAG_MULTIPLIER", GLOBAL_DRAG_MULTIPLIER.ToString(), true);
 				cfg.SetValue("IVA_LOWPASS_FREQ", IVA_LOWPASS_FREQ.ToString(), true);
+				cfg.SetValue("MAX_BULLET_RANGE", MAX_BULLET_RANGE.ToString(), true);
 
 				BDInputSettingsFields.SaveSettings(fileNode);
 
@@ -1227,6 +1233,18 @@ namespace BahaTurret
 			line++;
 			line++;
 
+			bool origPm = PEACE_MODE;
+			PEACE_MODE = GUI.Toggle(SLeftRect(line), PEACE_MODE, "Peace Mode");
+			if(PEACE_MODE && !origPm)
+			{
+				BDATargetManager.ClearDatabase();
+				if(OnPeaceEnabled != null)
+				{
+					OnPeaceEnabled();
+				}
+			}
+			line++;
+			line++;
 
 
 			GUI.Label(SLeftRect(line), "Trigger Hold: "+TRIGGER_HOLD_TIME.ToString("0.00")+"s", leftLabel);

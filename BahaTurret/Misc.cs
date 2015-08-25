@@ -1,10 +1,11 @@
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace BahaTurret
 {
-	public class Misc : MonoBehaviour
+	public static class Misc
 	{
 		
 		public static Color ParseColor255(string color)
@@ -91,7 +92,7 @@ namespace BahaTurret
 		//refreshes part action window
 		public static void RefreshAssociatedWindows(Part part)
         {
-			foreach ( UIPartActionWindow window in FindObjectsOfType( typeof( UIPartActionWindow ) ) ) 
+			foreach ( UIPartActionWindow window in GameObject.FindObjectsOfType( typeof( UIPartActionWindow ) ) ) 
             {
 				if ( window.part == part )
                 {
@@ -146,7 +147,7 @@ namespace BahaTurret
 			RaycastHit rayHit;
 			if(Physics.Raycast(ray, out rayHit, dist, 557057))
 			{
-				if(rayHit.distance < threshold)
+				if(Vector3.Distance(target, rayHit.point) < threshold)
 				{
 					return true;
 				}
@@ -156,7 +157,7 @@ namespace BahaTurret
 				}
 			}
 			
-			return true;
+			return false;
 		}
 
 
@@ -229,7 +230,26 @@ namespace BahaTurret
 			return finalString;
 		}
 
-		
+
+		public static void RemoveFARModule(Part p)
+		{
+			Component farComponent = p.gameObject.GetComponent("FARAeroPartModule");
+			if(farComponent != null)
+			{
+				if(BDArmorySettings.DRAW_DEBUG_LABELS)
+				{
+					Debug.Log("FAR component found on missile. Removing it.");
+				}
+				Component.Destroy(farComponent);
+			}
+			else
+			{
+				if(BDArmorySettings.DRAW_DEBUG_LABELS)
+				{
+					Debug.Log("No FAR component found.");
+				}
+			}
+		}
 	
 	}
 }

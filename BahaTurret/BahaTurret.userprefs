@@ -1,19 +1,25 @@
 ﻿<Properties StartupItem="BahaTurret.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="TargetingCamera.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="BDModulePilotAI.cs">
     <Files>
-      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
-      <File FileName="ModuleWeapon.cs" Line="1" Column="1" />
+      <File FileName="MissileLauncher.cs" Line="1662" Column="15" />
+      <File FileName="ModuleWeapon.cs" Line="611" Column="34" />
       <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
-      <File FileName="MissileFire.cs" Line="1" Column="1" />
-      <File FileName="ModuleTargetingCamera.cs" Line="505" Column="103" />
-      <File FileName="TargetingCamera.cs" Line="182" Column="4" />
-      <File FileName="Subtractive.shader" Line="1" Column="1" />
+      <File FileName="MissileFire.cs" Line="2802" Column="41" />
+      <File FileName="ModuleTargetingCamera.cs" Line="1" Column="1" />
+      <File FileName="TargetingCamera.cs" Line="151" Column="6" />
       <File FileName="BDAShaderLoader.cs" Line="1" Column="1" />
       <File FileName="TGPCameraEffects.cs" Line="1" Column="1" />
       <File FileName="GrayscaleEffectShader.shader" Line="1" Column="1" />
       <File FileName="RadarUtils.cs" Line="1" Column="1" />
       <File FileName="CameraBulletRenderer.cs" Line="1" Column="1" />
+      <File FileName="BDModulePilotAI.cs" Line="255" Column="44" />
+      <File FileName="ModuleTurret.cs" Line="89" Column="39" />
+      <File FileName="VectorUtils.cs" Line="17" Column="23" />
+      <File FileName="MissileGuidance.cs" Line="216" Column="34" />
+      <File FileName="BDGUIUtils.cs" Line="24" Column="56" />
+      <File FileName="BDATargetManager.cs" Line="235" Column="62" />
+      <File FileName="Misc.cs" Line="141" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

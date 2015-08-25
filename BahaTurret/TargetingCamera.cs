@@ -94,13 +94,17 @@ namespace BahaTurret
 
 		public void SetFOV(float fov)
 		{
-			if(cameras == null || cameras[0] == null)
+			if(fov == currentFOV)
 			{
 				return;
 			}
 
-			if(fov == currentFOV)
+			if(cameras == null || cameras[0] == null)
 			{
+				if(cameraEnabled)
+				{
+					DisableCamera();
+				}
 				return;
 			}
 
@@ -218,6 +222,11 @@ namespace BahaTurret
 		{
 			if(cameraEnabled)
 			{
+				if(cameras == null || cameras[0] == null)
+				{
+					DisableCamera();
+					return;
+				}
 				RenderCameras();
 			}
 		}

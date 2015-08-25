@@ -38,6 +38,8 @@ namespace BahaTurret
 		Vector3 aeroTorque = Vector3.zero;
 		float controlAuthority = 0;
 		float finalMaxTorque = 0;
+		[KSPField]
+		public float aeroSteerDamping = 0;
 
 		[KSPField]
 		public float maxTorque = 90;
@@ -246,7 +248,7 @@ namespace BahaTurret
 		public bool activeRadar = false;
 		float lastRWRPing = 0;
 		[KSPField]
-		public float activeRadarMinThresh = 100;
+		public float activeRadarMinThresh = 140;
 		[KSPField]
 		public bool radarLOAL = false;
 		bool radarLOALSearching = false;
@@ -503,6 +505,8 @@ namespace BahaTurret
 		{
 			if(!hasFired)
 			{
+				
+
 				hasFired = true;
 
 				GameEvents.onPartDie.Add(PartDie);
@@ -621,6 +625,8 @@ namespace BahaTurret
 			{
 				part.rb.velocity += decoupleSpeed * -part.transform.up;
 			}
+
+			Misc.RemoveFARModule(part);
 		}
 
 		/// <summary>
@@ -1043,6 +1049,11 @@ namespace BahaTurret
 
 
 					}
+
+					if(aero && aeroSteerDamping > 0)
+					{
+						//part.rb.angularDrag = aeroSteerDamping;
+					}
 					
 					if(hasRCS && !guidanceActive)
 					{
@@ -1333,6 +1344,7 @@ namespace BahaTurret
 		}
 		
 		int snapshotTicker;
+		int locksCount = 0;
 		TargetSignatureData[] scannedTargets;
 		void UpdateRadarTarget()
 		{
@@ -1382,7 +1394,7 @@ namespace BahaTurret
 						Ray ray = new Ray(transform.position, radarTarget.predictedPosition - transform.position);
 						bool pingRWR = Time.time - lastRWRPing > 0.4f;
 						if(pingRWR) lastRWRPing = Time.time;
-						bool radarSnapshot = (snapshotTicker > 30);
+						bool radarSnapshot = (snapshotTicker > 20);
 						if(radarSnapshot)
 						{
 							snapshotTicker = 0;
@@ -1393,24 +1405,45 @@ namespace BahaTurret
 						}
 						RadarUtils.ScanInDirection(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
 						float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(40, 2);
-						for(int i = 0; i < scannedTargets.Length; i++)
-						{
-							if(scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
-							{
-								radarTarget = scannedTargets[i];
-								targetAcquired = true;
-								radarLOALSearching = false;
-								targetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
-								targetVelocity = radarTarget.velocity;
-								targetAcceleration = radarTarget.acceleration;
 
-								if(!activeRadar && Time.time - timeFired > 1)
+						if(radarLOAL && radarLOALSearching && !radarSnapshot)
+						{
+							//only scan on snapshot interval
+						}
+						else
+						{
+							for(int i = 0; i < scannedTargets.Length; i++)
+							{
+								if(scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
 								{
-									RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
-									Debug.Log("Pitbull! Radar missile has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+									radarTarget = scannedTargets[i];
+									targetAcquired = true;
+									radarLOALSearching = false;
+									targetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+									targetVelocity = radarTarget.velocity;
+									targetAcceleration = radarTarget.acceleration;
+
+									if(!activeRadar && Time.time - timeFired > 1)
+									{
+										if(locksCount == 0)
+										{
+											RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+											Debug.Log("Pitbull! Radar missile has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+										}
+										else if(locksCount > 2)
+										{
+											guidanceActive = false;
+											checkMiss = true;
+											if(BDArmorySettings.DRAW_DEBUG_LABELS)
+											{
+												Debug.Log("Radar missile reached max re-lock attempts.");
+											}
+										}
+										locksCount++;
+									}
+									activeRadar = true;
+									return;
 								}
-								activeRadar = true;
-								return;
 							}
 						}
 

@@ -20,6 +20,7 @@ namespace BahaTurret
 
 		public MissileLauncher missileModule = null;
 
+
 		public bool isLanded
 		{
 			get
@@ -150,6 +151,70 @@ namespace BahaTurret
 			friendliesEngaging = new List<MissileFire>();
 
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
+			lifeRoutine = StartCoroutine(LifetimeRoutine());
+			//add delegate to peace enable event
+			BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
+
+			if(!isMissile && team != BDArmorySettings.BDATeams.None)
+			{
+				massRoutine = StartCoroutine(MassRoutine());
+			}
+		}
+
+		void OnPeaceEnabled()
+		{
+			if(lifeRoutine != null)
+			{
+				StopCoroutine(lifeRoutine);
+			}
+			if(massRoutine != null)
+			{
+				StopCoroutine(massRoutine);
+			}
+
+			Destroy(this);
+		}
+
+		void OnDestroy()
+		{
+			//remove delegate from peace enable event
+			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
+		}
+
+		Coroutine lifeRoutine;
+		IEnumerator LifetimeRoutine()
+		{
+			float startTime = Time.time;
+			while(Time.time - startTime < 30 && enabled)
+			{
+				yield return null;
+			}
+			if(massRoutine != null)
+			{
+				StopCoroutine(massRoutine);
+			}
+			Destroy(this);
+		}
+
+		Coroutine massRoutine;
+		IEnumerator MassRoutine()
+		{
+			float startMass = vessel.GetTotalMass();
+			while(enabled)
+			{
+				if(vessel.GetTotalMass() < startMass / 4)
+				{
+					if(lifeRoutine != null)
+					{
+						StopCoroutine(lifeRoutine);
+					}
+
+					RemoveFromDatabases();
+					yield break;
+				}
+
+				yield return new WaitForSeconds(1);
+			}
 		}
 
 		void Update()

@@ -930,7 +930,7 @@ namespace BahaTurret
 
 		void SendGPS()
 		{
-			if(groundStabilized)
+			if(groundStabilized && weaponManager)
 			{
 				BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
 			}

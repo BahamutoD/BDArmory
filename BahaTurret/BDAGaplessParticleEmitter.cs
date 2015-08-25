@@ -57,6 +57,11 @@ namespace BahaTurret
 			{
 				internalVelocity = (transform.position-lastPos)/Time.fixedDeltaTime;
 				lastPos = transform.position;
+				if(emit && internalVelocity.sqrMagnitude > 562500)
+				{
+					return; //dont bridge gap if floating origin shifted
+				}
+
 			}
 
 			if(emit)
