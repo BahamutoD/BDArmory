@@ -885,7 +885,11 @@ namespace BahaTurret
 					guardLines += 0.1f;
 					contentWidth -= 16;
 					leftIndent += 3;
-					ActiveWeaponManager.guardMode =  GUI.Toggle(new Rect(leftIndent, (guardLines*entryHeight), contentWidth, entryHeight), ActiveWeaponManager.guardMode, " Guard Mode", ActiveWeaponManager.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button);
+					string guardButtonLabel = "Guard Mode " + (ActiveWeaponManager.guardMode ? "ON" : "Off");
+					if(GUI.Button(new Rect(leftIndent, (guardLines * entryHeight), contentWidth, entryHeight), guardButtonLabel, ActiveWeaponManager.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button))
+					{
+						ActiveWeaponManager.ToggleGuardMode();
+					}
 					guardLines += 1.25f;
 
 					string scanLabel = ALLOW_LEGACY_TARGETING ? "Scan Interval" : "Firing Interval";
