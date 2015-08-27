@@ -104,6 +104,8 @@
     <Compile Include="BDKeyBinder.cs" />
     <Compile Include="BDInputSettingsFields.cs" />
     <Compile Include="BDInputInfo.cs" />
+    <Compile Include="ModuleWingCommander.cs" />
+    <Compile Include="BDATooltips.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
