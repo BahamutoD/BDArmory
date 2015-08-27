@@ -182,59 +182,53 @@ namespace BahaTurret
 
 		//KSP fields and events
 		#region kspFields,events,actions
-		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Scan Interval")]//,
-        	//UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
+
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Firing Interval"),
+        	UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float targetScanInterval = 12;
 		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Field of View")]//,
-        	//UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Field of View"),
+        	UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
 		public float guardAngle = 320;
 		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Visual Range")]//,
-        	//UI_FloatRange(minValue = 100f, maxValue = 8000f, stepIncrement = 100f, scene = UI_Scene.All)]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Visual Range"),
+			UI_FloatRange(minValue = 100f, maxValue = 3500, stepIncrement = 100f, scene = UI_Scene.All)]
         public float guardRange = 2500;
 
 
-		//[KSPEvent(guiActive = true, guiName = "Guard Mode: Off", active = true)]
-		public void GuiToggleGuardMode()
+		public void ToggleGuardMode()
 		{
 			guardMode = !guardMode;	
-			Fields["guardRange"].guiActive = guardMode;
-			Fields["guardAngle"].guiActive = guardMode;
-			Fields["targetMissiles"].guiActive = guardMode;
-			Fields["targetScanInterval"].guiActive = guardMode;
-			
-			if(guardMode)
+
+			if(!guardMode)
 			{
-				Events["GuiToggleGuardMode"].guiName = "Guard Mode: ON";
+				//disable turret firing and guard mode
+				foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
+				{
+					weapon.legacyTargetVessel = null;
+					weapon.autoFire = false;
+					weapon.aiControlled = false;
+				}
+
 			}
-			else
-			{
-				Events["GuiToggleGuardMode"].guiName = "Guard Mode: Off";
-			}
-			
-			Misc.RefreshAssociatedWindows(part);
 		}
+
 
 
 		[KSPAction("Toggle Guard Mode")]
 		public void AGToggleGuardMode(KSPActionParam param)
 		{
-			GuiToggleGuardMode();	
+			ToggleGuardMode();	
 		}
 
 
 		[KSPField(isPersistant = true)]
 		public bool guardMode = false;
-		bool wasGuardMode = true;
 
-		
-		/*
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Target Type: "), 
-			UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")]*/
+
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Target Type: "), 
+			UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")]
 		public bool targetMissiles = false;
-		//bool smartTargetMissiles = false;
 		
 		[KSPAction("Toggle Target Type")]
 		public void AGToggleTargetType(KSPActionParam param)
@@ -271,11 +265,15 @@ namespace BahaTurret
 		}
 		
 		
+		[KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
+		public string teamString = "A";
+		void UpdateTeamString()
+		{
+			teamString = Enum.GetName(typeof(BDArmorySettings.BDATeams), BDATargetManager.BoolToTeam(team));
+		}
 		
 		
-		
-		[KSPField(guiActiveEditor = true, isPersistant = true, guiActive = true, guiName = "Team"), 
-			UI_Toggle(disabledText = "A", enabledText = "B")]
+		[KSPField(isPersistant = true)]
 		public bool team = false;
 
 
@@ -283,26 +281,39 @@ namespace BahaTurret
 		[KSPAction("Toggle Team")]
 		public void AGToggleTeam(KSPActionParam param)
 		{
-			ToggleTeam();	
+			ToggleTeam();
 		}
-		
+
+		public delegate void ToggleTeamDelegate(MissileFire wm, BDArmorySettings.BDATeams team);
+		public static event ToggleTeamDelegate OnToggleTeam;
+		[KSPEvent(active = true, guiActiveEditor = true, guiActive = false)]
 		public void ToggleTeam()
 		{
-			audioSource.PlayOneShot(clickSound);
 			team = !team;
-			foreach(var wpnMgr in vessel.FindPartModulesImplementing<MissileFire>())
+
+			if(HighLogic.LoadedSceneIsFlight)
 			{
-				wpnMgr.team = team;	
+				audioSource.PlayOneShot(clickSound);
+				foreach(var wpnMgr in vessel.FindPartModulesImplementing<MissileFire>())
+				{
+					wpnMgr.team = team;	
+				}
+				if(vessel.GetComponent<TargetInfo>())
+				{
+					vessel.GetComponent<TargetInfo>().RemoveFromDatabases();
+					Destroy(vessel.GetComponent<TargetInfo>());
+				}
+
+				if(OnToggleTeam != null)
+				{
+					OnToggleTeam(this, BDATargetManager.BoolToTeam(team));
+				}
 			}
-			if(vessel.GetComponent<TargetInfo>())
-			{
-				vessel.GetComponent<TargetInfo>().RemoveFromDatabases();
-				Destroy(vessel.GetComponent<TargetInfo>());
-			}
+
+			UpdateTeamString();
 		}
 		
-		[KSPField(isPersistant = true)]//, guiActive = false, guiActiveEditor = false, guiName = "Armed")]//, 
-		//	UI_Toggle(disabledText = "Off", enabledText = "ARMED")]
+		[KSPField(isPersistant = true)]
 		public bool isArmed = false;
 		
 		
@@ -404,24 +415,13 @@ namespace BahaTurret
 		
 		public override void OnStart (PartModule.StartState state)
 		{
-			//UpdateMaxGuardRange();
+			UpdateMaxGuardRange();
 			
 			startTime = Time.time;
 
 			if(HighLogic.LoadedSceneIsFlight)
 			{
 				part.force_activate();
-
-				/*
-				if(guardMode)
-				{
-					Events["GuiToggleGuardMode"].guiName = "Guard Mode: ON";
-				}
-				else
-				{
-					Events["GuiToggleGuardMode"].guiName = "Guard Mode: Off";
-				}
-				*/
 
 				selectionMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
 				
@@ -434,11 +434,7 @@ namespace BahaTurret
 				part.force_activate();
 				rippleTimer = Time.time;
 				targetListTimer = Time.time;
-				
-				//Fields["guardRange"].guiActive = guardMode;
-				//Fields["guardAngle"].guiActive = guardMode;
-				//Fields["targetMissiles"].guiActive = guardMode;
-				//Fields["targetScanInterval"].guiActive = guardMode;
+			
 
 				audioSource = gameObject.AddComponent<AudioSource>();
 				audioSource.minDistance = 500;
@@ -537,23 +533,7 @@ namespace BahaTurret
 			{
 				if(!vessel.packed)
 				{
-					if(wasGuardMode != guardMode)
-					{
-						if(!guardMode)
-						{
-							//disable turret firing and guard mode
-							foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
-							{
-								weapon.legacyTargetVessel = null;
-								weapon.autoFire = false;
-								weapon.aiControlled = false;
-							}
-
-						}
-
-						wasGuardMode = guardMode;
-					}
-
+					
 					if(weaponIndex >= weaponArray.Length)
 					{
 						hasSingleFired = true;
@@ -1391,19 +1371,7 @@ namespace BahaTurret
 			}
 		}
 
-		public void ToggleGuardMode()
-		{
-			guardMode = !guardMode;
-
-			if(guardMode)
-			{
-
-			}
-			else
-			{
-
-			}
-		}
+	
 		
 		void GuardMode()
 		{
@@ -2499,24 +2467,20 @@ namespace BahaTurret
 		public void UpdateMaxGuardRange()
 		{
 			var rangeEditor = (UI_FloatRange) Fields["guardRange"].uiControlEditor;
-			var rangeFlight = (UI_FloatRange) Fields["guardRange"].uiControlFlight;
 			if(BDArmorySettings.PHYSICS_RANGE!=0)
 			{
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
 					rangeEditor.maxValue = BDArmorySettings.PHYSICS_RANGE;
-					rangeFlight.maxValue = BDArmorySettings.PHYSICS_RANGE;
 				}
 				else
 				{
 					rangeEditor.maxValue = BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
-					rangeFlight.maxValue = BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
 				}
 			}
 			else
 			{
 				rangeEditor.maxValue = 2500;
-				rangeFlight.maxValue = 2500;
 			}
 
 		}
