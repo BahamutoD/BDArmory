@@ -313,7 +313,7 @@ namespace BahaTurret
 				}
 			}
 
-			if(evasiveTimer > 0 || (weaponManager && (weaponManager.missileIsIncoming || weaponManager.isChaffing || weaponManager.isFlaring)))
+			if(evasiveTimer > 0 || (weaponManager && (weaponManager.missileIsIncoming || weaponManager.isChaffing || weaponManager.isFlaring || weaponManager.underFire)))
 			{
 				Evasive(s);
 				evasiveTimer += Time.fixedDeltaTime;
@@ -435,7 +435,19 @@ namespace BahaTurret
 				missile = weaponManager.currentMissile;
 				if(missile != null)
 				{
-					target = MissileGuidance.GetAirToAirFireSolution(missile, v);
+					if(missile.targetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
+					{
+						target += v.srf_velocity.normalized * 10;
+					}
+					else
+					{
+						target = MissileGuidance.GetAirToAirFireSolution(missile, v);
+					}
+
+					if(Vector3.Angle(target - vesselTransform.position, vesselTransform.forward) < 15)
+					{
+						steerMode = SteerModes.Aiming;
+					}
             	}
 				else
 				{
@@ -763,8 +775,14 @@ namespace BahaTurret
 					target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
 				}
 
-				if(Vector3.Angle(missile.transform.forward, target - missile.transform.position) < missile.maxOffBoresight * 0.75f)
-			   //|| (targetV.Landed && Vector3.Angle(vesselTransform.up, FlightPosition(target, (float)vessel.altitude)-vesselTransform.position) < 15))
+				float boresightFactor = targetV.Landed ? 0.75f : 0.25f;
+
+				float fTime = 3f;
+				Vector3 futurePos = target + (targetV.srf_velocity * fTime);
+				Vector3 myFuturePos = vesselTransform.position + (vessel.srf_velocity * fTime);
+				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
+
+				if(fDot && Vector3.Angle(missile.transform.forward, target - missile.transform.position) < missile.maxOffBoresight * boresightFactor)
 				{
 					launchAuthorized = true;
 				}
