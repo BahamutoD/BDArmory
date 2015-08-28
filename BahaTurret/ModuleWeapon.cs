@@ -197,6 +197,9 @@ namespace BahaTurret
 		Vector3 fixedLeadOffset = Vector3.zero;
 		float targetLeadDistance = 0;
 
+
+		//SPECAL FEATURES
+
 		//Air Detonating Rounds
 		[KSPField]
 		public bool airDetonation = false;
@@ -204,6 +207,12 @@ namespace BahaTurret
 		 UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float defaultDetonationRange = 3500;
 		float detonationRange = 2000;
+
+		//auto proximity tracking
+		[KSPField]
+		public float autoProxyTrackRange = 0;
+		bool atprAcquired = false;
+		int aptrTicker = 0;
 
 		//gapless particles
 		List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
@@ -533,6 +542,13 @@ namespace BahaTurret
 		}
 
 		bool finalFire = false;
+		public bool isFiring
+		{
+			get
+			{
+				return Time.time - timeFired < 120 / roundsPerMinute;
+			}
+		}
 
 		void FixedUpdate()
 		{
@@ -1474,6 +1490,8 @@ namespace BahaTurret
 		{
 			targetAcquired = false;
 			slaved = false;
+			bool atprWasAcquired = atprAcquired;
+			atprAcquired = false;
 
 			//targetVessel = null;
 			if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
@@ -1543,6 +1561,50 @@ namespace BahaTurret
 					targetAcquired = true;
 					return;
 				}
+
+				//auto proxy tracking
+				if(vessel.isActiveVessel && autoProxyTrackRange > 0)
+				{
+					if(aptrTicker < 20)
+					{
+						aptrTicker++;
+
+						if(atprWasAcquired)
+						{
+							targetVelocity += targetAcceleration * Time.fixedDeltaTime;
+							targetPosition += targetVelocity * Time.fixedDeltaTime;
+							targetAcquired = true;
+							atprAcquired = true;
+						}
+					}
+					else
+					{
+						aptrTicker = 0;
+						Vessel tgt = null;
+						float closestSqrDist = autoProxyTrackRange * autoProxyTrackRange;
+						foreach(var v in BDATargetManager.LoadedVessels)
+						{
+							if(!v || !v.loaded) continue;
+							if(!v.IsControllable) continue;
+							Vector3 targetVector = v.transform.position - part.transform.position;
+							if(Vector3.Dot(targetVector, fireTransforms[0].forward) < 0) continue;
+							float sqrDist = (v.transform.position - part.transform.position).sqrMagnitude;
+							if(sqrDist > closestSqrDist) continue;
+							if(Vector3.Angle(targetVector, fireTransforms[0].forward) > 20) continue;
+							tgt = v;
+							closestSqrDist = sqrDist;
+						}
+
+						if(tgt != null)
+						{
+							targetAcquired = true;
+							atprAcquired = true;
+							targetPosition = tgt.CoM;
+							targetVelocity = tgt.srf_velocity;
+							targetAcceleration = tgt.acceleration;
+						}
+					}
+				}
 			}
 
 		}
@@ -1568,6 +1630,11 @@ namespace BahaTurret
 						}
 
 						BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+
+						if(atprAcquired)
+						{
+							BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySettings.Instance.openGreenSquare, new Vector2(20, 20), 0);
+						}
 					}
 					else
 					{
