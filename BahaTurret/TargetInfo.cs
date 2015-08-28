@@ -20,6 +20,8 @@ namespace BahaTurret
 
 		public MissileLauncher missileModule = null;
 
+		public MissileFire weaponManager;
+
 
 		public bool isLanded
 		{
@@ -127,6 +129,7 @@ namespace BahaTurret
 			{
 				foundMf = true;
 				team = BDATargetManager.BoolToTeam(mf.team);
+				weaponManager = mf;
 				break;
 			}
 			if(!foundMf)

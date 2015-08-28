@@ -212,15 +212,27 @@ namespace BahaTurret
 			}
 		}
 
-		public static void GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
+		/// <summary>
+		/// Scans for targets in direction with field of view.
+		/// Returns the direction scanned for debug 
+		/// </summary>
+		/// <returns>The scan direction.</returns>
+		/// <param name="myWpnManager">My wpn manager.</param>
+		/// <param name="directionAngle">Direction angle.</param>
+		/// <param name="referenceTransform">Reference transform.</param>
+		/// <param name="fov">Fov.</param>
+		/// <param name="results">Results.</param>
+		/// <param name="maxDistance">Max distance.</param>
+		public static Vector3 GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
 		{
 			results = new ViewScanResults();
 			results.foundHeatMissile = false;
-			results.foundLaserMissile = false;
+			results.foundAGM = false;
+			results.firingAtMe = false;
 
 			if(!myWpnManager || !referenceTransform)
 			{
-				return;
+				return Vector3.zero;
 			}
 
 			Vector3 position = referenceTransform.position;
@@ -242,9 +254,12 @@ namespace BahaTurret
 					Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(vessel.transform.position-position, upVector);
 					Vector3 vesselDirection = vessel.transform.position - position;
 
+
 					if(Vector3.Dot(vesselDirection, lookDirection) < 0) continue;
 
-					if((vessel.transform.position-position).magnitude < maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
+					float vesselDistance = (vessel.transform.position - position).magnitude;
+
+					if(vesselDistance < maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
 					{
 						//Debug.Log("Found vessel: " + vessel.vesselName);
 						if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
@@ -252,34 +267,56 @@ namespace BahaTurret
 						BDATargetManager.ReportVessel(vessel, myWpnManager);
 
 						TargetInfo tInfo;
-						if((tInfo = vessel.GetComponent<TargetInfo>()) && tInfo.isMissile)
+						if((tInfo = vessel.GetComponent<TargetInfo>()))
 						{
-							MissileLauncher missile;
-							if(missile = tInfo.missileModule)
+							if(tInfo.isMissile)
 							{
-								if(missile.hasFired && (missile.targetPosition-(myWpnManager.vessel.CoM+(myWpnManager.vessel.rb_velocity*Time.fixedDeltaTime))).sqrMagnitude < 3600)
+								MissileLauncher missile;
+								if(missile = tInfo.missileModule)
 								{
-									//Debug.Log("found missile targeting me");
-									if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+									if(missile.hasFired && (missile.targetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
-										results.foundHeatMissile = true;
-										break;
+										//Debug.Log("found missile targeting me");
+										if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+										{
+											results.foundHeatMissile = true;
+											break;
+										}
+										else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
+										{
+											results.foundAGM = true;
+											break;
+										}
 									}
-									else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
+									else
 									{
-										results.foundLaserMissile = true;
 										break;
 									}
 								}
-								else
+							}
+							else
+							{
+								//check if its shooting guns at me
+								if(!results.firingAtMe)
 								{
-									break;
+									foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
+									{
+										if(!weapon.isFiring) continue;
+										if(Vector3.Dot(weapon.fireTransforms[0].forward, vesselDirection) > 0) continue;
+
+										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance)
+										{
+											results.firingAtMe = true;
+										}
+									}
 								}
 							}
 						}
 					}
 				}
 			}
+
+			return lookDirection;
 		}
 
 		public static float GetModifiedSignature(Vessel vessel, Vector3 origin)
