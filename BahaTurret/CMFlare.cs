@@ -91,7 +91,7 @@ namespace BahaTurret
 				relativePos = transform.position-sourceVessel.transform.position;
 			}
 
-			upDirection = (transform.position - FlightGlobals.currentMainBody.transform.position).normalized;
+			upDirection = VectorUtils.GetUpDirection(transform.position);
 
 			velocity = startVelocity;
 		}
@@ -103,7 +103,10 @@ namespace BahaTurret
 				return;
 			}
 
-			transform.rotation = Quaternion.LookRotation(velocity, upDirection);
+			if(velocity != Vector3.zero)
+			{
+				transform.rotation = Quaternion.LookRotation(velocity, upDirection);
+			}
 
 
 			//Particle effects

@@ -62,11 +62,7 @@ namespace BahaTurret
 		}
 		
 		
-		/* explosion sizes:
-		 * 1: small, regular sound (like missiles and rockets)
-		 * 2: large, regular sound (like mk82 bomb)
-		 * 3: small, pop sound (like cluster submunition)
-		 */
+	
 		public static void CreateExplosion(Vector3 position, float radius, float power, Vessel sourceVessel, Vector3 direction, string explModelPath, string soundPath)
 		{
 			GameObject go;
@@ -76,20 +72,20 @@ namespace BahaTurret
 			soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
 				
 				
-			Quaternion rotation = Quaternion.LookRotation(FlightGlobals.getUpAxis());
+			Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
 			GameObject newExplosion = (GameObject)GameObject.Instantiate(go, position, rotation);
 			newExplosion.SetActive(true);
-			newExplosion.AddComponent<ExplosionFX>();
-			newExplosion.GetComponent<ExplosionFX>().exSound = soundClip;
-			newExplosion.GetComponent<ExplosionFX>().audioSource = newExplosion.AddComponent<AudioSource>();
-			newExplosion.GetComponent<ExplosionFX>().audioSource.minDistance = 20;
-			newExplosion.GetComponent<ExplosionFX>().audioSource.maxDistance = 1000;
+			ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
+			eFx.exSound = soundClip;
+			eFx.audioSource = newExplosion.AddComponent<AudioSource>();
+			eFx.audioSource.minDistance = 20;
+			eFx.audioSource.maxDistance = 1000;
 				
 			if(power <= 5)
 			{
-				newExplosion.GetComponent<ExplosionFX>().audioSource.minDistance = 4f;
-				newExplosion.GetComponent<ExplosionFX>().audioSource.maxDistance = 1000;
-				newExplosion.GetComponent<ExplosionFX>().audioSource.priority = 9999;
+				eFx.audioSource.minDistance = 4f;
+				eFx.audioSource.maxDistance = 1000;
+				eFx.audioSource.priority = 9999;
 			}
 			foreach(KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
 			{
