@@ -42,8 +42,6 @@ namespace BahaTurret
 		public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
 
 		public static float MAX_GUARD_VISUAL_RANGE = 3500;
-		public static float MAX_PILOT_EXTEND_RANGE = 4000;
-
 
 		public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
 		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
@@ -603,8 +601,6 @@ namespace BahaTurret
 				if(cfg.HasValue("BDARMORY_WEAPONS_VOLUME")) BDARMORY_WEAPONS_VOLUME = float.Parse(cfg.GetValue("BDARMORY_WEAPONS_VOLUME"));
 
 				if(cfg.HasValue("MAX_GUARD_VISUAL_RANGE")) MAX_GUARD_VISUAL_RANGE = float.Parse(cfg.GetValue("MAX_GUARD_VISUAL_RANGE"));
-
-				if(cfg.HasValue("MAX_PILOT_EXTEND_RANGE")) MAX_PILOT_EXTEND_RANGE = float.Parse(cfg.GetValue("MAX_PILOT_EXTEND_RANGE"));
 
 				if(cfg.HasValue("GLOBAL_LIFT_MULTIPLIER")) GLOBAL_LIFT_MULTIPLIER = float.Parse(cfg.GetValue("GLOBAL_LIFT_MULTIPLIER"));
 
