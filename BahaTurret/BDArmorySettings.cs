@@ -43,7 +43,6 @@ namespace BahaTurret
 
 		public static float MAX_GUARD_VISUAL_RANGE = 3500;
 
-
 		public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
 		public static float GLOBAL_DRAG_MULTIPLIER = 4f;
 

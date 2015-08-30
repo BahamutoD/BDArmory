@@ -58,6 +58,10 @@ namespace BahaTurret
 		 UI_FloatRange(minValue = 150f, maxValue = 8500, stepIncrement = 10f, scene = UI_Scene.All)]
 		public float minAltitude = 900;
 
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Extend Range"),
+			UI_FloatRange(minValue = 2501f, maxValue = 50000f, stepIncrement = 100f, scene = UI_Scene.All)]
+		public float maxExtendRange = 4000f;
+
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
 		 UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
 		public float steerMult = 14;
@@ -353,7 +357,7 @@ namespace BahaTurret
 				}
 				else //extend if too close for agm attack
 				{
-					float extendDistance = Mathf.Clamp(weaponManager.guardRange - 1800, 2500, 4000);
+					float extendDistance = Mathf.Clamp(weaponManager.guardRange - 1800, 2500, maxExtendRange);
 					float srfDist = Vector3.Distance(GetSurfacePosition(targetVessel.transform.position), GetSurfacePosition(vessel.transform.position));
 
 					if(srfDist < extendDistance && Vector3.Angle(vesselTransform.up, targetVessel.transform.position - vessel.transform.position) > 45)
