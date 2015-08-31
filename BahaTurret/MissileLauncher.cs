@@ -289,6 +289,14 @@ namespace BahaTurret
 			return part;
 		}
 
+		//firing paramters
+		[KSPField]
+		public float minLaunchSpeed = 0; //only used by AI
+		[KSPField]
+		public float minStaticLaunchRange = 10;
+		[KSPField]
+		public float maxStaticLaunchRange = 3000;
+
 
 
 		public override void OnStart(PartModule.StartState state)
@@ -314,10 +322,12 @@ namespace BahaTurret
 				Fields["detonationTime"].guiActive = false;
 				Fields["detonationTime"].guiActiveEditor = false;
 			}
-			
+
+			ParseModes();
+
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				ParseModes();
+				
 
 				foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
 				{
