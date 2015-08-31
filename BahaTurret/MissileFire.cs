@@ -1360,6 +1360,15 @@ namespace BahaTurret
 							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
 							Vector3 fsDirection = (fireSolution - currentMissile.transform.position).normalized;
 							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+
+							if(BDArmorySettings.DRAW_DEBUG_LABELS)
+							{
+								string dynRangeDebug = string.Empty;
+								MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(missile, radar.lockedTarget.velocity, radar.lockedTarget.predictedPosition);
+								dynRangeDebug += "MaxDLZ: " + dlz.maxLaunchRange;
+								dynRangeDebug += "\nMinDLZ: " + dlz.minLaunchRange;
+								GUI.Label(new Rect(800, 800, 200, 200), dynRangeDebug);
+							}
 						}
 					}
 					else if(missile.targetingMode == MissileLauncher.TargetingModes.AntiRad)
@@ -1380,6 +1389,8 @@ namespace BahaTurret
 							BDGUIUtils.DrawTextureOnWorldPos(antiRadiationTarget, BDArmorySettings.Instance.openGreenSquare, new Vector2(22, 22), 0);
 						}
 					}
+
+
 				}
 
 				if((missile && missile.targetingMode == MissileLauncher.TargetingModes.GPS) || BDArmorySettings.Instance.showingGPSWindow)
@@ -2311,43 +2322,54 @@ namespace BahaTurret
 			else return true;
 		}
 		
-		void SwitchToMissile()
-		{
-			if(selectedWeapon.GetWeaponClass() != WeaponClasses.Missile)
-			{
-				CycleWeapon(0); //go to start of array
-				while(true)
-				{
-					CycleWeapon(true);
-					if(selectedWeapon == null) return;
-					if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile) return;
-				}
-			}
-			else return;
-		}
+
 
 		bool SwitchToAirMissile()
 		{
 			CycleWeapon(0); //go to start of array
+
+			int selectedIndex = 0;
+			float bestRangeDiff = float.MaxValue;
+			float targetDistance = Vector3.Distance(guardTarget.transform.position, vessel.transform.position);
 			while(true)
 			{
 				CycleWeapon(true);
-				if(selectedWeapon == null) return false;
+				if(selectedWeapon == null) break;//return false;
 				if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 				{
 					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
 					{
 						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure)
 						{
-							return true;
+							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.srf_velocity, guardTarget.transform.position);
+							if(vessel.srfSpeed > ml.minLaunchSpeed && targetDistance < dlz.maxLaunchRange && targetDistance > dlz.minLaunchRange)
+							{
+								float rangeDiff = Mathf.Abs(targetDistance - dlz.rangeTr);
+								if(rangeDiff < bestRangeDiff)
+								{
+									bestRangeDiff = rangeDiff;
+									selectedIndex = weaponIndex;
+								}
+							}
+							break;
+							//return true;
 						}
 						else
 						{
 							break;
 						}
 					}
-					//return;
 				}
+			}
+
+			if(selectedIndex > 0)
+			{
+				CycleWeapon(selectedIndex);
+				return true;
+			}
+			else
+			{
+				return false;
 			}
 		}
 
@@ -2370,17 +2392,16 @@ namespace BahaTurret
 							{
 								break;
 							}
-							else
-							{
-								return true;
-							}
+
+							if(vessel.srfSpeed < ml.minLaunchSpeed) break;
+
+							return true;
 						}
 						else
 						{
 							break;
 						}
 					}
-					//return;
 				}
 			}
 		}
@@ -2873,7 +2894,7 @@ namespace BahaTurret
 				heatTarget.predictedPosition - ml.transform.position 
 				: ml.transform.forward;
 
-			float heatThresh = radarSlaved ? ml.heatThreshold*0.75f : ml.heatThreshold;
+			float heatThresh = radarSlaved ? ml.heatThreshold*0.5f : ml.heatThreshold;
 
 			heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.transform.position, direction), scanRadius, ml.heatThreshold, ml.allAspect);
 		}
