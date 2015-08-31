@@ -858,7 +858,7 @@ namespace BahaTurret
 									Transform sTf = shellEjectTransforms[e];
 									//GameObject ejectedShell = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"), sTf.position + (part.rb.velocity*Time.fixedDeltaTime), sTf.rotation);
 									GameObject ejectedShell = shellPool.GetPooledObject();
-									ejectedShell.transform.position = sTf.position+(part.rb.velocity*TimeWarp.fixedDeltaTime);
+									ejectedShell.transform.position = sTf.position;//+(part.rb.velocity*TimeWarp.fixedDeltaTime);
 									ejectedShell.transform.rotation = sTf.rotation;
 									ejectedShell.transform.localScale = Vector3.one * shellScale;
 									ShellCasing shellComponent = ejectedShell.GetComponent<ShellCasing>();
