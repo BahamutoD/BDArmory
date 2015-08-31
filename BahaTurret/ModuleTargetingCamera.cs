@@ -792,8 +792,8 @@ namespace BahaTurret
 							float dlzWidth = 12 * (imageRect.width/360);
 							float lineWidth = 2;
 							Rect dlzRect = new Rect(imageRect.x + imageRect.width - (3*dlzWidth) - lineWidth, imageRect.y + (imageRect.height / 4), dlzWidth, imageRect.height / 2);
-							float scaleDistance = Mathf.Max(8000f, currMissile.maxStaticLaunchRange*2);
-							float rangeToPixels = (1f / 8000f) * dlzRect.height;
+							float scaleDistance = Mathf.Max(Mathf.Max(8000f, currMissile.maxStaticLaunchRange*2), targetRange);
+							float rangeToPixels = (1f / scaleDistance) * dlzRect.height;
 
 
 							GUI.BeginGroup(dlzRect);
