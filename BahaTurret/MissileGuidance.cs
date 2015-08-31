@@ -211,7 +211,7 @@ namespace BahaTurret
 			if(DefaultDragCurve == null)
 			{
 				DefaultDragCurve = new FloatCurve();
-				DefaultDragCurve.Add(0, 0.0020f);
+				DefaultDragCurve.Add(0, 0.00225f);
 				DefaultDragCurve.Add(5, .0035f);
 				DefaultDragCurve.Add(15, .015f);
 				DefaultDragCurve.Add(29, .025f);
