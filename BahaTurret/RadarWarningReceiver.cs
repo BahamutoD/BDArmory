@@ -54,6 +54,7 @@ namespace BahaTurret
 			}
 
 		}
+
 		Rect displayRect = new Rect(0, 0, 256, 256);
 
 		GUIStyle rwrIconLabelStyle;
@@ -95,7 +96,7 @@ namespace BahaTurret
 				float size = displayRect.height + 20;
 				if(!windowRectInitialized)
 				{
-					windowRect = new Rect(20, Screen.height - size - 20, displayRect.width + 20, size);
+					windowRect = new Rect(40, Screen.height - size - 20, size, size+20);
 					windowRectInitialized = true;
 				}
 
@@ -248,15 +249,20 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySettings.GAME_UI_ENABLED && vessel.isActiveVessel && rwrEnabled)
 			{
-				windowRect = GUI.Window(94353, windowRect, RWRWindow, GUIContent.none, HighLogic.Skin.window); 
+				windowRect = GUI.Window(94353, windowRect, RWRWindow, "Radar Warning Receiver", HighLogic.Skin.window); 
 				BDGUIUtils.UseMouseEventInRect(windowRect);
 			}
 		}
 
 		void RWRWindow(int windowID)
 		{
-			GUI.DragWindow();
-			GUI.BeginGroup(new Rect(10, 10, displayRect.width, displayRect.height));
+			GUI.DragWindow(new Rect(0,0,windowRect.width-18, 30));
+			if(GUI.Button(new Rect(windowRect.width - 28, 2, 26, 26), "X", HighLogic.Skin.button))
+			{
+				DisableRWR();
+			}
+			GUI.BeginGroup(new Rect(10, 30, displayRect.width, displayRect.height));
+			GUI.DragWindow(displayRect);
 
 			GUI.DrawTexture(displayRect, ModuleRadar.omniBgTexture, ScaleMode.StretchToFill, false);
 			float pingSize = 32;
