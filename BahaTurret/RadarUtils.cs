@@ -226,6 +226,7 @@ namespace BahaTurret
 		public static Vector3 GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
 		{
 			results = new ViewScanResults();
+			results.foundMissile = false;
 			results.foundHeatMissile = false;
 			results.foundAGM = false;
 			results.firingAtMe = false;
@@ -274,6 +275,7 @@ namespace BahaTurret
 								MissileLauncher missile;
 								if(missile = tInfo.missileModule)
 								{
+									results.foundMissile = true;
 									if(missile.hasFired && (missile.targetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
 										//Debug.Log("found missile targeting me");
