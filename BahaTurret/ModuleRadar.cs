@@ -222,6 +222,7 @@ namespace BahaTurret
 					float width = radarScreenSize + (2*windowBorder);
 					float height = radarScreenSize + (2*windowBorder) + headerHeight + controlsHeight;
 					radarWindowRect = new Rect(Screen.width - width, Screen.height - height, width, height);
+					radarRectInitialized = true;
 				}
 
 				lockedTarget = TargetSignatureData.noTarget;
