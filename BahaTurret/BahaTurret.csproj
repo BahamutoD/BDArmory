@@ -106,6 +106,7 @@
     <Compile Include="BDInputInfo.cs" />
     <Compile Include="ModuleWingCommander.cs" />
     <Compile Include="BDATooltips.cs" />
+    <Compile Include="MissileLaunchParams.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
