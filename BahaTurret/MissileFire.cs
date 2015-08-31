@@ -1521,11 +1521,6 @@ namespace BahaTurret
 			//scan and acquire new target
 			if(Time.time-targetScanTimer > targetScanInterval)
 			{
-				if(rwr && !rwr.rwrEnabled)
-				{
-					rwr.EnableRWR();
-				}
-
 				SetTarget(null);
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
@@ -1600,6 +1595,14 @@ namespace BahaTurret
 			{
 				currentGuardViewAngle = Mathf.Sign(currentGuardViewAngle) * finalMaxAngle;
 				guardViewScanDirection = -guardViewScanDirection;
+			}
+
+			if(results.foundMissile)
+			{
+				if(rwr && !rwr.rwrEnabled)
+				{
+					rwr.EnableRWR();
+				}
 			}
 
 			if(results.foundHeatMissile && !isFlaring)
