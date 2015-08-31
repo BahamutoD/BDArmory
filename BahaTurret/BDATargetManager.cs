@@ -48,6 +48,7 @@ namespace BahaTurret
 			LoadedVessels = new List<Vessel>();
 			GameEvents.onVesselLoaded.Add(AddVessel);
 			GameEvents.onVesselGoOnRails.Add(RemoveVessel);
+			GameEvents.onVesselGoOffRails.Add(AddVessel);
 			GameEvents.onVesselCreate.Add(AddVessel);
 			GameEvents.onVesselDestroy.Add(CleanVesselList);
 		}
@@ -63,6 +64,13 @@ namespace BahaTurret
 			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
 			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
 			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+
+
+			GameEvents.onVesselLoaded.Remove(AddVessel);
+			GameEvents.onVesselGoOnRails.Remove(RemoveVessel);
+			GameEvents.onVesselGoOffRails.Remove(AddVessel);
+			GameEvents.onVesselCreate.Remove(AddVessel);
+			GameEvents.onVesselDestroy.Remove(CleanVesselList);
 		}
 
 		void Start()
