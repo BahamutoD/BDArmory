@@ -474,17 +474,24 @@ namespace BahaTurret
 
 			FlyToPosition(s, target);
 
-			
-			//try airbrake if in front of enemy
-			if(Vector3.Dot(vesselTransform.up, v.transform.position-vessel.transform.position) < 0  
+			float targetDot = Vector3.Dot(vesselTransform.up, v.transform.position-vessel.transform.position);
+
+			//manage speed when close to enemy
+			float finalMaxSpeed = ((distanceToTarget-100)/8) + (float)v.srfSpeed;
+			if(vessel.srfSpeed > finalMaxSpeed)
+			{
+				s.mainThrottle = 0;
+			}
+
+			if((targetDot < 0 || vessel.srfSpeed > finalMaxSpeed)
 				&& distanceToTarget < 800 //distance is less than 800m
-			   && vessel.srfSpeed > 200) //airspeed is more than 200 
+			   && vessel.srfSpeed > 140) //airspeed is more than 140 
 			{
 				debugString += ("\nEnemy on tail. Braking");
 				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
 			}
 			if(missile!=null 
-			   && Vector3.Angle(vesselTransform.up, v.transform.position-vessel.transform.position) <45
+				&& targetDot > 0
 				&& distanceToTarget < 300
 			   && vessel.srfSpeed > 130)
 			{
@@ -776,13 +783,15 @@ namespace BahaTurret
 				}
 
 				float boresightFactor = targetV.Landed ? 0.75f : 0.25f;
+				float maxOffBoresight = missile.maxOffBoresight;
+				if(missile.targetingMode == MissileLauncher.TargetingModes.GPS) maxOffBoresight = 45;
 
 				float fTime = 3f;
 				Vector3 futurePos = target + (targetV.srf_velocity * fTime);
 				Vector3 myFuturePos = vesselTransform.position + (vessel.srf_velocity * fTime);
 				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
 
-				if(fDot && Vector3.Angle(missile.transform.forward, target - missile.transform.position) < missile.maxOffBoresight * boresightFactor)
+				if(fDot && Vector3.Angle(missile.transform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
 				{
 					launchAuthorized = true;
 				}
