@@ -763,7 +763,8 @@ namespace BahaTurret
 				dataStyle.fontSize = 16;
 				float dataStartX = stabilStartX + stabilizeRect.width + 8;
 				Rect targetRangeRect = new Rect(imageRect.x,(camImageSize * 0.94f) - 18, camImageSize, 18);
-				string rangeString = "Range: "+Vector3.Distance(groundTargetPosition, transform.position).ToString("0.0")+"m";
+				float targetRange = Vector3.Distance(groundTargetPosition, transform.position);
+				string rangeString = "Range: "+targetRange.ToString("0.0")+"m";
 				GUI.Label(targetRangeRect,rangeString, dataStyle);
 
 				//laser ranging indicator
@@ -778,6 +779,56 @@ namespace BahaTurret
 				Rect azielRect = new Rect(azielPos.x, azielPos.y, 4, 4);
 				GUI.DrawTexture(azielRect, BDArmorySettings.Instance.whiteSquareTexture, ScaleMode.StretchToFill, true);
 				*/
+
+				//DLZ
+				if(weaponManager && weaponManager.selectedWeapon != null)
+				{
+					if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+					{
+						MissileLauncher currMissile = weaponManager.currentMissile;
+						if(currMissile.targetingMode == MissileLauncher.TargetingModes.GPS || currMissile.targetingMode == MissileLauncher.TargetingModes.Laser)
+						{
+							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currMissile, Vector3.zero, groundTargetPosition);
+							float dlzWidth = 12 * (imageRect.width/360);
+							float lineWidth = 2;
+							Rect dlzRect = new Rect(imageRect.x + imageRect.width - (3*dlzWidth) - lineWidth, imageRect.y + (imageRect.height / 4), dlzWidth, imageRect.height / 2);
+							float scaleDistance = Mathf.Max(8000f, currMissile.maxStaticLaunchRange*2);
+							float rangeToPixels = (1f / 8000f) * dlzRect.height;
+
+
+							GUI.BeginGroup(dlzRect);
+
+							float dlzX = 0;
+
+							BDGUIUtils.DrawRectangle(new Rect(0, 0, dlzWidth, dlzRect.height), Color.black);
+
+							Rect maxRangeVertLineRect = new Rect(dlzRect.width - lineWidth, Mathf.Clamp(dlzRect.height - (dlz.maxLaunchRange * rangeToPixels), 0, dlzRect.height), lineWidth, Mathf.Clamp(dlz.maxLaunchRange * rangeToPixels, 0, dlzRect.height));
+							BDGUIUtils.DrawRectangle(maxRangeVertLineRect, Color.white);
+
+
+							Rect maxRangeTickRect = new Rect(dlzX, maxRangeVertLineRect.y, dlzWidth, lineWidth);
+							BDGUIUtils.DrawRectangle(maxRangeTickRect, Color.white);
+
+							Rect minRangeTickRect = new Rect(dlzX, Mathf.Clamp(dlzRect.height - (dlz.minLaunchRange * rangeToPixels), 0, dlzRect.height), dlzWidth, lineWidth);
+							BDGUIUtils.DrawRectangle(minRangeTickRect, Color.white);
+
+							Rect rTrTickRect = new Rect(dlzX, Mathf.Clamp(dlzRect.height - (dlz.rangeTr * rangeToPixels), 0, dlzRect.height), dlzWidth, lineWidth);
+							BDGUIUtils.DrawRectangle(rTrTickRect, Color.white);
+
+							Rect noEscapeLineRect = new Rect(dlzX, rTrTickRect.y, lineWidth, minRangeTickRect.y - rTrTickRect.y);
+							BDGUIUtils.DrawRectangle(noEscapeLineRect, Color.white);
+
+
+							GUI.EndGroup();
+
+							float targetDistIconSize = 6;
+							float targetDistY = dlzRect.y + dlzRect.height - (targetRange * rangeToPixels);
+							Rect targetDistanceRect = new Rect(dlzRect.x - (targetDistIconSize / 2), targetDistY, (targetDistIconSize/2) + dlzRect.width, targetDistIconSize);
+							BDGUIUtils.DrawRectangle(targetDistanceRect, Color.white);
+						}
+					}
+
+				}
 			}
 
 
