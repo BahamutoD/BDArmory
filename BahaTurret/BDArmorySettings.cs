@@ -559,29 +559,29 @@ namespace BahaTurret
 				
 				if(cfg.HasValue("INSTAKILL")) INSTAKILL = bool.Parse(cfg.GetValue("INSTAKILL"));	
 				
-				if(cfg.HasValue("BULLET_HITS")) BULLET_HITS = Boolean.Parse(cfg.GetValue("BULLET_HITS"));	
+				if(cfg.HasValue("BULLET_HITS")) BULLET_HITS = bool.Parse(cfg.GetValue("BULLET_HITS"));	
 				
 				if(cfg.HasValue("PHYSICS_RANGE")) PHYSICS_RANGE = float.Parse(cfg.GetValue("PHYSICS_RANGE"));	
 				
 				if(cfg.HasValue("EJECT_SHELLS")) EJECT_SHELLS = bool.Parse(cfg.GetValue("EJECT_SHELLS"));
 				
-				if(cfg.HasValue("INFINITE_AMMO")) INFINITE_AMMO = Boolean.Parse(cfg.GetValue("INFINITE_AMMO"));
+				if(cfg.HasValue("INFINITE_AMMO")) INFINITE_AMMO = bool.Parse(cfg.GetValue("INFINITE_AMMO"));
 				
-				if(cfg.HasValue("DRAW_DEBUG_LINES")) DRAW_DEBUG_LINES = Boolean.Parse(cfg.GetValue("DRAW_DEBUG_LINES"));
+				if(cfg.HasValue("DRAW_DEBUG_LINES")) DRAW_DEBUG_LINES = bool.Parse(cfg.GetValue("DRAW_DEBUG_LINES"));
 				
-				if(cfg.HasValue("DRAW_AIMERS")) DRAW_AIMERS = Boolean.Parse(cfg.GetValue ("DRAW_AIMERS"));
+				if(cfg.HasValue("DRAW_AIMERS")) DRAW_AIMERS = bool.Parse(cfg.GetValue ("DRAW_AIMERS"));
 				
-				if(cfg.HasValue("AIM_ASSIST")) AIM_ASSIST = Boolean.Parse(cfg.GetValue("AIM_ASSIST"));
+				if(cfg.HasValue("AIM_ASSIST")) AIM_ASSIST = bool.Parse(cfg.GetValue("AIM_ASSIST"));
 				
-				if(cfg.HasValue("REMOTE_SHOOTING")) REMOTE_SHOOTING = Boolean.Parse(cfg.GetValue("REMOTE_SHOOTING"));
+				if(cfg.HasValue("REMOTE_SHOOTING")) REMOTE_SHOOTING = bool.Parse(cfg.GetValue("REMOTE_SHOOTING"));
 				
 				if(cfg.HasValue("DMG_MULTIPLIER")) DMG_MULTIPLIER = float.Parse(cfg.GetValue("DMG_MULTIPLIER"));
 				
 				if(cfg.HasValue("FLARE_CHANCE_FACTOR")) FLARE_CHANCE_FACTOR = float.Parse(cfg.GetValue("FLARE_CHANCE_FACTOR"));
 				
-				if(cfg.HasValue("BOMB_CLEARANCE_CHECK")) BOMB_CLEARANCE_CHECK = Boolean.Parse(cfg.GetValue("BOMB_CLEARANCE_CHECK"));
+				if(cfg.HasValue("BOMB_CLEARANCE_CHECK")) BOMB_CLEARANCE_CHECK = bool.Parse(cfg.GetValue("BOMB_CLEARANCE_CHECK"));
 
-				if(cfg.HasValue("SMART_GUARDS")) SMART_GUARDS = Boolean.Parse(cfg.GetValue("SMART_GUARDS"));
+				if(cfg.HasValue("SMART_GUARDS")) SMART_GUARDS = bool.Parse(cfg.GetValue("SMART_GUARDS"));
 
 				if(cfg.HasValue("MAX_BULLET_RANGE")) MAX_BULLET_RANGE = float.Parse(cfg.GetValue("MAX_BULLET_RANGE"));	
 
@@ -662,6 +662,7 @@ namespace BahaTurret
 				cfg.SetValue("IVA_LOWPASS_FREQ", IVA_LOWPASS_FREQ.ToString(), true);
 				cfg.SetValue("MAX_BULLET_RANGE", MAX_BULLET_RANGE.ToString(), true);
 				cfg.SetValue("PEACE_MODE", PEACE_MODE.ToString(), true);
+				cfg.SetValue("MAX_GUARD_VISUAL_RANGE", MAX_GUARD_VISUAL_RANGE.ToString(), true);
 
 				BDInputSettingsFields.SaveSettings(fileNode);
 
