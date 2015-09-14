@@ -197,6 +197,8 @@ namespace BahaTurret
 		Vector3 fixedLeadOffset = Vector3.zero;
 		float targetLeadDistance = 0;
 
+		//Fired via an action group
+		private bool agFired = false;
 
 		//SPECAL FEATURES
 
@@ -305,6 +307,12 @@ namespace BahaTurret
 		public void AGToggle(KSPActionParam param)
 		{
 			Toggle();
+		}
+
+		[KSPAction("Fire Weapon ON/OFF")]
+		public void AGFire(KSPActionParam param)
+		{
+			agFired = !agFired;
 		}
 
 
@@ -465,7 +473,7 @@ namespace BahaTurret
 				{
 					
 
-					userFiring = (BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
+					userFiring = (BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled) || agFired ;
 					if((userFiring || autoFire) && (yawRange == 0 || (maxPitch-minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
