@@ -204,7 +204,7 @@ namespace BahaTurret
 		[KSPField]
 		public bool airDetonation = false;
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
-		 UI_FloatRange(minValue = 500, maxValue = 22500f, stepIncrement = 1f, scene = UI_Scene.All)]
+		 UI_FloatRange(minValue = 500, maxValue = BDArmorySettings.MAX_BULLET_RANGE, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float defaultDetonationRange = 3500;
 		float detonationRange = 2000;
 
