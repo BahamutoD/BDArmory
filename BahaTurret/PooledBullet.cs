@@ -7,9 +7,12 @@ namespace BahaTurret
 	public class PooledBullet : MonoBehaviour
 	{
 		public enum PooledBulletTypes{Standard, Explosive}
+        public enum BulletDragTypes { None, AnalyticEstimate, NumericalIntegration }
 		
 		public PooledBulletTypes bulletType;
-		public Vessel sourceVessel;
+        public BulletDragTypes dragType;
+
+        public Vessel sourceVessel;
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
 		public Color projectileColor;
 		
@@ -63,6 +66,9 @@ namespace BahaTurret
 		//physical properties
 		public Vector3 currentVelocity;
 		public float mass;
+        public float ballisticCoefficient;
+
+        public float flightTimeElapsed = 0;
 
 		bool collisionEnabled = false;
 		
@@ -166,11 +172,20 @@ namespace BahaTurret
 			{
 				return;
 			}
+            flightTimeElapsed += TimeWarp.fixedDeltaTime;       //calculate flight time for drag purposes
 
 			if(bulletDrop && FlightGlobals.RefFrameIsRotating)
 			{
 				currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.fixedDeltaTime;
 			}
+            if(dragType == BulletDragTypes.NumericalIntegration)
+            {
+                Vector3 dragAcc = currentVelocity * currentVelocity.magnitude * (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(transform.position));
+                dragAcc *= 0.5f;
+                dragAcc /= ballisticCoefficient;
+
+                currentVelocity -= dragAcc * TimeWarp.fixedDeltaTime;       //numerical integration; using Euler is silly, but let's go with it anyway
+            }
 			
 			
 			if(tracerLength == 0)
@@ -241,7 +256,24 @@ namespace BahaTurret
 					
 					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
 					{
-						float heatDamage = (mass/hitPart.crashTolerance) * currentVelocity.magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+                        float impactVelocity = currentVelocity.magnitude;
+                        if(dragType == BulletDragTypes.AnalyticEstimate)
+                        {
+                            float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(transform.position));
+                            analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
+                            analyticDragVelAdjustment += 2 * ballisticCoefficient;
+
+                            analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;        //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
+
+                            analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;       //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
+
+                            impactVelocity -= analyticDragVelAdjustment;        //and remove it from the impact velocity
+
+                            if (impactVelocity < 0)
+                                impactVelocity = 0;     //clamp the velocity to > 0, since it could drop below 0 if the bullet is fired upwards
+                        }
+
+                        float heatDamage = (mass / hitPart.crashTolerance) * impactVelocity * impactVelocity * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
 						if(!penetrated)
 						{
 							heatDamage = heatDamage/8;
@@ -276,7 +308,7 @@ namespace BahaTurret
 					catch(NullReferenceException){}
 					if(hitBuilding!=null && hitBuilding.IsIntact)
 					{
-						float damageToBuilding = mass * initialSpeed * BDArmorySettings.DMG_MULTIPLIER/120;
+                        float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER / 6000;
 						if(!penetrated)
 						{
 							damageToBuilding = damageToBuilding/8;
