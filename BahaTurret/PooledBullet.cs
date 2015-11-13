@@ -226,9 +226,25 @@ namespace BahaTurret
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
 					bool penetrated = true;
-					
-					
-					//hitting a vessel Part
+
+                    float impactVelocity = currentVelocity.magnitude;
+                    if (dragType == BulletDragTypes.AnalyticEstimate)
+                    {
+                        float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(transform.position));
+                        analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
+                        analyticDragVelAdjustment += 2 * ballisticCoefficient;
+
+                        analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;        //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
+
+                        analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;       //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
+                        //the above number should be negative...
+                        impactVelocity += analyticDragVelAdjustment;        //so add it to the impact velocity
+
+                        if (impactVelocity < 0)
+                            impactVelocity = 0;     //clamp the velocity to > 0, since it could drop below 0 if the bullet is fired upwards
+                    }
+                    
+                    //hitting a vessel Part
 					
 					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					/////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
@@ -242,7 +258,7 @@ namespace BahaTurret
 					float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
 					if(hitPart!=null) //see if it will ricochet of the part
 					{
-						penetrated = !RicochetOnPart(hitPart, hitAngle);
+						penetrated = !RicochetOnPart(hitPart, hitAngle, impactVelocity);
 					}
 					else //see if it will ricochet off scenery
 					{
@@ -256,23 +272,6 @@ namespace BahaTurret
 					
 					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
 					{
-                        float impactVelocity = currentVelocity.magnitude;
-                        if(dragType == BulletDragTypes.AnalyticEstimate)
-                        {
-                            float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(transform.position));
-                            analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
-                            analyticDragVelAdjustment += 2 * ballisticCoefficient;
-
-                            analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;        //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
-
-                            analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;       //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
-
-                            impactVelocity -= analyticDragVelAdjustment;        //and remove it from the impact velocity
-
-                            if (impactVelocity < 0)
-                                impactVelocity = 0;     //clamp the velocity to > 0, since it could drop below 0 if the bullet is fired upwards
-                        }
-
                         float heatDamage = (mass / hitPart.crashTolerance) * impactVelocity * impactVelocity * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
 						if(!penetrated)
 						{
@@ -284,14 +283,34 @@ namespace BahaTurret
 						}
 						if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
 						
-						if (hitPart.mass <= 0.01)   //if part mass is below 0.01, instakill it and do minor collateral (anti-exploit and to keep people from abusing near massless or massless crap as armor)
-						{
-							if (hitPart.vessel != sourceVessel) hitPart.temperature += hitPart.maxTemp + 500;  //make heat damage equal to the part's max temperture, and add 500 extra heat damage which should do minor collateral to teh surrounding parts
-						}
-						else    //apply damage normally if no special case present
-						{
-							if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
-						}
+					    if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
+
+                        float overKillHeatDamage = (float)(hitPart.temperature - hitPart.maxTemp);
+
+                        if(overKillHeatDamage > 0)      //if the part is destroyed by overheating, we want to add the remaining heat to attached parts.  This prevents using tiny parts as armor
+                        {
+                            overKillHeatDamage *= hitPart.crashTolerance;       //reset to raw damage
+                            float numConnectedParts = hitPart.children.Count;
+                            if(hitPart.parent != null)
+                            {
+                                numConnectedParts++;
+                                overKillHeatDamage /= numConnectedParts;
+                                hitPart.parent.temperature += overKillHeatDamage / hitPart.parent.crashTolerance;
+
+                                for(int i = 0; i < hitPart.children.Count; i++)
+                                {
+                                    hitPart.children[i].temperature += overKillHeatDamage / hitPart.children[i].crashTolerance;
+                                }
+                            }
+                            else
+                            {
+                                overKillHeatDamage /= numConnectedParts;
+                                for (int i = 0; i < hitPart.children.Count; i++)
+                                {
+                                    hitPart.children[i].temperature += overKillHeatDamage / hitPart.children[i].crashTolerance;
+                                }
+                            }
+                        }
 						
 					}
 					
@@ -436,10 +455,11 @@ namespace BahaTurret
 			currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, finalColorV.w);
 		}
 		
-		bool RicochetOnPart(Part p, float angleFromNormal)
+		bool RicochetOnPart(Part p, float angleFromNormal, float impactVel)
 		{
 			float hitTolerance = p.crashTolerance;
-			float chance = ((angleFromNormal/90) * (hitTolerance/150)) * 100;
+            //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
+            float chance = (((angleFromNormal - 15) / 75) * (hitTolerance / 150)) * 100 / Mathf.Clamp01(impactVel / 600);
 			float random = UnityEngine.Random.Range(0f,100f);
 			//Debug.Log ("Ricochet chance: "+chance);
 			if(random < chance)
