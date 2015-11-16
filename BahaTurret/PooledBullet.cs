@@ -462,7 +462,7 @@ namespace BahaTurret
 		{
 			float hitTolerance = p.crashTolerance;
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
-            float chance = (((angleFromNormal - 15) / 75) * (hitTolerance / 150)) * 100 / Mathf.Clamp01(impactVel / 600);
+            float chance = (((angleFromNormal - 5) / 75) * (hitTolerance / 150)) * 100 / Mathf.Clamp01(impactVel / 600);
 			float random = UnityEngine.Random.Range(0f,100f);
 			//Debug.Log ("Ricochet chance: "+chance);
 			if(random < chance)
