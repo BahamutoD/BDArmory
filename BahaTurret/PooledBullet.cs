@@ -230,7 +230,7 @@ namespace BahaTurret
                     float impactVelocity = currentVelocity.magnitude;
                     if (dragType == BulletDragTypes.AnalyticEstimate)
                     {
-                        float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(transform.position));
+                        float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition), FlightGlobals.getExternalTemperature(currPosition));
                         analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
                         analyticDragVelAdjustment += 2 * ballisticCoefficient;
 
@@ -241,7 +241,10 @@ namespace BahaTurret
                         impactVelocity += analyticDragVelAdjustment;        //so add it to the impact velocity
 
                         if (impactVelocity < 0)
+                        {
                             impactVelocity = 0;     //clamp the velocity to > 0, since it could drop below 0 if the bullet is fired upwards
+                        }
+                        //Debug.Log("flight time: " + flightTimeElapsed + " BC: " + ballisticCoefficient + "\ninit speed: " + initialSpeed + " vel diff: " + analyticDragVelAdjustment);
                     }
                     
                     //hitting a vessel Part
@@ -459,7 +462,7 @@ namespace BahaTurret
 		{
 			float hitTolerance = p.crashTolerance;
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
-            float chance = (((angleFromNormal - 15) / 75) * (hitTolerance / 150)) * 100 / Mathf.Clamp01(impactVel / 600);
+            float chance = (((angleFromNormal - 5) / 75) * (hitTolerance / 150)) * 100 / Mathf.Clamp01(impactVel / 600);
 			float random = UnityEngine.Random.Range(0f,100f);
 			//Debug.Log ("Ricochet chance: "+chance);
 			if(random < chance)
