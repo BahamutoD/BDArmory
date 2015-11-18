@@ -630,6 +630,18 @@ namespace BahaTurret
 				{
 					GUI.Label(new Rect(500, 500, 500, 500), "Slew rate: " + finalSlewSpeed);
 				}
+
+				if(BDArmorySettings.DRAW_DEBUG_LINES)
+				{
+					if(groundStabilized)
+					{
+						BDGUIUtils.DrawLineBetweenWorldPositions(cameraParentTransform.position, groundTargetPosition, 2, Color.red);
+					}
+					else
+					{
+						BDGUIUtils.DrawLineBetweenWorldPositions(cameraParentTransform.position, targetPointPosition, 2, Color.red);
+					}
+				}
 			}
 
 
