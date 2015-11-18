@@ -92,13 +92,13 @@ namespace BahaTurret
 				pe.emit = true;	
 			}
 
-			DoExplosionDamage(position, power, radius);
+			DoExplosionDamage(position, power, radius, sourceVessel);
 		}
 
 		public static float ExplosionHeatMultiplier = 2800;
 		public static float ExplosionImpulseMultiplier = 1;
 
-		public static void DoExplosionRay(Ray ray, float power, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs)
+		public static void DoExplosionRay(Ray ray, float power, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs, Vessel sourceVessel = null)
 		{
 			RaycastHit rayHit;
 			if(Physics.Raycast(ray, out rayHit, maxDistance, 557057))
@@ -108,19 +108,33 @@ namespace BahaTurret
 				float distanceFactor = Mathf.Clamp01((sqrMaxDist - sqrDist) / sqrMaxDist);
 				//parts
 				Part part = rayHit.collider.GetComponentInParent<Part>();
-				if(part && !ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL)
+				if(part)
 				{
-					ignoreParts.Add(part);
-					Rigidbody rb = part.GetComponent<Rigidbody>();
-					if(rb)
+					Vessel missileSource = null;
+					if(sourceVessel != null)
 					{
-						rb.AddForceAtPosition(ray.direction * power* distanceFactor * ExplosionImpulseMultiplier, rayHit.point, ForceMode.Impulse);
+						MissileLauncher ml = part.FindModuleImplementing<MissileLauncher>();
+						if(ml)
+						{
+							missileSource = ml.sourceVessel;
+						}
 					}
 
-					float heatDamage = ExplosionHeatMultiplier * power * distanceFactor/part.crashTolerance;
-					part.temperature += heatDamage;
-					if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("====== Explosion ray hit part! Damage: " + heatDamage);
-					return;
+
+					if(!ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL && (!sourceVessel || sourceVessel != missileSource))
+					{
+						ignoreParts.Add(part);
+						Rigidbody rb = part.GetComponent<Rigidbody>();
+						if(rb)
+						{
+							rb.AddForceAtPosition(ray.direction * power * distanceFactor * ExplosionImpulseMultiplier, rayHit.point, ForceMode.Impulse);
+						}
+
+						float heatDamage = ExplosionHeatMultiplier * power * distanceFactor / part.crashTolerance;
+						part.temperature += heatDamage;
+						if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("====== Explosion ray hit part! Damage: " + heatDamage);
+						return;
+					}
 				}
 
 				//buildings
@@ -139,7 +153,7 @@ namespace BahaTurret
 		public static List<Part> ignoreParts = new List<Part>(); 
 		public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
 
-		public static void DoExplosionDamage(Vector3 position, float power, float maxDistance)
+		public static void DoExplosionDamage(Vector3 position, float power, float maxDistance, Vessel sourceVessel)
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("======= Doing explosion sphere =========");
 			ignoreParts.Clear();
@@ -152,7 +166,7 @@ namespace BahaTurret
 					foreach(var part in vessel.parts)
 					{
 						if(!part) continue;
-						DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, maxDistance, ref ignoreParts, ref ignoreBuildings);
+						DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
 					}
 				}
 			}
