@@ -31,7 +31,7 @@ namespace BahaTurret
 		void OnEnable()
 		{
 
-			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.75f, 1.25f);
+			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.75f, 1.35f);
 
 			if(gaplessEmitters == null || pEmitters == null)
 			{
