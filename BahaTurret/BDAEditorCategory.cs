@@ -26,8 +26,9 @@ namespace BahaTurret
 		{
 			GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
 
-			availableParts.Clear();
-			availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
+			//availableParts.Clear();
+			//availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
+
 		}
 
 		void BDAWeaponsCategory()
@@ -35,10 +36,12 @@ namespace BahaTurret
 			const string FILTER_CATEGORY = "Filter by Function";
 			const string CUSTOM_CATEGORY_NAME = "BDA Weapons";
 
+			availableParts.Clear();
+			availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
+
 			Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
 
 			RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
-
 
 			PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == FILTER_CATEGORY);
 			PartCategorizer.AddCustomSubcategoryFilter(filter, CUSTOM_CATEGORY_NAME, icon, p => availableParts.Contains(p));
