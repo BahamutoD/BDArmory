@@ -29,6 +29,9 @@ namespace BahaTurret
 
 		public VesselECMJInfo vesselJammer;
 
+		bool orbital;
+		Orbit orbit;
+
 		public bool Equals(TargetSignatureData other)
 		{
 			return 
@@ -40,7 +43,18 @@ namespace BahaTurret
 
 		public TargetSignatureData(Vessel v, float _signalStrength)
 		{
-			velocity = v.srf_velocity;
+			if(v.situation == Vessel.Situations.SUB_ORBITAL || v.situation == Vessel.Situations.ESCAPING || v.situation == Vessel.Situations.SUB_ORBITAL)
+			{
+				velocity = v.obt_velocity;
+				orbit = v.orbit;
+				orbital = true;
+			}
+			else
+			{
+				orbital = false;
+				orbit = null;
+				velocity = v.srf_velocity;
+			}
 			geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
 			acceleration = v.acceleration;
 			exists = true;
@@ -81,6 +95,8 @@ namespace BahaTurret
 			vesselJammer = null;
 			team = BDArmorySettings.BDATeams.None;
 			pingPosition = Vector2.zero;
+			orbital = false;
+			orbit = null;
 		}
 
 		public TargetSignatureData(Vector3 _velocity, Vector3 _position, Vector3 _acceleration, bool _exists, float _signalStrength)
@@ -95,13 +111,23 @@ namespace BahaTurret
 			vesselJammer = null;
 			team = BDArmorySettings.BDATeams.None;
 			pingPosition = Vector2.zero;
+			orbital = false;
+			orbit = null;
 		}
 
 		public Vector3 position
 		{
 			get
 			{
-				return FlightGlobals.currentMainBody.GetWorldSurfacePosition(geoPos.x, geoPos.y, geoPos.z);
+				if(orbital)
+				{
+					return orbit.pos.xzy;
+				}
+				else
+				{
+					return FlightGlobals.currentMainBody.GetWorldSurfacePosition(geoPos.x, geoPos.y, geoPos.z);
+				}
+
 			}
 		}
 
@@ -109,7 +135,14 @@ namespace BahaTurret
 		{
 			get
 			{
-				return position + (velocity * (Time.time-timeAcquired));
+				if(orbital)
+				{
+					return orbit.getPositionAtUT(Planetarium.GetUniversalTime()).xzy;
+				}
+				else
+				{
+					return position + ((velocity) * (Time.time - timeAcquired));
+				}
 			}
 		}
 

@@ -1,7 +1,4 @@
 C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\BahaTurret.dll
-C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\Assembly-CSharp-firstpass.dll
-C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\Assembly-CSharp.dll
-C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\UnityEngine.dll
 C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\System.dll
 C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\System.Xml.dll
 C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\TDx.TDxInput.dll

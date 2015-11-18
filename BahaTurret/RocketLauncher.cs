@@ -68,6 +68,10 @@ namespace BahaTurret
 		{
 			return WeaponClasses.Rocket;
 		}
+		public string GetSubLabel()
+		{
+			return string.Empty;
+		}
 
 		[KSPAction("Fire")]
 		public void AGFire(KSPActionParam param)
@@ -84,7 +88,7 @@ namespace BahaTurret
 		[KSPEvent(guiActive = true, guiName = "Jettison", active = true, guiActiveEditor = false)]
 		public void Jettison()
 		{
-			part.decouple();
+			part.decouple(0);
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
 		
