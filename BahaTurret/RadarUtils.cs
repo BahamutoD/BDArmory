@@ -225,11 +225,14 @@ namespace BahaTurret
 		/// <param name="maxDistance">Max distance.</param>
 		public static Vector3 GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
 		{
+			fov *= 1.1f;
 			results = new ViewScanResults();
 			results.foundMissile = false;
 			results.foundHeatMissile = false;
+			results.foundRadarMissile = false;
 			results.foundAGM = false;
 			results.firingAtMe = false;
+			results.missileThreatDistance = float.MaxValue;
 
 			if(!myWpnManager || !referenceTransform)
 			{
@@ -276,17 +279,27 @@ namespace BahaTurret
 								if(missile = tInfo.missileModule)
 								{
 									results.foundMissile = true;
-									if(missile.hasFired && (missile.targetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
+									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missile.part.transform.position;
+									Vector3 relV = missile.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
+									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
+									if(missile.hasFired && approaching && (missile.targetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
 										//Debug.Log("found missile targeting me");
 										if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
 										{
 											results.foundHeatMissile = true;
+											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
 											break;
+										}
+										else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
+										{
+											results.foundRadarMissile = true;
+											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
 										}
 										else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
 										{
 											results.foundAGM = true;
+											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
 											break;
 										}
 									}

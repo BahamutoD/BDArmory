@@ -6,8 +6,10 @@ namespace BahaTurret
 	{
 		public bool foundMissile;
 		public bool foundHeatMissile;
+		public bool foundRadarMissile;
 		public bool foundAGM;
 		public bool	firingAtMe;
+		public float missileThreatDistance;
 
 
 	}
