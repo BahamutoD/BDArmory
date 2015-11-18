@@ -18,7 +18,7 @@ namespace BahaTurret
 		public string homingType = "AAM";
 
 		[KSPField]
-		public string targetingType = "radar";
+		public string targetingType = "none";
 		public enum TargetingModes{None,Radar,Heat,Laser,GPS,AntiRad}
 		public TargetingModes targetingMode;
 		public bool team;
@@ -287,6 +287,18 @@ namespace BahaTurret
 		public Part GetPart()
 		{
 			return part;
+		}
+		string tModeString;
+		public string GetSubLabel()
+		{
+			if(tModeString == "None")
+			{
+				return string.Empty;
+			}
+			else
+			{
+				return tModeString;
+			}
 		}
 
 		//firing paramters
@@ -983,7 +995,6 @@ namespace BahaTurret
 					
 						//increaseTurnRate after launch
 						float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS * 25f, 0, maxTurnRateDPS);
-						float turnRatePointDPS = turnRateDPS;
 						if(!hasRCS)
 						{
 							turnRateDPS *= controlAuthority;
@@ -1011,7 +1022,6 @@ namespace BahaTurret
 							}
 						}
 						debugTurnRate = turnRateDPS;
-						float radiansDelta = turnRateDPS*Mathf.Deg2Rad*Time.fixedDeltaTime;
 
 						finalMaxTorque = Mathf.Clamp((timeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
 
@@ -1029,10 +1039,11 @@ namespace BahaTurret
 						}
 						else if(guidanceMode == GuidanceModes.RCS)
 						{
-							if(legacyTargetVessel!=null)
-							{
-								transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(targetPosition-transform.position, transform.up), turnRateDPS*Time.fixedDeltaTime);
-							}
+							
+							part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition-part.transform.position, part.transform.up), turnRateDPS*Time.fixedDeltaTime);
+
+
+
 						}
 						else if(guidanceMode == GuidanceModes.Cruise)
 						{
@@ -1056,13 +1067,11 @@ namespace BahaTurret
 						{
 							aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
 						}
-
-
 					}
 
 					if(aero && aeroSteerDamping > 0)
 					{
-						//part.rb.angularDrag = aeroSteerDamping;
+						part.rb.AddRelativeTorque(-aeroSteerDamping * part.transform.InverseTransformVector(part.rb.angularVelocity));
 					}
 					
 					if(hasRCS && !guidanceActive)
@@ -1360,7 +1369,7 @@ namespace BahaTurret
 		{
 			targetAcquired = false;
 
-			float angleToTarget = Vector3.Angle(radarTarget.position-transform.position,transform.forward);
+			float angleToTarget = Vector3.Angle(radarTarget.predictedPosition-transform.position,transform.forward);
 			if(radarTarget.exists)
 			{
 				if(!activeRadar && ((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f))
@@ -1820,16 +1829,21 @@ namespace BahaTurret
 
 		void DoRCS()
 		{
+			Vector3 relV = targetVelocity-vessel.obt_velocity;
+
 			for(int i = 0; i < 4; i++)
 			{
-				Vector3 relV = legacyTargetVessel.obt_velocity-vessel.obt_velocity;
-				Vector3 localRelV = rcsTransforms[i].transform.InverseTransformPoint(relV + transform.position);
+				//Vector3 relV = legacyTargetVessel.obt_velocity-vessel.obt_velocity;
+
+				//Vector3 relV = vessel.obt_velocity-targetVelocity;
+				//Vector3 localRelV = rcsTransforms[i].transform.InverseTransformVector(relV);
 
 
-				float giveThrust = Mathf.Clamp(-localRelV.z, 0, rcsThrust);
+				//float giveThrust = Mathf.Clamp(-localRelV.z, 0, rcsThrust);
+				float giveThrust = Mathf.Clamp(Vector3.Project(relV, rcsTransforms[i].transform.forward).magnitude * -Mathf.Sign(Vector3.Dot(rcsTransforms[i].transform.forward, relV)), 0, rcsThrust);
 				part.rb.AddForce(-giveThrust*rcsTransforms[i].transform.forward);
 
-				if(localRelV.z < -rcsRVelThreshold)
+				if(giveThrust > rcsRVelThreshold)
 				{
 					rcsAudioMinInterval = UnityEngine.Random.Range(0.15f,0.25f);
 					if(Time.time-rcsFiredTimes[i] > rcsAudioMinInterval)
@@ -1868,6 +1882,12 @@ namespace BahaTurret
 			if(hasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
 			{
 				GUI.Label(new Rect(200,200,200,200), debugString);	
+
+
+			}
+			if(hasFired  && hasRCS)
+			{
+				BDGUIUtils.DrawLineBetweenWorldPositions(transform.position, targetPosition, 2, Color.red);
 			}
 		}
 
@@ -1948,6 +1968,8 @@ namespace BahaTurret
 				targetingMode = TargetingModes.None;
 				break;
 			}
+
+			tModeString = Enum.GetName(typeof(TargetingModes), targetingMode);
 		}
 		
 	}

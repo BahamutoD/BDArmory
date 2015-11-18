@@ -16,10 +16,12 @@ namespace BahaTurret
 		[KSPField(isPersistant = true)]
 		public string savedWingmen = string.Empty;
 
-		[KSPField(isPersistant = true)]
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Spread"),
+			UI_FloatRange(minValue = 10f, maxValue = 60f, stepIncrement = 1, scene = UI_Scene.Flight)]
 		public float spread = 20;
 
-		[KSPField(isPersistant = true)]
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Lag"),
+			UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 1, scene = UI_Scene.Flight)]
 		public float lag = 10;
 
 
@@ -225,14 +227,14 @@ namespace BahaTurret
 			height += buttonEndY;
 
 			//command buttons
-			float commandButtonIndex = 0;
-			CommandButton(SelectAll, "Select All", ref commandButtonIndex);
-			commandButtonIndex += 0.5f;
-			CommandButton(CommandFollow, "Follow", ref commandButtonIndex);
-			CommandButton(CommandRelease, "Release", ref commandButtonIndex);
+			float commandButtonLine = 0;
+			CommandButton(SelectAll, "Select All", ref commandButtonLine);
+			commandButtonLine += 0.5f;
+			CommandButton(CommandFollow, "Follow", ref commandButtonLine);
+			CommandButton(CommandRelease, "Release", ref commandButtonLine);
 
 			//resize window
-			height += (commandButtonIndex * (buttonHeight + buttonGap));
+			height += (commandButtonLine * (buttonHeight + buttonGap));
 			guiWindowRect.height = height;
 		}
 
@@ -247,13 +249,12 @@ namespace BahaTurret
 				selectAll = false;
 				focusIndex = i;
 			}
-
 			buttonEndY = buttonStartY + ((i + 1.5f) * buttonHeight);
 		}
 
-		void CommandButton(CommandFunction func, string buttonLabel, ref float buttonIndex)
+		void CommandButton(CommandFunction func, string buttonLabel, ref float buttonLine)
 		{
-			if(GUI.Button(new Rect(margin, buttonEndY + (buttonIndex*(buttonHeight+buttonGap)), buttonWidth, buttonHeight), buttonLabel, HighLogic.Skin.button))
+			if(GUI.Button(new Rect(margin, buttonEndY + (buttonLine*(buttonHeight+buttonGap)), buttonWidth, buttonHeight), buttonLabel, HighLogic.Skin.button))
 			{
 				if(!selectAll)
 				{
@@ -271,7 +272,7 @@ namespace BahaTurret
 				}
 			}
 
-			buttonIndex++;
+			buttonLine++;
 		}
 
 		void CommandRelease(BDModulePilotAI wingman, int index)
