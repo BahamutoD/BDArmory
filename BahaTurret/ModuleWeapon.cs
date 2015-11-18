@@ -301,6 +301,11 @@ namespace BahaTurret
 			return part;
 		}
 
+		public string GetSubLabel()
+		{
+			return string.Empty;
+		}
+
 		[KSPAction("Toggle Weapon")]
 		public void AGToggle(KSPActionParam param)
 		{
@@ -342,7 +347,7 @@ namespace BahaTurret
 
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				if(eWeaponType!=WeaponTypes.Laser)
+				if(eWeaponType != WeaponTypes.Laser)
 				{
 					if(bulletPool == null)
 					{
@@ -367,7 +372,7 @@ namespace BahaTurret
 					pe.shape2D *= part.rescaleFactor;
 					pe.shape1D *= part.rescaleFactor;
 
-					if(pe.useWorldSpace && !oneShotWorldParticles)	
+					if(pe.useWorldSpace && !oneShotWorldParticles)
 					{
 						BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();	
 						gpe.part = part;
@@ -393,8 +398,10 @@ namespace BahaTurret
 				{
 					SetupLaserSpecifics();
 				}
-
-
+			}
+			else if(HighLogic.LoadedSceneIsEditor)
+			{
+				fireTransforms = part.FindModelTransforms(fireTransformName);
 			}
 
 			//turret setup
@@ -709,21 +716,23 @@ namespace BahaTurret
 
 				if(targetAcquired)
 				{
-					Vector3 acceleration = targetAcceleration;
-					float time2 = VectorUtils.CalculateLeadTime(finalTarget-transform.position, targetVelocity-vessel.srf_velocity, bulletVelocity);
+					float time2 = VectorUtils.CalculateLeadTime(finalTarget-fireTransforms[0].position, targetVelocity-vessel.srf_velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
 					finalTarget += (targetVelocity-vessel.srf_velocity) * time; //target vessel relative velocity compensation
+
+					Vector3 acceleration = targetAcceleration;
 					finalTarget += (0.5f * acceleration * time * time); //target acceleration
 				}
 				else if(vessel.altitude < 6000)
 				{
-					float time2 = VectorUtils.CalculateLeadTime(finalTarget-transform.position, Vector3.zero-part.rb.velocity, bulletVelocity);
+					float time2 = VectorUtils.CalculateLeadTime(finalTarget-fireTransforms[0].position, -part.rb.velocity, bulletVelocity);
 					if(time2 > 0) time = time2;
 					finalTarget += (-part.rb.velocity*(time+Time.fixedDeltaTime));  //this vessel velocity compensation against stationary
 				}
-				if(bulletDrop && vessel.srfSpeed < 750) finalTarget += (0.5f*gAccel*time*time * FlightGlobals.getUpAxis());  //gravity compensation
+				Vector3 up = (finalTarget - vessel.mainBody.transform.position).normalized;
+				if(bulletDrop && vessel.srfSpeed < 750) finalTarget += (0.5f*gAccel*time*time*up);  //gravity compensation
 				
-				targetLeadDistance = Vector3.Distance(finalTarget, transform.position);
+				targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
 
 				fixedLeadOffset = originalTarget-finalTarget; //for aiming fixed guns to moving target	
 
@@ -799,6 +808,7 @@ namespace BahaTurret
 							//sound
 							if(oneShotSound)
 							{
+								audioSource.Stop();
 								audioSource.PlayOneShot(fireSound);
 							}
 							else
@@ -1658,6 +1668,72 @@ namespace BahaTurret
 					texture = BDArmorySettings.Instance.greenPointCircleTexture;
 				}
 				BDGUIUtils.DrawTextureOnWorldPos (reticlePosition, texture, new Vector2 (size, size), 0);
+
+				if(BDArmorySettings.DRAW_DEBUG_LINES)
+				{
+					if(targetAcquired)
+					{
+						BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, targetPosition, 2, Color.blue);
+					}
+				}
+			}
+
+			if(HighLogic.LoadedSceneIsEditor && BDArmorySettings.showWeaponAlignment)
+			{
+				DrawAlignmentIndicator();
+			}
+		}
+
+		void DrawAlignmentIndicator()
+		{
+			if(fireTransforms == null || fireTransforms[0] == null) return;
+
+			Transform refTransform = EditorLogic.RootPart.GetReferenceTransform();
+
+			Vector3 fwdPos = fireTransforms[0].position + (5 * fireTransforms[0].forward);
+			BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, fwdPos, 4, Color.green);
+
+			Vector3 referenceDirection = refTransform.up;
+			Vector3 refUp = -refTransform.forward;
+			Vector3 refRight = refTransform.right;
+
+			Vector3 refFwdPos = fireTransforms[0].position + (5 * referenceDirection);
+			BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, refFwdPos, 2, Color.white);
+
+			BDGUIUtils.DrawLineBetweenWorldPositions(fwdPos, refFwdPos, 2, XKCDColors.Orange);
+
+			Vector2 guiPos;
+			if(BDGUIUtils.WorldToGUIPos(fwdPos, out guiPos))
+			{
+				Rect angleRect = new Rect(guiPos.x, guiPos.y, 100, 200);
+
+				Vector3 pitchVector = (5 *Vector3.ProjectOnPlane(fireTransforms[0].forward, refRight));
+				Vector3 yawVector = (5 * Vector3.ProjectOnPlane(fireTransforms[0].forward, refUp));
+
+				BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position + pitchVector, fwdPos, 3, Color.white);
+				BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position + yawVector, fwdPos, 3, Color.white);
+
+				float pitch = Vector3.Angle(pitchVector, referenceDirection);
+				float yaw = Vector3.Angle(yawVector, referenceDirection); 
+
+				string convergeDistance;
+
+				Vector3 projAxis = Vector3.Project(refTransform.position - fireTransforms[0].transform.position, refRight);
+				float xDist = projAxis.magnitude;
+				float convergeAngle = 90 - Vector3.Angle(yawVector, refTransform.up);
+				if(Vector3.Dot(fireTransforms[0].forward, projAxis) > 0)
+				{
+					convergeDistance = "Converge: "+Mathf.Round((xDist * Mathf.Tan(convergeAngle*Mathf.Deg2Rad))).ToString()+"m";
+				}
+				else
+				{
+					convergeDistance = "Diverging";
+				}
+
+				string xAngle = "X: " + Vector3.Angle(fireTransforms[0].forward, pitchVector).ToString("0.00");
+				string yAngle = "Y: " + Vector3.Angle(fireTransforms[0].forward, yawVector).ToString("0.00");
+
+				GUI.Label(angleRect, xAngle+"\n"+ yAngle + "\n"+convergeDistance);
 			}
 		}
 
