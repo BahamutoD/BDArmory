@@ -89,7 +89,9 @@ namespace BahaTurret
 		public string physicsRangeGui;
 		public string fireKeyGui;
 		
-		
+
+		//editor alignment
+		public static bool showWeaponAlignment = false;
 		
 		//toolbar gui
 		public static bool hasAddedButton = false;
@@ -148,6 +150,10 @@ namespace BahaTurret
 		GUIStyle rippleThumbStyle;
 		GUIStyle kspTitleLabel;
 
+		GUIStyle middleLeftLabel;
+		GUIStyle middleLeftLabelOrange;
+		GUIStyle targetModeStyle;
+		GUIStyle targetModeStyleSelected;
 
 		public enum BDATeams{A, B, None};
 
@@ -349,7 +355,21 @@ namespace BahaTurret
 			leftLabel = new GUIStyle();
 			leftLabel.alignment = TextAnchor.UpperLeft;
 			leftLabel.normal.textColor = Color.white;
-			
+
+			middleLeftLabel = new GUIStyle(leftLabel);
+			middleLeftLabel.alignment = TextAnchor.MiddleLeft;
+
+			middleLeftLabelOrange = new GUIStyle(middleLeftLabel);
+			middleLeftLabelOrange.normal.textColor = XKCDColors.BloodOrange;
+
+			targetModeStyle = new GUIStyle();
+			targetModeStyle.alignment = TextAnchor.MiddleRight;
+			targetModeStyle.fontSize = 9;
+			targetModeStyle.normal.textColor = Color.white;
+
+			targetModeStyleSelected = new GUIStyle(targetModeStyle);
+			targetModeStyleSelected.normal.textColor = XKCDColors.BloodOrange;
+
 			leftLabelRed = new GUIStyle();
 			leftLabelRed.alignment = TextAnchor.UpperLeft;
 			leftLabelRed.normal.textColor = Color.red;
@@ -444,6 +464,13 @@ namespace BahaTurret
 					toolbarGuiEnabled = !toolbarGuiEnabled;	
 				}
 			
+			}
+			else if(HighLogic.LoadedSceneIsEditor)
+			{
+				if(Input.GetKeyDown(KeyCode.F2))
+				{
+					showWeaponAlignment = !showWeaponAlignment;
+				}
 			}
 
 			if(Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
@@ -820,11 +847,14 @@ namespace BahaTurret
 				line += 1.25f;
 				line += 0.1f;
 				//if weapon can ripple, show option and slider.
-				if(ActiveWeaponManager.canRipple)
+				if(ActiveWeaponManager.hasLoadedRippleData && ActiveWeaponManager.canRipple)
 				{
 					string rippleText = ActiveWeaponManager.rippleFire ? "Ripple: " + ActiveWeaponManager.rippleRPM.ToString("0") + " RPM" : "Ripple: OFF";
 					GUIStyle rippleStyle = ActiveWeaponManager.rippleFire ? HighLogic.Skin.box : HighLogic.Skin.button;
-					ActiveWeaponManager.rippleFire = GUI.Toggle(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight * 1.25f), ActiveWeaponManager.rippleFire, rippleText, rippleStyle);
+					if(GUI.Button(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight * 1.25f), rippleText, rippleStyle))
+					{
+						ActiveWeaponManager.ToggleRippleFire();
+					}
 					if(ActiveWeaponManager.rippleFire)
 					{
 						Rect sliderRect = new Rect(leftIndent + (contentWidth / 2) + 2, contentTop + (line * entryHeight) + 6.5f, (contentWidth / 2) - 2, 12);
@@ -852,23 +882,49 @@ namespace BahaTurret
 				if(showWeaponList && !toolMinimized)
 				{
 					line += 0.25f;
-					GUI.BeginGroup(new Rect(5,  contentTop+(line*entryHeight), toolWindowWidth-10, ActiveWeaponManager.weaponArray.Length * entryHeight),GUIContent.none, HighLogic.Skin.box); //darker box
+					Rect weaponListGroupRect = new Rect(5, contentTop + (line * entryHeight), toolWindowWidth - 10, ((float)ActiveWeaponManager.weaponArray.Length+0.1f) * entryHeight);
+					GUI.BeginGroup(weaponListGroupRect, GUIContent.none, HighLogic.Skin.box); //darker box
 					weaponLines += 0.1f;
 					for(int i = 0; i < ActiveWeaponManager.weaponArray.Length; i++)
 					{
 						GUIStyle wpnListStyle;
+						GUIStyle tgtStyle;
 						if(i == ActiveWeaponManager.weaponIndex)
 						{
-							wpnListStyle = centerLabelOrange;
+							wpnListStyle = middleLeftLabelOrange;
+							tgtStyle = targetModeStyleSelected;
 						}
 						else 
 						{
-							wpnListStyle = centerLabel;
+							wpnListStyle = middleLeftLabel;
+							tgtStyle = targetModeStyle;
 						}
-						string label = ActiveWeaponManager.weaponArray[i] == null ? "None" : ActiveWeaponManager.weaponArray[i].GetShortName();
-						if(GUI.Button(new Rect(leftIndent, (weaponLines*entryHeight), contentWidth, entryHeight), label, wpnListStyle))
+						string label;
+						string subLabel;
+						if(ActiveWeaponManager.weaponArray[i] != null)
+						{
+							label = ActiveWeaponManager.weaponArray[i].GetShortName();
+							subLabel = ActiveWeaponManager.weaponArray[i].GetSubLabel();
+						}
+						else
+						{
+							label = "None";
+							subLabel = string.Empty;
+						}
+						Rect weaponButtonRect = new Rect(leftIndent, (weaponLines * entryHeight), weaponListGroupRect.width - (2*leftIndent), entryHeight);
+
+						GUI.Label(weaponButtonRect, subLabel, tgtStyle);
+
+						if(GUI.Button(weaponButtonRect, label, wpnListStyle))
 						{
 							ActiveWeaponManager.CycleWeapon(i);
+						}
+
+					
+
+						if(i < ActiveWeaponManager.weaponArray.Length - 1)
+						{
+							BDGUIUtils.DrawRectangle(new Rect(weaponButtonRect.x, weaponButtonRect.y + weaponButtonRect.height, weaponButtonRect.width, 1), Color.white);
 						}
 						weaponLines++;
 					}
@@ -1419,13 +1475,13 @@ namespace BahaTurret
 		
 		public void ApplyPhysRange()
 		{
+			if(PHYSICS_RANGE <= 2500) PHYSICS_RANGE = 0;
+
 			if(!HighLogic.LoadedSceneIsFlight)
 			{
 				return;
 			}
 
-			if(PHYSICS_RANGE <= 2500) PHYSICS_RANGE = 0;
-			
 			
 			if(PHYSICS_RANGE > 0)
 			{

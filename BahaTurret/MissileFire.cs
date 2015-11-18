@@ -22,23 +22,157 @@ namespace BahaTurret
 		Part lastFiredSym = null;
 		
 		float startTime;
-		
+
+		public bool hasLoadedRippleData = false;
 		float rippleTimer;
-		[KSPField(isPersistant = true)]
-		public float rippleRPM = 650;
+		//[KSPField(isPersistant = true)]
+		public float rippleRPM
+		{
+			get
+			{
+				if(selectedWeapon != null)
+				{
+					return rippleDictionary[selectedWeapon.GetShortName()].rpm;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			set
+			{
+				if(selectedWeapon != null)
+				{
+					if(rippleDictionary.ContainsKey(selectedWeapon.GetShortName()))
+					{
+						rippleDictionary[selectedWeapon.GetShortName()].rpm = value;
+					}
+					else
+					{
+						return;
+					}
+				}
+				else
+				{
+					return;
+				}
+			}
+		}
 		float triggerTimer = 0;
-		
+
+
+		//ripple stuff
+		string rippleData = string.Empty;
+		Dictionary<string,RippleOption> rippleDictionary; //weapon name, ripple option
+
+
 		//public float triggerHoldTime = 0.3f;
 
-		[KSPField(isPersistant = true)]
-		public bool rippleFire = false;
+		//[KSPField(isPersistant = true)]
+		public bool rippleFire
+		{
+			get
+			{
+				if(selectedWeapon != null)
+				{
+					if(rippleDictionary.ContainsKey(selectedWeapon.GetShortName()))
+					{
+						return rippleDictionary[selectedWeapon.GetShortName()].rippleFire;
+					}
+					else
+					{
+						//rippleDictionary.Add(selectedWeapon.GetShortName(), new RippleOption(false, 650));
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+			
+		public void ToggleRippleFire()
+		{
+			if(selectedWeapon != null)
+			{
+				RippleOption ro;
+				if(rippleDictionary.ContainsKey(selectedWeapon.GetShortName()))
+				{
+					ro = rippleDictionary[selectedWeapon.GetShortName()];
+				}
+				else
+				{
+					ro = new RippleOption(false, 650);
+					rippleDictionary.Add(selectedWeapon.GetShortName(), ro);
+				}
+
+				ro.rippleFire = !ro.rippleFire;
+			}
+		}
+
+		public void AGToggleRipple(KSPActionParam param)
+		{
+			ToggleRippleFire();
+		}
+
+		void ParseRippleOptions()
+		{
+			rippleDictionary = new Dictionary<string, RippleOption>();
+			Debug.Log("Parsing ripple options");
+			if(rippleData != string.Empty)
+			{
+				Debug.Log("Ripple data: " + rippleData);
+				try
+				{
+					foreach(string weapon in rippleData.Split(new char[]{';'}))
+					{
+						if(weapon == string.Empty) continue;
+
+						string[] options = weapon.Split(new char[]{ ',' });
+						string wpnName = options[0];
+						bool rf = bool.Parse(options[1]);
+						float _rpm = float.Parse(options[2]);
+						RippleOption ro = new RippleOption(rf, _rpm);
+						rippleDictionary.Add(wpnName, ro);
+					}
+				}
+				catch(IndexOutOfRangeException)
+				{
+					Debug.Log("Ripple data was invalid.");
+					rippleData = string.Empty;
+				}
+			}
+			else
+			{
+				Debug.Log("Ripple data is empty.");
+			}
+
+			hasLoadedRippleData = true;
+		}
+
+		void SaveRippleOptions(ConfigNode node)
+		{
+			if(rippleDictionary != null)
+			{
+				rippleData = string.Empty;
+				foreach(var wpnName in rippleDictionary.Keys)
+				{
+					rippleData += wpnName + "," + rippleDictionary[wpnName].rippleFire.ToString() + "," + rippleDictionary[wpnName].rpm.ToString() + ";";
+				}
+
+
+				node.SetValue("RippleData", rippleData, true);
+			}
+			Debug.Log("Saved ripple data: "+rippleData);
+		}
 		
 		public bool hasSingleFired = false;
 		
 		
 		//
 		
-		
+
 		//bomb aimer
 		Part bombPart = null;
 		Vector3 bombAimerPosition = Vector3.zero;
@@ -68,7 +202,7 @@ namespace BahaTurret
 
 		//missile warning
 		public bool missileIsIncoming = false;
-		float incomingMissileDistance = 2500;
+		public float incomingMissileDistance = float.MaxValue;
 		
 		
 		//guard mode vars
@@ -193,11 +327,11 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Field of View"),
         	UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
-		public float guardAngle = 320;
+		public float guardAngle = 360;
 		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Visual Range"),
-			UI_FloatRange(minValue = 100f, maxValue = 3500, stepIncrement = 100f, scene = UI_Scene.All)]
-        public float guardRange = 2500;
+			UI_FloatRange(minValue = 100f, maxValue = 5000, stepIncrement = 100f, scene = UI_Scene.All)]
+        public float guardRange = 5000;
 
 
 		public void ToggleGuardMode()
@@ -417,6 +551,26 @@ namespace BahaTurret
 
 		public bool canRipple = false;
 
+		public override void OnSave(ConfigNode node)
+		{
+			base.OnSave(node);
+
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				SaveRippleOptions(node);
+			}
+		}
+
+		public override void OnLoad(ConfigNode node)
+		{
+			base.OnLoad(node);
+			rippleData = string.Empty;
+			if(node.HasValue("RippleData"))
+			{
+				rippleData = node.GetValue("RippleData");
+			}
+			ParseRippleOptions();
+		}
 		
 		public override void OnStart (PartModule.StartState state)
 		{
@@ -539,7 +693,19 @@ namespace BahaTurret
 			GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
 			GameEvents.onPartDie.Remove(OnPartDie);
 		}
-		
+			
+
+		void DisplaySelectedWeaponMessage()
+		{
+			if(BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
+			{
+				ScreenMessages.RemoveMessage(selectionMessage);
+				selectionText = "Selected Weapon: " + GetWeaponName(weaponArray[weaponIndex]);
+				selectionMessage.message = selectionText;
+				ScreenMessages.PostScreenMessage(selectionMessage, true);
+			}
+		}
+
 		void Update()
 		{	
 			
@@ -555,13 +721,7 @@ namespace BahaTurret
 					
 						weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
 					
-						if(BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
-						{
-							ScreenMessages.RemoveMessage(selectionMessage);
-							selectionText = "Selected Weapon: " + GetWeaponName(weaponArray[weaponIndex]);
-							selectionMessage.message = selectionText;
-							ScreenMessages.PostScreenMessage(selectionMessage, true);
-						}
+						DisplaySelectedWeaponMessage();
 					}
 					if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
 
@@ -726,6 +886,12 @@ namespace BahaTurret
 					}
 				}
 
+				//dont add empty rocket pods
+				if(weapon.GetWeaponClass() == WeaponClasses.Rocket && weapon.GetPart().GetResourceMass() == 0)
+				{
+					continue;
+				}
+
 				if(!alreadyAdded)
 				{
 					weaponTypes.Add(weapon);
@@ -757,14 +923,7 @@ namespace BahaTurret
 			if(GetWeaponName(selectedWeapon) != GetWeaponName(weaponArray[weaponIndex])&& vessel.isActiveVessel && Time.time-startTime > 1)
 			{
 				hasSingleFired = true;
-				if(BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
-				{
-					ScreenMessages.RemoveMessage(selectionMessage);
-					selectionText = "Selected Weapon: " + GetWeaponName(weaponArray[weaponIndex]);
-					selectionMessage.message = selectionText;
-					ScreenMessages.PostScreenMessage(selectionMessage, true);
-				}
-				
+				DisplaySelectedWeaponMessage();
 			}
 		
 			ToggleTurret();
@@ -778,19 +937,11 @@ namespace BahaTurret
 			weaponIndex = (int)Mathf.Repeat(weaponIndex, weaponArray.Length);
 
 			selectedWeapon = weaponArray[weaponIndex];
-			//selectedWeaponString = GetWeaponName(selectedWeapon);
 
 			hasSingleFired = true;
 			triggerTimer = 0;
 			
-			if(BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
-			{
-				ScreenMessages.RemoveMessage(selectionMessage);
-				selectionText = "Selected Weapon: " + selectedWeaponString;
-				selectionMessage.message = selectionText;
-				ScreenMessages.PostScreenMessage(selectionMessage, true);
-			}
-			
+			DisplaySelectedWeaponMessage();
 			
 			//bomb stuff
 			if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
@@ -809,9 +960,6 @@ namespace BahaTurret
 			{
 				audioSource.PlayOneShot(clickSound);
 			}
-
-
-
 		}
 		
 		public void CycleWeapon(int index)
@@ -823,7 +971,6 @@ namespace BahaTurret
 			}
 			weaponIndex = index;
 			selectedWeapon = weaponArray[index];
-			//selectedWeaponString = GetWeaponName(selectedWeapon);
 
 			hasSingleFired = true;
 			triggerTimer = 0;
@@ -910,6 +1057,7 @@ namespace BahaTurret
 				lastFiredSym = null;
 			}
 
+			IBDWeapon firedWeapon = null;
 
 			if(lastFiredSym != null && lastFiredSym.partName == selectedWeapon.GetPart().partName)
 			{
@@ -936,10 +1084,12 @@ namespace BahaTurret
 
 						if(guardMode && guardTarget!=null && BDArmorySettings.ALLOW_LEGACY_TARGETING)
 						{
+							firedWeapon = ml;
 							ml.FireMissileOnTarget(guardTarget);
 						}
 						else
 						{
+							firedWeapon = ml;
 							SendTargetDataToMissile(ml);
 							ml.FireMissile();
 						}
@@ -955,6 +1105,7 @@ namespace BahaTurret
 					foreach(RocketLauncher rl in lastFiredSym.FindModulesImplementing<RocketLauncher>())
 					{
 						hasFired = true;
+						firedWeapon = rl;
 						rl.FireRocket();
 						//rippleRPM = rl.rippleRPM;
 						if(nextPart!=null)
@@ -989,10 +1140,12 @@ namespace BahaTurret
 						
 						if(guardMode && guardTarget!=null && BDArmorySettings.ALLOW_LEGACY_TARGETING)
 						{
+							firedWeapon = ml;
 							ml.FireMissileOnTarget(guardTarget);
 						}
 						else
 						{
+							firedWeapon = ml;
 							SendTargetDataToMissile(ml);
 							ml.FireMissile();
 						}
@@ -1015,6 +1168,7 @@ namespace BahaTurret
 						if(rl.part.partInfo.title == selectedWeapon.GetPart().partInfo.title && hasRocket)
 						{
 							lastFiredSym = FindSym(rl.part);
+							firedWeapon = rl;
 							rl.FireRocket();
 							//rippleRPM = rl.rippleRPM;
 
@@ -1026,19 +1180,17 @@ namespace BahaTurret
 
 
 			UpdateList();
+			if(GetWeaponName(selectedWeapon) != GetWeaponName(firedWeapon))
+			{
+				hasSingleFired = true;
+			}
 			if(weaponIndex >= weaponArray.Length)
 			{
 				triggerTimer = 0;
 				hasSingleFired = true;
 				weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
 				
-				if(BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
-				{
-					ScreenMessages.RemoveMessage(selectionMessage);
-					selectionText = "Selected Weapon: " + GetWeaponName(weaponArray[weaponIndex]);
-					selectionMessage.message = selectionText;
-					ScreenMessages.PostScreenMessage(selectionMessage, true);
-				}
+				DisplaySelectedWeaponMessage();
 
 			}
 
@@ -1540,7 +1692,7 @@ namespace BahaTurret
 				if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 				{
 					bool launchAuthorized = true;
-					bool pilotAuthorized = (!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this));
+					bool pilotAuthorized = true;//(!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this));
 
 					float targetAngle = Vector3.Angle(-transform.forward, guardTarget.transform.position-transform.position);
 					float targetDistance = Vector3.Distance(currentTarget.position, transform.position);
@@ -1575,14 +1727,40 @@ namespace BahaTurret
 		}
 
 		Vector3 debugGuardViewDirection;
+		bool focusingOnTarget = false;
+		float focusingOnTargetTimer = 0;
 		void UpdateGuardViewScan()
 		{
 			float finalMaxAngle = guardAngle / 2;
 			float finalScanDirectionAngle = currentGuardViewAngle;
 			if(guardTarget != null)
 			{
-				finalMaxAngle = 10;
-				finalScanDirectionAngle = VectorUtils.SignedAngle(viewReferenceTransform.forward, guardTarget.transform.position - viewReferenceTransform.position, viewReferenceTransform.right) + currentGuardViewAngle; 
+				if(focusingOnTarget)
+				{
+					if(focusingOnTargetTimer > 3)
+					{
+						focusingOnTargetTimer = 0;
+						focusingOnTarget = false;
+					}
+					else
+					{
+						focusingOnTargetTimer += Time.fixedDeltaTime;
+					}
+					finalMaxAngle = 20;
+					finalScanDirectionAngle = VectorUtils.SignedAngle(viewReferenceTransform.forward, guardTarget.transform.position - viewReferenceTransform.position, viewReferenceTransform.right) + currentGuardViewAngle; 
+				}
+				else
+				{
+					if(focusingOnTargetTimer > 2)
+					{
+						focusingOnTargetTimer = 0;
+						focusingOnTarget = true;
+					}
+					else
+					{
+						focusingOnTargetTimer += Time.fixedDeltaTime;
+					}
+				}
 			}
 
 
@@ -1608,12 +1786,20 @@ namespace BahaTurret
 			if(results.foundHeatMissile && !isFlaring)
 			{
 				StartCoroutine(FlareRoutine(2.5f));
+				StartCoroutine(ResetMissileThreatDistanceRoutine());
+			}
+
+			if(results.foundRadarMissile)
+			{
+				FireChaff();
 			}
 
 			if(results.foundAGM)
 			{
 				//do smoke CM here.
 			}
+				
+			incomingMissileDistance = Mathf.Min(results.missileThreatDistance, incomingMissileDistance);
 
 			if(results.firingAtMe)
 			{
@@ -1623,6 +1809,12 @@ namespace BahaTurret
 				}
 				ufRoutine = StartCoroutine(UnderFireRoutine());
 			}
+		}
+
+		IEnumerator ResetMissileThreatDistanceRoutine()
+		{
+			yield return new WaitForSeconds(8);
+			incomingMissileDistance = float.MaxValue;
 		}
 
 
@@ -2758,8 +2950,12 @@ namespace BahaTurret
 						cm.DropCM();
 					}
 				}
+				isFlaring = true;
+				isChaffing = true;
 				yield return new WaitForSeconds(1f);
 			}
+			isFlaring = false;
+			isChaffing = false;
 		}
 
 
@@ -2775,6 +2971,8 @@ namespace BahaTurret
 		IEnumerator ChaffRoutine()
 		{
 			isChaffing = true;
+			yield return new WaitForSeconds(UnityEngine.Random.Range(0f, 1f));
+
 			foreach(var cm in vessel.FindPartModulesImplementing<CMDropper>())
 			{
 				if(cm.cmType == CMDropper.CountermeasureTypes.Chaff)
@@ -2794,6 +2992,7 @@ namespace BahaTurret
 			if(isFlaring) yield break;
 			time = Mathf.Clamp(time, 2, 8);
 			isFlaring = true;
+			yield return new WaitForSeconds(UnityEngine.Random.Range(0f, 1f));
 			float flareStartTime = Time.time;
 			while(Time.time - flareStartTime < time)
 			{
