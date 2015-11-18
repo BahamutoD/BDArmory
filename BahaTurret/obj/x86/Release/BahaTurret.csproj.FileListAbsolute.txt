@@ -1,0 +1,9 @@
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\BahaTurret.dll
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\System.dll
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\System.Xml.dll
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\TDx.TDxInput.dll
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\TrackIRUnity.dll
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\Mono.Cecil.dll
+C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\Mono.Security.dll
+C:\Users\ferram4\BDArmory\BahaTurret\obj\x86\Release\BahaTurret.dll
+C:\Users\ferram4\BDArmory\BahaTurret\obj\x86\Release\BahaTurret.csprojResolveAssemblyReference.cache

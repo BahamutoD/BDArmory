@@ -20,6 +20,7 @@ namespace BahaTurret
 
 		public enum WeaponTypes{Ballistic, Cannon, Laser}
 		public enum WeaponStates{Enabled, Disabled, PoweringUp, PoweringDown}
+        public enum BulletDragTypes { None, AnalyticEstimate, NumericalIntegration }
 		public WeaponStates weaponState = WeaponStates.Disabled;
 
 		//name
@@ -63,9 +64,17 @@ namespace BahaTurret
 		[KSPField]
 		public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
 		[KSPField]
-		public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil
+		public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
 		[KSPField]
 		public float bulletVelocity = 860; //velocity in meters/second
+
+        [KSPField]
+        public string bulletDragTypeName = "AnalyticEstimate";
+        public BulletDragTypes bulletDragType;
+        [KSPField]
+        public float bulletDragArea = 1.209675e-5f;  //drag area of the bullet in m^2; equal to Cd * A with A being the frontal area of the bullet; as a first approximation, take Cd to be 0.3
+        public float bulletBallisticCoefficient;    //bullet mass / bullet drag area.  Used in analytic estimate to speed up code
+
 		[KSPField]
 		public string ammoName = "50CalAmmo"; //resource usage TODO: multi resource requirement
 		[KSPField]
@@ -333,6 +342,9 @@ namespace BahaTurret
 			base.OnStart (state);
 
 			ParseWeaponType();
+            ParseBulletDragType();
+
+            bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000;        //1000 to convert from tonnes to kilograms
 
 			if(shortName == string.Empty)
 			{
@@ -884,7 +896,11 @@ namespace BahaTurret
 						GameObject firedBullet = bulletPool.GetPooledObject();
 						PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
 						firedBullet.transform.position = fireTransform.position;
+
 						pBullet.mass = bulletMass;
+                        pBullet.ballisticCoefficient = bulletBallisticCoefficient;
+                        pBullet.flightTimeElapsed = 0;
+
 						timeFired = Time.time;
 						
 						//Vector3 firedVelocity = fireTransform.rotation * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
@@ -921,6 +937,18 @@ namespace BahaTurret
 							pBullet.bulletType = PooledBullet.PooledBulletTypes.Standard;
 							pBullet.airDetonation = false;
 						}
+                        switch(bulletDragType)
+                        {
+                            case BulletDragTypes.None:
+                                pBullet.dragType = PooledBullet.BulletDragTypes.None;
+                                break;
+                            case BulletDragTypes.AnalyticEstimate:
+                                pBullet.dragType = PooledBullet.BulletDragTypes.AnalyticEstimate;
+                                break;
+                            case BulletDragTypes.NumericalIntegration:
+                                pBullet.dragType = PooledBullet.BulletDragTypes.NumericalIntegration;
+                                break;
+                        }
 
 						pBullet.gameObject.SetActive(true);
 
@@ -1446,7 +1474,27 @@ namespace BahaTurret
 			}
 		}
 
-		private VInfoBox InitReloadBar()
+        void ParseBulletDragType()
+        {
+            bulletDragTypeName = bulletDragTypeName.ToLower();
+
+            switch (bulletDragTypeName)
+            {
+                case "none":
+                    bulletDragType = BulletDragTypes.None;
+                    break;
+
+                case "numericalintegration":
+                    bulletDragType = BulletDragTypes.NumericalIntegration;
+                    break;
+
+                case "analyticestimate":
+                    bulletDragType = BulletDragTypes.AnalyticEstimate;
+                    break;
+            }
+        }
+        
+        private VInfoBox InitReloadBar()
 		{
 			VInfoBox v = part.stackIcon.DisplayInfo();
 			
