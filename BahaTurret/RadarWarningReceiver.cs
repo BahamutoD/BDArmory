@@ -166,7 +166,7 @@ namespace BahaTurret
 
 				if(weaponManager && weaponManager.guardMode)
 				{
-					weaponManager.FireAllCountermeasures(2);
+					weaponManager.FireAllCountermeasures(UnityEngine.Random.Range(2,4));
 				}
 			}
 		}
