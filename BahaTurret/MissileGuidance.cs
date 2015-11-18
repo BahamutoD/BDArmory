@@ -198,12 +198,11 @@ namespace BahaTurret
 			if(DefaultLiftCurve == null)
 			{
 				DefaultLiftCurve = new FloatCurve();
-				DefaultLiftCurve.Add(0, .1f);
-				DefaultLiftCurve.Add(8, .45f);
-				DefaultLiftCurve.Add(19, 1);
-				DefaultLiftCurve.Add(23, .9f);
-				DefaultLiftCurve.Add(29, 0.85f);
-				DefaultLiftCurve.Add(35, 0.65f);
+				DefaultLiftCurve.Add(0, 0);
+				DefaultLiftCurve.Add(8, .35f);
+			//	DefaultLiftCurve.Add(19, 1);
+			//	DefaultLiftCurve.Add(23, .9f);
+				DefaultLiftCurve.Add(30, 1.5f);
 				DefaultLiftCurve.Add(65, .6f);
 				DefaultLiftCurve.Add(90, .7f);
 			}
@@ -211,10 +210,10 @@ namespace BahaTurret
 			if(DefaultDragCurve == null)
 			{
 				DefaultDragCurve = new FloatCurve();
-				DefaultDragCurve.Add(0, 0.00225f);
-				DefaultDragCurve.Add(5, .0035f);
-				DefaultDragCurve.Add(15, .015f);
-				DefaultDragCurve.Add(29, .025f);
+				DefaultDragCurve.Add(0, 0.00215f);
+				DefaultDragCurve.Add(5, .00285f);
+				//DefaultDragCurve.Add(15, .009f);
+				DefaultDragCurve.Add(29, .01f);
 				DefaultDragCurve.Add(55, .3f);
 				DefaultDragCurve.Add(90, .5f);
 			}
@@ -245,14 +244,14 @@ namespace BahaTurret
 			{
 				double liftForce = 0.5 * airDensity * Math.Pow(airSpeed, 2) * liftArea * liftMultiplier * liftCurve.Evaluate(AoA);
 				Vector3 forceDirection = Vector3.ProjectOnPlane(-velocity, ml.transform.forward).normalized;
-				rb.AddForceAtPosition((float)liftForce * forceDirection, ml.transform.TransformPoint(CoL));
+				rb.AddForceAtPosition((float)liftForce * forceDirection, ml.transform.TransformPoint(ml.part.CoMOffset+CoL));
 			}
 
 			//drag
 			if(airSpeed > 0)
 			{
 				double dragForce = 0.5 * airDensity * Math.Pow(airSpeed, 2) * liftArea * dragMultiplier * dragCurve.Evaluate(AoA);
-				rb.AddForceAtPosition((float)dragForce * -velocity.normalized, ml.transform.TransformPoint(CoL));
+				rb.AddForceAtPosition((float)dragForce * -velocity.normalized, ml.transform.TransformPoint(ml.part.CoMOffset+CoL));
 			}
 
 
@@ -276,7 +275,7 @@ namespace BahaTurret
 				torqueDirection = ml.transform.InverseTransformDirection(torqueDirection);
 
 				float torque = Mathf.Clamp(targetAngle * steerMult, 0, maxTorque);
-				Vector3 finalTorque = Vector3.ProjectOnPlane(Vector3.Lerp(previousTorque, torqueDirection*torque, 0.86f), Vector3.forward);
+				Vector3 finalTorque = Vector3.ProjectOnPlane(Vector3.Lerp(previousTorque, torqueDirection*torque, 1), Vector3.forward);
 				
 				rb.AddRelativeTorque(finalTorque);
 				
