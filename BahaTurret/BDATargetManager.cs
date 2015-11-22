@@ -348,6 +348,7 @@ namespace BahaTurret
 			debugString += "\n\nHeat score: "+heatScore;
 			debugString += "\nFlare score: "+flareScore;
 
+			/*
 			debugString += "\n\nLoaded vessels: ";
 			foreach(var v in LoadedVessels)
 			{
@@ -356,6 +357,7 @@ namespace BahaTurret
 					debugString += "\n" + v.vesselName;
 				}
 			}
+			*/
 		}
 
 

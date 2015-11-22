@@ -15,6 +15,7 @@ namespace BahaTurret
 	{
 		WeaponClasses GetWeaponClass();
 		string GetShortName();
+		string GetSubLabel();
 		Part GetPart();
 	}
 
