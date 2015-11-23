@@ -87,8 +87,18 @@ namespace BahaTurret
 		 UI_Toggle(enabledText = "On", disabledText = "Off")]
 		public bool standbyMode = false;
 
+        float maxPosG = 0;
+        float cosAoAAtMaxPosG = 0;
 
+        float maxNegG = 0;
+        float cosAoAAtMaxNegG = 0;
 
+        float gaoASlopePerDynPres = 0;        //used to limit control input at very high dynamic pressures to avoid structural failure
+        float gOffsetPerDynPres = 0;
+
+        float maxAllowedGForce = 5;              //TODO: make this configurable
+        float posPitchDynPresLimit = 1;
+        float negPitchDynPresLimit = -1;
 
 		float threatLevel = 1;
 		float turningTimer = 0;
@@ -298,14 +308,14 @@ namespace BahaTurret
 			//upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
 			upDirection = VectorUtils.GetUpDirection(vessel.transform.position);
 			debugString = string.Empty;
-			if(MissileGuidance.GetRadarAltitude(vessel) < minAltitude)
+            if (MissileGuidance.GetRadarAltitude(vessel) < MinAltitudeNeeded())
 			{
 				startedLanded = true;
 			}
 
 
 
-			if(startedLanded)
+            if (startedLanded)
 			{
 				TakeOff(s);
 				turningTimer = 0;
@@ -325,7 +335,8 @@ namespace BahaTurret
 					UpdateAI(s);
 				}
 			}
-
+            UpdateGLimits(s);
+            AdjustPitchForGLimits(s);
 			//brake and cut throttle if exceeding max speed
 			/*
 			if(vessel.srfSpeed > maxSpeed)
@@ -860,6 +871,131 @@ namespace BahaTurret
 			}
 		}
 
+        void UpdateGLimits(FlightCtrlState s)
+        {
+            if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed)
+                return;
+
+            float pitchG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);       //should provide g force in vessel up / down direction, assuming a standard plane
+            float pitchGPerDynPres = pitchG / (float)vessel.dynamicPressurekPa;
+
+
+            if(pitchGPerDynPres < maxNegG)
+            {
+                maxNegG = pitchGPerDynPres;
+                cosAoAAtMaxNegG = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
+            }
+            else if (pitchGPerDynPres > maxPosG)
+            {
+                maxPosG = pitchGPerDynPres;
+                cosAoAAtMaxPosG = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
+            }
+
+
+
+            float aoADiff = cosAoAAtMaxPosG - cosAoAAtMaxNegG;
+
+            //if (Math.Abs(pitchControlDiff) < 0.005f)
+            //    return;                 //if the pitch control values are too similar, don't bother to avoid numerical errors
+
+
+            gaoASlopePerDynPres = (maxPosG - maxNegG) / aoADiff;
+            gOffsetPerDynPres = maxPosG - gaoASlopePerDynPres * cosAoAAtMaxPosG;     //g force offset
+        }
+
+        void AdjustPitchForGLimits(FlightCtrlState s)
+        {
+            float minCosAoA, maxCosAoA;
+            //debugString += "\nMax Pos G: " + maxPosG + " @ " + cosAoAAtMaxPosG;
+            //debugString += "\nMax Neg G: " + maxNegG + " @ " + cosAoAAtMaxNegG;
+
+            if (gaoASlopePerDynPres == 0)         //if the slope is 0, ignore it
+                return;
+
+            maxCosAoA = maxAllowedGForce * 9.81f / (float)vessel.dynamicPressurekPa;
+            minCosAoA = -maxCosAoA;
+
+            maxCosAoA -= gOffsetPerDynPres;
+            minCosAoA -= gOffsetPerDynPres;
+
+            maxCosAoA /= gaoASlopePerDynPres;
+            minCosAoA /= gaoASlopePerDynPres;
+
+            float curCosAoA = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
+
+            float centerCosAoA = (minCosAoA + maxCosAoA) * 0.5f;
+            float curCosAoACentered = curCosAoA - centerCosAoA;
+            float curCosAoANorm = curCosAoACentered / Math.Abs(maxCosAoA - minCosAoA) * 2f;      //scaled so that from centerAoA to maxAoA is 1
+
+            if (curCosAoANorm < 0)
+            {
+                float cosAoAOffset = curCosAoANorm + 1;     //set max neg aoa to be 0
+                float pitchScalar = Math.Abs(curCosAoANorm);
+                if (pitchScalar > 1)
+                    pitchScalar = 1;
+                negPitchDynPresLimit -= 0.001f * pitchScalar * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+            }
+            else
+            {
+                float cosAoAOffset = curCosAoANorm - 1;     //set max pos aoa to be 0
+                float pitchScalar = Math.Abs(curCosAoANorm);
+                if (pitchScalar > 1)
+                    pitchScalar = 1;
+                posPitchDynPresLimit -= 0.001f * pitchScalar * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+            }
+
+            float limit = negPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
+            if (limit > s.pitch)
+            {
+                s.pitch = limit;
+                debugString += "\nLimiting Neg Gs";
+            }
+            limit = posPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
+            if (limit < s.pitch)
+            {
+                s.pitch = limit;
+                debugString += "\nLimiting Pos Gs";
+            }
+            //debugString += "\ncurAoANorm: " + curCosAoANorm;
+            debugString += "\nNeg Pitch Lim: " + (negPitchDynPresLimit / (float)vessel.dynamicPressurekPa);
+            debugString += "\nPos Pitch Lim: " + (posPitchDynPresLimit / (float)vessel.dynamicPressurekPa);
+
+            //debugString += "\nPitch: " + s.pitch;
+            //s.pitch = Mathf.Clamp(s.pitch, minPitch, maxPitch);
+        }
+
+        float MinAltitudeNeeded()         //min altitude adjusted for G limits; let's try _not_ to overcook dives and faceplant into the ground
+        {
+            float maxPosAccel = gaoASlopePerDynPres * cosAoAAtMaxPosG + gOffsetPerDynPres;
+            maxPosAccel *= (float)vessel.dynamicPressurekPa;       //maximum acceleration from lift that the vehicle can provide
+
+            maxPosAccel = Math.Min(maxPosAccel, maxAllowedGForce * 9.81f);       //limit it to whichever is smaller, what we can provide or what we can handle
+
+            float turningCircleRadius = (float)vessel.srf_velocity.sqrMagnitude / maxPosAccel;     //radius that we can turn in assuming constant velocity, assuming simple circular motion
+            
+            //for a pure vertical dive, this will be the altitude that we need to turn.  However, for shallower dives we don't need that much.  Let's account for that.
+            //actual altitude needed will be radius * (1 - cos(theta)), where theta is the angle of the arc from dive entry to the turning circle to the bottom
+            //we can calculate that from the velocity vector mag dotted with the up vector
+
+            float diveAngleCorrection = -Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.upAxis); //normalize the vector and dot it with upAxis
+            //this gives us sin(theta)
+            if(diveAngleCorrection > 0)         //we're headed downwards
+            {
+                diveAngleCorrection *= diveAngleCorrection;
+                diveAngleCorrection = 1 - diveAngleCorrection;
+                diveAngleCorrection = Math.Max(0f, diveAngleCorrection);    //remember to check to make sure numerical errors haven't crept in!  Can't have NaN showing up
+                diveAngleCorrection = Mathf.Sqrt(diveAngleCorrection);      //convert sin(theta) to cos(theta)
+
+                diveAngleCorrection = 1 - diveAngleCorrection;      //and convert to 1 - cos(theta)
+            }
+            else
+            {
+                diveAngleCorrection = 0;
+            }
+
+            return minAltitude + turningCircleRadius * diveAngleCorrection;
+        }
+
 		Vector3 DefaultAltPosition()
 		{
 			return (vessel.transform.position + (-(float)vessel.altitude*upDirection) + (defaultAltitude *upDirection));
@@ -1169,7 +1305,7 @@ namespace BahaTurret
 			{
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					GUI.Label(new Rect(200, 800, 400, 400), debugString);	
+					GUI.Label(new Rect(200, Screen.height - 200, 400, 400), debugString);	
 				}
 
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
