@@ -99,6 +99,8 @@ namespace BahaTurret
         float maxAllowedGForce = 5;              //TODO: make this configurable
         float posPitchDynPresLimit = 1;
         float negPitchDynPresLimit = -1;
+        float lastPosPitchLimit;
+        float lastNegPitchLimit;
 
 		float threatLevel = 1;
 		float turningTimer = 0;
@@ -891,7 +893,12 @@ namespace BahaTurret
                 cosAoAAtMaxPosG = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
             }
 
-
+            if(cosAoAAtMaxNegG > cosAoAAtMaxPosG)
+            {
+                cosAoAAtMaxNegG = cosAoAAtMaxPosG = maxNegG = maxPosG = 0;
+                gOffsetPerDynPres = gaoASlopePerDynPres = 0;
+                return;
+            }
 
             float aoADiff = cosAoAAtMaxPosG - cosAoAAtMaxNegG;
 
@@ -909,8 +916,14 @@ namespace BahaTurret
             //debugString += "\nMax Pos G: " + maxPosG + " @ " + cosAoAAtMaxPosG;
             //debugString += "\nMax Neg G: " + maxNegG + " @ " + cosAoAAtMaxNegG;
 
-            if (gaoASlopePerDynPres == 0)         //if the slope is 0, ignore it
+            if (gaoASlopePerDynPres == 0 || vessel.srfSpeed < takeOffSpeed)         //if the slope is 0, ignore it
+            {
+                negPitchDynPresLimit = -1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
+                posPitchDynPresLimit = 1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
+                lastNegPitchLimit = negPitchDynPresLimit;
+                lastPosPitchLimit = posPitchDynPresLimit;
                 return;
+            }
 
             maxCosAoA = maxAllowedGForce * 9.81f / (float)vessel.dynamicPressurekPa;
             minCosAoA = -maxCosAoA;
@@ -927,21 +940,47 @@ namespace BahaTurret
             float curCosAoACentered = curCosAoA - centerCosAoA;
             float curCosAoANorm = curCosAoACentered / Math.Abs(maxCosAoA - minCosAoA) * 2f;      //scaled so that from centerAoA to maxAoA is 1
 
-            if (curCosAoANorm < 0)
+            if (curCosAoANorm < -0.15f)
             {
                 float cosAoAOffset = curCosAoANorm + 1;     //set max neg aoa to be 0
-                float pitchScalar = Math.Abs(curCosAoANorm);
-                if (pitchScalar > 1)
-                    pitchScalar = 1;
-                negPitchDynPresLimit -= 0.001f * pitchScalar * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+                float aoALimScalar = Math.Abs(curCosAoANorm);
+                aoALimScalar *= aoALimScalar;
+                aoALimScalar *= aoALimScalar;
+                if (aoALimScalar > 1)
+                    aoALimScalar = 1;
+
+                float pitchInputScalar = negPitchDynPresLimit / (float)vessel.dynamicPressurekPa - s.pitch;
+                pitchInputScalar = 1 - Mathf.Clamp01(Math.Abs(pitchInputScalar));
+                pitchInputScalar *= pitchInputScalar;
+                pitchInputScalar *= pitchInputScalar;
+                if (pitchInputScalar < 0)
+                    pitchInputScalar = 0;
+
+                negPitchDynPresLimit -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+                negPitchDynPresLimit -= (negPitchDynPresLimit - lastNegPitchLimit) * 0.1f;
+
+                lastNegPitchLimit = negPitchDynPresLimit;
             }
-            else
+            else if (curCosAoANorm > 0.15f)
             {
                 float cosAoAOffset = curCosAoANorm - 1;     //set max pos aoa to be 0
-                float pitchScalar = Math.Abs(curCosAoANorm);
-                if (pitchScalar > 1)
-                    pitchScalar = 1;
-                posPitchDynPresLimit -= 0.001f * pitchScalar * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+                float aoALimScalar = Math.Abs(curCosAoANorm);
+                aoALimScalar *= aoALimScalar;
+                aoALimScalar *= aoALimScalar;
+                if (aoALimScalar > 1)
+                    aoALimScalar = 1;
+
+                float pitchInputScalar = s.pitch - posPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
+                pitchInputScalar = 1 - Mathf.Clamp01(Math.Abs(pitchInputScalar));
+                pitchInputScalar *= pitchInputScalar;
+                pitchInputScalar *= pitchInputScalar;
+                if (pitchInputScalar < 0)
+                    pitchInputScalar = 0;
+
+                posPitchDynPresLimit -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+                posPitchDynPresLimit -= (posPitchDynPresLimit - lastPosPitchLimit) * 0.1f;
+
+                lastPosPitchLimit = posPitchDynPresLimit;
             }
 
             float limit = negPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
