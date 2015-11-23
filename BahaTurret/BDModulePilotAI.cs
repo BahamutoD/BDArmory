@@ -99,8 +99,6 @@ namespace BahaTurret
         float maxAllowedGForce = 5;              //TODO: make this configurable
         float posPitchDynPresLimit = 1;
         float negPitchDynPresLimit = -1;
-        float lastPosPitchLimit;
-        float lastNegPitchLimit;
 
 		float threatLevel = 1;
 		float turningTimer = 0;
@@ -875,7 +873,7 @@ namespace BahaTurret
 
         void UpdateGLimits(FlightCtrlState s)
         {
-            if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed)
+            if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed || startedLanded && -Vector3.Dot(vessel.ReferenceTransform.forward, vessel.upAxis) < 0.8f)
                 return;
 
             float pitchG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);       //should provide g force in vessel up / down direction, assuming a standard plane
@@ -893,7 +891,7 @@ namespace BahaTurret
                 cosAoAAtMaxPosG = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
             }
 
-            if(cosAoAAtMaxNegG > cosAoAAtMaxPosG)
+            if(cosAoAAtMaxNegG >= cosAoAAtMaxPosG)
             {
                 cosAoAAtMaxNegG = cosAoAAtMaxPosG = maxNegG = maxPosG = 0;
                 gOffsetPerDynPres = gaoASlopePerDynPres = 0;
@@ -920,8 +918,6 @@ namespace BahaTurret
             {
                 negPitchDynPresLimit = -1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
                 posPitchDynPresLimit = 1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
-                lastNegPitchLimit = negPitchDynPresLimit;
-                lastPosPitchLimit = posPitchDynPresLimit;
                 return;
             }
 
@@ -940,7 +936,11 @@ namespace BahaTurret
             float curCosAoACentered = curCosAoA - centerCosAoA;
             float curCosAoANorm = curCosAoACentered / Math.Abs(maxCosAoA - minCosAoA) * 2f;      //scaled so that from centerAoA to maxAoA is 1
 
-            if (curCosAoANorm < -0.15f)
+            float negPitchScalar, posPitchScalar;
+            negPitchScalar = negPitchDynPresLimit / (float)vessel.dynamicPressurekPa - s.pitch;
+            posPitchScalar = s.pitch - posPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
+
+            if (curCosAoANorm < -0.15f || Math.Abs(negPitchScalar) < 0.05f)
             {
                 float cosAoAOffset = curCosAoANorm + 1;     //set max neg aoa to be 0
                 float aoALimScalar = Math.Abs(curCosAoANorm);
@@ -949,7 +949,7 @@ namespace BahaTurret
                 if (aoALimScalar > 1)
                     aoALimScalar = 1;
 
-                float pitchInputScalar = negPitchDynPresLimit / (float)vessel.dynamicPressurekPa - s.pitch;
+                float pitchInputScalar = negPitchScalar;
                 pitchInputScalar = 1 - Mathf.Clamp01(Math.Abs(pitchInputScalar));
                 pitchInputScalar *= pitchInputScalar;
                 pitchInputScalar *= pitchInputScalar;
@@ -957,11 +957,8 @@ namespace BahaTurret
                     pitchInputScalar = 0;
 
                 negPitchDynPresLimit -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
-                negPitchDynPresLimit -= (negPitchDynPresLimit - lastNegPitchLimit) * 0.1f;
-
-                lastNegPitchLimit = negPitchDynPresLimit;
             }
-            else if (curCosAoANorm > 0.15f)
+            if (curCosAoANorm > 0.15f || Math.Abs(posPitchScalar) < 0.05f)
             {
                 float cosAoAOffset = curCosAoANorm - 1;     //set max pos aoa to be 0
                 float aoALimScalar = Math.Abs(curCosAoANorm);
@@ -970,7 +967,7 @@ namespace BahaTurret
                 if (aoALimScalar > 1)
                     aoALimScalar = 1;
 
-                float pitchInputScalar = s.pitch - posPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
+                float pitchInputScalar = posPitchScalar;
                 pitchInputScalar = 1 - Mathf.Clamp01(Math.Abs(pitchInputScalar));
                 pitchInputScalar *= pitchInputScalar;
                 pitchInputScalar *= pitchInputScalar;
@@ -978,26 +975,30 @@ namespace BahaTurret
                     pitchInputScalar = 0;
 
                 posPitchDynPresLimit -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
-                posPitchDynPresLimit -= (posPitchDynPresLimit - lastPosPitchLimit) * 0.1f;
-
-                lastPosPitchLimit = posPitchDynPresLimit;
             }
 
-            float limit = negPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
-            if (limit > s.pitch)
+            float centralDynPres = 0.5f * (posPitchDynPresLimit + negPitchDynPresLimit);
+            float diffDynPres = 0.5f * Math.Abs(posPitchDynPresLimit - negPitchDynPresLimit);
+
+            centralDynPres /= (float)vessel.dynamicPressurekPa;
+            diffDynPres /= (float)vessel.dynamicPressurekPa;
+
+            float negLim, posLim;
+            negLim = centralDynPres - diffDynPres;
+            if (negLim > s.pitch)
             {
-                s.pitch = limit;
+                s.pitch = negLim;
                 debugString += "\nLimiting Neg Gs";
             }
-            limit = posPitchDynPresLimit / (float)vessel.dynamicPressurekPa;
-            if (limit < s.pitch)
+            posLim = centralDynPres + diffDynPres;
+            if (posLim < s.pitch)
             {
-                s.pitch = limit;
+                s.pitch = posLim;
                 debugString += "\nLimiting Pos Gs";
             }
             //debugString += "\ncurAoANorm: " + curCosAoANorm;
-            debugString += "\nNeg Pitch Lim: " + (negPitchDynPresLimit / (float)vessel.dynamicPressurekPa);
-            debugString += "\nPos Pitch Lim: " + (posPitchDynPresLimit / (float)vessel.dynamicPressurekPa);
+            debugString += "\nNeg Pitch Lim: " + negLim;
+            debugString += "\nPos Pitch Lim: " + posLim;
 
             //debugString += "\nPitch: " + s.pitch;
             //s.pitch = Mathf.Clamp(s.pitch, minPitch, maxPitch);
