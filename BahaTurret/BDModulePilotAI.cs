@@ -973,7 +973,7 @@ namespace BahaTurret
             //update pitch control limits as needed
             float negPitchDynPresLimit, posPitchDynPresLimit;
             negPitchDynPresLimit = posPitchDynPresLimit = 0;
-            if (curCosAoANorm < -0.15f && s.pitch < lastPitchInput - 0.1f || Math.Abs(negPitchScalar) < 0.01f)
+            if (curCosAoANorm < -0.15f)// || Math.Abs(negPitchScalar) < 0.01f)
             {
                 float cosAoAOffset = curCosAoANorm + 1;     //set max neg aoa to be 0
                 float aoALimScalar = Math.Abs(curCosAoANorm);
@@ -996,11 +996,11 @@ namespace BahaTurret
 
                 debugString += "\nUpdating Neg Gs";
                 negPitchDynPresLimitIntegrator -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
-                negPitchDynPresLimitIntegrator -= 0.005f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
+                negPitchDynPresLimitIntegrator -= 0.01f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
                 if (cosAoAOffset < 0)
                     negPitchDynPresLimit = -0.3f * cosAoAOffset;
             }
-            if (curCosAoANorm > 0.15f && s.pitch > lastPitchInput + 0.1f || Math.Abs(posPitchScalar) < 0.01f)
+            if (curCosAoANorm > 0.15f)// || Math.Abs(posPitchScalar) < 0.01f)
             {
                 float cosAoAOffset = curCosAoANorm - 1;     //set max pos aoa to be 0
                 float aoALimScalar = Math.Abs(curCosAoANorm);
@@ -1023,7 +1023,7 @@ namespace BahaTurret
 
                 debugString += "\nUpdating Pos Gs";
                 posPitchDynPresLimitIntegrator -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
-                posPitchDynPresLimitIntegrator -= 0.005f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
+                posPitchDynPresLimitIntegrator -= 0.01f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
                 if(cosAoAOffset > 0)
                     posPitchDynPresLimit = -0.3f * cosAoAOffset;
             }
@@ -1041,7 +1041,7 @@ namespace BahaTurret
             {
                 s.pitch = posLim;
                 debugString += "\nLimiting Pos Gs";
-            }
+            }            
 
             lastPitchInput = s.pitch;
             lastCosAoA = curCosAoA;
