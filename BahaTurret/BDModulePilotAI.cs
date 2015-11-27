@@ -97,6 +97,7 @@ namespace BahaTurret
 		 UI_Toggle(enabledText = "On", disabledText = "Off")]
 		public bool standbyMode = false;
 
+        //manueuverability and g loading data
         float maxPosG = 0;
         float cosAoAAtMaxPosG = 0;
 
@@ -112,7 +113,24 @@ namespace BahaTurret
         float lastCosAoA = 0;
         float lastPitchInput = 0;
 
-		float threatLevel = 1;
+        //instantaneous turn radius and possible acceleration from lift
+        //properties can be used so that other AI modules can read this for future maneuverability comparisons between craft
+        float turnRadius;
+        public float TurnRadius
+        {
+            get { return turnRadius; }
+            private set { turnRadius = value; }
+        }
+
+        float maxLiftAcceleration;
+        public float MaxLiftAcceleration
+        {
+            get { return maxLiftAcceleration; }
+            private set { maxLiftAcceleration = value; }
+        }
+
+        
+        float threatLevel = 1;
 		float turningTimer = 0;
 		float evasiveTimer = 0;
 		Vector3 lastTargetPosition;
@@ -322,6 +340,8 @@ namespace BahaTurret
 			//upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
 			upDirection = VectorUtils.GetUpDirection(vessel.transform.position);
 			debugString = string.Empty;
+
+            CalculateAccelerationAndTurningCircle();
             if (MissileGuidance.GetRadarAltitude(vessel) < MinAltitudeNeeded())
 			{
 				startedLanded = true;
@@ -1050,16 +1070,20 @@ namespace BahaTurret
 
         }
 
+        void CalculateAccelerationAndTurningCircle()
+        {
+            maxLiftAcceleration = gaoASlopePerDynPres * Math.Min(cosAoAAtMaxPosG, maxAllowedCosAoA) + gOffsetPerDynPres;
+            maxLiftAcceleration *= (float)vessel.dynamicPressurekPa;       //maximum acceleration from lift that the vehicle can provide
+
+            maxLiftAcceleration = Math.Min(maxLiftAcceleration, maxAllowedGForce * 9.81f);       //limit it to whichever is smaller, what we can provide or what we can handle
+
+            if(maxLiftAcceleration > 0)
+                turnRadius = (float)vessel.srf_velocity.sqrMagnitude / maxLiftAcceleration;     //radius that we can turn in assuming constant velocity, assuming simple circular motion
+        }
+
         float MinAltitudeNeeded()         //min altitude adjusted for G limits; let's try _not_ to overcook dives and faceplant into the ground
         {
-            float maxPosAccel = gaoASlopePerDynPres * Math.Min(cosAoAAtMaxPosG, maxAllowedCosAoA) + gOffsetPerDynPres;
-            maxPosAccel *= (float)vessel.dynamicPressurekPa;       //maximum acceleration from lift that the vehicle can provide
-
-            maxPosAccel = Math.Min(maxPosAccel, maxAllowedGForce * 9.81f);       //limit it to whichever is smaller, what we can provide or what we can handle
-
-            float turningCircleRadius = (float)vessel.srf_velocity.sqrMagnitude / maxPosAccel;     //radius that we can turn in assuming constant velocity, assuming simple circular motion
-            
-            //for a pure vertical dive, this will be the altitude that we need to turn.  However, for shallower dives we don't need that much.  Let's account for that.
+            //for a pure vertical dive, turnRadius will be the altitude that we need to turn.  However, for shallower dives we don't need that much.  Let's account for that.
             //actual altitude needed will be radius * (1 - cos(theta)), where theta is the angle of the arc from dive entry to the turning circle to the bottom
             //we can calculate that from the velocity vector mag dotted with the up vector
 
@@ -1079,7 +1103,7 @@ namespace BahaTurret
                 diveAngleCorrection = 0;
             }
 
-            return Math.Max(minAltitude, 100 + turningCircleRadius * diveAngleCorrection);
+            return Math.Max(minAltitude, 100 + turnRadius * diveAngleCorrection);
         }
 
 		Vector3 DefaultAltPosition()
