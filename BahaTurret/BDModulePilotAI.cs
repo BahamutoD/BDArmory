@@ -1016,7 +1016,7 @@ namespace BahaTurret
 
                 debugString += "\nUpdating Neg Gs";
                 negPitchDynPresLimitIntegrator -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
-                negPitchDynPresLimitIntegrator -= 0.01f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
+                negPitchDynPresLimitIntegrator -= 0.005f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
                 if (cosAoAOffset < 0)
                     negPitchDynPresLimit = -0.3f * cosAoAOffset;
             }
@@ -1043,7 +1043,7 @@ namespace BahaTurret
 
                 debugString += "\nUpdating Pos Gs";
                 posPitchDynPresLimitIntegrator -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
-                posPitchDynPresLimitIntegrator -= 0.01f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
+                posPitchDynPresLimitIntegrator -= 0.005f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
                 if(cosAoAOffset > 0)
                     posPitchDynPresLimit = -0.3f * cosAoAOffset;
             }
