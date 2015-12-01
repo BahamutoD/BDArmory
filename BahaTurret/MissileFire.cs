@@ -596,18 +596,18 @@ namespace BahaTurret
 			
 
 				audioSource = gameObject.AddComponent<AudioSource>();
-				audioSource.minDistance = 500;
-				audioSource.maxDistance = 1000;
+				audioSource.minDistance = 1;
+				audioSource.maxDistance = 500;
 				audioSource.dopplerLevel = 0;
 
 				warningAudioSource = gameObject.AddComponent<AudioSource>();
-				warningAudioSource.minDistance = 500;
-				warningAudioSource.maxDistance = 1000;
+				warningAudioSource.minDistance = 1;
+				warningAudioSource.maxDistance = 500;
 				warningAudioSource.dopplerLevel = 0;
 
 				targetingAudioSource = gameObject.AddComponent<AudioSource>();
-				targetingAudioSource.minDistance = 100;
-				targetingAudioSource.maxDistance = 1000;
+				targetingAudioSource.minDistance = 1;
+				targetingAudioSource.maxDistance = 250;
 				targetingAudioSource.dopplerLevel = 0;
 				targetingAudioSource.loop = true;
 
@@ -915,34 +915,72 @@ namespace BahaTurret
 			}
 
 			weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
-			if(selectedWeapon == null || selectedWeapon.GetShortName() != weaponArray[weaponIndex].GetShortName())
+
+			if(selectedWeapon == null || selectedWeapon.GetPart() == null || selectedWeapon.GetPart().vessel!=vessel || GetWeaponName(selectedWeapon) != GetWeaponName(weaponArray[weaponIndex]))
 			{
 				selectedWeapon = weaponArray[weaponIndex];
+
+				if(vessel.isActiveVessel && Time.time - startTime > 1)
+				{
+					hasSingleFired = true;
+					DisplaySelectedWeaponMessage();
+				}
 			}
 
-			if(GetWeaponName(selectedWeapon) != GetWeaponName(weaponArray[weaponIndex])&& vessel.isActiveVessel && Time.time-startTime > 1)
+			selectedWeapon = weaponArray[weaponIndex];
+
+			//bomb stuff
+			if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
 			{
-				hasSingleFired = true;
-				DisplaySelectedWeaponMessage();
+				bombPart = selectedWeapon.GetPart();
+			}
+			else
+			{
+				bombPart = null;
 			}
 		
 			ToggleTurret();
+			SetMissileTurrets();
+		}
+
+		void SetMissileTurrets()
+		{
+			MissileTurret currentTurret = null;
+
+			if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+			{
+				MissileLauncher ml = selectedWeapon.GetPart().FindModuleImplementing<MissileLauncher>();
+				currentTurret = ml.missileTurret;
+			}
+
+			foreach(var mt in vessel.FindPartModulesImplementing<MissileTurret>())
+			{
+				if(mt == currentTurret)
+				{
+					mt.EnableTurret();
+				}
+				else
+				{
+					mt.DisableTurret();
+				}
+			}
 		}
 
 		public void CycleWeapon(bool forward)
 		{
-			UpdateList();
+			
 			if(forward) weaponIndex++;
 			else weaponIndex--;
 			weaponIndex = (int)Mathf.Repeat(weaponIndex, weaponArray.Length);
 
-			selectedWeapon = weaponArray[weaponIndex];
+			//selectedWeapon = weaponArray[weaponIndex];
 
 			hasSingleFired = true;
 			triggerTimer = 0;
-			
+
 			DisplaySelectedWeaponMessage();
-			
+
+			/*
 			//bomb stuff
 			if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
 			{
@@ -955,6 +993,9 @@ namespace BahaTurret
 			
 			//gun/turret stuff  
 			ToggleTurret();
+			*/
+
+			UpdateList();
 			
 			if(vessel.isActiveVessel && !guardMode)
 			{
@@ -964,12 +1005,14 @@ namespace BahaTurret
 		
 		public void CycleWeapon(int index)
 		{
-			UpdateList();
+			
 			if(index >= weaponArray.Length)
 			{
-				return;
+				index = 0;
 			}
 			weaponIndex = index;
+
+			/*
 			selectedWeapon = weaponArray[index];
 
 			hasSingleFired = true;
@@ -984,9 +1027,12 @@ namespace BahaTurret
 			{
 				bombPart = null;
 			}
-			
+
 			//gun/turret stuff  
 			ToggleTurret();
+			*/
+
+			UpdateList();
 
 			if(vessel.isActiveVessel && !guardMode)
 			{
@@ -1016,8 +1062,15 @@ namespace BahaTurret
 			}
 
 			Part partSym = FindSym(ml.part);
-			SendTargetDataToMissile(ml);
-			ml.FireMissile();
+			if(ml.missileTurret)
+			{
+				ml.missileTurret.FireMissile(ml);
+			}
+			else
+			{
+				SendTargetDataToMissile(ml);
+				ml.FireMissile();
+			}
 
 			if(partSym != null)
 			{
@@ -1085,13 +1138,29 @@ namespace BahaTurret
 						if(guardMode && guardTarget!=null && BDArmorySettings.ALLOW_LEGACY_TARGETING)
 						{
 							firedWeapon = ml;
-							ml.FireMissileOnTarget(guardTarget);
+							if(ml.missileTurret)
+							{
+								ml.missileTurret.PrepMissileForFire(ml);
+								ml.FireMissileOnTarget(guardTarget);
+								ml.missileTurret.UpdateMissileChildren();
+							}
+							else
+							{
+								ml.FireMissileOnTarget(guardTarget);
+							}
 						}
 						else
 						{
 							firedWeapon = ml;
 							SendTargetDataToMissile(ml);
-							ml.FireMissile();
+							if(ml.missileTurret)
+							{
+								ml.missileTurret.FireMissile(ml);
+							}
+							else
+							{
+								ml.FireMissile();
+							}
 						}
 
 						hasFired = true;
@@ -1491,27 +1560,27 @@ namespace BahaTurret
 						if(heatTarget.exists)
 						{
 							BDGUIUtils.DrawTextureOnWorldPos(heatTarget.position, BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
-							float distanceToTarget = Vector3.Distance(heatTarget.position, currentMissile.transform.position);
-							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
+							float distanceToTarget = Vector3.Distance(heatTarget.position, currentMissile.missileReferenceTransform.position);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (distanceToTarget * currentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
 							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(currentMissile, heatTarget.position, heatTarget.velocity);
-							Vector3 fsDirection = (fireSolution - currentMissile.transform.position).normalized;
-							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+							Vector3 fsDirection = (fireSolution - currentMissile.missileReferenceTransform.position).normalized;
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 						}
 						else
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
-							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (2000 * currentMissile.transform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (2000 * currentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (2000 * currentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
 						}
 					}
 					else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
 					{
 						if(radar && radar.locked)
 						{
-							float distanceToTarget = Vector3.Distance(radar.lockedTarget.predictedPosition, currentMissile.transform.position);
-							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * currentMissile.transform.forward), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
+							float distanceToTarget = Vector3.Distance(radar.lockedTarget.predictedPosition, currentMissile.missileReferenceTransform.position);
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (distanceToTarget * currentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
 							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
-							Vector3 fsDirection = (fireSolution - currentMissile.transform.position).normalized;
-							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.transform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+							Vector3 fsDirection = (fireSolution - currentMissile.missileReferenceTransform.position).normalized;
+							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 
 							if(BDArmorySettings.DRAW_DEBUG_LABELS)
 							{
@@ -1951,6 +2020,22 @@ namespace BahaTurret
 						}
 					}
 
+					//wait for missile turret to point at target
+					if(ml && ml.missileTurret && radar.locked)
+					{
+						radar.slaveTurrets = true;
+						float turretStartTime = Time.time;
+						while(Time.time - turretStartTime < 5)
+						{
+							float angle = Vector3.Angle(ml.missileTurret.finalTransform.forward, ml.missileTurret.slavedTargetPosition - ml.missileTurret.finalTransform.position);
+							if(angle < 1)
+							{
+								turretStartTime -= 2 * Time.fixedDeltaTime;
+							}
+							yield return new WaitForFixedUpdate();
+						}
+					}
+
 					if(ml && guardTarget && radar.locked && (!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this)))
 					{
 						if(BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -1966,8 +2051,18 @@ namespace BahaTurret
 					float attemptDuration = targetScanInterval * 0.75f;
 					while(ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).magnitude >40))
 					{
+						//try using missile turret to lock target
+						if(ml.missileTurret)
+						{
+							ml.missileTurret.slaved = true;
+							ml.missileTurret.slavedTargetPosition = guardTarget.CoM;
+							ml.missileTurret.SlavedAim();
+						}
+
 						yield return new WaitForFixedUpdate();
 					}
+
+
 
 					//try uncaged IR lock with radar
 					if(guardTarget && !heatTarget.exists && radar && radar.radarEnabled)
@@ -1984,6 +2079,25 @@ namespace BahaTurret
 						float LAstartTime = Time.time;
 						while(Time.time-LAstartTime < 3 && pilotAI && !pilotAI.GetLaunchAuthorization(guardTarget, this))
 						{
+							yield return new WaitForFixedUpdate();
+						}
+					}
+
+					//wait for missile turret to point at target
+					if(ml && ml.missileTurret && heatTarget.exists)
+					{
+						float turretStartTime = attemptStartTime;
+						while(heatTarget.exists && Time.time - turretStartTime < targetScanInterval*0.99f)
+						{
+							float angle = Vector3.Angle(ml.missileTurret.finalTransform.forward, ml.missileTurret.slavedTargetPosition - ml.missileTurret.finalTransform.position);
+							ml.missileTurret.slaved = true;
+							ml.missileTurret.slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(ml, heatTarget.predictedPosition, heatTarget.velocity);
+							ml.missileTurret.SlavedAim();
+
+							if(angle < 1)
+							{
+								turretStartTime -= 3 * Time.fixedDeltaTime;
+							}
 							yield return new WaitForFixedUpdate();
 						}
 					}
@@ -2419,6 +2533,10 @@ namespace BahaTurret
 				}
 				CycleWeapon(0);
 				SetTarget(null);
+				if(radar && radar.locked)
+				{
+					radar.UnlockTarget();
+				}
 				return;
 			}
 
@@ -3092,13 +3210,13 @@ namespace BahaTurret
 			}
 
 			Vector3 direction = 
-				heatTarget.exists && Vector3.Angle(heatTarget.position - ml.transform.position, ml.transform.forward) < maxOffBoresight ? 
-				heatTarget.predictedPosition - ml.transform.position 
-				: ml.transform.forward;
+				heatTarget.exists && Vector3.Angle(heatTarget.position - ml.missileReferenceTransform.position, ml.missileReferenceTransform.forward) < maxOffBoresight ? 
+				heatTarget.predictedPosition - ml.missileReferenceTransform.position 
+				: ml.missileReferenceTransform.forward;
 
 			float heatThresh = radarSlaved ? ml.heatThreshold*0.5f : ml.heatThreshold;
 
-			heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.transform.position, direction), scanRadius, ml.heatThreshold, ml.allAspect);
+			heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.missileReferenceTransform.position, direction), scanRadius, ml.heatThreshold, ml.allAspect);
 		}
 
 		void ClampVisualRange()
