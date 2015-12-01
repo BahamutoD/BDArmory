@@ -230,6 +230,8 @@ namespace BahaTurret
 
 
 		//module references
+		[KSPField]
+		public int turretID = 0;
 		public ModuleTurret turret;
 		MissileFire mf = null;
 		public MissileFire weaponManager
@@ -424,7 +426,15 @@ namespace BahaTurret
 			}
 
 			//turret setup
-			turret = part.FindModuleImplementing<ModuleTurret>();
+			foreach(var turr in part.FindModulesImplementing<ModuleTurret>())
+			{
+				if(turr.turretID == turretID)
+				{
+					turret = turr;
+					break;
+				}
+			}
+
 			if(!turret)
 			{
 				Fields["onlyFireInRange"].guiActive = false;
