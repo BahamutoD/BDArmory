@@ -7,6 +7,8 @@ namespace BahaTurret
 {
 	public class ModuleRadar : PartModule
 	{
+		[KSPField]
+		public string radarName;
 
 		[KSPField]
 		public int turretID = 0;
@@ -142,6 +144,8 @@ namespace BahaTurret
 		public MissileLauncher lastMissile;
 
 		public ModuleTurret lockingTurret;
+		public bool lockingPitch = true;
+		public bool lockingYaw = true;
 
 		public MissileFire weaponManager;
 
@@ -204,6 +208,11 @@ namespace BahaTurret
 			if(HighLogic.LoadedSceneIsFlight)
 			{
 				RadarUtils.SetupRadarCamera();
+
+				if(string.IsNullOrEmpty(radarName))
+				{
+					radarName = part.partInfo.title;
+				}
 
 				distanceStyle = new GUIStyle();
 				distanceStyle.normal.textColor = new Color(0,1,0,0.75f);
@@ -545,7 +554,7 @@ namespace BahaTurret
 					{
 						if(locked)
 						{
-							lockingTurret.AimToTarget(lockedTarget.predictedPosition);
+							lockingTurret.AimToTarget(lockedTarget.predictedPosition, lockingPitch, lockingYaw);
 						}
 						else
 						{
