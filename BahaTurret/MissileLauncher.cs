@@ -11,6 +11,7 @@ namespace BahaTurret
 	{
 		public enum MissileStates{Idle, Drop, Boost, Cruise, PostThrust}
 
+		public Transform missileReferenceTransform;
 
 		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,AGMBallistic,Cruise,STS,Bomb,RCS}
 		public GuidanceModes guidanceMode;
@@ -25,6 +26,8 @@ namespace BahaTurret
 		
 		public float timeFired = -1;
 		public float timeIndex = 0;
+
+		public MissileTurret missileTurret = null;
 
 		//aero
 		[KSPField]
@@ -339,7 +342,11 @@ namespace BahaTurret
 
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				
+				missileReferenceTransform = part.FindModelTransform("missileTransform");
+				if(!missileReferenceTransform)
+				{
+					missileReferenceTransform = part.transform;
+				}
 
 				foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
 				{
