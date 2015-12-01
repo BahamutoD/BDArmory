@@ -706,40 +706,87 @@ namespace BahaTurret
 			}
 		}
 
-		void Update()
-		{	
-			
-			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
+	
+
+		public override void OnUpdate()
+		{
+			base.OnUpdate();
+
+			if(!HighLogic.LoadedSceneIsFlight)
 			{
-				if(!vessel.packed)
-				{
-					
-					if(weaponIndex >= weaponArray.Length)
-					{
-						hasSingleFired = true;
-						triggerTimer = 0;
-					
-						weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
-					
-						DisplaySelectedWeaponMessage();
-					}
-					if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
-
-					//finding next rocket to shoot (for aimer)
-					FindNextRocket();
-
-					//targeting
-					if(selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
-					{
-						SearchForLaserPoint();
-						SearchForHeatTarget();
-						SearchForRadarSource();
-					}
-				}
-
-				UpdateTargetingAudio();
+				return;
 			}
 
+			if(!vessel.packed)
+			{
+				if(weaponIndex >= weaponArray.Length)
+				{
+					hasSingleFired = true;
+					triggerTimer = 0;
+
+					weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
+
+					DisplaySelectedWeaponMessage();
+				}
+				if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
+
+				//finding next rocket to shoot (for aimer)
+				FindNextRocket();
+
+				//targeting
+				if(selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
+				{
+					SearchForLaserPoint();
+					SearchForHeatTarget();
+					SearchForRadarSource();
+				}
+			}
+
+			UpdateTargetingAudio();
+
+
+			if(vessel.isActiveVessel)
+			{
+				if(!CheckMouseIsOnGui() && isArmed && BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY))
+				{
+					triggerTimer += Time.fixedDeltaTime;	
+				}
+				else
+				{
+					triggerTimer = 0;	
+					hasSingleFired = false;
+				}
+
+
+				//firing missiles and rockets===
+				if((selectedWeapon != null &&
+				  (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
+				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
+				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)))
+				{
+					canRipple = true;
+					if(!MapView.MapIsEnabled && triggerTimer > BDArmorySettings.TRIGGER_HOLD_TIME && !hasSingleFired)
+					{
+						if(rippleFire)
+						{
+							if(Time.time - rippleTimer > 60 / rippleRPM)
+							{
+								FireMissile();
+								rippleTimer = Time.time;
+							}
+						}
+						else
+						{
+							FireMissile();
+							hasSingleFired = true;
+						}
+					}
+				}
+				else
+				{
+					canRipple = false;
+				}
+			}
 		}
 		
 		public override void OnFixedUpdate ()
@@ -757,49 +804,7 @@ namespace BahaTurret
 			
 			if(vessel.isActiveVessel)
 			{
-				if(!CheckMouseIsOnGui() && isArmed && BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY))
-				{
-					triggerTimer += Time.fixedDeltaTime;	
-				}
-				else
-				{
-					triggerTimer = 0;	
-					hasSingleFired = false;
-				}
-
-				
-				//firing missiles and rockets===
-				if((selectedWeapon != null && 
-				    (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket 
-				    || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile 
-				    || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)))
-				{
-					canRipple = true;
-					if(!MapView.MapIsEnabled && triggerTimer > BDArmorySettings.TRIGGER_HOLD_TIME && !hasSingleFired)
-					{
-						if(rippleFire)
-						{
-							if(Time.time-rippleTimer > 60/rippleRPM)
-							{
-								FireMissile();
-								rippleTimer = Time.time;
-							}
-						}
-						else
-						{
-							FireMissile();
-							hasSingleFired = true;
-						}
-					}
-				}
-				else
-				{
-					canRipple = false;
-				}
-				
-
 				TargetAcquire();
-
 			}
 			BombAimer();
 		}
@@ -1210,13 +1215,29 @@ namespace BahaTurret
 						if(guardMode && guardTarget!=null && BDArmorySettings.ALLOW_LEGACY_TARGETING)
 						{
 							firedWeapon = ml;
-							ml.FireMissileOnTarget(guardTarget);
+							if(ml.missileTurret)
+							{
+								ml.missileTurret.PrepMissileForFire(ml);
+								ml.FireMissileOnTarget(guardTarget);
+								ml.missileTurret.UpdateMissileChildren();
+							}
+							else
+							{
+								ml.FireMissileOnTarget(guardTarget);
+							}
 						}
 						else
 						{
 							firedWeapon = ml;
 							SendTargetDataToMissile(ml);
-							ml.FireMissile();
+							if(ml.missileTurret)
+							{
+								ml.missileTurret.FireMissile(ml);
+							}
+							else
+							{
+								ml.FireMissile();
+							}
 						}
 						firedMissile = true;
 						
@@ -2000,7 +2021,16 @@ namespace BahaTurret
 					{
 						Debug.Log("Firing on target: " + guardTarget.GetName() + ", (legacy targeting)");
 					}
-					ml.FireMissileOnTarget(guardTarget);
+					if(ml.missileTurret)
+					{
+						ml.missileTurret.PrepMissileForFire(ml);
+						ml.FireMissileOnTarget(guardTarget);
+						ml.missileTurret.UpdateMissileChildren();
+					}
+					else
+					{
+						ml.FireMissileOnTarget(guardTarget);
+					}
 					UpdateList();
 				}
 				else if(ml.targetingMode == MissileLauncher.TargetingModes.Radar && radar)
