@@ -215,6 +215,8 @@ namespace BahaTurret
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
 		 UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float defaultDetonationRange = 3500;
+		[KSPField]
+		public float maxAirDetonationRange = 3500;
 		float detonationRange = 2000;
 
 		//auto proximity tracking
@@ -351,7 +353,12 @@ namespace BahaTurret
 				shortName = part.partInfo.title;
 			}
 
-			if(!airDetonation)
+			if(airDetonation)
+			{
+				var detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
+				detRange.maxValue = maxAirDetonationRange;
+			}
+			else
 			{
 				Fields["defaultDetonationRange"].guiActive = false;
 				Fields["defaultDetonationRange"].guiActiveEditor = false;
@@ -573,6 +580,15 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && !vessel.packed)
 			{
+				if(!vessel.IsControllable)
+				{
+					if(weaponState != WeaponStates.PoweringDown || weaponState != WeaponStates.Disabled)
+					{
+						DisableWeapon();
+					}
+					return;
+				}
+
 				if(showReloadMeter)
 				{
 					UpdateReloadMeter();
@@ -754,7 +770,7 @@ namespace BahaTurret
 				{
 					if(targetAcquired)
 					{
-						detonationRange = Mathf.Clamp(targetLeadDistance, 500, 3500) - 50f;
+						detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 50f;
 					}
 					else
 					{
