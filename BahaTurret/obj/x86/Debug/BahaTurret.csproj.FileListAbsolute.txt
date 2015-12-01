@@ -1,8 +1,6 @@
 D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\BahaTurret.dll
 D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\BahaTurret.pdb
-D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\Assembly-CSharp-firstpass.dll
 D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\Assembly-CSharp.dll
-D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\UnityEngine.dll
 D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\System.dll
 D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\System.Xml.dll
 D:\Plugin Projects\BahaTurret\BahaTurret\bin\Debug\TDx.TDxInput.dll
