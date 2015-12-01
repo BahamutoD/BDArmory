@@ -345,7 +345,7 @@ namespace BahaTurret
 				missileReferenceTransform = part.FindModelTransform("missileTransform");
 				if(!missileReferenceTransform)
 				{
-					missileReferenceTransform = part.transform;
+					missileReferenceTransform = part.partTransform;
 				}
 
 				foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
@@ -512,7 +512,14 @@ namespace BahaTurret
 		public void AGFire(KSPActionParam param)
 		{
 			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
-			FireMissile();	
+			if(missileTurret)
+			{
+				missileTurret.FireMissile(this);
+			}
+			else
+			{
+				FireMissile();	
+			}
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
 		
@@ -520,13 +527,22 @@ namespace BahaTurret
 		public void GuiFire()
 		{
 			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
-			FireMissile();	
+			if(missileTurret)
+			{
+				missileTurret.FireMissile(this);
+			}
+			else
+			{
+				FireMissile();	
+			}
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
 
 		[KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
 		public void Jettison()
 		{
+			if(missileTurret) return;
+
 			part.decouple(0);
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
