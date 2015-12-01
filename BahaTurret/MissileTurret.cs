@@ -38,6 +38,13 @@ namespace BahaTurret
 		float timeFired = 0;
 		float pauseTime = 0.5f;
 
+		ModuleRadar attachedRadar;
+		bool hasAttachedRadar = false;
+		[KSPField]
+		public bool disableRadarYaw = false;
+		[KSPField]
+		public bool disableRadarPitch = false;
+
 		MissileFire wm;
 		public MissileFire weaponManager
 		{
@@ -65,6 +72,13 @@ namespace BahaTurret
 			}
 
 			turretEnabled = true;
+			hasReturned = false;
+
+			if(hasAttachedRadar)
+			{
+				attachedRadar.lockingYaw = !disableRadarYaw;
+				attachedRadar.lockingPitch = !disableRadarPitch;
+			}
 		}
 
 		public void DisableTurret()
@@ -75,11 +89,22 @@ namespace BahaTurret
 				hasReturned = true;
 				returnRoutine = StartCoroutine(ReturnRoutine());
 			}
+
+			if(hasAttachedRadar)
+			{
+				attachedRadar.lockingYaw = true;
+				attachedRadar.lockingPitch = true;
+			}
 		}
 
 		IEnumerator ReturnRoutine()
 		{
-			while(!pausingAfterShot && !turret.ReturnTurret())
+			while(pausingAfterShot)
+			{
+				yield return new WaitForFixedUpdate();
+			}
+
+			while(!turret.ReturnTurret())
 			{
 				UpdateMissilePositions();
 				yield return new WaitForFixedUpdate();
@@ -101,6 +126,9 @@ namespace BahaTurret
 				}
 			}
 
+			attachedRadar = part.FindModuleImplementing<ModuleRadar>();
+			if(attachedRadar) hasAttachedRadar = true;
+
 			finalTransform = part.FindModelTransform(finalTransformName);
 
 			UpdateMissileChildren();
@@ -109,6 +137,8 @@ namespace BahaTurret
 		public override void OnFixedUpdate()
 		{
 			base.OnFixedUpdate();
+
+
 
 			if(turretEnabled)
 			{
@@ -122,6 +152,12 @@ namespace BahaTurret
 
 				Aim();
 				UpdateMissilePositions();
+
+				if(!vessel.IsControllable)
+				{
+					DisableTurret();
+				}
+
 			}
 			else
 			{
@@ -134,6 +170,9 @@ namespace BahaTurret
 				{
 					DisableTurret();
 				}
+
+
+
 			}
 
 			pausingAfterShot = (Time.time - timeFired < pauseTime);
@@ -272,6 +311,9 @@ namespace BahaTurret
 					ml.missileReferenceTransform = mTf;
 					ml.missileTurret = this;
 
+					ml.decoupleForward = true;
+					ml.dropTime = 0;
+
 					missileCount++;
 				}
 			}
@@ -326,12 +368,18 @@ namespace BahaTurret
 
 		public void FireMissile(MissileLauncher ml)
 		{
-			FireMissile(IndexOfMissile(ml));
+			int index = IndexOfMissile(ml);
+			if(index >= 0)
+			{
+				Debug.Log("Firing missile index: " + index);
+				FireMissile(index);
+			}
 		}
 
 
 		void PrepMissileForFire(int index)
 		{
+			Debug.Log("Prepping missile for turret fire.");
 			missileTransforms[index].localPosition = Vector3.zero;
 			missileTransforms[index].localRotation = Quaternion.identity;
 			missileChildren[index].transform.position = missileReferenceTransforms[index].position;
@@ -339,6 +387,7 @@ namespace BahaTurret
 
 			missileChildren[index].dropTime = 0;
 			missileChildren[index].decoupleForward = true;
+
 		}
 
 		public void PrepMissileForFire(MissileLauncher ml)
@@ -354,17 +403,15 @@ namespace BahaTurret
 		{
 			if(missileCount == 0) return -1;
 
-			int index = -1;
 			for(int i = 0; i < missileCount; i++)
 			{
 				if(missileChildren[i] && missileChildren[i] == ml)
 				{
-					index = i;
-					break;
+					return i;
 				}
 			}
 
-			return index;
+			return -1;
 		}
 
 
