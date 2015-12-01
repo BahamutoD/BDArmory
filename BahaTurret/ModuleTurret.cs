@@ -140,7 +140,7 @@ namespace BahaTurret
 					{
 						if(!audioSource.isPlaying) audioSource.Play();
 
-						audioSource.volume = audioRotationRate*audioRotationRate;
+						audioSource.volume = Mathf.Clamp01(2f*audioRotationRate);
 						audioSource.pitch = Mathf.Clamp(audioRotationRate, minAudioPitch, maxAudioPitch);
 
 					}
@@ -172,7 +172,7 @@ namespace BahaTurret
 			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 		}
 
-		public void AimToTarget(Vector3 targetPosition)
+		public void AimToTarget(Vector3 targetPosition, bool pitch = true, bool yaw = true)
 		{
 			if(!yawTransform)
 			{
@@ -210,8 +210,8 @@ namespace BahaTurret
 				pitchSpeed = pitchSpeedDPS * deltaTime;
 			}
 			
-			yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.Euler(0, targetYawAngle, 0), yawSpeed);
-			pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.Euler(-targetPitchAngle, 0, 0), pitchSpeed);
+			if(yaw) yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.Euler(0, targetYawAngle, 0), yawSpeed);
+			if(pitch) pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.Euler(-targetPitchAngle, 0, 0), pitchSpeed);
 		}
 
 		public bool ReturnTurret()
