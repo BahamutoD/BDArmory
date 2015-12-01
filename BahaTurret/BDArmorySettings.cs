@@ -1058,7 +1058,7 @@ namespace BahaTurret
 					{
 						numberOfModules++;
 						GUIStyle moduleStyle = mr.radarEnabled ? centerLabelBlue : centerLabel;
-						string label = mr.part.partInfo.title;
+						string label = mr.radarName;
 						if(GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight), label, moduleStyle))
 						{
 							mr.Toggle();
