@@ -1297,7 +1297,7 @@ namespace BahaTurret
 			{
 				while(!turret.ReturnTurret()) //wait till turret has returned
 				{
-					yield return null;
+					yield return new WaitForFixedUpdate();
 				}
 			}
 

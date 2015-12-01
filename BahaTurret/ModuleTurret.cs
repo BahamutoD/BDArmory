@@ -13,6 +13,11 @@ namespace BahaTurret
 {
 	public class ModuleTurret : PartModule
 	{
+
+		[KSPField]
+		public int turretID = 0;
+
+
 		[KSPField]
 		public string pitchTransformName = "pitchTransform";
 		public Transform pitchTransform;
@@ -57,6 +62,21 @@ namespace BahaTurret
 		float pitchTargetOffset;
 		float yawTargetOffset;
 
+		//sfx
+		[KSPField]
+		public string audioPath;
+		[KSPField]
+		public float maxAudioPitch = 0.5f;
+		[KSPField]
+		public float minAudioPitch = 0f;
+
+		AudioClip soundClip;
+		AudioSource audioSource;
+		bool hasAudio = false;
+		float audioRotationRate = 0;
+		float targetAudioRotationRate = 0;
+		Vector3 lastTurretDirection;
+		float maxAudioRotRate;
 
 
 		public override void OnStart (StartState state)
@@ -69,10 +89,87 @@ namespace BahaTurret
 			pitchTransform = part.FindModelTransform(pitchTransformName);
 			yawTransform = part.FindModelTransform (yawTransformName);
 
+			if(!pitchTransform)
+			{
+				Debug.LogWarning(part.partInfo.title + " has no pitchTransform");
+			}
+
+			if(!yawTransform)
+			{
+				Debug.LogWarning(part.partInfo.title + " has no yawTransform");
+			}
+
 			if(!referenceTransform)
 			{
 				SetReferenceTransform(pitchTransform);
 			}
+
+			if(!string.IsNullOrEmpty(audioPath) && (yawSpeedDPS!=0 || pitchSpeedDPS!=0))
+			{
+				soundClip = GameDatabase.Instance.GetAudioClip(audioPath);
+
+				audioSource = gameObject.AddComponent<AudioSource>();
+				audioSource.clip = soundClip;
+				audioSource.loop = true;
+				audioSource.dopplerLevel = 0;
+				audioSource.minDistance = .5f;
+				audioSource.maxDistance = 150;
+				audioSource.Play();
+				audioSource.volume = 0;
+				audioSource.pitch = 0;
+
+				lastTurretDirection = yawTransform.parent.InverseTransformDirection(pitchTransform.forward);
+
+				maxAudioRotRate = Mathf.Min(yawSpeedDPS, pitchSpeedDPS);
+
+				hasAudio = true;
+				BDArmorySettings.OnVolumeChange += UpdateVolume;
+			}
+		}
+
+		void FixedUpdate()
+		{
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				if(hasAudio)
+				{
+					audioRotationRate = Mathf.Lerp(audioRotationRate, targetAudioRotationRate, 20*Time.fixedDeltaTime);
+					audioRotationRate = Mathf.Clamp01(audioRotationRate);
+
+					if(!BDArmorySettings.GameIsPaused && audioRotationRate > 0.05f)
+					{
+						if(!audioSource.isPlaying) audioSource.Play();
+
+						audioSource.volume = audioRotationRate*audioRotationRate;
+						audioSource.pitch = Mathf.Clamp(audioRotationRate, minAudioPitch, maxAudioPitch);
+
+					}
+					else
+					{
+						if(audioSource.isPlaying)
+						{
+							audioSource.Stop();
+						}
+					}
+
+					Vector3 tDir = yawTransform.parent.InverseTransformDirection(pitchTransform.forward);
+					float angle = Vector3.Angle(tDir, lastTurretDirection);
+					float rate = Mathf.Clamp01((angle / Time.fixedDeltaTime)/maxAudioRotRate);
+					lastTurretDirection = tDir;
+
+					targetAudioRotationRate = rate;
+				}
+			}
+		}
+
+		void OnDestroy()
+		{
+			BDArmorySettings.OnVolumeChange -= UpdateVolume;
+		}
+
+		void UpdateVolume()
+		{
+			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 		}
 
 		public void AimToTarget(Vector3 targetPosition)
@@ -104,6 +201,8 @@ namespace BahaTurret
 				
 				yawSpeed = Mathf.Clamp(yawOffset * smoothMultiplier, 1f, yawSpeedDPS) * deltaTime;
 				pitchSpeed = Mathf.Clamp(pitchOffset * smoothMultiplier, 1f, pitchSpeedDPS) * deltaTime;
+
+
 			}
 			else
 			{
@@ -123,7 +222,7 @@ namespace BahaTurret
 			}
 			yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.identity, yawSpeedDPS*Time.deltaTime);
 			pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.identity, pitchSpeedDPS*Time.deltaTime);
-			
+
 			if(yawTransform.localRotation == Quaternion.identity && pitchTransform.localRotation == Quaternion.identity)
 			{
 				return true;
