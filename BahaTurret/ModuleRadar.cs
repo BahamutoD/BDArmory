@@ -279,7 +279,25 @@ namespace BahaTurret
 				}
 
 				StartCoroutine(StartUpRoutine());
+			}
 
+			if(HighLogic.LoadedSceneIsEditor)
+			{
+				foreach(var tur in part.FindModulesImplementing<ModuleTurret>())
+				{
+					if(tur.turretID == turretID)
+					{
+						lockingTurret = tur;
+						break;
+					}
+				}
+
+				if(lockingTurret)
+				{
+					lockingTurret.Fields["minPitch"].guiActiveEditor = false;
+					lockingTurret.Fields["maxPitch"].guiActiveEditor = false;
+					lockingTurret.Fields["yawRange"].guiActiveEditor = false;
+				}
 			}
 		}
 
