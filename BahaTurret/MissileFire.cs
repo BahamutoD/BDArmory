@@ -928,7 +928,10 @@ namespace BahaTurret
 				if(vessel.isActiveVessel && Time.time - startTime > 1)
 				{
 					hasSingleFired = true;
-					DisplaySelectedWeaponMessage();
+					if(weaponIndex != 0)
+					{
+						DisplaySelectedWeaponMessage();
+					}
 				}
 			}
 
@@ -2066,6 +2069,8 @@ namespace BahaTurret
 						}
 					}
 
+					yield return null;
+
 					if(ml && guardTarget && radar.locked && (!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this)))
 					{
 						if(BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -2131,6 +2136,8 @@ namespace BahaTurret
 							yield return new WaitForFixedUpdate();
 						}
 					}
+
+					yield return null;
 
 					if(guardTarget && ml && heatTarget.exists && (!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this)))
 					{
