@@ -16,10 +16,10 @@ namespace BahaTurret
 
 		ModuleTurret turret;
 
-		[KSPField(guiActive = true, guiName = "Enabled")]
+		[KSPField(guiActive = true, guiName = "Turret Enabled")]
 		public bool turretEnabled = false;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Auto-Return")]
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Auto-Return"), UI_Toggle(scene = UI_Scene.Editor)]
 		public bool autoReturn = true;
 		bool hasReturned = true;
 
@@ -38,7 +38,7 @@ namespace BahaTurret
 
 		bool pausingAfterShot = true;
 		float timeFired = 0;
-		float pauseTime = 0.5f;
+		float pauseTime = 0.25f;
 
 		ModuleRadar attachedRadar;
 		bool hasAttachedRadar = false;
@@ -46,6 +46,19 @@ namespace BahaTurret
 		public bool disableRadarYaw = false;
 		[KSPField]
 		public bool disableRadarPitch = false;
+
+		[KSPField]
+		public bool mouseControllable = true;
+
+		//animation
+		[KSPField]
+		public string deployAnimationName;
+		AnimationState deployAnimState;
+		bool hasDeployAnimation = false;
+		[KSPField]
+		public float deployAnimationSpeed = 1;
+		bool editorDeployed = false;
+		Coroutine deployAnimRoutine;
 
 		MissileFire wm;
 		public MissileFire weaponManager
@@ -65,6 +78,32 @@ namespace BahaTurret
 			}
 		}
 
+		IEnumerator DeployAnimation(bool forward)
+		{
+			if(forward)
+			{
+				while(deployAnimState.normalizedTime < 1)
+				{
+					deployAnimState.speed = deployAnimationSpeed;
+					yield return null;
+				}
+
+				deployAnimState.normalizedTime = 1;
+			}
+			else
+			{
+				while(deployAnimState.normalizedTime > 0)
+				{
+					deployAnimState.speed = -deployAnimationSpeed;
+					yield return null;
+				}
+
+				deployAnimState.normalizedTime = 0;
+			}
+
+			deployAnimState.speed = 0;
+		}
+
 		public void EnableTurret()
 		{
 			if(returnRoutine!=null)
@@ -81,11 +120,28 @@ namespace BahaTurret
 				attachedRadar.lockingYaw = !disableRadarYaw;
 				attachedRadar.lockingPitch = !disableRadarPitch;
 			}
+
+			if(!autoReturn)
+			{
+				Events["ReturnTurret"].guiActive = false;
+			}
+
+			if(hasDeployAnimation)
+			{
+				if(deployAnimRoutine != null)
+				{
+					StopCoroutine(deployAnimRoutine);
+				}
+
+				deployAnimRoutine = StartCoroutine(DeployAnimation(true));
+			}
 		}
+			
 
 		public void DisableTurret()
 		{
 			turretEnabled = false;
+
 			if(autoReturn)
 			{
 				hasReturned = true;
@@ -97,10 +153,56 @@ namespace BahaTurret
 				attachedRadar.lockingYaw = true;
 				attachedRadar.lockingPitch = true;
 			}
+
+			if(!autoReturn)
+			{
+				Events["ReturnTurret"].guiActive = true;
+			}
+
+			if(hasDeployAnimation)
+			{
+				if(deployAnimRoutine != null)
+				{
+					StopCoroutine(deployAnimRoutine);
+				}
+
+				deployAnimRoutine = StartCoroutine(DeployAnimation(false));
+			}
+		}
+
+		[KSPEvent(guiActive = false, guiActiveEditor = false, guiName = "Return Turret")]
+		public void ReturnTurret()
+		{
+			if(!turretEnabled)
+			{
+				returnRoutine = StartCoroutine(ReturnRoutine());
+				hasReturned = true;
+			}
+		}
+
+		[KSPEvent(guiActive = false, guiActiveEditor = false, guiName = "Toggle Animation")]
+		public void EditorToggleAnimation()
+		{
+			editorDeployed = !editorDeployed;
+
+			if(deployAnimRoutine != null)
+			{
+				StopCoroutine(deployAnimRoutine);
+			}
+
+			deployAnimRoutine = StartCoroutine(DeployAnimation(editorDeployed));
 		}
 
 		IEnumerator ReturnRoutine()
 		{
+			if(turretEnabled)
+			{
+				hasReturned = false;
+				yield break;
+			}
+
+			yield return new WaitForSeconds(0.25f);
+
 			while(pausingAfterShot)
 			{
 				yield return new WaitForFixedUpdate();
@@ -119,21 +221,40 @@ namespace BahaTurret
 
 			part.force_activate();
 
-			foreach(var tur in part.FindModulesImplementing<ModuleTurret>())
+			//setup anim
+			if(!string.IsNullOrEmpty(deployAnimationName))
 			{
-				if(tur.turretID == turretID)
+				hasDeployAnimation = true;
+				deployAnimState = Misc.SetUpSingleAnimation(deployAnimationName, part);
+				if(state == StartState.Editor)
 				{
-					turret = tur;
-					break;
+					Events["EditorToggleAnimation"].guiActiveEditor = true;
 				}
 			}
 
-			attachedRadar = part.FindModuleImplementing<ModuleRadar>();
-			if(attachedRadar) hasAttachedRadar = true;
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				foreach(var tur in part.FindModulesImplementing<ModuleTurret>())
+				{
+					if(tur.turretID == turretID)
+					{
+						turret = tur;
+						break;
+					}
+				}
 
-			finalTransform = part.FindModelTransform(finalTransformName);
+				attachedRadar = part.FindModuleImplementing<ModuleRadar>();
+				if(attachedRadar) hasAttachedRadar = true;
 
-			UpdateMissileChildren();
+				finalTransform = part.FindModelTransform(finalTransformName);
+
+				UpdateMissileChildren();
+
+				if(!autoReturn)
+				{
+					Events["ReturnTurret"].guiActive = true;
+				}
+			}
 		}
 
 		public override void OnFixedUpdate()
@@ -179,6 +300,7 @@ namespace BahaTurret
 
 			pausingAfterShot = (Time.time - timeFired < pauseTime);
 		}
+			
 
 		void Aim()
 		{
@@ -195,7 +317,10 @@ namespace BahaTurret
 					return;
 				}
 
-				MouseAim();
+				if(mouseControllable)
+				{
+					MouseAim();
+				}
 			}
 		}
 
@@ -209,7 +334,14 @@ namespace BahaTurret
 				if(radar && radar.radarEnabled && radar.slaveTurrets)
 				{
 					slaved = true;
-					slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
+					if(radar.locked)
+					{
+						slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
+					}
+					else
+					{
+						slavedTargetPosition = finalTransform.position + (100 * finalTransform.forward);
+					}
 				}
 			}
 		}
@@ -391,6 +523,10 @@ namespace BahaTurret
 				Debug.Log("Firing missile index: " + index);
 				FireMissile(index);
 			}
+			else
+			{
+				Debug.Log("Tried to fire a missile that doesn't exist or is not attached to the turret.");
+			}
 		}
 
 
@@ -399,8 +535,8 @@ namespace BahaTurret
 			Debug.Log("Prepping missile for turret fire.");
 			missileTransforms[index].localPosition = Vector3.zero;
 			missileTransforms[index].localRotation = Quaternion.identity;
-			missileChildren[index].transform.position = missileReferenceTransforms[index].position;
-			missileChildren[index].transform.rotation = missileReferenceTransforms[index].rotation;
+			missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
+			missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
 
 			missileChildren[index].dropTime = 0;
 			missileChildren[index].decoupleForward = true;
@@ -413,9 +549,14 @@ namespace BahaTurret
 		{
 			int index = IndexOfMissile(ml);
 
-			if(index < 0) return;
-
-			PrepMissileForFire(index);
+			if(index >= 0)
+			{
+				PrepMissileForFire(index);
+			}
+			else
+			{
+				Debug.Log("Tried to prep a missile for firing that doesn't exist or is not attached to the turret.");
+			}
 		}
 
 		private int IndexOfMissile(MissileLauncher ml)
