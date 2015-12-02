@@ -30,6 +30,8 @@ namespace BahaTurret
 		Transform[] missileTransforms;
 		Transform[] missileReferenceTransforms;
 
+		Dictionary<string,Vector3> comOffsets;
+
 		public bool slaved = false;
 
 		public Vector3 slavedTargetPosition;
@@ -256,6 +258,12 @@ namespace BahaTurret
 		{
 			missileCount = 0;
 
+			//setup com dictionary
+			if(comOffsets == null)
+			{
+				comOffsets = new Dictionary<string, Vector3>();
+			}
+
 			//destroy the existing reference transform objects
 			if(missileReferenceTransforms != null)
 			{
@@ -314,6 +322,11 @@ namespace BahaTurret
 					ml.decoupleForward = true;
 					ml.dropTime = 0;
 
+					if(!comOffsets.ContainsKey(ml.part.partName))
+					{
+						comOffsets.Add(ml.part.partName, ml.part.CoMOffset);
+					}
+
 					missileCount++;
 				}
 			}
@@ -338,6 +351,10 @@ namespace BahaTurret
 				{
 					missileTransforms[i].position = missileReferenceTransforms[i].position;
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
+
+					Part missilePart = missileChildren[i].part;
+					Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.partName]));
+					missilePart.CoMOffset = newCoMOffset;
 				}
 			}
 		}
@@ -387,6 +404,8 @@ namespace BahaTurret
 
 			missileChildren[index].dropTime = 0;
 			missileChildren[index].decoupleForward = true;
+
+			missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part.partName];
 
 		}
 
