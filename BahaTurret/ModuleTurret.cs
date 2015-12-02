@@ -180,35 +180,42 @@ namespace BahaTurret
 			}
 
 			float deltaTime = Time.fixedDeltaTime;
-			
+
 			Vector3 localTargetYaw = yawTransform.parent.InverseTransformPoint(targetPosition - (yawTargetOffset * pitchTransform.right));
 			Vector3 targetYaw = Vector3.ProjectOnPlane(localTargetYaw, Vector3.up);
 			float targetYawAngle = VectorUtils.SignedAngle(Vector3.forward, targetYaw, Vector3.right);
 			targetYawAngle = Mathf.Clamp(targetYawAngle, -yawRange / 2, yawRange / 2);
-			
+
+			Quaternion currYawRot = yawTransform.localRotation;
+			yawTransform.localRotation = Quaternion.Euler(0, targetYawAngle, 0);
 			Vector3 localTargetPitch = pitchTransform.parent.InverseTransformPoint(targetPosition - (pitchTargetOffset * pitchTransform.up));
+			yawTransform.localRotation = currYawRot;
 			localTargetPitch.z = Mathf.Abs(localTargetPitch.z);//prevents from aiming wonky if target is behind
 			Vector3 targetPitch = Vector3.ProjectOnPlane(localTargetPitch, Vector3.right);
 			float targetPitchAngle = VectorUtils.SignedAngle(Vector3.forward, targetPitch, Vector3.up);
 			targetPitchAngle = Mathf.Clamp(targetPitchAngle, minPitch, maxPitch);
+
+			float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), targetYaw);
+			float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), targetPitch);
+
+			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (pitchSpeedDPS/yawSpeedDPS)) : 1;
+			float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset / pitchOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
 			
 			float yawSpeed;
 			float pitchSpeed;
 			if(smoothRotation)
 			{
-				float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), targetYaw);
-				float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), targetPitch);
-				
 				yawSpeed = Mathf.Clamp(yawOffset * smoothMultiplier, 1f, yawSpeedDPS) * deltaTime;
 				pitchSpeed = Mathf.Clamp(pitchOffset * smoothMultiplier, 1f, pitchSpeedDPS) * deltaTime;
-
-
 			}
 			else
 			{
 				yawSpeed = yawSpeedDPS * deltaTime;
 				pitchSpeed = pitchSpeedDPS * deltaTime;
 			}
+
+			yawSpeed *= linYawMult;
+			pitchSpeed *= linPitchMult;
 			
 			if(yaw) yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.Euler(0, targetYawAngle, 0), yawSpeed);
 			if(pitch) pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.Euler(-targetPitchAngle, 0, 0), pitchSpeed);
