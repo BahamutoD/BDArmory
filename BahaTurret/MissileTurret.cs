@@ -317,7 +317,7 @@ namespace BahaTurret
 					return;
 				}
 
-				if(mouseControllable)
+				if(mouseControllable && vessel.isActiveVessel)
 				{
 					MouseAim();
 				}
