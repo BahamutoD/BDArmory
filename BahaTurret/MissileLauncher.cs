@@ -215,6 +215,7 @@ namespace BahaTurret
 		public Vessel legacyTargetVessel;
 
 
+		Transform vesselReferenceTransform;
 
 		[KSPField]
 		public string boostTransformName = string.Empty;
@@ -650,6 +651,7 @@ namespace BahaTurret
 				refObject.transform.parent = transform;
 				part.SetReferenceTransform(refObject.transform);
 				vessel.SetReferenceTransform(part);
+				vesselReferenceTransform = refObject.transform;
 
 				MissileState = MissileStates.Drop;
 
@@ -1128,7 +1130,11 @@ namespace BahaTurret
 				float agmThreshDist = 2500;
 				if(distance <agmThreshDist)
 				{
-					cruiseTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, agmDescentRatio);
+					if(!MissileGuidance.GetBallisticGuidanceTarget(targetPosition, vessel, true, out cruiseTarget))
+					{
+						cruiseTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, agmDescentRatio);
+					}
+				
 					debugString += "\nDescending On Target";
 				}
 				else
@@ -1152,13 +1158,11 @@ namespace BahaTurret
 				Quaternion originalRTrotation = rotationTransform.rotation;
 				transform.rotation = Quaternion.LookRotation(transform.forward, upDirection);
 				rotationTransform.rotation = originalRTrotation;
-				Vector3 accel = vessel.acceleration;
-				Vector3 tDir = (cruiseTarget - transform.position).normalized * 20;
-				Vector3 lookUpDirection = Vector3.ProjectOnPlane(tDir, transform.forward);
+				Vector3 lookUpDirection = Vector3.ProjectOnPlane(cruiseTarget-transform.position, transform.forward) * 100;
 				lookUpDirection = transform.InverseTransformPoint(lookUpDirection + transform.position);
 
 				lookUpDirection = new Vector3(lookUpDirection.x, 0, 0);
-				lookUpDirection += 10 * Vector3.up;
+				lookUpDirection += 10*Vector3.up;
 				//Debug.Log ("lookUpDirection: "+lookUpDirection);
 
 
@@ -1166,6 +1170,8 @@ namespace BahaTurret
 				Quaternion finalRotation = rotationTransform.rotation;
 				transform.rotation = originalRotation;
 				rotationTransform.rotation = finalRotation;
+
+				vesselReferenceTransform.rotation = Quaternion.LookRotation(-rotationTransform.up, rotationTransform.forward);
 			}
 
 			aeroTorque = MissileGuidance.DoAeroForces(this, cruiseTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, limitAoA); 
@@ -1707,6 +1713,12 @@ namespace BahaTurret
 				Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 				if(sourceVessel==null) sourceVessel = vessel;
 				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath);
+
+				foreach(var e in gaplessEmitters)
+				{
+					e.gameObject.AddComponent<BDAParticleSelfDestruct>();
+					e.transform.parent = null;
+				}
 			}
 		}
 
