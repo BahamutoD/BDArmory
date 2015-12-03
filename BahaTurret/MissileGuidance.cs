@@ -174,18 +174,23 @@ namespace BahaTurret
 		public static Vector3 GetTerminalManeuveringTarget(Vector3 targetPosition, Vessel missileVessel, float radarAlt)
 		{
 			Vector3 upDirection = -FlightGlobals.getGeeForceAtPosition(missileVessel.GetWorldPos3D()).normalized;
-			Vector3 planarDirectionToTarget = Vector3.ProjectOnPlane(targetPosition-missileVessel.transform.position, upDirection).normalized;
+			Vector3 planarVectorToTarget = Vector3.ProjectOnPlane(targetPosition - missileVessel.transform.position, upDirection);
+			Vector3 planarDirectionToTarget = planarVectorToTarget.normalized;
 			Vector3 crossAxis = Vector3.Cross(planarDirectionToTarget, upDirection).normalized;
-			float sinAmplitude = Mathf.Clamp(Vector3.Distance(targetPosition, missileVessel.transform.position)-650, 0, 4500);
-			Vector3 targetSin = (Mathf.Sin(1.5f*Time.time) * sinAmplitude * crossAxis)+targetPosition;
+			float sinAmplitude = Mathf.Clamp(Vector3.Distance(targetPosition, missileVessel.transform.position)-850, 0, 4500);
+			Vector3 sinOffset = (Mathf.Sin(1.25f * Time.time) * sinAmplitude * crossAxis);
+			Vector3 targetSin = targetPosition + sinOffset;
+			Vector3 planarSin = missileVessel.transform.position + planarVectorToTarget + sinOffset;
+
 			Vector3 finalTarget;
-			if(Vector3.Distance(targetPosition,missileVessel.transform.position) > (1000+GetRadarAltitude(missileVessel)))
+			if(Vector3.Distance(targetPosition,missileVessel.transform.position) > (2500+GetRadarAltitude(missileVessel)))
 			{
-				finalTarget = GetCruiseTarget(targetSin, missileVessel, radarAlt);
+				finalTarget = targetPosition;
 			}
 			else if(!GetBallisticGuidanceTarget(targetSin, missileVessel, true, out finalTarget))
 			{
-				finalTarget = GetAirToGroundTarget(targetSin, missileVessel, 6);
+				//finalTarget = GetAirToGroundTarget(targetSin, missileVessel, 6);
+				finalTarget = planarSin;
 			}
 			return finalTarget;
 		}
