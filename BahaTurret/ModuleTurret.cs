@@ -69,6 +69,10 @@ namespace BahaTurret
 		public float maxAudioPitch = 0.5f;
 		[KSPField]
 		public float minAudioPitch = 0f;
+		[KSPField]
+		public float maxVolume = 1;
+		[KSPField]
+		public float minVolume = 0;
 
 		AudioClip soundClip;
 		AudioSource audioSource;
@@ -123,7 +127,6 @@ namespace BahaTurret
 				maxAudioRotRate = Mathf.Min(yawSpeedDPS, pitchSpeedDPS);
 
 				hasAudio = true;
-				BDArmorySettings.OnVolumeChange += UpdateVolume;
 			}
 		}
 
@@ -136,21 +139,18 @@ namespace BahaTurret
 					audioRotationRate = Mathf.Lerp(audioRotationRate, targetAudioRotationRate, 20*Time.fixedDeltaTime);
 					audioRotationRate = Mathf.Clamp01(audioRotationRate);
 
-					if(!BDArmorySettings.GameIsPaused && audioRotationRate > 0.05f)
+
+					if(audioRotationRate < 0.05f)
 					{
-						if(!audioSource.isPlaying) audioSource.Play();
-
-						audioSource.volume = Mathf.Clamp01(2f*audioRotationRate);
-						audioSource.pitch = Mathf.Clamp(audioRotationRate, minAudioPitch, maxAudioPitch);
-
+						audioSource.volume = 0;
 					}
 					else
 					{
-						if(audioSource.isPlaying)
-						{
-							audioSource.Stop();
-						}
+						audioSource.volume = Mathf.Clamp(2f * audioRotationRate, minVolume * BDArmorySettings.BDARMORY_WEAPONS_VOLUME, maxVolume * BDArmorySettings.BDARMORY_WEAPONS_VOLUME);
+						audioSource.pitch = Mathf.Clamp(audioRotationRate, minAudioPitch, maxAudioPitch);
 					}
+
+					
 
 					Vector3 tDir = yawTransform.parent.InverseTransformDirection(pitchTransform.forward);
 					float angle = Vector3.Angle(tDir, lastTurretDirection);
@@ -162,15 +162,27 @@ namespace BahaTurret
 			}
 		}
 
-		void OnDestroy()
+		void Update()
 		{
-			BDArmorySettings.OnVolumeChange -= UpdateVolume;
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				if(hasAudio)
+				{
+					if(!BDArmorySettings.GameIsPaused && audioRotationRate > 0.05f)
+					{
+						if(!audioSource.isPlaying) audioSource.Play();
+					}
+					else
+					{
+						if(audioSource.isPlaying)
+						{
+							audioSource.Stop();
+						}
+					}
+				}
+			}
 		}
 
-		void UpdateVolume()
-		{
-			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-		}
 
 		public void AimToTarget(Vector3 targetPosition, bool pitch = true, bool yaw = true)
 		{
@@ -198,8 +210,8 @@ namespace BahaTurret
 			float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), targetYaw);
 			float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), targetPitch);
 
-			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (pitchSpeedDPS/yawSpeedDPS)) : 1;
-			float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset / pitchOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
+			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
+			float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset / pitchOffset) * (pitchSpeedDPS/yawSpeedDPS)) : 1;
 			
 			float yawSpeed;
 			float pitchSpeed;
@@ -230,8 +242,8 @@ namespace BahaTurret
 
 			float deltaTime = Time.fixedDeltaTime;
 
-			float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), yawTransform.parent.forward);
-			float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), yawTransform.forward);
+			float yawOffset = Vector3.Angle(yawTransform.forward, yawTransform.parent.forward);
+			float pitchOffset = Vector3.Angle(pitchTransform.forward, yawTransform.forward);
 
 			float yawSpeed;
 			float pitchSpeed;
@@ -247,8 +259,8 @@ namespace BahaTurret
 				pitchSpeed = pitchSpeedDPS * deltaTime;
 			}
 
-			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (pitchSpeedDPS/yawSpeedDPS)) : 1;
-			float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset / pitchOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
+			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
+			float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset / pitchOffset) * (pitchSpeedDPS/yawSpeedDPS)) : 1;
 
 			yawSpeed *= linYawMult;
 			pitchSpeed *= linPitchMult;
