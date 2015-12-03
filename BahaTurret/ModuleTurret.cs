@@ -227,8 +227,34 @@ namespace BahaTurret
 			{
 				return false;
 			}
-			yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.identity, yawSpeedDPS*Time.deltaTime);
-			pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.identity, pitchSpeedDPS*Time.deltaTime);
+
+			float deltaTime = Time.fixedDeltaTime;
+
+			float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), yawTransform.parent.forward);
+			float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), yawTransform.forward);
+
+			float yawSpeed;
+			float pitchSpeed;
+
+			if(smoothRotation)
+			{
+				yawSpeed = Mathf.Clamp(yawOffset * smoothMultiplier, 1f, yawSpeedDPS) * deltaTime;
+				pitchSpeed = Mathf.Clamp(pitchOffset * smoothMultiplier, 1f, pitchSpeedDPS) * deltaTime;
+			}
+			else
+			{
+				yawSpeed = yawSpeedDPS * deltaTime;
+				pitchSpeed = pitchSpeedDPS * deltaTime;
+			}
+
+			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (pitchSpeedDPS/yawSpeedDPS)) : 1;
+			float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset / pitchOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
+
+			yawSpeed *= linYawMult;
+			pitchSpeed *= linPitchMult;
+
+			yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.identity, yawSpeed);
+			pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.identity, pitchSpeed);
 
 			if(yawTransform.localRotation == Quaternion.identity && pitchTransform.localRotation == Quaternion.identity)
 			{
