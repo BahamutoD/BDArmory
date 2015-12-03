@@ -510,40 +510,47 @@ namespace BahaTurret
 				DrawAimerCursor();
 			}
 		}
-		
+
+
+
 		void DrawAimerCursor()
 		{
 			if(ActiveWeaponManager == null)
 			{
+				Screen.showCursor = true;
 				return;
 			}
 
-			Screen.showCursor = true;
+
 			drawCursor = false;
 			if(!MapView.MapIsEnabled && !Misc.CheckMouseIsOnGui() && !PauseMenu.isOpen)
 			{
-				/*
-				foreach(BahaTurret bt in FlightGlobals.ActiveVessel.FindPartModulesImplementing<BahaTurret>())
+				if(ActiveWeaponManager.weaponIndex > 0)
 				{
-					if(bt.deployed && DRAW_AIMERS && bt.maxPitch > 1)
+					if(ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Gun || ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.DefenseLaser)
 					{
-						Screen.showCursor = false;
-						drawCursor = true;
-						return;
+						ModuleWeapon mw = ActiveWeaponManager.selectedWeapon.GetPart().FindModuleImplementing<ModuleWeapon>();
+						if(mw.weaponState == ModuleWeapon.WeaponStates.Enabled && mw.maxPitch > 1 && !mw.slaved && !mw.aiControlled)
+						{
+							Screen.showCursor = false;
+							drawCursor = true;
+							return;
+						}
 					}
-				}
-				*/
-
-				foreach(ModuleWeapon mw in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleWeapon>())
-				{
-					if(mw.weaponState == ModuleWeapon.WeaponStates.Enabled && mw.maxPitch > 1 && !mw.slaved && !mw.aiControlled)
+					else if(ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
 					{
-						Screen.showCursor = false;
-						drawCursor = true;
-						return;
+						RocketLauncher rl = ActiveWeaponManager.selectedWeapon.GetPart().FindModuleImplementing<RocketLauncher>();
+						if(rl.readyToFire && rl.turret)
+						{
+							Screen.showCursor = false;
+							drawCursor = true;
+							return;
+						}
 					}
 				}
 			}
+
+			Screen.showCursor = true;
 		}
 		
 	
@@ -722,10 +729,13 @@ namespace BahaTurret
 				if(drawCursor)
 				{
 					//mouse cursor
+					int origDepth = GUI.depth;
+					GUI.depth = -100;
 					float cursorSize = 40;
 					Vector3 cursorPos = Input.mousePosition;
 					Rect cursorRect = new Rect(cursorPos.x - (cursorSize/2), Screen.height - cursorPos.y - (cursorSize/2), cursorSize, cursorSize);
 					GUI.DrawTexture(cursorRect, cursorTexture);	
+					GUI.depth = origDepth;
 				}
 				
 				if(toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
