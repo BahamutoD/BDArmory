@@ -3050,7 +3050,7 @@ namespace BahaTurret
 			else
 			{
 				//forward check for no-drop missiles
-				if(Physics.Raycast(new Ray(ml.transform.position, ml.transform.forward), 50, 557057))
+				if(Physics.Raycast(new Ray(ml.missileReferenceTransform.position, ml.missileReferenceTransform.forward), 50, 557057))
 				{
 					return false;
 				}
