@@ -116,6 +116,7 @@
     <Compile Include="BDAirspeedControl.cs" />
     <Compile Include="RippleOption.cs" />
     <Compile Include="MissileTurret.cs" />
+    <Compile Include="BDAParticleSelfDestruct.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />

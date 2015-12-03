@@ -1,10 +1,28 @@
 ﻿<Properties StartupItem="BahaTurret.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BDModulePilotAI.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MissileLauncher.cs">
     <Files>
-      <File FileName="MissileGuidance.cs" Line="295" Column="22" />
+      <File FileName="MissileGuidance.cs" Line="68" Column="94" />
       <File FileName="BDModulePilotAI.cs" Line="567" Column="5" />
+      <File FileName="MissileFire.cs" Line="152" Column="4" />
+      <File FileName="MissileTurret.cs" Line="169" Column="57" />
+      <File FileName="ModuleWeapon.cs" Line="434" Column="12" />
+      <File FileName="MissileLauncher.cs" Line="1161" Column="40" />
+      <File FileName="ModuleTurret.cs" Line="215" Column="5" />
+      <File FileName="ModuleRadar.cs" Line="299" Column="52" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="BahaTurret" expanded="True">
+            <Node name="BahaTurret" expanded="True">
+              <Node name="Animation" expanded="True" />
+              <Node name="MissileLauncher.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
