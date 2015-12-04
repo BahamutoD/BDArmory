@@ -1603,6 +1603,7 @@ namespace BahaTurret
 				}
 
 				//radar targeting
+				/*
 				if(weaponManager && weaponManager.radar)
 				{
 					if(weaponManager.radar.locked)
@@ -1643,6 +1644,16 @@ namespace BahaTurret
 					targetVelocity = Vector3.zero;
 					targetAcceleration = Vector3.zero;
 					targetAcquired = true;
+					return;
+				}
+				*/
+
+				if(weaponManager.slavingTurrets && turret)
+				{
+					slaved = true;
+					targetPosition = weaponManager.slavedPosition;
+					targetVelocity = weaponManager.slavedVelocity;
+					targetAcceleration = weaponManager.slavedAcceleration;
 					return;
 				}
 

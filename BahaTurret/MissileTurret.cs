@@ -328,21 +328,10 @@ namespace BahaTurret
 		{
 			slaved = false;
 
-			if(weaponManager)
+			if(weaponManager && wm.slavingTurrets)
 			{
-				ModuleRadar radar = wm.radar;
-				if(radar && radar.radarEnabled && radar.slaveTurrets)
-				{
-					slaved = true;
-					if(radar.locked)
-					{
-						slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.currentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
-					}
-					else
-					{
-						slavedTargetPosition = finalTransform.position + (100 * finalTransform.forward);
-					}
-				}
+				slaved = true;
+				slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.currentMissile, wm.slavedPosition, wm.slavedVelocity);
 			}
 		}
 

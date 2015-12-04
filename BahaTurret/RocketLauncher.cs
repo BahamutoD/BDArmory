@@ -46,11 +46,12 @@ namespace BahaTurret
 		public string explSoundPath = "BDArmory/Sounds/explode1";
 
 		[KSPField]
-		public float thrustDeviation = 0.1f;
+		public float thrustDeviation = 0.14f;
 
 		[KSPField]
 		public float maxTargetingRange = 8000;
 		float currentTgtRange = 8000;
+		float predictedFlightTime = 1;
 
 		public bool drawAimer = false;
 		
@@ -359,11 +360,10 @@ namespace BahaTurret
 		bool mouseAiming = false;
 		void Aim()
 		{
-			bool slaved = false;
 			mouseAiming = false;
-			if(weaponManager && slaved)
+			if(weaponManager && weaponManager.slavingTurrets)
 			{
-				//TODO:
+				SlavedAim();
 			}
 			else
 			{
@@ -374,11 +374,27 @@ namespace BahaTurret
 			}
 		}
 
+		void SlavedAim()
+		{
+			float targetDistance = Vector3.Distance(weaponManager.slavedPosition, rockets[0].parent.transform.position);
+			currentTgtRange = targetDistance;
+
+			Vector3 targetPosition = weaponManager.slavedPosition;
+
+			targetPosition += trajectoryOffset;
+			targetPosition += weaponManager.slavedVelocity * predictedFlightTime;
+			targetPosition += 0.5f * weaponManager.slavedAcceleration * predictedFlightTime * predictedFlightTime;
+			//targetPosition -= vessel.srf_velocity * predictedFlightTime;
+
+
+			turret.AimToTarget(targetPosition);
+		}
+
 		void MouseAim()
 		{
 			mouseAiming = true;
 			Vector3 targetPosition;
-			float maxTargetingRange = 8000;
+		//	float maxTargetingRange = 8000;
 
 			float targetDistance;
 
@@ -460,6 +476,7 @@ namespace BahaTurret
 				{
 					rocket.targetVessel = vessel.targetObject.GetVessel();
 				}
+
 				rocket.sourceVessel = vessel;
 				rocketObj.SetActive(true);
 				rocketObj.transform.SetParent(currentRocketTfm.parent);
@@ -547,7 +564,8 @@ namespace BahaTurret
 
 				Vector3 pointingPos = fireTransform.position + (fireTransform.forward * currentTgtRange);
 				trajectoryOffset = pointingPos - rocketPrediction;
-				
+				predictedFlightTime = simTime;
+
 				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
 				{
 					Vector3[] pointsArray = pointPositions.ToArray();

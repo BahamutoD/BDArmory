@@ -362,6 +362,8 @@ namespace BahaTurret
 			}
 
 			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED);
+
+			UpdateSlaveData();
 		}
 
 		void FixedUpdate()
@@ -397,6 +399,20 @@ namespace BahaTurret
 					{
 						UnlinkRadar();
 					}
+				}
+			}
+		}
+
+		void UpdateSlaveData()
+		{
+			if(slaveTurrets && weaponManager)
+			{
+				weaponManager.slavingTurrets = true;
+				if(locked)
+				{
+					weaponManager.slavedPosition = lockedTarget.predictedPosition;
+					weaponManager.slavedVelocity = lockedTarget.velocity;
+					weaponManager.slavedAcceleration = lockedTarget.acceleration;
 				}
 			}
 		}
@@ -826,6 +842,13 @@ namespace BahaTurret
 			{
 				rad.slaveTurrets = false;
 			}
+
+			if(weaponManager)
+			{
+				weaponManager.slavingTurrets = false;
+			}
+
+			slaveTurrets = false;
 		}
 
 		void OnGUI()

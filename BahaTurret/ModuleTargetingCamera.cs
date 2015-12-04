@@ -213,7 +213,11 @@ namespace BahaTurret
 		{
 			cameraEnabled = false;
 			groundStabilized = false;
-			slaveTurrets = false;
+
+			if(slaveTurrets)
+			{
+				UnslaveTurrets();
+			}
 			//StopResetting();
 
 			if(!TargetingCamera.Instance)
@@ -1024,6 +1028,25 @@ namespace BahaTurret
 			foreach (var rad in vessel.FindPartModulesImplementing<ModuleRadar>())
 			{
 				rad.slaveTurrets = false;
+			}
+
+			if(weaponManager)
+			{
+				weaponManager.slavingTurrets = false;
+			}
+		}
+
+		void UpdateSlaveData()
+		{
+			if(slaveTurrets)
+			{
+				if(groundStabilized && weaponManager)
+				{
+					weaponManager.slavingTurrets = true;
+					weaponManager.slavedPosition = groundTargetPosition;
+					weaponManager.slavedVelocity = Vector3.zero;
+					weaponManager.slavedAcceleration = Vector3.zero;
+				}
 			}
 		}
 
