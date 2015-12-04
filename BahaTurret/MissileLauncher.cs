@@ -262,6 +262,14 @@ namespace BahaTurret
 		//GPS stuff
 		public Vector3d targetGPSCoords;
 
+
+		//torpedo
+		[KSPField]
+		public bool torpedo = false;
+		[KSPField]
+		public float waterImpactTolerance = 25;
+
+
 		//weapon interface
 		[KSPField]
 		public string missileType = "missile";
@@ -312,6 +320,7 @@ namespace BahaTurret
 		public float minStaticLaunchRange = 10;
 		[KSPField]
 		public float maxStaticLaunchRange = 3000;
+
 
 
 
@@ -804,11 +813,27 @@ namespace BahaTurret
 				{
 					MissileState = MissileStates.PostThrust;	
 				}
-				
+
+
 				if(timeIndex > 0.5f)
 				{
-					part.crashTolerance = 1;
+					if(torpedo)
+					{
+						if(vessel.altitude > 0)
+						{
+							part.crashTolerance = waterImpactTolerance;
+						}
+						else
+						{
+							part.crashTolerance = 1;
+						}
+					}
+					else
+					{
+						part.crashTolerance = 1;
+					}
 				}
+
 				
 				
 				if(MissileState == MissileStates.Drop) //drop phase
@@ -1187,7 +1212,7 @@ namespace BahaTurret
 			{
 				DrawDebugLine(transform.position+(part.rb.velocity*Time.fixedDeltaTime), targetPosition);
 
-				aamTarget = MissileGuidance.GetAirToAirTarget(targetPosition, targetVelocity, targetAcceleration, vessel, out timeToImpact);
+				aamTarget = MissileGuidance.GetAirToAirTarget(targetPosition, targetVelocity, targetAcceleration, vessel, out timeToImpact, optimumAirspeed);
 				if(Vector3.Angle(aamTarget-transform.position, transform.forward) > maxOffBoresight*0.75f)
 				{
 					aamTarget = targetPosition;

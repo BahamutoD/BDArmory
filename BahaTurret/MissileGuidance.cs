@@ -62,12 +62,14 @@ namespace BahaTurret
 			}
 		}
 
-		public static Vector3 GetAirToAirTarget(Vector3 targetPosition, Vector3 targetVelocity, Vector3 targetAcceleration, Vessel missileVessel,  out float timeToImpact)
+		public static Vector3 GetAirToAirTarget(Vector3 targetPosition, Vector3 targetVelocity, Vector3 targetAcceleration, Vessel missileVessel,  out float timeToImpact, float minSpeed = 200)
 		{
 			float leadTime = 0;
 			float targetDistance = Vector3.Distance(targetPosition, missileVessel.transform.position);
 
-			leadTime = (float)(1/((targetVelocity-missileVessel.srf_velocity).magnitude/targetDistance));
+			Vector3 currVel = Mathf.Max((float)missileVessel.srfSpeed, minSpeed) * missileVessel.srf_velocity.normalized;
+
+			leadTime = (float)(1/((targetVelocity-currVel).magnitude/targetDistance));
 			timeToImpact = leadTime;
 			leadTime = Mathf.Clamp(leadTime, 0f, 8f);
 			Vector3 mTargetPosition = targetPosition + (targetVelocity*leadTime);
