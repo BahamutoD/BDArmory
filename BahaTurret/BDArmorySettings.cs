@@ -16,8 +16,10 @@ namespace BahaTurret
 		public static bool BULLET_HITS = true;
 		public static float PHYSICS_RANGE = 0;
 		public static bool EJECT_SHELLS = true;
+
+		public static bool SHELL_COLLISIONS = true;
+
 		public static bool INFINITE_AMMO = false;
-		//public static bool CAMERA_TOOLS = true;
 		public static bool DRAW_DEBUG_LINES = false;
 		public static bool DRAW_DEBUG_LABELS = false;
 		public static bool DRAW_AIMERS = true;
@@ -29,6 +31,8 @@ namespace BahaTurret
 		public static bool SMART_GUARDS = true;
 		public static float MAX_BULLET_RANGE = 8000;
 		public static float TRIGGER_HOLD_TIME = 0.3f;
+
+
 
 		public static bool ALLOW_LEGACY_TARGETING = true;
 
