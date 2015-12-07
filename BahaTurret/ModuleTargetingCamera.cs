@@ -312,6 +312,7 @@ namespace BahaTurret
 
 				if(cameraEnabled)
 				{
+					Debug.Log("saved gtp: " + bodyRelativeGTP);
 					DelayedEnable();
 				}
 
@@ -335,6 +336,7 @@ namespace BahaTurret
 
 			Vector3d savedGTP = bodyRelativeGTP;
 			Debug.Log("saved gtp: " + Misc.FormattedGeoPos(savedGTP, true));
+			Debug.Log("groundStabilized: " + groundStabilized);
 
 			while(TargetingCamera.Instance == null)
 			{
@@ -372,6 +374,8 @@ namespace BahaTurret
 				GroundStabilize();
 			}
 			delayedEnabling = false;
+
+			Debug.Log("post load saved gtp: " + bodyRelativeGTP);
 		}
 
 
@@ -379,10 +383,7 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				if(cameraEnabled && !vessel.IsControllable)
-				{
-					DisableCamera();
-				}
+				
 
 				if(cameraEnabled && TargetingCamera.ReadyForUse && vessel.IsControllable)
 				{
@@ -441,9 +442,20 @@ namespace BahaTurret
 					}
 
 					UpdateControls();
-				
+					UpdateSlaveData();
 				}
 
+			}
+		}
+
+		public override void OnFixedUpdate()
+		{
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				if(cameraEnabled && !vessel.packed && !vessel.IsControllable)
+				{
+					DisableCamera();
+				}
 			}
 		}
 
@@ -1040,10 +1052,17 @@ namespace BahaTurret
 		{
 			if(slaveTurrets)
 			{
-				if(groundStabilized && weaponManager)
+				if(weaponManager)
 				{
 					weaponManager.slavingTurrets = true;
-					weaponManager.slavedPosition = groundTargetPosition;
+					if(groundStabilized)
+					{
+						weaponManager.slavedPosition = groundTargetPosition;
+					}
+					else
+					{
+						weaponManager.slavedPosition = targetPointPosition;
+					}
 					weaponManager.slavedVelocity = Vector3.zero;
 					weaponManager.slavedAcceleration = Vector3.zero;
 				}
