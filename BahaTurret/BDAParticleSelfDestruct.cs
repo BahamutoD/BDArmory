@@ -17,7 +17,14 @@ namespace BahaTurret
 
 		void Start()
 		{
-			StartCoroutine(SelfDestructRoutine());
+			if(pEmitter.pe.particleCount == 0)
+			{
+				Destroy(gameObject);
+			}
+			else
+			{
+				StartCoroutine(SelfDestructRoutine());
+			}
 		}
 
 		IEnumerator SelfDestructRoutine()
