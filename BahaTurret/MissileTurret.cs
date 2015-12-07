@@ -65,8 +65,10 @@ namespace BahaTurret
 		{
 			get
 			{
-				if(!wm)
+				if(!wm || wm.vessel != vessel)
 				{
+					wm = null;
+				
 					foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
 					{
 						wm = mf;
@@ -328,7 +330,7 @@ namespace BahaTurret
 		{
 			slaved = false;
 
-			if(weaponManager && wm.slavingTurrets)
+			if(weaponManager && wm.slavingTurrets && wm.currentMissile)
 			{
 				slaved = true;
 				slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.currentMissile, wm.slavedPosition, wm.slavedVelocity);
