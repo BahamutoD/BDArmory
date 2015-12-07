@@ -62,6 +62,20 @@ namespace BahaTurret
 			}
 		}
 
+		public static Vector3 GetBeamRideTarget(Ray beam, Vector3 currentPosition, Vector3 currentVelocity, float correctionFactor, float correctionDamping)
+		{
+			Vector3 onBeamPos = beam.GetPoint(Vector3.Distance(currentPosition, beam.origin));
+			Vector3 target = onBeamPos + (500f * beam.direction);
+			Vector3 offset = onBeamPos - currentPosition;
+			target += correctionFactor * offset;
+
+			Vector3 velDamp = correctionDamping * Vector3.Project(currentVelocity, onBeamPos - currentPosition);
+			target -= velDamp;
+
+
+			return target;
+		}
+
 		public static Vector3 GetAirToAirTarget(Vector3 targetPosition, Vector3 targetVelocity, Vector3 targetAcceleration, Vessel missileVessel,  out float timeToImpact, float minSpeed = 200)
 		{
 			float leadTime = 0;
@@ -219,7 +233,7 @@ namespace BahaTurret
 				DefaultDragCurve = new FloatCurve();
 				DefaultDragCurve.Add(0, 0.00215f);
 				DefaultDragCurve.Add(5, .00285f);
-				//DefaultDragCurve.Add(15, .009f);
+				DefaultDragCurve.Add(15, .007f);
 				DefaultDragCurve.Add(29, .01f);
 				DefaultDragCurve.Add(55, .3f);
 				DefaultDragCurve.Add(90, .5f);

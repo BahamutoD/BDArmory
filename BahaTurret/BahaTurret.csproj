@@ -124,6 +124,7 @@
   <ItemGroup>
     <EmbeddedResource Include="GrayscaleEffectShader.shader" />
     <EmbeddedResource Include="UnlitBlack.shader" />
+    <EmbeddedResource Include="BulletShader.shader" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BahaTurret.cs" />

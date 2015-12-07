@@ -13,7 +13,7 @@ namespace BahaTurret
 
 		public Transform missileReferenceTransform;
 
-		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,AGMBallistic,Cruise,STS,Bomb,RCS}
+		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,AGMBallistic,Cruise,STS,Bomb,RCS, BeamRiding}
 		public GuidanceModes guidanceMode;
 		[KSPField]
 		public string homingType = "AAM";
@@ -59,6 +59,8 @@ namespace BahaTurret
 		public float boostTime = 2.2f;
 		[KSPField]
 		public float cruiseTime = 45;
+		[KSPField]
+		public float cruiseDelay = 0;
 		[KSPField]
 		public bool guidanceActive = true;
 		[KSPField]
@@ -122,7 +124,8 @@ namespace BahaTurret
 
 		[KSPField]
 		public bool terminalManeuvering = false;
-		
+
+	
 		
 		
 		[KSPField]
@@ -157,8 +160,7 @@ namespace BahaTurret
 		public MissileFire targetMf = null;
 		public bool hasFired = false;
 
-		bool startedEngine = false;
-		
+
 		LineRenderer LR;
 		float cmTimer;
 		
@@ -186,7 +188,7 @@ namespace BahaTurret
 		float currentThrust = 0;
 		
 		public bool deployed;
-		public float deployedTime;
+		//public float deployedTime;
 		
 		AnimationState[] deployStates;
 		
@@ -199,8 +201,8 @@ namespace BahaTurret
 
 
 		List<GameObject> boosters;
-		bool decoupleBoosters = false;
-		bool hasDecoupledBoosters = false;
+		[KSPField]
+		public bool decoupleBoosters = false;
 		[KSPField]
 		public float boosterDecoupleSpeed = 5;
 		[KSPField]
@@ -220,6 +222,7 @@ namespace BahaTurret
 		[KSPField]
 		public string boostTransformName = string.Empty;
 		List<KSPParticleEmitter> boostEmitters;
+		List<BDAGaplessParticleEmitter> boostGaplessEmitters;
 
 		public MissileStates MissileState = MissileStates.Idle;
 
@@ -336,6 +339,7 @@ namespace BahaTurret
 			gaplessEmitters = new List<BDAGaplessParticleEmitter>();
 			pEmitters = new List<KSPParticleEmitter>();
 			boostEmitters = new List<KSPParticleEmitter>();
+			boostGaplessEmitters = new List<BDAGaplessParticleEmitter>();
 
 			if(isTimed)
 			{
@@ -350,6 +354,11 @@ namespace BahaTurret
 
 			ParseModes();
 
+			foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
+			{
+				emitter.emit = false;
+			}
+
 			if(HighLogic.LoadedSceneIsFlight)
 			{
 				missileReferenceTransform = part.FindModelTransform("missileTransform");
@@ -358,8 +367,45 @@ namespace BahaTurret
 					missileReferenceTransform = part.partTransform;
 				}
 
+
+				boosters = new List<GameObject>();
+				if(!string.IsNullOrEmpty(boostTransformName))
+				{
+					foreach(var t in part.FindModelTransforms(boostTransformName))
+					{
+						boosters.Add(t.gameObject);
+
+						foreach(var be in t.GetComponentsInChildren<KSPParticleEmitter>())
+						{
+							if(be.useWorldSpace)
+							{
+								if(!be.GetComponent<BDAGaplessParticleEmitter>())
+								{
+									BDAGaplessParticleEmitter ge = be.gameObject.AddComponent<BDAGaplessParticleEmitter>();
+									ge.part = part;
+									boostGaplessEmitters.Add(ge);
+								}
+							}
+							else
+							{
+								if(!boostEmitters.Contains(be))
+								{
+									boostEmitters.Add(be);
+								}
+							}
+						}
+					}
+				}
+
+	
+
 				foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
 				{
+					if(emitter.GetComponent<BDAGaplessParticleEmitter>() || boostEmitters.Contains(emitter))
+					{
+						continue;
+					}
+
 					if(emitter.useWorldSpace)
 					{
 						BDAGaplessParticleEmitter gaplessEmitter = emitter.gameObject.AddComponent<BDAGaplessParticleEmitter>();	
@@ -378,14 +424,13 @@ namespace BahaTurret
 						}
 					}
 				}
-				//pEmitters = part.FindModelComponents<KSPParticleEmitter>();
+
 				previousRotation = transform.rotation;
 
 				cmTimer = Time.time;
 				
 				part.force_activate();
-				//part.OnJustAboutToBeDestroyed += new Callback(Detonate);
-				
+
 			
 				
 				foreach(var pe in pEmitters)	
@@ -411,12 +456,7 @@ namespace BahaTurret
 				}
 
 
-				boosters = new List<GameObject>();
-				foreach(var tf in part.FindModelTransforms("boosterTransform"))
-				{
-					boosters.Add(tf.gameObject);
-					decoupleBoosters = true;
-				}
+
 
 
 
@@ -615,6 +655,7 @@ namespace BahaTurret
 					{
 						targetAcquired = true;
 						targetPosition = lastLaserPoint = lockedCamera.groundTargetPosition;
+						targetingPod = lockedCamera;
 					}
 				}
 				else if(targetingMode == TargetingModes.AntiRad && targetAcquired)
@@ -667,7 +708,7 @@ namespace BahaTurret
 				part.crashTolerance = 9999;
 
 
-
+				StartCoroutine(MissileRoutine());
 				
 			}
 		}
@@ -712,28 +753,11 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate()
 		{
-
 			debugString = "";
 			if(hasFired && !hasExploded && part!=null)
 			{
 				part.rb.isKinematic = false;
 				AntiSpin();
-
-				//deploy stuff
-				if(deployAnimationName != "" && timeIndex > deployTime && !deployed)
-				{
-					deployed = true;
-					deployedTime = Time.time;
-				}
-				
-				if(deployed)
-				{
-					foreach(var anim in deployStates)
-					{
-						anim.speed = 1;
-					}
-				}
-		
 
 				//simpleDrag
 				if(useSimpleDrag)
@@ -764,56 +788,9 @@ namespace BahaTurret
 					audioSource.dopplerLevel = 1f;
 				}
 
-
-				if(guidanceActive)
-				{
-					if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
-					{
-						UpdateLegacyTarget();
-					}
-
-					if(targetingMode == TargetingModes.Heat)
-					{
-						UpdateHeatTarget();
-					}
-					else if(targetingMode == TargetingModes.Radar)
-					{
-						UpdateRadarTarget();
-					}
-					else if(targetingMode == TargetingModes.Laser)
-					{
-						UpdateLaserTarget();
-					}
-					else if(targetingMode == TargetingModes.GPS)
-					{
-						UpdateGPSTarget();
-					}
-					else if(targetingMode == TargetingModes.AntiRad)
-					{
-						UpdateAntiRadiationTarget();
-					}
-				}
-
 				
 				//Missile State
 				timeIndex = Time.time - timeFired;
-				if(timeIndex < dropTime)
-				{
-					MissileState = MissileStates.Drop;
-				}
-				else if(timeIndex < dropTime + boostTime)
-				{
-					MissileState = MissileStates.Boost;	
-				}
-				else if(timeIndex < dropTime+boostTime+cruiseTime)
-				{
-					MissileState = MissileStates.Cruise;	
-				}
-				else
-				{
-					MissileState = MissileStates.PostThrust;	
-				}
-
 
 				if(timeIndex > 0.5f)
 				{
@@ -833,311 +810,527 @@ namespace BahaTurret
 						part.crashTolerance = 1;
 					}
 				}
-
-				
-				
-				if(MissileState == MissileStates.Drop) //drop phase
-				{
-				}
-				else if(MissileState == MissileStates.Boost) //boost phase
-				{
-					//light, sound & particle fx
-					if(boostAudio||thrustAudio)	
-					{
-						if(!BDArmorySettings.GameIsPaused)
-						{
-							if(!audioSource.isPlaying)
-							{
-								if(boostAudio)
-								{
-									audioSource.clip = boostAudio;
-								}
-								else if(thrustAudio)
-								{
-									audioSource.clip = thrustAudio;
-								}
-								audioSource.Play();	
-							}
-						}
-						else if(audioSource.isPlaying)
-						{
-							audioSource.Stop();
-						}
-					}
-
-
-					foreach(Light light in gameObject.GetComponentsInChildren<Light>())
-					{
-						light.intensity = 1.5f;	
-					}
-					if(spoolEngine) 
-					{
-						currentThrust = Mathf.MoveTowards(currentThrust, thrust, thrust/10);
-					}
-					else
-					{
-						currentThrust = thrust;	
-					}
-
-					if(boostTransformName != string.Empty)
-					{
-						foreach(var emitter in boostEmitters)
-						{
-							emitter.emit = true;
-						}
-					}
-
-					part.rb.AddRelativeForce(currentThrust * Vector3.forward);
-					if(hasRCS) forwardRCS.emit = true;
-					if(!startedEngine && thrust > 0)
-					{
-						startedEngine = true;
-						sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
-						RadarWarningReceiver.WarnMissileLaunch(transform.position, transform.forward);
-					}
-				}
-				else if(MissileState == MissileStates.Cruise) //cruise phase
-				{
-					part.crashTolerance = 1;
-
-					if(thrustAudio)	
-					{
-						if(!BDArmorySettings.GameIsPaused)
-						{
-							if(!audioSource.isPlaying || audioSource.clip!=thrustAudio)
-							{
-								audioSource.clip = thrustAudio;
-								audioSource.Play();	
-							}
-						}
-						else if(audioSource.isPlaying)
-						{
-							audioSource.Stop();
-						}
-					}
-
-
-					if(spoolEngine)
-					{
-						currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, thrust/10);
-					}
-					else
-					{
-						currentThrust = cruiseThrust;	
-					}
 					
-					if(!hasRCS)
-					{
-						part.rb.AddRelativeForce(cruiseThrust * Vector3.forward);
-					}
-					else
-					{
-						forwardRCS.emit = false;
-						audioSource.Stop();
-					}
-
-					if(boostTransformName != string.Empty)
-					{
-						foreach(var emitter in boostEmitters)
-						{
-							if(!emitter) continue;
-							emitter.emit = false;
-						}
-					}
-
-					if(decoupleBoosters && !hasDecoupledBoosters)
-					{
-						hasDecoupledBoosters = true;
-						part.mass -= boosterMass;
-						foreach(var booster in boosters)
-						{
-							if(!booster) continue;
-							(booster.AddComponent<DecoupledBooster>()).DecoupleBooster(part.rb.velocity, boosterDecoupleSpeed);
-						}
-					}
-				}
 				
-				if(MissileState != MissileStates.Idle && MissileState != MissileStates.PostThrust && MissileState != MissileStates.Drop) //all thrust
-				{
-					if(!hasRCS)
-					{
-						foreach(KSPParticleEmitter pe in pEmitters)
-						{
-							pe.emit = true;
-						}
-						foreach(var gpe in gaplessEmitters)
-						{
-							if(vessel.atmDensity > 0)
-							{
-								gpe.emit = true;
-								gpe.pEmitter.worldVelocity = 2*ParticleTurbulence.Turbulence;
-							}
-							else
-							{
-								gpe.emit = false;
-							}	
-						}
-					}
-					
-					foreach(KSPParticleEmitter pe in pEmitters)
-					{
-						if(!pe.gameObject.name.Contains("rcs") && !pe.useWorldSpace)
-						{
-							pe.sizeGrow = Mathf.Lerp(pe.sizeGrow, 1, 0.4f);
-						}
-					}
-				}
-				else
-				{
-					if(thrustAudio && audioSource.isPlaying)
-					{
-						audioSource.volume = Mathf.Lerp(audioSource.volume, 0, 0.1f);
-						audioSource.pitch = Mathf.Lerp(audioSource.pitch, 0, 0.1f);
-					}
-					foreach(Light light in gameObject.GetComponentsInChildren<Light>())
-					{
-						light.intensity = 0;	
-					}
-				}
-				if(timeIndex > dropTime + boostTime + cruiseTime && !hasRCS)
-				{
-					foreach(KSPParticleEmitter pe in pEmitters)
-					{
-						pe.maxEmission = Mathf.FloorToInt(pe.maxEmission * 0.8f);
-						pe.minEmission =  Mathf.FloorToInt(pe.minEmission * 0.8f);
-					}
-					foreach(var gpe in gaplessEmitters)
-					{
-						gpe.pEmitter.maxSize = Mathf.MoveTowards(gpe.pEmitter.maxSize, 0, 0.005f);
-						gpe.pEmitter.minSize = Mathf.MoveTowards(gpe.pEmitter.minSize, 0, 0.008f);
-						gpe.pEmitter.worldVelocity = 2*ParticleTurbulence.Turbulence;
-					}
-				}
-				
-				
+				UpdateThrustForces();
 
-				if(MissileState != MissileStates.Idle && MissileState != MissileStates.Drop) //guidance
-				{
-					//guidance and attitude stabilisation scales to atmospheric density. //use part.atmDensity
-					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody)); 
+				UpdateGuidance();
 
-					if(vessel.srfSpeed < optimumAirspeed)
-					{
-						float optimumSpeedFactor = (float)vessel.srfSpeed / (2 * optimumAirspeed);
-						controlAuthority = Mathf.Clamp01(atmosMultiplier * (-Mathf.Abs(2 * optimumSpeedFactor - 1) + 1));
-					}
-					else
-					{
-						controlAuthority = Mathf.Clamp01(atmosMultiplier);
-					}
-					debugString += "\ncontrolAuthority: "+controlAuthority;
+				RaycastCollisions();
 
-					if(guidanceActive)// && timeIndex - dropTime > 0.5f)
-					{
-						WarnTarget();
-						Vector3 targetPosition = Vector3.zero;
-
-						if(legacyTargetVessel && legacyTargetVessel.loaded)
-						{
-							Vector3 targetCoMPos = legacyTargetVessel.findWorldCenterOfMass();
-							targetPosition = targetCoMPos+legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
-						}
-					
-						//increaseTurnRate after launch
-						float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS * 25f, 0, maxTurnRateDPS);
-						if(!hasRCS)
-						{
-							turnRateDPS *= controlAuthority;
-						}
-						
-						//decrease turn rate after thrust cuts out
-						if(timeIndex > dropTime+boostTime+cruiseTime)
-						{
-							turnRateDPS = atmosMultiplier * Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*0.45f), 1, maxTurnRateDPS);	
-							if(hasRCS) 
-							{
-								turnRateDPS = 0;
-							}
-						}
-						
-						if(hasRCS)
-						{
-							if(turnRateDPS > 0)
-							{
-								DoRCS();
-							}
-							else
-							{
-								KillRCS();
-							}
-						}
-						debugTurnRate = turnRateDPS;
-
-						finalMaxTorque = Mathf.Clamp((timeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
-
-						if(guidanceMode == GuidanceModes.AAMLead)
-						{
-							AAMGuidance();
-						}
-						else if(guidanceMode == GuidanceModes.AGM)
-						{
-							AGMGuidance();
-						}
-						else if(guidanceMode == GuidanceModes.AGMBallistic)
-						{
-							AGMBallisticGuidance();
-						}
-						else if(guidanceMode == GuidanceModes.RCS)
-						{
-							
-							part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition-part.transform.position, part.transform.up), turnRateDPS*Time.fixedDeltaTime);
-
-
-
-						}
-						else if(guidanceMode == GuidanceModes.Cruise)
-						{
-							CruiseGuidance();
-						}
-					
-
-					}
-					else
-					{
-						CheckMiss();
-						targetMf = null;
-						if(!aero)
-						{
-							if(!hasRCS && !useSimpleDrag)	
-							{
-								transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
-							}
-						}
-						else
-						{
-							aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
-						}
-					}
-
-					if(aero && aeroSteerDamping > 0)
-					{
-						part.rb.AddRelativeTorque(-aeroSteerDamping * part.transform.InverseTransformVector(part.rb.angularVelocity));
-					}
-					
-					if(hasRCS && !guidanceActive)
-					{
-						KillRCS();	
-					}
-				}
-				
 				//Timed detonation
 				if(isTimed && timeIndex > detonationTime)
 				{
-					part.temperature = part.maxTemp+100;;
+					part.temperature = part.maxTemp+100;
+				}
+			}
+		}
+
+		Vector3 previousPos;
+		void RaycastCollisions()
+		{
+			if(timeIndex > 0.5f && vessel.srfSpeed > part.crashTolerance)
+			{
+				/*
+				RaycastHit[] hits = Physics.RaycastAll(new Ray(previousPos, part.transform.position - previousPos), (part.transform.position - previousPos).magnitude, 557057);
+				for(int i = 0; i < hits.Length; i++)
+				{
+					if(hits[i].collider.gameObject.layer == 0 && hits[i].collider.attachedRigidbody && hits[i].collider.attachedRigidbody == part.rb)
+					{
+						continue;
+					}
+					else
+					{
+						Debug.Log(part.partInfo.title + " raycast detonated on " + (hits[i].collider.attachedRigidbody ? hits[i].collider.attachedRigidbody.gameObject.name : hits[i].collider.gameObject.name));
+						part.temperature = part.maxTemp + 100;
+					}
+				}
+				*/
+
+				RaycastHit lineHit;
+				if(Physics.Linecast(part.transform.position, previousPos, out lineHit, 557057))
+				{
+					Debug.Log(part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
+					part.temperature = part.maxTemp + 100;
+				}
+			}
+
+			previousPos = part.transform.position;
+		}
+
+		void UpdateGuidance()
+		{
+			if(guidanceActive)
+			{
+				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
+				{
+					UpdateLegacyTarget();
+				}
+
+				if(targetingMode == TargetingModes.Heat)
+				{
+					UpdateHeatTarget();
+				}
+				else if(targetingMode == TargetingModes.Radar)
+				{
+					UpdateRadarTarget();
+				}
+				else if(targetingMode == TargetingModes.Laser)
+				{
+					UpdateLaserTarget();
+				}
+				else if(targetingMode == TargetingModes.GPS)
+				{
+					UpdateGPSTarget();
+				}
+				else if(targetingMode == TargetingModes.AntiRad)
+				{
+					UpdateAntiRadiationTarget();
+				}
+
+			}
+
+			if(MissileState != MissileStates.Idle && MissileState != MissileStates.Drop) //guidance
+			{
+				//guidance and attitude stabilisation scales to atmospheric density. //use part.atmDensity
+				float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody)); 
+
+				if(vessel.srfSpeed < optimumAirspeed)
+				{
+					float optimumSpeedFactor = (float)vessel.srfSpeed / (2 * optimumAirspeed);
+					controlAuthority = Mathf.Clamp01(atmosMultiplier * (-Mathf.Abs(2 * optimumSpeedFactor - 1) + 1));
+				}
+				else
+				{
+					controlAuthority = Mathf.Clamp01(atmosMultiplier);
+				}
+				debugString += "\ncontrolAuthority: "+controlAuthority;
+
+				if(guidanceActive)// && timeIndex - dropTime > 0.5f)
+				{
+					WarnTarget();
+					Vector3 targetPosition = Vector3.zero;
+
+					if(legacyTargetVessel && legacyTargetVessel.loaded)
+					{
+						Vector3 targetCoMPos = legacyTargetVessel.findWorldCenterOfMass();
+						targetPosition = targetCoMPos+legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
+					}
+
+					//increaseTurnRate after launch
+					float turnRateDPS = Mathf.Clamp(((timeIndex-dropTime)/boostTime)*maxTurnRateDPS * 25f, 0, maxTurnRateDPS);
+					if(!hasRCS)
+					{
+						turnRateDPS *= controlAuthority;
+					}
+
+					//decrease turn rate after thrust cuts out
+					if(timeIndex > dropTime+boostTime+cruiseTime)
+					{
+						turnRateDPS = atmosMultiplier * Mathf.Clamp(maxTurnRateDPS - ((timeIndex-dropTime-boostTime-cruiseTime)*0.45f), 1, maxTurnRateDPS);	
+						if(hasRCS) 
+						{
+							turnRateDPS = 0;
+						}
+					}
+
+					if(hasRCS)
+					{
+						if(turnRateDPS > 0)
+						{
+							DoRCS();
+						}
+						else
+						{
+							KillRCS();
+						}
+					}
+					debugTurnRate = turnRateDPS;
+
+					finalMaxTorque = Mathf.Clamp((timeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
+
+					if(guidanceMode == GuidanceModes.AAMLead)
+					{
+						AAMGuidance();
+					}
+					else if(guidanceMode == GuidanceModes.AGM)
+					{
+						AGMGuidance();
+					}
+					else if(guidanceMode == GuidanceModes.AGMBallistic)
+					{
+						AGMBallisticGuidance();
+					}
+					else if(guidanceMode == GuidanceModes.BeamRiding)
+					{
+						BeamRideGuidance();
+					}
+					else if(guidanceMode == GuidanceModes.RCS)
+					{
+						part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition-part.transform.position, part.transform.up), turnRateDPS*Time.fixedDeltaTime);
+					}
+					else if(guidanceMode == GuidanceModes.Cruise)
+					{
+						CruiseGuidance();
+					}
+
+
+				}
+				else
+				{
+					CheckMiss();
+					targetMf = null;
+					if(!aero)
+					{
+						if(!hasRCS && !useSimpleDrag)	
+						{
+							transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
+						}
+					}
+					else
+					{
+						aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
+					}
+				}
+
+				if(aero && aeroSteerDamping > 0)
+				{
+					part.rb.AddRelativeTorque(-aeroSteerDamping * part.transform.InverseTransformVector(part.rb.angularVelocity));
+				}
+
+				if(hasRCS && !guidanceActive)
+				{
+					KillRCS();	
+				}
+			}
+		}
+
+		void UpdateThrustForces()
+		{
+			if(MissileState == MissileStates.Boost) //boost phase
+			{
+				part.rb.AddRelativeForce(currentThrust * Vector3.forward);
+			}
+			else if(MissileState == MissileStates.Cruise) //cruise phase
+			{
+				if(!hasRCS)
+				{
+					part.rb.AddRelativeForce(cruiseThrust * Vector3.forward);
+				}
+			}
+		}
+
+		IEnumerator MissileRoutine()
+		{
+			MissileState = MissileStates.Drop;
+			StartCoroutine(AnimRoutine());
+			yield return new WaitForSeconds(dropTime);
+			yield return StartCoroutine(BoostRoutine());
+			yield return new WaitForSeconds(cruiseDelay);
+			yield return StartCoroutine(CruiseRoutine());
+		}
+
+		IEnumerator AnimRoutine()
+		{
+			yield return new WaitForSeconds(deployTime);
+ 
+			if(!string.IsNullOrEmpty(deployAnimationName))
+			{
+				deployed = true;
+			
+				foreach(var anim in deployStates)
+				{
+					anim.speed = 1;
+				}
+			}
+		}
+
+		IEnumerator BoostRoutine()
+		{
+			StartBoost();
+			float boostStartTime = Time.time;
+			while(Time.time-boostStartTime < boostTime)
+			{
+				//light, sound & particle fx
+				//sound
+				if(!BDArmorySettings.GameIsPaused)
+				{
+					if(!audioSource.isPlaying)
+					{
+						audioSource.Play();	
+					}
+				}
+				else if(audioSource.isPlaying)
+				{
+					audioSource.Stop();
+				}
+
+				//particleFx
+				foreach(var emitter in boostEmitters)
+				{
+					if(!hasRCS)
+					{
+						emitter.sizeGrow = Mathf.Lerp(emitter.sizeGrow, 0, 20*Time.deltaTime);
+					}
+				}
+				foreach(var gpe in boostGaplessEmitters)
+				{
+					if(vessel.atmDensity > 0)
+					{
+						gpe.emit = true;
+						gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+					}
+					else
+					{
+						gpe.emit = false;
+					}	
+				}
+
+				//thrust
+				if(spoolEngine) 
+				{
+					currentThrust = Mathf.MoveTowards(currentThrust, thrust, thrust/10);
+				}
+				yield return null;
+			}
+			EndBoost();
+		}
+		//boost
+		void StartBoost()
+		{
+			MissileState = MissileStates.Boost;
+
+			if(boostAudio)
+			{
+				audioSource.clip = boostAudio;
+			}
+			else if(thrustAudio)
+			{
+				audioSource.clip = thrustAudio;
+			}
+
+			foreach(Light light in gameObject.GetComponentsInChildren<Light>())
+			{
+				light.intensity = 1.5f;	
+			}
+
+
+			if(!spoolEngine)
+			{
+				currentThrust = thrust;	
+			}
+
+			if(string.IsNullOrEmpty(boostTransformName))
+			{
+				boostEmitters = pEmitters;
+				boostGaplessEmitters = gaplessEmitters;
+			}
+			foreach(var emitter in boostEmitters)
+			{
+				emitter.emit = true;
+			}
+
+			if(hasRCS)
+			{
+				forwardRCS.emit = true;
+			}
+
+			if(thrust > 0)
+			{
+				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
+				RadarWarningReceiver.WarnMissileLaunch(transform.position, transform.forward);
+			}
+
+		}
+		void EndBoost()
+		{
+			foreach(var emitter in boostEmitters)
+			{
+				if(!emitter) continue;
+				emitter.emit = false;
+			}
+
+			foreach(var emitter in boostGaplessEmitters)
+			{
+				if(!emitter) continue;
+				emitter.emit = false;
+			}
+
+			if(decoupleBoosters)
+			{
+				part.mass -= boosterMass;
+				foreach(var booster in boosters)
+				{
+					if(!booster) continue;
+					(booster.AddComponent<DecoupledBooster>()).DecoupleBooster(part.rb.velocity, boosterDecoupleSpeed);
+				}
+			}
+
+			if(cruiseDelay > 0)
+			{
+				currentThrust = 0;
+			}
+		}
+
+		IEnumerator CruiseRoutine()
+		{
+			StartCruise();
+			float cruiseStartTime = Time.time;
+			while(Time.time - cruiseStartTime < cruiseTime)
+			{
+				if(!BDArmorySettings.GameIsPaused)
+				{
+					if(!audioSource.isPlaying || audioSource.clip != thrustAudio)
+					{
+						audioSource.clip = thrustAudio;
+						audioSource.Play();	
+					}
+				}
+				else if(audioSource.isPlaying)
+				{
+					audioSource.Stop();
+				}
+
+				//particleFx
+				foreach(var emitter in pEmitters)
+				{
+					if(!hasRCS)
+					{
+						emitter.sizeGrow = Mathf.Lerp(emitter.sizeGrow, 0, 20*Time.deltaTime);
+					}
+				}
+				foreach(var gpe in gaplessEmitters)
+				{
+					if(vessel.atmDensity > 0)
+					{
+						gpe.emit = true;
+						gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+					}
+					else
+					{
+						gpe.emit = false;
+					}	
+				}
+
+				if(spoolEngine)
+				{
+					currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, thrust/10);
+				}
+
+
+				yield return null;
+			}
+			EndCruise();
+		}
+
+		void StartCruise()
+		{
+			MissileState = MissileStates.Cruise;
+
+			if(thrustAudio)	
+			{
+				audioSource.clip = thrustAudio;
+			}
+
+			if(spoolEngine)
+			{
+				currentThrust = 0;
+			}
+			else
+			{
+				currentThrust = cruiseThrust;	
+			}
+
+			foreach(var emitter in pEmitters)
+			{
+				emitter.emit = true;
+			}
+
+			foreach(var emitter in gaplessEmitters)
+			{
+				emitter.emit = true;
+			}
+
+			if(hasRCS)
+			{
+				forwardRCS.emit = false;
+				audioSource.Stop();
+			}
+		}
+
+		void EndCruise()
+		{
+			MissileState = MissileStates.PostThrust;
+
+			foreach(Light light in gameObject.GetComponentsInChildren<Light>())
+			{
+				light.intensity = 0;	
+			}
+
+			StartCoroutine(FadeOutAudio());
+			StartCoroutine(FadeOutEmitters());
+		}
+
+		IEnumerator FadeOutAudio()
+		{
+			if(thrustAudio && audioSource.isPlaying)
+			{
+				while(audioSource.volume > 0 || audioSource.pitch > 0)
+				{
+					audioSource.volume = Mathf.Lerp(audioSource.volume, 0, 5*Time.deltaTime);
+					audioSource.pitch = Mathf.Lerp(audioSource.pitch, 0, 5*Time.deltaTime);
+					yield return null;
+				}
+			}
+		}
+
+		IEnumerator FadeOutEmitters()
+		{
+			float fadeoutStartTime = Time.time;
+			while(Time.time-fadeoutStartTime < 5)
+			{
+				foreach(KSPParticleEmitter pe in pEmitters)
+				{
+					if(!pe) continue;
+					pe.maxEmission = Mathf.FloorToInt(pe.maxEmission * 0.8f);
+					pe.minEmission = Mathf.FloorToInt(pe.minEmission * 0.8f);
 				}
 				
-				
+				foreach(var gpe in gaplessEmitters)
+				{
+					if(!gpe) continue;
+					gpe.pEmitter.maxSize = Mathf.MoveTowards(gpe.pEmitter.maxSize, 0, 0.005f);
+					gpe.pEmitter.minSize = Mathf.MoveTowards(gpe.pEmitter.minSize, 0, 0.008f);
+					gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+				}
+
+				yield return new WaitForFixedUpdate();
 			}
+		}
+
+		[KSPField]
+		public float beamCorrectionFactor;
+		[KSPField]
+		public float beamCorrectionDamping;
+
+		ModuleTargetingCamera targetingPod;
+		void BeamRideGuidance()
+		{
+			if(!targetingPod)
+			{
+				guidanceActive = false;
+				return;
+			}
+
+			if(RadarUtils.TerrainCheck(targetingPod.cameraParentTransform.position, transform.position))
+			{
+				guidanceActive = false;
+				return;
+			}
+
+			Vector3 target = MissileGuidance.GetBeamRideTarget(new Ray(targetingPod.cameraParentTransform.position, targetingPod.targetPointPosition - targetingPod.cameraParentTransform.position), part.transform.position, vessel.srf_velocity, beamCorrectionFactor, beamCorrectionDamping);
+			DrawDebugLine(part.transform.position, target);
+			DoAero(target);
 		}
 
 		void CruiseGuidance()
@@ -1169,8 +1362,8 @@ namespace BahaTurret
 				}
 			}
 					
-			float clampedSpeed = Mathf.Clamp((float)vessel.srfSpeed, 1, 1000);
-			float limitAoA = Mathf.Clamp(3500 / clampedSpeed, 5, maxAoA);
+			//float clampedSpeed = Mathf.Clamp((float)vessel.srfSpeed, 1, 1000);
+			//float limitAoA = Mathf.Clamp(3500 / clampedSpeed, 5, maxAoA);
 
 			//debugString += "\n limitAoA: "+limitAoA.ToString("0.0");
 
@@ -1199,7 +1392,8 @@ namespace BahaTurret
 				vesselReferenceTransform.rotation = Quaternion.LookRotation(-rotationTransform.up, rotationTransform.forward);
 			}
 
-			aeroTorque = MissileGuidance.DoAeroForces(this, cruiseTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, limitAoA); 
+			//aeroTorque = MissileGuidance.DoAeroForces(this, cruiseTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, limitAoA); 
+			DoAero(cruiseTarget);
 			CheckMiss();
 
 			debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
@@ -1232,7 +1426,7 @@ namespace BahaTurret
 
 			if(Time.time-timeFired > dropTime+0.25f)
 			{
-				aeroTorque = MissileGuidance.DoAeroForces(this, aamTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
+				DoAero(aamTarget);
 			}
 
 			CheckMiss();
@@ -1266,7 +1460,12 @@ namespace BahaTurret
 
 			Vector3 agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, vessel, agmDescentRatio);
 
-			aeroTorque = MissileGuidance.DoAeroForces(this, agmTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
+			DoAero(agmTarget);
+		}
+
+		void DoAero(Vector3 targetPosition)
+		{
+			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
 
 		void AGMBallisticGuidance()
@@ -1280,7 +1479,7 @@ namespace BahaTurret
 				agmTarget = transform.position + direction;
 			}
 
-			aeroTorque = MissileGuidance.DoAeroForces(this, agmTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
+			DoAero(agmTarget);
 		}
 
 		void UpdateGPSTarget()
@@ -1743,6 +1942,10 @@ namespace BahaTurret
 				{
 					e.gameObject.AddComponent<BDAParticleSelfDestruct>();
 					e.transform.parent = null;
+					if(e.GetComponent<Light>())
+					{
+						e.GetComponent<Light>().enabled = false;
+					}
 				}
 			}
 		}
@@ -1999,6 +2202,9 @@ namespace BahaTurret
 				break;
 			case "rcs":
 				guidanceMode = GuidanceModes.RCS;
+				break;
+			case "beamriding":
+				guidanceMode = GuidanceModes.BeamRiding;
 				break;
 			default:
 				guidanceMode = GuidanceModes.None;
