@@ -506,6 +506,7 @@ namespace BahaTurret
 				List<Vector3> pointPositions = new List<Vector3>();
 				pointPositions.Add(simCurrPos);
 
+				bool slaved = weaponManager && weaponManager.slavingTurrets;
 				float atmosMultiplier = Mathf.Clamp01(2.5f*(float)FlightGlobals.getAtmDensity(vessel.staticPressurekPa, vessel.externalTemperature, vessel.mainBody));
 				while(simulating)
 				{
@@ -533,7 +534,7 @@ namespace BahaTurret
 
 					simCurrPos += simVelocity * simDeltaTime;
 					pointPositions.Add(simCurrPos);
-					if(!mouseAiming)
+					if(!mouseAiming && !slaved)
 					{
 						if(simTime > 0.1f && Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit, Vector3.Distance(simPrevPos, simCurrPos), 557057))
 						{
