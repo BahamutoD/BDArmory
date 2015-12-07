@@ -27,6 +27,8 @@ namespace BahaTurret
 		public float tracerStartWidth = 1;
 		public float tracerEndWidth = 1;
 		public float tracerLength = 0;
+		public float tracerDeltaFactor = 1.35f;
+		public float tracerLuminance = 1;
 		
 		public float initialSpeed;
 		
@@ -71,7 +73,10 @@ namespace BahaTurret
         public float flightTimeElapsed = 0;
 
 		bool collisionEnabled = false;
-		
+
+		public static Shader bulletShader;
+		public static bool shaderInitialized = false;
+
 		void OnEnable()
 		{
 			startPosition = transform.position;
@@ -80,10 +85,12 @@ namespace BahaTurret
 			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, BDArmorySettings.MAX_BULLET_RANGE);
 			if(!wasInitiated)
 			{
-				projectileColor.a = projectileColor.a/2;
-				startColor.a = startColor.a/2;
+				//projectileColor.a = projectileColor.a/2;
+				//startColor.a = startColor.a/2;
 			}
-			
+
+			projectileColor.a = Mathf.Clamp(projectileColor.a, 0.25f, 1f);
+			startColor.a = Mathf.Clamp(startColor.a, 0.25f, 1f);
 			currentColor = projectileColor;
 			if(fadeColor)	
 			{
@@ -120,9 +127,16 @@ namespace BahaTurret
 			//float width = tracerStartWidth * Vector3.Distance(transform.position, FlightCamera.fetch.mainCamera.transform.position)/50;
 			//bulletTrail.SetWidth(width, width);
 
+			if(!shaderInitialized)
+			{
+				shaderInitialized = true;
+				bulletShader = BDAShaderLoader.LoadManifestShader("BahaTurret.BulletShader.shader");
+			}
+
 			if(!wasInitiated)
 			{
-				bulletTrail.material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
+				//bulletTrail.material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
+				bulletTrail.material = new Material(bulletShader);
 
 				randomWidthScale = UnityEngine.Random.Range(0.5f, 1f);
 				gameObject.layer = 15;
@@ -130,6 +144,10 @@ namespace BahaTurret
 
 			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture(bulletTexturePath, false);
 			bulletTrail.material.SetColor("_TintColor", currentColor);
+			bulletTrail.material.SetFloat("_Lum", tracerLuminance);
+
+			tracerStartWidth *= 2f;
+			tracerEndWidth *= 2f;
 
 			hasBounced = false;
 
@@ -190,7 +208,7 @@ namespace BahaTurret
 			
 			if(tracerLength == 0)
 			{
-				bulletTrail.SetPosition(0, transform.position+(currentVelocity * 1.35f * TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate)-(FlightGlobals.ActiveVessel.rb_velocity*TimeWarp.fixedDeltaTime));
+				bulletTrail.SetPosition(0, transform.position+(currentVelocity * tracerDeltaFactor * TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate)-(FlightGlobals.ActiveVessel.rb_velocity*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{
@@ -199,7 +217,7 @@ namespace BahaTurret
 			if(fadeColor)
 			{
 				FadeColor();
-				bulletTrail.material.SetColor("_TintColor", currentColor);
+				bulletTrail.material.SetColor("_TintColor", currentColor * tracerLuminance);
 			}
 			
 
@@ -275,7 +293,7 @@ namespace BahaTurret
 					
 					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
 					{
-                        float heatDamage = (mass / hitPart.crashTolerance) * impactVelocity * impactVelocity * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+						float heatDamage = (mass / (hitPart.crashTolerance*hitPart.mass)) * impactVelocity * impactVelocity * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance and mass
 						if(!penetrated)
 						{
 							heatDamage = heatDamage/8;
@@ -298,7 +316,7 @@ namespace BahaTurret
                             {
                                 numConnectedParts++;
                                 overKillHeatDamage /= numConnectedParts;
-                                hitPart.parent.temperature += overKillHeatDamage / hitPart.parent.crashTolerance;
+								hitPart.parent.temperature += overKillHeatDamage / (hitPart.parent.crashTolerance*hitPart.parent.mass);
 
                                 for(int i = 0; i < hitPart.children.Count; i++)
                                 {
@@ -330,7 +348,7 @@ namespace BahaTurret
 					catch(NullReferenceException){}
 					if(hitBuilding!=null && hitBuilding.IsIntact)
 					{
-                        float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER / 6000;
+                        float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER / 12000;
 						if(!penetrated)
 						{
 							damageToBuilding = damageToBuilding/8;
@@ -352,7 +370,10 @@ namespace BahaTurret
 							if(BDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
-							}	
+							}
+
+							tracerStartWidth /= 2;
+							tracerEndWidth /= 2;
 							
 							transform.position = hit.point;
 							currentVelocity = Vector3.Reflect(currentVelocity, hit.normal);
@@ -455,7 +476,7 @@ namespace BahaTurret
 			//float delta = (Vector4.Distance(currentColorV, endColorV)/0.15f) * TimeWarp.fixedDeltaTime;
 			float delta = TimeWarp.fixedDeltaTime;
 			Vector4 finalColorV = Vector4.MoveTowards(currentColor, endColorV, delta);
-			currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, finalColorV.w);
+			currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, Mathf.Clamp(finalColorV.w, 0.25f, 1f));
 		}
 		
 		bool RicochetOnPart(Part p, float angleFromNormal, float impactVel)
