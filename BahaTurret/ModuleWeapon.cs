@@ -116,6 +116,15 @@ namespace BahaTurret
 		[KSPField]
 		public float tracerLength = 0; //if set to zero, tracer will be the length of the distance covered by the projectile in one physics timestep
 		[KSPField]
+		public float tracerDeltaFactor = 2.65f;
+		[KSPField]
+		public float nonTracerWidth = 0.01f;
+		[KSPField]
+		public int tracerInterval = 0;
+		[KSPField]
+		public float tracerLuminance = 1.75f;
+		int tracerIntervalCounter = 0;
+		[KSPField]
 		public string bulletTexturePath = "BDArmory/Textures/bullet";
 
 		[KSPField]
@@ -353,6 +362,11 @@ namespace BahaTurret
 			if(shortName == string.Empty)
 			{
 				shortName = part.partInfo.title;
+			}
+
+			foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
+			{
+				emitter.emit = false;
 			}
 
 			if(airDetonation)
@@ -943,9 +957,26 @@ namespace BahaTurret
 						pBullet.projectileColor = projectileColorC;
 						pBullet.startColor = startColorC;
 						pBullet.fadeColor = fadeColor;
-						pBullet.tracerStartWidth = tracerStartWidth;
-						pBullet.tracerEndWidth = tracerEndWidth;
+
+						tracerIntervalCounter++;
+						if(tracerIntervalCounter > tracerInterval)
+						{
+							tracerIntervalCounter = 0;
+							pBullet.tracerStartWidth = tracerStartWidth;
+							pBullet.tracerEndWidth = tracerEndWidth;
+						}
+						else
+						{
+							pBullet.tracerStartWidth = nonTracerWidth;
+							pBullet.tracerEndWidth = nonTracerWidth;
+							pBullet.startColor.a *= 0.5f;
+							pBullet.projectileColor.a *= 0.5f;
+						}
+
 						pBullet.tracerLength = tracerLength;
+						pBullet.tracerDeltaFactor = tracerDeltaFactor;
+						pBullet.tracerLuminance = tracerLuminance;
+
 						pBullet.bulletDrop = bulletDrop;
 						
 						if(weaponType == "cannon")
@@ -1651,9 +1682,10 @@ namespace BahaTurret
 				if(weaponManager.slavingTurrets && turret)
 				{
 					slaved = true;
-					targetPosition = weaponManager.slavedPosition;
+					targetPosition = weaponManager.slavedPosition + (weaponManager.slavedVelocity*Time.fixedDeltaTime);
 					targetVelocity = weaponManager.slavedVelocity;
 					targetAcceleration = weaponManager.slavedAcceleration;
+					targetAcquired = true;
 					return;
 				}
 
