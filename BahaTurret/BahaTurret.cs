@@ -632,7 +632,7 @@ namespace BahaTurret
 			targetVessel = null;
 			if(vessel.targetObject!=null)
 			{
-				targetVessel = vessel.targetObject.GetVessel();
+                targetVessel = vessel.targetObject.GetVessel();
 			}
 			
 			//auto target tracking
