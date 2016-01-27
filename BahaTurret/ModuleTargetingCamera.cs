@@ -29,6 +29,9 @@ namespace BahaTurret
 		public float gimbalLimit = 120;
 		public bool gimbalLimitReached = false;
 
+		[KSPField]
+		public bool rollCameraModel = false;
+
 		[KSPField(isPersistant = true)]
 		public bool cameraEnabled = false;
 
@@ -220,14 +223,16 @@ namespace BahaTurret
 			}
 			//StopResetting();
 
-			if(!TargetingCamera.Instance)
-			{
-				Debug.Log ("Tried to disable targeting camera, but camera instance is null.");
-				return;
-			}
+
 		
 			if(vessel.isActiveVessel)
 			{
+				if(!TargetingCamera.Instance)
+				{
+					Debug.Log ("Tried to disable targeting camera, but camera instance is null.");
+					return;
+				}
+
 				TargetingCamera.Instance.DisableCamera();
 				if(ModuleTargetingCamera.activeCam == this)
 				{
@@ -307,7 +312,7 @@ namespace BahaTurret
 				ParseFovs();
 				UpdateSlewRate();
 
-
+				GameEvents.onVesselCreate.Add(Disconnect);
 
 
 				if(cameraEnabled)
@@ -319,6 +324,20 @@ namespace BahaTurret
 				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
 				{
 					wm.targetingPods.Add(this);
+				}
+			}
+		}
+
+		void Disconnect(Vessel v)
+		{
+			if(weaponManager && vessel)
+			{
+				if(weaponManager.vessel != vessel)
+				{
+					if(slaveTurrets)
+					{
+						weaponManager.slavingTurrets = false;
+					}
 				}
 			}
 		}
@@ -370,12 +389,33 @@ namespace BahaTurret
 				Debug.Log("Camera delayed enabled");
 				groundTargetPosition = VectorUtils.GetWorldSurfacePostion(savedGTP, vessel.mainBody);// vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
 				Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
-				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, VectorUtils.GetUpDirection(cameraParentTransform.transform.position));
+				PointCameraModel(lookVector);
 				GroundStabilize();
 			}
 			delayedEnabling = false;
 
 			Debug.Log("post load saved gtp: " + bodyRelativeGTP);
+		}
+
+		void PointCameraModel(Vector3 lookVector)
+		{
+
+			Vector3 worldUp = VectorUtils.GetUpDirection(cameraParentTransform.position);
+			if(rollCameraModel)
+			{
+				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, worldUp);
+			}
+			else
+			{
+				Vector3 camUp = cameraParentTransform.up;
+				if(eyeHolderTransform) camUp = Vector3.Cross(cameraParentTransform.forward, eyeHolderTransform.right);
+				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, camUp);
+				if(vessel.isActiveVessel && TargetingCamera.Instance && TargetingCamera.Instance.cameraTransform)
+				{
+					TargetingCamera.Instance.cameraTransform.rotation = Quaternion.LookRotation(cameraParentTransform.forward, worldUp); 
+				}
+			}
+
 		}
 
 
@@ -414,7 +454,8 @@ namespace BahaTurret
 					{
 						groundTargetPosition = VectorUtils.GetWorldSurfacePostion(bodyRelativeGTP, vessel.mainBody);//vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
 						Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
-						cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
+						//cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
+						PointCameraModel(lookVector);
 					}
 
 
@@ -430,7 +471,11 @@ namespace BahaTurret
 						gimbalLimitReached = false;
 					}
 
-					cameraParentTransform.rotation = Quaternion.LookRotation(lookDirection, VectorUtils.GetUpDirection(transform.position));
+					if(!groundStabilized || gimbalLimitReached)
+					{
+						PointCameraModel(lookDirection);
+					}
+						
 					
 					if(eyeHolderTransform)
 					{
@@ -594,13 +639,21 @@ namespace BahaTurret
 
 		void UpdateRadarLock()
 		{
-			if(weaponManager && weaponManager.radar && weaponManager.radar.locked)
+			if(weaponManager && weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
 			{
-				Vector3 radarTargetPos = weaponManager.radar.lockedTarget.predictedPosition + (weaponManager.radar.lockedTarget.velocity*Time.fixedDeltaTime);
-				Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
-				if(Vector3.Angle(radarTargetPos - cameraParentTransform.position, cameraParentTransform.forward) < 1.5f)
+				RadarDisplayData tgt = weaponManager.vesselRadarData.lockedTargetData;
+				Vector3 radarTargetPos = tgt.targetData.predictedPosition + (tgt.targetData.velocity*Time.fixedDeltaTime);
+				Vector3 targetDirection = radarTargetPos - cameraParentTransform.position;
+
+				//Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
+				if(Vector3.Angle(radarTargetPos - cameraParentTransform.position, cameraParentTransform.forward) < 0.5f)
 				{
-					cameraParentTransform.rotation = lookRotation;
+					//cameraParentTransform.rotation = lookRotation;
+					if(tgt.vessel)
+					{
+						targetDirection = ((tgt.vessel.CoM+(tgt.vessel.rb_velocity*Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
+					}
+					PointCameraModel(targetDirection);
 					GroundStabilize();
 				}
 				else
@@ -609,12 +662,14 @@ namespace BahaTurret
 					{
 						ClearTarget();
 					}
-					cameraParentTransform.rotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 80*Time.fixedDeltaTime);
+					//lookRotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 120*Time.fixedDeltaTime);
+					Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 300*Time.fixedDeltaTime*Mathf.Deg2Rad, 0);
+					PointCameraModel(rotateTwdDirection);
 				}
 			}
 			else
 			{
-				radarLock = false;
+				//radarLock = false;
 			}
 		}
 
@@ -1022,9 +1077,9 @@ namespace BahaTurret
 				mtc.slaveTurrets = false;
 			}
 
-			foreach (var rad in vessel.FindPartModulesImplementing<ModuleRadar>())
+			if(weaponManager && weaponManager.vesselRadarData)
 			{
-				rad.slaveTurrets = false;
+				weaponManager.vesselRadarData.slaveTurrets = false;
 			}
 
 			slaveTurrets = true;
@@ -1037,9 +1092,9 @@ namespace BahaTurret
 				mtc.slaveTurrets = false;
 			}
 
-			foreach (var rad in vessel.FindPartModulesImplementing<ModuleRadar>())
+			if(weaponManager && weaponManager.vesselRadarData)
 			{
-				rad.slaveTurrets = false;
+				weaponManager.vesselRadarData.slaveTurrets = false;
 			}
 
 			if(weaponManager)
@@ -1087,16 +1142,22 @@ namespace BahaTurret
 		{
 			StopResetting();
 			StopPointToPosRoutine();
+
 			radarLock = false;
 			float slewRate = finalSlewSpeed;
-			cameraParentTransform.localRotation *= Quaternion.AngleAxis(slewRate*Time.deltaTime, Quaternion.AngleAxis(90, Vector3.forward) * direction);
-
+			Vector3 rotationAxis = Matrix4x4.TRS(Vector3.zero, Quaternion.LookRotation(cameraParentTransform.forward, vessel.upAxis), Vector3.one).MultiplyVector(Quaternion.AngleAxis(90, Vector3.forward) * direction);
+			Vector3 lookVector = Quaternion.AngleAxis(slewRate * Time.deltaTime, rotationAxis) * cameraParentTransform.forward;
+			PointCameraModel(lookVector);
 			yield return new WaitForEndOfFrame();
+
 
 			if(groundStabilized)
 			{
 				GroundStabilize();
+				lookVector = groundTargetPosition - cameraParentTransform.position;
 			}
+
+			PointCameraModel(lookVector);
 		}
 
 		void PointToGPSTarget()
@@ -1129,6 +1190,22 @@ namespace BahaTurret
 			//fov = zoomFovs[currentFovIndex];
 		}
 
+		GameObject debugSphere;
+		void CreateDebugSphere()
+		{
+			debugSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			debugSphere.GetComponent<Collider>().enabled = false;
+		}
+
+		void MoveDebugSphere()
+		{
+			if(!debugSphere)
+			{
+				CreateDebugSphere();
+			}
+			debugSphere.transform.position = groundTargetPosition;
+		}
+
 		void GroundStabilize()
 		{
 			if(vessel.packed) return;
@@ -1146,7 +1223,7 @@ namespace BahaTurret
 					Part p = rayHit.collider.GetComponentInParent<Part>();
 					if(p && p.vessel && p.vessel.CoM!=Vector3.zero)
 					{
-						groundTargetPosition = p.vessel.CoM;
+						groundTargetPosition = p.vessel.CoM+(p.vessel.rb_velocity*Time.fixedDeltaTime);
 						StartCoroutine(StabilizeNextFrame());
 					}
 				}
@@ -1158,7 +1235,7 @@ namespace BahaTurret
             }
 			else
 			{
-				Vector3 upDir = VectorUtils.GetUpDirection(transform.position);
+				Vector3 upDir = VectorUtils.GetUpDirection(cameraParentTransform.position);
 				float altitude = (float)vessel.altitude; //MissileGuidance.GetRadarAltitude(vessel);
 				Plane surfacePlane = new Plane(upDir, vessel.transform.position-(altitude*upDir));
 				float enter;
@@ -1176,6 +1253,11 @@ namespace BahaTurret
 					}
 				}
 	
+			}
+
+			if(BDArmorySettings.DRAW_DEBUG_LABELS)
+			{
+				MoveDebugSphere();
 			}
 		}
 
@@ -1262,7 +1344,8 @@ namespace BahaTurret
 			while(Vector3.Angle(cameraParentTransform.forward, cameraParentTransform.parent.forward) > 0.1f)
 			{
 				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.forward, cameraParentTransform.parent.forward, 60*Mathf.Deg2Rad*Time.deltaTime, 0);
-				cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+				//cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+				PointCameraModel(newForward);
 				gimbalLimitReached = false;
 				yield return null;
 			}
@@ -1295,11 +1378,11 @@ namespace BahaTurret
 			radarLock = false;
 			StopResetting();
 			ClearTarget();
-			while(!stopPTPR && Vector3.Angle(cameraParentTransform.transform.forward, position - (cameraParentTransform.transform.position+(part.rb.velocity*Time.fixedDeltaTime))) > 0.75f)
+			while(!stopPTPR && Vector3.Angle(cameraParentTransform.transform.forward, position - (cameraParentTransform.transform.position)) > 0.1f)
 			{
-				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.transform.forward, position - cameraParentTransform.transform.position, 60 * Mathf.Deg2Rad * Time.fixedDeltaTime, 0);
-				cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
-
+				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.transform.forward, position - cameraParentTransform.transform.position, 90 * Mathf.Deg2Rad * Time.fixedDeltaTime, 0);
+				//cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+				PointCameraModel(newForward);
 				yield return new WaitForFixedUpdate();
 				if(gimbalLimitReached)
 				{
@@ -1311,7 +1394,8 @@ namespace BahaTurret
 			}
 			if(surfaceDetected && !stopPTPR)
 			{
-				cameraParentTransform.transform.rotation = Quaternion.LookRotation(position - cameraParentTransform.position, VectorUtils.GetUpDirection(transform.position));
+				//cameraParentTransform.transform.rotation = Quaternion.LookRotation(position - cameraParentTransform.position, VectorUtils.GetUpDirection(transform.position));
+				PointCameraModel(position-cameraParentTransform.position);
 				GroundStabilize();
 			}
 			slewingToPosition = false;
@@ -1343,6 +1427,13 @@ namespace BahaTurret
 		void OnDestroy()
 		{
 			windowIsOpen = false;
+			if(weaponManager)
+			{
+				if(slaveTurrets)
+				{
+					weaponManager.slavingTurrets = false;
+				}
+			}
 		}
 
 		Vector2 TargetAzimuthElevationScreenPos(Rect screenRect, Vector3 targetPosition, float textureSize)

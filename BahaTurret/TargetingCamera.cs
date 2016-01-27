@@ -41,7 +41,7 @@ namespace BahaTurret
 
 
 		Camera[] cameras;
-		Transform cameraTransform;
+		public Transform cameraTransform;
 
 		bool cameraEnabled = false;
 
