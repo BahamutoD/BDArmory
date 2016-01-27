@@ -208,6 +208,7 @@ namespace BahaTurret
 			targetPitchAngle = Mathf.Clamp(targetPitchAngle, minPitch, maxPitch);
 
 			float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward), targetYaw);
+			float currentYawSign = Mathf.Sign(Vector3.Dot(yawTransform.localRotation*Vector3.forward, Vector3.right));
 			float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward), targetPitch);
 
 			float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset / yawOffset) * (yawSpeedDPS/pitchSpeedDPS)) : 1;
@@ -228,7 +229,12 @@ namespace BahaTurret
 
 			yawSpeed *= linYawMult;
 			pitchSpeed *= linPitchMult;
-			
+
+			if(yawRange < 360 && Mathf.Abs(targetYawAngle) > 90 && currentYawSign != Mathf.Sign(targetYawAngle))
+			{
+				targetYawAngle = 5 * Mathf.Sign(targetYawAngle);
+			}
+
 			if(yaw) yawTransform.localRotation = Quaternion.RotateTowards(yawTransform.localRotation, Quaternion.Euler(0, targetYawAngle, 0), yawSpeed);
 			if(pitch) pitchTransform.localRotation = Quaternion.RotateTowards(pitchTransform.localRotation, Quaternion.Euler(-targetPitchAngle, 0, 0), pitchSpeed);
 		}
