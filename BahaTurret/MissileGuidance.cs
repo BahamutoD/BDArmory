@@ -9,8 +9,8 @@ namespace BahaTurret
 		
 		public static Vector3 GetAirToGroundTarget(Vector3 targetPosition, Vessel missileVessel, float descentRatio)
 		{
-			Vector3 upDirection = -FlightGlobals.getGeeForceAtPosition(targetPosition).normalized;
-			Vector3 surfacePos = missileVessel.transform.position - ((float)missileVessel.altitude*upDirection);
+			Vector3 upDirection = missileVessel.upAxis;//-FlightGlobals.getGeeForceAtPosition(targetPosition).normalized;
+			Vector3 surfacePos = missileVessel.transform.position + Vector3.Project(targetPosition-missileVessel.transform.position, upDirection); //((float)missileVessel.altitude*upDirection);
 			Vector3 targetSurfacePos;
 
 			targetSurfacePos = targetPosition;
@@ -62,14 +62,19 @@ namespace BahaTurret
 			}
 		}
 
-		public static Vector3 GetBeamRideTarget(Ray beam, Vector3 currentPosition, Vector3 currentVelocity, float correctionFactor, float correctionDamping)
+		public static Vector3 GetBeamRideTarget(Ray beam, Vector3 currentPosition, Vector3 currentVelocity, float correctionFactor, float correctionDamping, Ray previousBeam)
 		{
-			Vector3 onBeamPos = beam.GetPoint(Vector3.Distance(currentPosition, beam.origin));
+			float onBeamDistance = Vector3.Project(currentPosition - beam.origin, beam.direction).magnitude;
+			//Vector3 onBeamPos = beam.origin+Vector3.Project(currentPosition-beam.origin, beam.direction);//beam.GetPoint(Vector3.Distance(Vector3.Project(currentPosition-beam.origin, beam.direction), Vector3.zero));
+			Vector3 onBeamPos = beam.GetPoint(onBeamDistance);
+			Vector3 previousBeamPos = previousBeam.GetPoint(onBeamDistance);
+			Vector3 beamVel = (onBeamPos - previousBeamPos) / Time.fixedDeltaTime;
 			Vector3 target = onBeamPos + (500f * beam.direction);
 			Vector3 offset = onBeamPos - currentPosition;
+			offset += beamVel*0.5f;
 			target += correctionFactor * offset;
 
-			Vector3 velDamp = correctionDamping * Vector3.Project(currentVelocity, onBeamPos - currentPosition);
+			Vector3 velDamp = correctionDamping * Vector3.ProjectOnPlane(currentVelocity-beamVel, beam.direction);
 			target -= velDamp;
 
 
