@@ -23,6 +23,9 @@ namespace BahaTurret
 		public bool autoReturn = true;
 		bool hasReturned = true;
 
+		[KSPField]
+		public float railLength = 3;
+
 		Coroutine returnRoutine;
 
 		int missileCount = 0;
@@ -38,7 +41,8 @@ namespace BahaTurret
 
 		bool pausingAfterShot = true;
 		float timeFired = 0;
-		float pauseTime = 0.25f;
+		[KSPField]
+		public float firePauseTime = 0.25f;
 
 		ModuleRadar attachedRadar;
 		bool hasAttachedRadar = false;
@@ -108,6 +112,11 @@ namespace BahaTurret
 
 		public void EnableTurret()
 		{
+			if(!HighLogic.LoadedSceneIsFlight)
+			{
+				return;
+			}
+
 			if(returnRoutine!=null)
 			{
 				StopCoroutine(returnRoutine);
@@ -147,6 +156,10 @@ namespace BahaTurret
 			if(autoReturn)
 			{
 				hasReturned = true;
+				if(returnRoutine != null)
+				{
+					StopCoroutine(returnRoutine);
+				}
 				returnRoutine = StartCoroutine(ReturnRoutine());
 			}
 
@@ -300,7 +313,7 @@ namespace BahaTurret
 
 			}
 
-			pausingAfterShot = (Time.time - timeFired < pauseTime);
+			pausingAfterShot = (Time.time - timeFired < firePauseTime);
 		}
 			
 
@@ -494,7 +507,7 @@ namespace BahaTurret
 					wm.SendTargetDataToMissile(missileChildren[index]);
 				}
 				missileChildren[index].FireMissile();
-
+				StartCoroutine(MissileRailRoutine(missileChildren[index]));
 				if(wm)
 				{
 					wm.UpdateList();
@@ -518,6 +531,39 @@ namespace BahaTurret
 			{
 				Debug.Log("Tried to fire a missile that doesn't exist or is not attached to the turret.");
 			}
+		}
+
+		IEnumerator MissileRailRoutine(MissileLauncher ml)
+		{
+			yield return null;
+			Ray ray = new Ray(ml.transform.position, ml.missileReferenceTransform.forward);
+			Vector3 localOrigin = turret.pitchTransform.InverseTransformPoint(ray.origin);
+			Vector3 localDirection = turret.pitchTransform.InverseTransformDirection(ray.direction);
+			float forwardSpeed = ml.decoupleSpeed;
+			while(ml && Vector3.SqrMagnitude(ml.transform.position - ray.origin) < railLength*railLength)
+			{
+				float thrust = ml.timeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
+				thrust = ml.timeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
+				float accel = thrust / ml.part.mass;
+				forwardSpeed += accel * Time.fixedDeltaTime;
+
+				ray.origin = turret.pitchTransform.TransformPoint(localOrigin);
+				ray.direction = turret.pitchTransform.TransformDirection(localDirection);
+
+				Vector3 projPos = Vector3.Project(ml.vessel.transform.position - ray.origin, ray.direction) + ray.origin;
+				Vector3 railVel = part.rb.GetPointVelocity(projPos);
+				//Vector3 projVel = Vector3.Project(ml.vessel.srf_velocity-railVel, ray.direction);
+
+				ml.vessel.SetPosition(projPos);
+				ml.vessel.SetWorldVelocity(railVel + (forwardSpeed*ray.direction));
+
+				yield return new WaitForFixedUpdate();
+
+				ray.origin = turret.pitchTransform.TransformPoint(localOrigin);
+				ray.direction = turret.pitchTransform.TransformDirection(localDirection);
+			}
+
+
 		}
 
 
