@@ -46,7 +46,7 @@ namespace BahaTurret
 		public string explSoundPath = "BDArmory/Sounds/explode1";
 
 		[KSPField]
-		public float thrustDeviation = 0.14f;
+		public float thrustDeviation = 0.10f;
 
 		[KSPField]
 		public float maxTargetingRange = 8000;
@@ -74,12 +74,40 @@ namespace BahaTurret
 
 		public bool readyToFire = true;
 
+		public Vessel legacyGuardTarget = null;
+		public float lastAutoFiredTime = 0;
+		public float autoRippleRate = 0;
+		public float autoFireStartTime = 0;
+		public float autoFireDuration = 0;
+	
 		//turret
 		[KSPField]
 		public int turretID = 0;
 		public ModuleTurret turret;
 		Vector3 trajectoryOffset = Vector3.zero;
 		public MissileFire weaponManager;
+		bool targetInTurretView = true;
+		public float yawRange
+		{
+			get
+			{
+				return turret ? turret.yawRange : 0;
+			}
+		}
+		public float maxPitch
+		{
+			get
+			{
+				return turret ? turret.maxPitch : 0;
+			}
+		}
+		public float minPitch
+		{
+			get
+			{
+				return turret ? turret.minPitch : 0;
+			}
+		}
 		
 		double lastRocketsLeft = 0;
 		
@@ -100,6 +128,8 @@ namespace BahaTurret
 		{
 			return string.Empty;
 		}
+
+	
 
 		[KSPAction("Fire")]
 		public void AGFire(KSPActionParam param)
@@ -171,7 +201,12 @@ namespace BahaTurret
 			readyToFire = false;
 			drawAimer = false;
 			hasReturned = false;
+			targetInTurretView = false;
 
+			if(returnRoutine != null)
+			{
+				StopCoroutine(returnRoutine);
+			}
 			returnRoutine = StartCoroutine(ReturnRoutine());
 
 			if(hasDeployAnimation)
@@ -243,6 +278,7 @@ namespace BahaTurret
 					if(turr.turretID == turretID)
 					{
 						turret = turr;
+						targetInTurretView = false;
 						break;
 					}
 				}
@@ -347,11 +383,33 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				if(readyToFire && deployed && (!weaponManager || weaponManager.selectedWeaponString!=GetShortName()))
+				if(readyToFire && deployed)
 				{
-					if(BDInputUtils.GetKeyDown(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING))
+					if(returnRoutine != null)
 					{
-						FireRocket();
+						StopCoroutine(returnRoutine);
+						returnRoutine = null;
+					}
+
+					if(weaponManager && weaponManager.guardMode && weaponManager.selectedWeaponString == GetShortName())
+					{
+						if(Time.time - autoFireStartTime < autoFireDuration)
+						{
+							float fireInterval = 0.5f;
+							if(autoRippleRate > 0) fireInterval = 60f / autoRippleRate;
+							if(Time.time - lastAutoFiredTime > fireInterval)
+							{
+								FireRocket();
+								lastAutoFiredTime = Time.time;
+							}
+						}
+					}
+					else if((!weaponManager || (weaponManager.selectedWeaponString != GetShortName() && !weaponManager.guardMode)))
+					{
+						if(BDInputUtils.GetKeyDown(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING))
+						{
+							FireRocket();
+						}
 					}
 				}
 			}			
@@ -361,7 +419,7 @@ namespace BahaTurret
 		void Aim()
 		{
 			mouseAiming = false;
-			if(weaponManager && weaponManager.slavingTurrets)
+			if(weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode))
 			{
 				SlavedAim();
 			}
@@ -376,18 +434,38 @@ namespace BahaTurret
 
 		void SlavedAim()
 		{
-			float targetDistance = Vector3.Distance(weaponManager.slavedPosition, rockets[0].parent.transform.position);
-			currentTgtRange = targetDistance;
+			Vector3 targetPosition;
+			Vector3 targetVel;
+			Vector3 targetAccel;
+			if(weaponManager.slavingTurrets)
+			{
+				targetPosition = weaponManager.slavedPosition;
+				targetVel = weaponManager.slavedVelocity;
+				targetAccel = weaponManager.slavedAcceleration;
 
-			Vector3 targetPosition = weaponManager.slavedPosition;
+				//targetPosition -= vessel.srf_velocity * predictedFlightTime;
+			}
+			else if(legacyGuardTarget)
+			{
+				targetPosition = legacyGuardTarget.CoM;
+				targetVel = legacyGuardTarget.srf_velocity;
+				targetAccel = legacyGuardTarget.acceleration;
+			}
+			else
+			{
+				targetInTurretView = false;
+				return;
+			}
+
+			currentTgtRange = Vector3.Distance(targetPosition, rockets[0].parent.transform.position);
+
 
 			targetPosition += trajectoryOffset;
-			targetPosition += weaponManager.slavedVelocity * predictedFlightTime;
-			targetPosition += 0.5f * weaponManager.slavedAcceleration * predictedFlightTime * predictedFlightTime;
-			//targetPosition -= vessel.srf_velocity * predictedFlightTime;
-
+			targetPosition += targetVel * predictedFlightTime;
+			targetPosition += 0.5f * targetAccel * predictedFlightTime * predictedFlightTime;
 
 			turret.AimToTarget(targetPosition);
+			targetInTurretView = turret.TargetInRange(targetPosition, 2, maxTargetingRange);
 		}
 
 		void MouseAim()
@@ -436,12 +514,13 @@ namespace BahaTurret
 
 
 			turret.AimToTarget(targetPosition);
+			targetInTurretView = turret.TargetInRange(targetPosition, 2, maxTargetingRange);
 		}
 		
 		public void FireRocket()
 		{
 			if(!readyToFire) return;
-
+			if(!targetInTurretView) return;
 
 			PartResource rocketResource = GetRocketResource();
 			
@@ -492,7 +571,7 @@ namespace BahaTurret
 		
 		void SimulateTrajectory()
 		{
-			if(BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel && vessel.altitude < 5000)
+			if((BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel) || (weaponManager && weaponManager.guardMode && weaponManager.selectedWeaponString==GetShortName()))
 			{
 				float simTime = 0;
 				Transform fireTransform = rockets[0].parent;
@@ -506,7 +585,7 @@ namespace BahaTurret
 				List<Vector3> pointPositions = new List<Vector3>();
 				pointPositions.Add(simCurrPos);
 
-				bool slaved = weaponManager && weaponManager.slavingTurrets;
+				bool slaved = turret && weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode);
 				float atmosMultiplier = Mathf.Clamp01(2.5f*(float)FlightGlobals.getAtmDensity(vessel.staticPressurekPa, vessel.externalTemperature, vessel.mainBody));
 				while(simulating)
 				{
