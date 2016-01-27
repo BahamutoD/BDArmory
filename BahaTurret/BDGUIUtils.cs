@@ -56,6 +56,7 @@ namespace BahaTurret
 
 		public static void DrawLineBetweenWorldPositions(Vector3 worldPosA, Vector3 worldPosB, float width, Color color)
 		{
+			GUI.matrix = Matrix4x4.identity;
 			Vector3 screenPosA = Camera.main.WorldToViewportPoint(worldPosA);
 			screenPosA.x = screenPosA.x*Screen.width;
 			screenPosA.y = (1-screenPosA.y)*Screen.height;

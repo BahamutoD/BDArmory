@@ -7,3 +7,15 @@ C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\Mono.Cecil.dll
 C:\Users\ferram4\BDArmory\BahaTurret\bin\Release\Mono.Security.dll
 C:\Users\ferram4\BDArmory\BahaTurret\obj\x86\Release\BahaTurret.dll
 C:\Users\ferram4\BDArmory\BahaTurret\obj\x86\Release\BahaTurret.csprojResolveAssemblyReference.cache
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\BahaTurret.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\Assembly-CSharp.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\UnityEngine.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\System.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\Assembly-CSharp-firstpass.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\System.Xml.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\TDx.TDxInput.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\TrackIRUnity.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\Mono.Cecil.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\bin\Release\Mono.Security.dll
+D:\Plugin Projects\BahaTurret\BahaTurret\obj\x86\Release\BahaTurret.csprojResolveAssemblyReference.cache
+D:\Plugin Projects\BahaTurret\BahaTurret\obj\x86\Release\BahaTurret.dll
