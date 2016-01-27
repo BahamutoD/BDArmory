@@ -244,123 +244,136 @@ namespace BahaTurret
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
 					bool penetrated = true;
-
-                    float impactVelocity = currentVelocity.magnitude;
-                    if (dragType == BulletDragTypes.AnalyticEstimate)
-                    {
-                        float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition), FlightGlobals.getExternalTemperature(currPosition));
-                        analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
-                        analyticDragVelAdjustment += 2 * ballisticCoefficient;
-
-                        analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;        //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
-
-                        analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;       //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
-                        //the above number should be negative...
-                        impactVelocity += analyticDragVelAdjustment;        //so add it to the impact velocity
-
-                        if (impactVelocity < 0)
-                        {
-                            impactVelocity = 0;     //clamp the velocity to > 0, since it could drop below 0 if the bullet is fired upwards
-                        }
-                        //Debug.Log("flight time: " + flightTimeElapsed + " BC: " + ballisticCoefficient + "\ninit speed: " + initialSpeed + " vel diff: " + analyticDragVelAdjustment);
-                    }
-                    
-                    //hitting a vessel Part
-					
-					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					/////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
-					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					
-					Part hitPart =  null;   //determine when bullet collides with a target
-					try{
-						hitPart = Part.FromGO(hit.rigidbody.gameObject);
-					}catch(NullReferenceException){}
-					
+					Part hitPart = null;   //determine when bullet collides with a target
 					float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
-					if(hitPart!=null) //see if it will ricochet of the part
+
+					if(bulletType != PooledBulletTypes.Explosive) //dont do bullet damage if it is explosive
 					{
-						penetrated = !RicochetOnPart(hitPart, hitAngle, impactVelocity);
-					}
-					else //see if it will ricochet off scenery
-					{
-						float reflectRandom = UnityEngine.Random.Range(-150f, 90f);
-						if(reflectRandom > 90-hitAngle)
+						float impactVelocity = currentVelocity.magnitude;
+						if(dragType == BulletDragTypes.AnalyticEstimate)
 						{
-							penetrated = false;
+							float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition), FlightGlobals.getExternalTemperature(currPosition));
+							analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
+							analyticDragVelAdjustment += 2 * ballisticCoefficient;
+
+							analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;        //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
+
+							analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;       //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
+							//the above number should be negative...
+							impactVelocity += analyticDragVelAdjustment;        //so add it to the impact velocity
+
+							if(impactVelocity < 0)
+							{
+								impactVelocity = 0;     //clamp the velocity to > 0, since it could drop below 0 if the bullet is fired upwards
+							}
+							//Debug.Log("flight time: " + flightTimeElapsed + " BC: " + ballisticCoefficient + "\ninit speed: " + initialSpeed + " vel diff: " + analyticDragVelAdjustment);
 						}
-					}
+                    
+						//hitting a vessel Part
+					
+						//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+						/////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
+						//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					
+
+						try
+						{
+							hitPart = Part.FromGO(hit.rigidbody.gameObject);
+						}
+						catch(NullReferenceException)
+						{
+						}
+					
+
+						if(hitPart != null) //see if it will ricochet of the part
+						{
+							penetrated = !RicochetOnPart(hitPart, hitAngle, impactVelocity);
+						}
+						else //see if it will ricochet off scenery
+						{
+							float reflectRandom = UnityEngine.Random.Range(-150f, 90f);
+							if(reflectRandom > 90 - hitAngle)
+							{
+								penetrated = false;
+							}
+						}
 					
 					
-					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
-					{
-						float heatDamage = (mass / (hitPart.crashTolerance*hitPart.mass)) * impactVelocity * impactVelocity * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance and mass
-						if(!penetrated)
+						if(hitPart != null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
 						{
-							heatDamage = heatDamage/8;
-						}
-						if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
-						{
-							heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
-						}
-						if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
+							float heatDamage = (mass / (hitPart.crashTolerance * hitPart.mass)) * impactVelocity * impactVelocity * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance and mass
+							if(!penetrated)
+							{
+								heatDamage = heatDamage / 8;
+							}
+							if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
+							{
+								heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
+							}
+							if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
 						
-					    if (hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
+							if(hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
 
-                        float overKillHeatDamage = (float)(hitPart.temperature - hitPart.maxTemp);
+							float overKillHeatDamage = (float)(hitPart.temperature - hitPart.maxTemp);
 
-                        if(overKillHeatDamage > 0)      //if the part is destroyed by overheating, we want to add the remaining heat to attached parts.  This prevents using tiny parts as armor
-                        {
-                            overKillHeatDamage *= hitPart.crashTolerance;       //reset to raw damage
-                            float numConnectedParts = hitPart.children.Count;
-                            if(hitPart.parent != null)
-                            {
-                                numConnectedParts++;
-                                overKillHeatDamage /= numConnectedParts;
-								hitPart.parent.temperature += overKillHeatDamage / (hitPart.parent.crashTolerance*hitPart.parent.mass);
+							if(overKillHeatDamage > 0)      //if the part is destroyed by overheating, we want to add the remaining heat to attached parts.  This prevents using tiny parts as armor
+							{
+								overKillHeatDamage *= hitPart.crashTolerance;       //reset to raw damage
+								float numConnectedParts = hitPart.children.Count;
+								if(hitPart.parent != null)
+								{
+									numConnectedParts++;
+									overKillHeatDamage /= numConnectedParts;
+									hitPart.parent.temperature += overKillHeatDamage / (hitPart.parent.crashTolerance * hitPart.parent.mass);
 
-                                for(int i = 0; i < hitPart.children.Count; i++)
-                                {
-                                    hitPart.children[i].temperature += overKillHeatDamage / hitPart.children[i].crashTolerance;
-                                }
-                            }
-                            else
-                            {
-                                overKillHeatDamage /= numConnectedParts;
-                                for (int i = 0; i < hitPart.children.Count; i++)
-                                {
-                                    hitPart.children[i].temperature += overKillHeatDamage / hitPart.children[i].crashTolerance;
-                                }
-                            }
-                        }
+									for(int i = 0; i < hitPart.children.Count; i++)
+									{
+										hitPart.children[i].temperature += overKillHeatDamage / hitPart.children[i].crashTolerance;
+									}
+								}
+								else
+								{
+									overKillHeatDamage /= numConnectedParts;
+									for(int i = 0; i < hitPart.children.Count; i++)
+									{
+										hitPart.children[i].temperature += overKillHeatDamage / hitPart.children[i].crashTolerance;
+									}
+								}
+							}
 						
-					}
-					
-					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					/////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE END////////////////////////////////////////////////////////////////
-					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					
-					
-					//hitting a Building
-					DestructibleBuilding hitBuilding = null;
-					try{
-						hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
-					}
-					catch(NullReferenceException){}
-					if(hitBuilding!=null && hitBuilding.IsIntact)
-					{
-                        float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER / 12000;
-						if(!penetrated)
-						{
-							damageToBuilding = damageToBuilding/8;
 						}
-						hitBuilding.AddDamage(damageToBuilding);
-						if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
-						{
-							hitBuilding.Demolish();
-						}
-						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("bullet hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
-					}
 					
+						//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+						/////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE END////////////////////////////////////////////////////////////////
+						//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					
+					
+						//hitting a Building
+						DestructibleBuilding hitBuilding = null;
+						try
+						{
+							hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+						}
+						catch(NullReferenceException)
+						{
+						}
+						if(hitBuilding != null && hitBuilding.IsIntact)
+						{
+							float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER / 12000;
+							if(!penetrated)
+							{
+								damageToBuilding = damageToBuilding / 8;
+							}
+							hitBuilding.AddDamage(damageToBuilding);
+							if(hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
+							{
+								hitBuilding.Demolish();
+							}
+							if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("bullet hit destructible building! Damage: " + (damageToBuilding).ToString("0.00") + ", total Damage: " + hitBuilding.Damage);
+						}
+
+					}
+
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
 					{
 						if(!penetrated && !hasBounced)
@@ -385,15 +398,16 @@ namespace BahaTurret
 						}
 						else
 						{
-							if(BDArmorySettings.BULLET_HITS)
-							{
-								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
-							}
-							
 							if(bulletType == PooledBulletTypes.Explosive)
 							{
 								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
 							}
+							else if(BDArmorySettings.BULLET_HITS)
+							{
+								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
+							}
+							
+
 							
 							//GameObject.Destroy(gameObject); //destroy bullet on collision
 							KillBullet();
