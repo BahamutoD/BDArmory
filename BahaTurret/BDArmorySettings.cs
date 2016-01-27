@@ -529,7 +529,7 @@ namespace BahaTurret
 			drawCursor = false;
 			if(!MapView.MapIsEnabled && !Misc.CheckMouseIsOnGui() && !PauseMenu.isOpen)
 			{
-				if(ActiveWeaponManager.weaponIndex > 0)
+				if(ActiveWeaponManager.weaponIndex > 0 && !ActiveWeaponManager.guardMode)
 				{
 					if(ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Gun || ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.DefenseLaser)
 					{
@@ -649,6 +649,8 @@ namespace BahaTurret
 
 				if(cfg.HasValue("PEACE_MODE")) PEACE_MODE = bool.Parse(cfg.GetValue("PEACE_MODE"));
 
+				if(cfg.HasValue("SHELL_COLLISIONS")) SHELL_COLLISIONS = bool.Parse(cfg.GetValue("SHELL_COLLISIONS"));
+
 				BDInputSettingsFields.LoadSettings(fileNode);
 			}
 			catch(NullReferenceException)
@@ -701,6 +703,7 @@ namespace BahaTurret
 				cfg.SetValue("MAX_BULLET_RANGE", MAX_BULLET_RANGE.ToString(), true);
 				cfg.SetValue("PEACE_MODE", PEACE_MODE.ToString(), true);
 				cfg.SetValue("MAX_GUARD_VISUAL_RANGE", MAX_GUARD_VISUAL_RANGE.ToString(), true);
+				cfg.SetValue("SHELL_COLLISIONS", SHELL_COLLISIONS.ToString(), true);
 
 				BDInputSettingsFields.SaveSettings(fileNode);
 
@@ -952,7 +955,7 @@ namespace BahaTurret
 				if(showGuardMenu && !toolMinimized)
 				{
 					line += 0.25f;
-					GUI.BeginGroup(new Rect(5, contentTop+(line*entryHeight), toolWindowWidth-10, 5.45f*entryHeight), GUIContent.none, HighLogic.Skin.box);
+					GUI.BeginGroup(new Rect(5, contentTop+(line*entryHeight), toolWindowWidth-10, 7.45f*entryHeight), GUIContent.none, HighLogic.Skin.box);
 					guardLines += 0.1f;
 					contentWidth -= 16;
 					leftIndent += 3;
@@ -989,6 +992,22 @@ namespace BahaTurret
 					ActiveWeaponManager.guardRange = guardRange * 100;
 					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.guardRange.ToString(), leftLabel);
 					guardLines++;
+
+					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Guns Range", leftLabel);
+					float gRange = ActiveWeaponManager.gunRange;
+					gRange = GUI.HorizontalSlider(new Rect(leftIndent+90, (guardLines*entryHeight), contentWidth-90-38, entryHeight), gRange, 0, 10000);
+					gRange = Mathf.Round(gRange);
+					ActiveWeaponManager.gunRange = gRange;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.gunRange.ToString(), leftLabel);
+					guardLines++;
+
+					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Missiles/Tgt", leftLabel);
+					float mslCount = ActiveWeaponManager.maxMissilesOnTarget;
+					mslCount = GUI.HorizontalSlider(new Rect(leftIndent+90, (guardLines*entryHeight), contentWidth-90-38, entryHeight), mslCount, 1, 6);
+					mslCount = Mathf.Round(mslCount);
+					ActiveWeaponManager.maxMissilesOnTarget = mslCount;
+					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.maxMissilesOnTarget.ToString(), leftLabel);
+					guardLines++;
 					
 					string targetType = "Target Type: ";
 					if(ActiveWeaponManager.targetMissiles)
@@ -997,7 +1016,7 @@ namespace BahaTurret
 					}
 					else
 					{
-						targetType += "Vessels";	
+						targetType += "All Targets";	
 					}
 					
 					if(GUI.Button(new Rect(leftIndent, (guardLines*entryHeight), contentWidth, entryHeight), targetType, HighLogic.Skin.button))
@@ -1103,6 +1122,18 @@ namespace BahaTurret
 						showGPSWindow = !showGPSWindow;
 					}
 					moduleLines++;
+
+					//wingCommander
+					if(ActiveWeaponManager.wingCommander)
+					{
+						GUIStyle wingComStyle = ActiveWeaponManager.wingCommander.showGUI ? centerLabelBlue : centerLabel;
+						numberOfModules++;
+						if(GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight), "Wing Command", wingComStyle))
+						{
+							ActiveWeaponManager.wingCommander.ToggleGUI();
+						}
+						moduleLines++;
+					}
 
 					GUI.EndGroup();
 
@@ -1308,6 +1339,7 @@ namespace BahaTurret
 			BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BOMB_CLEARANCE_CHECK, "Clearance Check");
 			line++;
 			ALLOW_LEGACY_TARGETING = GUI.Toggle(SLeftRect(line), ALLOW_LEGACY_TARGETING, "Legacy Targeting");
+			SHELL_COLLISIONS = GUI.Toggle(SRightRect(line), SHELL_COLLISIONS, "Shell Collisions");
 			line++;
 			line++;
 
