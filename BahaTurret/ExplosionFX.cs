@@ -13,7 +13,7 @@ namespace BahaTurret
 		public AudioSource audioSource;
 		float maxTime = 0;
 		
-		
+		public float range;
 		
 		
 		void Start()
@@ -23,7 +23,9 @@ namespace BahaTurret
 			foreach(KSPParticleEmitter pe in pEmitters)
 			{
 				pe.emit = true;	
-				if(!pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
+
+				if(pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
+
 				if(pe.maxEnergy > maxTime)
 				{
 					maxTime = pe.maxEnergy;	
@@ -32,8 +34,8 @@ namespace BahaTurret
 			lightFX = gameObject.AddComponent<Light>();
 			lightFX.color = Misc.ParseColor255("255,238,184,255");
 			lightFX.intensity = 8;
-			lightFX.range = 50;
-			
+			lightFX.range = range*3f;
+			lightFX.shadows = LightShadows.None;
 			
 			
 			
@@ -55,6 +57,7 @@ namespace BahaTurret
 				
 				
 			}
+
 			if(Time.time-startTime > maxTime)
 			{
 				GameObject.Destroy(gameObject);	
@@ -78,13 +81,14 @@ namespace BahaTurret
 			ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
 			eFx.exSound = soundClip;
 			eFx.audioSource = newExplosion.AddComponent<AudioSource>();
-			eFx.audioSource.minDistance = 25;
-			eFx.audioSource.maxDistance = 2500;
+			eFx.audioSource.minDistance = 66;
+			eFx.audioSource.maxDistance = 4500;
+			eFx.range = radius;
 				
 			if(power <= 5)
 			{
 				eFx.audioSource.minDistance = 4f;
-				eFx.audioSource.maxDistance = 1000;
+				eFx.audioSource.maxDistance = 3000;
 				eFx.audioSource.priority = 9999;
 			}
 			foreach(KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
@@ -95,8 +99,8 @@ namespace BahaTurret
 			DoExplosionDamage(position, power, radius, sourceVessel);
 		}
 
-		public static float ExplosionHeatMultiplier = 2800;
-		public static float ExplosionImpulseMultiplier = 1;
+		public static float ExplosionHeatMultiplier = 3500;
+		public static float ExplosionImpulseMultiplier = 1.5f;
 
 		public static void DoExplosionRay(Ray ray, float power, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs, Vessel sourceVessel = null)
 		{
