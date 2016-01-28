@@ -2,96 +2,99 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class ObjectPool : MonoBehaviour 
+namespace BahaTurret
 {
-	public GameObject poolObject;
-	public int size;
-	public bool canGrow;
-	
-	List<GameObject> pool;
-
-	public string poolObjectName;
-
-
-	void Awake()
+	public class ObjectPool : MonoBehaviour 
 	{
-		pool = new List<GameObject>();
-	}
-	
-	void Start()
-	{
-		for(int i = 0; i < size; i++)
+		public GameObject poolObject;
+		public int size;
+		public bool canGrow;
+		
+		List<GameObject> pool;
+
+		public string poolObjectName;
+
+
+		void Awake()
 		{
-			GameObject obj = (GameObject)Instantiate(poolObject);
-			obj.transform.SetParent(transform);
-			obj.SetActive(false);
-			pool.Add(obj);
+			pool = new List<GameObject>();
 		}
-	}
-
-	public GameObject GetPooledObject(int index)
-	{
-		return pool[index];
-	}
-
-	
-	public GameObject GetPooledObject()
-	{
-		for(int i = 0; i < pool.Count; i++)
+		
+		void Start()
 		{
-			if(!pool[i].activeInHierarchy)
+			for(int i = 0; i < size; i++)
 			{
-				//pool[i].SetActive(true);
-				return pool[i];
+				GameObject obj = (GameObject)Instantiate(poolObject);
+				obj.transform.SetParent(transform);
+				obj.SetActive(false);
+				pool.Add(obj);
+			}
+		}
+
+		public GameObject GetPooledObject(int index)
+		{
+			return pool[index];
+		}
+
+		
+		public GameObject GetPooledObject()
+		{
+			for(int i = 0; i < pool.Count; i++)
+			{
+				if(!pool[i].activeInHierarchy)
+				{
+					//pool[i].SetActive(true);
+					return pool[i];
+				}
+			}
+			
+			if(canGrow)
+			{
+				if(!poolObject)
+				{
+					Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! ("+poolObjectName+")");
+				}
+				GameObject obj = (GameObject)Instantiate(poolObject);
+				obj.transform.SetParent(transform);
+				obj.SetActive(false);
+				//obj.SetActive(true);
+				pool.Add(obj);
+				size++;
+				return obj;
+			}
+			
+			return null;
+		}
+		
+		public void DisableAfterDelay(GameObject obj, float t)
+		{
+			StartCoroutine(DisableObject(obj, t));
+		}
+		
+		IEnumerator DisableObject(GameObject obj, float t)
+		{
+			yield return new WaitForSeconds(t);
+			if(obj)
+			{
+				obj.SetActive(false);
+				obj.transform.parent = transform;
 			}
 		}
 		
-		if(canGrow)
+		public static ObjectPool CreateObjectPool(GameObject obj, int size, bool canGrow, bool destroyOnLoad)
 		{
-			if(!poolObject)
+			GameObject poolObject = new GameObject(obj.name+"Pool");
+			ObjectPool op = poolObject.AddComponent<ObjectPool>();
+			op.poolObject = obj;
+			op.size = size;
+			op.canGrow = canGrow;
+			op.poolObjectName = obj.name;
+			if(!destroyOnLoad)
 			{
-				Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! ("+poolObjectName+")");
+				GameObject.DontDestroyOnLoad(poolObject);
 			}
-			GameObject obj = (GameObject)Instantiate(poolObject);
-			obj.transform.SetParent(transform);
-			obj.SetActive(false);
-			//obj.SetActive(true);
-			pool.Add(obj);
-			size++;
-			return obj;
+			
+			return op;
 		}
-		
-		return null;
-	}
-	
-	public void DisableAfterDelay(GameObject obj, float t)
-	{
-		StartCoroutine(DisableObject(obj, t));
-	}
-	
-	IEnumerator DisableObject(GameObject obj, float t)
-	{
-		yield return new WaitForSeconds(t);
-		if(obj)
-		{
-			obj.SetActive(false);
-			obj.transform.parent = transform;
-		}
-	}
-	
-	public static ObjectPool CreateObjectPool(GameObject obj, int size, bool canGrow, bool destroyOnLoad)
-	{
-		GameObject poolObject = new GameObject(obj.name+"Pool");
-		ObjectPool op = poolObject.AddComponent<ObjectPool>();
-		op.poolObject = obj;
-		op.size = size;
-		op.canGrow = canGrow;
-		op.poolObjectName = obj.name;
-		if(!destroyOnLoad)
-		{
-			GameObject.DontDestroyOnLoad(poolObject);
-		}
-		
-		return op;
 	}
 }

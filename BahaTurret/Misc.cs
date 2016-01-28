@@ -71,12 +71,18 @@ namespace BahaTurret
 			if(BDArmorySettings.Instance.ActiveWeaponManager)
 			{
 				MissileFire wm = BDArmorySettings.Instance.ActiveWeaponManager;
-				if(wm.radar && wm.radar.radarEnabled)
+
+				if(wm.vesselRadarData && wm.vesselRadarData.guiEnabled)
 				{
-					if(ModuleRadar.radarWindowRect.Contains(inverseMousePos)) return true;
-					if(wm.radar.linkWindowOpen && wm.radar.linkWindowRect.Contains(inverseMousePos)) return true;
+					if(VesselRadarData.radarWindowRect.Contains(inverseMousePos)) return true;
+					if(wm.vesselRadarData.linkWindowOpen && wm.vesselRadarData.linkWindowRect.Contains(inverseMousePos)) return true;
 				}
 				if(wm.rwr && wm.rwr.rwrEnabled && RadarWarningReceiver.windowRect.Contains(inverseMousePos)) return true;
+				if(wm.wingCommander && wm.wingCommander.showGUI)
+				{
+					if(wm.wingCommander.guiWindowRect.Contains(inverseMousePos)) return true;
+					if(wm.wingCommander.showAGWindow && wm.wingCommander.agWindowRect.Contains(inverseMousePos)) return true;
+				}
 			}
 			
 			return false;
@@ -231,24 +237,23 @@ namespace BahaTurret
 		}
 
 
-		public static void RemoveFARModule(Part p)
+
+		public static KeyBinding AGEnumToKeybinding(KSPActionGroup group)
 		{
-			Component farComponent = p.gameObject.GetComponent("FARAeroPartModule");
-			if(farComponent != null)
+			string groupName = group.ToString();
+			if(groupName.Contains("Custom"))
 			{
-				if(BDArmorySettings.DRAW_DEBUG_LABELS)
-				{
-					Debug.Log("FAR component found on missile. Removing it.");
-				}
-				Component.Destroy(farComponent);
+				groupName = groupName.Substring(6);
+				int customNumber = int.Parse(groupName);
+				groupName = "CustomActionGroup" + customNumber;
 			}
 			else
 			{
-				if(BDArmorySettings.DRAW_DEBUG_LABELS)
-				{
-					Debug.Log("No FAR component found.");
-				}
+				return null;
 			}
+
+			FieldInfo field = typeof(GameSettings).GetField(groupName);
+			return (KeyBinding)field.GetValue(null);
 		}
 	
 	}

@@ -14,7 +14,4 @@ Global
 		{D86F2003-1724-4F4C-BB5A-B0109CB16F35}.Release|x86.ActiveCfg = Release|x86
 		{D86F2003-1724-4F4C-BB5A-B0109CB16F35}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = BahaTurret.csproj
-	EndGlobalSection
 EndGlobal

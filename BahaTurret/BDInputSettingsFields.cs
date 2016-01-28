@@ -27,6 +27,7 @@ namespace BahaTurret
 
 		//RADAR
 		public static BDInputInfo RADAR_LOCK = new BDInputInfo("Lock/Unlock");
+		public static BDInputInfo RADAR_CYCLE_LOCK = new BDInputInfo("Cycle Lock");
 		public static BDInputInfo RADAR_SLEW_RIGHT = new BDInputInfo("Slew Right");
 		public static BDInputInfo RADAR_SLEW_LEFT = new BDInputInfo("Slew Left");
 		public static BDInputInfo RADAR_SLEW_UP = new BDInputInfo("Slew Up");

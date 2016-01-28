@@ -196,8 +196,17 @@ namespace BahaTurret
 					continue;
 				}
 
+
+
 				if(cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
 				{
+					/*
+					if(ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding && Vector3.Dot(ml.transform.position - cam.transform.position, ml.transform.forward) < 0)
+					{
+						continue;
+					}
+					*/
+
 					float angle = Vector3.Angle(referenceTransform.forward, cam.groundTargetPosition-referenceTransform.position);
 					if(angle < maxOffBoresight && angle < smallestAngle && ml.CanSeePosition(cam.groundTargetPosition))
 					{
@@ -209,7 +218,7 @@ namespace BahaTurret
 			return finalCam;
 		}
 
-		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect)
+		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
 		{
 			float minScore = highpassThreshold;
 			float minMass = 0.5f;
@@ -221,9 +230,16 @@ namespace BahaTurret
 				{
 					continue;
 				}
-				if(vessel.GetTotalMass() < minMass)
+
+				TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
+				if(mf == null || 
+					!tInfo || 
+					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.missileModule.MissileState == MissileLauncher.MissileStates.Boost || tInfo.missileModule.MissileState == MissileLauncher.MissileStates.Cruise)))
 				{
-					continue;
+					if(vessel.GetTotalMass() < minMass)
+					{
+						continue;
+					}
 				}
 
 				if(RadarUtils.TerrainCheck(ray.origin, vessel.transform.position))
@@ -243,7 +259,7 @@ namespace BahaTurret
 							if(!Misc.CheckSightLine(ray.origin, part.transform.position, 10000, 5, 5)) continue;
 						}
 
-						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * Mathf.Clamp01(15/angle);
+						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * (15/Mathf.Max(15,angle));
 						thisScore *= Mathf.Pow(1400,2)/Mathf.Clamp((vessel.CoM-ray.origin).sqrMagnitude, 90000, 36000000);
 						score = Mathf.Max (score, thisScore);
 					}
@@ -648,6 +664,7 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
+				if(target.numFriendliesEngaging >= 2) continue;
 				if(target && target.Vessel && !target.isLanded && !target.isMissile)
 				{
 					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
@@ -715,22 +732,32 @@ namespace BahaTurret
 			return finalTarget;
 		}
 
-		public static TargetInfo GetMissileTarget(MissileFire mf)
+		public static TargetInfo GetMissileTarget(MissileFire mf, bool targetingMeOnly = false)
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
 				{
-					bool isHostile = false;
-					if(target.missileModule && target.missileModule.targetMf && target.missileModule.targetMf.team == mf.team)
+					if(target.missileModule)
 					{
-						isHostile = true;
+						if(targetingMeOnly)
+						{
+							if(Vector3.SqrMagnitude(target.missileModule.targetPosition - mf.vessel.CoM) > 60 * 60)
+							{
+								continue;
+							}
+						}
+					}
+					else
+					{
+						Debug.LogWarning("checking target missile -  doesn't have missile module");
 					}
 
-					if(isHostile && ((finalTarget == null && target.numFriendliesEngaging < 2) || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging))
+
+					if(((finalTarget == null && target.numFriendliesEngaging < 2) || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging))
 					{
 						finalTarget = target;
 					}
@@ -746,15 +773,9 @@ namespace BahaTurret
 
 			foreach(var target in TargetDatabase[team])
 			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile && target.isThreat)
 				{
-					bool isHostile = false;
-					if(target.isThreat)
-					{
-						isHostile = true;
-					}
-					
-					if(isHostile && target.numFriendliesEngaging == 0)
+					if(target.numFriendliesEngaging == 0)
 					{
 						return target;
 					}

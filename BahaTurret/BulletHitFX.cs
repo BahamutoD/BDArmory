@@ -68,7 +68,14 @@ namespace BahaTurret
 			foreach(KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
 			{
 				pe.emit = true;	
-				pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
+				if(pe.gameObject.name == "sparks")
+				{
+					pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
+				}
+				else if(pe.gameObject.name == "smoke")
+				{
+					pe.force = (1.49f * FlightGlobals.getGeeForceAtPosition(position));
+				}
 			}
 		}
 		

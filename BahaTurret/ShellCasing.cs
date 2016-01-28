@@ -38,6 +38,17 @@ namespace BahaTurret
 
 			transform.rotation *= Quaternion.Euler(angularVelocity*TimeWarp.fixedDeltaTime);
 			transform.position += velocity*TimeWarp.deltaTime;
+
+			if(BDArmorySettings.SHELL_COLLISIONS)
+			{
+				RaycastHit hit;
+				if(Physics.Linecast(transform.position, transform.position + velocity * Time.fixedDeltaTime, out hit, 557057))
+				{
+					velocity = Vector3.Reflect(velocity, hit.normal);
+					velocity *= 0.55f;
+					velocity = Quaternion.AngleAxis(UnityEngine.Random.Range(0f, 90f), UnityEngine.Random.onUnitSphere) * velocity;
+				}
+			}
 		}
 
 		void Update()

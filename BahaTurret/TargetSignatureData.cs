@@ -29,6 +29,10 @@ namespace BahaTurret
 
 		public VesselECMJInfo vesselJammer;
 
+		public ModuleRadar lockedByRadar;
+
+		public Vessel vessel;
+
 		bool orbital;
 		Orbit orbit;
 
@@ -43,6 +47,7 @@ namespace BahaTurret
 
 		public TargetSignatureData(Vessel v, float _signalStrength)
 		{
+			/*
 			if(v.situation == Vessel.Situations.SUB_ORBITAL || v.situation == Vessel.Situations.ESCAPING || v.situation == Vessel.Situations.SUB_ORBITAL)
 			{
 				velocity = v.obt_velocity;
@@ -51,10 +56,12 @@ namespace BahaTurret
 			}
 			else
 			{
+			*/
 				orbital = false;
 				orbit = null;
 				velocity = v.srf_velocity;
-			}
+			//}
+			vessel = v;
 			geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
 			acceleration = v.acceleration;
 			exists = true;
@@ -81,6 +88,7 @@ namespace BahaTurret
 
 			pingPosition = Vector2.zero;
 
+			lockedByRadar = null;
 		}
 
 		public TargetSignatureData(CMFlare flare, float _signalStrength)
@@ -97,6 +105,8 @@ namespace BahaTurret
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;
+			lockedByRadar = null;
+			vessel = null;
 		}
 
 		public TargetSignatureData(Vector3 _velocity, Vector3 _position, Vector3 _acceleration, bool _exists, float _signalStrength)
@@ -113,6 +123,8 @@ namespace BahaTurret
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;
+			lockedByRadar = null;
+			vessel = null;
 		}
 
 		public Vector3 position
@@ -125,7 +137,8 @@ namespace BahaTurret
 				}
 				else
 				{
-					return FlightGlobals.currentMainBody.GetWorldSurfacePosition(geoPos.x, geoPos.y, geoPos.z);
+					//return FlightGlobals.currentMainBody.GetWorldSurfacePosition(geoPos.x, geoPos.y, geoPos.z);
+					return VectorUtils.GetWorldSurfacePostion(geoPos, FlightGlobals.currentMainBody);
 				}
 
 			}
@@ -141,7 +154,7 @@ namespace BahaTurret
 				}
 				else
 				{
-					return position + ((velocity) * (Time.time - timeAcquired));
+					return position + (velocity * age) + (0.5f * acceleration * age * age);
 				}
 			}
 		}
