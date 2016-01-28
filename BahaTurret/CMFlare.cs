@@ -24,14 +24,15 @@ namespace BahaTurret
 		public Vector3 velocity;
 
 		public float thermal; //heat value
-		float minThermal = BDArmorySettings.FLARE_THERMAL * 0.55f;
+		float minThermal = 0;
 
 		float lifeTime = 6;
 
 		void OnEnable()
 		{
 
-			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.75f, 1.35f);
+			thermal = BDArmorySettings.FLARE_THERMAL * UnityEngine.Random.Range(0.45f, 1.25f);
+			minThermal = thermal * 0.35f;
 
 			if(gaplessEmitters == null || pEmitters == null)
 			{

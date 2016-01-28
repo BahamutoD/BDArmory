@@ -75,19 +75,11 @@ namespace BahaTurret
 					return false;
 				}
 
-				foreach(var wm in Vessel.FindPartModulesImplementing<MissileFire>())
-				{
-					if(wm.vessel.IsControllable)
-					{
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-				}
-
 				if(isMissile && missileModule && !missileModule.hasMissed)
+				{
+					return true;
+				}
+				else if(weaponManager && weaponManager.vessel.IsControllable)
 				{
 					return true;
 				}

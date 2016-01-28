@@ -34,21 +34,10 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\Games\KSP\KSP 1.0.5 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>C:\Games\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-      <HintPath>..\..\..\..\Games\KSP 1.0.5\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-      <HintPath>..\..\..\Games\KSP\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\..\..\Games\KSP\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\Games\KSP\KSP 1.0.4 - Mod Dev\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\..\Games\KSP\KSP 1.0.5 - Mod Dev\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -118,6 +107,10 @@
     <Compile Include="WMTurretGroup.cs" />
     <Compile Include="BDAirspeedControl.cs" />
     <Compile Include="RippleOption.cs" />
+    <Compile Include="MissileTurret.cs" />
+    <Compile Include="BDAParticleSelfDestruct.cs" />
+    <Compile Include="VesselRadarData.cs" />
+    <Compile Include="RadarDisplayData.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
@@ -125,6 +118,7 @@
   <ItemGroup>
     <EmbeddedResource Include="GrayscaleEffectShader.shader" />
     <EmbeddedResource Include="UnlitBlack.shader" />
+    <EmbeddedResource Include="BulletShader.shader" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BahaTurret.cs" />

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace BahaTurret
@@ -44,6 +45,14 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public string explSoundPath = "BDArmory/Sounds/explode1";
 
+		[KSPField]
+		public float thrustDeviation = 0.10f;
+
+		[KSPField]
+		public float maxTargetingRange = 8000;
+		float currentTgtRange = 8000;
+		float predictedFlightTime = 1;
+
 		public bool drawAimer = false;
 		
 		Vector3 rocketPrediction = Vector3.zero;
@@ -52,6 +61,53 @@ namespace BahaTurret
 		Transform[] rockets;
 		
 		AudioSource sfAudioSource;
+
+		//animation
+		[KSPField]
+		public string deployAnimationName;
+		[KSPField]
+		public float deployAnimationSpeed = 1;
+		AnimationState deployAnimState;
+		bool hasDeployAnimation = false;
+		public bool deployed = false;
+		Coroutine deployAnimRoutine;
+
+		public bool readyToFire = true;
+
+		public Vessel legacyGuardTarget = null;
+		public float lastAutoFiredTime = 0;
+		public float autoRippleRate = 0;
+		public float autoFireStartTime = 0;
+		public float autoFireDuration = 0;
+	
+		//turret
+		[KSPField]
+		public int turretID = 0;
+		public ModuleTurret turret;
+		Vector3 trajectoryOffset = Vector3.zero;
+		public MissileFire weaponManager;
+		bool targetInTurretView = true;
+		public float yawRange
+		{
+			get
+			{
+				return turret ? turret.yawRange : 0;
+			}
+		}
+		public float maxPitch
+		{
+			get
+			{
+				return turret ? turret.maxPitch : 0;
+			}
+		}
+		public float minPitch
+		{
+			get
+			{
+				return turret ? turret.minPitch : 0;
+			}
+		}
 		
 		double lastRocketsLeft = 0;
 		
@@ -73,6 +129,8 @@ namespace BahaTurret
 			return string.Empty;
 		}
 
+	
+
 		[KSPAction("Fire")]
 		public void AGFire(KSPActionParam param)
 		{
@@ -88,8 +146,100 @@ namespace BahaTurret
 		[KSPEvent(guiActive = true, guiName = "Jettison", active = true, guiActiveEditor = false)]
 		public void Jettison()
 		{
+			if(turret)
+			{
+				return;
+			}
+
 			part.decouple(0);
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+		}
+
+		[KSPEvent(guiActive = false, guiName = "Toggle Turret", guiActiveEditor = false)]
+		public void ToggleTurret()
+		{
+			if(deployed)
+			{
+				DisableTurret();
+			}
+			else
+			{
+				EnableTurret();
+			}
+		}
+
+		public void EnableTurret()
+		{
+			deployed = true;
+			drawAimer = true;
+			hasReturned = false;
+
+			if(returnRoutine != null)
+			{
+				StopCoroutine(returnRoutine);
+				returnRoutine = null;
+			}
+
+			if(hasDeployAnimation)
+			{
+				if(deployAnimRoutine != null)
+				{
+					StopCoroutine(deployAnimRoutine);
+				}
+				deployAnimRoutine = StartCoroutine(DeployAnimRoutine(true));
+			}
+			else
+			{
+				readyToFire = true;
+			}
+
+		}
+
+		public void DisableTurret()
+		{
+			deployed = false;
+			readyToFire = false;
+			drawAimer = false;
+			hasReturned = false;
+			targetInTurretView = false;
+
+			if(returnRoutine != null)
+			{
+				StopCoroutine(returnRoutine);
+			}
+			returnRoutine = StartCoroutine(ReturnRoutine());
+
+			if(hasDeployAnimation)
+			{
+				if(deployAnimRoutine != null)
+				{
+					StopCoroutine(deployAnimRoutine);
+				}
+
+				deployAnimRoutine = StartCoroutine(DeployAnimRoutine(false));
+			}
+
+		}
+
+		bool hasReturned = true;
+		Coroutine returnRoutine;
+		IEnumerator ReturnRoutine()
+		{
+			if(deployed)
+			{
+				hasReturned = false;
+				yield break;
+			}
+
+			yield return new WaitForSeconds(0.25f);
+
+			while(!turret.ReturnTurret())
+			{
+				yield return new WaitForFixedUpdate();
+			}
+
+			hasReturned = true;
+
 		}
 		
 		
@@ -117,7 +267,78 @@ namespace BahaTurret
 
 				UpdateAudio();
 				BDArmorySettings.OnVolumeChange += UpdateAudio;
+
+
 			}
+
+			if(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
+			{
+				foreach(var turr in part.FindModulesImplementing<ModuleTurret>())
+				{
+					if(turr.turretID == turretID)
+					{
+						turret = turr;
+						targetInTurretView = false;
+						break;
+					}
+				}
+
+				if(turret)
+				{
+					Events["GuiFire"].guiActive = false;
+					Events["Jettison"].guiActive = false;
+					Actions["AGFire"].active = false;
+
+					if(HighLogic.LoadedSceneIsFlight)
+					{
+						Events["ToggleTurret"].guiActive = true;
+					}
+				}
+
+				if(!string.IsNullOrEmpty(deployAnimationName))
+				{
+					deployAnimState = Misc.SetUpSingleAnimation(deployAnimationName, part);
+					hasDeployAnimation = true;
+
+					readyToFire = false;
+				}
+			}
+		}
+
+		IEnumerator DeployAnimRoutine(bool forward)
+		{
+			readyToFire = false;
+
+			if(forward)
+			{
+				while(deployAnimState.normalizedTime < 1)
+				{
+					deployAnimState.speed = deployAnimationSpeed;
+					yield return null;
+				}
+
+				deployAnimState.normalizedTime = 1;
+			}
+			else
+			{
+				while(!hasReturned)
+				{
+					deployAnimState.speed = 0;
+					yield return null;
+				}
+
+				while(deployAnimState.normalizedTime > 0)
+				{
+					deployAnimState.speed = -deployAnimationSpeed;
+					yield return null;
+				}
+
+				deployAnimState.normalizedTime = 0;
+			}
+
+			deployAnimState.speed = 0;
+
+			readyToFire = deployed;
 		}
 
 		void UpdateAudio()
@@ -132,21 +353,175 @@ namespace BahaTurret
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateAudio;
 		}
+
+
 		
 		public override void OnFixedUpdate ()
 		{
-			SimulateTrajectory();
-			
 			if(GetRocketResource().amount != lastRocketsLeft)
 			{
 				UpdateRocketScales();
 				lastRocketsLeft = GetRocketResource().amount;
 			}
-			
+
+			if(!vessel.IsControllable)
+			{
+				return;
+			}
+
+			SimulateTrajectory();
+
+			currentTgtRange = maxTargetingRange;
+
+			if(deployed && readyToFire && turret)
+			{
+				Aim();		
+			}
+		}
+
+		public override void OnUpdate()
+		{
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				if(readyToFire && deployed)
+				{
+					if(returnRoutine != null)
+					{
+						StopCoroutine(returnRoutine);
+						returnRoutine = null;
+					}
+
+					if(weaponManager && weaponManager.guardMode && weaponManager.selectedWeaponString == GetShortName())
+					{
+						if(Time.time - autoFireStartTime < autoFireDuration)
+						{
+							float fireInterval = 0.5f;
+							if(autoRippleRate > 0) fireInterval = 60f / autoRippleRate;
+							if(Time.time - lastAutoFiredTime > fireInterval)
+							{
+								FireRocket();
+								lastAutoFiredTime = Time.time;
+							}
+						}
+					}
+					else if((!weaponManager || (weaponManager.selectedWeaponString != GetShortName() && !weaponManager.guardMode)))
+					{
+						if(BDInputUtils.GetKeyDown(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING))
+						{
+							FireRocket();
+						}
+					}
+				}
+			}			
+		}
+
+		bool mouseAiming = false;
+		void Aim()
+		{
+			mouseAiming = false;
+			if(weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode))
+			{
+				SlavedAim();
+			}
+			else
+			{
+				if(vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING)
+				{
+					MouseAim();
+				}
+			}
+		}
+
+		void SlavedAim()
+		{
+			Vector3 targetPosition;
+			Vector3 targetVel;
+			Vector3 targetAccel;
+			if(weaponManager.slavingTurrets)
+			{
+				targetPosition = weaponManager.slavedPosition;
+				targetVel = weaponManager.slavedVelocity;
+				targetAccel = weaponManager.slavedAcceleration;
+
+				//targetPosition -= vessel.srf_velocity * predictedFlightTime;
+			}
+			else if(legacyGuardTarget)
+			{
+				targetPosition = legacyGuardTarget.CoM;
+				targetVel = legacyGuardTarget.srf_velocity;
+				targetAccel = legacyGuardTarget.acceleration;
+			}
+			else
+			{
+				targetInTurretView = false;
+				return;
+			}
+
+			currentTgtRange = Vector3.Distance(targetPosition, rockets[0].parent.transform.position);
+
+
+			targetPosition += trajectoryOffset;
+			targetPosition += targetVel * predictedFlightTime;
+			targetPosition += 0.5f * targetAccel * predictedFlightTime * predictedFlightTime;
+
+			turret.AimToTarget(targetPosition);
+			targetInTurretView = turret.TargetInRange(targetPosition, 2, maxTargetingRange);
+		}
+
+		void MouseAim()
+		{
+			mouseAiming = true;
+			Vector3 targetPosition;
+		//	float maxTargetingRange = 8000;
+
+			float targetDistance;
+
+			//MouseControl
+			Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
+			Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
+			RaycastHit hit;
+			if(Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+			{
+				targetPosition = hit.point;
+
+				//aim through self vessel if occluding mouseray
+				Part p = hit.collider.gameObject.GetComponentInParent<Part>();
+				if(p && p.vessel && p.vessel == vessel)
+				{
+					targetPosition = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position; 
+				}
+
+				targetDistance = Vector3.Distance(hit.point, rockets[0].parent.position);
+			}
+			else
+			{
+				targetPosition = (ray.direction * (maxTargetingRange+(FlightCamera.fetch.Distance*0.75f))) + FlightCamera.fetch.mainCamera.transform.position;	
+				targetDistance = maxTargetingRange;
+			}
+
+			currentTgtRange = targetDistance;
+
+			/*
+			float accelDistance = (thrust / rocketMass) * ((thrustTime * thrustTime) / 2);
+			float finalV = (thrust / rocketMass) * thrustTime;
+			float aveThrustV = finalV / 2;
+			float flightTime = targetDistance / finalV;//(accelDistance / aveThrustV) + ((targetDistance - accelDistance) / finalV);
+			float gravDrop = 0.5f * (float)FlightGlobals.getGeeForceAtPosition(part.transform.position).magnitude * flightTime * flightTime;
+			targetPosition += gravDrop * VectorUtils.GetUpDirection(part.transform.position);
+			*/
+
+			targetPosition += trajectoryOffset;
+
+
+			turret.AimToTarget(targetPosition);
+			targetInTurretView = turret.TargetInRange(targetPosition, 2, maxTargetingRange);
 		}
 		
 		public void FireRocket()
 		{
+			if(!readyToFire) return;
+			if(!targetInTurretView) return;
+
 			PartResource rocketResource = GetRocketResource();
 			
 			if(rocketResource == null)
@@ -162,8 +537,8 @@ namespace BahaTurret
 				Transform currentRocketTfm = rockets[rocketsLeft-1];
 				
 				GameObject rocketObj = GameDatabase.Instance.GetModel(rocketModelPath);
-				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position, transform.rotation);
-				rocketObj.transform.rotation = part.transform.rotation;
+				rocketObj = (GameObject) Instantiate(rocketObj, currentRocketTfm.position, currentRocketTfm.parent.rotation);
+				rocketObj.transform.rotation = currentRocketTfm.parent.rotation;
 				rocketObj.transform.localScale = part.rescaleFactor * Vector3.one;
 				currentRocketTfm.localScale = Vector3.zero;
 				Rocket rocket = rocketObj.AddComponent<Rocket>();
@@ -175,10 +550,16 @@ namespace BahaTurret
 				rocket.blastRadius = blastRadius;
 				rocket.thrust = thrust;
 				rocket.thrustTime = thrustTime;
-				if(vessel.targetObject!=null) rocket.targetVessel = vessel.targetObject.GetVessel();
+				rocket.randomThrustDeviation = thrustDeviation;
+				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && vessel.targetObject != null)
+				{
+					rocket.targetVessel = vessel.targetObject.GetVessel();
+				}
+
 				rocket.sourceVessel = vessel;
 				rocketObj.SetActive(true);
-				rocketObj.transform.SetParent(transform);
+				rocketObj.transform.SetParent(currentRocketTfm.parent);
+				rocket.parentRB = part.rb;
 				
 				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
 				rocketResource.amount--;
@@ -190,10 +571,10 @@ namespace BahaTurret
 		
 		void SimulateTrajectory()
 		{
-			if(BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel && vessel.altitude < 5000)
+			if((BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel) || (weaponManager && weaponManager.guardMode && weaponManager.selectedWeaponString==GetShortName()))
 			{
 				float simTime = 0;
-				Transform fireTransform = part.transform;
+				Transform fireTransform = rockets[0].parent;
 				Vector3 pointingDirection = fireTransform.forward;
 				Vector3 simVelocity = part.rb.velocity;
 				Vector3 simCurrPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
@@ -203,47 +584,68 @@ namespace BahaTurret
 				float simDeltaTime = 0.02f;
 				List<Vector3> pointPositions = new List<Vector3>();
 				pointPositions.Add(simCurrPos);
-				
+
+				bool slaved = turret && weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode);
+				float atmosMultiplier = Mathf.Clamp01(2.5f*(float)FlightGlobals.getAtmDensity(vessel.staticPressurekPa, vessel.externalTemperature, vessel.mainBody));
 				while(simulating)
 				{
-					float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(simCurrPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
-					
 					RaycastHit hit;
-					simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
-					if(simTime > 0.04f && simTime < thrustTime)
+
+					if(simTime > thrustTime)
 					{
-						simDeltaTime = 0.2f;
-						if(simTime < 0.5f) pointingDirection = Vector3.RotateTowards(pointingDirection, simVelocity, atmosMultiplier * (0.5f*(simTime)) * 50*simDeltaTime * Mathf.Deg2Rad, 0);
-						else pointingDirection = Vector3.Lerp(pointingDirection, simVelocity.normalized, atmosMultiplier/2.5f);
-						simVelocity += thrust/rocketMass * simDeltaTime * pointingDirection;
+						simDeltaTime = 0.1f;
 					}
+
+					if(simTime > 0.04f)
+					{
+						simDeltaTime = 0.02f;
+						if(simTime < thrustTime)
+						{
+							simVelocity += thrust / rocketMass * simDeltaTime * pointingDirection;
+						}
+
+						//rotation (aero stabilize)
+						pointingDirection = Vector3.RotateTowards(pointingDirection, simVelocity+Krakensbane.GetFrameVelocity(), atmosMultiplier * (0.5f * (simTime)) * 50 * simDeltaTime * Mathf.Deg2Rad, 0);
+					}
+
+					//gravity
+					simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
+
 					simCurrPos += simVelocity * simDeltaTime;
 					pointPositions.Add(simCurrPos);
-					if(simTime > 0.1f && Physics.Raycast(simPrevPos,simCurrPos-simPrevPos, out hit, Vector3.Distance(simPrevPos,simCurrPos), 557057))
+					if(!mouseAiming && !slaved)
 					{
-						rocketPrediction = hit.point;
-						simulating = false;
-						break;
+						if(simTime > 0.1f && Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit, Vector3.Distance(simPrevPos, simCurrPos), 557057))
+						{
+							rocketPrediction = hit.point;
+							simulating = false;
+							break;
+						}
+						else if(FlightGlobals.getAltitudeAtPos(simCurrPos) < 0)
+						{
+							rocketPrediction = simCurrPos;
+							simulating = false;
+							break;
+						}
 					}
-					else if(FlightGlobals.getAltitudeAtPos(simCurrPos)<0)
-					{
-						rocketPrediction = simCurrPos;
-						simulating = false;
-						break;
-					}
+
 					
 					
 					simPrevPos = simCurrPos;
 					
-					if((simStartPos-simCurrPos).sqrMagnitude>4000*4000)
+					if((simStartPos-simCurrPos).sqrMagnitude>currentTgtRange*currentTgtRange)
 					{
-						rocketPrediction = simStartPos + (simCurrPos-simStartPos).normalized*2500;
+						rocketPrediction = simStartPos + (simCurrPos-simStartPos).normalized*currentTgtRange;
+						//rocketPrediction = simCurrPos;
 						simulating = false;
 					}
 					simTime += simDeltaTime;
 				}
-				
-				
+
+				Vector3 pointingPos = fireTransform.position + (fireTransform.forward * currentTgtRange);
+				trajectoryOffset = pointingPos - rocketPrediction;
+				predictedFlightTime = simTime;
+
 				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
 				{
 					Vector3[] pointsArray = pointPositions.ToArray();
@@ -367,6 +769,11 @@ namespace BahaTurret
 		public float blastForce;
 		public string explModelPath;
 		public string explSoundPath;
+
+		public float randomThrustDeviation = 0.05f;
+
+		public Rigidbody parentRB;
+
 		float startTime;
 		AudioSource audioSource;
 		
@@ -385,6 +792,8 @@ namespace BahaTurret
 		
 		
 		KSPParticleEmitter[] pEmitters;
+
+		float randThrustSeed = 0;
 		
 		void Start()
 		{
@@ -426,6 +835,8 @@ namespace BahaTurret
 			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
 			
 			rb.useGravity = false;
+
+			randThrustSeed = UnityEngine.Random.Range(0f, 100f);
 		}
 		
 		void FixedUpdate()
@@ -446,9 +857,9 @@ namespace BahaTurret
 			}
 			else
 			{
-				if(transform.parent != null && transform.parent.rigidbody)
+				if(transform.parent != null && parentRB)
 				{
-					startVelocity = transform.parent.rigidbody.velocity;
+					startVelocity = parentRB.velocity;
 					transform.parent = null;	
 					rb.isKinematic = false;
 					rb.velocity = startVelocity;
@@ -467,20 +878,14 @@ namespace BahaTurret
 				float atmosMultiplier = Mathf.Clamp01 (2.5f*(float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
 
 				//model transform. always points prograde
-				transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rb.velocity, transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
-				if(!FlightGlobals.RefFrameIsRotating && Time.time-startTime > 0.5f)
-				{
-					transform.rotation = Quaternion.Lerp (transform.rotation, Quaternion.LookRotation(rb.velocity), atmosMultiplier/2.5f);
-
-				}
-				//
+				transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(rb.velocity+Krakensbane.GetFrameVelocity(), transform.up), atmosMultiplier * (0.5f*(Time.time-startTime)) * 50*Time.fixedDeltaTime);
 
 
 				if(Time.time - startTime < thrustTime && Time.time-startTime > stayTime)
 				{
-					float random = UnityEngine.Random.Range(-.2f,.2f);
-					float random2 = UnityEngine.Random.Range(-.2f,.2f);
-					rb.AddForce((thrust * transform.forward) + (random * transform.right) + (random2 * transform.up));
+					float random = randomThrustDeviation * (1-(Mathf.PerlinNoise(4*Time.time, randThrustSeed)*2));
+					float random2 = randomThrustDeviation * (1-(Mathf.PerlinNoise(randThrustSeed, 4*Time.time)*2));
+					rb.AddRelativeForce(new Vector3(random,random2,thrust));
 				}
 
 			}
@@ -488,20 +893,6 @@ namespace BahaTurret
 
 			
 
-			if(BDArmorySettings.GameIsPaused)
-			{
-				if(audioSource.isPlaying)
-				{
-					audioSource.Stop();
-				}
-			}
-			else
-			{
-				if(!audioSource.isPlaying)
-				{
-					audioSource.Play();	
-				}
-			}
 			
 
 			
@@ -573,12 +964,43 @@ namespace BahaTurret
 			}
 			
 		}
+
+		void Update()
+		{
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				if(BDArmorySettings.GameIsPaused)
+				{
+					if(audioSource.isPlaying)
+					{
+						audioSource.Stop();
+					}
+				}
+				else
+				{
+					if(!audioSource.isPlaying)
+					{
+						audioSource.Play();	
+					}
+				}
+			}
+		}
 		
 		void Detonate(Vector3 pos)
 		{
 			BDArmorySettings.numberOfParticleEmitters--;
 			
 			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+
+			foreach(var emitter in pEmitters)
+			{
+				if(emitter.useWorldSpace)
+				{
+					emitter.gameObject.AddComponent<BDAParticleSelfDestruct>();
+					emitter.transform.parent = null;
+				}
+			}
+
 			GameObject.Destroy(gameObject); //destroy rocket on collision
 		}
 		

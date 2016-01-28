@@ -19,6 +19,7 @@ namespace BahaTurret
 
 		public MissileFire weaponManager;
 
+		[KSPField(isPersistant = true)]
 		public bool rwrEnabled = false;
 
 		public static Texture2D rwrDiamondTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrDiamond", false);
@@ -264,7 +265,7 @@ namespace BahaTurret
 			GUI.BeginGroup(new Rect(10, 30, displayRect.width, displayRect.height));
 			GUI.DragWindow(displayRect);
 
-			GUI.DrawTexture(displayRect, ModuleRadar.omniBgTexture, ScaleMode.StretchToFill, false);
+			GUI.DrawTexture(displayRect, VesselRadarData.omniBgTexture, ScaleMode.StretchToFill, false);
 			float pingSize = 32;
 
 			for(int i = 0; i < dataCount; i++)
