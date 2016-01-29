@@ -1426,12 +1426,15 @@ namespace BahaTurret
 
 		void OnDestroy()
 		{
-			windowIsOpen = false;
-			if(weaponManager)
+			if(HighLogic.LoadedSceneIsFlight)
 			{
-				if(slaveTurrets)
+				windowIsOpen = false;
+				if(weaponManager)
 				{
-					weaponManager.slavingTurrets = false;
+					if(slaveTurrets)
+					{
+						weaponManager.slavingTurrets = false;
+					}
 				}
 			}
 		}
