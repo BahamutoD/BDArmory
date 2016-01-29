@@ -829,7 +829,9 @@ namespace BahaTurret
 		Vector3 previousPos;
 		void RaycastCollisions()
 		{
-			if(timeIndex > 0.5f && vessel.srfSpeed > part.crashTolerance)
+			if(weaponClass == WeaponClasses.Bomb) return;
+
+			if(timeIndex > 1f && vessel.srfSpeed > part.crashTolerance)
 			{
 				/*
 				RaycastHit[] hits = Physics.RaycastAll(new Ray(previousPos, part.transform.position - previousPos), (part.transform.position - previousPos).magnitude, 557057);
