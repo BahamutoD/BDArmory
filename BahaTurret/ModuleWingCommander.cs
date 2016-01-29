@@ -258,7 +258,7 @@ namespace BahaTurret
 				}
 			}
 
-			if(vessel.isActiveVessel)
+			if(HighLogic.LoadedSceneIsFlight && vessel.isActiveVessel)
 			{
 				float diamondSize = 24;
 				foreach(var comPos in commandedPositions)
