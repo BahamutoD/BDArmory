@@ -218,7 +218,7 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
-			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, FlightGlobals.getUpAxis(), subExplModelPath, subExplSoundPath);
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastForce, sourceVessel, FlightGlobals.getUpAxis(), subExplModelPath, subExplSoundPath);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}
 		

@@ -99,6 +99,8 @@ namespace BahaTurret
 		public float cannonShellRadius = 30; //max radius of explosion forces/damage
 		[KSPField]
 		public float cannonShellPower = 8; //explosion's impulse force
+		[KSPField]
+		public float cannonShellHeat = -1; //if non-negative, heat damage
 
 		//projectile graphics
 		[KSPField]
@@ -1046,6 +1048,7 @@ namespace BahaTurret
 							pBullet.explModelPath = explModelPath;
 							pBullet.explSoundPath = explSoundPath;
 							pBullet.blastPower = cannonShellPower;
+							pBullet.blastHeat = cannonShellHeat;
 							pBullet.radius = cannonShellRadius;
 							pBullet.airDetonation = airDetonation;
 							pBullet.detonationRange = detonationRange;

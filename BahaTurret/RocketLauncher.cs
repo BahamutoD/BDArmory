@@ -990,7 +990,7 @@ namespace BahaTurret
 		{
 			BDArmorySettings.numberOfParticleEmitters--;
 			
-			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastForce, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 
 			foreach(var emitter in pEmitters)
 			{
