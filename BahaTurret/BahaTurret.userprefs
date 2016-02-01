@@ -1,31 +1,15 @@
 ﻿<Properties StartupItem="BahaTurret.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="ModuleWeapon.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="MissileTurret.cs">
     <Files>
-      <File FileName="ModuleWingCommander.cs" Line="245" Column="40" />
-      <File FileName="BDModulePilotAI.cs" Line="315" Column="59" />
-      <File FileName="ModuleWeapon.cs" Line="75" Column="192" />
-      <File FileName="VesselRadarData.cs" Line="386" Column="5" />
-      <File FileName="ModuleRadar.cs" Line="932" Column="3" />
-      <File FileName="RadarUtils.cs" Line="349" Column="15" />
-      <File FileName="ViewScanResults.cs" Line="13" Column="3" />
-      <File FileName="MissileTurret.cs" Line="49" Column="13" />
-      <File FileName="TargetSignatureData.cs" Line="157" Column="64" />
-      <File FileName="VesselChaffInfo.cs" Line="1" Column="1" />
-      <File FileName="BDInputSettingsFields.cs" Line="30" Column="45" />
-      <File FileName="CMFlare.cs" Line="34" Column="75" />
-      <File FileName="GPSTargetInfo.cs" Line="25" Column="24" />
-      <File FileName="Misc.cs" Line="84" Column="111" />
-      <File FileName="ModuleTargetingCamera.cs" Line="339" Column="44" />
-      <File FileName="RadarWarningReceiver.cs" Line="258" Column="31" />
-      <File FileName="BDArmorySettings.cs" Line="1001" Column="119" />
-      <File FileName="MissileFire.cs" Line="3498" Column="39" />
-      <File FileName="MissileLauncher.cs" Line="840" Column="37" />
-      <File FileName="MissileGuidance.cs" Line="84" Column="3" />
-      <File FileName="BDATargetManager.cs" Line="241" Column="16" />
-      <File FileName="TargetInfo.cs" Line="69" Column="3" />
-      <File FileName="BDAirspeedControl.cs" Line="35" Column="4" />
-      <File FileName="ModuleTurret.cs" Line="212" Column="85" />
+      <File FileName="ModuleWingCommander.cs" Line="124" Column="41" />
+      <File FileName="BDModulePilotAI.cs" Line="859" Column="15" />
+      <File FileName="BDArmorySettings.cs" Line="1034" Column="19" />
+      <File FileName="MissileFire.cs" Line="24" Column="5" />
+      <File FileName="MissileLauncher.cs" Line="1495" Column="60" />
+      <File FileName="MissileGuidance.cs" Line="42" Column="39" />
+      <File FileName="BDATargetManager.cs" Line="1" Column="1" />
+      <File FileName="MissileTurret.cs" Line="542" Column="38" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

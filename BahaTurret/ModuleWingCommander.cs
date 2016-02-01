@@ -27,6 +27,9 @@ namespace BahaTurret
 			UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
 		public float lag = 10;
 
+		[KSPField(isPersistant = true)]
+		public bool commandSelf = false;
+
 		List<GPSTargetInfo> commandedPositions;
 		bool drawMouseDiamond = false;
 
@@ -98,12 +101,14 @@ namespace BahaTurret
 
 		void OnDestroy()
 		{
-			
-			GameEvents.onGameStateSave.Remove(SaveWingmen);
-			GameEvents.onVesselLoaded.Remove(OnVesselLoad);
-			GameEvents.onVesselDestroy.Remove(OnVesselLoad);
-			GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
-			MissileFire.OnToggleTeam -= OnToggleTeam;
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				GameEvents.onGameStateSave.Remove(SaveWingmen);
+				GameEvents.onVesselLoaded.Remove(OnVesselLoad);
+				GameEvents.onVesselDestroy.Remove(OnVesselLoad);
+				GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
+				MissileFire.OnToggleTeam -= OnToggleTeam;
+			}
 			
 		}
 
@@ -307,7 +312,13 @@ namespace BahaTurret
 			//command buttons
 			float commandButtonLine = 0;
 			CommandButton(SelectAll, "Select All", ref commandButtonLine, false, false);
-			commandButtonLine += 0.5f;
+			//commandButtonLine += 0.25f;
+
+			commandSelf = GUI.Toggle(new Rect(margin, margin + buttonEndY + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth, buttonHeight), commandSelf, "Command Self", HighLogic.Skin.toggle);
+			commandButtonLine++;
+
+			commandButtonLine += 0.10f;
+
 			CommandButton(CommandFollow, "Follow", ref commandButtonLine, true, false);
 			CommandButton(CommandFlyTo, "Fly To Pos", ref commandButtonLine, true, waitingForFlytoPos);
 			CommandButton(CommandAttack, "Attack Pos", ref commandButtonLine, true, waitingForAttackPos);
@@ -363,26 +374,24 @@ namespace BahaTurret
 			{
 				if(sendToWingmen)
 				{
-					foreach(var index in focusIndexes)
+					if(wingmen.Count > 0)
 					{
-						func(wingmen[index], index, data);
-					}
-					/*
-					if(!selectAll)
-					{
-						if(focusIndex < wingmen.Count)
+						foreach(var index in focusIndexes)
 						{
-							func(wingmen[focusIndex], focusIndex, data);
+							func(wingmen[index], index, data);
 						}
 					}
-					else
+
+					if(commandSelf)
 					{
-						for(int i = 0; i < wingmen.Count; i++)
+						foreach(var ai in vessel.FindPartModulesImplementing<BDModulePilotAI>())
 						{
-							func(wingmen[i], i, data);
+							if(ai.pilotEnabled)
+							{
+								func(ai, -1, data);
+							}
 						}
 					}
-					*/
 				}
 				else
 				{
@@ -483,7 +492,7 @@ namespace BahaTurret
 		bool waitingForAttackPos = false;
 		IEnumerator CommandPosition(BDModulePilotAI wingman, BDModulePilotAI.PilotCommands command)
 		{
-			if(focusIndexes.Count == 0)
+			if(focusIndexes.Count == 0 && !commandSelf)
 			{
 				yield break;
 			}
