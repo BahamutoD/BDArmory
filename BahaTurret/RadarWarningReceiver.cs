@@ -109,6 +109,11 @@ namespace BahaTurret
 						weaponManager = mf;
 					}
 				}
+
+				if(rwrEnabled)
+				{
+					EnableRWR();
+				}
 			}
 		}
 
