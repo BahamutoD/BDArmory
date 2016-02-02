@@ -401,7 +401,7 @@ namespace BahaTurret
 						{
 							if(bulletType == PooledBulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
+								ExplosionFX.CreateExplosion(hit.point - (ray.direction*0.1f), radius, blastPower, blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
 							}
 							else if(BDArmorySettings.BULLET_HITS)
 							{

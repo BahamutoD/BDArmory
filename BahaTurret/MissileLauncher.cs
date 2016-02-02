@@ -87,6 +87,8 @@ namespace BahaTurret
 		[KSPField]
 		public float blastPower = 25;
 		[KSPField]
+		public float blastHeat = -1;
+		[KSPField]
 		public float maxTurnRateDPS = 20;
 		[KSPField]
 		public bool proxyDetonate = true;
@@ -1983,7 +1985,7 @@ namespace BahaTurret
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 				if(sourceVessel==null) sourceVessel = vessel;
-				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, sourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage
 
 				foreach(var e in gaplessEmitters)
 				{

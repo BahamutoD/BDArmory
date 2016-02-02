@@ -34,6 +34,9 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = false)]
 		public float blastForce;
+
+		[KSPField]
+		public float blastHeat = -1;
 		
 		[KSPField(isPersistant = false)]
 		public bool descendingOrder = true;
@@ -547,6 +550,7 @@ namespace BahaTurret
 				rocket.spawnTransform = currentRocketTfm;
 				rocket.mass = rocketMass;
 				rocket.blastForce = blastForce;
+				rocket.blastHeat = blastHeat;
 				rocket.blastRadius = blastRadius;
 				rocket.thrust = thrust;
 				rocket.thrustTime = thrustTime;
@@ -767,6 +771,7 @@ namespace BahaTurret
 		public float thrustTime;
 		public float blastRadius;
 		public float blastForce;
+		public float blastHeat;
 		public string explModelPath;
 		public string explSoundPath;
 
@@ -990,7 +995,7 @@ namespace BahaTurret
 		{
 			BDArmorySettings.numberOfParticleEmitters--;
 			
-			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastForce, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 
 			foreach(var emitter in pEmitters)
 			{

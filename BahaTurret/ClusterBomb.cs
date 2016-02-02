@@ -99,6 +99,7 @@ namespace BahaTurret
 				subScript.deployed = true;
 				subScript.sourceVessel = missileLauncher.sourceVessel;
 				subScript.blastForce = missileLauncher.blastPower;
+				subScript.blastHeat = missileLauncher.blastHeat;
 				subScript.blastRadius = missileLauncher.blastRadius;
 				subScript.subExplModelPath = subExplModelPath;
 				subScript.subExplSoundPath = subExplSoundPath;
@@ -140,6 +141,7 @@ namespace BahaTurret
 		public bool deployed = false;
 		public float blastRadius;
 		public float blastForce;
+		public float blastHeat;
 		public string subExplModelPath;
 		public string subExplSoundPath;
 		public Vessel sourceVessel;
@@ -218,7 +220,7 @@ namespace BahaTurret
 		
 		void Detonate(Vector3 pos)
 		{
-			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastForce, sourceVessel, FlightGlobals.getUpAxis(), subExplModelPath, subExplSoundPath);
+			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, FlightGlobals.getUpAxis(), subExplModelPath, subExplSoundPath);
 			GameObject.Destroy(gameObject); //destroy bullet on collision
 		}
 		
