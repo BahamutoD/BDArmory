@@ -81,8 +81,8 @@ namespace BahaTurret
 			ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
 			eFx.exSound = soundClip;
 			eFx.audioSource = newExplosion.AddComponent<AudioSource>();
-			eFx.audioSource.minDistance = 66;
-			eFx.audioSource.maxDistance = 4500;
+			eFx.audioSource.minDistance = 200;
+			eFx.audioSource.maxDistance = 5500;
 			eFx.range = radius;
 				
 			if(power <= 5)
