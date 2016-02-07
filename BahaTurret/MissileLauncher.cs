@@ -28,6 +28,7 @@ namespace BahaTurret
 		public float timeIndex = 0;
 
 		public MissileTurret missileTurret = null;
+		public BDRotaryRail rotaryRail = null;
 
 		//aero
 		[KSPField]
@@ -180,6 +181,8 @@ namespace BahaTurret
 		public bool useSimpleDrag = false;
 		[KSPField]
 		public float simpleDrag = 0.02f;
+		[KSPField]
+		public float simpleStableTorque = 10;
 
 		[KSPField]
 		public Vector3 simpleCoD = new Vector3(0,0,-1);
@@ -195,9 +198,7 @@ namespace BahaTurret
 		AnimationState[] deployStates;
 		
 		bool hasPlayedFlyby = false;
-		
-		Quaternion previousRotation;
-		
+	
 		float debugTurnRate = 0;
 		string debugString = "";
 
@@ -428,9 +429,7 @@ namespace BahaTurret
 						}
 					}
 				}
-
-				previousRotation = transform.rotation;
-
+					
 				cmTimer = Time.time;
 				
 				part.force_activate();
@@ -684,10 +683,7 @@ namespace BahaTurret
 
 				StartCoroutine(DecoupleRoutine());
 				
-				if(rndAngVel > 0)
-				{
-					part.rb.angularVelocity += UnityEngine.Random.insideUnitSphere.normalized * rndAngVel;	
-				}
+
 				
 
 				vessel.vesselName = GetShortName();
@@ -696,8 +692,6 @@ namespace BahaTurret
 				
 				timeFired = Time.time;
 
-				
-				previousRotation = transform.rotation;
 
 				//setting ref transform for navball
 				GameObject refObject = new GameObject();
@@ -720,6 +714,13 @@ namespace BahaTurret
 		IEnumerator DecoupleRoutine()
 		{
 			yield return new WaitForFixedUpdate();
+
+			if(rndAngVel > 0)
+			{
+				part.rb.angularVelocity += UnityEngine.Random.insideUnitSphere.normalized * rndAngVel;	
+			}
+
+
 			if(decoupleForward)
 			{
 				part.rb.velocity += decoupleSpeed * part.transform.forward;
@@ -729,7 +730,6 @@ namespace BahaTurret
 				part.rb.velocity += decoupleSpeed * -part.transform.up;
 			}
 
-			//Misc.RemoveFARModule(part);
 		}
 
 		/// <summary>
@@ -989,14 +989,7 @@ namespace BahaTurret
 				{
 					CheckMiss();
 					targetMf = null;
-					if(!aero)
-					{
-						if(!hasRCS && !useSimpleDrag)	
-						{
-							transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
-						}
-					}
-					else
+					if(aero)
 					{
 						aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
 					}
@@ -2210,18 +2203,24 @@ namespace BahaTurret
 			Vector3 spin = Vector3.Project(part.rb.angularVelocity, part.rb.transform.forward);// * 8 * Time.fixedDeltaTime;
 			part.rb.angularVelocity -= spin;
 			//rigidbody.maxAngularVelocity = 7;
-			part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
+			//part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
 		}
 		
 		void SimpleDrag()
 		{
 			part.dragModel = Part.DragModel.NONE;
-			float simSpeedSquared = (float)vessel.srf_velocity.sqrMagnitude;
+			//float simSpeedSquared = (float)vessel.srf_velocity.sqrMagnitude;
+			float simSpeedSquared = (part.rb.GetPointVelocity(part.transform.TransformPoint(simpleCoD))+(Vector3)Krakensbane.GetFrameVelocity()).sqrMagnitude;
 			Vector3 currPos = transform.position;
 			float drag = deployed ? deployedDrag : simpleDrag;
-			Vector3 dragForce = (0.008f * part.rb.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * vessel.srf_velocity.normalized;
+			float dragMagnitude = (0.008f * part.rb.mass) * drag * 0.5f * simSpeedSquared * (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody);
+			Vector3 dragForce = dragMagnitude * vessel.srf_velocity.normalized;
 			part.rb.AddForceAtPosition(-dragForce, transform.TransformPoint(simpleCoD));
 
+			Vector3 torqueAxis = -Vector3.Cross(vessel.srf_velocity, part.transform.forward).normalized;
+			float AoA = Vector3.Angle(part.transform.forward, vessel.srf_velocity);
+			AoA /= 20;
+			part.rb.AddTorque(AoA * simpleStableTorque * dragMagnitude * torqueAxis);
 		}
 
 		void ParseModes()
