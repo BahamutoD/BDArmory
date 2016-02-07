@@ -1,15 +1,12 @@
 ﻿<Properties StartupItem="BahaTurret.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="MissileTurret.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="BDRotaryRail.cs">
     <Files>
-      <File FileName="ModuleWingCommander.cs" Line="124" Column="41" />
-      <File FileName="BDModulePilotAI.cs" Line="859" Column="15" />
-      <File FileName="BDArmorySettings.cs" Line="1034" Column="19" />
-      <File FileName="MissileFire.cs" Line="24" Column="5" />
-      <File FileName="MissileLauncher.cs" Line="1495" Column="60" />
-      <File FileName="MissileGuidance.cs" Line="42" Column="39" />
-      <File FileName="BDATargetManager.cs" Line="1" Column="1" />
-      <File FileName="MissileTurret.cs" Line="542" Column="38" />
+      <File FileName="MissileTurret.cs" Line="594" Column="4" />
+      <File FileName="BDRotaryRail.cs" Line="173" Column="31" />
+      <File FileName="BDAdjustableRail.cs" Line="145" Column="3" />
+      <File FileName="MissileLauncher.cs" Line="22" Column="40" />
+      <File FileName="MissileFire.cs" Line="1042" Column="19" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

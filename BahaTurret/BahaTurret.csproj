@@ -111,6 +111,7 @@
     <Compile Include="BDAParticleSelfDestruct.cs" />
     <Compile Include="VesselRadarData.cs" />
     <Compile Include="RadarDisplayData.cs" />
+    <Compile Include="BDRotaryRail.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
