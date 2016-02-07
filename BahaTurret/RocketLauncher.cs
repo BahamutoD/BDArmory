@@ -529,7 +529,7 @@ namespace BahaTurret
 			
 			if(rocketResource == null)
 			{
-				Debug.Log (part.partName+" doesn't carry the rocket resource it was meant to");	
+				Debug.Log (part.name +" doesn't carry the rocket resource it was meant to");	
 				return;
 			}
 			
