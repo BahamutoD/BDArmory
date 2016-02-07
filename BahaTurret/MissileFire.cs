@@ -19,8 +19,7 @@ namespace BahaTurret
 		//ScreenMessage armedMessage;
 		string selectionText = "";
 		Transform cameraTransform;
-		Part lastFiredSym = null;
-		
+
 		float startTime;
 
 		public bool hasLoadedRippleData = false;
@@ -200,7 +199,7 @@ namespace BahaTurret
 		
 		
 		//rocket aimer handling
-		RocketLauncher nextRocket = null;
+		RocketLauncher currentRocket = null;
 		
 		
 		//sounds
@@ -296,7 +295,9 @@ namespace BahaTurret
 		public Vector3 slavedAcceleration;
 
 		//current weapon ref
-		MissileLauncher currMiss;
+		public MissileLauncher currentMissile = null;
+		//MissileLauncher currMiss;
+		/*
 		public MissileLauncher currentMissile
 		{
 			get
@@ -323,7 +324,7 @@ namespace BahaTurret
 			{
 				currMiss = value;
 			}
-		}
+		}*/
 
 		public ModuleWeapon currentGun
 		{
@@ -339,6 +340,8 @@ namespace BahaTurret
 				}
 			}
 		}
+
+	
 
 		//KSP fields and events
 		#region kspFields,events,actions
@@ -804,7 +807,7 @@ namespace BahaTurret
 				if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
 
 				//finding next rocket to shoot (for aimer)
-				FindNextRocket();
+				//FindNextRocket();
 
 
 				//targeting
@@ -966,7 +969,7 @@ namespace BahaTurret
 				}
 
 				//dont add empty rocket pods
-				if(weapon.GetWeaponClass() == WeaponClasses.Rocket && weapon.GetPart().GetResourceMass() == 0)
+				if(weapon.GetWeaponClass() == WeaponClasses.Rocket && weapon.GetPart().FindModuleImplementing<RocketLauncher>().GetRocketResource().amount < 1)
 				{
 					continue;
 				}
@@ -1012,8 +1015,30 @@ namespace BahaTurret
 			MissileLauncher aMl = GetAsymMissile();
 			if(aMl)
 			{
+				//Debug.Log("setting asym missile: " + aMl.part.name);
 				selectedWeapon = aMl;
 				currentMissile = aMl;
+			}
+
+			MissileLauncher rMl = GetRotaryReadyMissile();
+			if(rMl)
+			{
+				//Debug.Log("setting rotary ready missile: " + rMl.part.name);
+				selectedWeapon = rMl;
+				currentMissile = rMl;
+			}
+
+			if(selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile))
+			{
+				//Debug.Log("=====selected weapon: " + selectedWeapon.GetPart().name);
+				if(!currentMissile || currentMissile.part.name != selectedWeapon.GetPart().name)
+				{
+					currentMissile = selectedWeapon.GetPart().FindModuleImplementing<MissileLauncher>();
+				}
+			}
+			else
+			{
+				currentMissile = null;
 			}
 
 			//selectedWeapon = weaponArray[weaponIndex];
@@ -1027,10 +1052,71 @@ namespace BahaTurret
 			{
 				bombPart = null;
 			}
+
+			//rocket
+			FindNextRocket(null);
 		
 			ToggleTurret();
 			SetMissileTurrets();
 			SetRocketTurrets();
+			SetRotaryRails();
+		}
+
+		void SetRotaryRails()
+		{
+			if(weaponIndex == 0) return;
+
+			if(selectedWeapon == null) return;
+
+			if(!(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)) return;
+
+			if(!currentMissile) return;
+
+			MissileLauncher cm = currentMissile;
+			foreach(var rotRail in vessel.FindPartModulesImplementing<BDRotaryRail>())
+			{
+				if(rotRail.missileCount == 0)
+				{
+					//Debug.Log("SetRotaryRails(): rail has no missiles");
+					continue;
+				}
+
+				//Debug.Log("SetRotaryRails(): rotRail.readyToFire: " + rotRail.readyToFire + ", rotRail.readyMissile: " + ((rotRail.readyMissile != null) ? rotRail.readyMissile.part.name : "null") + ", rotRail.nextMissile: " + ((rotRail.nextMissile != null) ? rotRail.nextMissile.part.name : "null"));
+
+				//Debug.Log("current missile: " + cm.part.name);
+
+				if(rotRail.readyToFire)
+				{
+					if(!rotRail.readyMissile)
+					{
+						rotRail.RotateToMissile(cm);
+						return;
+					}
+
+					if(rotRail.readyMissile.part.name != cm.part.name)
+					{
+						rotRail.RotateToMissile(cm);
+					}
+				}
+				else
+				{
+					if(!rotRail.nextMissile)
+					{
+						rotRail.RotateToMissile(cm);
+					}
+					else if(rotRail.nextMissile.part.name!=cm.part.name)
+					{
+						rotRail.RotateToMissile(cm);
+					}
+				}
+
+				/*
+				if((rotRail.readyToFire && (!rotRail.readyMissile || rotRail.readyMissile.part.name!=cm.part.name)) || (!rotRail.nextMissile || rotRail.nextMissile.part.name!=cm.part.name))
+				{
+					rotRail.RotateToMissile(cm);
+				}
+				*/
+			}
 		}
 
 		void SetMissileTurrets()
@@ -1076,7 +1162,7 @@ namespace BahaTurret
 				rl.weaponManager = this;
 				if(rl.turret)
 				{
-					if(currentTurret && rl.part.partName == currentTurret.part.partName)
+					if(currentTurret && rl.part.name == currentTurret.part.name)
 					{
 						rl.EnableTurret();
 					}
@@ -1110,7 +1196,6 @@ namespace BahaTurret
 		
 		public void CycleWeapon(int index)
 		{
-			
 			if(index >= weaponArray.Length)
 			{
 				index = 0;
@@ -1131,11 +1216,11 @@ namespace BahaTurret
 			MissileLauncher ml = currentMissile;
 			if(ml == null) return;
 
-			if(checkClearance && !CheckBombClearance(ml))
+			if(checkClearance && (!CheckBombClearance(ml) || (ml.rotaryRail&&!ml.rotaryRail.readyMissile==ml)))
 			{
 				foreach(var otherMissile in vessel.FindPartModulesImplementing<MissileLauncher>())
 				{
-					if(otherMissile != ml && otherMissile.GetShortName() == ml.GetShortName() && CheckBombClearance(otherMissile))
+					if(otherMissile != ml && otherMissile.GetShortName() == ml.GetShortName() && CheckBombClearance(otherMissile) && (!otherMissile.rotaryRail || (otherMissile.rotaryRail.readyToFire&&otherMissile.rotaryRail.readyMissile==otherMissile)))
 					{
 						currentMissile = otherMissile;
 						selectedWeapon = otherMissile;
@@ -1146,10 +1231,14 @@ namespace BahaTurret
 				return;
 			}
 
-			Part partSym = FindSym(ml.part);
+			//Part partSym = FindSym(ml.part);
 			if(ml.missileTurret)
 			{
 				ml.missileTurret.FireMissile(ml);
+			}
+			else if(ml.rotaryRail)
+			{
+				ml.rotaryRail.FireMissile(ml);
 			}
 			else
 			{
@@ -1157,30 +1246,11 @@ namespace BahaTurret
 				ml.FireMissile();
 			}
 
-			if(partSym != null)
-			{
-				MissileLauncher nextMissile = partSym.FindModuleImplementing<MissileLauncher>();
-				currentMissile = nextMissile;
-				selectedWeapon = nextMissile;
-			}
-			else
-			{
-				foreach(var newMissile in vessel.FindPartModulesImplementing<MissileLauncher>())
-				{
-					if(GetWeaponName(newMissile) == selectedWeaponString)
-					{
-						currentMissile = newMissile;
-						selectedWeapon = newMissile;
-						break;
-					}
-				}
-			}
-
-
 			UpdateList();
 		}
 		
-		
+
+		/*
 		public void FireMissile()
 		{
 			bool hasFired = false;
@@ -1229,6 +1299,12 @@ namespace BahaTurret
 								ml.FireMissileOnTarget(guardTarget);
 								ml.missileTurret.UpdateMissileChildren();
 							}
+							else if(ml.rotaryRail)
+							{
+								ml.rotaryRail.PrepMissileForFire(ml);
+								ml.FireMissileOnTarget(guardTarget);
+								ml.rotaryRail.UpdateMissileChildren();
+							}
 							else
 							{
 								ml.FireMissileOnTarget(guardTarget);
@@ -1241,6 +1317,10 @@ namespace BahaTurret
 							if(ml.missileTurret)
 							{
 								ml.missileTurret.FireMissile(ml);
+							}
+							else if(ml.rotaryRail)
+							{
+								ml.rotaryRail.FireMissile(ml);
 							}
 							else
 							{
@@ -1307,6 +1387,12 @@ namespace BahaTurret
 								ml.FireMissileOnTarget(guardTarget);
 								ml.missileTurret.UpdateMissileChildren();
 							}
+							else if(ml.rotaryRail)
+							{
+								ml.rotaryRail.PrepMissileForFire(ml);
+								ml.FireMissileOnTarget(guardTarget);
+								ml.rotaryRail.UpdateMissileChildren();
+							}
 							else
 							{
 								ml.FireMissileOnTarget(guardTarget);
@@ -1319,6 +1405,10 @@ namespace BahaTurret
 							if(ml.missileTurret)
 							{
 								ml.missileTurret.FireMissile(ml);
+							}
+							else if(ml.rotaryRail)
+							{
+								ml.rotaryRail.FireMissile(ml);
 							}
 							else
 							{
@@ -1381,6 +1471,40 @@ namespace BahaTurret
 				vesselRadarData.CycleActiveLock();
 			}
 	
+		}*/
+
+		void FireMissile()
+		{
+			if(weaponIndex == 0)
+			{
+				return;
+			}
+
+			if(selectedWeapon == null)
+			{
+				return;
+			}
+
+			if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
+			{
+				FireCurrentMissile(true);
+			}
+			else if(selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
+			{
+				if(!currentRocket || currentRocket.part.name!=selectedWeapon.GetPart().name)
+				{
+					FindNextRocket(null);
+				}
+
+				if(currentRocket)
+				{
+					currentRocket.FireRocket();
+					FindNextRocket(currentRocket);
+				}
+			}
+
+			UpdateList();
+			//TODO: fire rockets and take care of extra things
 		}
 		
 		//finds a symmetry partner
@@ -1759,24 +1883,52 @@ namespace BahaTurret
 		}
 
 		bool disabledRocketAimers = false;
-		void FindNextRocket()
+		void FindNextRocket(RocketLauncher lastFired)
 		{
 			if(weaponIndex > 0 && selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
 			{
 				disabledRocketAimers = false;
-				if(lastFiredSym!=null && lastFiredSym.partInfo.title == selectedWeapon.GetPart().partInfo.title)	
+ 
+				//first check sym of last fired
+				if(lastFired && lastFired.part.name == selectedWeapon.GetPart().name)	
 				{
-					foreach(RocketLauncher rl in lastFiredSym.FindModulesImplementing<RocketLauncher>())
+					foreach(Part pSym in lastFired.part.symmetryCounterparts)
 					{
-						if(nextRocket!=null) nextRocket.drawAimer = false;
-						rl.drawAimer = true;	
-						nextRocket = rl;
-						return;
+						RocketLauncher rl = pSym.FindModuleImplementing<RocketLauncher>();
+						bool hasRocket = false;
+						foreach(PartResource r in rl.part.Resources.list)
+						{
+							if(r.resourceName == rl.rocketType && r.amount > 0)
+							{
+								hasRocket = true;
+								break;
+							}
+						}
+
+						if(hasRocket)
+						{
+							if(currentRocket) currentRocket.drawAimer = false;
+
+							rl.drawAimer = true;
+							currentRocket = rl;
+							selectedWeapon = currentRocket;
+							return;
+						}
 					}
 				}
-				else
+
+				if(!lastFired && currentRocket && currentRocket.part.name == selectedWeapon.GetPart().name)
 				{
-					foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
+					currentRocket.drawAimer = true;
+					selectedWeapon = currentRocket;
+					return;
+				}
+
+				//then check for other rocket
+				bool foundRocket = false;
+				foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
+				{
+					if(!foundRocket && rl.part.partInfo.title == selectedWeapon.GetPart().partInfo.title)
 					{
 						bool hasRocket = false;
 						foreach(PartResource r in rl.part.Resources.list)
@@ -1786,27 +1938,34 @@ namespace BahaTurret
 							{
 								rl.drawAimer = false;	
 							}
-						}	
-						
-						if(rl.part.partInfo.title == selectedWeapon.GetPart().partInfo.title && hasRocket)
-						{
-							if(nextRocket!=null) nextRocket.drawAimer = false;
-							rl.drawAimer = true;
-							nextRocket = rl;
-							return;
 						}
+
+						if(!hasRocket) continue;
+
+						if(currentRocket != null) currentRocket.drawAimer = false;
+						rl.drawAimer = true;
+						currentRocket = rl;
+						selectedWeapon = currentRocket;
+						//return;
+						foundRocket = true;
+					}
+					else
+					{
+						rl.drawAimer = false;
 					}
 				}
 			}
+			//not using a rocket, disable reticles.
 			else if(!disabledRocketAimers)
 			{
 				foreach(RocketLauncher rl in vessel.FindPartModulesImplementing<RocketLauncher>())
 				{
 					rl.drawAimer = false;
-					nextRocket = null;
+					currentRocket = null;
 				}
 				disabledRocketAimers = true;
 			}
+
 		}
 
 	
@@ -3584,7 +3743,7 @@ namespace BahaTurret
 				MissileLauncher firstMl = null;
 				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
 				{
-					if(ml.GetShortName() != weaponArray[weaponIndex].GetShortName()) continue;
+					if(ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
 					
 					if(firstMl == null) firstMl = ml;
 
@@ -3594,6 +3753,45 @@ namespace BahaTurret
 					}
 				}
 				return firstMl;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		private MissileLauncher GetRotaryReadyMissile()
+		{
+			if(weaponIndex == 0) return null;
+			if(weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Bomb ||
+				weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile)
+			{
+				if(currentMissile && currentMissile.part.name == weaponArray[weaponIndex].GetPart().name)
+				{
+					if(!currentMissile.rotaryRail)
+					{
+						return currentMissile;
+					}
+					else if(currentMissile.rotaryRail.readyToFire && currentMissile.rotaryRail.readyMissile == currentMissile)
+					{
+						return currentMissile;
+					}
+				}
+
+				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+				{
+					if(ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
+
+					if(!ml.rotaryRail)
+					{
+						return ml;
+					}
+					else if(ml.rotaryRail.readyToFire && ml.rotaryRail.readyMissile.part.name == weaponArray[weaponIndex].GetPart().name)
+					{
+						return ml.rotaryRail.readyMissile;
+					}
+				}
+				return null;
 			}
 			else
 			{
