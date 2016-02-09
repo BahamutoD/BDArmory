@@ -2203,7 +2203,11 @@ namespace BahaTurret
 			Vector3 spin = Vector3.Project(part.rb.angularVelocity, part.rb.transform.forward);// * 8 * Time.fixedDeltaTime;
 			part.rb.angularVelocity -= spin;
 			//rigidbody.maxAngularVelocity = 7;
-			//part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
+
+			if(guidanceActive)
+			{
+				part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
+			}
 		}
 		
 		void SimpleDrag()
