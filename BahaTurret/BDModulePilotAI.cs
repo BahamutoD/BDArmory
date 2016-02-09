@@ -1292,6 +1292,11 @@ namespace BahaTurret
 
 		public void CommandFollow(ModuleWingCommander leader, int followerIndex)
 		{
+			if(!pilotEnabled)
+			{
+				return;
+			}
+
 			if(leader == vessel || followerIndex < 0)
 			{
 				return;
@@ -1305,11 +1310,23 @@ namespace BahaTurret
 
 		public void CommandAG(KSPActionGroup ag)
 		{
+			if(!pilotEnabled)
+			{
+				return;
+			}
+
+
 			vessel.ActionGroups.ToggleGroup(ag);
 		}
 
 		public void CommandFlyTo(Vector3 gpsCoords)
 		{
+			if(!pilotEnabled)
+			{
+				return;
+			}
+
+
 			Debug.Log(vessel.vesselName + " was commanded to fly to.");
 			defaultOrbitCoords = gpsCoords;
 			commandGeoPos = gpsCoords;
@@ -1318,6 +1335,12 @@ namespace BahaTurret
 
 		public void CommandAttack(Vector3 gpsCoords)
 		{
+			if(!pilotEnabled)
+			{
+				return;
+			}
+
+
 			Debug.Log(vessel.vesselName + " was commanded to attack.");
 			defaultOrbitCoords = gpsCoords;
 			commandGeoPos = gpsCoords;
