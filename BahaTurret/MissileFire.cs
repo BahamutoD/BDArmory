@@ -1246,6 +1246,14 @@ namespace BahaTurret
 				ml.FireMissile();
 			}
 
+			if(guardMode)
+			{
+				if(ml.GetWeaponClass() == WeaponClasses.Bomb)
+				{
+					StartCoroutine(BombsAwayRoutine(ml));
+				}
+			}
+
 			UpdateList();
 		}
 		
@@ -1654,9 +1662,8 @@ namespace BahaTurret
 				AltitudeTrigger()
 			);
 			
-			if(showBombAimer)
+			if(showBombAimer || (guardMode && weaponIndex > 0 && selectedWeapon.GetWeaponClass()==WeaponClasses.Bomb))
 			{
-				
 				float simDeltaTime = 0.1f;
 				float simTime = 0;
 				Vector3 dragForce = Vector3.zero;
@@ -2088,6 +2095,13 @@ namespace BahaTurret
 								targetScanTimer -= 0.5f * targetScanInterval;
 							}
 						}
+						else if(selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
+						{
+							if(!guardFiringMissile)
+							{
+								StartCoroutine(GuardBombRoutine());
+							}
+						}
 						else if(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun || selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket || selectedWeapon.GetWeaponClass() == WeaponClasses.DefenseLaser)
 						{
 							StartCoroutine(GuardTurretRoutine());
@@ -2343,6 +2357,25 @@ namespace BahaTurret
 			missilesAway--;
 		}
 
+		IEnumerator BombsAwayRoutine(MissileLauncher ml)
+		{
+			missilesAway++;
+			float timeStart = Time.time;
+			float timeLimit = 3;
+			while(ml)
+			{
+				if(Time.time - timeStart < timeLimit)
+				{
+					yield return null;
+				}
+				else
+				{
+					break;
+				}
+			}
+			missilesAway--;
+		}
+
 
 		bool guardFiringMissile = false;
 		IEnumerator GuardMissileRoutine()
@@ -2568,6 +2601,105 @@ namespace BahaTurret
 			}
 		}
 
+		IEnumerator GuardBombRoutine()
+		{
+			guardFiringMissile = true;
+			float bombStartTime = Time.time;
+			float bombAttemptDuration = Mathf.Max(targetScanInterval, 12f);
+			float radius = currentMissile.blastRadius * Mathf.Min((1 + ((float)maxMissilesOnTarget/2f)), 1.5f);
+			if(currentMissile.targetingMode == MissileLauncher.TargetingModes.GPS && Vector3.Distance(designatedGPSInfo.worldPos, guardTarget.CoM) > currentMissile.blastRadius)
+			{
+				ModuleTargetingCamera tgp = null;
+				foreach(var t in targetingPods)
+				{
+					if(t) tgp = t;
+				}
+
+				if(tgp)
+				{
+					tgp.EnableCamera();
+					yield return StartCoroutine(tgp.PointToPositionRoutine(guardTarget.CoM));
+
+					if(tgp)
+					{
+						if(guardTarget && tgp.groundStabilized && Vector3.Distance(tgp.groundTargetPosition, guardTarget.transform.position) < currentMissile.blastRadius)
+						{
+							radius = 500;
+							designatedGPSInfo = new GPSTargetInfo(tgp.bodyRelativeGTP, "Guard Target");
+							bombStartTime = Time.time;
+						}
+						else
+						{
+							tgp.DisableCamera();
+							designatedGPSInfo = new GPSTargetInfo();
+							guardFiringMissile = false;
+							yield break;
+						}
+					}
+					else
+					{
+						guardFiringMissile = false;
+						yield break;
+					}
+				}
+				else
+				{
+					guardFiringMissile = false;
+					yield break;
+				}
+			}
+
+
+
+			bool doProxyCheck = true;
+
+			float prevDist = 2 * radius;
+
+			while(guardTarget && Time.time-bombStartTime < bombAttemptDuration && weaponIndex > 0 && weaponArray[weaponIndex].GetWeaponClass()==WeaponClasses.Bomb && missilesAway < maxMissilesOnTarget)
+			{
+				float targetDist = Vector3.Distance(bombAimerPosition, guardTarget.CoM);
+				if(targetDist > Mathf.Max(radius, 50f))
+				{
+					yield return null;
+				}
+				else
+				{
+					if(doProxyCheck)
+					{
+						if(targetDist - prevDist > 0)
+						{
+							doProxyCheck = false;
+						}
+						else
+						{
+							prevDist = targetDist;
+						}
+					}
+
+					if(!doProxyCheck)
+					{
+						FireCurrentMissile(true);
+						yield return new WaitForSeconds(rippleFire ? 60f / rippleRPM : 0.06f);
+						if(missilesAway >= maxMissilesOnTarget)
+						{
+							yield return new WaitForSeconds(1f);
+							if(pilotAI)
+							{
+								pilotAI.RequestExtend(guardTarget.CoM);
+							}
+						}
+					}
+					else
+					{
+						yield return null;
+					}
+				}
+			}
+
+			designatedGPSInfo = new GPSTargetInfo();
+			guardFiringMissile = false;
+		}
+
 		bool SmartPickWeapon(TargetInfo target, float turretRange) 
 		{
 			if(!target)
@@ -2637,7 +2769,14 @@ namespace BahaTurret
 				}
 				else
 				{
-					return SwitchToGroundMissile();
+					if(SwitchToGroundMissile())
+					{
+						return true;
+					}
+					else if(SwitchToBomb())
+					{
+						return true;
+					}
 				}
 			}
 
@@ -3188,6 +3327,30 @@ namespace BahaTurret
 					}
 				}
 			}
+		}
+
+		bool SwitchToBomb()
+		{
+			if(!pilotAI) return false;
+
+			for(int i = 1; i < weaponArray.Length; i++)
+			{
+				if(weaponArray[i].GetWeaponClass() == WeaponClasses.Bomb)
+				{
+					if(weaponArray[i].GetPart().FindModuleImplementing<MissileLauncher>().targetingMode == MissileLauncher.TargetingModes.GPS)
+					{
+						if(targetingPods.Count == 0)
+						{
+							continue;
+						}
+					}
+
+					CycleWeapon(i);
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		bool SwitchToLaser()

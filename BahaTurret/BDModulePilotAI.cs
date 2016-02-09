@@ -26,6 +26,15 @@ namespace BahaTurret
 		bool startedLanded = false;
 		bool extending = false;
 
+		bool requestedExtend = false;
+		Vector3 requestedExtendTpos;
+
+		public void RequestExtend(Vector3 tPosition)
+		{
+			requestedExtend = true;
+			requestedExtendTpos = tPosition;
+		}
+
 		GameObject vobj;
 		Transform velocityTransform
 		{
@@ -55,7 +64,7 @@ namespace BahaTurret
 		public float defaultAltitude = 1500;
 		
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Altitude"),
-		 UI_FloatRange(minValue = 150f, maxValue = 2500, stepIncrement = 10f, scene = UI_Scene.All)]
+		 UI_FloatRange(minValue = 150f, maxValue = 1500, stepIncrement = 10f, scene = UI_Scene.All)]
 		public float minAltitude = 800;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
@@ -433,13 +442,23 @@ namespace BahaTurret
 						lastTargetPosition = targetVessel.transform.position;
 					}
 				}
+					
 
 				if(!extending)
 				{
-					currentStatus = "Engaging";
-					debugString += "\nFlying to target";
-					threatLevel = 1;
-					FlyToTargetVessel(s, targetVessel);
+					if(requestedExtend)
+					{
+						requestedExtend = false;
+						extending = true;
+						lastTargetPosition = requestedExtendTpos;
+					}
+					else
+					{
+						currentStatus = "Engaging";
+						debugString += "\nFlying to target";
+						threatLevel = 1;
+						FlyToTargetVessel(s, targetVessel);
+					}
 				}
 			}
 			else
@@ -512,18 +531,34 @@ namespace BahaTurret
 				missile = weaponManager.currentMissile;
 				if(missile != null)
 				{
-					if(missile.targetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
+					if(missile.GetWeaponClass() == WeaponClasses.Missile)
 					{
-						target += v.srf_velocity.normalized * 10;
-					}
-					else
-					{
-						target = MissileGuidance.GetAirToAirFireSolution(missile, v);
-					}
+						if(missile.targetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
+						{
+							target += v.srf_velocity.normalized * 10;
+						}
+						else
+						{
+							target = MissileGuidance.GetAirToAirFireSolution(missile, v);
+						}
 
-					if(Vector3.Angle(target - vesselTransform.position, vesselTransform.forward) < 20f)
+						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.forward) < 20f)
+						{
+							steerMode = SteerModes.Aiming;
+						}
+					}
+					else //bombing
 					{
-						steerMode = SteerModes.Aiming;
+						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.forward) < 45f)
+						{
+							target = GetSurfacePosition(target) + (vessel.upAxis * vessel.altitude);
+							Vector3 fixedTDir = Quaternion.FromToRotation(Vector3.ProjectOnPlane(vessel.srf_velocity, vessel.upAxis), target - vesselTransform.position) * (target - vesselTransform.position);
+							target = FlightPosition(vesselTransform.position + fixedTDir, Mathf.Max(defaultAltitude - 500f, minAltitude));
+						}
+						else
+						{
+							target = FlightPosition(target, Mathf.Max(defaultAltitude - 500f, minAltitude));
+						}
 					}
             	}
 				else
@@ -685,7 +720,7 @@ namespace BahaTurret
 				}
 				else
 				{
-					postYawFactor = 1.5f;
+					postYawFactor = 1.75f;
 					postPitchFactor = 2f;
 				}
 			}
@@ -711,7 +746,7 @@ namespace BahaTurret
 
 			//if(steerMode == SteerModes.Aiming || angleToTarget > 2)
 			//{
-				rollTarget = (targetPosition + ((steerMode == SteerModes.Aiming ? 10f : 30f) * upDirection)) - vesselTransform.position;
+				rollTarget = (targetPosition + ((steerMode == SteerModes.Aiming ? 10f : 25f) * upDirection)) - vesselTransform.position;
 			//}
 			//else
 			//{
@@ -756,6 +791,12 @@ namespace BahaTurret
 			if(weaponManager)
 			{
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
+
+				if(weaponManager.currentMissile && weaponManager.currentMissile.GetWeaponClass() == WeaponClasses.Bomb)
+				{
+					extendDistance = 4500;
+				}
+
 				if(targetVessel!=null && !targetVessel.LandedOrSplashed)
 				{
 					extendDistance = 800;
@@ -767,6 +808,7 @@ namespace BahaTurret
 				{
 					Vector3 targetDirection = srfVector.normalized*extendDistance;
 					Vector3 target = vessel.transform.position + targetDirection;
+					target = GetTerrainSurfacePosition(target) + (vessel.upAxis*Mathf.Min(defaultAltitude, MissileGuidance.GetRaycastRadarAltitude(vesselTransform.position)));
 					FlyToPosition(s, FlightPosition(target, defaultAltitude));
 				}
 				else
