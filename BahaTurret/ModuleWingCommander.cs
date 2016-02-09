@@ -386,10 +386,7 @@ namespace BahaTurret
 					{
 						foreach(var ai in vessel.FindPartModulesImplementing<BDModulePilotAI>())
 						{
-							if(ai.pilotEnabled)
-							{
-								func(ai, -1, data);
-							}
+							func(ai, -1, data);
 						}
 					}
 				}
