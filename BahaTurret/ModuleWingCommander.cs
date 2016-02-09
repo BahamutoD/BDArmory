@@ -16,7 +16,7 @@ namespace BahaTurret
 		[KSPField(isPersistant = true)]
 		public string savedWingmen = string.Empty;
 
-		[KSPField(guiActive = false, guiActiveEditor = true)]
+		[KSPField(guiActive = false, guiActiveEditor = true, guiName = "")]
 		public string guiTitle = "WingCommander:";
 
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spread"),
