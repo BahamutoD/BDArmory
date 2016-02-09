@@ -649,6 +649,10 @@ namespace BahaTurret
 					return;
 				}
 			}
+			else
+			{
+				info.detectedTime = Time.time;
+			}
 		}
 
 		public static void ClearDatabase()
