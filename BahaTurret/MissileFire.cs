@@ -1062,6 +1062,85 @@ namespace BahaTurret
 			SetRotaryRails();
 		}
 
+		void SetCargoBays()
+		{
+			if(!guardMode) return;
+
+			if(weaponIndex > 0 && currentMissile && guardTarget && Vector3.Dot(guardTarget.transform.position-currentMissile.transform.position, currentMissile.transform.forward) > 0)
+			{
+				if(currentMissile.part.ShieldedFromAirstream)
+				{
+					foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+					{
+						if(ml.part.ShieldedFromAirstream)
+						{
+							ml.inCargoBay = true;
+						}
+					}
+
+					foreach(var bay in vessel.FindPartModulesImplementing<ModuleCargoBay>())
+					{
+						if(currentMissile.part.airstreamShields.Contains(bay))
+						{
+							ModuleAnimateGeneric anim = (ModuleAnimateGeneric)bay.part.Modules.GetModule(bay.DeployModuleIndex);
+
+							string toggleOption = anim.Events["Toggle"].guiName;
+							if(toggleOption == "Open")
+							{
+								if(anim)
+								{
+									anim.Toggle();
+								}
+							}
+						}
+						else
+						{
+							ModuleAnimateGeneric anim = (ModuleAnimateGeneric)bay.part.Modules.GetModule(bay.DeployModuleIndex);
+
+							string toggleOption = anim.Events["Toggle"].guiName;
+							if(toggleOption == "Close")
+							{
+								if(anim)
+								{
+									anim.Toggle();
+								}
+							}
+						}
+					}
+				}
+				else if(!currentMissile.inCargoBay)
+				{
+					foreach(var bay in vessel.FindPartModulesImplementing<ModuleCargoBay>())
+					{
+						ModuleAnimateGeneric anim = (ModuleAnimateGeneric) bay.part.Modules.GetModule(bay.DeployModuleIndex);
+						string toggleOption = anim.Events["Toggle"].guiName;
+						if(toggleOption == "Close")
+						{
+							if(anim)
+							{
+								anim.Toggle();
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				foreach(var bay in vessel.FindPartModulesImplementing<ModuleCargoBay>())
+				{
+					ModuleAnimateGeneric anim = (ModuleAnimateGeneric) bay.part.Modules.GetModule(bay.DeployModuleIndex);
+					string toggleOption = anim.Events["Toggle"].guiName;
+					if(toggleOption == "Close")
+					{
+						if(anim)
+						{
+							anim.Toggle();
+						}
+					}
+				}
+			}
+		}
+
 		void SetRotaryRails()
 		{
 			if(weaponIndex == 0) return;
@@ -1228,6 +1307,8 @@ namespace BahaTurret
 						return;
 					}
 				}
+				currentMissile = ml;
+				selectedWeapon = ml;
 				return;
 			}
 
@@ -1772,6 +1853,8 @@ namespace BahaTurret
 				}
 
 
+
+
 				if(showBombAimer)
 				{
 					MissileLauncher ml = currentMissile;
@@ -2056,6 +2139,7 @@ namespace BahaTurret
 
 					if(guardTarget == null || selectedWeapon == null)
 					{
+						SetCargoBays();
 						return;
 					}
 
@@ -2097,6 +2181,7 @@ namespace BahaTurret
 						}
 						else if(selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
 						{
+
 							if(!guardFiringMissile)
 							{
 								StartCoroutine(GuardBombRoutine());
@@ -2108,6 +2193,7 @@ namespace BahaTurret
 						}
 					}
 				}
+				SetCargoBays();
 			}
 		}
 
@@ -2386,6 +2472,7 @@ namespace BahaTurret
 			{
 				guardFiringMissile = true;
 
+
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
 					if(BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -2654,12 +2741,18 @@ namespace BahaTurret
 			bool doProxyCheck = true;
 
 			float prevDist = 2 * radius;
-
+			radius = Mathf.Max(radius, 50f);
 			while(guardTarget && Time.time-bombStartTime < bombAttemptDuration && weaponIndex > 0 && weaponArray[weaponIndex].GetWeaponClass()==WeaponClasses.Bomb && missilesAway < maxMissilesOnTarget)
 			{
 				float targetDist = Vector3.Distance(bombAimerPosition, guardTarget.CoM);
-				if(targetDist > Mathf.Max(radius, 50f))
+
+				if(targetDist > radius)
 				{
+					if(targetDist < radius * 2 && Vector3.Dot(guardTarget.CoM - bombAimerPosition, guardTarget.CoM - transform.position) < 0)
+					{
+						pilotAI.RequestExtend(guardTarget.CoM);
+						break;
+					}
 					yield return null;
 				}
 				else

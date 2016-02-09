@@ -128,7 +128,7 @@ namespace BahaTurret
 		[KSPField]
 		public bool terminalManeuvering = false;
 
-	
+		public bool inCargoBay = false;
 		
 		
 		[KSPField]
