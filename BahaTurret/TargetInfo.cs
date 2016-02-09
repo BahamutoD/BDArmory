@@ -180,7 +180,7 @@ namespace BahaTurret
 		IEnumerator LifetimeRoutine()
 		{
 			float startTime = Time.time;
-			while(Time.time - startTime < 30 && enabled)
+			while(Time.time - startTime < 60 && enabled)
 			{
 				yield return null;
 			}
