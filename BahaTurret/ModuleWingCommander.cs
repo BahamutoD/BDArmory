@@ -238,51 +238,55 @@ namespace BahaTurret
 		GUIStyle wingmanButtonSelectedStyle;
 		void OnGUI()
 		{
-			if(HighLogic.LoadedSceneIsFlight && showGUI && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED)
+			if(HighLogic.LoadedSceneIsFlight && vessel && vessel.isActiveVessel && !vessel.packed)
 			{
-				if(!rectInit)
+				if(BDArmorySettings.GAME_UI_ENABLED)
 				{
-					guiWindowRect = new Rect(45, 75, 240, 800);
-					buttonWidth = guiWindowRect.width - (2*margin);
-					buttonEndY = buttonStartY;
-					wingmanButtonStyle = new GUIStyle(HighLogic.Skin.button);
-					wingmanButtonStyle.alignment = TextAnchor.MiddleLeft;
-					wingmanButtonStyle.wordWrap = false;
-					wingmanButtonStyle.fontSize = 11;
-					wingmanButtonSelectedStyle = new GUIStyle(HighLogic.Skin.box);
-					wingmanButtonSelectedStyle.alignment = TextAnchor.MiddleLeft;
-					wingmanButtonSelectedStyle.wordWrap = false;
-					wingmanButtonSelectedStyle.fontSize = 11;
-					rectInit = true;
-				}
-				guiWindowRect = GUI.Window(1293293, guiWindowRect, WingmenWindow, "WingCommander", HighLogic.Skin.window);
-
-				if(showAGWindow)
-				{
-					AGWindow();
-				}
-			}
-
-			if(HighLogic.LoadedSceneIsFlight && vessel.isActiveVessel)
-			{
-				float diamondSize = 24;
-				foreach(var comPos in commandedPositions)
-				{
-					BDGUIUtils.DrawTextureOnWorldPos(comPos.worldPos, BDArmorySettings.Instance.greenDiamondTexture, new Vector2(diamondSize, diamondSize), 0);
-					Vector2 labelPos;
-					if(BDGUIUtils.WorldToGUIPos(comPos.worldPos, out labelPos))
+					if(showGUI)
 					{
-						labelPos.x += diamondSize/2;
-						labelPos.y -= 10;
-						GUI.Label(new Rect(labelPos.x, labelPos.y, 300, 20), comPos.name);
-					}
-				}
+						if(!rectInit)
+						{
+							guiWindowRect = new Rect(45, 75, 240, 800);
+							buttonWidth = guiWindowRect.width - (2 * margin);
+							buttonEndY = buttonStartY;
+							wingmanButtonStyle = new GUIStyle(HighLogic.Skin.button);
+							wingmanButtonStyle.alignment = TextAnchor.MiddleLeft;
+							wingmanButtonStyle.wordWrap = false;
+							wingmanButtonStyle.fontSize = 11;
+							wingmanButtonSelectedStyle = new GUIStyle(HighLogic.Skin.box);
+							wingmanButtonSelectedStyle.alignment = TextAnchor.MiddleLeft;
+							wingmanButtonSelectedStyle.wordWrap = false;
+							wingmanButtonSelectedStyle.fontSize = 11;
+							rectInit = true;
+						}
+						guiWindowRect = GUI.Window(1293293, guiWindowRect, WingmenWindow, "WingCommander", HighLogic.Skin.window);
 
-				if(drawMouseDiamond)
-				{
-					Vector2 mouseDiamondPos = Input.mousePosition;
-					Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize / 2), Screen.height-mouseDiamondPos.y - (diamondSize / 2), diamondSize, diamondSize);
-					GUI.DrawTexture(mouseDiamondRect, BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
+						if(showAGWindow)
+						{
+							AGWindow();
+						}
+					}
+
+					//command position diamonds
+					float diamondSize = 24;
+					foreach(var comPos in commandedPositions)
+					{
+						BDGUIUtils.DrawTextureOnWorldPos(comPos.worldPos, BDArmorySettings.Instance.greenDiamondTexture, new Vector2(diamondSize, diamondSize), 0);
+						Vector2 labelPos;
+						if(BDGUIUtils.WorldToGUIPos(comPos.worldPos, out labelPos))
+						{
+							labelPos.x += diamondSize/2;
+							labelPos.y -= 10;
+							GUI.Label(new Rect(labelPos.x, labelPos.y, 300, 20), comPos.name);
+						}
+					}
+
+					if(drawMouseDiamond)
+					{
+						Vector2 mouseDiamondPos = Input.mousePosition;
+						Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize / 2), Screen.height-mouseDiamondPos.y - (diamondSize / 2), diamondSize, diamondSize);
+						GUI.DrawTexture(mouseDiamondRect, BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
+					}
 				}
 			}
 		}
