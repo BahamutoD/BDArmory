@@ -549,15 +549,23 @@ namespace BahaTurret
 					}
 					else //bombing
 					{
-						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.forward) < 45f)
+						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.up) < 45f)
 						{
+							/*
 							target = GetSurfacePosition(target) + (vessel.upAxis * vessel.altitude);
 							Vector3 fixedTDir = Quaternion.FromToRotation(Vector3.ProjectOnPlane(vessel.srf_velocity, vessel.upAxis), target - vesselTransform.position) * (target - vesselTransform.position);
 							target = FlightPosition(vesselTransform.position + fixedTDir, Mathf.Max(defaultAltitude - 500f, minAltitude));
+							*/
+
+							target = target+(Mathf.Max(defaultAltitude - 500f, minAltitude)*upDirection);
+							Vector3 tDir = (target-vesselTransform.position).normalized;
+							tDir = (1000 * tDir) - (vessel.srf_velocity.normalized * 600);
+							target = vesselTransform.position + tDir;
+
 						}
 						else
 						{
-							target = FlightPosition(target, Mathf.Max(defaultAltitude - 500f, minAltitude));
+							target = target+(Mathf.Max(defaultAltitude - 500f, minAltitude)*upDirection);
 						}
 					}
             	}
