@@ -128,6 +128,8 @@ namespace BahaTurret
 		[KSPField]
 		public bool terminalManeuvering = false;
 
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "), 
+			UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
 		public bool inCargoBay = false;
 		
 		
@@ -569,6 +571,10 @@ namespace BahaTurret
 			{
 				missileTurret.FireMissile(this);
 			}
+			else if(rotaryRail)
+			{
+				rotaryRail.FireMissile(this);
+			}
 			else
 			{
 				FireMissile();	
@@ -583,6 +589,10 @@ namespace BahaTurret
 			if(missileTurret)
 			{
 				missileTurret.FireMissile(this);
+			}
+			else if(rotaryRail)
+			{
+				rotaryRail.FireMissile(this);
 			}
 			else
 			{
