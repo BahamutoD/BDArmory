@@ -3460,7 +3460,7 @@ namespace BahaTurret
 
 		bool SwitchToBomb()
 		{
-			if(!pilotAI) return false;
+			if(vessel.LandedOrSplashed) return false;
 
 			for(int i = 1; i < weaponArray.Length; i++)
 			{
