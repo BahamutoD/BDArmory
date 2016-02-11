@@ -1018,7 +1018,9 @@ namespace BahaTurret
         void UpdateGAndAoALimits(FlightCtrlState s)
         {
             if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed || startedLanded && -Vector3.Dot(vessel.ReferenceTransform.forward, vessel.upAxis) < 0.8f)
+            {
                 return;
+            }
 
             if(lastAllowedAoA != maxAllowedAoA)
             {
@@ -1158,17 +1160,23 @@ namespace BahaTurret
                     posPitchDynPresLimit = -0.3f * cosAoAOffset;
             }
 
-
+            float currentG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);
             float negLim, posLim;
             negLim = negPitchDynPresLimitIntegrator * invVesselDynPreskPa + negPitchDynPresLimit;
             if (negLim > s.pitch)
             {
+                if (currentG > -maxAllowedGForce)
+                    negPitchDynPresLimitIntegrator -= 0.05f;        //jsut an override in case things break
+                
                 s.pitch = negLim;
                 debugString += "\nLimiting Neg Gs";
             }
             posLim = posPitchDynPresLimitIntegrator * invVesselDynPreskPa + posPitchDynPresLimit;
             if (posLim < s.pitch)
             {
+                if (currentG < maxAllowedGForce)
+                    posPitchDynPresLimitIntegrator += 0.05f;        //jsut an override in case things break
+
                 s.pitch = posLim;
                 debugString += "\nLimiting Pos Gs";
             }            
