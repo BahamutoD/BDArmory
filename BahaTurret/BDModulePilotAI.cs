@@ -1165,7 +1165,7 @@ namespace BahaTurret
             negLim = negPitchDynPresLimitIntegrator * invVesselDynPreskPa + negPitchDynPresLimit;
             if (negLim > s.pitch)
             {
-                if (currentG > -maxAllowedGForce)
+                if (currentG > -(maxAllowedGForce * 0.97f))
                     negPitchDynPresLimitIntegrator -= 0.05f;        //jsut an override in case things break
                 
                 s.pitch = negLim;
@@ -1174,7 +1174,7 @@ namespace BahaTurret
             posLim = posPitchDynPresLimitIntegrator * invVesselDynPreskPa + posPitchDynPresLimit;
             if (posLim < s.pitch)
             {
-                if (currentG < maxAllowedGForce)
+                if (currentG < (maxAllowedGForce * 0.97f))
                     posPitchDynPresLimitIntegrator += 0.05f;        //jsut an override in case things break
 
                 s.pitch = posLim;
