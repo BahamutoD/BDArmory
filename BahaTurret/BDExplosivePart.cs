@@ -11,6 +11,9 @@ namespace BahaTurret
 		[KSPField(isPersistant = false)]
 		public float blastPower = 25;
 
+		[KSPField]
+		public float blastHeat = -1;
+
 		[KSPAction("Detonate")]
 		public void DetonateAG(KSPActionParam param)
 		{
@@ -52,7 +55,7 @@ namespace BahaTurret
 				hasDetonated = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
-				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, vessel, FlightGlobals.getUpAxis(), "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(), "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 			}
 		}
 	}

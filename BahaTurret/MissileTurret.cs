@@ -418,7 +418,12 @@ namespace BahaTurret
 
 			foreach(var child in part.children)
 			{
+				if(child.parent != part) continue;
+
 				MissileLauncher ml = child.FindModuleImplementing<MissileLauncher>();
+
+				if(!ml) continue;
+
 				Transform mTf = child.FindModelTransform("missileTransform");
 				//fix incorrect hierarchy
 				if(!mTf)
@@ -458,9 +463,9 @@ namespace BahaTurret
 					ml.decoupleForward = true;
 					ml.dropTime = 0;
 
-					if(!comOffsets.ContainsKey(ml.part.partName))
+					if(!comOffsets.ContainsKey(ml.part.name))
 					{
-						comOffsets.Add(ml.part.partName, ml.part.CoMOffset);
+						comOffsets.Add(ml.part.name, ml.part.CoMOffset);
 					}
 
 					missileCount++;
@@ -470,8 +475,6 @@ namespace BahaTurret
 			missileChildren = msl.ToArray();
 			missileTransforms = mtfl.ToArray();
 			missileReferenceTransforms = mrl.ToArray();
-
-
 		}
 
 		void UpdateMissilePositions()
@@ -489,7 +492,7 @@ namespace BahaTurret
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
 
 					Part missilePart = missileChildren[i].part;
-					Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.partName]));
+					Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.name]));
 					missilePart.CoMOffset = newCoMOffset;
 				}
 			}
@@ -578,8 +581,7 @@ namespace BahaTurret
 			missileChildren[index].dropTime = 0;
 			missileChildren[index].decoupleForward = true;
 
-			missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part.partName];
-
+			missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part.name];
 		}
 
 		public void PrepMissileForFire(MissileLauncher ml)
@@ -609,6 +611,21 @@ namespace BahaTurret
 			}
 
 			return -1;
+		}
+
+		public bool ContainsMissileOfType(MissileLauncher ml)
+		{
+			if(!ml) return false;
+			if(missileCount == 0) return false;
+
+			for(int i = 0; i < missileCount; i++)
+			{
+				if(missileChildren[i].part.name == ml.part.name)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 

@@ -39,6 +39,7 @@ namespace BahaTurret
 		//explosive parameters
 		public float radius = 30;
 		public float blastPower = 8;
+		public float blastHeat = -1;
 		
 		public string explModelPath;
 		public string explSoundPath;
@@ -400,7 +401,7 @@ namespace BahaTurret
 						{
 							if(bulletType == PooledBulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
+								ExplosionFX.CreateExplosion(hit.point - (ray.direction*0.1f), radius, blastPower, blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
 							}
 							else if(BDArmorySettings.BULLET_HITS)
 							{
@@ -443,7 +444,7 @@ namespace BahaTurret
 			if(bulletType == PooledBulletTypes.Explosive && airDetonation && distanceFromStart > detonationRange)
 			{
 				//detonate
-				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
+				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);
 				//GameObject.Destroy(gameObject); //destroy bullet on collision
 				KillBullet();
 				return;

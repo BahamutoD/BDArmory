@@ -28,6 +28,7 @@ namespace BahaTurret
 		public float timeIndex = 0;
 
 		public MissileTurret missileTurret = null;
+		public BDRotaryRail rotaryRail = null;
 
 		//aero
 		[KSPField]
@@ -87,6 +88,8 @@ namespace BahaTurret
 		[KSPField]
 		public float blastPower = 25;
 		[KSPField]
+		public float blastHeat = -1;
+		[KSPField]
 		public float maxTurnRateDPS = 20;
 		[KSPField]
 		public bool proxyDetonate = true;
@@ -125,7 +128,9 @@ namespace BahaTurret
 		[KSPField]
 		public bool terminalManeuvering = false;
 
-	
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "), 
+			UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
+		public bool inCargoBay = false;
 		
 		
 		[KSPField]
@@ -178,6 +183,8 @@ namespace BahaTurret
 		public bool useSimpleDrag = false;
 		[KSPField]
 		public float simpleDrag = 0.02f;
+		[KSPField]
+		public float simpleStableTorque = 10;
 
 		[KSPField]
 		public Vector3 simpleCoD = new Vector3(0,0,-1);
@@ -193,9 +200,7 @@ namespace BahaTurret
 		AnimationState[] deployStates;
 		
 		bool hasPlayedFlyby = false;
-		
-		Quaternion previousRotation;
-		
+	
 		float debugTurnRate = 0;
 		string debugString = "";
 
@@ -325,7 +330,9 @@ namespace BahaTurret
 		public float maxStaticLaunchRange = 3000;
 
 
-
+		//ballistic options
+		[KSPField]
+		public bool indirect = false;
 
 		public override void OnStart(PartModule.StartState state)
 		{
@@ -424,9 +431,7 @@ namespace BahaTurret
 						}
 					}
 				}
-
-				previousRotation = transform.rotation;
-
+					
 				cmTimer = Time.time;
 				
 				part.force_activate();
@@ -566,6 +571,10 @@ namespace BahaTurret
 			{
 				missileTurret.FireMissile(this);
 			}
+			else if(rotaryRail)
+			{
+				rotaryRail.FireMissile(this);
+			}
 			else
 			{
 				FireMissile();	
@@ -580,6 +589,10 @@ namespace BahaTurret
 			if(missileTurret)
 			{
 				missileTurret.FireMissile(this);
+			}
+			else if(rotaryRail)
+			{
+				rotaryRail.FireMissile(this);
 			}
 			else
 			{
@@ -680,10 +693,7 @@ namespace BahaTurret
 
 				StartCoroutine(DecoupleRoutine());
 				
-				if(rndAngVel > 0)
-				{
-					part.rb.angularVelocity += UnityEngine.Random.insideUnitSphere.normalized * rndAngVel;	
-				}
+
 				
 
 				vessel.vesselName = GetShortName();
@@ -692,8 +702,6 @@ namespace BahaTurret
 				
 				timeFired = Time.time;
 
-				
-				previousRotation = transform.rotation;
 
 				//setting ref transform for navball
 				GameObject refObject = new GameObject();
@@ -716,6 +724,13 @@ namespace BahaTurret
 		IEnumerator DecoupleRoutine()
 		{
 			yield return new WaitForFixedUpdate();
+
+			if(rndAngVel > 0)
+			{
+				part.rb.angularVelocity += UnityEngine.Random.insideUnitSphere.normalized * rndAngVel;	
+			}
+
+
 			if(decoupleForward)
 			{
 				part.rb.velocity += decoupleSpeed * part.transform.forward;
@@ -725,7 +740,6 @@ namespace BahaTurret
 				part.rb.velocity += decoupleSpeed * -part.transform.up;
 			}
 
-			//Misc.RemoveFARModule(part);
 		}
 
 		/// <summary>
@@ -829,7 +843,9 @@ namespace BahaTurret
 		Vector3 previousPos;
 		void RaycastCollisions()
 		{
-			if(timeIndex > 0.5f && vessel.srfSpeed > part.crashTolerance)
+			if(weaponClass == WeaponClasses.Bomb) return;
+
+			if(timeIndex > 1f && vessel.srfSpeed > part.crashTolerance)
 			{
 				/*
 				RaycastHit[] hits = Physics.RaycastAll(new Ray(previousPos, part.transform.position - previousPos), (part.transform.position - previousPos).magnitude, 557057);
@@ -983,14 +999,7 @@ namespace BahaTurret
 				{
 					CheckMiss();
 					targetMf = null;
-					if(!aero)
-					{
-						if(!hasRCS && !useSimpleDrag)	
-						{
-							transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(vessel.srf_velocity, transform.up), atmosMultiplier * (0.5f*(timeIndex-dropTime)) * 50*Time.fixedDeltaTime);	
-						}
-					}
-					else
+					if(aero)
 					{
 						aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
 					}
@@ -1488,11 +1497,11 @@ namespace BahaTurret
 		void AGMBallisticGuidance()
 		{
 			Vector3 agmTarget;
-			bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(targetPosition, vessel, true, out agmTarget);
+			bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(targetPosition, vessel, !indirect, out agmTarget);
 			if(!validSolution || Vector3.Angle(targetPosition - transform.position, agmTarget - transform.position) > Mathf.Clamp(maxOffBoresight, 0, 65))
 			{
 				Vector3 dToTarget = targetPosition - transform.position;
-				Vector3 direction = Quaternion.AngleAxis(maxOffBoresight * 0.9f, Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
+				Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
 				agmTarget = transform.position + direction;
 			}
 
@@ -1979,7 +1988,7 @@ namespace BahaTurret
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 				if(sourceVessel==null) sourceVessel = vessel;
-				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, sourceVessel, transform.forward, explModelPath, explSoundPath);
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, sourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage
 
 				foreach(var e in gaplessEmitters)
 				{
@@ -2204,18 +2213,28 @@ namespace BahaTurret
 			Vector3 spin = Vector3.Project(part.rb.angularVelocity, part.rb.transform.forward);// * 8 * Time.fixedDeltaTime;
 			part.rb.angularVelocity -= spin;
 			//rigidbody.maxAngularVelocity = 7;
-			part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
+
+			if(guidanceActive)
+			{
+				part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
+			}
 		}
 		
 		void SimpleDrag()
 		{
 			part.dragModel = Part.DragModel.NONE;
-			float simSpeedSquared = (float)vessel.srf_velocity.sqrMagnitude;
+			//float simSpeedSquared = (float)vessel.srf_velocity.sqrMagnitude;
+			float simSpeedSquared = (part.rb.GetPointVelocity(part.transform.TransformPoint(simpleCoD))+(Vector3)Krakensbane.GetFrameVelocity()).sqrMagnitude;
 			Vector3 currPos = transform.position;
 			float drag = deployed ? deployedDrag : simpleDrag;
-			Vector3 dragForce = (0.008f * part.rb.mass) * drag * 0.5f * simSpeedSquared * (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) * vessel.srf_velocity.normalized;
+			float dragMagnitude = (0.008f * part.rb.mass) * drag * 0.5f * simSpeedSquared * (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos), FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody);
+			Vector3 dragForce = dragMagnitude * vessel.srf_velocity.normalized;
 			part.rb.AddForceAtPosition(-dragForce, transform.TransformPoint(simpleCoD));
 
+			Vector3 torqueAxis = -Vector3.Cross(vessel.srf_velocity, part.transform.forward).normalized;
+			float AoA = Vector3.Angle(part.transform.forward, vessel.srf_velocity);
+			AoA /= 20;
+			part.rb.AddTorque(AoA * simpleStableTorque * dragMagnitude * torqueAxis);
 		}
 
 		void ParseModes()

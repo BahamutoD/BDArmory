@@ -176,11 +176,12 @@ namespace BahaTurret
 			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
 		}
 
+		public float detectedTime;
 		Coroutine lifeRoutine;
 		IEnumerator LifetimeRoutine()
 		{
-			float startTime = Time.time;
-			while(Time.time - startTime < 30 && enabled)
+			detectedTime = Time.time;
+			while(Time.time - detectedTime < 60 && enabled)
 			{
 				yield return null;
 			}

@@ -178,7 +178,9 @@ namespace BahaTurret
 
 		void EnsureVesselRadarData()
 		{
-			if(vesselRadarData == null)
+			myVesselID = vessel.id.ToString();
+
+			if(vesselRadarData == null || vesselRadarData.vessel!=vessel)
 			{
 				vesselRadarData = vessel.gameObject.GetComponent<VesselRadarData>();
 

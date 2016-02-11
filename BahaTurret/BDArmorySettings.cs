@@ -996,7 +996,9 @@ namespace BahaTurret
 					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Guns Range", leftLabel);
 					float gRange = ActiveWeaponManager.gunRange;
 					gRange = GUI.HorizontalSlider(new Rect(leftIndent+90, (guardLines*entryHeight), contentWidth-90-38, entryHeight), gRange, 0, 10000);
+					gRange /= 100f;
 					gRange = Mathf.Round(gRange);
+					gRange *= 100f;
 					ActiveWeaponManager.gunRange = gRange;
 					GUI.Label(new Rect(leftIndent+(contentWidth-35), (guardLines*entryHeight), 35, entryHeight), ActiveWeaponManager.gunRange.ToString(), leftLabel);
 					guardLines++;
