@@ -1805,7 +1805,7 @@ namespace BahaTurret
 				float size = 30;
 				
 				Vector3 reticlePosition;
-				if(BDArmorySettings.AIM_ASSIST && vessel.srf_velocity.sqrMagnitude < Mathf.Pow(750,2))
+				if(BDArmorySettings.AIM_ASSIST && vessel.srfSpeed < Krakensbane.Threshold)
 				{
 					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{

@@ -444,7 +444,6 @@ namespace BahaTurret
 		void LoadGPSTargets(ConfigNode saveNode)
 		{
 			ConfigNode fileNode = ConfigNode.Load("GameData/BDArmory/gpsTargets.cfg");
-
 			string saveTitle = HighLogic.CurrentGame.Title;
 
 			if(fileNode != null && fileNode.HasNode("BDARMORY"))
