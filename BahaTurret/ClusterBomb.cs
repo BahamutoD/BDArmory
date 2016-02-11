@@ -44,18 +44,33 @@ namespace BahaTurret
 			foreach(var sub in part.FindModelTransforms("submunition"))
 			{
 				submunitions.Add(sub.gameObject);
-				Rigidbody subRb = sub.gameObject.AddComponent<Rigidbody>();
-				subRb.isKinematic = true;
-				subRb.mass = part.mass / part.FindModelTransforms("submunition").Length;
+				if(HighLogic.LoadedSceneIsFlight)
+				{
+					Rigidbody subRb = sub.gameObject.GetComponent<Rigidbody>();
+					if(!subRb)
+					{
+						subRb = sub.gameObject.AddComponent<Rigidbody>();
+					}
+					subRb.isKinematic = true;
+					subRb.mass = part.mass / part.FindModelTransforms("submunition").Length;
+				}
+				sub.gameObject.SetActive(false);
 			}
 			
 			fairings = new List<GameObject>();
 			foreach(var fairing in part.FindModelTransforms("fairing"))
 			{
 				fairings.Add(fairing.gameObject);
-				Rigidbody fairingRb = fairing.gameObject.AddComponent<Rigidbody>();
-				fairingRb.isKinematic = true;
-				fairingRb.mass = 0.05f;
+				if(HighLogic.LoadedSceneIsFlight)
+				{
+					Rigidbody fairingRb = fairing.gameObject.GetComponent<Rigidbody>();
+					if(!fairingRb)
+					{
+						fairingRb = fairing.gameObject.AddComponent<Rigidbody>();
+					}
+					fairingRb.isKinematic = true;
+					fairingRb.mass = 0.05f;
+				}
 			}
 			
 			missileLauncher = part.GetComponent<MissileLauncher>();
@@ -89,6 +104,7 @@ namespace BahaTurret
 			
 			foreach(var sub in submunitions)
 			{
+				sub.SetActive(true);
 				sub.transform.parent = null;
 				Vector3 direction = (sub.transform.position - part.transform.position).normalized;
 				sub.rigidbody.isKinematic = false;
