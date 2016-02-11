@@ -16,7 +16,7 @@ namespace BahaTurret
 		[KSPField(isPersistant = true)]
 		public string savedWingmen = string.Empty;
 
-		[KSPField(guiActive = false, guiActiveEditor = true)]
+		[KSPField(guiActive = false, guiActiveEditor = true, guiName = "")]
 		public string guiTitle = "WingCommander:";
 
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spread"),
@@ -26,6 +26,9 @@ namespace BahaTurret
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Lag"),
 			UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
 		public float lag = 10;
+
+		[KSPField(isPersistant = true)]
+		public bool commandSelf = false;
 
 		List<GPSTargetInfo> commandedPositions;
 		bool drawMouseDiamond = false;
@@ -98,12 +101,14 @@ namespace BahaTurret
 
 		void OnDestroy()
 		{
-			
-			GameEvents.onGameStateSave.Remove(SaveWingmen);
-			GameEvents.onVesselLoaded.Remove(OnVesselLoad);
-			GameEvents.onVesselDestroy.Remove(OnVesselLoad);
-			GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
-			MissileFire.OnToggleTeam -= OnToggleTeam;
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				GameEvents.onGameStateSave.Remove(SaveWingmen);
+				GameEvents.onVesselLoaded.Remove(OnVesselLoad);
+				GameEvents.onVesselDestroy.Remove(OnVesselLoad);
+				GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
+				MissileFire.OnToggleTeam -= OnToggleTeam;
+			}
 			
 		}
 
@@ -233,51 +238,55 @@ namespace BahaTurret
 		GUIStyle wingmanButtonSelectedStyle;
 		void OnGUI()
 		{
-			if(HighLogic.LoadedSceneIsFlight && showGUI && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED)
+			if(HighLogic.LoadedSceneIsFlight && vessel && vessel.isActiveVessel && !vessel.packed)
 			{
-				if(!rectInit)
+				if(BDArmorySettings.GAME_UI_ENABLED)
 				{
-					guiWindowRect = new Rect(45, 75, 240, 800);
-					buttonWidth = guiWindowRect.width - (2*margin);
-					buttonEndY = buttonStartY;
-					wingmanButtonStyle = new GUIStyle(HighLogic.Skin.button);
-					wingmanButtonStyle.alignment = TextAnchor.MiddleLeft;
-					wingmanButtonStyle.wordWrap = false;
-					wingmanButtonStyle.fontSize = 11;
-					wingmanButtonSelectedStyle = new GUIStyle(HighLogic.Skin.box);
-					wingmanButtonSelectedStyle.alignment = TextAnchor.MiddleLeft;
-					wingmanButtonSelectedStyle.wordWrap = false;
-					wingmanButtonSelectedStyle.fontSize = 11;
-					rectInit = true;
-				}
-				guiWindowRect = GUI.Window(1293293, guiWindowRect, WingmenWindow, "WingCommander", HighLogic.Skin.window);
-
-				if(showAGWindow)
-				{
-					AGWindow();
-				}
-			}
-
-			if(vessel.isActiveVessel)
-			{
-				float diamondSize = 24;
-				foreach(var comPos in commandedPositions)
-				{
-					BDGUIUtils.DrawTextureOnWorldPos(comPos.worldPos, BDArmorySettings.Instance.greenDiamondTexture, new Vector2(diamondSize, diamondSize), 0);
-					Vector2 labelPos;
-					if(BDGUIUtils.WorldToGUIPos(comPos.worldPos, out labelPos))
+					if(showGUI)
 					{
-						labelPos.x += diamondSize/2;
-						labelPos.y -= 10;
-						GUI.Label(new Rect(labelPos.x, labelPos.y, 300, 20), comPos.name);
-					}
-				}
+						if(!rectInit)
+						{
+							guiWindowRect = new Rect(45, 75, 240, 800);
+							buttonWidth = guiWindowRect.width - (2 * margin);
+							buttonEndY = buttonStartY;
+							wingmanButtonStyle = new GUIStyle(HighLogic.Skin.button);
+							wingmanButtonStyle.alignment = TextAnchor.MiddleLeft;
+							wingmanButtonStyle.wordWrap = false;
+							wingmanButtonStyle.fontSize = 11;
+							wingmanButtonSelectedStyle = new GUIStyle(HighLogic.Skin.box);
+							wingmanButtonSelectedStyle.alignment = TextAnchor.MiddleLeft;
+							wingmanButtonSelectedStyle.wordWrap = false;
+							wingmanButtonSelectedStyle.fontSize = 11;
+							rectInit = true;
+						}
+						guiWindowRect = GUI.Window(1293293, guiWindowRect, WingmenWindow, "WingCommander", HighLogic.Skin.window);
 
-				if(drawMouseDiamond)
-				{
-					Vector2 mouseDiamondPos = Input.mousePosition;
-					Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize / 2), Screen.height-mouseDiamondPos.y - (diamondSize / 2), diamondSize, diamondSize);
-					GUI.DrawTexture(mouseDiamondRect, BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
+						if(showAGWindow)
+						{
+							AGWindow();
+						}
+					}
+
+					//command position diamonds
+					float diamondSize = 24;
+					foreach(var comPos in commandedPositions)
+					{
+						BDGUIUtils.DrawTextureOnWorldPos(comPos.worldPos, BDArmorySettings.Instance.greenDiamondTexture, new Vector2(diamondSize, diamondSize), 0);
+						Vector2 labelPos;
+						if(BDGUIUtils.WorldToGUIPos(comPos.worldPos, out labelPos))
+						{
+							labelPos.x += diamondSize/2;
+							labelPos.y -= 10;
+							GUI.Label(new Rect(labelPos.x, labelPos.y, 300, 20), comPos.name);
+						}
+					}
+
+					if(drawMouseDiamond)
+					{
+						Vector2 mouseDiamondPos = Input.mousePosition;
+						Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize / 2), Screen.height-mouseDiamondPos.y - (diamondSize / 2), diamondSize, diamondSize);
+						GUI.DrawTexture(mouseDiamondRect, BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
+					}
 				}
 			}
 		}
@@ -307,7 +316,13 @@ namespace BahaTurret
 			//command buttons
 			float commandButtonLine = 0;
 			CommandButton(SelectAll, "Select All", ref commandButtonLine, false, false);
-			commandButtonLine += 0.5f;
+			//commandButtonLine += 0.25f;
+
+			commandSelf = GUI.Toggle(new Rect(margin, margin + buttonEndY + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth, buttonHeight), commandSelf, "Command Self", HighLogic.Skin.toggle);
+			commandButtonLine++;
+
+			commandButtonLine += 0.10f;
+
 			CommandButton(CommandFollow, "Follow", ref commandButtonLine, true, false);
 			CommandButton(CommandFlyTo, "Fly To Pos", ref commandButtonLine, true, waitingForFlytoPos);
 			CommandButton(CommandAttack, "Attack Pos", ref commandButtonLine, true, waitingForAttackPos);
@@ -363,26 +378,21 @@ namespace BahaTurret
 			{
 				if(sendToWingmen)
 				{
-					foreach(var index in focusIndexes)
+					if(wingmen.Count > 0)
 					{
-						func(wingmen[index], index, data);
-					}
-					/*
-					if(!selectAll)
-					{
-						if(focusIndex < wingmen.Count)
+						foreach(var index in focusIndexes)
 						{
-							func(wingmen[focusIndex], focusIndex, data);
+							func(wingmen[index], index, data);
 						}
 					}
-					else
+
+					if(commandSelf)
 					{
-						for(int i = 0; i < wingmen.Count; i++)
+						foreach(var ai in vessel.FindPartModulesImplementing<BDModulePilotAI>())
 						{
-							func(wingmen[i], i, data);
+							func(ai, -1, data);
 						}
 					}
-					*/
 				}
 				else
 				{
@@ -483,7 +493,7 @@ namespace BahaTurret
 		bool waitingForAttackPos = false;
 		IEnumerator CommandPosition(BDModulePilotAI wingman, BDModulePilotAI.PilotCommands command)
 		{
-			if(focusIndexes.Count == 0)
+			if(focusIndexes.Count == 0 && !commandSelf)
 			{
 				yield break;
 			}

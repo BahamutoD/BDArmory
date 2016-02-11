@@ -99,6 +99,8 @@ namespace BahaTurret
 		public float cannonShellRadius = 30; //max radius of explosion forces/damage
 		[KSPField]
 		public float cannonShellPower = 8; //explosion's impulse force
+		[KSPField]
+		public float cannonShellHeat = -1; //if non-negative, heat damage
 
 		//projectile graphics
 		[KSPField]
@@ -1046,6 +1048,7 @@ namespace BahaTurret
 							pBullet.explModelPath = explModelPath;
 							pBullet.explSoundPath = explSoundPath;
 							pBullet.blastPower = cannonShellPower;
+							pBullet.blastHeat = cannonShellHeat;
 							pBullet.radius = cannonShellRadius;
 							pBullet.airDetonation = airDetonation;
 							pBullet.detonationRange = detonationRange;
@@ -1802,7 +1805,7 @@ namespace BahaTurret
 				float size = 30;
 				
 				Vector3 reticlePosition;
-				if(BDArmorySettings.AIM_ASSIST && vessel.srf_velocity.sqrMagnitude < Mathf.Pow(750,2))
+				if(BDArmorySettings.AIM_ASSIST && vessel.srfSpeed < Krakensbane.Threshold)
 				{
 					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{

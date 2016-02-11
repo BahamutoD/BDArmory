@@ -1169,9 +1169,9 @@ namespace BahaTurret
 
 		void RefreshAvailableLinks()
 		{
-			if(!weaponManager)
+			if(!HighLogic.LoadedSceneIsFlight || !weaponManager)
 			{
-				Debug.Log("tried refreshing links but weapon manager is null");
+				//Debug.Log("tried refreshing links but weapon manager is null");
 				return;
 
 			}
