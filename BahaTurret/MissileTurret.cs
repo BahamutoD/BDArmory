@@ -613,6 +613,21 @@ namespace BahaTurret
 			return -1;
 		}
 
+		public bool ContainsMissileOfType(MissileLauncher ml)
+		{
+			if(!ml) return false;
+			if(missileCount == 0) return false;
+
+			for(int i = 0; i < missileCount; i++)
+			{
+				if(missileChildren[i].part.name == ml.part.name)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 
 	}
 }
