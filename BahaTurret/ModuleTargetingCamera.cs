@@ -1440,7 +1440,7 @@ namespace BahaTurret
 			if(HighLogic.LoadedSceneIsFlight)
 			{
 				windowIsOpen = false;
-				if(weaponManager)
+				if(wpmr)
 				{
 					if(slaveTurrets)
 					{
