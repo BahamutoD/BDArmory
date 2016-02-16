@@ -1167,10 +1167,12 @@ namespace BahaTurret
             {
                 if (currentG > -(maxAllowedGForce * 0.97f * 9.81f))
                 {
-                    negPitchDynPresLimitIntegrator -= 0.05f;        //jsut an override in case things break
+                    negPitchDynPresLimitIntegrator -= (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
                     maxNegG = currentG / (float)vessel.dynamicPressurekPa;
                     cosAoAAtMaxNegG = curCosAoA;
+
+                    negPitchDynPresLimit = 0;
 
                     //maxPosG = 0;
                     //cosAoAAtMaxPosG = 0;
@@ -1184,10 +1186,12 @@ namespace BahaTurret
             {
                 if (currentG < (maxAllowedGForce * 0.97f * 9.81f))
                 {
-                    posPitchDynPresLimitIntegrator += 0.05f;        //jsut an override in case things break
+                    posPitchDynPresLimitIntegrator += (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
                     maxPosG = currentG / (float)vessel.dynamicPressurekPa;
                     cosAoAAtMaxPosG = curCosAoA;
+
+                    posPitchDynPresLimit = 0;
 
                     //maxNegG = 0;
                     //cosAoAAtMaxNegG = 0;
