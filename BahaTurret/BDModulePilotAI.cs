@@ -96,14 +96,54 @@ namespace BahaTurret
 			UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1.0f, scene = UI_Scene.All)]
 		public float idleSpeed = 120f;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Standby Mode"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max G"),
+         UI_FloatRange(minValue = 2f, maxValue = 25f, stepIncrement = 0.25f, scene = UI_Scene.All)]
+        public float maxAllowedGForce = 10;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max AoA"),
+         UI_FloatRange(minValue = 0f, maxValue = 85f, stepIncrement = 2.5f, scene = UI_Scene.All)]
+        public float maxAllowedAoA = 35;
+        float maxAllowedCosAoA = 0;
+        float lastAllowedAoA = 0;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Standby Mode"),
 		 UI_Toggle(enabledText = "On", disabledText = "Off")]
 		public bool standbyMode = false;
 
+        //manueuverability and g loading data
+        float maxPosG = 0;
+        float cosAoAAtMaxPosG = 0;
 
+        float maxNegG = 0;
+        float cosAoAAtMaxNegG = 0;
 
+        float gaoASlopePerDynPres = 0;        //used to limit control input at very high dynamic pressures to avoid structural failure
+        float gOffsetPerDynPres = 0;
 
-		float threatLevel = 1;
+        float posPitchDynPresLimitIntegrator = 1;
+        float negPitchDynPresLimitIntegrator = -1;
+
+        float lastCosAoA = 0;
+        float lastPitchInput = 0;
+
+        //instantaneous turn radius and possible acceleration from lift
+        //properties can be used so that other AI modules can read this for future maneuverability comparisons between craft
+        float turnRadius;
+        public float TurnRadius
+        {
+            get { return turnRadius; }
+            private set { turnRadius = value; }
+        }
+
+        float maxLiftAcceleration;
+        public float MaxLiftAcceleration
+        {
+            get { return maxLiftAcceleration; }
+            private set { maxLiftAcceleration = value; }
+        }
+
+        
+        float threatLevel = 1;
 		float turningTimer = 0;
 		float evasiveTimer = 0;
 		Vector3 lastTargetPosition;
@@ -173,6 +213,8 @@ namespace BahaTurret
 				{
 					ActivatePilot();
 				}
+                maxAllowedCosAoA = (float)Math.Cos(maxAllowedAoA * Math.PI / 180.0);
+                lastAllowedAoA = maxAllowedAoA;
 			}
 
 			RefreshPartWindow();
@@ -337,14 +379,16 @@ namespace BahaTurret
 			//upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
 			upDirection = VectorUtils.GetUpDirection(vessel.transform.position);
 			debugString = string.Empty;
-			if(MissileGuidance.GetRadarAltitude(vessel) < minAltitude)
+
+            CalculateAccelerationAndTurningCircle();
+            if (MissileGuidance.GetRadarAltitude(vessel) < MinAltitudeNeeded())
 			{
 				startedLanded = true;
 			}
 
 
 
-			if(startedLanded)
+            if (startedLanded)
 			{
 				if(command != PilotCommands.Follow)
 				{
@@ -368,7 +412,8 @@ namespace BahaTurret
 					UpdateAI(s);
 				}
 			}
-
+            UpdateGAndAoALimits(s);
+            AdjustPitchForGAndAoALimits(s);
 			//brake and cut throttle if exceeding max speed
 			/*
 			if(vessel.srfSpeed > maxSpeed)
@@ -970,6 +1015,235 @@ namespace BahaTurret
 			}
 		}
 
+        void UpdateGAndAoALimits(FlightCtrlState s)
+        {
+            if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed || startedLanded && -Vector3.Dot(vessel.ReferenceTransform.forward, vessel.upAxis) < 0.8f)
+            {
+                return;
+            }
+
+            if(lastAllowedAoA != maxAllowedAoA)
+            {
+                lastAllowedAoA = maxAllowedAoA;
+                maxAllowedCosAoA = (float)Math.Cos(lastAllowedAoA * Math.PI / 180.0);
+            }
+            float pitchG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);       //should provide g force in vessel up / down direction, assuming a standard plane
+            float pitchGPerDynPres = pitchG / (float)vessel.dynamicPressurekPa;
+
+            float curCosAoA = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
+            if(pitchGPerDynPres < maxNegG || Math.Abs(curCosAoA - cosAoAAtMaxNegG) < 0.005f)
+            {
+                maxNegG = pitchGPerDynPres;
+                cosAoAAtMaxNegG = curCosAoA;
+            }
+            if (pitchGPerDynPres > maxPosG || Math.Abs(curCosAoA - cosAoAAtMaxPosG) < 0.005f)
+            {
+                maxPosG = pitchGPerDynPres;
+                cosAoAAtMaxPosG = curCosAoA;
+            }
+
+            if(cosAoAAtMaxNegG >= cosAoAAtMaxPosG)
+            {
+                cosAoAAtMaxNegG = cosAoAAtMaxPosG = maxNegG = maxPosG = 0;
+                gOffsetPerDynPres = gaoASlopePerDynPres = 0;
+                return;
+            }
+
+            float aoADiff = cosAoAAtMaxPosG - cosAoAAtMaxNegG;
+
+            //if (Math.Abs(pitchControlDiff) < 0.005f)
+            //    return;                 //if the pitch control values are too similar, don't bother to avoid numerical errors
+
+
+            gaoASlopePerDynPres = (maxPosG - maxNegG) / aoADiff;
+            gOffsetPerDynPres = maxPosG - gaoASlopePerDynPres * cosAoAAtMaxPosG;     //g force offset
+        }
+
+        void AdjustPitchForGAndAoALimits(FlightCtrlState s)
+        {
+            float minCosAoA, maxCosAoA;
+            //debugString += "\nMax Pos G: " + maxPosG + " @ " + cosAoAAtMaxPosG;
+            //debugString += "\nMax Neg G: " + maxNegG + " @ " + cosAoAAtMaxNegG;
+
+            if (gaoASlopePerDynPres == 0 || vessel.srfSpeed < takeOffSpeed)         //if the slope is 0, ignore it
+            {
+                negPitchDynPresLimitIntegrator = -1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
+                posPitchDynPresLimitIntegrator = 1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
+                return;
+            }
+
+            float invVesselDynPreskPa = 1f / (float)vessel.dynamicPressurekPa;
+
+            maxCosAoA = maxAllowedGForce * 9.81f * invVesselDynPreskPa;
+            minCosAoA = -maxCosAoA;
+
+            maxCosAoA -= gOffsetPerDynPres;
+            minCosAoA -= gOffsetPerDynPres;
+
+            maxCosAoA /= gaoASlopePerDynPres;
+            minCosAoA /= gaoASlopePerDynPres;
+
+            if (maxCosAoA > maxAllowedCosAoA)
+                maxCosAoA = maxAllowedCosAoA;
+
+            if (minCosAoA < -maxAllowedCosAoA)
+                minCosAoA = -maxAllowedCosAoA;
+
+            float curCosAoA = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
+
+
+            float centerCosAoA = (minCosAoA + maxCosAoA) * 0.5f;
+            float curCosAoACentered = curCosAoA - centerCosAoA;
+            float cosAoADiff = 0.5f * Math.Abs(maxCosAoA - minCosAoA);
+            float curCosAoANorm = curCosAoACentered / cosAoADiff;      //scaled so that from centerAoA to maxAoA is 1
+
+
+            float negPitchScalar, posPitchScalar;
+            negPitchScalar = negPitchDynPresLimitIntegrator * invVesselDynPreskPa - lastPitchInput;
+            posPitchScalar = lastPitchInput - posPitchDynPresLimitIntegrator * invVesselDynPreskPa;
+
+            //update pitch control limits as needed
+            float negPitchDynPresLimit, posPitchDynPresLimit;
+            negPitchDynPresLimit = posPitchDynPresLimit = 0;
+            if (curCosAoANorm < -0.15f)// || Math.Abs(negPitchScalar) < 0.01f)
+            {
+                float cosAoAOffset = curCosAoANorm + 1;     //set max neg aoa to be 0
+                float aoALimScalar = Math.Abs(curCosAoANorm);
+                aoALimScalar *= aoALimScalar;
+                aoALimScalar *= aoALimScalar;
+                aoALimScalar *= aoALimScalar;
+                if (aoALimScalar > 1)
+                    aoALimScalar = 1;
+
+                float pitchInputScalar = negPitchScalar;
+                pitchInputScalar = 1 - Mathf.Clamp01(Math.Abs(pitchInputScalar));
+                pitchInputScalar *= pitchInputScalar;
+                pitchInputScalar *= pitchInputScalar;
+                pitchInputScalar *= pitchInputScalar;
+                if (pitchInputScalar < 0)
+                    pitchInputScalar = 0;
+
+                float deltaCosAoANorm = curCosAoA - lastCosAoA;
+                deltaCosAoANorm /= cosAoADiff;
+
+                debugString += "\nUpdating Neg Gs";
+                negPitchDynPresLimitIntegrator -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+                negPitchDynPresLimitIntegrator -= 0.005f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
+                if (cosAoAOffset < 0)
+                    negPitchDynPresLimit = -0.3f * cosAoAOffset;
+            }
+            if (curCosAoANorm > 0.15f)// || Math.Abs(posPitchScalar) < 0.01f)
+            {
+                float cosAoAOffset = curCosAoANorm - 1;     //set max pos aoa to be 0
+                float aoALimScalar = Math.Abs(curCosAoANorm);
+                aoALimScalar *= aoALimScalar;
+                aoALimScalar *= aoALimScalar;
+                aoALimScalar *= aoALimScalar;
+                if (aoALimScalar > 1)
+                    aoALimScalar = 1;
+
+                float pitchInputScalar = posPitchScalar;
+                pitchInputScalar = 1 - Mathf.Clamp01(Math.Abs(pitchInputScalar));
+                pitchInputScalar *= pitchInputScalar;
+                pitchInputScalar *= pitchInputScalar;
+                pitchInputScalar *= pitchInputScalar;
+                if (pitchInputScalar < 0)
+                    pitchInputScalar = 0;
+
+                float deltaCosAoANorm = curCosAoA - lastCosAoA;
+                deltaCosAoANorm /= cosAoADiff;
+
+                debugString += "\nUpdating Pos Gs";
+                posPitchDynPresLimitIntegrator -= 0.01f * Mathf.Clamp01(aoALimScalar + pitchInputScalar) * cosAoAOffset * (float)vessel.dynamicPressurekPa;
+                posPitchDynPresLimitIntegrator -= 0.005f * deltaCosAoANorm * (float)vessel.dynamicPressurekPa;
+                if(cosAoAOffset > 0)
+                    posPitchDynPresLimit = -0.3f * cosAoAOffset;
+            }
+
+            float currentG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);
+            float negLim, posLim;
+            negLim = negPitchDynPresLimitIntegrator * invVesselDynPreskPa + negPitchDynPresLimit;
+            if (negLim > s.pitch)
+            {
+                if (currentG > -(maxAllowedGForce * 0.97f * 9.81f))
+                {
+                    negPitchDynPresLimitIntegrator -= (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
+
+                    maxNegG = currentG / (float)vessel.dynamicPressurekPa;
+                    cosAoAAtMaxNegG = curCosAoA;
+
+                    negPitchDynPresLimit = 0;
+
+                    //maxPosG = 0;
+                    //cosAoAAtMaxPosG = 0;
+                }
+
+                s.pitch = negLim;
+                debugString += "\nLimiting Neg Gs";
+            }
+            posLim = posPitchDynPresLimitIntegrator * invVesselDynPreskPa + posPitchDynPresLimit;
+            if (posLim < s.pitch)
+            {
+                if (currentG < (maxAllowedGForce * 0.97f * 9.81f))
+                {
+                    posPitchDynPresLimitIntegrator += (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
+
+                    maxPosG = currentG / (float)vessel.dynamicPressurekPa;
+                    cosAoAAtMaxPosG = curCosAoA;
+
+                    posPitchDynPresLimit = 0;
+
+                    //maxNegG = 0;
+                    //cosAoAAtMaxNegG = 0;
+                }
+
+                s.pitch = posLim;
+                debugString += "\nLimiting Pos Gs";
+            }            
+
+            lastPitchInput = s.pitch;
+            lastCosAoA = curCosAoA;
+            debugString += "\nNeg Pitch Lim: " + negLim;
+            debugString += "\nPos Pitch Lim: " + posLim;
+
+        }
+
+        void CalculateAccelerationAndTurningCircle()
+        {
+            maxLiftAcceleration = gaoASlopePerDynPres * Math.Min(cosAoAAtMaxPosG, maxAllowedCosAoA) + gOffsetPerDynPres;
+            maxLiftAcceleration *= (float)vessel.dynamicPressurekPa;       //maximum acceleration from lift that the vehicle can provide
+
+            maxLiftAcceleration = Math.Min(maxLiftAcceleration, maxAllowedGForce * 9.81f);       //limit it to whichever is smaller, what we can provide or what we can handle
+
+            if(maxLiftAcceleration > 0)
+                turnRadius = (float)vessel.srf_velocity.sqrMagnitude / maxLiftAcceleration;     //radius that we can turn in assuming constant velocity, assuming simple circular motion
+        }
+
+        float MinAltitudeNeeded()         //min altitude adjusted for G limits; let's try _not_ to overcook dives and faceplant into the ground
+        {
+            //for a pure vertical dive, turnRadius will be the altitude that we need to turn.  However, for shallower dives we don't need that much.  Let's account for that.
+            //actual altitude needed will be radius * (1 - cos(theta)), where theta is the angle of the arc from dive entry to the turning circle to the bottom
+            //we can calculate that from the velocity vector mag dotted with the up vector
+
+            float diveAngleCorrection = -Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.upAxis); //normalize the vector and dot it with upAxis
+            //this gives us sin(theta)
+            if(diveAngleCorrection > 0)         //we're headed downwards
+            {
+                diveAngleCorrection *= diveAngleCorrection;
+                diveAngleCorrection = 1 - diveAngleCorrection;
+                diveAngleCorrection = Math.Max(0f, diveAngleCorrection);    //remember to check to make sure numerical errors haven't crept in!  Can't have NaN showing up
+                diveAngleCorrection = Mathf.Sqrt(diveAngleCorrection);      //convert sin(theta) to cos(theta)
+
+                diveAngleCorrection = 1 - diveAngleCorrection;      //and convert to 1 - cos(theta)
+            }
+            else
+            {
+                diveAngleCorrection = 0;
+            }
+
+            return Math.Max(minAltitude, 100 + turnRadius * diveAngleCorrection);
+        }
+
 		Vector3 DefaultAltPosition()
 		{
 			return (vessel.transform.position + (-(float)vessel.altitude*upDirection) + (defaultAltitude *upDirection));
@@ -1361,7 +1635,7 @@ namespace BahaTurret
 			{
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					GUI.Label(new Rect(200, 800, 400, 400), debugString);	
+					GUI.Label(new Rect(200, Screen.height - 200, 400, 400), debugString);	
 				}
 
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
