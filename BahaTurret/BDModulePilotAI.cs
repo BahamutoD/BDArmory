@@ -381,7 +381,9 @@ namespace BahaTurret
 			debugString = string.Empty;
 
             CalculateAccelerationAndTurningCircle();
-            if (MissileGuidance.GetRadarAltitude(vessel) < MinAltitudeNeeded())
+			float minAltNeeded = MinAltitudeNeeded();
+			debugString += "minAltNeeded: " + minAltNeeded;
+			if (MissileGuidance.GetRadarAltitude(vessel) < minAltNeeded)
 			{
 				startedLanded = true;
 			}
@@ -580,6 +582,7 @@ namespace BahaTurret
 					{
 						if(missile.targetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
 						{
+							debugString += "\nAttempting heat lock";
 							target += v.srf_velocity.normalized * 10;
 						}
 						else
@@ -587,7 +590,7 @@ namespace BahaTurret
 							target = MissileGuidance.GetAirToAirFireSolution(missile, v);
 						}
 
-						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.forward) < 20f)
+						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.up) < 20f)
 						{
 							steerMode = SteerModes.Aiming;
 						}
@@ -819,12 +822,12 @@ namespace BahaTurret
 
 			
 			float rollError = Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
-			debugString += "\nRoll offset: "+rollError;
+			//debugString += "\nRoll offset: "+rollError;
 			float steerRoll = (steerMult * 0.0015f * rollError);
-			debugString += "\nSteerRoll: "+steerRoll;
+			//debugString += "\nSteerRoll: "+steerRoll;
 			float rollDamping = (.10f * steerDamping * -localAngVel.y);
 			steerRoll -= rollDamping;
-			debugString += "\nRollDamping: "+rollDamping;
+			//debugString += "\nRollDamping: "+rollDamping;
 
 
 
