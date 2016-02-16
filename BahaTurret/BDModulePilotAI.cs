@@ -101,7 +101,7 @@ namespace BahaTurret
         public float maxAllowedGForce = 10;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max AoA"),
-         UI_FloatRange(minValue = 0f, maxValue = 90f, stepIncrement = 2.5f, scene = UI_Scene.All)]
+         UI_FloatRange(minValue = 0f, maxValue = 85f, stepIncrement = 2.5f, scene = UI_Scene.All)]
         public float maxAllowedAoA = 35;
         float maxAllowedCosAoA = 0;
         float lastAllowedAoA = 0;
@@ -1165,12 +1165,15 @@ namespace BahaTurret
             negLim = negPitchDynPresLimitIntegrator * invVesselDynPreskPa + negPitchDynPresLimit;
             if (negLim > s.pitch)
             {
-                if (currentG > -(maxAllowedGForce * 0.97f))
+                if (currentG > -(maxAllowedGForce * 0.97f * 9.81f))
                 {
                     negPitchDynPresLimitIntegrator -= 0.05f;        //jsut an override in case things break
 
                     maxNegG = currentG / (float)vessel.dynamicPressurekPa;
                     cosAoAAtMaxNegG = curCosAoA;
+
+                    //maxPosG = 0;
+                    //cosAoAAtMaxPosG = 0;
                 }
 
                 s.pitch = negLim;
@@ -1179,12 +1182,15 @@ namespace BahaTurret
             posLim = posPitchDynPresLimitIntegrator * invVesselDynPreskPa + posPitchDynPresLimit;
             if (posLim < s.pitch)
             {
-                if (currentG < (maxAllowedGForce * 0.97f))
+                if (currentG < (maxAllowedGForce * 0.97f * 9.81f))
                 {
                     posPitchDynPresLimitIntegrator += 0.05f;        //jsut an override in case things break
 
                     maxPosG = currentG / (float)vessel.dynamicPressurekPa;
                     cosAoAAtMaxPosG = curCosAoA;
+
+                    //maxNegG = 0;
+                    //cosAoAAtMaxNegG = 0;
                 }
 
                 s.pitch = posLim;
