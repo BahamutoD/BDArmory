@@ -898,6 +898,11 @@ namespace BahaTurret
 
 		void FlyExtend(FlightCtrlState s, Vector3 tPosition)
 		{
+			if(weaponManager)
+			{
+				weaponManager.ForceWideViewScan();
+			}
+
 			if(vessel.srfSpeed < minSpeed)
 			{
 				RegainEnergy(s);
