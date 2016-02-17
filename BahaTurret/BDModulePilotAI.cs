@@ -468,7 +468,7 @@ namespace BahaTurret
 						turningTimer = 0;
 					}
 
-					debugString += "turningTimer: " + turningTimer;
+					debugString += "\nturningTimer: " + turningTimer;
 
 					if(turningTimer > 15)
 					{
@@ -549,13 +549,38 @@ namespace BahaTurret
 			else if(collisionDetectionTicker > 20)
 			{
 				collisionDetectionTicker = 0;
+				bool avoid = false;
 				Vector3 badDirection;
 				if(DetectCollision(flyingToPosition - vesselTransform.position, out badDirection))
 				{
+					avoid = true;
+				}
+				else if(targetVessel) //check collision with target
+				{
+					if(PredictCollisionWithVessel(targetVessel, 3f, 0.25f, out badDirection))
+					{
+						avoid = true;
+					}
+				}
+				else if(command != PilotCommands.Follow) //check collisions with othe flyin vessels
+				{
+					foreach(var v in BDATargetManager.LoadedVessels)
+					{
+						if(v && v!=vessel && !v.Landed)
+						{
+							if(PredictCollisionWithVessel(v, 3, 0.5f, out badDirection))
+							{
+								avoid = true;
+								break;
+							}
+						}
+					}
+				}
+
+				if(avoid)
+				{
 					collisionDetectionTimer += Time.fixedDeltaTime;
-					 //= flyingToPosition - vesselTransform.position;
 					Vector3 axis = -Vector3.Cross(vesselTransform.up, badDirection);
-					//axis = Vector3.Project(axis, upDirection);
 					collisionAvoidDirection = Quaternion.AngleAxis(90, axis) * badDirection; //need to change axis to opposite of direction to collision
 				}
 			}
@@ -565,6 +590,34 @@ namespace BahaTurret
 			}
 
 			return false;
+		}
+
+		bool PredictCollisionWithVessel(Vessel v, float maxTime, float interval, out Vector3 badDirection)
+		{
+			float time = Mathf.Min(0.5f, maxTime);
+			while(time < maxTime)
+			{
+				Vector3 tPos = PredictPosition(v, time);
+				Vector3 myPos = PredictPosition(vessel, time);
+				if(Vector3.SqrMagnitude(tPos - myPos) < 900f)
+				{
+					badDirection = tPos - vesselTransform.position;
+					return true;
+				}
+
+				time = Mathf.MoveTowards(time, maxTime, interval);
+			}
+
+			badDirection = Vector3.zero;
+			return false;
+		}
+
+		Vector3 PredictPosition(Vessel v, float time)
+		{
+			Vector3 pos = v.CoM;
+			pos += v.srf_velocity * time;
+			pos += 0.5f * v.acceleration * time * time;
+			return pos;
 		}
 
 		void FlyToTargetVessel(FlightCtrlState s, Vessel v)
