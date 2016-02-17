@@ -1473,6 +1473,7 @@ namespace BahaTurret
 				audioSource.Stop ();
 				wasFiring = false;
 				audioSource2.PlayOneShot(overheatSound);
+				weaponManager.ResetGuardInterval();
 			}
 			if(heat < maxHeat/3 && isOverheated) //reset on cooldown
 			{
