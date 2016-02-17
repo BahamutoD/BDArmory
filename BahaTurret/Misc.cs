@@ -83,9 +83,41 @@ namespace BahaTurret
 					if(wm.wingCommander.guiWindowRect.Contains(inverseMousePos)) return true;
 					if(wm.wingCommander.showAGWindow && wm.wingCommander.agWindowRect.Contains(inverseMousePos)) return true;
 				}
+
+				if(extraGUIRects != null)
+				{
+					for(int i = 0; i < extraGUIRects.Count; i++)
+					{
+						if(extraGUIRects[i].Contains(inverseMousePos)) return true;
+					}
+				}
 			}
 			
 			return false;
+		}
+
+		public static List<Rect> extraGUIRects;
+
+		public static int RegisterGUIRect(Rect rect)
+		{
+			if(extraGUIRects == null)
+			{
+				extraGUIRects = new List<Rect>();
+			}
+
+			int index = extraGUIRects.Count;
+			extraGUIRects.Add(rect);
+			return index;
+		}
+
+		public static void UpdateGUIRect(Rect rect, int index)
+		{
+			if(extraGUIRects == null)
+			{
+				Debug.LogWarning("Trying to update a GUI rect for mouse position check, but Rect list is null.");
+			}
+
+			extraGUIRects[index] = rect;
 		}
 
 		public static bool MouseIsInRect(Rect rect)
