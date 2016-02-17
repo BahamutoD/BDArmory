@@ -19,8 +19,8 @@ namespace BahaTurret
 		[KSPField]
 		public float rotationSpeed = 360;
 
-		[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Rails")]
-		public int numberOfRails = 8;
+		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Rails")]
+		public float numberOfRails = 8;
 		float railAngle = 0;
 
 		[KSPField]
@@ -58,7 +58,7 @@ namespace BahaTurret
 		int[] railCounts = new int[]{2,3,4,6,8};
 
 		[KSPField(isPersistant = true)]
-		int railCountIndex = 4;
+		public float railCountIndex = 4;
 
 		bool rdyToFire = false;
 		public bool readyToFire
@@ -229,29 +229,38 @@ namespace BahaTurret
 		public void IncreaseRails(bool updateSym)
 		{
 			railCountIndex = Mathf.Min(railCountIndex + 1, railCounts.Length-1);
-			numberOfRails = railCounts[railCountIndex];
-			UpdateRails(numberOfRails);
+			numberOfRails = railCounts[Mathf.RoundToInt(railCountIndex)];
+			UpdateRails(Mathf.RoundToInt(numberOfRails));
 
 			if(updateSym)
 			{
 				foreach(Part p in part.symmetryCounterparts)
 				{
-					p.FindModuleImplementing<BDRotaryRail>().IncreaseRails(false);
+					//p.FindModuleImplementing<BDRotaryRail>().IncreaseRails(false);
+					p.FindModuleImplementing<BDRotaryRail>().SetRailCount(Mathf.RoundToInt(numberOfRails), railCountIndex);
 				}
 			}
+		}
+
+		public void SetRailCount(int railCount, float railCountIndex)
+		{
+			this.railCountIndex = railCountIndex;
+			numberOfRails = railCount;
+			UpdateRails(Mathf.RoundToInt(numberOfRails));
 		}
 
 		public void DecreaseRails(bool updateSym)
 		{
 			railCountIndex = Mathf.Max(railCountIndex - 1, 0);
-			numberOfRails = railCounts[railCountIndex];
-			UpdateRails(numberOfRails);
+			numberOfRails = railCounts[Mathf.RoundToInt(railCountIndex)];
+			UpdateRails(Mathf.RoundToInt(numberOfRails));
 
 			if(updateSym)
 			{
 				foreach(Part p in part.symmetryCounterparts)
 				{
-					p.FindModuleImplementing<BDRotaryRail>().DecreaseRails(false);
+					//p.FindModuleImplementing<BDRotaryRail>().DecreaseRails(false);
+					p.FindModuleImplementing<BDRotaryRail>().SetRailCount(Mathf.RoundToInt(numberOfRails), railCountIndex);
 				}
 			}
 		}
@@ -278,6 +287,11 @@ namespace BahaTurret
 			if(rails.Count == 0)
 			{
 				rails.Add(part.FindModelTransform("railTransform"));
+				var extraRails = part.FindModelTransforms("newRail");
+				for(int i = 0; i < extraRails.Length; i++)
+				{
+					rails.Add(extraRails[i]);
+				}
 			}
 
 			for(int i = 1; i < rails.Count; i++)
@@ -299,6 +313,7 @@ namespace BahaTurret
 			for(int i = 1; i < railAmount; i++)
 			{
 				GameObject newRail = (GameObject)Instantiate(rails[0].gameObject);
+				newRail.name = "newRail";
 				newRail.transform.parent = rails[0].parent;
 				newRail.transform.localPosition = rails[0].localPosition;
 				newRail.transform.localRotation = Quaternion.AngleAxis((float)i*railAngle, rails[0].parent.InverseTransformDirection(part.transform.up)) * rails[0].localRotation;
@@ -331,7 +346,7 @@ namespace BahaTurret
 			heightInterval = maxHeight / intervals;
 
 
-			numberOfRails = railCounts[railCountIndex];
+			numberOfRails = railCounts[Mathf.RoundToInt(railCountIndex)];
 
 			rails = new List<Transform>();
 			rotationTransforms = new List<Transform>();
@@ -344,10 +359,22 @@ namespace BahaTurret
 			if(HighLogic.LoadedSceneIsEditor)
 			{
 				StartCoroutine(DelayedMoveStackNode(currentLength));
-				part.AddOnMouseEnter(OnPartEnter);
-				part.AddOnMouseExit(OnPartExit);
+				//part.AddOnMouseEnter(OnPartEnter);
+				//part.AddOnMouseExit(OnPartExit);
 				part.OnEditorAttach += OnAttach;
-				previousSymMethod = EditorLogic.fetch.symmetryMethod;
+				//previousSymMethod = EditorLogic.fetch.symmetryMethod;
+
+				/*
+				foreach(var pSym in part.symmetryCounterparts)
+				{
+					var otherRail = pSym.FindModuleImplementing<BDRotaryRail>();
+					if(otherRail.numberOfRails != numberOfRails)
+					{
+						SetRailCount(Mathf.RoundToInt(otherRail.numberOfRails), otherRail.railCountIndex);
+						break;
+					}
+				}
+				*/
 			}
 
 			if(HighLogic.LoadedSceneIsFlight)
@@ -360,7 +387,7 @@ namespace BahaTurret
 
 		void OnAttach()
 		{
-			UpdateRails(numberOfRails);
+			UpdateRails(Mathf.RoundToInt(numberOfRails));
 		}
 
 
@@ -406,7 +433,7 @@ namespace BahaTurret
 
 		void UpdateModelState()
 		{
-			UpdateRails(numberOfRails);
+			UpdateRails(Mathf.RoundToInt(numberOfRails));
 
 			for(int i = 0; i < heightTransforms.Count; i++)
 			{
@@ -810,6 +837,7 @@ namespace BahaTurret
 			UpdateIndexDictionary();
 		}
 
+		/*
 		//editor stuff
 		void OnPartEnter(Part p)
 		{
@@ -832,6 +860,7 @@ namespace BahaTurret
 			}
 		}
 		SymmetryMethod previousSymMethod;
+		*/
 
 		//test
 		void OnGUI()
