@@ -112,6 +112,7 @@
     <Compile Include="VesselRadarData.cs" />
     <Compile Include="RadarDisplayData.cs" />
     <Compile Include="BDRotaryRail.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
