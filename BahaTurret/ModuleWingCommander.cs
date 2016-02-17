@@ -413,6 +413,17 @@ namespace BahaTurret
 			wingman.CommandFollow(this, index);
 		}
 
+		public void CommandAllFollow()
+		{
+			RefreshFriendlies();
+			int i = 0;
+			foreach(var wingman in friendlies)
+			{
+				wingman.CommandFollow(this, i);
+				i++;
+			}
+		}
+
 		void CommandAG(BDModulePilotAI wingman, int index, object ag)
 		{
 			//Debug.Log("object to string: "+ag.ToString());

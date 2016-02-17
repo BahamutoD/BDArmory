@@ -161,6 +161,9 @@ namespace BahaTurret
 
 		public enum BDATeams{A, B, None};
 
+		//competition mode
+		float competitionDist = 8000;
+		string compDistGui = "8000";
 
 
 		//common textures
@@ -1413,6 +1416,36 @@ namespace BahaTurret
 				PHYSICS_RANGE = (physRangeSetting>=2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
 				physicsRangeGui = PHYSICS_RANGE.ToString();
 				ApplyPhysRange();
+			}
+			line++;
+			line++;
+
+			//competition mode
+			if(!BDATargetManager.competitionStarting)
+			{
+				compDistGui = GUI.TextField(SRightRect(line), compDistGui);
+				GUI.Label(SLeftRect(line), "Competition Distance");
+				float cDist = float.Parse(compDistGui);
+				cDist = Mathf.Clamp(cDist, 0f, 20000f);
+				competitionDist = cDist;
+				compDistGui = competitionDist.ToString();
+				line++;
+
+				if(GUI.Button(SRightRect(line), "Start Competition"))
+				{
+					BDATargetManager.Instance.StartCompetitionMode(competitionDist);
+					SaveConfig();
+					settingsGuiEnabled = false;
+				}
+			}
+			else
+			{
+				GUI.Label(SLeftRect(line), "Starting Competition...");
+				line++;
+				if(GUI.Button(SLeftRect(line), "Cancel"))
+				{
+					BDATargetManager.Instance.StopCompetition();
+				}
 			}
 			
 			line++;

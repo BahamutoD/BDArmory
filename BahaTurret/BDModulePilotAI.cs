@@ -175,7 +175,7 @@ namespace BahaTurret
 				return command;
 			}
 		}
-		ModuleWingCommander commandLeader;
+		public ModuleWingCommander commandLeader;
 		bool useRollHint = false;
 		Vector3d commandGeoPos;
 		public Vector3d commandPosition
@@ -209,6 +209,13 @@ namespace BahaTurret
 				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
 				MissileFire.OnToggleTeam += OnToggleTeam;
 				vesselTransform = vessel.ReferenceTransform;
+
+				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
+				{
+					weaponManager = wm;
+					break;
+				}
+
 				if(pilotEnabled)
 				{
 					ActivatePilot();
