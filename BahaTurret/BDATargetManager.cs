@@ -839,7 +839,17 @@ namespace BahaTurret
 				GUIStyle cStyle = new GUIStyle(HighLogic.Skin.label);
 				cStyle.fontStyle = FontStyle.Bold;
 				cStyle.fontSize = 22;
+				cStyle.alignment = TextAnchor.UpperCenter;
 				Rect cLabelRect = new Rect(0, Screen.height / 6, Screen.width, 100);
+
+
+				GUIStyle cShadowStyle = new GUIStyle(cStyle);
+				Rect cShadowRect = new Rect(cLabelRect);
+				cShadowRect.x += 2;
+				cShadowRect.y += 2;
+				cShadowStyle.normal.textColor = new Color(0, 0, 0, 0.75f);
+
+				GUI.Label(cShadowRect, competitionStatus, cShadowStyle);
 				GUI.Label(cLabelRect, competitionStatus, cStyle);
 			}
 		}
@@ -970,19 +980,21 @@ namespace BahaTurret
 					yield break;
 				}
 
-				center = VectorUtils.GetWorldSurfacePostion(centerGPS, FlightGlobals.currentMainBody);
-				foreach(var t in pilots.Keys)
+				if(Vector3.Distance(aLeader.transform.position, bLeader.transform.position) < distance*1.95f)
 				{
-					foreach(var p in pilots[t])
+					waiting = true;
+				}
+				else
+				{
+					foreach(var t in pilots.Keys)
 					{
-						if(Vector3.Distance(p.vessel.CoM, center) < distance - 2500)
+						foreach(var p in pilots[t])
 						{
-							waiting = true;
-						}
-						else if(p.currentCommand == BDModulePilotAI.PilotCommands.Follow && Vector3.Distance(p.vessel.CoM, p.commandLeader.vessel.CoM) > 1000)
-						{
-							competitionStatus = "Competition: Waiting for teams to get in position.";
-							waiting = true;
+							if(p.currentCommand == BDModulePilotAI.PilotCommands.Follow && Vector3.Distance(p.vessel.CoM, p.commandLeader.vessel.CoM) > 1000)
+							{
+								competitionStatus = "Competition: Waiting for teams to get in position.";
+								waiting = true;
+							}
 						}
 					}
 				}
