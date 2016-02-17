@@ -804,27 +804,30 @@ namespace BahaTurret
 			*/
 			line += 1.25f;
 			line += 0.25f;
+
+			//SETTINGS BUTTON
+			if(!BDKeyBinder.current && GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
+			{
+				ToggleSettingsGUI();
+			}
+
+			//vesselswitcher button
+			if(hasVS)
+			{
+				GUIStyle vsStyle = showVSGUI ? HighLogic.Skin.box : HighLogic.Skin.button;
+				if(GUI.Button(new Rect(toolWindowWidth - 30 - 28, 4, 26, 26), "VS", vsStyle))
+				{
+					showVSGUI = !showVSGUI;
+				}
+			}
+
 			
 			if(ActiveWeaponManager!=null)
 			{
 				//MINIMIZE BUTTON
 				toolMinimized = GUI.Toggle(new Rect(4, 4, 26, 26), toolMinimized, "_", toolMinimized ? HighLogic.Skin.box : HighLogic.Skin.button);
 			
-				//SETTINGS BUTTON
-				if(!BDKeyBinder.current && GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
-				{
-					ToggleSettingsGUI();
-				}
 
-				//vesselswitcher button
-				if(hasVS)
-				{
-					GUIStyle vsStyle = showVSGUI ? HighLogic.Skin.box : HighLogic.Skin.button;
-					if(GUI.Button(new Rect(toolWindowWidth - 30 - 28, 4, 26, 26), "VS", vsStyle))
-					{
-						showVSGUI = !showVSGUI;
-					}
-				}
 
 				GUIStyle armedLabelStyle;
 				Rect armedRect = new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight);
