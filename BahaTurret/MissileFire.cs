@@ -2212,7 +2212,7 @@ namespace BahaTurret
 				SetCargoBays();
 			}
 		}
-
+			
 		Vector3 debugGuardViewDirection;
 		bool focusingOnTarget = false;
 		float focusingOnTargetTimer = 0;
@@ -2301,6 +2301,12 @@ namespace BahaTurret
 				}
 				ufRoutine = StartCoroutine(UnderFireRoutine());
 			}
+		}
+
+		public void ForceWideViewScan()
+		{
+			focusingOnTarget = false;
+			focusingOnTargetTimer = 1;
 		}
 
 		IEnumerator ResetMissileThreatDistanceRoutine()
