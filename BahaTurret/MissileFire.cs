@@ -1217,7 +1217,14 @@ namespace BahaTurret
 			{
 				if(weaponIndex > 0 && mt.ContainsMissileOfType(currentMissile))
 				{
-					mt.EnableTurret();
+					if(!mt.activeMissileOnly || currentMissile.missileTurret == mt)
+					{
+						mt.EnableTurret();
+					}
+					else
+					{
+						mt.DisableTurret();
+					}
 				}
 				else
 				{

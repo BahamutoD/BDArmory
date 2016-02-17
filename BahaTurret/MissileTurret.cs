@@ -64,6 +64,10 @@ namespace BahaTurret
 		bool editorDeployed = false;
 		Coroutine deployAnimRoutine;
 
+		//special
+		[KSPField]
+		public bool activeMissileOnly = false;
+
 		MissileFire wm;
 		public MissileFire weaponManager
 		{
