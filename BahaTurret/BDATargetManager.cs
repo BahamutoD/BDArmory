@@ -952,8 +952,6 @@ namespace BahaTurret
 			aDestination = VectorUtils.WorldPositionToGeoCoords(aDestination, FlightGlobals.currentMainBody);
 			bDestination = VectorUtils.WorldPositionToGeoCoords(bDestination, FlightGlobals.currentMainBody);
 
-			Vector3 centerGPS = VectorUtils.WorldPositionToGeoCoords(center, FlightGlobals.currentMainBody);
-
 			aLeader.CommandFlyTo(aDestination);
 			bLeader.CommandFlyTo(bDestination);
 

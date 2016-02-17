@@ -1421,6 +1421,8 @@ namespace BahaTurret
 			line++;
 
 			//competition mode
+			GUI.Label(SLineRect(line), "= Dogfight Competition =", centerLabel);
+			line++;
 			if(!BDATargetManager.competitionStarting)
 			{
 				compDistGui = GUI.TextField(SRightRect(line), compDistGui);
