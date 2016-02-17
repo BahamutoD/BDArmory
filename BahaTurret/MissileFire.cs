@@ -699,6 +699,12 @@ namespace BahaTurret
 				GameEvents.onVesselCreate.Add(OnVesselCreate);
 				GameEvents.onPartJointBreak.Add(OnPartJointBreak);
 				GameEvents.onPartDie.Add(OnPartDie);
+
+				foreach(var aipilot in vessel.FindPartModulesImplementing<BDModulePilotAI>())
+				{
+					pilotAI = aipilot;
+					break;
+				}
 			}
 		}
 
@@ -4030,7 +4036,7 @@ namespace BahaTurret
 
 			float heatThresh = radarSlaved ? ml.heatThreshold*0.5f : ml.heatThreshold;
 
-			heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.missileReferenceTransform.position, direction), scanRadius, ml.heatThreshold, ml.allAspect);
+			heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.missileReferenceTransform.position + (50*ml.missileReferenceTransform.forward), direction), scanRadius, ml.heatThreshold, ml.allAspect);
 		}
 
 		void ClampVisualRange()

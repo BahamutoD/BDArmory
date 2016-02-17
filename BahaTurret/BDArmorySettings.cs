@@ -772,6 +772,11 @@ namespace BahaTurret
 			}
 		}
 
+
+		public bool hasVS = false;
+		public bool showVSGUI = false;
+
+
 		float rippleHeight = 0;
 		float weaponsHeight = 0;
 		float guardHeight = 0;
@@ -781,7 +786,7 @@ namespace BahaTurret
 
 		void ToolbarGUI(int windowID)
 		{
-			GUI.DragWindow(new Rect(30,0,toolWindowWidth-60, 30));
+			GUI.DragWindow(new Rect(30,0,toolWindowWidth-90, 30));
 
 			float line = 0;
 			float leftIndent = 10;
@@ -809,6 +814,16 @@ namespace BahaTurret
 				if(!BDKeyBinder.current && GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
 				{
 					ToggleSettingsGUI();
+				}
+
+				//vesselswitcher button
+				if(hasVS)
+				{
+					GUIStyle vsStyle = showVSGUI ? HighLogic.Skin.box : HighLogic.Skin.button;
+					if(GUI.Button(new Rect(toolWindowWidth - 30 - 28, 4, 26, 26), "VS", vsStyle))
+					{
+						showVSGUI = !showVSGUI;
+					}
 				}
 
 				GUIStyle armedLabelStyle;
