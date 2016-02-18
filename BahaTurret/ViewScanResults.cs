@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace BahaTurret
 {
@@ -10,7 +11,7 @@ namespace BahaTurret
 		public bool foundAGM;
 		public bool	firingAtMe;
 		public float missileThreatDistance;
-
+		public Vector3 threatPosition;
 
 	}
 }
