@@ -405,12 +405,14 @@ namespace BahaTurret
 										{
 											results.foundHeatMissile = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
+											results.threatPosition = missile.transform.position;
 											break;
 										}
 										else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
 										{
 											results.foundRadarMissile = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
+											results.threatPosition = missile.transform.position;
 										}
 										else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
 										{
@@ -438,6 +440,7 @@ namespace BahaTurret
 										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance)
 										{
 											results.firingAtMe = true;
+											results.threatPosition = weapon.vessel.transform.position;
 										}
 									}
 								}
