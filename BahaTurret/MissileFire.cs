@@ -842,10 +842,11 @@ namespace BahaTurret
 
 
 				//firing missiles and rockets===
-				if((selectedWeapon != null &&
+				if(	!guardMode && 
+					selectedWeapon != null &&
 				  (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
 				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
-				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)))
+				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
 				{
 					canRipple = true;
 					if(!MapView.MapIsEnabled && triggerTimer > BDArmorySettings.TRIGGER_HOLD_TIME && !hasSingleFired)
@@ -1016,6 +1017,12 @@ namespace BahaTurret
 						DisplaySelectedWeaponMessage();
 					}
 				}
+			}
+
+			if(weaponIndex == 0)
+			{
+				selectedWeapon = null;
+				hasSingleFired = true;
 			}
 
 			MissileLauncher aMl = GetAsymMissile();
@@ -2169,15 +2176,12 @@ namespace BahaTurret
 
 							float targetAngle = Vector3.Angle(-transform.forward, guardTarget.transform.position - transform.position);
 							float targetDistance = Vector3.Distance(currentTarget.position, transform.position);
+							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currentMissile, guardTarget.srf_velocity, guardTarget.CoM);
 							if(targetAngle > guardAngle / 2) //dont fire yet if target out of guard angle
 							{
 								launchAuthorized = false;
 							}
-							else if((vessel.LandedOrSplashed || guardTarget.LandedOrSplashed) && targetDistance < 1000)  //fire the missile only if target is further than 1000m
-							{
-								launchAuthorized = false;
-							}
-							else if(!vessel.LandedOrSplashed && !guardTarget.LandedOrSplashed && targetDistance < 400) //if air2air only fire if futher than 400m
+							else if(targetDistance > dlz.maxLaunchRange || targetDistance < dlz.minLaunchRange)  //fire the missile only if target is further than missiles min launch range
 							{
 								launchAuthorized = false;
 							}
@@ -2216,6 +2220,7 @@ namespace BahaTurret
 		Vector3 debugGuardViewDirection;
 		bool focusingOnTarget = false;
 		float focusingOnTargetTimer = 0;
+		public Vector3 incomingThreatPosition;
 		void UpdateGuardViewScan()
 		{
 			float finalMaxAngle = guardAngle / 2;
@@ -2270,15 +2275,20 @@ namespace BahaTurret
 				}
 			}
 
-			if(results.foundHeatMissile && !isFlaring)
+			if(results.foundHeatMissile)
 			{
-				StartCoroutine(FlareRoutine(2.5f));
-				StartCoroutine(ResetMissileThreatDistanceRoutine());
+				if(!isFlaring)
+				{
+					StartCoroutine(FlareRoutine(2.5f));
+					StartCoroutine(ResetMissileThreatDistanceRoutine());
+				}
+				incomingThreatPosition = results.threatPosition;
 			}
 
 			if(results.foundRadarMissile)
 			{
 				FireChaff();
+				incomingThreatPosition = results.threatPosition;
 			}
 
 			if(results.foundAGM)
@@ -2295,6 +2305,7 @@ namespace BahaTurret
 
 			if(results.firingAtMe)
 			{
+				incomingThreatPosition = results.threatPosition;
 				if(ufRoutine != null)
 				{
 					StopCoroutine(ufRoutine);
@@ -3460,6 +3471,7 @@ namespace BahaTurret
 					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
 					{
 						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AGM 
+						   || ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding
 						   || ml.guidanceMode == MissileLauncher.GuidanceModes.STS
 						   || ml.guidanceMode == MissileLauncher.GuidanceModes.Cruise)
 						{
@@ -4023,7 +4035,7 @@ namespace BahaTurret
 				return;
 			}
 
-			foundCam = BDATargetManager.GetLaserTarget(ml);
+			foundCam = BDATargetManager.GetLaserTarget(ml, (ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding));
 			if(foundCam)
 			{
 				laserPointDetected = true;
