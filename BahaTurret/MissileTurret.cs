@@ -102,6 +102,11 @@ namespace BahaTurret
 			}
 			else
 			{
+				while(pausingAfterShot)
+				{
+					yield return null;
+				}
+
 				while(deployAnimState.normalizedTime > 0)
 				{
 					deployAnimState.speed = -deployAnimationSpeed;
