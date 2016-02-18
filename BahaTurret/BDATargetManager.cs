@@ -187,7 +187,7 @@ namespace BahaTurret
 		/// <returns>The laser target painter.</returns>
 		/// <param name="referenceTransform">Reference transform.</param>
 		/// <param name="maxBoreSight">Max bore sight.</param>
-		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml)
+		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
 		{
 			Transform referenceTransform = ml.transform;
 			float maxOffBoresight = ml.maxOffBoresight;
@@ -200,6 +200,10 @@ namespace BahaTurret
 					continue;
 				}
 
+				if(parentOnly && !(cam.vessel == ml.vessel || cam.vessel == ml.sourceVessel))
+				{
+					continue;
+				}
 
 
 				if(cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
@@ -315,12 +319,6 @@ namespace BahaTurret
 
 			return finalData;
 		}
-
-
-
-
-
-
 
 
 		void UpdateDebugLabels()

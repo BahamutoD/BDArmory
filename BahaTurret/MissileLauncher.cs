@@ -1559,7 +1559,8 @@ namespace BahaTurret
 			else
 			{
 				ModuleTargetingCamera foundCam = null;
-				foundCam = BDATargetManager.GetLaserTarget(this);
+				bool parentOnly = (guidanceMode == GuidanceModes.BeamRiding);
+				foundCam = BDATargetManager.GetLaserTarget(this, parentOnly);
 				if(foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized && CanSeePosition(foundCam.groundTargetPosition))
 				{
 					Debug.Log("Laser guided missile actively found laser point. Enabling guidance.");
