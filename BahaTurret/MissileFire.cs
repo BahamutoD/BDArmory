@@ -1012,10 +1012,11 @@ namespace BahaTurret
 				if(vessel.isActiveVessel && Time.time - startTime > 1)
 				{
 					hasSingleFired = true;
-					if(weaponIndex != 0)
-					{
-						DisplaySelectedWeaponMessage();
-					}
+				}
+
+				if(vessel.isActiveVessel && weaponIndex!=0)
+				{
+					DisplaySelectedWeaponMessage();
 				}
 			}
 
@@ -1302,6 +1303,8 @@ namespace BahaTurret
 			if(vessel.isActiveVessel && !guardMode)
 			{
 				audioSource.PlayOneShot(clickSound);
+
+				DisplaySelectedWeaponMessage();
 			}
 
 		}
