@@ -1103,11 +1103,13 @@ namespace BahaTurret
 				{
 					currentThrust = Mathf.MoveTowards(currentThrust, thrust, thrust/10);
 				}
+
+				//add heat
+				part.temperature += (vessel.dynamicPressurekPa+thrust) * TimeWarp.deltaTime;
+
 				yield return null;
 			}
 			EndBoost();
-
-
 		}
 		//boost
 		void StartBoost()
@@ -1231,6 +1233,10 @@ namespace BahaTurret
 					currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, thrust/10);
 				}
 
+				//add heat
+				part.temperature += (vessel.dynamicPressurekPa+cruiseThrust) * TimeWarp.deltaTime;
+
+				Debug.Log("Adding +" + (vessel.dynamicPressurekPa + cruiseThrust).ToString("0.000") + "deg per second");
 
 				yield return null;
 			}

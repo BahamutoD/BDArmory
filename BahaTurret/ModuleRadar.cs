@@ -500,7 +500,7 @@ namespace BahaTurret
 
 		void LateUpdate()
 		{
-			if (HighLogic.LoadedSceneIsFlight && canScan)
+			if (HighLogic.LoadedSceneIsFlight && (canScan || canLock))
 			{
 				UpdateModel ();
 			}
@@ -511,11 +511,11 @@ namespace BahaTurret
 		void UpdateModel()
 		{
 			//model rotation
-			if(rotationTransform)
+
+			if(radarEnabled)
 			{
-				if(radarEnabled)
+				if(rotationTransform && canScan)
 				{
-					
 					Vector3 direction;
 					if(locked)
 					{
@@ -532,29 +532,34 @@ namespace BahaTurret
 						rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.LookRotation(localDirection, Vector3.up), 10 * TimeWarp.fixedDeltaTime);
 					}
 
-
-					//lock turret
-					if(lockingTurret)
-					{
-						if(locked)
-						{
-							lockingTurret.AimToTarget(lockedTarget.predictedPosition, lockingPitch, lockingYaw);
-						}
-						else
-						{
-							lockingTurret.ReturnTurret();
-						}
-					}
 				}
-				else
+
+				//lock turret
+				if(lockingTurret && canLock)
 				{
-					rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.identity, 5 * TimeWarp.fixedDeltaTime);
-					if(lockingTurret)
+					if(locked)
+					{
+						lockingTurret.AimToTarget(lockedTarget.predictedPosition, lockingPitch, lockingYaw);
+					}
+					else
 					{
 						lockingTurret.ReturnTurret();
 					}
 				}
 			}
+			else
+			{
+				if(rotationTransform)
+				{
+					rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.identity, 5 * TimeWarp.fixedDeltaTime);
+				}
+
+				if(lockingTurret)
+				{
+					lockingTurret.ReturnTurret();
+				}
+			}
+
 		}
 
 		public float leftLimit;
