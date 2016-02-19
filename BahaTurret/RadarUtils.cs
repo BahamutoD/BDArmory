@@ -477,7 +477,16 @@ namespace BahaTurret
 			float notchFactor = 1;
 			float angleFromUp = Vector3.Angle(targetDirection,upVector);
 			float lookDownAngle = angleFromUp-90;
-			if(lookDownAngle > 5) notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude/Mathf.Pow(60,2), 0.1f, 1f);
+
+			if(lookDownAngle > 5)
+			{
+				notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude / 3600f, 0.1f, 1f);
+			}
+			else
+			{
+				notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude / 3600f, 0.8f, 3f);
+			}
+
 			float groundClutterFactor = Mathf.Clamp((90/angleFromUp), 0.25f, 1.85f);
 			sig *= groundClutterFactor;
 			sig *= notchFactor;
