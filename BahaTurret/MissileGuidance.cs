@@ -356,6 +356,13 @@ namespace BahaTurret
 		public static float GetRaycastRadarAltitude(Vector3 position)
 		{
 			Vector3 upDirection = -FlightGlobals.getGeeForceAtPosition(position).normalized;
+
+			float altAtPos = FlightGlobals.getAltitudeAtPos(position);
+			if(altAtPos < 0)
+			{
+				position += 2 * Mathf.Abs(altAtPos) * upDirection;
+			}
+
 			Ray ray = new Ray(position, -upDirection);
 			float rayDistance = FlightGlobals.getAltitudeAtPos(position);
 
@@ -374,6 +381,8 @@ namespace BahaTurret
 				return rayDistance;
 			}
 		}
+
+
 	}
 }
 
