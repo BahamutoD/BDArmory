@@ -942,11 +942,12 @@ namespace BahaTurret
 				yield return null;
 			}
 			competitionStatus = "Competition: Sending pilots to start position.";
-			Vector3 aDirection = (aLeader.vessel.CoM - bLeader.vessel.CoM).normalized;
-			Vector3 bDirection = (bLeader.vessel.CoM - aLeader.vessel.CoM).normalized;
+			Vector3 aDirection = Vector3.ProjectOnPlane(aLeader.vessel.CoM - bLeader.vessel.CoM, aLeader.vessel.upAxis).normalized;
+			Vector3 bDirection = Vector3.ProjectOnPlane(bLeader.vessel.CoM - aLeader.vessel.CoM, bLeader.vessel.upAxis).normalized;
+
 			Vector3 center = (aLeader.vessel.CoM + bLeader.vessel.CoM) / 2f;
-			Vector3 aDestination = center + (aDirection * distance);
-			Vector3 bDestination = center + (bDirection * distance);
+			Vector3 aDestination = center + (aDirection * (distance+1250f));
+			Vector3 bDestination = center + (bDirection * (distance+1250f));
 			aDestination = VectorUtils.WorldPositionToGeoCoords(aDestination, FlightGlobals.currentMainBody);
 			bDestination = VectorUtils.WorldPositionToGeoCoords(bDestination, FlightGlobals.currentMainBody);
 
