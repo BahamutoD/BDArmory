@@ -1424,12 +1424,12 @@ namespace BahaTurret
 			//competition mode
 			GUI.Label(SLineRect(line), "= Dogfight Competition =", centerLabel);
 			line++;
-			if(!BDATargetManager.competitionStarting)
+			if(!BDATargetManager.competitionStarting && !BDATargetManager.stopCompetition)
 			{
 				compDistGui = GUI.TextField(SRightRect(line), compDistGui);
 				GUI.Label(SLeftRect(line), "Competition Distance");
 				float cDist = float.Parse(compDistGui);
-				cDist = Mathf.Clamp(cDist, 0f, 20000f);
+				cDist = Mathf.Clamp(cDist, 2000f, 20000f);
 				competitionDist = cDist;
 				compDistGui = competitionDist.ToString();
 				line++;
@@ -1443,7 +1443,7 @@ namespace BahaTurret
 			}
 			else
 			{
-				GUI.Label(SLeftRect(line), "Starting Competition...");
+				GUI.Label(SLeftRect(line), "Starting Competition... ("+compDistGui+")");
 				line++;
 				if(GUI.Button(SLeftRect(line), "Cancel"))
 				{

@@ -99,6 +99,13 @@ namespace BahaTurret
 
 			AddToolbarButton();
 
+			GameEvents.onGameSceneSwitchRequested.Add(OnSceneSwitchRequested);
+		}
+
+
+		void OnSceneSwitchRequested(GameEvents.FromToAction<GameScenes,GameScenes> fta)
+		{
+			StopCompetition();
 		}
 
 		void AddBuilding(DestructibleBuilding b)
@@ -164,6 +171,11 @@ namespace BahaTurret
 			if(BDArmorySettings.DRAW_DEBUG_LABELS)
 			{
 				UpdateDebugLabels();
+			}
+
+			if(!HighLogic.LoadedSceneIsFlight)
+			{
+				stopCompetition = true;
 			}
 		}
 
@@ -856,7 +868,7 @@ namespace BahaTurret
 		//Competition mode
 		public static bool competitionStarting = false;
 		string competitionStatus = "";
-		bool stopCompetition = false;
+		public static bool stopCompetition = false;
 		public void StartCompetitionMode(float distance)
 		{
 			if(!competitionStarting)
@@ -920,7 +932,7 @@ namespace BahaTurret
 
 
 			//wait till the leaders are airborne
-			while(aLeader.vessel.LandedOrSplashed || bLeader.vessel.LandedOrSplashed)
+			while(aLeader && bLeader && (aLeader.vessel.LandedOrSplashed || bLeader.vessel.LandedOrSplashed))
 			{
 				if(stopCompetition)
 				{
@@ -960,6 +972,11 @@ namespace BahaTurret
 			{
 				waiting = false;
 
+				if(!aLeader || !bLeader)
+				{
+					stopCompetition = true;
+				}
+
 				if(stopCompetition)
 				{
 					foreach(var t in pilots.Keys)
@@ -996,7 +1013,7 @@ namespace BahaTurret
 					}
 				}
 
-				yield return new WaitForSeconds(1);
+				yield return null;
 			}
 
 			//start the match
