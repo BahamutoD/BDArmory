@@ -299,7 +299,7 @@ namespace BahaTurret
 			{
 				if(TerrainCheck(ray.origin, lockedVessel.transform.position))
 				{
-					radar.UnlockTargetAt(lockIndex); //blocked by terrain
+					radar.UnlockTargetAt(lockIndex, true); //blocked by terrain
 					return;
 				}
 
@@ -318,13 +318,13 @@ namespace BahaTurret
 				}
 				else
 				{
-					radar.UnlockTargetAt(lockIndex);
+					radar.UnlockTargetAt(lockIndex, true);
 					return;
 				}
 			}
 			else
 			{
-				radar.UnlockTargetAt(lockIndex);
+				radar.UnlockTargetAt(lockIndex, true);
 			}
 		}
 

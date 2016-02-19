@@ -91,6 +91,16 @@ namespace BahaTurret
 
 		public bool hasLoadedExternalVRDs = false;
 
+		public List<TargetSignatureData> GetLockedTargets()
+		{
+			List<TargetSignatureData> lockedTargets = new List<TargetSignatureData>();
+			for(int i = 0; i < lockedTargetIndexes.Count; i++)
+			{
+				lockedTargets.Add(displayedTargets[lockedTargetIndexes[i]].targetData);
+			}
+			return lockedTargets;
+		}
+
 		public RadarDisplayData lockedTargetData
 		{
 			get
@@ -499,9 +509,9 @@ namespace BahaTurret
 			}
 		}
 
-		void TryLockTarget(RadarDisplayData radarTarget)
+		bool TryLockTarget(RadarDisplayData radarTarget)
 		{
-			if(radarTarget.locked) return;
+			if(radarTarget.locked) return false;
 
 			ModuleRadar lockingRadar = null;
 			//first try using the last radar to detect that target
@@ -523,11 +533,12 @@ namespace BahaTurret
 
 			if(lockingRadar != null)
 			{
-				lockingRadar.TryLockTarget(radarTarget.targetData.predictedPosition);
+				return lockingRadar.TryLockTarget(radarTarget.targetData.predictedPosition);
 			}
 
 			UpdateLockedTargets();
 			StartCoroutine(UpdateLocksAfterFrame());
+			return false;
 		}
 
 		IEnumerator UpdateLocksAfterFrame()
@@ -548,16 +559,17 @@ namespace BahaTurret
 			}
 		}
 
-		public void TryLockTarget(Vessel v)
+		public bool TryLockTarget(Vessel v)
 		{
 			foreach(var displayData in displayedTargets)
 			{
 				if(v == displayData.vessel)
 				{
-					TryLockTarget(displayData);
-					return;
+					return TryLockTarget(displayData);
 				}
 			}
+
+			return false;
 		}
 
 		bool CheckRadarForLock(ModuleRadar radar, RadarDisplayData radarTarget)
@@ -622,20 +634,23 @@ namespace BahaTurret
 
 				for(int i = 0; i < lockedTargetIndexes.Count; i++)
 				{
-					string label = string.Empty;
-					if(i == activeLockedTargetIndex)
+					if(BDArmorySettings.DRAW_DEBUG_LABELS)
 					{
-						label += "Active: ";
+						string label = string.Empty;
+						if(i == activeLockedTargetIndex)
+						{
+							label += "Active: ";
+						}
+						if(!displayedTargets[lockedTargetIndexes[i]].vessel)
+						{
+							label += "data with no vessel";
+						}
+						else
+						{
+							label += displayedTargets[lockedTargetIndexes[i]].vessel.vesselName;
+						}
+						GUI.Label(new Rect(20, 60 + (i * 26), 800, 446), label); 
 					}
-					if(!displayedTargets[lockedTargetIndexes[i]].vessel)
-					{
-						label += "data with no vessel";
-					}
-					else
-					{
-						label += displayedTargets[lockedTargetIndexes[i]].vessel.vesselName;
-					}
-					GUI.Label(new Rect(20, 60 + (i * 26), 800, 446), label); 
 
 					TargetSignatureData lockedTarget = displayedTargets[lockedTargetIndexes[i]].targetData;
 					if(i == activeLockedTargetIndex)

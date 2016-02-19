@@ -255,7 +255,8 @@ namespace BahaTurret
 		public bool hasMissed = false;
 
 		//radar stuff
-		public ModuleRadar radar;
+		//public ModuleRadar radar;
+		public VesselRadarData vrd;
 		public TargetSignatureData radarTarget;
 		[KSPField]
 		public float activeRadarRange = 6000;
@@ -1668,14 +1669,15 @@ namespace BahaTurret
 			{
 				if(!activeRadar && ((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f))
 				{
-					if(radar)
+					if(vrd)
 					{
 						TargetSignatureData t = TargetSignatureData.noTarget;
-						for(int i = 0; i < radar.lockedTargets.Count; i++)
+						List<TargetSignatureData> possibleTargets = vrd.GetLockedTargets();
+						for(int i = 0; i < possibleTargets.Count; i++)
 						{
-							if(radar.lockedTargets[i].vessel == radarTarget.vessel)
+							if(possibleTargets[i].vessel == radarTarget.vessel)
 							{
-								t = radar.lockedTargets[i];
+								t = possibleTargets[i];
 							}
 						}
 
@@ -1708,7 +1710,7 @@ namespace BahaTurret
 				}
 				else
 				{
-					radar = null;
+					vrd = null;
 
 					if(angleToTarget > maxOffBoresight)
 					{

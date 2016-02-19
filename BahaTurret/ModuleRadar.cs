@@ -609,18 +609,18 @@ namespace BahaTurret
 
 
 
-		public void TryLockTarget(Vector3 position)
+		public bool TryLockTarget(Vector3 position)
 		{
 			if(!canLock)
 			{
-				return;
+				return false;
 			}
 			Debug.Log ("Trying to radar lock target");
 
 			if(currentLocks == maxLocks)
 			{
 				Debug.Log("This radar ("+ radarName +") already has the maximum allowed targets locked.");
-				return;
+				return false;
 			}
 
 
@@ -647,11 +647,12 @@ namespace BahaTurret
 					Debug.Log ("- Acquired lock on target.");
 					vesselRadarData.AddRadarContact(this, lockedTarget, true);
 					vesselRadarData.UpdateLockedTargets();
-					return;
+					return true;
 				}
 			}
 
 			Debug.Log ("- Failed to lock on target.");
+			return false;
 		}
 
 
@@ -726,7 +727,7 @@ namespace BahaTurret
 
 			if(Vector3.Angle(lockedTarget.position - referenceTransform.position, this.lockedTarget.position - referenceTransform.position) > multiLockFOV / 2)
 			{
-				UnlockTargetAt(index);
+				UnlockTargetAt(index, true);
 				return;
 			}
 
@@ -758,7 +759,7 @@ namespace BahaTurret
 			if(!lockedTarget.exists || (!omnidirectional && Vector3.Angle(lockedTarget.position-referenceTransform.position, transform.up) > directionalFieldOfView/2))
 			{
 				//UnlockAllTargets();
-				UnlockTargetAt(index);
+				UnlockTargetAt(index, true);
 				return;
 			}
 
@@ -766,7 +767,7 @@ namespace BahaTurret
 			if(lockedTarget.vesselJammer && lockedTarget.vesselJammer.lockBreakStrength > lockedTarget.signalStrength*lockedTarget.vesselJammer.rcsReductionFactor)
 			{
 				//UnlockAllTargets();
-				UnlockTargetAt(index);
+				UnlockTargetAt(index, true);
 				return;
 			}
 
@@ -812,8 +813,16 @@ namespace BahaTurret
 			}
 		}
 
-		public void UnlockTargetAt(int index)
+		public void UnlockTargetAt(int index, bool tryRelock = false)
 		{
+			if(tryRelock)
+			{
+				Vessel v = lockedTargets[index].vessel;
+				UnlockTargetAt(index, false);
+				StartCoroutine(RetryLockRoutine(v));
+				return;
+			}
+
 			//Vector3 position = lockedTargets[index].position;
 			Vessel rVess = lockedTargets[index].vessel;
 			lockedTargets.RemoveAt(index);
@@ -831,6 +840,12 @@ namespace BahaTurret
 				//vesselRadarData.UnlockTargetAtPosition(position);
 				vesselRadarData.RemoveVesselFromTargets(rVess);
 			}
+		}
+
+		IEnumerator RetryLockRoutine(Vessel v)
+		{
+			yield return null;
+			vesselRadarData.TryLockTarget(v);
 		}
 
 		public void UnlockTargetVessel(Vessel v)

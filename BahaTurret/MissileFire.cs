@@ -1664,7 +1664,7 @@ namespace BahaTurret
 				//ml.radarTarget = radar.lockedTarget;
 				ml.radarTarget = vesselRadarData.lockedTargetData.targetData;
 
-				ml.radar = vesselRadarData.lockedTargetData.detectedByRadar;
+				ml.vrd = vesselRadarData;
 				vesselRadarData.lastMissile = ml;
 				/*
 
