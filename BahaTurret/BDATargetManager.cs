@@ -966,6 +966,8 @@ namespace BahaTurret
 			aLeader.CommandFlyTo(aDestination);
 			bLeader.CommandFlyTo(bDestination);
 
+			Vector3 centerGPS = VectorUtils.WorldPositionToGeoCoords(center, FlightGlobals.currentMainBody);
+
 			//wait till everyone is in position
 			bool waiting = true;
 			while(waiting)
@@ -1039,6 +1041,8 @@ namespace BahaTurret
 
 					//release command
 					p.ReleaseCommand();
+					p.defaultOrbitCoords = centerGPS;
+
 				}
 			}
 			competitionStatus = "Competition starting!  Good luck!";

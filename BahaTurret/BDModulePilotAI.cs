@@ -61,6 +61,7 @@ namespace BahaTurret
 
 		public MissileFire weaponManager;
 
+
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Alt."),
 		 UI_FloatRange(minValue = 500f, maxValue = 8500f, stepIncrement = 25f, scene = UI_Scene.All)]
 		public float defaultAltitude = 1500;
@@ -154,7 +155,7 @@ namespace BahaTurret
 		LineRenderer lr;
 		Vector3 flyingToPosition;
 
-		Vector3d defaultOrbitCoords;
+		public Vector3d defaultOrbitCoords;
 
 		//speed controller
 		BDAirspeedControl speedController;
@@ -943,7 +944,7 @@ namespace BahaTurret
 
 			//roll
 			Vector3 currentRoll = -vesselTransform.forward;
-			float rollUp = (steerMode == SteerModes.Aiming ? 5f : 22f);
+			float rollUp = (steerMode == SteerModes.Aiming ? 5f : 10f);
 			if(steerMode == SteerModes.NormalFlight)
 			{
 				rollUp += (1 - finalMaxSteer) * 10f;
@@ -967,6 +968,8 @@ namespace BahaTurret
 			s.roll = roll;
 			//
 		}
+
+
 
 		void FlyExtend(FlightCtrlState s, Vector3 tPosition)
 		{
