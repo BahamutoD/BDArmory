@@ -224,6 +224,7 @@ namespace BahaTurret
 
 		//AIPilot
 		public BDModulePilotAI pilotAI = null;
+		public float timeBombReleased = 0;
 
 		//targeting pods
 		public ModuleTargetingCamera mainTGP = null;
@@ -647,6 +648,8 @@ namespace BahaTurret
 			UpdateMaxGuardRange();
 			
 			startTime = Time.time;
+
+			UpdateTeamString();
 
 			if(HighLogic.LoadedSceneIsFlight)
 			{
@@ -2821,7 +2824,7 @@ namespace BahaTurret
 
 				if(targetDist > radius)
 				{
-					if(targetDist < radius * 2 && Vector3.Dot(guardTarget.CoM - bombAimerPosition, guardTarget.CoM - transform.position) < 0)
+					if(targetDist < Mathf.Max(radius * 2, 800f) && Vector3.Dot(guardTarget.CoM - bombAimerPosition, guardTarget.CoM - transform.position) < 0)
 					{
 						pilotAI.RequestExtend(guardTarget.CoM);
 						break;
@@ -2845,6 +2848,7 @@ namespace BahaTurret
 					if(!doProxyCheck)
 					{
 						FireCurrentMissile(true);
+						timeBombReleased = Time.time;
 						yield return new WaitForSeconds(rippleFire ? 60f / rippleRPM : 0.06f);
 						if(missilesAway >= maxMissilesOnTarget)
 						{
@@ -3949,7 +3953,7 @@ namespace BahaTurret
 		IEnumerator ChaffRoutine()
 		{
 			isChaffing = true;
-			yield return new WaitForSeconds(UnityEngine.Random.Range(0f, 1f));
+			yield return new WaitForSeconds(UnityEngine.Random.Range(0.2f, 1f));
 
 			foreach(var cm in vessel.FindPartModulesImplementing<CMDropper>())
 			{
