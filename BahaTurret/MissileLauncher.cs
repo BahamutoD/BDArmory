@@ -2211,13 +2211,19 @@ namespace BahaTurret
 
 		void AntiSpin()
 		{
+			part.rb.angularDrag = 0;
+			part.angularDrag = 0;
 			Vector3 spin = Vector3.Project(part.rb.angularVelocity, part.rb.transform.forward);// * 8 * Time.fixedDeltaTime;
 			part.rb.angularVelocity -= spin;
 			//rigidbody.maxAngularVelocity = 7;
 
 			if(guidanceActive)
 			{
-				part.rb.angularVelocity -= 0.5f * part.rb.angularVelocity;
+				part.rb.angularVelocity -= 0.6f * part.rb.angularVelocity;
+			}
+			else
+			{
+				part.rb.angularVelocity -= 0.02f * part.rb.angularVelocity;
 			}
 		}
 		
