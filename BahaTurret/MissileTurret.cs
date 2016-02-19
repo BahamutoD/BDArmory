@@ -39,7 +39,7 @@ namespace BahaTurret
 
 		public Vector3 slavedTargetPosition;
 
-		bool pausingAfterShot = true;
+		bool pausingAfterShot = false;
 		float timeFired = 0;
 		[KSPField]
 		public float firePauseTime = 0.25f;
@@ -90,6 +90,8 @@ namespace BahaTurret
 
 		IEnumerator DeployAnimation(bool forward)
 		{
+			yield return null;
+
 			if(forward)
 			{
 				while(deployAnimState.normalizedTime < 1)
@@ -102,9 +104,11 @@ namespace BahaTurret
 			}
 			else
 			{
+				deployAnimState.speed = 0;
+
 				while(pausingAfterShot)
 				{
-					yield return null;
+					yield return new WaitForFixedUpdate();
 				}
 
 				while(deployAnimState.normalizedTime > 0)
