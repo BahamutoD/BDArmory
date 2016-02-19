@@ -524,6 +524,7 @@ namespace BahaTurret
 		{
 			if(ActiveWeaponManager == null)
 			{
+				drawCursor = false;
 				Screen.showCursor = true;
 				return;
 			}
