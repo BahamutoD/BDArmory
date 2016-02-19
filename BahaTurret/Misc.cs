@@ -198,6 +198,27 @@ namespace BahaTurret
 			return false;
 		}
 
+		public static bool CheckSightLineExactDistance(Vector3 origin, Vector3 target, float maxDistance, float threshold, float startDistance)
+		{
+			float dist = maxDistance;
+			Ray ray = new Ray(origin, target-origin);
+			ray.origin += ray.direction*startDistance;
+			RaycastHit rayHit;
+			if(Physics.Raycast(ray, out rayHit, dist, 557057))
+			{
+				if(Vector3.Distance(target, rayHit.point) < threshold)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 
 
 		public static float[] ParseToFloatArray(string floatString)

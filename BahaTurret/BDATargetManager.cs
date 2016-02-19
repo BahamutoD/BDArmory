@@ -276,7 +276,7 @@ namespace BahaTurret
 						if(!part) continue;
 						if(!allAspect)
 						{
-							if(!Misc.CheckSightLine(ray.origin, part.transform.position, 10000, 5, 5)) continue;
+							if(!Misc.CheckSightLineExactDistance(ray.origin, part.transform.position+vessel.rb_velocity, Vector3.Distance(part.transform.position,ray.origin), 5, 5)) continue;
 						}
 
 						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * (15/Mathf.Max(15,angle));

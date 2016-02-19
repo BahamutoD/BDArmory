@@ -1106,6 +1106,8 @@ namespace BahaTurret
 				yield return null;
 			}
 			EndBoost();
+
+
 		}
 		//boost
 		void StartBoost()
