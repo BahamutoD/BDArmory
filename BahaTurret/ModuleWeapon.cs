@@ -937,20 +937,22 @@ namespace BahaTurret
 							//animation
 							if(hasFireAnimation)
 							{
-								float unclampedSpeed = (roundsPerMinute*fireState.length)/60;
+								float unclampedSpeed = (roundsPerMinute*fireState.length)/60f;
 								float lowFramerateFix = 1;
-								if(roundsPerMinute > 500)
+								if(roundsPerMinute > 500f)
 								{
 									lowFramerateFix = (0.02f/Time.deltaTime);
 								}
 								fireAnimSpeed = Mathf.Clamp (unclampedSpeed, 1f * lowFramerateFix, 20f * lowFramerateFix);
 								fireState.enabled = true;
-								if(unclampedSpeed == fireAnimSpeed)
+								if(unclampedSpeed == fireAnimSpeed || fireState.normalizedTime > 1)
 								{
 									fireState.normalizedTime = 0;
 								}
 								fireState.speed = fireAnimSpeed;
 								fireState.normalizedTime = Mathf.Repeat(fireState.normalizedTime, 1);
+
+								//Debug.Log("fireAnim time: " + fireState.normalizedTime + ", speed; " + fireState.speed);
 							}
 							
 							//muzzle flash
