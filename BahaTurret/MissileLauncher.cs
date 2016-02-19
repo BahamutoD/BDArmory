@@ -184,7 +184,7 @@ namespace BahaTurret
 		[KSPField]
 		public float simpleDrag = 0.02f;
 		[KSPField]
-		public float simpleStableTorque = 10;
+		public float simpleStableTorque = 5;
 
 		[KSPField]
 		public Vector3 simpleCoD = new Vector3(0,0,-1);
