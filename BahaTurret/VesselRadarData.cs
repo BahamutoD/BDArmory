@@ -557,6 +557,7 @@ namespace BahaTurret
 					return;
 				}
 			}
+			return;
 		}
 
 		public bool TryLockTarget(Vessel v)
@@ -569,11 +570,20 @@ namespace BahaTurret
 				}
 			}
 
-			return false;
+			RadarDisplayData newData = new RadarDisplayData();
+			newData.vessel = v;
+			newData.detectedByRadar = null;
+			newData.targetData = new TargetSignatureData(v, 999);
+
+			return TryLockTarget(newData);
+
+			//return false;
 		}
 
 		bool CheckRadarForLock(ModuleRadar radar, RadarDisplayData radarTarget)
 		{
+			if(!radar) return false;
+
 			return
 				(
 			    radar.canLock
