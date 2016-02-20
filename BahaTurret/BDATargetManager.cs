@@ -106,17 +106,15 @@ namespace BahaTurret
 		void OnSceneSwitchRequested(GameEvents.FromToAction<GameScenes,GameScenes> fta)
 		{
 			StopCompetition();
-
-			if(fta.to == GameScenes.FLIGHT)
-			{
-				StartCoroutine(ReEnableCompetition());
-			}
 		}
 
 		IEnumerator ReEnableCompetition()
 		{
-			yield return null;
-			yield return null;
+			while(!HighLogic.LoadedSceneIsFlight)
+			{
+				yield return null;
+
+			}
 			stopCompetition = false;
 		}
 
@@ -188,6 +186,13 @@ namespace BahaTurret
 			if(!HighLogic.LoadedSceneIsFlight)
 			{
 				stopCompetition = true;
+			}
+			else
+			{
+				if(!competitionStarting)
+				{
+					stopCompetition = false;
+				}
 			}
 		}
 
@@ -892,7 +897,10 @@ namespace BahaTurret
 
 		public void StopCompetition()
 		{
-			stopCompetition = true;
+			if(competitionStarting)
+			{
+				stopCompetition = true;
+			}
 		}
 
 		IEnumerator CompetitionModeRoutine(float distance)
