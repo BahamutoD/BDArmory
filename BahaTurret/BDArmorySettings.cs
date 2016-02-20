@@ -1422,32 +1422,35 @@ namespace BahaTurret
 			line++;
 
 			//competition mode
-			GUI.Label(SLineRect(line), "= Dogfight Competition =", centerLabel);
-			line++;
-			if(!BDATargetManager.competitionStarting && !BDATargetManager.stopCompetition)
+			if(HighLogic.LoadedSceneIsFlight)
 			{
-				compDistGui = GUI.TextField(SRightRect(line), compDistGui);
-				GUI.Label(SLeftRect(line), "Competition Distance");
-				float cDist = float.Parse(compDistGui);
-				cDist = Mathf.Clamp(cDist, 2000f, 20000f);
-				competitionDist = cDist;
-				compDistGui = competitionDist.ToString();
+				GUI.Label(SLineRect(line), "= Dogfight Competition =", centerLabel);
 				line++;
+				if(!BDATargetManager.competitionStarting && !BDATargetManager.stopCompetition)
+				{
+					compDistGui = GUI.TextField(SRightRect(line), compDistGui);
+					GUI.Label(SLeftRect(line), "Competition Distance");
+					float cDist = float.Parse(compDistGui);
+					cDist = Mathf.Clamp(cDist, 2000f, 20000f);
+					competitionDist = cDist;
+					compDistGui = competitionDist.ToString();
+					line++;
 
-				if(GUI.Button(SRightRect(line), "Start Competition"))
-				{
-					BDATargetManager.Instance.StartCompetitionMode(competitionDist);
-					SaveConfig();
-					settingsGuiEnabled = false;
+					if(GUI.Button(SRightRect(line), "Start Competition"))
+					{
+						BDATargetManager.Instance.StartCompetitionMode(competitionDist);
+						SaveConfig();
+						settingsGuiEnabled = false;
+					}
 				}
-			}
-			else
-			{
-				GUI.Label(SLeftRect(line), "Starting Competition... ("+compDistGui+")");
-				line++;
-				if(GUI.Button(SLeftRect(line), "Cancel"))
+				else
 				{
-					BDATargetManager.Instance.StopCompetition();
+					GUI.Label(SLeftRect(line), "Starting Competition... (" + compDistGui + ")");
+					line++;
+					if(GUI.Button(SLeftRect(line), "Cancel"))
+					{
+						BDATargetManager.Instance.StopCompetition();
+					}
 				}
 			}
 			

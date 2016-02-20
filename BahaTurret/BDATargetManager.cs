@@ -106,6 +106,18 @@ namespace BahaTurret
 		void OnSceneSwitchRequested(GameEvents.FromToAction<GameScenes,GameScenes> fta)
 		{
 			StopCompetition();
+
+			if(fta.to == GameScenes.FLIGHT)
+			{
+				StartCoroutine(ReEnableCompetition());
+			}
+		}
+
+		IEnumerator ReEnableCompetition()
+		{
+			yield return null;
+			yield return null;
+			stopCompetition = false;
 		}
 
 		void AddBuilding(DestructibleBuilding b)
