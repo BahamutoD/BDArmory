@@ -140,7 +140,10 @@ namespace BahaTurret
 					//return FlightGlobals.currentMainBody.GetWorldSurfacePosition(geoPos.x, geoPos.y, geoPos.z);
 					return VectorUtils.GetWorldSurfacePostion(geoPos, FlightGlobals.currentMainBody);
 				}
-
+			}
+			set
+			{
+				geoPos = VectorUtils.WorldPositionToGeoCoords(value, FlightGlobals.currentMainBody);
 			}
 		}
 

@@ -1660,6 +1660,8 @@ namespace BahaTurret
 		int snapshotTicker;
 		int locksCount = 0;
 		TargetSignatureData[] scannedTargets;
+		float radarFailTimer = 0;
+		float maxRadarFailTime = 1;
 		void UpdateRadarTarget()
 		{
 			targetAcquired = false;
@@ -1689,15 +1691,32 @@ namespace BahaTurret
 							targetPosition = radarTarget.predictedPosition;
 							targetVelocity = radarTarget.velocity;
 							targetAcceleration = radarTarget.acceleration;
-							//radarTarget.signalStrength = 
+							radarFailTimer = 0;
 							return;
 						}
 						else
 						{
-							Debug.Log("Semi-Active Radar guidance failed. Parent radar lost target.");
-							radarTarget = TargetSignatureData.noTarget;
-							legacyTargetVessel = null;
-							return;
+							if(radarFailTimer > maxRadarFailTime)
+							{
+								Debug.Log("Semi-Active Radar guidance failed. Parent radar lost target.");
+								radarTarget = TargetSignatureData.noTarget;
+								legacyTargetVessel = null;
+								return;
+							}
+							else
+							{
+								if(radarFailTimer == 0)
+								{
+									Debug.Log("Semi-Active Radar guidance failed - waiting for data");
+								}
+								radarFailTimer += Time.fixedDeltaTime;
+								radarTarget.timeAcquired = Time.time;
+								radarTarget.position = radarTarget.predictedPosition;
+								targetPosition = radarTarget.predictedPosition;
+								targetVelocity = radarTarget.velocity;
+								targetAcceleration = Vector3.zero;
+								targetAcquired = true;
+							}
 						}
 					}
 					else
@@ -1754,13 +1773,14 @@ namespace BahaTurret
 									targetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
 									targetVelocity = radarTarget.velocity;
 									targetAcceleration = radarTarget.acceleration;
-
+									radarFailTimer = 0;
 									if(!activeRadar && Time.time - timeFired > 1)
 									{
 										if(locksCount == 0)
 										{
 											RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
 											Debug.Log("Pitbull! Radar missile has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+
 										}
 										else if(locksCount > 2)
 										{
