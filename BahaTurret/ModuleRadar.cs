@@ -815,16 +815,19 @@ namespace BahaTurret
 
 		public void UnlockTargetAt(int index, bool tryRelock = false)
 		{
+			Vessel rVess = lockedTargets[index].vessel;
+
 			if(tryRelock)
 			{
-				Vessel v = lockedTargets[index].vessel;
 				UnlockTargetAt(index, false);
-				StartCoroutine(RetryLockRoutine(v));
+				if(rVess)
+				{
+					StartCoroutine(RetryLockRoutine(rVess));
+				}
 				return;
 			}
 
-			//Vector3 position = lockedTargets[index].position;
-			Vessel rVess = lockedTargets[index].vessel;
+
 			lockedTargets.RemoveAt(index);
 			currLocks = lockedTargets.Count;
 			if(lockedTargetIndex > index)

@@ -718,6 +718,8 @@ namespace BahaTurret
 				GameEvents.onPartDie.Remove(OnPartDie);
 				GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
 			}
+
+
 			RefreshModules();
 			UpdateList();
 		}

@@ -562,6 +562,8 @@ namespace BahaTurret
 
 		public bool TryLockTarget(Vessel v)
 		{
+			if(!v) return false;
+
 			foreach(var displayData in displayedTargets)
 			{
 				if(v == displayData.vessel)
