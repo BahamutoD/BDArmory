@@ -23,7 +23,7 @@ namespace BahaTurret
 		[KSPField(isPersistant = true)]
 		public bool pilotEnabled = false;
 
-		bool startedLanded = false;
+		bool belowMinAltitude = false;
 		bool extending = false;
 
 		bool requestedExtend = false;
@@ -161,6 +161,7 @@ namespace BahaTurret
 		BDAirspeedControl speedController;
 		bool useAB = true;
 		bool useBrakes = true;
+		bool regainEnergy = false;
 
 		//collision detection
 		int collisionDetectionTicker = 0;
@@ -266,7 +267,9 @@ namespace BahaTurret
 			pilotEnabled = true;
 			vessel.OnFlyByWire -= AutoPilot;
 			vessel.OnFlyByWire += AutoPilot;
-			startedLanded = vessel.LandedOrSplashed;
+			belowMinAltitude = vessel.LandedOrSplashed;
+
+			prevTargetDir = vesselTransform.up;
 
 			if(!speedController)
 			{
@@ -378,6 +381,7 @@ namespace BahaTurret
 			steerMode = SteerModes.NormalFlight;
 
 
+
 			GetGuardTarget();
 			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0||BDArmorySettings.PEACE_MODE))
 			{
@@ -395,12 +399,21 @@ namespace BahaTurret
 			debugString += "minAltNeeded: " + minAltNeeded;
 			if (MissileGuidance.GetRadarAltitude(vessel) < minAltNeeded)
 			{
-				startedLanded = true;
+				belowMinAltitude = true;
+			}
+
+			if(vessel.srfSpeed < minSpeed)
+			{
+				regainEnergy = true;
+			}
+			else if(!belowMinAltitude && vessel.srfSpeed > Mathf.Min(minSpeed + 20f, idleSpeed))
+			{
+				regainEnergy = false;
 			}
 
 
 
-            if (startedLanded)
+            if (belowMinAltitude)
 			{
 				if(command != PilotCommands.Follow)
 				{
@@ -426,15 +439,6 @@ namespace BahaTurret
 			}
             UpdateGAndAoALimits(s);
             AdjustPitchForGAndAoALimits(s);
-			//brake and cut throttle if exceeding max speed
-			/*
-			if(vessel.srfSpeed > maxSpeed)
-			{
-				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-				s.mainThrottle = 0;
-			}
-			*/
-
 		}
 
 		void UpdateAI(FlightCtrlState s)
@@ -531,9 +535,10 @@ namespace BahaTurret
 					if(turningTimer > 15)
 					{
 						//extend if turning circles for too long
-						extending = true;
+						//extending = true;
+						RequestExtend(targetVessel.transform.position);
 						turningTimer = 0;
-						lastTargetPosition = targetVessel.transform.position;
+						//lastTargetPosition = targetVessel.transform.position;
 					}
 				}
 				else //extend if too close for agm attack
@@ -676,6 +681,7 @@ namespace BahaTurret
 			Vector3 vectorToTarget = v.transform.position - vesselTransform.position;
 			float distanceToTarget = vectorToTarget.magnitude;
 			float planarDistanceToTarget = Vector3.ProjectOnPlane(vectorToTarget, upDirection).magnitude;
+			float angleToTarget = Vector3.Angle(target - vesselTransform.position, vesselTransform.up);
 			if(weaponManager)
 			{
 				missile = weaponManager.currentMissile;
@@ -698,7 +704,7 @@ namespace BahaTurret
 							target = MissileGuidance.GetAirToAirFireSolution(missile, v);
 						}
 
-						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.up) < 20f)
+						if(angleToTarget < 20f)
 						{
 							steerMode = SteerModes.Aiming;
 						}
@@ -710,7 +716,7 @@ namespace BahaTurret
 							finalMaxSteer = GetSteerLimiterForSpeedAndPower();
 						}
 
-						if(Vector3.Angle(target - vesselTransform.position, vesselTransform.up) < 45f)
+						if(angleToTarget < 45f)
 						{
 							/*
 							target = GetSurfacePosition(target) + (vessel.upAxis * vessel.altitude);
@@ -735,17 +741,16 @@ namespace BahaTurret
 					ModuleWeapon weapon = weaponManager.currentGun;
 					if(weapon != null)
 					{
-						
-
 						Vector3 leadOffset = weapon.GetLeadOffset();
 
-						float targetAngVel = 1.65f * Vector3.Angle(v.transform.position - vessel.transform.position, v.transform.position + (vessel.srf_velocity) - vessel.transform.position);
+						float targetAngVel = Vector3.Angle(v.transform.position - vessel.transform.position, v.transform.position + (vessel.srf_velocity) - vessel.transform.position);
 						debugString += "\ntargetAngVel: " + targetAngVel;
-						float magnifier = Mathf.Clamp(targetAngVel, 1.25f, 2f);
-						magnifier += (0.5f * Mathf.Sin(Time.time / 2));
+						float magnifier = Mathf.Clamp(targetAngVel, 1f, 2f);
+						magnifier += ((magnifier-1f) * Mathf.Sin(Time.time *0.75f));
 						target -= magnifier * leadOffset;
-						float angleToLead = Vector3.Angle(vesselTransform.up, target - vesselTransform.position);
-						if(distanceToTarget < weaponManager.gunRange && angleToLead < 20)
+
+						angleToTarget = Vector3.Angle(vesselTransform.up, target - vesselTransform.position);
+						if(distanceToTarget < weaponManager.gunRange && angleToTarget < 20)
 						{
 							steerMode = SteerModes.Aiming; //steer to aim
 						}
@@ -796,7 +801,7 @@ namespace BahaTurret
 			if(targetDot > 0)
 			{
 				finalMaxSpeed = Mathf.Max((distanceToTarget - 100) / 8, 0) + (float)v.srfSpeed;
-				finalMaxSpeed = Mathf.Max(finalMaxSpeed, minSpeed);
+				finalMaxSpeed = Mathf.Max(finalMaxSpeed, minSpeed+25f);
 			}
 			AdjustThrottle(finalMaxSpeed, true);
 		
@@ -808,28 +813,36 @@ namespace BahaTurret
 			}
 			if(missile!=null 
 				&& targetDot > 0
-				&& distanceToTarget < 300
-			   && vessel.srfSpeed > 130)
+				&& distanceToTarget < MissileLaunchParams.GetDynamicLaunchParams(missile, v.srf_velocity, v.transform.position).minLaunchRange
+				&& vessel.srfSpeed > idleSpeed)
 			{
-				extending = true;
-				lastTargetPosition = v.transform.position;
+				//extending = true;
+				//lastTargetPosition = v.transform.position;
+				RequestExtend(lastTargetPosition);
 			}
 
-
-			FlyToPosition(s, target);
+			if(regainEnergy && angleToTarget > 30f)
+			{
+				RegainEnergy(s, target - vesselTransform.position);
+			}
+			else
+			{
+				FlyToPosition(s, target);
+			}
 		}
 
 
 
-		void RegainEnergy(FlightCtrlState s)
+		void RegainEnergy(FlightCtrlState s, Vector3 direction)
 		{
 			debugString += "\nRegaining energy";
 			steerMode = SteerModes.Aiming;
-			Vector3 planarDirection = Vector3.ProjectOnPlane(vessel.srf_velocity, upDirection);
+			Vector3 planarDirection = Vector3.ProjectOnPlane(direction, upDirection);
 			float angle = (Mathf.Clamp(MissileGuidance.GetRadarAltitude(vessel) - minAltitude, 0, 1500) / 1500) * 90;
 			angle = Mathf.Clamp(angle, 0, 55) * Mathf.Deg2Rad;
-			Vector3 targetDirection = Vector3.RotateTowards(planarDirection, -upDirection, angle, 0).normalized;
-		
+			Vector3 targetDirection = Vector3.RotateTowards(planarDirection, -upDirection, angle, 0);
+			targetDirection = Vector3.RotateTowards(vessel.srf_velocity, targetDirection, 15f * Mathf.Deg2Rad, 0).normalized;
+
 			AdjustThrottle(maxSpeed, false);
 			FlyToPosition(s, vesselTransform.position + (targetDirection*100));
 		}
@@ -844,10 +857,11 @@ namespace BahaTurret
 			return Mathf.Clamp01(limiter);
 		}
 					
-
+		//test
+		Vector3 prevTargetDir;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)
 		{
-			if(!startedLanded)
+			if(!belowMinAltitude)
 			{
 				if(weaponManager && Time.time - weaponManager.timeBombReleased < 1.5f)
 				{
@@ -864,7 +878,21 @@ namespace BahaTurret
 				velocityTransform.rotation = Quaternion.LookRotation(srfVel, -vesselTransform.forward);
 			}
 			velocityTransform.rotation = Quaternion.AngleAxis(90, velocityTransform.right) * velocityTransform.rotation;
+
+			//ang vel 
 			Vector3 localAngVel = vessel.angularVelocity;
+			//test
+			Vector3 currTargetDir = (targetPosition-vesselTransform.position).normalized;
+			//if(steerMode == SteerModes.NormalFlight)
+			//{
+			float gRotVel = (9.81f * maxAllowedGForce) / ((float)vessel.srfSpeed);
+			currTargetDir = Vector3.RotateTowards(prevTargetDir, currTargetDir, gRotVel*Mathf.Deg2Rad, 0);
+			//}
+			Vector3 targetAngVel = Vector3.Cross(prevTargetDir, currTargetDir)/Time.fixedDeltaTime;
+			Vector3 localTargetAngVel = vesselTransform.InverseTransformVector(targetAngVel);
+			prevTargetDir = currTargetDir;
+			targetPosition = vessel.transform.position + (currTargetDir * 100);
+
 
 			if(BDArmorySettings.DRAW_DEBUG_LINES)
 			{
@@ -886,6 +914,13 @@ namespace BahaTurret
 			debugString += "\nFinal Target Speed: " + finalSpeed.ToString("0.0");
 			AdjustThrottle(finalSpeed, useBrakes, useAB);
 
+
+
+			if(steerMode == SteerModes.Aiming)
+			{
+				localAngVel -= localTargetAngVel;
+			}
+
 			Vector3 targetDirection;
 			Vector3 targetDirectionYaw;
 			float yawError;
@@ -903,8 +938,6 @@ namespace BahaTurret
 
 				postYawFactor = 0.25f;
 				postPitchFactor = 0.8f;
-
-
 			}
 			else//(steerMode == SteerModes.Aiming)
 			{
@@ -951,6 +984,8 @@ namespace BahaTurret
 			}
 			Vector3 rollTarget = (targetPosition + (rollUp * upDirection)) - vesselTransform.position;
 		
+			//test
+			//rollTarget += 100*vesselTransform.TransformVector(Quaternion.AngleAxis(90f, Vector3.up) * localTargetAngVel);
 
 			if(command == PilotCommands.Follow && useRollHint)
 			{
@@ -978,12 +1013,6 @@ namespace BahaTurret
 				weaponManager.ForceWideViewScan();
 			}
 
-			if(vessel.srfSpeed < minSpeed)
-			{
-				RegainEnergy(s);
-				return;
-			}
-
 			if(weaponManager)
 			{
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
@@ -1005,7 +1034,16 @@ namespace BahaTurret
 					Vector3 targetDirection = srfVector.normalized*extendDistance;
 					Vector3 target = vessel.transform.position + targetDirection;
 					target = GetTerrainSurfacePosition(target) + (vessel.upAxis*Mathf.Min(defaultAltitude, MissileGuidance.GetRaycastRadarAltitude(vesselTransform.position)));
-					FlyToPosition(s, FlightPosition(target, defaultAltitude));
+					target = FlightPosition(target, defaultAltitude);
+					if(regainEnergy)
+					{
+						RegainEnergy(s, target - vesselTransform.position);
+						return;
+					}
+					else
+					{
+						FlyToPosition(s, target);
+					}
 				}
 				else
 				{
@@ -1020,9 +1058,9 @@ namespace BahaTurret
 
 		void FlyOrbit(FlightCtrlState s, Vector3d centerGPS, float radius, float speed, bool clockwise)
 		{
-			if(vessel.srfSpeed < minSpeed)
+			if(regainEnergy)
 			{
-				RegainEnergy(s);
+				RegainEnergy(s, vessel.srf_velocity);
 				return;
 			}
 
@@ -1092,16 +1130,13 @@ namespace BahaTurret
 
 				if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance > 2000)
 				{
-					if(evasiveTimer < 2)
-					{
-						debugString += "\nBreaking from missile threat!";
-						Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
-						Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
-						Vector3 breakTarget = vesselTransform.position + breakDirection;
-						FlyToPosition(s, breakTarget);
-						return;
-					}
-					RegainEnergy(s);
+					debugString += "\nBreaking from missile threat!";
+					Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
+					Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
+					//Vector3 breakTarget = vesselTransform.position + breakDirection;
+					RegainEnergy(s, breakDirection);
+
+
 					return;
 				}
 				else if(weaponManager.underFire)
@@ -1169,7 +1204,7 @@ namespace BahaTurret
 
 			if(radarAlt > minAltitude)
 			{
-				startedLanded = false;
+				belowMinAltitude = false;
 			}
 		}
 
@@ -1191,7 +1226,7 @@ namespace BahaTurret
 
         void UpdateGAndAoALimits(FlightCtrlState s)
         {
-            if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed || startedLanded && -Vector3.Dot(vessel.ReferenceTransform.forward, vessel.upAxis) < 0.8f)
+            if (vessel.dynamicPressurekPa <= 0 || vessel.srfSpeed < takeOffSpeed || belowMinAltitude && -Vector3.Dot(vessel.ReferenceTransform.forward, vessel.upAxis) < 0.8f)
             {
                 return;
             }
