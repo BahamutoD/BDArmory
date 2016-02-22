@@ -1870,6 +1870,8 @@ namespace BahaTurret
 
 			Transform refTransform = EditorLogic.RootPart.GetReferenceTransform();
 
+			if(!refTransform) return;
+
 			Vector3 fwdPos = fireTransforms[0].position + (5 * fireTransforms[0].forward);
 			BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, fwdPos, 4, Color.green);
 
