@@ -66,7 +66,7 @@ namespace BahaTurret
 
 			if(emit)
 			{
-				maxDistance = Mathf.Clamp((pEmitter.minSize/3), 0.5f, 5) + (Mathf.Clamp((BDArmorySettings.numberOfParticleEmitters-1), 0, 20)*0.07f);
+				maxDistance = Mathf.Clamp((pEmitter.minSize/3), 0.3f, 5f) + (Mathf.Clamp((BDArmorySettings.numberOfParticleEmitters-1), 0, 20)*0.07f);
 
 				Vector3 originalLocalPosition = gameObject.transform.localPosition;
 				Vector3 originalPosition = gameObject.transform.position;
@@ -85,7 +85,7 @@ namespace BahaTurret
 				
 				pEmitter.EmitParticle();
 				gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, startPosition, maxDistance);
-				for(int i = 1; i < intermediateSteps-1; i++)
+				for(int i = 1; i < intermediateSteps; i++)
 				{
 					pEmitter.EmitParticle();
 					gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, startPosition, maxDistance);
