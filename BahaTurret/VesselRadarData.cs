@@ -637,12 +637,14 @@ namespace BahaTurret
 		{
 			if(drawGUI)
 			{
+				/*
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
 				{
 					BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.forward), 2, Color.blue);
 					BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.right), 2, Color.red);
 					BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.up), 2, Color.green);
 				}
+				*/
 
 				for(int i = 0; i < lockedTargetIndexes.Count; i++)
 				{
