@@ -359,6 +359,8 @@ namespace BahaTurret
 			}
 		}
 
+
+
 		float finalMaxSteer = 1;
 		void AutoPilot(FlightCtrlState s)
 		{
@@ -379,6 +381,7 @@ namespace BahaTurret
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
 			steerMode = SteerModes.NormalFlight;
+			useVelRollTarget = false;
 
 
 
@@ -824,10 +827,13 @@ namespace BahaTurret
 			if(regainEnergy && angleToTarget > 30f)
 			{
 				RegainEnergy(s, target - vesselTransform.position);
+				return;
 			}
 			else
 			{
+				useVelRollTarget = true;
 				FlyToPosition(s, target);
+				return;
 			}
 		}
 
@@ -859,6 +865,7 @@ namespace BahaTurret
 					
 		//test
 		Vector3 prevTargetDir;
+		bool useVelRollTarget = false;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)
 		{
 			if(!belowMinAltitude)
@@ -883,11 +890,11 @@ namespace BahaTurret
 			Vector3 localAngVel = vessel.angularVelocity;
 			//test
 			Vector3 currTargetDir = (targetPosition-vesselTransform.position).normalized;
-			//if(steerMode == SteerModes.NormalFlight)
-			//{
-			float gRotVel = (9.81f * maxAllowedGForce) / ((float)vessel.srfSpeed);
-			currTargetDir = Vector3.RotateTowards(prevTargetDir, currTargetDir, gRotVel*Mathf.Deg2Rad, 0);
-			//}
+			if(steerMode == SteerModes.NormalFlight)
+			{
+				float gRotVel = ((10f * maxAllowedGForce) / ((float)vessel.srfSpeed));
+				//currTargetDir = Vector3.RotateTowards(prevTargetDir, currTargetDir, gRotVel*Mathf.Deg2Rad, 0);
+			}
 			Vector3 targetAngVel = Vector3.Cross(prevTargetDir, currTargetDir)/Time.fixedDeltaTime;
 			Vector3 localTargetAngVel = vesselTransform.InverseTransformVector(targetAngVel);
 			prevTargetDir = currTargetDir;
@@ -982,17 +989,36 @@ namespace BahaTurret
 			{
 				rollUp += (1 - finalMaxSteer) * 10f;
 			}
-			Vector3 rollTarget = (targetPosition + (rollUp * upDirection)) - vesselTransform.position;
+			rollTarget = (targetPosition + (rollUp * upDirection)) - vesselTransform.position;
 		
 			//test
-			//rollTarget += 100*vesselTransform.TransformVector(Quaternion.AngleAxis(90f, Vector3.up) * localTargetAngVel);
+			if(steerMode == SteerModes.Aiming && !belowMinAltitude)
+			{
+				angVelRollTarget = -140 * vesselTransform.TransformVector(Quaternion.AngleAxis(90f, Vector3.up) * localTargetAngVel);
+				rollTarget += angVelRollTarget;
+			}
 
 			if(command == PilotCommands.Follow && useRollHint)
 			{
 				rollTarget = -commandLeader.vessel.ReferenceTransform.forward;
 			}
 
-			rollTarget = Vector3.ProjectOnPlane(rollTarget, vesselTransform.up);
+			//
+			if(belowMinAltitude)
+			{
+				rollTarget = vessel.upAxis * 100;
+
+			}
+			if(useVelRollTarget && !belowMinAltitude)
+			{
+				rollTarget = Vector3.ProjectOnPlane(rollTarget, vessel.srf_velocity);
+				currentRoll = Vector3.ProjectOnPlane(currentRoll, vessel.srf_velocity);
+			}
+			else
+			{
+				rollTarget = Vector3.ProjectOnPlane(rollTarget, vesselTransform.up);
+			}
+
 
 			float rollError = Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
 			float steerRoll = (steerMult * 0.0015f * rollError);
@@ -1001,9 +1027,10 @@ namespace BahaTurret
 
 			float roll = Mathf.Clamp(steerRoll, -maxSteer, maxSteer);
 			s.roll = roll;
-			//
 		}
 
+		Vector3 rollTarget;
+		Vector3 angVelRollTarget;
 
 
 		void FlyExtend(FlightCtrlState s, Vector3 tPosition)
@@ -1091,6 +1118,8 @@ namespace BahaTurret
 				command = PilotCommands.Free;
 			}
 
+			useVelRollTarget = true;
+
 			AdjustThrottle(speed, false);
 			FlyToPosition(s, targetPosition);
 		}
@@ -1135,8 +1164,6 @@ namespace BahaTurret
 					Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
 					//Vector3 breakTarget = vesselTransform.position + breakDirection;
 					RegainEnergy(s, breakDirection);
-
-
 					return;
 				}
 				else if(weaponManager.underFire)
@@ -1156,6 +1183,7 @@ namespace BahaTurret
 					debugString += "Missile about to impact! pull!";
 					AdjustThrottle(maxSpeed, false, false);
 					FlyToPosition(s, vesselTransform.position + (100 * -vesselTransform.forward));
+					return;
 				}
 			}
 
@@ -1860,8 +1888,8 @@ namespace BahaTurret
 					}
 
 
-
-
+					BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + rollTarget, 2, Color.blue);
+					BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right) + angVelRollTarget, 2, Color.green);
 				}
 
 
