@@ -23,13 +23,14 @@ namespace BahaTurret
 				return new Vector3(x,y,z) * 5;
 			}
 		}
-		
+
+
 		
 		void FixedUpdate()
 		{
 			
-			if(BDArmorySettings.Flares.Count > 0)
-			{
+			//if(BDArmorySettings.numberOfParticleEmitters > 0)
+			//{
 				if(Time.time-flareTurbTimer > flareTurbDelta)
 				{
 					flareTurbTimer = Time.time;
@@ -47,8 +48,12 @@ namespace BahaTurret
 					else flareTurbulenceZ += Mathf.Clamp (UnityEngine.Random.Range(-1f,1f), -1, 1);
 				}
 				
-				flareTurbulence = Vector3.Lerp(flareTurbulence, new Vector3(flareTurbulenceX, flareTurbulenceY, flareTurbulenceZ), UnityEngine.Random.Range(0.05f,0.15f));
-			}	
+			flareTurbulence = Vector3.Lerp(flareTurbulence, new Vector3(flareTurbulenceX, flareTurbulenceY, flareTurbulenceZ), UnityEngine.Random.Range(2.5f,7.5f) * TimeWarp.fixedDeltaTime);
+
+			//wind
+
+		
+			//}	
 		}
 	}
 }
