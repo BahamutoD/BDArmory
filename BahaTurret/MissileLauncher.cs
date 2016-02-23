@@ -30,6 +30,15 @@ namespace BahaTurret
 		public MissileTurret missileTurret = null;
 		public BDRotaryRail rotaryRail = null;
 
+		[KSPField]
+		public string exhaustPrefabPath;
+
+		[KSPField]
+		public string boostExhaustPrefabPath;
+
+		[KSPField]
+		public string boostExhaustTransformName;
+
 		//aero
 		[KSPField]
 		public bool aero = false;
@@ -375,6 +384,38 @@ namespace BahaTurret
 					missileReferenceTransform = part.partTransform;
 				}
 
+				if(!string.IsNullOrEmpty(exhaustPrefabPath))
+				{
+					foreach(var t in part.FindModelTransforms("exhaustTransform"))
+					{
+						GameObject exhaustPrefab = (GameObject)Instantiate(GameDatabase.Instance.GetModel(exhaustPrefabPath));
+						exhaustPrefab.SetActive(true);
+						foreach(var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
+						{
+							emitter.emit = false;
+						}
+						exhaustPrefab.transform.parent = t;
+						exhaustPrefab.transform.localPosition = Vector3.zero;
+						exhaustPrefab.transform.localRotation = Quaternion.identity;
+					}
+				}
+
+				if(!string.IsNullOrEmpty(boostExhaustPrefabPath) && !string.IsNullOrEmpty(boostExhaustTransformName))
+				{
+					foreach(var t in part.FindModelTransforms(boostExhaustTransformName))
+					{
+						GameObject exhaustPrefab = (GameObject)Instantiate(GameDatabase.Instance.GetModel(boostExhaustPrefabPath));
+						exhaustPrefab.SetActive(true);
+						foreach(var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
+						{
+							emitter.emit = false;
+						}
+						exhaustPrefab.transform.parent = t;
+						exhaustPrefab.transform.localPosition = Vector3.zero;
+						exhaustPrefab.transform.localRotation = Quaternion.identity;
+					}
+				}
+
 
 				boosters = new List<GameObject>();
 				if(!string.IsNullOrEmpty(boostTransformName))
@@ -405,9 +446,7 @@ namespace BahaTurret
 					}
 				}
 
-	
-
-				foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
+				foreach(var emitter in part.partTransform.FindChild("model").GetComponentsInChildren<KSPParticleEmitter>())
 				{
 					if(emitter.GetComponent<BDAGaplessParticleEmitter>() || boostEmitters.Contains(emitter))
 					{
@@ -1020,16 +1059,9 @@ namespace BahaTurret
 
 		void UpdateThrustForces()
 		{
-			if(MissileState == MissileStates.Boost) //boost phase
+			if(currentThrust > 0)
 			{
 				part.rb.AddRelativeForce(currentThrust * Vector3.forward);
-			}
-			else if(MissileState == MissileStates.Cruise) //cruise phase
-			{
-				if(!hasRCS)
-				{
-					part.rb.AddRelativeForce(cruiseThrust * Vector3.forward);
-				}
 			}
 		}
 
@@ -1091,7 +1123,8 @@ namespace BahaTurret
 					if(vessel.atmDensity > 0)
 					{
 						gpe.emit = true;
-						gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+						//gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+						gpe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
 					}
 					else
 					{
@@ -1104,9 +1137,6 @@ namespace BahaTurret
 				{
 					currentThrust = Mathf.MoveTowards(currentThrust, thrust, thrust/10);
 				}
-
-				//add heat
-				part.temperature += (vessel.dynamicPressurekPa+thrust) * TimeWarp.deltaTime;
 
 				yield return null;
 			}
@@ -1221,7 +1251,8 @@ namespace BahaTurret
 					if(vessel.atmDensity > 0)
 					{
 						gpe.emit = true;
-						gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+						//gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
+						gpe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
 					}
 					else
 					{
@@ -1231,13 +1262,10 @@ namespace BahaTurret
 
 				if(spoolEngine)
 				{
-					currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, thrust/10);
+					currentThrust = Mathf.MoveTowards(currentThrust, cruiseThrust, cruiseThrust/10);
 				}
 
-				//add heat
-				part.temperature += (vessel.dynamicPressurekPa+cruiseThrust) * TimeWarp.deltaTime;
 
-				Debug.Log("Adding +" + (vessel.dynamicPressurekPa + cruiseThrust).ToString("0.000") + "deg per second");
 
 				yield return null;
 			}
