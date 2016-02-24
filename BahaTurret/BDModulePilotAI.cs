@@ -612,20 +612,13 @@ namespace BahaTurret
 				{
 					avoid = true;
 				}
-				else if(targetVessel) //check collision with target
-				{
-					if(PredictCollisionWithVessel(targetVessel, 3f, 0.25f, out badDirection))
-					{
-						avoid = true;
-					}
-				}
-				else if(command != PilotCommands.Follow && !isLeadingFormation) //check collisions with othe flying vessels
+				else if(command != PilotCommands.Follow && !isLeadingFormation) //check collisions with other flying vessels
 				{
 					foreach(var v in BDATargetManager.LoadedVessels)
 					{
-						if(v && v!=vessel && !v.Landed)
+						if(v && v!=vessel && !v.Landed && Vector3.Dot(v.transform.position-vesselTransform.position, vesselTransform.up) > 0)
 						{
-							if(PredictCollisionWithVessel(v, 3, 0.5f, out badDirection))
+							if(PredictCollisionWithVessel(v, 2.5f, 0.5f, out badDirection))
 							{
 								avoid = true;
 								break;
@@ -638,7 +631,10 @@ namespace BahaTurret
 				{
 					collisionDetectionTimer += Time.fixedDeltaTime;
 					Vector3 axis = -Vector3.Cross(vesselTransform.up, badDirection);
-					collisionAvoidDirection = Quaternion.AngleAxis(90, axis) * badDirection; //need to change axis to opposite of direction to collision
+					collisionAvoidDirection = Quaternion.AngleAxis(90, axis) * badDirection;
+
+					FlyAvoidCollision(s);
+					return true;
 				}
 			}
 			else
@@ -1172,8 +1168,17 @@ namespace BahaTurret
 					{
 						debugString += "\nBreaking from gunfire!";
 						Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
+
+						if(Vector3.Angle(threatDirection, vesselTransform.up) < 10f)
+						{
+							axis = Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * vessel.upAxis;
+							debugString += " Directly ahead!";
+						}
 						Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
 						Vector3 breakTarget = vesselTransform.position + breakDirection;
+
+
+
 						FlyToPosition(s, breakTarget);
 						return;
 					}
@@ -1507,9 +1512,9 @@ namespace BahaTurret
 			{
 				Vector3 projectedDirection = Vector3.ProjectOnPlane(forwardDirection, upDirection);
 				Vector3 projectedTargetDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
-				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 160f)
+				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 165f)
 				{
-					targetPosition = vessel.transform.position + (Quaternion.AngleAxis(45, upDirection)*(projectedDirection.normalized*200));
+					targetPosition = vessel.transform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * 45, upDirection)*(projectedDirection.normalized*200));
 					targetDirection = (targetPosition - vesselTransform.position).normalized;
 				}
 
@@ -1607,7 +1612,7 @@ namespace BahaTurret
 			if(MissileGuidance.GetRadarAltitude(vessel) < 20) return false;
 
 			direction = direction.normalized;
-			int layerMask = 557057;
+			int layerMask = 1<<15;
 			Ray ray = new Ray(vesselTransform.position + (50*vesselTransform.up), direction);
 			float distance = Mathf.Clamp((float)vessel.srfSpeed * 4f, 125f, 2500);
 			RaycastHit hit;
