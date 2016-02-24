@@ -937,20 +937,22 @@ namespace BahaTurret
 							//animation
 							if(hasFireAnimation)
 							{
-								float unclampedSpeed = (roundsPerMinute*fireState.length)/60;
+								float unclampedSpeed = (roundsPerMinute*fireState.length)/60f;
 								float lowFramerateFix = 1;
-								if(roundsPerMinute > 500)
+								if(roundsPerMinute > 500f)
 								{
 									lowFramerateFix = (0.02f/Time.deltaTime);
 								}
 								fireAnimSpeed = Mathf.Clamp (unclampedSpeed, 1f * lowFramerateFix, 20f * lowFramerateFix);
 								fireState.enabled = true;
-								if(unclampedSpeed == fireAnimSpeed)
+								if(unclampedSpeed == fireAnimSpeed || fireState.normalizedTime > 1)
 								{
 									fireState.normalizedTime = 0;
 								}
 								fireState.speed = fireAnimSpeed;
 								fireState.normalizedTime = Mathf.Repeat(fireState.normalizedTime, 1);
+
+								//Debug.Log("fireAnim time: " + fireState.normalizedTime + ", speed; " + fireState.speed);
 							}
 							
 							//muzzle flash
@@ -1473,6 +1475,7 @@ namespace BahaTurret
 				audioSource.Stop ();
 				wasFiring = false;
 				audioSource2.PlayOneShot(overheatSound);
+				weaponManager.ResetGuardInterval();
 			}
 			if(heat < maxHeat/3 && isOverheated) //reset on cooldown
 			{
@@ -1866,6 +1869,8 @@ namespace BahaTurret
 			if(fireTransforms == null || fireTransforms[0] == null) return;
 
 			Transform refTransform = EditorLogic.RootPart.GetReferenceTransform();
+
+			if(!refTransform) return;
 
 			Vector3 fwdPos = fireTransforms[0].position + (5 * fireTransforms[0].forward);
 			BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, fwdPos, 4, Color.green);

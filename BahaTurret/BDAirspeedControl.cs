@@ -80,7 +80,10 @@ namespace BahaTurret
 
 		void SetAcceleration(float accel, FlightCtrlState s)
 		{
-			float requestEngineAccel = accel - GravAccel();
+			float gravAccel = GravAccel();
+			float requestEngineAccel = accel - gravAccel;
+
+			possibleAccel = gravAccel;
 
 			float dragAccel = 0;
 			float engineAccel = MaxEngineAccel(requestEngineAccel, out dragAccel);
@@ -134,7 +137,7 @@ namespace BahaTurret
 					{
 						engineThrust *= engine.flowMultiplier;
 					}
-					maxThrust += engineThrust;
+					maxThrust += engineThrust * (engine.thrustPercentage/100f);
 
 					finalThrust += engine.finalThrust;
 				}
@@ -152,6 +155,8 @@ namespace BahaTurret
 			float actualCurrentAccel = Vector3.Project(vessel.acceleration, vessel.ReferenceTransform.up).magnitude*Mathf.Sign(Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward));
 			float accelError = (actualCurrentAccel - estimatedCurrentAccel)/2;
 			dragAccel = accelError;
+
+			possibleAccel += accel;
 
 			//use multimode afterburner for extra accel if lacking
 			foreach(var mme in multiModeEngines)
@@ -176,7 +181,7 @@ namespace BahaTurret
 
 			return accel;
 		}
-
+			
 		float GravAccel()
 		{
 			Vector3 geeVector = FlightGlobals.getGeeForceAtPosition(vessel.CoM);
@@ -187,6 +192,11 @@ namespace BahaTurret
 		}
 
 
+		float possibleAccel = 0;
+		public float GetPossibleAccel()
+		{
+			return possibleAccel;
+		}
 	}
 }
 

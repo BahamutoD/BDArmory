@@ -299,7 +299,7 @@ namespace BahaTurret
 			{
 				if(TerrainCheck(ray.origin, lockedVessel.transform.position))
 				{
-					radar.UnlockTargetAt(lockIndex); //blocked by terrain
+					radar.UnlockTargetAt(lockIndex, true); //blocked by terrain
 					return;
 				}
 
@@ -318,13 +318,13 @@ namespace BahaTurret
 				}
 				else
 				{
-					radar.UnlockTargetAt(lockIndex);
+					radar.UnlockTargetAt(lockIndex, true);
 					return;
 				}
 			}
 			else
 			{
-				radar.UnlockTargetAt(lockIndex);
+				radar.UnlockTargetAt(lockIndex, true);
 			}
 		}
 
@@ -405,12 +405,14 @@ namespace BahaTurret
 										{
 											results.foundHeatMissile = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
+											results.threatPosition = missile.transform.position;
 											break;
 										}
 										else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
 										{
 											results.foundRadarMissile = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
+											results.threatPosition = missile.transform.position;
 										}
 										else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
 										{
@@ -438,6 +440,7 @@ namespace BahaTurret
 										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance)
 										{
 											results.firingAtMe = true;
+											results.threatPosition = weapon.vessel.transform.position;
 										}
 									}
 								}
@@ -474,7 +477,16 @@ namespace BahaTurret
 			float notchFactor = 1;
 			float angleFromUp = Vector3.Angle(targetDirection,upVector);
 			float lookDownAngle = angleFromUp-90;
-			if(lookDownAngle > 5) notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude/Mathf.Pow(60,2), 0.1f, 1f);
+
+			if(lookDownAngle > 5)
+			{
+				notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude / 3600f, 0.1f, 1f);
+			}
+			else
+			{
+				notchFactor = Mathf.Clamp(targetClosureV.sqrMagnitude / 3600f, 0.8f, 3f);
+			}
+
 			float groundClutterFactor = Mathf.Clamp((90/angleFromUp), 0.25f, 1.85f);
 			sig *= groundClutterFactor;
 			sig *= notchFactor;

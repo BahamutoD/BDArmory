@@ -91,6 +91,16 @@ namespace BahaTurret
 
 		public bool hasLoadedExternalVRDs = false;
 
+		public List<TargetSignatureData> GetLockedTargets()
+		{
+			List<TargetSignatureData> lockedTargets = new List<TargetSignatureData>();
+			for(int i = 0; i < lockedTargetIndexes.Count; i++)
+			{
+				lockedTargets.Add(displayedTargets[lockedTargetIndexes[i]].targetData);
+			}
+			return lockedTargets;
+		}
+
 		public RadarDisplayData lockedTargetData
 		{
 			get
@@ -499,9 +509,9 @@ namespace BahaTurret
 			}
 		}
 
-		void TryLockTarget(RadarDisplayData radarTarget)
+		bool TryLockTarget(RadarDisplayData radarTarget)
 		{
-			if(radarTarget.locked) return;
+			if(radarTarget.locked) return false;
 
 			ModuleRadar lockingRadar = null;
 			//first try using the last radar to detect that target
@@ -523,11 +533,12 @@ namespace BahaTurret
 
 			if(lockingRadar != null)
 			{
-				lockingRadar.TryLockTarget(radarTarget.targetData.predictedPosition);
+				return lockingRadar.TryLockTarget(radarTarget.targetData.predictedPosition);
 			}
 
 			UpdateLockedTargets();
 			StartCoroutine(UpdateLocksAfterFrame());
+			return false;
 		}
 
 		IEnumerator UpdateLocksAfterFrame()
@@ -546,22 +557,35 @@ namespace BahaTurret
 					return;
 				}
 			}
+			return;
 		}
 
-		public void TryLockTarget(Vessel v)
+		public bool TryLockTarget(Vessel v)
 		{
+			if(!v) return false;
+
 			foreach(var displayData in displayedTargets)
 			{
 				if(v == displayData.vessel)
 				{
-					TryLockTarget(displayData);
-					return;
+					return TryLockTarget(displayData);
 				}
 			}
+
+			RadarDisplayData newData = new RadarDisplayData();
+			newData.vessel = v;
+			newData.detectedByRadar = null;
+			newData.targetData = new TargetSignatureData(v, 999);
+
+			return TryLockTarget(newData);
+
+			//return false;
 		}
 
 		bool CheckRadarForLock(ModuleRadar radar, RadarDisplayData radarTarget)
 		{
+			if(!radar) return false;
+
 			return
 				(
 			    radar.canLock
@@ -613,29 +637,34 @@ namespace BahaTurret
 		{
 			if(drawGUI)
 			{
+				/*
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
 				{
 					BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.forward), 2, Color.blue);
 					BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.right), 2, Color.red);
 					BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.up), 2, Color.green);
 				}
+				*/
 
 				for(int i = 0; i < lockedTargetIndexes.Count; i++)
 				{
-					string label = string.Empty;
-					if(i == activeLockedTargetIndex)
+					if(BDArmorySettings.DRAW_DEBUG_LABELS)
 					{
-						label += "Active: ";
+						string label = string.Empty;
+						if(i == activeLockedTargetIndex)
+						{
+							label += "Active: ";
+						}
+						if(!displayedTargets[lockedTargetIndexes[i]].vessel)
+						{
+							label += "data with no vessel";
+						}
+						else
+						{
+							label += displayedTargets[lockedTargetIndexes[i]].vessel.vesselName;
+						}
+						GUI.Label(new Rect(20, 60 + (i * 26), 800, 446), label); 
 					}
-					if(!displayedTargets[lockedTargetIndexes[i]].vessel)
-					{
-						label += "data with no vessel";
-					}
-					else
-					{
-						label += displayedTargets[lockedTargetIndexes[i]].vessel.vesselName;
-					}
-					GUI.Label(new Rect(20, 60 + (i * 26), 800, 446), label); 
 
 					TargetSignatureData lockedTarget = displayedTargets[lockedTargetIndexes[i]].targetData;
 					if(i == activeLockedTargetIndex)

@@ -161,6 +161,9 @@ namespace BahaTurret
 
 		public enum BDATeams{A, B, None};
 
+		//competition mode
+		float competitionDist = 8000;
+		string compDistGui = "8000";
 
 
 		//common textures
@@ -521,6 +524,7 @@ namespace BahaTurret
 		{
 			if(ActiveWeaponManager == null)
 			{
+				drawCursor = false;
 				Screen.showCursor = true;
 				return;
 			}
@@ -772,6 +776,11 @@ namespace BahaTurret
 			}
 		}
 
+
+		public bool hasVS = false;
+		public bool showVSGUI = false;
+
+
 		float rippleHeight = 0;
 		float weaponsHeight = 0;
 		float guardHeight = 0;
@@ -781,7 +790,7 @@ namespace BahaTurret
 
 		void ToolbarGUI(int windowID)
 		{
-			GUI.DragWindow(new Rect(30,0,toolWindowWidth-60, 30));
+			GUI.DragWindow(new Rect(30,0,toolWindowWidth-90, 30));
 
 			float line = 0;
 			float leftIndent = 10;
@@ -799,17 +808,30 @@ namespace BahaTurret
 			*/
 			line += 1.25f;
 			line += 0.25f;
+
+			//SETTINGS BUTTON
+			if(!BDKeyBinder.current && GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
+			{
+				ToggleSettingsGUI();
+			}
+
+			//vesselswitcher button
+			if(hasVS)
+			{
+				GUIStyle vsStyle = showVSGUI ? HighLogic.Skin.box : HighLogic.Skin.button;
+				if(GUI.Button(new Rect(toolWindowWidth - 30 - 28, 4, 26, 26), "VS", vsStyle))
+				{
+					showVSGUI = !showVSGUI;
+				}
+			}
+
 			
 			if(ActiveWeaponManager!=null)
 			{
 				//MINIMIZE BUTTON
 				toolMinimized = GUI.Toggle(new Rect(4, 4, 26, 26), toolMinimized, "_", toolMinimized ? HighLogic.Skin.box : HighLogic.Skin.button);
 			
-				//SETTINGS BUTTON
-				if(!BDKeyBinder.current && GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
-				{
-					ToggleSettingsGUI();
-				}
+
 
 				GUIStyle armedLabelStyle;
 				Rect armedRect = new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight);
@@ -1395,6 +1417,41 @@ namespace BahaTurret
 				PHYSICS_RANGE = (physRangeSetting>=2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
 				physicsRangeGui = PHYSICS_RANGE.ToString();
 				ApplyPhysRange();
+			}
+			line++;
+			line++;
+
+			//competition mode
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				GUI.Label(SLineRect(line), "= Dogfight Competition =", centerLabel);
+				line++;
+				if(!BDACompetitionMode.Instance.competitionStarting)
+				{
+					compDistGui = GUI.TextField(SRightRect(line), compDistGui);
+					GUI.Label(SLeftRect(line), "Competition Distance");
+					float cDist = float.Parse(compDistGui);
+					cDist = Mathf.Clamp(cDist, 2000f, 20000f);
+					competitionDist = cDist;
+					compDistGui = competitionDist.ToString();
+					line++;
+
+					if(GUI.Button(SRightRect(line), "Start Competition"))
+					{
+						BDACompetitionMode.Instance.StartCompetitionMode(competitionDist);
+						SaveConfig();
+						settingsGuiEnabled = false;
+					}
+				}
+				else
+				{
+					GUI.Label(SLeftRect(line), "Starting Competition... (" + compDistGui + ")");
+					line++;
+					if(GUI.Button(SLeftRect(line), "Cancel"))
+					{
+						BDACompetitionMode.Instance.StopCompetition();
+					}
+				}
 			}
 			
 			line++;

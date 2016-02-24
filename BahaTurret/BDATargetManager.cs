@@ -30,6 +30,8 @@ namespace BahaTurret
 
 		public static List<Vessel> LoadedVessels;
 
+		public static BDATargetManager Instance;
+
 
 
 		string debugString = string.Empty;
@@ -51,6 +53,8 @@ namespace BahaTurret
 			GameEvents.onVesselGoOffRails.Add(AddVessel);
 			GameEvents.onVesselCreate.Add(AddVessel);
 			GameEvents.onVesselDestroy.Add(CleanVesselList);
+
+			Instance = this;
 		}
 
 		void OnDestroy()
@@ -96,6 +100,7 @@ namespace BahaTurret
 			AddToolbarButton();
 
 		}
+
 
 		void AddBuilding(DestructibleBuilding b)
 		{
@@ -161,6 +166,7 @@ namespace BahaTurret
 			{
 				UpdateDebugLabels();
 			}
+
 		}
 
 
@@ -183,7 +189,7 @@ namespace BahaTurret
 		/// <returns>The laser target painter.</returns>
 		/// <param name="referenceTransform">Reference transform.</param>
 		/// <param name="maxBoreSight">Max bore sight.</param>
-		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml)
+		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
 		{
 			Transform referenceTransform = ml.transform;
 			float maxOffBoresight = ml.maxOffBoresight;
@@ -196,6 +202,10 @@ namespace BahaTurret
 					continue;
 				}
 
+				if(parentOnly && !(cam.vessel == ml.vessel || cam.vessel == ml.sourceVessel))
+				{
+					continue;
+				}
 
 
 				if(cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
@@ -256,7 +266,7 @@ namespace BahaTurret
 						if(!part) continue;
 						if(!allAspect)
 						{
-							if(!Misc.CheckSightLine(ray.origin, part.transform.position, 10000, 5, 5)) continue;
+							if(!Misc.CheckSightLineExactDistance(ray.origin, part.transform.position+vessel.rb_velocity, Vector3.Distance(part.transform.position,ray.origin), 5, 5)) continue;
 						}
 
 						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * (15/Mathf.Max(15,angle));
@@ -311,12 +321,6 @@ namespace BahaTurret
 
 			return finalData;
 		}
-
-
-
-
-
-
 
 
 		void UpdateDebugLabels()
@@ -656,6 +660,14 @@ namespace BahaTurret
 
 		public static void ClearDatabase()
 		{
+			foreach(var t in TargetDatabase.Keys)
+			{
+				foreach(var target in TargetDatabase[t])
+				{
+					target.detectedTime = 0;
+				}
+			}
+
 			TargetDatabase[BDArmorySettings.BDATeams.A].Clear();
 			TargetDatabase[BDArmorySettings.BDATeams.B].Clear();
 		}
@@ -821,7 +833,12 @@ namespace BahaTurret
 			{
 				GUI.Label(new Rect(600,100,600,600), debugString);	
 			}
+
+
 		}
+
+
+
 	}
 }
 
