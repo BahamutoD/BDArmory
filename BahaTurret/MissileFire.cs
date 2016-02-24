@@ -59,6 +59,25 @@ namespace BahaTurret
 		}
 		float triggerTimer = 0;
 
+		int rippleGunCount = 0;
+		int _gunRippleIndex = 0;
+		public float gunRippleRpm = 0;
+		public int gunRippleIndex
+		{
+			get
+			{
+				return _gunRippleIndex;
+			}
+			set
+			{
+				_gunRippleIndex = value;
+				if(_gunRippleIndex >= rippleGunCount)
+				{
+					_gunRippleIndex = 0;
+				}
+			}
+		}
+
 
 		//ripple stuff
 		string rippleData = string.Empty;
@@ -102,7 +121,11 @@ namespace BahaTurret
 				}
 				else
 				{
-					ro = new RippleOption(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun, 650);       //default to true ripple fire for guns, otherwise, false
+					ro = new RippleOption(false, 650);       //default to true ripple fire for guns, otherwise, false
+					if(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
+					{
+						ro.rippleFire = currentGun.useRippleFire;
+					}
 					rippleDictionary.Add(selectedWeapon.GetShortName(), ro);
 				}
 
@@ -861,14 +884,14 @@ namespace BahaTurret
 				  (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
 				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
 				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb
-                  || selectedWeapon.GetWeaponClass() == WeaponClasses.Gun))
+				  || (selectedWeapon.GetWeaponClass() == WeaponClasses.Gun && currentGun.roundsPerMinute < 1500)))
 				{
 					canRipple = true;
 					if(!MapView.MapIsEnabled && triggerTimer > BDArmorySettings.TRIGGER_HOLD_TIME && !hasSingleFired)
 					{
 						if(rippleFire)
 						{
-							if(Time.time - rippleTimer > 60 / rippleRPM)
+							if(Time.time - rippleTimer > 60f / rippleRPM)
 							{
 								FireMissile();
 								rippleTimer = Time.time;
@@ -1083,27 +1106,30 @@ namespace BahaTurret
 			}
 
             //gun ripple stuff
-            if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
+			if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Gun && currentGun.roundsPerMinute < 1500)
             {
                 float counter = 0;
                 float weaponRPM = 0;
+				gunRippleIndex = 0;
+				rippleGunCount = 0;
                 List<ModuleWeapon> tempListModuleWeapon = vessel.FindPartModulesImplementing<ModuleWeapon>();
                 foreach (ModuleWeapon weapon in tempListModuleWeapon)
                 {
                     if (selectedWeapon.GetShortName() == weapon.GetShortName())
                     {
-                        ++counter;
+						weapon.rippleIndex = Mathf.RoundToInt(counter);
                         weaponRPM = weapon.roundsPerMinute;
+						++counter;
+						rippleGunCount++;
                     }
                 }
+				gunRippleRpm = weaponRPM * counter;
                 float timeDelayPerGun = 60f / (weaponRPM * counter);    //number of seconds between each gun firing; will reduce with increasing RPM or number of guns
-                counter = 0;    //reset it to 0
                 foreach (ModuleWeapon weapon in tempListModuleWeapon)
                 {
                     if (selectedWeapon.GetShortName() == weapon.GetShortName())
                     {
-                        weapon.initialFireDelay = counter * timeDelayPerGun;        //this will cause the delay to be different for each gun
-                        ++counter;
+                        weapon.initialFireDelay = timeDelayPerGun;        //set the time delay for moving to next index
                     }
                 }
 
@@ -1114,7 +1140,7 @@ namespace BahaTurret
                 }
                 else
                 {
-                    ro = new RippleOption(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun, 650);       //default to true ripple fire for guns, otherwise, false
+					ro = new RippleOption(currentGun.useRippleFire, 650);       //take from gun's persistant value
                     rippleDictionary.Add(selectedWeapon.GetShortName(), ro);
                 }
 
