@@ -270,6 +270,7 @@ namespace BahaTurret
 
 		//
 		float timeFired = 0;
+        public float initialFireDelay = 0;     //used to ripple fire multiple weapons of this type
 		bool pointingAtSelf = false; //true if weapon is pointing at own vessel
 		bool userFiring = false;
 		Vector3 laserPoint;
@@ -634,6 +635,10 @@ namespace BahaTurret
 				}
 				else
 				{
+                    if (!isFiring)
+                    {
+                        timeFired = Time.time + (initialFireDelay - (60 / roundsPerMinute)) * TimeWarp.CurrentRate;
+                    }
 					Fire();
 				}
 

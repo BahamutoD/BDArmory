@@ -1072,6 +1072,32 @@ namespace BahaTurret
 				bombPart = null;
 			}
 
+            //gun ripple stuff
+            if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
+            {
+                float counter = 0;
+                float weaponRPM = 0;
+                List<ModuleWeapon> tempListModuleWeapon = vessel.FindPartModulesImplementing<ModuleWeapon>();
+                foreach (ModuleWeapon weapon in tempListModuleWeapon)
+                {
+                    if (selectedWeapon.GetShortName() == weapon.GetShortName())
+                    {
+                        ++counter;
+                        weaponRPM = weapon.roundsPerMinute;
+                    }
+                }
+                float timeDelayPerGun = 60f / (weaponRPM * counter);    //number of seconds between each gun firing; will reduce with increasing RPM or number of guns
+                counter = 0;    //reset it to 0
+                foreach (ModuleWeapon weapon in tempListModuleWeapon)
+                {
+                    if (selectedWeapon.GetShortName() == weapon.GetShortName())
+                    {
+                        weapon.initialFireDelay = counter * timeDelayPerGun;        //this will cause the delay to be different for each gun
+                        ++counter;
+                    }
+                }
+            }
+
 			//rocket
 			FindNextRocket(null);
 		
