@@ -152,7 +152,7 @@ namespace BahaTurret
 
 			//estimate drag
 			float estimatedCurrentAccel = finalThrust/vesselMass;
-			float actualCurrentAccel = Vector3.Project(vessel.acceleration, vessel.ReferenceTransform.up).magnitude*Mathf.Sign(Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward));
+			float actualCurrentAccel = Vector3.Project(vessel.acceleration, vessel.ReferenceTransform.up).magnitude*Mathf.Sign(Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.up));
 			float accelError = (actualCurrentAccel - estimatedCurrentAccel)/2;
 			dragAccel = accelError;
 
