@@ -1411,6 +1411,13 @@ namespace BahaTurret
 					StartCoroutine(BombsAwayRoutine(ml));
 				}
 			}
+			else
+			{
+				if(vesselRadarData && vesselRadarData.autoCycleLockOnFire)
+				{
+					vesselRadarData.CycleActiveLock();
+				}
+			}
 
 			UpdateList();
 		}

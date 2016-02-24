@@ -311,7 +311,7 @@ namespace BahaTurret
 							{
 								heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 							}
-							if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
+							if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
 						
 							if(hitPart.vessel != sourceVessel) hitPart.temperature += heatDamage;  //apply heat damage to the hit part.
 
