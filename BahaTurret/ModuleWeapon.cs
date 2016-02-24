@@ -271,7 +271,24 @@ namespace BahaTurret
 		//
 		float timeFired = 0;
         public float initialFireDelay = 0;     //used to ripple fire multiple weapons of this type
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
         public bool useRippleFire = true;
+		[KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Toggle Barrage")]
+		public void ToggleRipple()
+		{
+			foreach(var craftPart in EditorLogic.fetch.ship.parts)
+			{
+				if(craftPart.name == part.name)
+				{
+					foreach(var weapon in craftPart.FindModulesImplementing<ModuleWeapon>())
+					{
+						weapon.useRippleFire = !weapon.useRippleFire;
+					}
+				}
+			}
+		}
+
 		bool pointingAtSelf = false; //true if weapon is pointing at own vessel
 		bool userFiring = false;
 		Vector3 laserPoint;
@@ -414,6 +431,12 @@ namespace BahaTurret
 				emitter.emit = false;
 			}
 
+			if(roundsPerMinute >= 1500)
+			{
+				Events["ToggleRipple"].guiActiveEditor = false;
+				Fields["useRippleFire"].guiActiveEditor = false;
+			}
+
 			if(airDetonation)
 			{
 				var detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
@@ -548,6 +571,7 @@ namespace BahaTurret
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 		}
 
+		public int rippleIndex = 0;
 		void Update()
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && vessel.IsControllable)
@@ -567,15 +591,20 @@ namespace BahaTurret
 	
 				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 				{
-					
-
 					userFiring = (BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
-					if((userFiring || autoFire || agHoldFiring) && (yawRange == 0 || (maxPitch-minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
+					if(!pointingAtSelf && (userFiring || autoFire || agHoldFiring) && (yawRange == 0 || (maxPitch - minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
 						{
-							finalFire = true;
-							//Fire();
+							if(useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
+							{
+								//timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
+								finalFire = false;
+							}
+							else
+							{
+								finalFire = true;
+							}
 						}
 					}
 					else
@@ -592,18 +621,16 @@ namespace BahaTurret
 				}
 				else
 				{
-					audioSource.Stop ();
+					audioSource.Stop();
 					autoFire = false;
 				}
 
 				if(spinningDown && spinDownAnimation && hasFireAnimation)
 				{
-					if(fireState.normalizedTime>1) fireState.normalizedTime = 0;
+					if(fireState.normalizedTime > 1) fireState.normalizedTime = 0;
 					fireState.speed = fireAnimSpeed;
 					fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
 				}
-				
-				
 			}
 		}
 
@@ -636,10 +663,6 @@ namespace BahaTurret
 				}
 				else
 				{
-                    if (useRippleFire && !isFiring)
-                    {
-                        timeFired = Time.time + (initialFireDelay - (60 / roundsPerMinute)) * TimeWarp.CurrentRate;
-                    }
 					Fire();
 				}
 
@@ -650,11 +673,11 @@ namespace BahaTurret
 		}
 
 		bool finalFire = false;
-		public bool isFiring
+		public bool recentlyFiring //used by guard to know if it should evaid this
 		{
 			get
 			{
-				return Time.time - timeFired < 120 / roundsPerMinute;
+				return Time.time - timeFired < 1;
 			}
 		}
 
@@ -695,23 +718,6 @@ namespace BahaTurret
 						if((userFiring || autoFire || agHoldFiring) && (!turret || turret.TargetInRange(targetPosition, 10, float.MaxValue)))
 						{
 							finalFire = true;
-							/*
-							if(FireLaser())
-						   	{
-								for(int i = 0; i < laserRenderers.Length; i++)
-								{
-									laserRenderers[i].enabled = true;
-								}
-							}
-							else
-							{
-								for(int i = 0; i < laserRenderers.Length; i++)
-								{
-									laserRenderers[i].enabled = false;
-								}
-								audioSource.Stop ();	
-							}
-							*/
 						}
 						else
 						{
@@ -761,7 +767,6 @@ namespace BahaTurret
 					autoFire = false;
 					legacyTargetVessel = null;
 				}
-
 			}
 		}
 			
@@ -904,6 +909,11 @@ namespace BahaTurret
 				{
 					if(!Misc.CheckMouseIsOnGui() && WMgrAuthorized() && (BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount)>0))
 					{
+						if(useRippleFire)
+						{
+							StartCoroutine(IncrementRippleIndex(initialFireDelay));
+						}
+
 						Transform fireTransform = fireTransforms[i];
 						spinningDown = false;
 
@@ -929,13 +939,13 @@ namespace BahaTurret
 									audioSource.clip = fireSound;
 									audioSource.loop = false;
 									audioSource.time = 0;
-									audioSource.Play();	
+									audioSource.Play();
 								}
 								else
 								{
 									if (audioSource.time >= fireSound.length)
 									{
-										audioSource.time = soundRepeatTime;	
+										audioSource.time = soundRepeatTime;
 									}
 								}
 							}
@@ -1105,6 +1115,17 @@ namespace BahaTurret
 			}
 		}
 
+		IEnumerator IncrementRippleIndex(float delay)
+		{
+			if(delay > 0)
+			{
+				yield return new WaitForSeconds(delay);
+			}
+			weaponManager.gunRippleIndex = weaponManager.gunRippleIndex +1;
+
+			//Debug.Log("incrementing ripple index to: " + weaponManager.gunRippleIndex);
+		}
+
 
 		private bool FireLaser()
 		{
@@ -1250,6 +1271,11 @@ namespace BahaTurret
 				{
 					pointingAtPosition = fireTransforms[i].position + (ray.direction * (maxTargetingRange));
 				}
+			}
+
+			if(useRippleFire && (pointingAtSelf || isOverheated))
+			{
+				StartCoroutine(IncrementRippleIndex(0));
 			}
 		}
 
@@ -1809,7 +1835,7 @@ namespace BahaTurret
 
 		void OnGUI()
 		{
-			if(weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled)
+			if(weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
 			{
 				float size = 30;
 				
