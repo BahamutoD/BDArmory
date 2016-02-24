@@ -790,9 +790,6 @@ namespace BahaTurret
 			}
 
 
-
-
-
 			float targetDot = Vector3.Dot(vesselTransform.up, v.transform.position-vessel.transform.position);
 
 			//manage speed when close to enemy
