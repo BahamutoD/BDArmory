@@ -434,7 +434,7 @@ namespace BahaTurret
 								{
 									foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
 									{
-										if(!weapon.isFiring) continue;
+										if(!weapon.recentlyFiring) continue;
 										if(Vector3.Dot(weapon.fireTransforms[0].forward, vesselDirection) > 0) continue;
 
 										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance)
