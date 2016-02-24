@@ -102,11 +102,20 @@ namespace BahaTurret
 				}
 				else
 				{
-					ro = new RippleOption(false, 650);
+					ro = new RippleOption(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun, 650);       //default to true ripple fire for guns, otherwise, false
 					rippleDictionary.Add(selectedWeapon.GetShortName(), ro);
 				}
 
 				ro.rippleFire = !ro.rippleFire;
+
+                if(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
+                {
+                    foreach(ModuleWeapon w in vessel.FindPartModulesImplementing<ModuleWeapon>())
+                    {
+                        if (w.GetShortName() == selectedWeapon.GetShortName())
+                            w.useRippleFire = ro.rippleFire;
+                    }
+                }
 			}
 		}
 
@@ -851,7 +860,8 @@ namespace BahaTurret
 					selectedWeapon != null &&
 				  (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
 				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
-				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
+				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb
+                  || selectedWeapon.GetWeaponClass() == WeaponClasses.Gun))
 				{
 					canRipple = true;
 					if(!MapView.MapIsEnabled && triggerTimer > BDArmorySettings.TRIGGER_HOLD_TIME && !hasSingleFired)
@@ -1095,6 +1105,23 @@ namespace BahaTurret
                         weapon.initialFireDelay = counter * timeDelayPerGun;        //this will cause the delay to be different for each gun
                         ++counter;
                     }
+                }
+
+                RippleOption ro;        //ripplesetup and stuff
+                if (rippleDictionary.ContainsKey(selectedWeapon.GetShortName()))
+                {
+                    ro = rippleDictionary[selectedWeapon.GetShortName()];
+                }
+                else
+                {
+                    ro = new RippleOption(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun, 650);       //default to true ripple fire for guns, otherwise, false
+                    rippleDictionary.Add(selectedWeapon.GetShortName(), ro);
+                }
+
+                foreach (ModuleWeapon w in vessel.FindPartModulesImplementing<ModuleWeapon>())
+                {
+                    if (w.GetShortName() == selectedWeapon.GetShortName())
+                        w.useRippleFire = ro.rippleFire;
                 }
             }
 
