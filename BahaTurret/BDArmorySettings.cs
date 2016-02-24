@@ -888,18 +888,32 @@ namespace BahaTurret
 				//if weapon can ripple, show option and slider.
 				if(ActiveWeaponManager.hasLoadedRippleData && ActiveWeaponManager.canRipple)
 				{
-					string rippleText = ActiveWeaponManager.rippleFire ? "Ripple: " + ActiveWeaponManager.rippleRPM.ToString("0") + " RPM" : "Ripple: OFF";
-					GUIStyle rippleStyle = ActiveWeaponManager.rippleFire ? HighLogic.Skin.box : HighLogic.Skin.button;
-					if(GUI.Button(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight * 1.25f), rippleText, rippleStyle))
+					if(ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
 					{
-						ActiveWeaponManager.ToggleRippleFire();
+						string rippleText = ActiveWeaponManager.rippleFire ? "Barrage: " + ActiveWeaponManager.gunRippleRpm.ToString("0") + " RPM" : "Salvo";
+						GUIStyle rippleStyle = ActiveWeaponManager.rippleFire ? HighLogic.Skin.box : HighLogic.Skin.button;
+						if(GUI.Button(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight * 1.25f), rippleText, rippleStyle))
+						{
+							ActiveWeaponManager.ToggleRippleFire();
+						}
+		
+						rippleHeight = Mathf.Lerp(rippleHeight, 1.25f, 0.15f);
 					}
-					if(ActiveWeaponManager.rippleFire)
+					else
 					{
-						Rect sliderRect = new Rect(leftIndent + (contentWidth / 2) + 2, contentTop + (line * entryHeight) + 6.5f, (contentWidth / 2) - 2, 12);
-						ActiveWeaponManager.rippleRPM = GUI.HorizontalSlider(sliderRect, ActiveWeaponManager.rippleRPM, 100, 1600, rippleSliderStyle, rippleThumbStyle);
+						string rippleText = ActiveWeaponManager.rippleFire ? "Ripple: " + ActiveWeaponManager.rippleRPM.ToString("0") + " RPM" : "Ripple: OFF";
+						GUIStyle rippleStyle = ActiveWeaponManager.rippleFire ? HighLogic.Skin.box : HighLogic.Skin.button;
+						if(GUI.Button(new Rect(leftIndent, contentTop + (line * entryHeight), contentWidth / 2, entryHeight * 1.25f), rippleText, rippleStyle))
+						{
+							ActiveWeaponManager.ToggleRippleFire();
+						}
+						if(ActiveWeaponManager.rippleFire)
+						{
+							Rect sliderRect = new Rect(leftIndent + (contentWidth / 2) + 2, contentTop + (line * entryHeight) + 6.5f, (contentWidth / 2) - 2, 12);
+							ActiveWeaponManager.rippleRPM = GUI.HorizontalSlider(sliderRect, ActiveWeaponManager.rippleRPM, 100, 1600, rippleSliderStyle, rippleThumbStyle);
+						}
+						rippleHeight = Mathf.Lerp(rippleHeight, 1.25f, 0.15f);
 					}
-					rippleHeight = Mathf.Lerp(rippleHeight, 1.25f, 0.15f);
 				}
 				else
 				{
