@@ -254,6 +254,7 @@ namespace BahaTurret
 		Vessel guardTarget = null;
 		public TargetInfo currentTarget;
         TargetInfo overrideTarget;       //used for setting target next guard scan for stuff like assisting teammates
+        float overrideTimer = 0;
 
 		//AIPilot
 		public BDModulePilotAI pilotAI = null;
@@ -2310,6 +2311,16 @@ namespace BahaTurret
 				}
 				SetCargoBays();
 			}
+
+            if(overrideTimer > 0)
+            {
+                overrideTimer -= TimeWarp.fixedDeltaTime;
+            }
+            else
+            {
+                overrideTimer = 0;
+                overrideTarget = null;
+            }
 		}
 			
 		Vector3 debugGuardViewDirection;
@@ -3158,11 +3169,12 @@ namespace BahaTurret
                     {
                         Debug.Log(vessel.vesselName + " is engaging an override target with " + selectedWeapon);
                     }
-                    overrideTarget = null;
+                    overrideTimer = 30f;
+                    //overrideTarget = null;
                     return;
                 }
             }
-            overrideTarget = null;      //null the override target after failing to attack, or after successfully targetting it
+            overrideTarget = null;      //null the override target if it cannot be used
             
             //if AIRBORNE, try to engage airborne target first
 			if(!vessel.LandedOrSplashed && !targetMissiles)
