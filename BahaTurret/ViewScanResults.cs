@@ -12,7 +12,8 @@ namespace BahaTurret
 		public bool	firingAtMe;
 		public float missileThreatDistance;
 		public Vector3 threatPosition;
-
+        public Vessel threatVessel;
+        public MissileFire threatWeaponManager;
 	}
 }
 

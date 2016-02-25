@@ -253,6 +253,7 @@ namespace BahaTurret
 		float targetScanTimer = 0;
 		Vessel guardTarget = null;
 		public TargetInfo currentTarget;
+        TargetInfo overrideTarget;       //used for setting target next guard scan for stuff like assisting teammates
 
 		//AIPilot
 		public BDModulePilotAI pilotAI = null;
@@ -2404,7 +2405,27 @@ namespace BahaTurret
 				{
 					StopCoroutine(ufRoutine);
 				}
-				ufRoutine = StartCoroutine(UnderFireRoutine());
+                if (results.threatWeaponManager != null)
+                {
+                    TargetInfo nearbyFriendly = BDATargetManager.GetClosestFriendly(this);
+                    TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
+
+                    if (nearbyThreat != null && nearbyFriendly != null)
+                    {
+                        if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
+                        {
+                            this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
+                            nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                            //basically, swap targets to cover each other
+                        }
+                        else
+                        {
+                            //otherwise, continue engaging the current target for now
+                            nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                        }
+                    }
+                } 
+                ufRoutine = StartCoroutine(UnderFireRoutine());
 			}
 		}
 
@@ -3123,9 +3144,27 @@ namespace BahaTurret
 
 		void SmartFindTarget()
 		{
+
+
 			List<TargetInfo> targetsTried = new List<TargetInfo>();
 
-			//if AIRBORNE, try to engage airborne target first
+            if (overrideTarget)      //begin by checking the override target, since that takes priority
+            {
+                targetsTried.Add(overrideTarget);
+                SetTarget(overrideTarget);
+                if(SmartPickWeapon(overrideTarget, gunRange))
+                {
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log(vessel.vesselName + " is engaging an override target with " + selectedWeapon);
+                    }
+                    overrideTarget = null;
+                    return;
+                }
+            }
+            overrideTarget = null;      //null the override target after failing to attack, or after successfully targetting it
+            
+            //if AIRBORNE, try to engage airborne target first
 			if(!vessel.LandedOrSplashed && !targetMissiles)
 			{
 				TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTarget(this);
@@ -3353,6 +3392,11 @@ namespace BahaTurret
 
 			return matchFound;
 		}
+
+        public void SetOverrideTarget(TargetInfo target)
+        {
+            overrideTarget = target;
+        }
 
 		void SetTarget(TargetInfo target)
 		{

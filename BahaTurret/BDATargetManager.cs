@@ -691,9 +691,44 @@ namespace BahaTurret
 
 			return finalTarget;
 		}
-		 
 
-		public static TargetInfo GetClosestTarget(MissileFire mf)
+        //returns the nearest friendly target
+        public static TargetInfo GetClosestFriendly(MissileFire mf)
+        {
+            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            TargetInfo finalTarget = null;
+
+            foreach (var target in TargetDatabase[team])
+            {
+                if (target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+                {
+                    if (finalTarget == null || (target.IsCloser(finalTarget, mf)))
+                    {
+                        finalTarget = target;
+                    }
+                }
+            }
+
+            return finalTarget;
+        }
+
+        //returns the target that owns this weapon manager
+        public static TargetInfo GetTargetFromWeaponManager(MissileFire mf)
+        {
+            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+
+            foreach (var target in TargetDatabase[team])
+            {
+                if (target && target.Vessel && target.weaponManager == mf)
+                {
+                    return target;
+                }
+            }
+
+            return null;
+        }
+
+        public static TargetInfo GetClosestTarget(MissileFire mf)
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;

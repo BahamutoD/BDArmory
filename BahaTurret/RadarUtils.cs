@@ -349,6 +349,8 @@ namespace BahaTurret
 			results.foundAGM = false;
 			results.firingAtMe = false;
 			results.missileThreatDistance = float.MaxValue;
+            results.threatVessel = null;
+            results.threatWeaponManager = null;
 
 			if(!myWpnManager || !referenceTransform)
 			{
@@ -441,6 +443,8 @@ namespace BahaTurret
 										{
 											results.firingAtMe = true;
 											results.threatPosition = weapon.vessel.transform.position;
+                                            results.threatVessel = weapon.vessel;
+                                            results.threatWeaponManager = weapon.weaponManager;
 										}
 									}
 								}
