@@ -911,7 +911,7 @@ namespace BahaTurret
 					{
 						if(useRippleFire)
 						{
-							StartCoroutine(IncrementRippleIndex(initialFireDelay));
+							StartCoroutine(IncrementRippleIndex(initialFireDelay * TimeWarp.CurrentRate));
 						}
 
 						Transform fireTransform = fireTransforms[i];
