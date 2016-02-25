@@ -120,6 +120,13 @@ namespace BahaTurret
         float maxNegG = 0;
         float cosAoAAtMaxNegG = 0;
 
+        float[] gLoadMovingAvgArray = new float[64];
+        float[] cosAoAMovingAvgArray = new float[64];
+        int movingAvgIndex = 0;
+
+        float gLoadMovingAvg = 0;
+        float cosAoAMovingAvg = 0;
+
         float gaoASlopePerDynPres = 0;        //used to limit control input at very high dynamic pressures to avoid structural failure
         float gOffsetPerDynPres = 0;
 
@@ -1269,16 +1276,36 @@ namespace BahaTurret
             float pitchG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);       //should provide g force in vessel up / down direction, assuming a standard plane
             float pitchGPerDynPres = pitchG / (float)vessel.dynamicPressurekPa;
 
-            float curCosAoA = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
-            if(pitchGPerDynPres < maxNegG || Math.Abs(curCosAoA - cosAoAAtMaxNegG) < 0.005f)
+            float curCosAoA = Vector3.Dot(vessel.srf_velocity.normalized, vessel.ReferenceTransform.forward);
+
+            //adjust moving averages
+            //adjust gLoad average
+            gLoadMovingAvg *= 64f;
+            gLoadMovingAvg -= gLoadMovingAvgArray[movingAvgIndex];
+            gLoadMovingAvgArray[movingAvgIndex] = pitchGPerDynPres;
+            gLoadMovingAvg += pitchGPerDynPres;
+            gLoadMovingAvg /= 64f;
+
+            //adjusting cosAoAAvg
+            cosAoAMovingAvg *= 64f;
+            cosAoAMovingAvg -= cosAoAMovingAvgArray[movingAvgIndex];
+            cosAoAMovingAvgArray[movingAvgIndex] = curCosAoA;
+            cosAoAMovingAvg += curCosAoA;
+            cosAoAMovingAvg /= 64f;
+
+            ++movingAvgIndex;
+            if (movingAvgIndex == gLoadMovingAvgArray.Length)
+                movingAvgIndex = 0;
+
+            if (gLoadMovingAvg < maxNegG || Math.Abs(cosAoAMovingAvg - cosAoAAtMaxNegG) < 0.005f)
             {
-                maxNegG = pitchGPerDynPres;
-                cosAoAAtMaxNegG = curCosAoA;
+                maxNegG = gLoadMovingAvg;
+                cosAoAAtMaxNegG = cosAoAMovingAvg;
             }
-            if (pitchGPerDynPres > maxPosG || Math.Abs(curCosAoA - cosAoAAtMaxPosG) < 0.005f)
+            if (gLoadMovingAvg > maxPosG || Math.Abs(cosAoAMovingAvg - cosAoAAtMaxPosG) < 0.005f)
             {
-                maxPosG = pitchGPerDynPres;
-                cosAoAAtMaxPosG = curCosAoA;
+                maxPosG = gLoadMovingAvg;
+                cosAoAAtMaxPosG = cosAoAMovingAvg;
             }
 
             if(cosAoAAtMaxNegG >= cosAoAAtMaxPosG)
@@ -1304,10 +1331,11 @@ namespace BahaTurret
             //debugString += "\nMax Pos G: " + maxPosG + " @ " + cosAoAAtMaxPosG;
             //debugString += "\nMax Neg G: " + maxNegG + " @ " + cosAoAAtMaxNegG;
 
-            if (gaoASlopePerDynPres == 0 || vessel.srfSpeed < takeOffSpeed)         //if the slope is 0, ignore it
+            if (gaoASlopePerDynPres == 0 || vessel.LandedOrSplashed || vessel.srfSpeed < Math.Min(minSpeed, takeOffSpeed))         //if the slope is 0, ignore it
             {
-                negPitchDynPresLimitIntegrator = -1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
-                posPitchDynPresLimitIntegrator = 1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
+                float speed = Math.Max(takeOffSpeed, minSpeed);
+                negPitchDynPresLimitIntegrator = -1f * 0.001f * 0.5f * 1.225f * speed * speed;
+                posPitchDynPresLimitIntegrator = 1f * 0.001f * 0.5f * 1.225f * speed * speed;
                 return;
             }
 
@@ -1404,12 +1432,12 @@ namespace BahaTurret
             negLim = negPitchDynPresLimitIntegrator * invVesselDynPreskPa + negPitchDynPresLimit;
             if (negLim > s.pitch)
             {
-                if (currentG > -(maxAllowedGForce * 0.97f * 9.81f))
+                if (currentG > -(maxAllowedGForce * 0.1f * 9.81f))
                 {
                     negPitchDynPresLimitIntegrator -= (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
-                    maxNegG = currentG / (float)vessel.dynamicPressurekPa;
-                    cosAoAAtMaxNegG = curCosAoA;
+                    maxNegG = 0;
+                    cosAoAAtMaxNegG = 0;
 
                     negPitchDynPresLimit = 0;
 
@@ -1423,12 +1451,12 @@ namespace BahaTurret
             posLim = posPitchDynPresLimitIntegrator * invVesselDynPreskPa + posPitchDynPresLimit;
             if (posLim < s.pitch)
             {
-                if (currentG < (maxAllowedGForce * 0.97f * 9.81f))
+                if (currentG < (maxAllowedGForce * 0.1f * 9.81f))
                 {
                     posPitchDynPresLimitIntegrator += (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
-                    maxPosG = currentG / (float)vessel.dynamicPressurekPa;
-                    cosAoAAtMaxPosG = curCosAoA;
+                    maxPosG = 0;
+                    cosAoAAtMaxPosG = 0;
 
                     posPitchDynPresLimit = 0;
 
