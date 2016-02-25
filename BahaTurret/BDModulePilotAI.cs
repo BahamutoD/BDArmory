@@ -1535,7 +1535,10 @@ namespace BahaTurret
 
             float vertFactor = 0;
             float alt = MissileGuidance.GetRadarAltitude(vessel);
-            if (vessel.srfSpeed > minSpeed * 1.5f && ((targetPosition - vesselTransform.position).magnitude > 600 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.2f) && !weaponManager.underFire)      //go upwards in some way
+            if (vessel.srfSpeed > minSpeed * 1.5f && 
+                Vector3.Dot(targetPosition-vesselTransform.position, upDirection) > -1000 &&
+                ((targetPosition - vesselTransform.position).magnitude > 600 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.1f) || 
+                Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0)      //go upwards in some way
             {
                 vertFactor = (float)vessel.srfSpeed / (minSpeed * 1.5f);
                 --vertFactor;
@@ -1557,7 +1560,7 @@ namespace BahaTurret
 			{
 				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 165f)
 				{
-					targetPosition = vessel.transform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * 45, upDirection)*(projectedDirection.normalized*200));
+                    targetPosition = vesselTransform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * 45, upDirection) * (projectedDirection.normalized * 200));
 					targetDirection = (targetPosition - vesselTransform.position).normalized;
 				}
                 
@@ -1571,8 +1574,8 @@ namespace BahaTurret
                 {
                     if(targetVessel)
                         vertFactor *= (1f + Mathf.Clamp((float)(vessel.srfSpeed - targetVessel.srfSpeed), 0, float.PositiveInfinity) * 0.1f);
-                    if(Vector3.Dot(targetPosition - vessel.ReferenceTransform.position, upDirection) > 0)
-                        targetPosition += upDirection * Vector3.Dot(targetPosition - vessel.ReferenceTransform.position, upDirection) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                    if (Vector3.Dot(targetPosition - vesselTransform.position, upDirection) > 0)
+                        targetPosition += upDirection * Vector3.Dot(targetPosition - vesselTransform.position, upDirection) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
                     else
                         targetPosition += upDirection * (targetPosition - vesselTransform.position).magnitude * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
                 }
