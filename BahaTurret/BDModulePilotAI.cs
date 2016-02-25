@@ -1432,12 +1432,12 @@ namespace BahaTurret
             negLim = negPitchDynPresLimitIntegrator * invVesselDynPreskPa + negPitchDynPresLimit;
             if (negLim > s.pitch)
             {
-                if (currentG > -(maxAllowedGForce * 0.1f * 9.81f))
+                if (currentG > -(maxAllowedGForce * 0.97f * 9.81f))
                 {
                     negPitchDynPresLimitIntegrator -= (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
-                    maxNegG = 0;
-                    cosAoAAtMaxNegG = 0;
+                    maxNegG = currentG * invVesselDynPreskPa;
+                    cosAoAAtMaxNegG = curCosAoA;
 
                     negPitchDynPresLimit = 0;
 
@@ -1451,12 +1451,12 @@ namespace BahaTurret
             posLim = posPitchDynPresLimitIntegrator * invVesselDynPreskPa + posPitchDynPresLimit;
             if (posLim < s.pitch)
             {
-                if (currentG < (maxAllowedGForce * 0.1f * 9.81f))
+                if (currentG < (maxAllowedGForce * 0.97f * 9.81f))
                 {
                     posPitchDynPresLimitIntegrator += (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
-                    maxPosG = 0;
-                    cosAoAAtMaxPosG = 0;
+                    maxPosG = currentG * invVesselDynPreskPa;
+                    cosAoAAtMaxPosG = curCosAoA;
 
                     posPitchDynPresLimit = 0;
 
@@ -1533,18 +1533,49 @@ namespace BahaTurret
 			Vector3 forwardDirection = vesselTransform.up;
 			Vector3 targetDirection = (targetPosition - vesselTransform.position).normalized;
 
+            float vertFactor = 0;
+            float alt = MissileGuidance.GetRadarAltitude(vessel);
+            if (vessel.srfSpeed > minSpeed * 1.5f && ((targetPosition - vesselTransform.position).magnitude > 600 || vessel.srfSpeed > targetVessel.srfSpeed * 1.2f) && !weaponManager.underFire)      //go upwards in some way
+            {
+                vertFactor = (float)vessel.srfSpeed / (minSpeed * 1.5f);
+                --vertFactor;
+                vertFactor *= 0.8f;
+                vertFactor = Mathf.Clamp01(vertFactor);
+            }
+            else if(alt > minAltitude)
+            {
+                vertFactor = (alt - minAltitude) / (2 * turnRadius);
+                vertFactor = Mathf.Clamp01(vertFactor);
+                vertFactor = -vertFactor;
+            }
+
+            vertFactor += 0.25f * Mathf.Sin((float)vessel.missionTime);     //some randomness in there
+
+		    Vector3 projectedDirection = Vector3.ProjectOnPlane(forwardDirection, upDirection);
+			Vector3 projectedTargetDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
 			if(Vector3.Dot(targetDirection, forwardDirection) < 0)
 			{
-				Vector3 projectedDirection = Vector3.ProjectOnPlane(forwardDirection, upDirection);
-				Vector3 projectedTargetDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
 				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 165f)
 				{
 					targetPosition = vessel.transform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * 45, upDirection)*(projectedDirection.normalized*200));
 					targetDirection = (targetPosition - vesselTransform.position).normalized;
 				}
-
-				targetPosition = vesselTransform.position + Vector3.RotateTowards(projectedDirection, Vector3.ProjectOnPlane(targetDirection, upDirection), 45*Mathf.Deg2Rad, 0).normalized*200;
+                
+				targetPosition = vesselTransform.position + Vector3.RotateTowards(projectedDirection, Vector3.ProjectOnPlane(targetDirection, upDirection) + upDirection * vertFactor, 45*Mathf.Deg2Rad, 0).normalized*200;
 			}
+            else if(steerMode != SteerModes.Aiming)
+            {
+                if (vertFactor < 0)
+                    targetPosition += upDirection * (alt - minAltitude) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                else
+                {
+                    vertFactor *= (1f + Mathf.Clamp((float)(vessel.srfSpeed - targetVessel.srfSpeed), 0, float.PositiveInfinity) * 0.1f);
+                    if(Vector3.Dot(targetPosition - vessel.ReferenceTransform.position, upDirection) > 0)
+                        targetPosition += upDirection * Vector3.Dot(targetPosition - vessel.ReferenceTransform.position, upDirection) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                    else
+                        targetPosition += upDirection * (targetPosition - vesselTransform.position).magnitude * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                }
+            }
 
 
 			if(MissileGuidance.GetRadarAltitude(vessel) > minAlt * 1.1f)
