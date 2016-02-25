@@ -271,6 +271,7 @@ namespace BahaTurret
 		//
 		float timeFired = 0;
         public float initialFireDelay = 0;     //used to ripple fire multiple weapons of this type
+        float fireDelayTimer = 0;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
         public bool useRippleFire = true;
@@ -596,16 +597,8 @@ namespace BahaTurret
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
 						{
-							if(useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
-							{
-								//timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
-								finalFire = false;
-							}
-							else
-							{
-								finalFire = true;
-							}
-						}
+                            finalFire = true;
+                        }
 					}
 					else
 					{
@@ -643,6 +636,7 @@ namespace BahaTurret
 			if(eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
 			if(finalFire)
 			{
+                
 				if(eWeaponType == WeaponTypes.Laser)
 				{
 					if(FireLaser())
@@ -663,7 +657,18 @@ namespace BahaTurret
 				}
 				else
 				{
-					Fire();
+                    if (useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
+                    {
+                        //timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
+                        finalFire = false;
+                    }
+                    else
+                    {
+                        finalFire = true;
+                    }
+
+                    if(finalFire)
+                        Fire();
 				}
 
 				finalFire = false;

@@ -255,6 +255,10 @@ namespace BahaTurret
 		public TargetInfo currentTarget;
         TargetInfo overrideTarget;       //used for setting target next guard scan for stuff like assisting teammates
         float overrideTimer = 0;
+        public bool TargetOverride
+        {
+            get { return overrideTimer > 0; }
+        }
 
 		//AIPilot
 		public BDModulePilotAI pilotAI = null;

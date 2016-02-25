@@ -1535,10 +1535,11 @@ namespace BahaTurret
 
             float vertFactor = 0;
             float alt = MissileGuidance.GetRadarAltitude(vessel);
-            if (vessel.srfSpeed > minSpeed * 1.5f && 
+            if ((vessel.srfSpeed > minSpeed * 1.5f || (weaponManager.TargetOverride && vessel.srfSpeed > minSpeed * 3)) && 
                 Vector3.Dot(targetPosition-vesselTransform.position, upDirection) > -1000 &&
                 ((targetPosition - vesselTransform.position).magnitude > 600 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.1f) || 
-                Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0)      //go upwards in some way
+                (Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0) &&
+                !weaponManager.underFire)      //go upwards in some way
             {
                 vertFactor = (float)vessel.srfSpeed / (minSpeed * 1.5f);
                 --vertFactor;
@@ -1569,7 +1570,7 @@ namespace BahaTurret
             else if(steerMode != SteerModes.Aiming)
             {
                 if (vertFactor < 0)
-                    targetPosition += upDirection * Math.Min((alt - minAltitude), (targetPosition - vesselTransform.position).magnitude) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                    targetPosition += upDirection * Math.Min((alt - minAltitude), (targetPosition - vesselTransform.position).magnitude) * 0.2f * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
                 else
                 {
                     if(targetVessel)
