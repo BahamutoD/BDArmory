@@ -770,7 +770,8 @@ namespace BahaTurret
 							}
                             else
                             {
-                                //figuring how much to lead the target's movement to get there after its movement
+                                //figuring how much to lead the target's movement to get there after its movement assuming we can manage a constant speed turn
+                                //this only runs if we're not aiming and not that far from the target
                                 float curVesselMaxAccel = Math.Min(maxDynPresGRecorded * (float)vessel.dynamicPressurekPa, maxAllowedGForce * 9.81f);
                                 if (curVesselMaxAccel > 0)
                                 {
