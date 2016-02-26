@@ -115,7 +115,6 @@ namespace BahaTurret
 
         //manueuverability and g loading data
         float maxDynPresGRecorded = 0;
-        float gTargetRatio = 1; 
 
         float maxPosG = 0;
         float cosAoAAtMaxPosG = 0;
@@ -769,6 +768,17 @@ namespace BahaTurret
 							{
 								finalMaxSteer = GetSteerLimiterForSpeedAndPower();
 							}
+                            else
+                            {
+                                //figuring how much to lead the target's movement to get there after its movement
+                                float curVesselMaxAccel = Math.Min(maxDynPresGRecorded * (float)vessel.dynamicPressurekPa, maxAllowedGForce * 9.81f);
+                                if (curVesselMaxAccel > 0)
+                                {
+                                    float timeToTurn = (float)vessel.srfSpeed * angleToTarget * Mathf.Deg2Rad / curVesselMaxAccel;
+                                    target += v.srf_velocity * timeToTurn;
+                                    target += 0.5f * v.acceleration * timeToTurn * timeToTurn;
+                                }
+                            }
 						}
 
 						if(v.LandedOrSplashed)
@@ -1052,10 +1062,10 @@ namespace BahaTurret
 					extendDistance = 4500;
 				}
 
-				/*if(targetVessel!=null && !targetVessel.LandedOrSplashed)      //this is just asking for trouble
+			    if(targetVessel!=null && !targetVessel.LandedOrSplashed)      //this is just asking for trouble at 800m
 				{
-					extendDistance = 800;
-				}*/
+					extendDistance = 1600;
+				}
 
 				Vector3 srfVector = Vector3.ProjectOnPlane(vessel.transform.position - tPosition, upDirection);
 				float srfDist = srfVector.magnitude;
@@ -1171,69 +1181,76 @@ namespace BahaTurret
 				}
 				else if(weaponManager.underFire)
 				{
-					if(evasiveTimer < 2.5)
+					debugString += "\nDodging gunfire";
+                    float threatDirectionFactor = Vector3.Dot(vesselTransform.up, threatRelativePosition.normalized);
+					//Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
+
+                    Vector3 breakTarget = threatRelativePosition * 2f;       //for the most part, we want to turn _towards_ the threat in order to increase the rel ang vel and get under its guns
+
+                    if (threatDirectionFactor > 0.9f)     //within 28 degrees in front
 					{
-						debugString += "\nDodging gunfire";
-                        float threatDirectionFactor = Vector3.Dot(vesselTransform.up, threatRelativePosition.normalized);
-						//Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
-
-                        Vector3 breakTarget = threatRelativePosition * 1.5f;       //for the most part, we want to turn _towards_ the threat in order to increase the rel ang vel and get under its guns
-
-                        if (threatDirectionFactor > 0.9f)     //within 28 degrees in front
-						{
-                            breakTarget += Vector3.Cross(threatRelativePosition.normalized, Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * vessel.upAxis);
-							debugString += " from directly ahead!";
-						}
-                        else if (threatDirectionFactor < -0.9) //within ~28 degrees behind
-                        {
-                            float threatDistance = threatRelativePosition.magnitude;
-                            if(threatDistance > 800)
-                            {
-                                breakTarget = vesselTransform.position + vesselTransform.up * 1500;
-                                breakTarget += Mathf.Sin((float)vessel.missionTime) * vesselTransform.right * 150;
-                                debugString += " from behind afar; attempting to extend and dive away";
-                            }
-                            else if (threatDistance < 400)
-                            {
-                                breakTarget = threatRelativePosition;
-                                breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 500;
-                                debugString += " from directly behind and close; breaking hard";
-                                steerMode = SteerModes.Aiming;
-                            }
-                            else
-                            {
-                                breakTarget = threatRelativePosition;
-                                breakTarget += Mathf.Sin((float)vessel.missionTime * 5) * vesselTransform.right * 500;
-                                debugString += " from directly behind and moderate distance; breaking wildly";
-                                steerMode = SteerModes.Aiming;
-                            }
-                        }
-                        else
-                        {
-                            float threatDistance = threatRelativePosition.magnitude;
-                            if(threatDistance < 800)
-                            {
-                                breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 500;
-                                debugString += " from the side; breaking in";
-                                steerMode = SteerModes.Aiming;
-                            }
-                            else
-                            {
-                                breakTarget = vesselTransform.position + vesselTransform.up * 1500;
-                                breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 50;
-                                debugString += " from far side; waiting for enemy to close before moving";
-                            }
-                        }
-
-                        float threatAltitudeDiff = Vector3.Dot(threatRelativePosition, vessel.upAxis);
-                        if (threatAltitudeDiff > 500)
-                            breakTarget += threatAltitudeDiff * vessel.upAxis;      //if it's trying to spike us from below, don't go crazy trying to dive below it
-                        else
-                            breakTarget += - 150 * vessel.upAxis;   //dive a bit to escape
-
-						FlyToPosition(s, breakTarget);
-						return;
+                        breakTarget += Vector3.Cross(threatRelativePosition.normalized, Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * vessel.upAxis);
+						debugString += " from directly ahead!";
 					}
+                    else if (threatDirectionFactor < -0.9) //within ~28 degrees behind
+                    {
+                        float threatDistance = threatRelativePosition.magnitude;
+                        if(threatDistance > 800)
+                        {
+                            breakTarget = vesselTransform.position + vesselTransform.up * 1500 - 500 * vessel.upAxis;
+                            breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 1000 - Mathf.Cos((float)vessel.missionTime / 2) * vesselTransform.forward * 1000;
+                            debugString += " from behind afar; engaging barrel roll";
+                        }
+                        else if (threatDistance < 400)
+                        {
+                            breakTarget = threatRelativePosition;
+                            if (evasiveTimer < 1.5f)
+                                breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 500;
+                            else
+                                breakTarget += -Math.Sign(Mathf.Sin((float)vessel.missionTime * 2)) * vesselTransform.right * 150;
+                            debugString += " from directly behind and close; breaking hard";
+                            steerMode = SteerModes.Aiming;
+                        }
+                        else
+                        {
+                            breakTarget = threatRelativePosition;
+                            if (evasiveTimer < 1f)
+                                breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 500;
+                            else if (evasiveTimer < 2f)
+                                breakTarget += -Math.Sign(Mathf.Sin((float)vessel.missionTime * 2)) * vesselTransform.right * 150;
+                            else
+                                breakTarget += Math.Sign(Mathf.Sin((float)vessel.missionTime * 2)) * vesselTransform.right * 150;
+
+                            debugString += " from directly behind and moderate distance; breaking wildly";
+                            steerMode = SteerModes.Aiming;
+                        }
+                    }
+                    else
+                    {
+                        float threatDistance = threatRelativePosition.magnitude;
+                        if(threatDistance < 800)
+                        {
+                            breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 100;
+                            debugString += " from the side; breaking in";
+                            steerMode = SteerModes.Aiming;
+                        }
+                        else
+                        {
+                            breakTarget = vesselTransform.position + vesselTransform.up * 1500;
+                            breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 1000 - Mathf.Cos((float)vessel.missionTime / 2) * vesselTransform.forward * 1000;
+                            debugString += " from far side; engaging barrel roll";
+                        }
+                    }
+
+                    float threatAltitudeDiff = Vector3.Dot(threatRelativePosition, vessel.upAxis);
+                    if (threatAltitudeDiff > 500)
+                        breakTarget += threatAltitudeDiff * vessel.upAxis;      //if it's trying to spike us from below, don't go crazy trying to dive below it
+                    else
+                        breakTarget += - 150 * vessel.upAxis;   //dive a bit to escape
+
+					FlyToPosition(s, breakTarget);
+					return;
+					
 				}
 				else if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance < 200)
 				{
@@ -1587,10 +1604,13 @@ namespace BahaTurret
             vertFactor += (((float)vessel.srfSpeed / minSpeed) - 2f) * 0.3f;          //speeds greater than 2x minSpeed encourage going upwards; below encourages downwards
             vertFactor += (((targetPosition - vesselTransform.position).magnitude / 1000f) - 1f) * 0.3f;    //distances greater than 1000m encourage going upwards; closer encourages going downwards
             vertFactor -= Mathf.Clamp01(Vector3.Dot(vesselTransform.position - targetPosition, upDirection) / 1600f - 1f) * 0.5f;       //being higher than 1600m above a target encourages going downwards
-            vertFactor += Vector3.Dot(targetVessel.srf_velocity / targetVessel.srfSpeed, (targetVessel.ReferenceTransform.position - vesselTransform.position).normalized) * 0.3f;   //the target moving away from us encourages upward motion, moving towards us encourages downward motion
+            if (targetVessel)
+                vertFactor += Vector3.Dot(targetVessel.srf_velocity / targetVessel.srfSpeed, (targetVessel.ReferenceTransform.position - vesselTransform.position).normalized) * 0.3f;   //the target moving away from us encourages upward motion, moving towards us encourages downward motion
+            else
+                vertFactor += 0.4f;
             vertFactor -= weaponManager.underFire ? 0.5f : 0;   //being under fire encourages going downwards as well, to gain energy
 
-            //float alt = MissileGuidance.GetRadarAltitude(vessel);
+            float alt = MissileGuidance.GetRadarAltitude(vessel);
 
             if (vertFactor > 2)
                 vertFactor = 2;
@@ -1632,7 +1652,11 @@ namespace BahaTurret
 			}
             else if(steerMode != SteerModes.Aiming)
             {
-                targetPosition += upDirection * Math.Min((targetPosition - vesselTransform.position).magnitude, 1000) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                float distance = (targetPosition - vesselTransform.position).magnitude;
+                if (vertFactor < 0)
+                    distance = Math.Min(distance, Math.Abs((alt - minAlt) / vertFactor));
+
+                targetPosition += upDirection * Math.Min(distance, 1000) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
                 /*if (vertFactor < 0)
                     targetPosition += upDirection * Math.Min((alt - minAltitude), (targetPosition - vesselTransform.position).magnitude) * 0.2f * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
                 else
