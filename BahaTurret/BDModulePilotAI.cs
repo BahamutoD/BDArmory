@@ -474,7 +474,7 @@ namespace BahaTurret
 			{
 				if(evasiveTimer < 1)
 				{
-					threatDirection = vessel.srf_velocity.normalized + vesselTransform.right;
+					threatRelativePosition = vessel.srf_velocity.normalized + vesselTransform.right;
 
 					if(weaponManager)
 					{
@@ -499,13 +499,13 @@ namespace BahaTurret
 							}
 							if(missileThreatDetected)
 							{
-								threatDirection = missileThreat - vesselTransform.position;
+								threatRelativePosition = missileThreat - vesselTransform.position;
 							}
 						}
 
 						if(weaponManager.underFire)
 						{
-							threatDirection = weaponManager.incomingThreatPosition - vesselTransform.position;
+							threatRelativePosition = weaponManager.incomingThreatPosition - vesselTransform.position;
 						}
 					}
 				}
@@ -1132,7 +1132,7 @@ namespace BahaTurret
 			speedController.allowAfterburner = allowAfterburner;
 		}
 
-		Vector3 threatDirection;
+		Vector3 threatRelativePosition;
 		void Evasive(FlightCtrlState s)
 		{
 			currentStatus = "Evading";
@@ -1160,29 +1160,65 @@ namespace BahaTurret
 				if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance > 2000)
 				{
 					debugString += "\nBreaking from missile threat!";
-					Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
-					Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
+					Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
+					Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatRelativePosition;
 					//Vector3 breakTarget = vesselTransform.position + breakDirection;
 					RegainEnergy(s, breakDirection);
 					return;
 				}
 				else if(weaponManager.underFire)
 				{
-					if(evasiveTimer < 2)
+					if(evasiveTimer < 2.5)
 					{
-						debugString += "\nBreaking from gunfire!";
-						Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
+						debugString += "\nDodging gunfire";
+                        float threatDirectionFactor = Vector3.Dot(vesselTransform.up, threatRelativePosition.normalized);
+						//Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
 
-						if(Vector3.Angle(threatDirection, vesselTransform.up) < 10f)
+                        Vector3 breakTarget = threatRelativePosition * 1.5f;       //for the most part, we want to turn _towards_ the threat in order to increase the rel ang vel and get under its guns
+
+                        if (threatDirectionFactor > 0.985f)     //within 10 degrees in front
 						{
-							axis = Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * vessel.upAxis;
-							debugString += " Directly ahead!";
+                            breakTarget += Vector3.Cross(threatRelativePosition.normalized, Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * vessel.upAxis);
+							debugString += " from directly ahead!";
 						}
-						Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
-						Vector3 breakTarget = vesselTransform.position + breakDirection;
+                        else if (threatDirectionFactor < -0.95) //within ~18 degrees behind
+                        {
+                            float threatDistance = threatRelativePosition.magnitude;
+                            if(threatDistance > 800)
+                            {
+                                breakTarget = vesselTransform.position + vesselTransform.up * 1500;
+                                breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 150;
+                                debugString += " from behind afar; attempting to extend and dive away";
+                            }
+                            else if (threatDistance < 400)
+                            {
+                                breakTarget = threatRelativePosition - 100 * vessel.upAxis;
+                                breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 150;
+                                debugString += " from directly behind and close; breaking hard underneath";
+                            }
+                            else
+                            {
+                                breakTarget = threatRelativePosition - 100 * vessel.upAxis;
+                                breakTarget += Mathf.Sin((float)vessel.missionTime * 5) * vesselTransform.right * 500;
+                                debugString += " from directly behind and moderate distance; breaking wildly";
+                            }
+                        }
+                        else
+                        {
+                            float threatDistance = threatRelativePosition.magnitude;
+                            if(threatDistance < 800)
+                            {
+                                debugString += " from the side; breaking in and under opponent";
+                            }
+                            else
+                            {
+                                breakTarget = vesselTransform.position + vesselTransform.up * 1500;
+                                breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 50;
+                                debugString += " from far side; waiting for enemy to close before moving";
+                            }
+                        }
 
-
-
+                        breakTarget += - 250 * vessel.upAxis;   //dive a bit to escape
 						FlyToPosition(s, breakTarget);
 						return;
 					}
@@ -1535,10 +1571,11 @@ namespace BahaTurret
 
             float vertFactor = 0;
             float alt = MissileGuidance.GetRadarAltitude(vessel);
-            if ((vessel.srfSpeed > minSpeed * 1.5f || (weaponManager.TargetOverride && vessel.srfSpeed > minSpeed * 3)) && 
-                Vector3.Dot(targetPosition-vesselTransform.position, upDirection) > -1000 &&
-                ((targetPosition - vesselTransform.position).magnitude > 600 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.1f) || 
-                (Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0) &&
+            if ((weaponManager.TargetOverride && vessel.srfSpeed > minSpeed * 3) || 
+                (!weaponManager.TargetOverride && (vessel.srfSpeed > minSpeed * 1.5f)) && 
+                Vector3.Dot(targetPosition-vesselTransform.position, upDirection) > -1000 && (
+                ((targetPosition - vesselTransform.position).magnitude > 1200 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.5f) || 
+                (Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0)) &&
                 !weaponManager.underFire)      //go upwards in some way
             {
                 vertFactor = (float)vessel.srfSpeed / (minSpeed * 1.5f);
