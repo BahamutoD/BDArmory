@@ -700,7 +700,7 @@ namespace BahaTurret
 
             foreach (var target in TargetDatabase[team])
             {
-                if (target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+                if (target && target.Vessel)
                 {
                     if (finalTarget == null || (target.IsCloser(finalTarget, mf)))
                     {
