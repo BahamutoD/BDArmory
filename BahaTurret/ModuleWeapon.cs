@@ -750,7 +750,6 @@ namespace BahaTurret
 					Vector3 targetRelPos = (finalAimTarget)-fireTransform.position;
 					Vector3 aimDirection = fireTransform.forward;
                     float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
-                    Debug.Log(targetCosAngle + " " + maxAutoFireCosAngle);
 
                     if (targetCosAngle >= maxAutoFireCosAngle && BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, maxEffectiveDistance, 0.996f)) //~5 degrees of unsafe angle
 					{

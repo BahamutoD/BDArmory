@@ -2425,24 +2425,25 @@ namespace BahaTurret
                     TargetInfo nearbyFriendly = BDATargetManager.GetClosestFriendly(this);
                     TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
 
-                    if (nearbyThreat != null && nearbyFriendly != null)
-                    {
-                        if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
+                    if(nearbyThreat.team != BDATargetManager.BoolToTeam(this))          //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
+                        if (nearbyThreat != null && nearbyFriendly != null)
                         {
-                            this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
-                            nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
-                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName + " and took its target in return");
-                            //basically, swap targets to cover each other
+                            if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
+                            {
+                                this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
+                                nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName + " and took its target in return");
+                                //basically, swap targets to cover each other
+                            }
+                            else
+                            {
+                                //otherwise, continue engaging the current target for now
+                                nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName);
+                            }
                         }
-                        else
-                        {
-                            //otherwise, continue engaging the current target for now
-                            nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
-                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName);
-                        }
-                    }
                 } 
                 ufRoutine = StartCoroutine(UnderFireRoutine());
 			}
