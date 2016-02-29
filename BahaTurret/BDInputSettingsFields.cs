@@ -38,8 +38,9 @@ namespace BahaTurret
 		public static BDInputInfo RADAR_RANGE_DN = new BDInputInfo("Range -");
 
 
-		public static void SaveSettings(ConfigNode fileNode)
+		public static void SaveSettings()
 		{
+			ConfigNode fileNode = ConfigNode.Load(BDArmorySettings.settingsConfigURL);
 			if(!fileNode.HasNode("BDAInputSettings"))
 			{
 				fileNode.AddNode("BDAInputSettings");
@@ -54,10 +55,13 @@ namespace BahaTurret
 				string valueString = ((BDInputInfo)fields[i].GetValue(null)).inputString;
 				cfg.SetValue(fieldName, valueString, true);
 			}
+
+			fileNode.Save(BDArmorySettings.settingsConfigURL);
 		}
 
-		public static void LoadSettings(ConfigNode fileNode)
+		public static void LoadSettings()
 		{
+			ConfigNode fileNode = ConfigNode.Load(BDArmorySettings.settingsConfigURL);
 			if(!fileNode.HasNode("BDAInputSettings"))
 			{
 				fileNode.AddNode("BDAInputSettings");
@@ -76,6 +80,8 @@ namespace BahaTurret
 					fields[i].SetValue(null, loaded);
 				}
 			}
+
+			fileNode.Save(BDArmorySettings.settingsConfigURL);
 		}
 	}
 }

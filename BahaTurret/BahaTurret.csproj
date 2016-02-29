@@ -114,6 +114,7 @@
     <Compile Include="BDRotaryRail.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BDACompetitionMode.cs" />
+    <Compile Include="BDAPersistantSettingsField.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Animation\" />
