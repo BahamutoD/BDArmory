@@ -2431,12 +2431,16 @@ namespace BahaTurret
                         {
                             this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
                             nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName + " and took its target in return");
                             //basically, swap targets to cover each other
                         }
                         else
                         {
                             //otherwise, continue engaging the current target for now
                             nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName);
                         }
                     }
                 } 
