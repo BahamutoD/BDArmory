@@ -2600,7 +2600,6 @@ namespace BahaTurret
 						weapon.autoFireStartTime = Time.time;
 						weapon.autoFireDuration = targetScanInterval / 2;
 						weapon.autoRippleRate = rippleFire ? rippleRPM : 0;
-
 					}
 				}
 			}
@@ -3037,7 +3036,7 @@ namespace BahaTurret
 
 			if(!target.isMissile && target.weaponManager.pilotAI && target.weaponManager.pilotAI.pilotEnabled)
             {
-                if (vessel.LandedOrSplashed)
+				if (pilotAI && pilotAI.pilotEnabled && vessel.LandedOrSplashed)
                     return false;
             }
 				
