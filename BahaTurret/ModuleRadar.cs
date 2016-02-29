@@ -460,7 +460,7 @@ namespace BahaTurret
 				//UpdateInputs();
 			}
 
-			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED);
+			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
 
 			//UpdateSlaveData();
 		}
@@ -981,12 +981,10 @@ namespace BahaTurret
 		{
 			if(drawGUI)
 			{
-
 				if(boresightScan)
 				{
 					BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500 * transform.up), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
 				}
-
 			}
 		}
 

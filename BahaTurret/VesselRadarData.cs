@@ -463,7 +463,7 @@ namespace BahaTurret
 				linkCapabilityDirty = false;
 			}
 
-			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && rCount > 0 && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED);
+			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && rCount > 0 && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
 
 			if(!vessel.loaded && radarCount == 0)
 			{
