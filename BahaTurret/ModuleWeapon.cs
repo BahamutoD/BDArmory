@@ -196,6 +196,7 @@ namespace BahaTurret
 		private Vector3 targetVelocity;
 		private Vector3 targetAcceleration;
 		Vector3 finalAimTarget;
+        Vector3 lastFinalAimTarget;
 		public Vessel legacyTargetVessel;
 		bool targetAcquired = false;
 		
@@ -751,8 +752,19 @@ namespace BahaTurret
 					Vector3 aimDirection = fireTransform.forward;
                     float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
 
+                    Vector3 targetDiffVec = finalAimTarget - lastFinalAimTarget;
+                    Vector3 projectedTargetPos = targetDiffVec;
+                    //projectedTargetPos /= TimeWarp.fixedDeltaTime;
+                    //projectedTargetPos *= TimeWarp.fixedDeltaTime;
+                    projectedTargetPos *= 2;        //project where the target will be in 2 timesteps
+                    projectedTargetPos += finalAimTarget;
+
+                    targetDiffVec.Normalize();
+                    Vector3 lastTargetRelPos = (lastFinalAimTarget) - fireTransform.position;
+
                     if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) &&  //~1 degree of unsafe angle
-                        (targetCosAngle >= maxAutoFireCosAngle))          //check if directly on target
+                        (targetCosAngle >= maxAutoFireCosAngle || //check if directly on target
+                        Vector3.Dot(targetDiffVec, targetRelPos) * Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0))          //check if target will pass this point soon
 					{
 						autoFire = true;
 					}
@@ -773,6 +785,7 @@ namespace BahaTurret
 					legacyTargetVessel = null;
 				}
 			}
+            lastFinalAimTarget = finalAimTarget;
 		}
 			
 

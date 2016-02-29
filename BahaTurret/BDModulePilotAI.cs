@@ -551,7 +551,7 @@ namespace BahaTurret
 
 					debugString += "\nturningTimer: " + turningTimer;
 
-                    float targetForwardDot = Vector3.Dot(targetVesselRelPos, vesselTransform.up);
+                    float targetForwardDot = Vector3.Dot(targetVesselRelPos.normalized, vesselTransform.up);
                     float targetVelFrac = (float)(targetVessel.srfSpeed / vessel.srfSpeed);      //this is the ratio of the target vessel's velocity to this vessel's srfSpeed in the forward direction; this allows smart decisions about when to break off the attack
 
                     if (targetVelFrac < 0.8f && targetForwardDot < 0.2f && targetVesselRelPos.magnitude < 400)
