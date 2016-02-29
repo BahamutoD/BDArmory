@@ -208,8 +208,8 @@ namespace BahaTurret
 		[KSPField]
 		public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
-		//AI will fire gun if target is within this angle(degrees) of barrel
-		public float maxAutoFireAngle = 2;
+		//AI will fire gun if target is within this Cos(angle) of barrel
+        public float maxAutoFireCosAngle = 0.9993908f;   //corresponds to ~2 degrees
 		
 		//aimer textures
 		Vector3 pointingAtPosition;
@@ -748,11 +748,11 @@ namespace BahaTurret
 				if(targetAcquired && aiControlled)
 				{
 					Transform fireTransform = fireTransforms[0];
-					Vector3 targetDirection = (finalAimTarget)-fireTransform.position;
+					Vector3 targetRelPos = (finalAimTarget)-fireTransform.position;
 					Vector3 aimDirection = fireTransform.forward;
-					float targetAngle = Vector3.Angle(aimDirection, targetDirection);
+                    float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
 
-					if(targetAngle < maxAutoFireAngle)
+                    if (targetCosAngle > maxAutoFireCosAngle && BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, maxEffectiveDistance, 0.996f)) //~5 degrees of unsafe angle
 					{
 						autoFire = true;
 					}

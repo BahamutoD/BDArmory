@@ -2209,7 +2209,7 @@ namespace BahaTurret
 					{
 						weapon.EnableWeapon();
 						weapon.aiControlled = true;
-						weapon.maxAutoFireAngle = vessel.LandedOrSplashed ? 2 : 4;
+						weapon.maxAutoFireCosAngle = vessel.LandedOrSplashed ? 2 : 4;
 					}
 				}
 

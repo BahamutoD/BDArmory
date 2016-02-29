@@ -44,7 +44,7 @@ namespace BahaTurret
 		{
 			get
 			{
-				return vessel.transform.position;
+				return vessel.vesselTransform.position;
 			}
 		}
 
