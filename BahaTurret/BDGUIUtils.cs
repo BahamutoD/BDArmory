@@ -70,6 +70,33 @@ namespace BahaTurret
 		{
 			Camera cam = GetMainCamera();
 			GUI.matrix = Matrix4x4.identity;
+
+			bool aBehind = false;
+
+			Plane clipPlane = new Plane(cam.transform.forward, cam.transform.position + cam.transform.forward * 0.05f);
+
+			if(Vector3.Dot(cam.transform.forward, worldPosA-cam.transform.position) < 0)
+			{
+				Ray ray = new Ray(worldPosB, worldPosA - worldPosB);
+				float dist;
+				if(clipPlane.Raycast(ray, out dist))
+				{
+					worldPosA = ray.GetPoint(dist);
+				}
+				aBehind = true;
+			}
+			if(Vector3.Dot(cam.transform.forward, worldPosB-cam.transform.position) < 0)
+			{
+				if(aBehind) return;
+
+				Ray ray = new Ray(worldPosA, worldPosB - worldPosA);
+				float dist;
+				if(clipPlane.Raycast(ray, out dist))
+				{
+					worldPosB = ray.GetPoint(dist);
+				}
+			}
+
 			Vector3 screenPosA = cam.WorldToViewportPoint(worldPosA);
 			screenPosA.x = screenPosA.x*Screen.width;
 			screenPosA.y = (1-screenPosA.y)*Screen.height;
@@ -77,7 +104,6 @@ namespace BahaTurret
 			screenPosB.x = screenPosB.x*Screen.width;
 			screenPosB.y = (1-screenPosB.y)*Screen.height;
 
-			if(screenPosA.z < 0 && screenPosB.z < 0) return;
 			screenPosA.z = screenPosB.z = 0;
 
 			float angle = Vector2.Angle(Vector3.up, screenPosB - screenPosA);
