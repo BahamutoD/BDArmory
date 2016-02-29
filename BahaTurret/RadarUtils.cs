@@ -349,6 +349,8 @@ namespace BahaTurret
 			results.foundAGM = false;
 			results.firingAtMe = false;
 			results.missileThreatDistance = float.MaxValue;
+            results.threatVessel = null;
+            results.threatWeaponManager = null;
 
 			if(!myWpnManager || !referenceTransform)
 			{
@@ -430,20 +432,23 @@ namespace BahaTurret
 							else
 							{
 								//check if its shooting guns at me
-								if(!results.firingAtMe)
-								{
+								//if(!results.firingAtMe)       //more work, but we can't afford to be incorrect picking the closest threat
+								//{
 									foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
 									{
 										if(!weapon.recentlyFiring) continue;
 										if(Vector3.Dot(weapon.fireTransforms[0].forward, vesselDirection) > 0) continue;
 
-										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance)
+										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.vessel.ReferenceTransform.position - position).magnitude < (results.threatPosition - position).magnitude))
 										{
 											results.firingAtMe = true;
 											results.threatPosition = weapon.vessel.transform.position;
+                                            results.threatVessel = weapon.vessel;
+                                            results.threatWeaponManager = weapon.weaponManager;
+                                            break;
 										}
 									}
-								}
+								//}
 							}
 						}
 					}

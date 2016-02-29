@@ -677,23 +677,100 @@ namespace BahaTurret
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
+            float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
+
 			foreach(var target in TargetDatabase[team])
 			{
 				if(target.numFriendliesEngaging >= 2) continue;
 				if(target && target.Vessel && !target.isLanded && !target.isMissile)
 				{
-					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
+                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+                    float targetSuitability = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);       //prefer targets ahead to those behind
+                    targetSuitability += 500 / (targetRelPos.magnitude + 100);
+
+                    if (finalTarget == null || (target.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
 					{
 						finalTarget = target;
+                        finalTargetSuitability = targetSuitability;
 					}
 				}
 			}
 
 			return finalTarget;
 		}
-		 
 
-		public static TargetInfo GetClosestTarget(MissileFire mf)
+        //this will search for an AA target that is immediately in front of the AI during an extend when it would otherwise be helpless
+        public static TargetInfo GetAirToAirTargetAbortExtend(MissileFire mf, float maxDistance, float cosAngleCheck)
+        {
+            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+            TargetInfo finalTarget = null;
+
+            float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
+
+            foreach (var target in TargetDatabase[team])
+            {
+                if (target && target.Vessel && !target.isLanded && !target.isMissile)
+                {
+                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+
+                    float distance, dot;
+                    distance = targetRelPos.magnitude;
+                    dot = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);
+
+                    if (distance > maxDistance || cosAngleCheck > dot)
+                        continue;
+
+                    float targetSuitability = dot;       //prefer targets ahead to those behind
+                    targetSuitability += 500 / (distance + 100);        //same suitability check as above
+
+                    if (finalTarget == null || targetSuitability > finalTargetSuitability)      //just pick the most suitable one
+                    {
+                        finalTarget = target;
+                        finalTargetSuitability = targetSuitability;
+                    }
+                }
+            }
+
+            return finalTarget;
+        }
+        
+        //returns the nearest friendly target
+        public static TargetInfo GetClosestFriendly(MissileFire mf)
+        {
+            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            TargetInfo finalTarget = null;
+
+            foreach (var target in TargetDatabase[team])
+            {
+                if (target && target.Vessel && target.weaponManager != mf)
+                {
+                    if (finalTarget == null || (target.IsCloser(finalTarget, mf)))
+                    {
+                        finalTarget = target;
+                    }
+                }
+            }
+
+            return finalTarget;
+        }
+
+        //returns the target that owns this weapon manager
+        public static TargetInfo GetTargetFromWeaponManager(MissileFire mf)
+        {
+            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+
+            foreach (var target in TargetDatabase[team])
+            {
+                if (target && target.Vessel && target.weaponManager == mf)
+                {
+                    return target;
+                }
+            }
+
+            return null;
+        }
+
+        public static TargetInfo GetClosestTarget(MissileFire mf)
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
@@ -825,6 +902,28 @@ namespace BahaTurret
 			return finalTarget;
 		}
 
+        //checks to see if a friendly is too close to the gun trajectory to fire them
+        public static bool CheckSafeToFireGuns(MissileFire weaponManager, Vector3 aimDirection, float safeDistance, float cosUnsafeAngle)
+        {
+            BDArmorySettings.BDATeams team = weaponManager.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            foreach (var friendlyTarget in TargetDatabase[team])
+            {
+                if (friendlyTarget && friendlyTarget.Vessel)
+                {
+                    float friendlyPosDot = Vector3.Dot(friendlyTarget.position - weaponManager.vessel.vesselTransform.position, aimDirection);
+                    if (friendlyPosDot > 0)  //only bother if the friendly is actually in front of us
+                    {
+                        float friendlyDistance = (friendlyTarget.position - weaponManager.vessel.vesselTransform.position).magnitude;
+                        float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
+
+                        if (friendlyDistance < safeDistance && cosUnsafeAngle < friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
+                            return false;
+                    }
+                }
+            }
+
+            return true;
+        }
 
 
 		void OnGUI()

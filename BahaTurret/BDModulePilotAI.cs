@@ -29,7 +29,12 @@ namespace BahaTurret
 		bool requestedExtend = false;
 		Vector3 requestedExtendTpos;
 
-		public bool isLeadingFormation = false;
+        public bool IsExtending
+        {
+            get { return extending || requestedExtend; }
+        }
+        
+        public bool isLeadingFormation = false;
 
 		public void RequestExtend(Vector3 tPosition)
 		{
@@ -114,11 +119,20 @@ namespace BahaTurret
 		public bool standbyMode = false;
 
         //manueuverability and g loading data
+        float maxDynPresGRecorded = 0;
+
         float maxPosG = 0;
         float cosAoAAtMaxPosG = 0;
 
         float maxNegG = 0;
         float cosAoAAtMaxNegG = 0;
+
+        float[] gLoadMovingAvgArray = new float[32];
+        float[] cosAoAMovingAvgArray = new float[32];
+        int movingAvgIndex = 0;
+
+        float gLoadMovingAvg = 0;
+        float cosAoAMovingAvg = 0;
 
         float gaoASlopePerDynPres = 0;        //used to limit control input at very high dynamic pressures to avoid structural failure
         float gOffsetPerDynPres = 0;
@@ -442,6 +456,7 @@ namespace BahaTurret
 			}
             UpdateGAndAoALimits(s);
             AdjustPitchForGAndAoALimits(s);
+
 		}
 
 		void UpdateAI(FlightCtrlState s)
@@ -467,7 +482,7 @@ namespace BahaTurret
 			{
 				if(evasiveTimer < 1)
 				{
-					threatDirection = vessel.srf_velocity.normalized + vesselTransform.right;
+					threatRelativePosition = vessel.srf_velocity.normalized + vesselTransform.right;
 
 					if(weaponManager)
 					{
@@ -492,13 +507,13 @@ namespace BahaTurret
 							}
 							if(missileThreatDetected)
 							{
-								threatDirection = missileThreat - vesselTransform.position;
+								threatRelativePosition = missileThreat - vesselTransform.position;
 							}
 						}
 
 						if(weaponManager.underFire)
 						{
-							threatDirection = weaponManager.incomingThreatPosition - vesselTransform.position;
+							threatRelativePosition = weaponManager.incomingThreatPosition - vesselTransform.position;
 						}
 					}
 				}
@@ -517,14 +532,15 @@ namespace BahaTurret
 				evasiveTimer = 0;
 				if(!targetVessel.LandedOrSplashed)
 				{
-					if(vessel.altitude < defaultAltitude && Vector3.Angle(targetVessel.transform.position - vessel.transform.position, -upDirection) < 35)
+                    Vector3 targetVesselRelPos = targetVessel.vesselTransform.position - vesselTransform.position;
+                    if (vessel.altitude < defaultAltitude && Vector3.Angle(targetVesselRelPos, -upDirection) < 35)
 					{
 						//dangerous if low altitude and target is far below you - don't dive into ground!
 						extending = true;
-						lastTargetPosition = targetVessel.transform.position;
+                        lastTargetPosition = targetVessel.vesselTransform.position;
 					}
 
-					if(Vector3.Angle(targetVessel.transform.position - vesselTransform.position, vesselTransform.up) > 35)
+                    if (Vector3.Angle(targetVessel.vesselTransform.position - vesselTransform.position, vesselTransform.up) > 35)
 					{
 						turningTimer += Time.deltaTime;
 					}
@@ -535,13 +551,23 @@ namespace BahaTurret
 
 					debugString += "\nturningTimer: " + turningTimer;
 
+                    float targetForwardDot = Vector3.Dot(targetVesselRelPos.normalized, vesselTransform.up);
+                    float targetVelFrac = (float)(targetVessel.srfSpeed / vessel.srfSpeed);      //this is the ratio of the target vessel's velocity to this vessel's srfSpeed in the forward direction; this allows smart decisions about when to break off the attack
+
+                    if (targetVelFrac < 0.8f && targetForwardDot < 0.2f && targetVesselRelPos.magnitude < 400)
+                    {
+                        extending = true;
+                        lastTargetPosition = targetVessel.vesselTransform.position - vessel.srf_velocity;       //we'll set our last target pos based on the enemy vessel and where we were 1 seconds ago
+                        weaponManager.ForceScan();
+                    }
 					if(turningTimer > 15)
 					{
 						//extend if turning circles for too long
 						//extending = true;
-						RequestExtend(targetVessel.transform.position);
+                        RequestExtend(targetVessel.vesselTransform.position);
 						turningTimer = 0;
-						//lastTargetPosition = targetVessel.transform.position;
+                        weaponManager.ForceScan();
+                        //lastTargetPosition = targetVessel.transform.position;
 					}
 				}
 				else //extend if too close for agm attack
@@ -553,7 +579,8 @@ namespace BahaTurret
 					{
 						extending = true;
 						lastTargetPosition = targetVessel.transform.position;
-					}
+                        weaponManager.ForceScan();
+                    }
 				}
 					
 
@@ -631,7 +658,7 @@ namespace BahaTurret
 				{
 					collisionDetectionTimer += Time.fixedDeltaTime;
 					Vector3 axis = -Vector3.Cross(vesselTransform.up, badDirection);
-					collisionAvoidDirection = Quaternion.AngleAxis(90, axis) * badDirection;
+					collisionAvoidDirection = Quaternion.AngleAxis(25, axis) * badDirection;        //don't need to change the angle that much to avoid, and it should prevent stupid suicidal manuevers as well
 
 					FlyAvoidCollision(s);
 					return true;
@@ -759,6 +786,18 @@ namespace BahaTurret
 							{
 								finalMaxSteer = GetSteerLimiterForSpeedAndPower();
 							}
+                            else
+                            {
+                                //figuring how much to lead the target's movement to get there after its movement assuming we can manage a constant speed turn
+                                //this only runs if we're not aiming and not that far from the target
+                                float curVesselMaxAccel = Math.Min(maxDynPresGRecorded * (float)vessel.dynamicPressurekPa, maxAllowedGForce * 9.81f);
+                                if (curVesselMaxAccel > 0)
+                                {
+                                    float timeToTurn = (float)vessel.srfSpeed * angleToTarget * Mathf.Deg2Rad / curVesselMaxAccel;
+                                    target += v.srf_velocity * timeToTurn;
+                                    //target += 0.5f * v.acceleration * timeToTurn * timeToTurn;
+                                }
+                            }
 						}
 
 						if(v.LandedOrSplashed)
@@ -1030,11 +1069,15 @@ namespace BahaTurret
 		{
 			if(weaponManager)
 			{
-				weaponManager.ForceWideViewScan();
-			}
+                if (weaponManager.TargetOverride)
+                {
+                    extending = false;
+                    weaponManager.ForceWideViewScan();
+                }
+                else
+				    weaponManager.ForceWideViewScan();
+			    
 
-			if(weaponManager)
-			{
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
 
 				if(weaponManager.currentMissile && weaponManager.currentMissile.GetWeaponClass() == WeaponClasses.Bomb)
@@ -1042,9 +1085,9 @@ namespace BahaTurret
 					extendDistance = 4500;
 				}
 
-				if(targetVessel!=null && !targetVessel.LandedOrSplashed)
+			    if(targetVessel!=null && !targetVessel.LandedOrSplashed)      //this is just asking for trouble at 800m
 				{
-					extendDistance = 800;
+					extendDistance = 1600;
 				}
 
 				Vector3 srfVector = Vector3.ProjectOnPlane(vessel.transform.position - tPosition, upDirection);
@@ -1125,7 +1168,7 @@ namespace BahaTurret
 			speedController.allowAfterburner = allowAfterburner;
 		}
 
-		Vector3 threatDirection;
+		Vector3 threatRelativePosition;
 		void Evasive(FlightCtrlState s)
 		{
 			currentStatus = "Evading";
@@ -1153,32 +1196,78 @@ namespace BahaTurret
 				if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance > 2000)
 				{
 					debugString += "\nBreaking from missile threat!";
-					Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
-					Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
+					Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
+					Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatRelativePosition;
 					//Vector3 breakTarget = vesselTransform.position + breakDirection;
 					RegainEnergy(s, breakDirection);
 					return;
 				}
 				else if(weaponManager.underFire)
 				{
-					if(evasiveTimer < 2)
+					debugString += "\nDodging gunfire";
+                    float threatDirectionFactor = Vector3.Dot(vesselTransform.up, threatRelativePosition.normalized);
+					//Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
+
+                    Vector3 breakTarget = threatRelativePosition * 2f;       //for the most part, we want to turn _towards_ the threat in order to increase the rel ang vel and get under its guns
+
+                    if (threatDirectionFactor > 0.9f)     //within 28 degrees in front
 					{
-						debugString += "\nBreaking from gunfire!";
-						Vector3 axis = -Vector3.Cross(vesselTransform.up, threatDirection);
-
-						if(Vector3.Angle(threatDirection, vesselTransform.up) < 10f)
-						{
-							axis = Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * vessel.upAxis;
-							debugString += " Directly ahead!";
-						}
-						Vector3 breakDirection = Quaternion.AngleAxis(90, axis) * threatDirection;
-						Vector3 breakTarget = vesselTransform.position + breakDirection;
-
-
-
-						FlyToPosition(s, breakTarget);
-						return;
+                        breakTarget += Vector3.Cross(threatRelativePosition.normalized, Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * vessel.upAxis);
+						debugString += " from directly ahead!";
 					}
+                    else if (threatDirectionFactor < -0.9) //within ~28 degrees behind
+                    {
+                        float threatDistance = threatRelativePosition.magnitude;
+                        if(threatDistance > 400)
+                        {
+                            breakTarget = vesselTransform.position + vesselTransform.up * 1500 - 500 * vessel.upAxis;
+                            breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 1000 - Mathf.Cos((float)vessel.missionTime / 2) * vesselTransform.forward * 1000;
+                            if(threatDistance > 800)
+                                debugString += " from behind afar; engaging barrel roll";
+                            else
+                            {
+                                debugString += " from behind moderate distance; engaging aggressvie barrel roll and braking";
+                                steerMode = SteerModes.Aiming;
+                                AdjustThrottle(minSpeed, true, false);
+                            }
+                        }
+                        else
+                        {
+                            breakTarget = threatRelativePosition;
+                            if (evasiveTimer < 1.5f)
+                                breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 500;
+                            else
+                                breakTarget += -Math.Sign(Mathf.Sin((float)vessel.missionTime * 2)) * vesselTransform.right * 150;
+                            debugString += " from directly behind and close; breaking hard";
+                            steerMode = SteerModes.Aiming;
+                        }
+                    }
+                    else
+                    {
+                        float threatDistance = threatRelativePosition.magnitude;
+                        if(threatDistance < 400)
+                        {
+                            breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 100;
+                            debugString += " from the side; breaking in";
+                            steerMode = SteerModes.Aiming;
+                        }
+                        else
+                        {
+                            breakTarget = vesselTransform.position + vesselTransform.up * 1500;
+                            breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 1000 - Mathf.Cos((float)vessel.missionTime / 2) * vesselTransform.forward * 1000;
+                            debugString += " from far side; engaging barrel roll";
+                        }
+                    }
+
+                    float threatAltitudeDiff = Vector3.Dot(threatRelativePosition, vessel.upAxis);
+                    if (threatAltitudeDiff > 500)
+                        breakTarget += threatAltitudeDiff * vessel.upAxis;      //if it's trying to spike us from below, don't go crazy trying to dive below it
+                    else
+                        breakTarget += - 150 * vessel.upAxis;   //dive a bit to escape
+
+					FlyToPosition(s, breakTarget);
+					return;
+					
 				}
 				else if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance < 200)
 				{
@@ -1195,7 +1284,6 @@ namespace BahaTurret
 			target +=
 				(Quaternion.AngleAxis(angleOff, upDirection) * Vector3.ProjectOnPlane(vesselTransform.up * 500, upDirection));
 				//+ (Mathf.Sin (Time.time/3) * upDirection * minAltitude/3);
-
 
 
 			FlyToPosition(s, target);
@@ -1269,16 +1357,36 @@ namespace BahaTurret
             float pitchG = -Vector3.Dot(vessel.acceleration, vessel.ReferenceTransform.forward);       //should provide g force in vessel up / down direction, assuming a standard plane
             float pitchGPerDynPres = pitchG / (float)vessel.dynamicPressurekPa;
 
-            float curCosAoA = Vector3.Dot(vessel.srf_velocity / vessel.srfSpeed, vessel.ReferenceTransform.forward);
-            if(pitchGPerDynPres < maxNegG || Math.Abs(curCosAoA - cosAoAAtMaxNegG) < 0.005f)
+            float curCosAoA = Vector3.Dot(vessel.srf_velocity.normalized, vessel.ReferenceTransform.forward);
+
+            //adjust moving averages
+            //adjust gLoad average
+            gLoadMovingAvg *= 32f;
+            gLoadMovingAvg -= gLoadMovingAvgArray[movingAvgIndex];
+            gLoadMovingAvgArray[movingAvgIndex] = pitchGPerDynPres;
+            gLoadMovingAvg += pitchGPerDynPres;
+            gLoadMovingAvg /= 32f;
+
+            //adjusting cosAoAAvg
+            cosAoAMovingAvg *= 32f;
+            cosAoAMovingAvg -= cosAoAMovingAvgArray[movingAvgIndex];
+            cosAoAMovingAvgArray[movingAvgIndex] = curCosAoA;
+            cosAoAMovingAvg += curCosAoA;
+            cosAoAMovingAvg /= 32f;
+
+            ++movingAvgIndex;
+            if (movingAvgIndex == gLoadMovingAvgArray.Length)
+                movingAvgIndex = 0;
+
+            if (gLoadMovingAvg < maxNegG || Math.Abs(cosAoAMovingAvg - cosAoAAtMaxNegG) < 0.005f)
             {
-                maxNegG = pitchGPerDynPres;
-                cosAoAAtMaxNegG = curCosAoA;
+                maxNegG = gLoadMovingAvg;
+                cosAoAAtMaxNegG = cosAoAMovingAvg;
             }
-            if (pitchGPerDynPres > maxPosG || Math.Abs(curCosAoA - cosAoAAtMaxPosG) < 0.005f)
+            if (gLoadMovingAvg > maxPosG || Math.Abs(cosAoAMovingAvg - cosAoAAtMaxPosG) < 0.005f)
             {
-                maxPosG = pitchGPerDynPres;
-                cosAoAAtMaxPosG = curCosAoA;
+                maxPosG = gLoadMovingAvg;
+                cosAoAAtMaxPosG = cosAoAMovingAvg;
             }
 
             if(cosAoAAtMaxNegG >= cosAoAAtMaxPosG)
@@ -1287,6 +1395,9 @@ namespace BahaTurret
                 gOffsetPerDynPres = gaoASlopePerDynPres = 0;
                 return;
             }
+
+            if (maxPosG > maxDynPresGRecorded)
+                maxDynPresGRecorded = maxPosG;
 
             float aoADiff = cosAoAAtMaxPosG - cosAoAAtMaxNegG;
 
@@ -1304,10 +1415,11 @@ namespace BahaTurret
             //debugString += "\nMax Pos G: " + maxPosG + " @ " + cosAoAAtMaxPosG;
             //debugString += "\nMax Neg G: " + maxNegG + " @ " + cosAoAAtMaxNegG;
 
-            if (gaoASlopePerDynPres == 0 || vessel.srfSpeed < takeOffSpeed)         //if the slope is 0, ignore it
+            if (vessel.LandedOrSplashed || vessel.srfSpeed < Math.Min(minSpeed, takeOffSpeed))         //if we're going too slow, don't use this
             {
-                negPitchDynPresLimitIntegrator = -1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
-                posPitchDynPresLimitIntegrator = 1f * 0.001f * 0.5f * 1.225f * takeOffSpeed * takeOffSpeed;
+                float speed = Math.Max(takeOffSpeed, minSpeed);
+                negPitchDynPresLimitIntegrator = -1f * 0.001f * 0.5f * 1.225f * speed * speed;
+                posPitchDynPresLimitIntegrator = 1f * 0.001f * 0.5f * 1.225f * speed * speed;
                 return;
             }
 
@@ -1408,7 +1520,7 @@ namespace BahaTurret
                 {
                     negPitchDynPresLimitIntegrator -= (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
-                    maxNegG = currentG / (float)vessel.dynamicPressurekPa;
+                    maxNegG = currentG * invVesselDynPreskPa;
                     cosAoAAtMaxNegG = curCosAoA;
 
                     negPitchDynPresLimit = 0;
@@ -1427,7 +1539,7 @@ namespace BahaTurret
                 {
                     posPitchDynPresLimitIntegrator += (float)(0.15 * vessel.dynamicPressurekPa);        //jsut an override in case things break
 
-                    maxPosG = currentG / (float)vessel.dynamicPressurekPa;
+                    maxPosG = currentG * invVesselDynPreskPa;
                     cosAoAAtMaxPosG = curCosAoA;
 
                     posPitchDynPresLimit = 0;
@@ -1449,10 +1561,10 @@ namespace BahaTurret
 
         void CalculateAccelerationAndTurningCircle()
         {
-            //maxLiftAcceleration = gaoASlopePerDynPres * Math.Min(cosAoAAtMaxPosG, maxAllowedCosAoA) + gOffsetPerDynPres;
-           // maxLiftAcceleration *= (float)vessel.dynamicPressurekPa;       //maximum acceleration from lift that the vehicle can provide
+            maxLiftAcceleration = maxDynPresGRecorded;
+            maxLiftAcceleration *= (float)vessel.dynamicPressurekPa;       //maximum acceleration from lift that the vehicle can provide
 
-           // maxLiftAcceleration = Math.Min(maxLiftAcceleration, maxAllowedGForce * 9.81f);       //limit it to whichever is smaller, what we can provide or what we can handle
+            maxLiftAcceleration = Math.Min(maxLiftAcceleration, maxAllowedGForce * 9.81f);       //limit it to whichever is smaller, what we can provide or what we can handle
 			maxLiftAcceleration = maxAllowedGForce * 9.81f;
 
             if(maxLiftAcceleration > 0)
@@ -1505,18 +1617,75 @@ namespace BahaTurret
 			Vector3 forwardDirection = vesselTransform.up;
 			Vector3 targetDirection = (targetPosition - vesselTransform.position).normalized;
 
+            float vertFactor = 0;
+            vertFactor += (((float)vessel.srfSpeed / minSpeed) - 2f) * 0.3f;          //speeds greater than 2x minSpeed encourage going upwards; below encourages downwards
+            vertFactor += (((targetPosition - vesselTransform.position).magnitude / 1000f) - 1f) * 0.3f;    //distances greater than 1000m encourage going upwards; closer encourages going downwards
+            vertFactor -= Mathf.Clamp01(Vector3.Dot(vesselTransform.position - targetPosition, upDirection) / 1600f - 1f) * 0.5f;       //being higher than 1600m above a target encourages going downwards
+            if (targetVessel)
+                vertFactor += Vector3.Dot(targetVessel.srf_velocity / targetVessel.srfSpeed, (targetVessel.ReferenceTransform.position - vesselTransform.position).normalized) * 0.3f;   //the target moving away from us encourages upward motion, moving towards us encourages downward motion
+            else
+                vertFactor += 0.4f;
+            vertFactor -= weaponManager.underFire ? 0.5f : 0;   //being under fire encourages going downwards as well, to gain energy
+
+            float alt = MissileGuidance.GetRadarAltitude(vessel);
+
+            if (vertFactor > 2)
+                vertFactor = 2;
+            if (vertFactor < -2)
+                vertFactor = -2;
+
+            /*if ((weaponManager.TargetOverride && vessel.srfSpeed > minSpeed * 3) || 
+                (!weaponManager.TargetOverride && (vessel.srfSpeed > minSpeed * 1.5f)) && 
+                Vector3.Dot(targetPosition-vesselTransform.position, upDirection) > -1000 && (
+                ((targetPosition - vesselTransform.position).magnitude > 1200 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.5f) || 
+                (Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0)) &&
+                !weaponManager.underFire)      //go upwards in some way
+            {
+                vertFactor = (float)vessel.srfSpeed / (minSpeed * 1.5f);
+                --vertFactor;
+                vertFactor *= 0.8f;
+                vertFactor = Mathf.Clamp01(vertFactor);
+            }
+            else if(alt > minAltitude)
+            {
+                vertFactor = (alt - minAltitude) / (2 * turnRadius);
+                vertFactor = Mathf.Clamp01(vertFactor);
+                vertFactor = -vertFactor;
+            }*/
+
+            vertFactor += 0.15f * Mathf.Sin((float)vessel.missionTime * 0.25f);     //some randomness in there
+
+		    Vector3 projectedDirection = Vector3.ProjectOnPlane(forwardDirection, upDirection);
+			Vector3 projectedTargetDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
 			if(Vector3.Dot(targetDirection, forwardDirection) < 0)
 			{
-				Vector3 projectedDirection = Vector3.ProjectOnPlane(forwardDirection, upDirection);
-				Vector3 projectedTargetDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
 				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 165f)
 				{
-					targetPosition = vessel.transform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime/2)) * 45, upDirection)*(projectedDirection.normalized*200));
+                    targetPosition = vesselTransform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * 45, upDirection) * (projectedDirection.normalized * 200));
 					targetDirection = (targetPosition - vesselTransform.position).normalized;
 				}
-
-				targetPosition = vesselTransform.position + Vector3.RotateTowards(projectedDirection, Vector3.ProjectOnPlane(targetDirection, upDirection), 45*Mathf.Deg2Rad, 0).normalized*200;
+                
+				targetPosition = vesselTransform.position + Vector3.RotateTowards(projectedDirection, Vector3.ProjectOnPlane(targetDirection, upDirection) + upDirection * vertFactor, 45*Mathf.Deg2Rad, 0).normalized*200;
 			}
+            else if(steerMode != SteerModes.Aiming)
+            {
+                float distance = (targetPosition - vesselTransform.position).magnitude;
+                if (vertFactor < 0)
+                    distance = Math.Min(distance, Math.Abs((alt - minAlt) / vertFactor));
+
+                targetPosition += upDirection * Math.Min(distance, 1000) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                /*if (vertFactor < 0)
+                    targetPosition += upDirection * Math.Min((alt - minAltitude), (targetPosition - vesselTransform.position).magnitude) * 0.2f * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                else
+                {
+                    if(targetVessel)
+                        vertFactor *= (1f + Mathf.Clamp((float)(vessel.srfSpeed - targetVessel.srfSpeed), 0, float.PositiveInfinity) * 0.05f);
+                    if (Vector3.Dot(targetPosition - vesselTransform.position, upDirection) > 0)
+                        targetPosition += upDirection * Vector3.Dot(targetPosition - vesselTransform.position, upDirection) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                    else
+                        targetPosition += upDirection * (targetPosition - vesselTransform.position).magnitude * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+                }*/
+            }
 
 
 			if(MissileGuidance.GetRadarAltitude(vessel) > minAlt * 1.1f)

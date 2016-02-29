@@ -196,6 +196,7 @@ namespace BahaTurret
 		private Vector3 targetVelocity;
 		private Vector3 targetAcceleration;
 		Vector3 finalAimTarget;
+        Vector3 lastFinalAimTarget;
 		public Vessel legacyTargetVessel;
 		bool targetAcquired = false;
 		
@@ -208,8 +209,8 @@ namespace BahaTurret
 		[KSPField]
 		public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
-		//AI will fire gun if target is within this angle(degrees) of barrel
-		public float maxAutoFireAngle = 2;
+		//AI will fire gun if target is within this Cos(angle) of barrel
+        public float maxAutoFireCosAngle = 0.9993908f;   //corresponds to ~2 degrees
 		
 		//aimer textures
 		Vector3 pointingAtPosition;
@@ -596,16 +597,8 @@ namespace BahaTurret
 					{
 						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
 						{
-							if(useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
-							{
-								//timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
-								finalFire = false;
-							}
-							else
-							{
-								finalFire = true;
-							}
-						}
+                            finalFire = true;
+                        }
 					}
 					else
 					{
@@ -643,6 +636,7 @@ namespace BahaTurret
 			if(eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
 			if(finalFire)
 			{
+                
 				if(eWeaponType == WeaponTypes.Laser)
 				{
 					if(FireLaser())
@@ -663,7 +657,18 @@ namespace BahaTurret
 				}
 				else
 				{
-					Fire();
+                    if (useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
+                    {
+                        //timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
+                        finalFire = false;
+                    }
+                    else
+                    {
+                        finalFire = true;
+                    }
+
+                    if(finalFire)
+                        Fire();
 				}
 
 				finalFire = false;
@@ -743,11 +748,23 @@ namespace BahaTurret
 				if(targetAcquired && aiControlled)
 				{
 					Transform fireTransform = fireTransforms[0];
-					Vector3 targetDirection = (finalAimTarget)-fireTransform.position;
+					Vector3 targetRelPos = (finalAimTarget)-fireTransform.position;
 					Vector3 aimDirection = fireTransform.forward;
-					float targetAngle = Vector3.Angle(aimDirection, targetDirection);
+                    float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
 
-					if(targetAngle < maxAutoFireAngle)
+                    Vector3 targetDiffVec = finalAimTarget - lastFinalAimTarget;
+                    Vector3 projectedTargetPos = targetDiffVec;
+                    //projectedTargetPos /= TimeWarp.fixedDeltaTime;
+                    //projectedTargetPos *= TimeWarp.fixedDeltaTime;
+                    projectedTargetPos *= 2;        //project where the target will be in 2 timesteps
+                    projectedTargetPos += finalAimTarget;
+
+                    targetDiffVec.Normalize();
+                    Vector3 lastTargetRelPos = (lastFinalAimTarget) - fireTransform.position;
+
+                    if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) &&  //~1 degree of unsafe angle
+                        (targetCosAngle >= maxAutoFireCosAngle || //check if directly on target
+                        (Vector3.Dot(targetDiffVec, targetRelPos) * Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0 && targetCosAngle > 0)))          //check if target will pass this point soon
 					{
 						autoFire = true;
 					}
@@ -768,6 +785,7 @@ namespace BahaTurret
 					legacyTargetVessel = null;
 				}
 			}
+            lastFinalAimTarget = finalAimTarget;
 		}
 			
 
@@ -911,7 +929,7 @@ namespace BahaTurret
 					{
 						if(useRippleFire)
 						{
-							StartCoroutine(IncrementRippleIndex(initialFireDelay));
+							StartCoroutine(IncrementRippleIndex(initialFireDelay * TimeWarp.CurrentRate));
 						}
 
 						Transform fireTransform = fireTransforms[i];

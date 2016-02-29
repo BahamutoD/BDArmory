@@ -253,6 +253,12 @@ namespace BahaTurret
 		float targetScanTimer = 0;
 		Vessel guardTarget = null;
 		public TargetInfo currentTarget;
+        TargetInfo overrideTarget;       //used for setting target next guard scan for stuff like assisting teammates
+        float overrideTimer = 0;
+        public bool TargetOverride
+        {
+            get { return overrideTimer > 0; }
+        }
 
 		//AIPilot
 		public BDModulePilotAI pilotAI = null;
@@ -2203,7 +2209,7 @@ namespace BahaTurret
 					{
 						weapon.EnableWeapon();
 						weapon.aiControlled = true;
-						weapon.maxAutoFireAngle = vessel.LandedOrSplashed ? 2 : 4;
+                        weapon.maxAutoFireCosAngle = vessel.LandedOrSplashed ? 0.9993908f : 0.9975641f;     //2 : 4 degrees
 					}
 				}
 
@@ -2309,12 +2315,23 @@ namespace BahaTurret
 				}
 				SetCargoBays();
 			}
+
+            if(overrideTimer > 0)
+            {
+                overrideTimer -= TimeWarp.fixedDeltaTime;
+            }
+            else
+            {
+                overrideTimer = 0;
+                overrideTarget = null;
+            }
 		}
 			
 		Vector3 debugGuardViewDirection;
 		bool focusingOnTarget = false;
 		float focusingOnTargetTimer = 0;
 		public Vector3 incomingThreatPosition;
+        public Vessel incomingThreatVessel;
 		void UpdateGuardViewScan()
 		{
 			float finalMaxAngle = guardAngle / 2;
@@ -2383,6 +2400,7 @@ namespace BahaTurret
 			{
 				FireChaff();
 				incomingThreatPosition = results.threatPosition;
+                incomingThreatVessel = results.threatVessel;
 			}
 
 			if(results.foundAGM)
@@ -2404,7 +2422,32 @@ namespace BahaTurret
 				{
 					StopCoroutine(ufRoutine);
 				}
-				ufRoutine = StartCoroutine(UnderFireRoutine());
+                if (results.threatWeaponManager != null)
+                {
+                    TargetInfo nearbyFriendly = BDATargetManager.GetClosestFriendly(this);
+                    TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
+
+                    if (nearbyThreat != null && nearbyFriendly != null)
+                        if (nearbyThreat.weaponManager.team != this.team && nearbyFriendly.weaponManager.team == this.team)          //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
+                        {
+                            if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
+                            {
+                                this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
+                                nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName + " and took its target in return");
+                                //basically, swap targets to cover each other
+                            }
+                            else
+                            {
+                                //otherwise, continue engaging the current target for now
+                                nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName);
+                            }
+                        }
+                } 
+                ufRoutine = StartCoroutine(UnderFireRoutine());
 			}
 		}
 
@@ -2412,7 +2455,13 @@ namespace BahaTurret
 		{
 			focusingOnTarget = false;
 			focusingOnTargetTimer = 1;
-		}
+		}        
+
+        public void ForceScan()
+        {
+            targetScanTimer = -100;
+        }
+
 
 		IEnumerator ResetMissileThreatDistanceRoutine()
 		{
@@ -2965,16 +3014,13 @@ namespace BahaTurret
 				return false;
 			}
 
-			if(vessel.LandedOrSplashed)
-			{
-				foreach(var pilot in vessel.FindPartModulesImplementing<BDModulePilotAI>())
-				{
-					if(pilot && pilot.pilotEnabled)
-					{
-						return false;
-					}
-				}
-			}
+            if (target.weaponManager.pilotAI && target.weaponManager.pilotAI.pilotEnabled)
+            {
+                if (vessel.LandedOrSplashed)
+                    return false;
+            }
+				
+
 
 			float distance = Vector3.Distance(transform.position+vessel.srf_velocity, target.position+target.velocity); //take velocity into account (test)
 			if(distance < turretRange || (target.isMissile && distance < turretRange*1.5f))
@@ -3125,23 +3171,64 @@ namespace BahaTurret
 		{
 			List<TargetInfo> targetsTried = new List<TargetInfo>();
 
-			//if AIRBORNE, try to engage airborne target first
+            if (overrideTarget)      //begin by checking the override target, since that takes priority
+            {
+                targetsTried.Add(overrideTarget);
+                SetTarget(overrideTarget);
+                if(SmartPickWeapon(overrideTarget, gunRange))
+                {
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log(vessel.vesselName + " is engaging an override target with " + selectedWeapon);
+                    }
+                    overrideTimer = 15f;
+                    //overrideTarget = null;
+                    return;
+                }
+                else if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                {
+                    Debug.Log(vessel.vesselName + " is engaging an override target with failed to engage its override target!");
+                }
+            }
+            overrideTarget = null;      //null the override target if it cannot be used
+            
+            //if AIRBORNE, try to engage airborne target first
 			if(!vessel.LandedOrSplashed && !targetMissiles)
 			{
-				TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTarget(this);
-				if(potentialAirTarget)
-				{
-					targetsTried.Add(potentialAirTarget);
-					SetTarget(potentialAirTarget);
-					if(SmartPickWeapon(potentialAirTarget, gunRange))
-					{
-						if(BDArmorySettings.DRAW_DEBUG_LABELS)
-						{
-							Debug.Log(vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
-						}
-						return;
-					}
-				}
+                if (pilotAI.IsExtending)
+                {
+                    TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTargetAbortExtend(this, 1500, 0.2f);
+                    if (potentialAirTarget)
+                    {
+                        targetsTried.Add(potentialAirTarget);
+                        SetTarget(potentialAirTarget);
+                        if (SmartPickWeapon(potentialAirTarget, gunRange))
+                        {
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            {
+                                Debug.Log(vessel.vesselName + " is aborting extend and engaging an incoming airborne target with " + selectedWeapon);
+                            }
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTarget(this);
+                    if (potentialAirTarget)
+                    {
+                        targetsTried.Add(potentialAirTarget);
+                        SetTarget(potentialAirTarget);
+                        if (SmartPickWeapon(potentialAirTarget, gunRange))
+                        {
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            {
+                                Debug.Log(vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
+                            }
+                            return;
+                        }
+                    }
+                }
 			}
 
 			TargetInfo potentialTarget = null;
@@ -3353,6 +3440,12 @@ namespace BahaTurret
 
 			return matchFound;
 		}
+
+        public void SetOverrideTarget(TargetInfo target)
+        {
+            overrideTarget = target;
+            targetScanTimer = -100;     //force target update
+        }
 
 		void SetTarget(TargetInfo target)
 		{
