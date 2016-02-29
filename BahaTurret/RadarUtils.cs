@@ -397,12 +397,12 @@ namespace BahaTurret
 								if(missile = tInfo.missileModule)
 								{
 									results.foundMissile = true;
+									results.threatVessel = missile.vessel;
 									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missile.part.transform.position;
 									Vector3 relV = missile.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
 									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
 									if(missile.hasFired && missile.timeIndex > 1 && approaching && (missile.targetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
-										//Debug.Log("found missile targeting me");
 										if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
 										{
 											results.foundHeatMissile = true;

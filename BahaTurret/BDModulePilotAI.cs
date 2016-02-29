@@ -674,6 +674,12 @@ namespace BahaTurret
 
 		bool PredictCollisionWithVessel(Vessel v, float maxTime, float interval, out Vector3 badDirection)
 		{
+			if(v == weaponManager.incomingMissileVessel) //evasive will handle avoiding missiles
+			{
+				badDirection = Vector3.zero;
+				return false;
+			}
+
 			float time = Mathf.Min(0.5f, maxTime);
 			while(time < maxTime)
 			{
@@ -1193,7 +1199,7 @@ namespace BahaTurret
 				}
 
 
-				if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance > 2000)
+				if((weaponManager.isChaffing || weaponManager.isFlaring) && (weaponManager.incomingMissileDistance > 2000))
 				{
 					debugString += "\nBreaking from missile threat!";
 					Vector3 axis = -Vector3.Cross(vesselTransform.up, threatRelativePosition);
@@ -1269,12 +1275,24 @@ namespace BahaTurret
 					return;
 					
 				}
-				else if((weaponManager.isChaffing || weaponManager.isFlaring) && weaponManager.incomingMissileDistance < 200)
+				else if(weaponManager.incomingMissileVessel)
 				{
-					debugString += "Missile about to impact! pull!";
-					AdjustThrottle(maxSpeed, false, false);
-					FlyToPosition(s, vesselTransform.position + (100 * -vesselTransform.forward));
-					return;
+					float mSqrDist = Vector3.SqrMagnitude(weaponManager.incomingMissileVessel.transform.position - vesselTransform.position);
+					if(mSqrDist < 810000) //900m
+					{
+						debugString += "\nMissile about to impact! pull away!";
+						AdjustThrottle(maxSpeed, false, false);
+						Vector3 cross = Vector3.Cross(weaponManager.incomingMissileVessel.transform.position - vesselTransform.position, vessel.srf_velocity).normalized;
+						if(Vector3.Dot(cross, -vesselTransform.forward) < 0)
+						{
+							cross = -cross;
+						}
+						FlyToPosition(s, vesselTransform.position +(50*vessel.srf_velocity/vessel.srfSpeed)+ (100 * cross));
+						return;
+					}
+
+
+
 				}
 			}
 

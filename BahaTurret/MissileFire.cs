@@ -247,6 +247,7 @@ namespace BahaTurret
 		//missile warning
 		public bool missileIsIncoming = false;
 		public float incomingMissileDistance = float.MaxValue;
+		public Vessel incomingMissileVessel;
 		
 		
 		//guard mode vars
@@ -1969,6 +1970,11 @@ namespace BahaTurret
 					{
 						BDGUIUtils.DrawLineBetweenWorldPositions(part.transform.position, part.transform.position + (debugGuardViewDirection * 25), 2, Color.yellow);
 					}
+
+					if(incomingMissileVessel)
+					{
+						BDGUIUtils.DrawLineBetweenWorldPositions(part.transform.position, incomingMissileVessel.transform.position, 5, Color.cyan);
+					}
 				}
 
 
@@ -2394,13 +2400,28 @@ namespace BahaTurret
 					StartCoroutine(ResetMissileThreatDistanceRoutine());
 				}
 				incomingThreatPosition = results.threatPosition;
+
+				if(results.threatVessel)
+				{
+					if(!incomingMissileVessel || (incomingMissileVessel.transform.position - vessel.transform.position).sqrMagnitude > (results.threatVessel.transform.position - vessel.transform.position).sqrMagnitude)
+					{
+						incomingMissileVessel = results.threatVessel;
+					}
+				}
 			}
 
 			if(results.foundRadarMissile)
 			{
 				FireChaff();
 				incomingThreatPosition = results.threatPosition;
-                incomingThreatVessel = results.threatVessel;
+
+				if(results.threatVessel)
+				{
+					if(!incomingMissileVessel || (incomingMissileVessel.transform.position - vessel.transform.position).sqrMagnitude > (results.threatVessel.transform.position - vessel.transform.position).sqrMagnitude)
+					{
+						incomingMissileVessel = results.threatVessel;
+					}
+				}
 			}
 
 			if(results.foundAGM)
@@ -3014,7 +3035,7 @@ namespace BahaTurret
 				return false;
 			}
 
-            if (target.weaponManager.pilotAI && target.weaponManager.pilotAI.pilotEnabled)
+			if(!target.isMissile && target.weaponManager.pilotAI && target.weaponManager.pilotAI.pilotEnabled)
             {
                 if (vessel.LandedOrSplashed)
                     return false;
@@ -4276,7 +4297,15 @@ namespace BahaTurret
 
 		void RefreshModules()
 		{
+			foreach(var rad in radars)
+			{
+				rad.EnsureVesselRadarData();
+			}
 			radars = vessel.FindPartModulesImplementing<ModuleRadar>();
+			foreach(var rad in radars)
+			{
+				rad.EnsureVesselRadarData();
+			}
 			jammers = vessel.FindPartModulesImplementing<ModuleECMJammer>();
 			targetingPods = vessel.FindPartModulesImplementing<ModuleTargetingCamera>();
 		}
