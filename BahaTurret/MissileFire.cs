@@ -3412,6 +3412,7 @@ namespace BahaTurret
         public void SetOverrideTarget(TargetInfo target)
         {
             overrideTarget = target;
+            targetScanTimer = -100;     //force target update
         }
 
 		void SetTarget(TargetInfo target)

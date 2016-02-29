@@ -526,14 +526,15 @@ namespace BahaTurret
 				evasiveTimer = 0;
 				if(!targetVessel.LandedOrSplashed)
 				{
-					if(vessel.altitude < defaultAltitude && Vector3.Angle(targetVessel.transform.position - vessel.transform.position, -upDirection) < 35)
+                    Vector3 targetVesselRelPos = targetVessel.vesselTransform.position - vesselTransform.position;
+                    if (vessel.altitude < defaultAltitude && Vector3.Angle(targetVesselRelPos, -upDirection) < 35)
 					{
 						//dangerous if low altitude and target is far below you - don't dive into ground!
 						extending = true;
-						lastTargetPosition = targetVessel.transform.position;
+                        lastTargetPosition = targetVessel.vesselTransform.position;
 					}
 
-					if(Vector3.Angle(targetVessel.transform.position - vesselTransform.position, vesselTransform.up) > 35)
+                    if (Vector3.Angle(targetVessel.vesselTransform.position - vesselTransform.position, vesselTransform.up) > 35)
 					{
 						turningTimer += Time.deltaTime;
 					}
@@ -544,11 +545,19 @@ namespace BahaTurret
 
 					debugString += "\nturningTimer: " + turningTimer;
 
+                    float targetForwardDot = Vector3.Dot(targetVesselRelPos, vesselTransform.up);
+                    float targetVelForwardFrac = Vector3.Dot(vessel.srf_velocity, targetVessel.srf_velocity) / (float)(vessel.srfSpeed * targetVessel.srfSpeed);
+
+                    if (targetVelForwardFrac < 0.8f && Math.Abs(targetVelForwardFrac) < 2 && targetForwardDot < 0 && targetVesselRelPos.magnitude < 400)
+                    {
+                        extending = true;
+                        lastTargetPosition = targetVessel.vesselTransform.position;
+                    }
 					if(turningTimer > 15)
 					{
 						//extend if turning circles for too long
 						//extending = true;
-						RequestExtend(targetVessel.transform.position);
+                        RequestExtend(targetVessel.vesselTransform.position);
 						turningTimer = 0;
 						//lastTargetPosition = targetVessel.transform.position;
 					}
