@@ -677,14 +677,21 @@ namespace BahaTurret
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
+            float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
+
 			foreach(var target in TargetDatabase[team])
 			{
 				if(target.numFriendliesEngaging >= 2) continue;
 				if(target && target.Vessel && !target.isLanded && !target.isMissile)
 				{
-					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
+                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+                    float targetSuitability = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);       //prefer targets ahead to those behind
+                    targetSuitability += 500 / (targetRelPos.magnitude + 100);
+
+                    if (finalTarget == null || (target.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + 0.5f)
 					{
 						finalTarget = target;
+                        finalTargetSuitability = targetSuitability;
 					}
 				}
 			}
@@ -874,7 +881,7 @@ namespace BahaTurret
                         float friendlyDistance = (friendlyTarget.position - weaponManager.vessel.vesselTransform.position).magnitude;
                         float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
 
-                        if (friendlyDistance < safeDistance && cosUnsafeAngle > friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
+                        if (friendlyDistance < safeDistance && cosUnsafeAngle < friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
                             return false;
                     }
                 }

@@ -546,12 +546,12 @@ namespace BahaTurret
 					debugString += "\nturningTimer: " + turningTimer;
 
                     float targetForwardDot = Vector3.Dot(targetVesselRelPos, vesselTransform.up);
-                    float targetVelForwardFrac = Vector3.Dot(vessel.srf_velocity, targetVessel.srf_velocity) / (float)(vessel.srfSpeed * targetVessel.srfSpeed);
+                    float targetVelFrac = (float)(targetVessel.srfSpeed / vessel.srfSpeed);      //this is the ratio of the target vessel's velocity to this vessel's srfSpeed in the forward direction; this allows smart decisions about when to break off the attack
 
-                    if (targetVelForwardFrac < 0.8f && Math.Abs(targetVelForwardFrac) < 2 && targetForwardDot < 0 && targetVesselRelPos.magnitude < 400)
+                    if (targetVelFrac < 0.8f && targetForwardDot < 0.2f && targetVesselRelPos.magnitude < 400)
                     {
                         extending = true;
-                        lastTargetPosition = targetVessel.vesselTransform.position;
+                        lastTargetPosition = targetVessel.vesselTransform.position - vessel.srf_velocity * 2f;       //we'll set our last target pos based on the enemy vessel and where we were 2 seconds ago
                     }
 					if(turningTimer > 15)
 					{
@@ -1408,7 +1408,7 @@ namespace BahaTurret
             //debugString += "\nMax Pos G: " + maxPosG + " @ " + cosAoAAtMaxPosG;
             //debugString += "\nMax Neg G: " + maxNegG + " @ " + cosAoAAtMaxNegG;
 
-            if (gaoASlopePerDynPres == 0 || vessel.LandedOrSplashed || vessel.srfSpeed < Math.Min(minSpeed, takeOffSpeed))         //if the slope is 0, ignore it
+            if (vessel.LandedOrSplashed || vessel.srfSpeed < Math.Min(minSpeed, takeOffSpeed))         //if we're going too slow, don't use this
             {
                 float speed = Math.Max(takeOffSpeed, minSpeed);
                 negPitchDynPresLimitIntegrator = -1f * 0.001f * 0.5f * 1.225f * speed * speed;

@@ -751,7 +751,8 @@ namespace BahaTurret
 					Vector3 aimDirection = fireTransform.forward;
                     float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
 
-                    if (targetCosAngle >= maxAutoFireCosAngle && BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, maxEffectiveDistance, 0.996f)) //~5 degrees of unsafe angle
+                    if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) &&  //~1 degree of unsafe angle
+                        (targetCosAngle >= maxAutoFireCosAngle))          //check if directly on target
 					{
 						autoFire = true;
 					}

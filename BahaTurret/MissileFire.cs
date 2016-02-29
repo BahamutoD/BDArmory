@@ -2425,7 +2425,7 @@ namespace BahaTurret
                     TargetInfo nearbyFriendly = BDATargetManager.GetClosestFriendly(this);
                     TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
 
-                    if(nearbyThreat.team != BDATargetManager.BoolToTeam(this))          //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
+                    if(nearbyThreat.weaponManager.team != this.team && nearbyFriendly.weaponManager.team == this.team)          //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
                         if (nearbyThreat != null && nearbyFriendly != null)
                         {
                             if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
@@ -2453,6 +2453,7 @@ namespace BahaTurret
 		{
 			focusingOnTarget = false;
 			focusingOnTargetTimer = 1;
+            targetScanTimer = -100;
 		}
 
 		IEnumerator ResetMissileThreatDistanceRoutine()
