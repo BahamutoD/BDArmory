@@ -3034,12 +3034,12 @@ namespace BahaTurret
 				return false;
 			}
 
-			if(!target.isMissile && target.weaponManager.pilotAI && target.weaponManager.pilotAI.pilotEnabled)
-            {
-				if (pilotAI && pilotAI.pilotEnabled && vessel.LandedOrSplashed)
-                    return false;
-            }
-				
+
+			if(pilotAI && pilotAI.pilotEnabled && vessel.LandedOrSplashed)
+			{
+				return false;
+			}
+            
 
 
 			float distance = Vector3.Distance(transform.position+vessel.srf_velocity, target.position+target.velocity); //take velocity into account (test)
