@@ -2612,7 +2612,7 @@ namespace BahaTurret
 					{
 						weapon.legacyTargetVessel = guardTarget;
 						weapon.autoFireTimer = Time.time;
-						weapon.autoFireLength = targetScanInterval / 2;
+						weapon.autoFireLength = 3 * targetScanInterval / 4;
 					}
 				}
 			}
