@@ -764,7 +764,7 @@ namespace BahaTurret
 
                     if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) &&  //~1 degree of unsafe angle
                         (targetCosAngle >= maxAutoFireCosAngle || //check if directly on target
-                        Vector3.Dot(targetDiffVec, targetRelPos) * Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0))          //check if target will pass this point soon
+                        (Vector3.Dot(targetDiffVec, targetRelPos) * Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0 && targetCosAngle > 0)))          //check if target will pass this point soon
 					{
 						autoFire = true;
 					}
