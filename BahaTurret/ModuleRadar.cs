@@ -154,7 +154,27 @@ namespace BahaTurret
 		public bool lockingPitch = true;
 		public bool lockingYaw = true;
 
-		public MissileFire weaponManager;
+		private MissileFire wpmr;
+		public MissileFire weaponManager
+		{
+			get
+			{
+				if(wpmr == null || wpmr.vessel!=vessel)
+				{
+					wpmr = null;
+					foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
+					{
+						wpmr = mf;
+					}
+				}
+
+				return wpmr;
+			}
+			set
+			{
+				wpmr = value;
+			}
+		}
 
 		public VesselRadarData vesselRadarData;
 
@@ -176,7 +196,7 @@ namespace BahaTurret
 			Events["Toggle"].guiName = radarEnabled ? "Disable Radar" : "Enable Radar";
 		}
 
-		void EnsureVesselRadarData()
+		public void EnsureVesselRadarData()
 		{
 			myVesselID = vessel.id.ToString();
 
@@ -212,8 +232,6 @@ namespace BahaTurret
 
 
 			vesselRadarData.AddRadar(this);
-
-
 		}
 
 		public void DisableRadar()

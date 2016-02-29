@@ -1961,7 +1961,7 @@ namespace BahaTurret
 		
 		void OnGUI()
 		{
-			if(HighLogic.LoadedSceneIsFlight && vessel == FlightGlobals.ActiveVessel && BDArmorySettings.GAME_UI_ENABLED)
+			if(HighLogic.LoadedSceneIsFlight && vessel == FlightGlobals.ActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled)
 			{
 				//debug
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
@@ -4300,11 +4300,19 @@ namespace BahaTurret
 			foreach(var rad in radars)
 			{
 				rad.EnsureVesselRadarData();
+				if(rad.radarEnabled)
+				{
+					rad.EnableRadar();
+				}
 			}
 			radars = vessel.FindPartModulesImplementing<ModuleRadar>();
 			foreach(var rad in radars)
 			{
 				rad.EnsureVesselRadarData();
+				if(rad.radarEnabled)
+				{
+					rad.EnableRadar();
+				}
 			}
 			jammers = vessel.FindPartModulesImplementing<ModuleECMJammer>();
 			targetingPods = vessel.FindPartModulesImplementing<ModuleTargetingCamera>();
