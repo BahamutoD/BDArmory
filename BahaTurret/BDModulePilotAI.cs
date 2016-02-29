@@ -29,7 +29,12 @@ namespace BahaTurret
 		bool requestedExtend = false;
 		Vector3 requestedExtendTpos;
 
-		public bool isLeadingFormation = false;
+        public bool IsExtending
+        {
+            get { return extending || requestedExtend; }
+        }
+        
+        public bool isLeadingFormation = false;
 
 		public void RequestExtend(Vector3 tPosition)
 		{
@@ -451,6 +456,7 @@ namespace BahaTurret
 			}
             UpdateGAndAoALimits(s);
             AdjustPitchForGAndAoALimits(s);
+
 		}
 
 		void UpdateAI(FlightCtrlState s)
@@ -551,7 +557,8 @@ namespace BahaTurret
                     if (targetVelFrac < 0.8f && targetForwardDot < 0.2f && targetVesselRelPos.magnitude < 400)
                     {
                         extending = true;
-                        lastTargetPosition = targetVessel.vesselTransform.position - vessel.srf_velocity * 2f;       //we'll set our last target pos based on the enemy vessel and where we were 2 seconds ago
+                        lastTargetPosition = targetVessel.vesselTransform.position - vessel.srf_velocity;       //we'll set our last target pos based on the enemy vessel and where we were 1 seconds ago
+                        weaponManager.ForceScan();
                     }
 					if(turningTimer > 15)
 					{
@@ -559,7 +566,8 @@ namespace BahaTurret
 						//extending = true;
                         RequestExtend(targetVessel.vesselTransform.position);
 						turningTimer = 0;
-						//lastTargetPosition = targetVessel.transform.position;
+                        weaponManager.ForceScan();
+                        //lastTargetPosition = targetVessel.transform.position;
 					}
 				}
 				else //extend if too close for agm attack
@@ -571,7 +579,8 @@ namespace BahaTurret
 					{
 						extending = true;
 						lastTargetPosition = targetVessel.transform.position;
-					}
+                        weaponManager.ForceScan();
+                    }
 				}
 					
 
@@ -1067,7 +1076,7 @@ namespace BahaTurret
                 }
                 else
 				    weaponManager.ForceWideViewScan();
-			
+			    
 
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
 

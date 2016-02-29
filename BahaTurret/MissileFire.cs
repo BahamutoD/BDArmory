@@ -2455,8 +2455,13 @@ namespace BahaTurret
 		{
 			focusingOnTarget = false;
 			focusingOnTargetTimer = 1;
+		}        
+
+        public void ForceScan()
+        {
             targetScanTimer = -100;
-		}
+        }
+
 
 		IEnumerator ResetMissileThreatDistanceRoutine()
 		{
@@ -3009,16 +3014,13 @@ namespace BahaTurret
 				return false;
 			}
 
-			if(vessel.LandedOrSplashed)
-			{
-				foreach(var pilot in vessel.FindPartModulesImplementing<BDModulePilotAI>())
-				{
-					if(pilot && pilot.pilotEnabled)
-					{
-						return false;
-					}
-				}
-			}
+            if (target.weaponManager.pilotAI && target.weaponManager.pilotAI.pilotEnabled)
+            {
+                if (vessel.LandedOrSplashed)
+                    return false;
+            }
+				
+
 
 			float distance = Vector3.Distance(transform.position+vessel.srf_velocity, target.position+target.velocity); //take velocity into account (test)
 			if(distance < turretRange || (target.isMissile && distance < turretRange*1.5f))
@@ -3167,8 +3169,6 @@ namespace BahaTurret
 
 		void SmartFindTarget()
 		{
-
-
 			List<TargetInfo> targetsTried = new List<TargetInfo>();
 
             if (overrideTarget)      //begin by checking the override target, since that takes priority
@@ -3195,20 +3195,40 @@ namespace BahaTurret
             //if AIRBORNE, try to engage airborne target first
 			if(!vessel.LandedOrSplashed && !targetMissiles)
 			{
-				TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTarget(this);
-				if(potentialAirTarget)
-				{
-					targetsTried.Add(potentialAirTarget);
-					SetTarget(potentialAirTarget);
-					if(SmartPickWeapon(potentialAirTarget, gunRange))
-					{
-						if(BDArmorySettings.DRAW_DEBUG_LABELS)
-						{
-							Debug.Log(vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
-						}
-						return;
-					}
-				}
+                if (pilotAI.IsExtending)
+                {
+                    TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTargetAbortExtend(this, 1500, 0.2f);
+                    if (potentialAirTarget)
+                    {
+                        targetsTried.Add(potentialAirTarget);
+                        SetTarget(potentialAirTarget);
+                        if (SmartPickWeapon(potentialAirTarget, gunRange))
+                        {
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            {
+                                Debug.Log(vessel.vesselName + " is aborting extend and engaging an incoming airborne target with " + selectedWeapon);
+                            }
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTarget(this);
+                    if (potentialAirTarget)
+                    {
+                        targetsTried.Add(potentialAirTarget);
+                        SetTarget(potentialAirTarget);
+                        if (SmartPickWeapon(potentialAirTarget, gunRange))
+                        {
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            {
+                                Debug.Log(vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
+                            }
+                            return;
+                        }
+                    }
+                }
 			}
 
 			TargetInfo potentialTarget = null;

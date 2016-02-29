@@ -699,6 +699,41 @@ namespace BahaTurret
 			return finalTarget;
 		}
 
+        //this will search for an AA target that is immediately in front of the AI during an extend when it would otherwise be helpless
+        public static TargetInfo GetAirToAirTargetAbortExtend(MissileFire mf, float maxDistance, float cosAngleCheck)
+        {
+            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+            TargetInfo finalTarget = null;
+
+            float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
+
+            foreach (var target in TargetDatabase[team])
+            {
+                if (target && target.Vessel && !target.isLanded && !target.isMissile)
+                {
+                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+
+                    float distance, dot;
+                    distance = targetRelPos.magnitude;
+                    dot = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);
+
+                    if (distance > maxDistance || cosAngleCheck > dot)
+                        continue;
+
+                    float targetSuitability = dot;       //prefer targets ahead to those behind
+                    targetSuitability += 500 / (distance + 100);        //same suitability check as above
+
+                    if (finalTarget == null || targetSuitability > finalTargetSuitability)      //just pick the most suitable one
+                    {
+                        finalTarget = target;
+                        finalTargetSuitability = targetSuitability;
+                    }
+                }
+            }
+
+            return finalTarget;
+        }
+        
         //returns the nearest friendly target
         public static TargetInfo GetClosestFriendly(MissileFire mf)
         {
