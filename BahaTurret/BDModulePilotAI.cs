@@ -73,11 +73,11 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Altitude"),
 		 UI_FloatRange(minValue = 150f, maxValue = 1500, stepIncrement = 10f, scene = UI_Scene.All)]
-		public float minAltitude = 800;
+		public float minAltitude = 500f;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
 		 UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
-		public float steerMult = 14;
+		public float steerMult = 6;
 		//make a combat steer mult and idle steer mult
 		
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"),
@@ -86,7 +86,7 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"),
 		 UI_FloatRange(minValue = 1f, maxValue = 8f, stepIncrement = 0.5f, scene = UI_Scene.All)]
-		public float steerDamping = 5;
+		public float steerDamping = 3;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Speed"),
 		 UI_FloatRange(minValue = 125f, maxValue = 800f, stepIncrement = 1.0f, scene = UI_Scene.All)]
