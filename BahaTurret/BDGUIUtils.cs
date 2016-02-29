@@ -15,9 +15,21 @@ namespace BahaTurret
 	{
 		public static Texture2D pixel;
 
+		public static Camera GetMainCamera()
+		{
+			if(HighLogic.LoadedSceneIsFlight)
+			{
+				return FlightCamera.fetch.mainCamera;
+			}
+			else
+			{
+				return Camera.main;
+			}
+		}
+
 		public static void DrawTextureOnWorldPos(Vector3 worldPos, Texture texture, Vector2 size, float wobble)
 		{
-			Vector3 screenPos = Camera.main.WorldToViewportPoint(worldPos);
+			Vector3 screenPos = GetMainCamera().WorldToViewportPoint(worldPos);
 			if(screenPos.z < 0) return; //dont draw if point is behind camera
 			if(screenPos.x != Mathf.Clamp01(screenPos.x)) return; //dont draw if off screen
 			if(screenPos.y != Mathf.Clamp01(screenPos.y)) return;
@@ -35,7 +47,7 @@ namespace BahaTurret
 
 		public static bool WorldToGUIPos(Vector3 worldPos, out Vector2 guiPos)
 		{
-			Vector3 screenPos = Camera.main.WorldToViewportPoint(worldPos);
+			Vector3 screenPos = GetMainCamera().WorldToViewportPoint(worldPos);
 			bool offScreen = false;
 			if(screenPos.z < 0) offScreen = true; //dont draw if point is behind camera
 			if(screenPos.x != Mathf.Clamp01(screenPos.x)) offScreen = true; //dont draw if off screen
@@ -56,11 +68,12 @@ namespace BahaTurret
 
 		public static void DrawLineBetweenWorldPositions(Vector3 worldPosA, Vector3 worldPosB, float width, Color color)
 		{
+			Camera cam = GetMainCamera();
 			GUI.matrix = Matrix4x4.identity;
-			Vector3 screenPosA = Camera.main.WorldToViewportPoint(worldPosA);
+			Vector3 screenPosA = cam.WorldToViewportPoint(worldPosA);
 			screenPosA.x = screenPosA.x*Screen.width;
 			screenPosA.y = (1-screenPosA.y)*Screen.height;
-			Vector3 screenPosB = Camera.main.WorldToViewportPoint(worldPosB);
+			Vector3 screenPosB = cam.WorldToViewportPoint(worldPosB);
 			screenPosB.x = screenPosB.x*Screen.width;
 			screenPosB.y = (1-screenPosB.y)*Screen.height;
 
