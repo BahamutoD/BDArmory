@@ -688,7 +688,7 @@ namespace BahaTurret
                     float targetSuitability = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);       //prefer targets ahead to those behind
                     targetSuitability += 500 / (targetRelPos.magnitude + 100);
 
-                    if (finalTarget == null || (target.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + 0.5f)
+                    if (finalTarget == null || (target.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
 					{
 						finalTarget = target;
                         finalTargetSuitability = targetSuitability;
@@ -707,7 +707,7 @@ namespace BahaTurret
 
             foreach (var target in TargetDatabase[team])
             {
-                if (target && target.Vessel)
+                if (target && target.Vessel && target.weaponManager != mf)
                 {
                     if (finalTarget == null || (target.IsCloser(finalTarget, mf)))
                     {

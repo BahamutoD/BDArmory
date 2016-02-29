@@ -649,7 +649,7 @@ namespace BahaTurret
 				{
 					collisionDetectionTimer += Time.fixedDeltaTime;
 					Vector3 axis = -Vector3.Cross(vesselTransform.up, badDirection);
-					collisionAvoidDirection = Quaternion.AngleAxis(90, axis) * badDirection;
+					collisionAvoidDirection = Quaternion.AngleAxis(25, axis) * badDirection;        //don't need to change the angle that much to avoid, and it should prevent stupid suicidal manuevers as well
 
 					FlyAvoidCollision(s);
 					return true;
@@ -786,7 +786,7 @@ namespace BahaTurret
                                 {
                                     float timeToTurn = (float)vessel.srfSpeed * angleToTarget * Mathf.Deg2Rad / curVesselMaxAccel;
                                     target += v.srf_velocity * timeToTurn;
-                                    target += 0.5f * v.acceleration * timeToTurn * timeToTurn;
+                                    //target += 0.5f * v.acceleration * timeToTurn * timeToTurn;
                                 }
                             }
 						}
@@ -1060,11 +1060,15 @@ namespace BahaTurret
 		{
 			if(weaponManager)
 			{
-				weaponManager.ForceWideViewScan();
-			}
+                if (weaponManager.TargetOverride)
+                {
+                    extending = false;
+                    weaponManager.ForceWideViewScan();
+                }
+                else
+				    weaponManager.ForceWideViewScan();
+			
 
-			if(weaponManager)
-			{
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
 
 				if(weaponManager.currentMissile && weaponManager.currentMissile.GetWeaponClass() == WeaponClasses.Bomb)
@@ -1205,13 +1209,20 @@ namespace BahaTurret
                     else if (threatDirectionFactor < -0.9) //within ~28 degrees behind
                     {
                         float threatDistance = threatRelativePosition.magnitude;
-                        if(threatDistance > 800)
+                        if(threatDistance > 400)
                         {
                             breakTarget = vesselTransform.position + vesselTransform.up * 1500 - 500 * vessel.upAxis;
                             breakTarget += Mathf.Sin((float)vessel.missionTime / 2) * vesselTransform.right * 1000 - Mathf.Cos((float)vessel.missionTime / 2) * vesselTransform.forward * 1000;
-                            debugString += " from behind afar; engaging barrel roll";
+                            if(threatDistance > 800)
+                                debugString += " from behind afar; engaging barrel roll";
+                            else
+                            {
+                                debugString += " from behind moderate distance; engaging aggressvie barrel roll and braking";
+                                steerMode = SteerModes.Aiming;
+                                AdjustThrottle(minSpeed, true, false);
+                            }
                         }
-                        else if (threatDistance < 400)
+                        else
                         {
                             breakTarget = threatRelativePosition;
                             if (evasiveTimer < 1.5f)
@@ -1221,24 +1232,11 @@ namespace BahaTurret
                             debugString += " from directly behind and close; breaking hard";
                             steerMode = SteerModes.Aiming;
                         }
-                        else
-                        {
-                            breakTarget = threatRelativePosition;
-                            if (evasiveTimer < 1f)
-                                breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 500;
-                            else if (evasiveTimer < 2f)
-                                breakTarget += -Math.Sign(Mathf.Sin((float)vessel.missionTime * 2)) * vesselTransform.right * 150;
-                            else
-                                breakTarget += Math.Sign(Mathf.Sin((float)vessel.missionTime * 2)) * vesselTransform.right * 150;
-
-                            debugString += " from directly behind and moderate distance; breaking wildly";
-                            steerMode = SteerModes.Aiming;
-                        }
                     }
                     else
                     {
                         float threatDistance = threatRelativePosition.magnitude;
-                        if(threatDistance < 800)
+                        if(threatDistance < 400)
                         {
                             breakTarget += Mathf.Sin((float)vessel.missionTime * 2) * vesselTransform.right * 100;
                             debugString += " from the side; breaking in";

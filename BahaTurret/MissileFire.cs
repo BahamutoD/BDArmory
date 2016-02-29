@@ -2331,6 +2331,7 @@ namespace BahaTurret
 		bool focusingOnTarget = false;
 		float focusingOnTargetTimer = 0;
 		public Vector3 incomingThreatPosition;
+        public Vessel incomingThreatVessel;
 		void UpdateGuardViewScan()
 		{
 			float finalMaxAngle = guardAngle / 2;
@@ -2399,6 +2400,7 @@ namespace BahaTurret
 			{
 				FireChaff();
 				incomingThreatPosition = results.threatPosition;
+                incomingThreatVessel = results.threatVessel;
 			}
 
 			if(results.foundAGM)
@@ -3179,9 +3181,13 @@ namespace BahaTurret
                     {
                         Debug.Log(vessel.vesselName + " is engaging an override target with " + selectedWeapon);
                     }
-                    overrideTimer = 30f;
+                    overrideTimer = 15f;
                     //overrideTarget = null;
                     return;
+                }
+                else if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                {
+                    Debug.Log(vessel.vesselName + " is engaging an override target with failed to engage its override target!");
                 }
             }
             overrideTarget = null;      //null the override target if it cannot be used
