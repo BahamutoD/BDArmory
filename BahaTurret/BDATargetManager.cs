@@ -866,14 +866,17 @@ namespace BahaTurret
             BDArmorySettings.BDATeams team = weaponManager.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
             foreach (var friendlyTarget in TargetDatabase[team])
             {
-                float friendlyPosDot = Vector3.Dot(friendlyTarget.position - weaponManager.vessel.vesselTransform.position, aimDirection);
-                if(friendlyPosDot > 0)  //only bother if the friendly is actually in front of us
+                if (friendlyTarget && friendlyTarget.Vessel)
                 {
-                    float friendlyDistance = (friendlyTarget.position - weaponManager.vessel.vesselTransform.position).magnitude;
-                    float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
+                    float friendlyPosDot = Vector3.Dot(friendlyTarget.position - weaponManager.vessel.vesselTransform.position, aimDirection);
+                    if (friendlyPosDot > 0)  //only bother if the friendly is actually in front of us
+                    {
+                        float friendlyDistance = (friendlyTarget.position - weaponManager.vessel.vesselTransform.position).magnitude;
+                        float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
 
-                    if (friendlyDistance < safeDistance && cosUnsafeAngle > friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
-                        return false;
+                        if (friendlyDistance < safeDistance && cosUnsafeAngle > friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
+                            return false;
+                    }
                 }
             }
 

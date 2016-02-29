@@ -271,7 +271,6 @@ namespace BahaTurret
 		//
 		float timeFired = 0;
         public float initialFireDelay = 0;     //used to ripple fire multiple weapons of this type
-        float fireDelayTimer = 0;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
         public bool useRippleFire = true;
@@ -751,8 +750,9 @@ namespace BahaTurret
 					Vector3 targetRelPos = (finalAimTarget)-fireTransform.position;
 					Vector3 aimDirection = fireTransform.forward;
                     float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
+                    Debug.Log(targetCosAngle + " " + maxAutoFireCosAngle);
 
-                    if (targetCosAngle > maxAutoFireCosAngle && BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, maxEffectiveDistance, 0.996f)) //~5 degrees of unsafe angle
+                    if (targetCosAngle >= maxAutoFireCosAngle && BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, maxEffectiveDistance, 0.996f)) //~5 degrees of unsafe angle
 					{
 						autoFire = true;
 					}
