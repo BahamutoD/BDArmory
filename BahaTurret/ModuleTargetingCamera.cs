@@ -410,9 +410,9 @@ namespace BahaTurret
 				Vector3 camUp = cameraParentTransform.up;
 				if(eyeHolderTransform) camUp = Vector3.Cross(cameraParentTransform.forward, eyeHolderTransform.right);
 				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, camUp);
-				if(vessel.isActiveVessel && activeCam == this && TargetingCamera.Instance && TargetingCamera.Instance.cameraTransform)
+				if(vessel.isActiveVessel && activeCam == this && TargetingCamera.cameraTransform)
 				{
-					TargetingCamera.Instance.cameraTransform.rotation = Quaternion.LookRotation(cameraParentTransform.forward, worldUp); 
+					TargetingCamera.cameraTransform.rotation = Quaternion.LookRotation(cameraParentTransform.forward, worldUp); 
 				}
 			}
 

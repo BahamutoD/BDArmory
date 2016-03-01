@@ -6,7 +6,6 @@ namespace BahaTurret
 	[AttributeUsage(AttributeTargets.Field)]
 	public class BDAPersistantSettingsField : Attribute
 	{
-
 		public BDAPersistantSettingsField ()
 		{
 		}
@@ -31,8 +30,6 @@ namespace BahaTurret
 
 			fileNode.Save(BDArmorySettings.settingsConfigURL);
 		}
-
-	
 
 		public static void Load()
 		{
@@ -79,12 +76,11 @@ namespace BahaTurret
 			{
 				return Single.Parse(value);
 			}
-
-
 			UnityEngine.Debug.LogError("BDAPersistantSettingsField to parse settings field of type "+type.ToString()+" and value "+value);
 
 			return null;
 		}
+
 	}
 }
 

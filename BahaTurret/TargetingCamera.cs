@@ -41,7 +41,7 @@ namespace BahaTurret
 
 
 		Camera[] cameras;
-		public Transform cameraTransform;
+		public static Transform cameraTransform;
 
 		bool cameraEnabled = false;
 
@@ -384,6 +384,11 @@ namespace BahaTurret
 		void OnDestroy()
 		{
 			ReadyForUse = false;
+		}
+
+		public static bool IsTGPCamera(Camera c)
+		{
+			return c.transform == cameraTransform;
 		}
 	}
 }

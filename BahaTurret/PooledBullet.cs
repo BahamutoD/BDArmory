@@ -173,13 +173,13 @@ namespace BahaTurret
 				return;
 			}
 			Camera currentCam = Camera.current;
-			if(currentCam == FlightCamera.fetch.cameras[0] || currentCam == FlightCamera.fetch.cameras[1])
+			if(TargetingCamera.IsTGPCamera(currentCam))
 			{
-				UpdateWidth(currentCam, 1);
+				UpdateWidth(currentCam, 4);
 			}
 			else
 			{
-				UpdateWidth(currentCam, 4);
+				UpdateWidth(currentCam, 1);
 			}
 		}
 			
