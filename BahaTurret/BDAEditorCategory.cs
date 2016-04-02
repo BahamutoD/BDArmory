@@ -13,7 +13,7 @@ using System.Linq.Expressions;
 //using System.Core;
 using System.Collections.Generic;
 using UnityEngine;
-
+using KSP.UI.Screens;
 
 namespace BahaTurret
 {
@@ -46,10 +46,9 @@ namespace BahaTurret
 			PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == FILTER_CATEGORY);
 			PartCategorizer.AddCustomSubcategoryFilter(filter, CUSTOM_CATEGORY_NAME, icon, p => availableParts.Contains(p));
 
-			RUIToggleButtonTyped button = filter.button.activeButton;
-
-			button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
-			button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED, false);
+			KSP.UI.UIRadioButton button = filter.button.activeButton;
+			//button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
+			//button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED, false);
 		}
 
 

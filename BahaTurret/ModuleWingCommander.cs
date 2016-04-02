@@ -591,7 +591,7 @@ namespace BahaTurret
 			{
 				ScreenMessages.RemoveMessage(screenMessage);
 				screenMessage.message = message;
-				ScreenMessages.PostScreenMessage(screenMessage, true);
+				ScreenMessages.PostScreenMessage(screenMessage);
 			}
 		}
 	}

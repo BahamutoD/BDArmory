@@ -47,3 +47,10 @@ UnityEngine.dll
 
 BahaTurret/BahaTurret.userprefs
 *.zip
+KSPAssets.dll
+KSPCore.dll
+KSPUtil.dll
+SaveUpgradePipeline.Core.dll
+UnityEngine.UI.dll
+UnityEngine.xml
+Vectrosity.dll

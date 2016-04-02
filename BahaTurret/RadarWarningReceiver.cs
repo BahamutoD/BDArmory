@@ -88,6 +88,7 @@ namespace BahaTurret
 				audioSource = gameObject.AddComponent<AudioSource>();
 				audioSource.minDistance = 500;
 				audioSource.maxDistance = 1000;
+				audioSource.spatialBlend = 1;
 				audioSource.dopplerLevel = 0;
 				audioSource.loop = false;
 

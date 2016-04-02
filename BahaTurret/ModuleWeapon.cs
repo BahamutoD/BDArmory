@@ -11,6 +11,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.UI.Screens;
 namespace BahaTurret
 {
 	public class ModuleWeapon : PartModule, IBDWeapon
@@ -204,8 +205,8 @@ namespace BahaTurret
 		//private int numberOfGuns = 0;
 
 		//UI gauges(next to staging icon)
-		private VInfoBox heatGauge = null;
-		private VInfoBox reloadBar = null;
+		private ProtoStageIconInfo heatGauge = null;
+		private ProtoStageIconInfo reloadBar = null;
 		[KSPField]
 		public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
@@ -701,11 +702,11 @@ namespace BahaTurret
 
 				if(showReloadMeter)
 				{
-					UpdateReloadMeter();
+					//UpdateReloadMeter();
 				}
 				else
 				{
-					UpdateHeatMeter();
+					//UpdateHeatMeter();
 				}
 				UpdateHeat();
 
@@ -938,7 +939,7 @@ namespace BahaTurret
 						//recoil
 						if(hasRecoil)
 						{
-							gameObject.rigidbody.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity*bulletMass), fireTransform.position, ForceMode.Impulse);
+							part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity*bulletMass), fireTransform.position, ForceMode.Impulse);
 						}
 						
 						if(!effectsShot)
@@ -1591,6 +1592,7 @@ namespace BahaTurret
 				audioSource.maxDistance = 1000;
 				audioSource.priority = 10;
 				audioSource.dopplerLevel = 0;
+				audioSource.spatialBlend = 1;
 			}
 
 			if(!audioSource2)
@@ -1601,6 +1603,7 @@ namespace BahaTurret
 				audioSource2.maxDistance = 1000;
 				audioSource2.dopplerLevel = 0;
 				audioSource2.priority = 10;
+				audioSource2.spatialBlend = 1;
 			}
 			
 			if(reloadAudioPath != string.Empty)
@@ -1616,7 +1619,7 @@ namespace BahaTurret
 			{
 				lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
 				lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
-				lowpassFilter.lowpassResonaceQ = 1f;
+				lowpassFilter.lowpassResonanceQ = 1f;
 			}
 
 			UpdateVolume();
@@ -1641,7 +1644,7 @@ namespace BahaTurret
 				laserRenderers[i].material = new Material(Shader.Find ("KSP/Particles/Alpha Blended"));
 				laserRenderers[i].material.SetColor("_TintColor", laserColor);
 				laserRenderers[i].material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser", false);
-				laserRenderers[i].castShadows = false;
+				laserRenderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;//= false;
 				laserRenderers[i].receiveShadows = false;
 				laserRenderers[i].SetWidth(tracerStartWidth, tracerEndWidth);
 				laserRenderers[i].SetVertexCount(2);
@@ -1693,10 +1696,10 @@ namespace BahaTurret
             }
         }
         
-        private VInfoBox InitReloadBar()
+		private ProtoStageIconInfo InitReloadBar()
 		{
-			VInfoBox v = part.stackIcon.DisplayInfo();
-			
+			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+
 			v.SetMsgBgColor(XKCDColors.DarkGrey);
 			v.SetMsgTextColor(XKCDColors.White);
 			v.SetMessage("Reloading");
@@ -1706,9 +1709,9 @@ namespace BahaTurret
 			return v;
 		}
 
-		private VInfoBox InitHeatGauge()  //thanks DYJ
+		private ProtoStageIconInfo InitHeatGauge()  //thanks DYJ
 		{
-			VInfoBox v = part.stackIcon.DisplayInfo();
+			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
 			
 			v.SetMsgBgColor(XKCDColors.DarkRed);
 			v.SetMsgTextColor(XKCDColors.Orange);

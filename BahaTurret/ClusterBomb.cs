@@ -107,8 +107,9 @@ namespace BahaTurret
 				sub.SetActive(true);
 				sub.transform.parent = null;
 				Vector3 direction = (sub.transform.position - part.transform.position).normalized;
-				sub.rigidbody.isKinematic = false;
-				sub.rigidbody.velocity = part.rb.velocity + (UnityEngine.Random.Range(submunitionMaxSpeed/10, submunitionMaxSpeed) * direction);
+				Rigidbody subRB = sub.GetComponent<Rigidbody>();
+				subRB.isKinematic = false;
+				subRB.velocity = part.rb.velocity + (UnityEngine.Random.Range(submunitionMaxSpeed/10, submunitionMaxSpeed) * direction);
 				
 				Submunition subScript = sub.AddComponent<Submunition>();
 				subScript.enabled = true;
@@ -125,8 +126,9 @@ namespace BahaTurret
 			foreach(var fairing in fairings)
 			{
 				Vector3 direction = (fairing.transform.position - part.transform.position).normalized;
-				fairing.rigidbody.isKinematic = false;
-				fairing.rigidbody.velocity = part.rb.velocity + ((submunitionMaxSpeed+2) * direction);
+				Rigidbody fRB = fairing.GetComponent<Rigidbody>();
+				fRB.isKinematic = false;
+				fRB.velocity = part.rb.velocity + ((submunitionMaxSpeed+2) * direction);
 				fairing.AddComponent<KSPForceApplier>();
 				fairing.GetComponent<KSPForceApplier>().drag = 0.2f;
 				ClusterBombFairing fairingScript = fairing.AddComponent<ClusterBombFairing>();

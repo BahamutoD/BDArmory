@@ -547,7 +547,8 @@ namespace BahaTurret
 			if(ActiveWeaponManager == null)
 			{
 				drawCursor = false;
-				Screen.showCursor = true;
+				//Screen.showCursor = true;
+				Cursor.visible = false;
 				return;
 			}
 
@@ -562,7 +563,8 @@ namespace BahaTurret
 						ModuleWeapon mw = ActiveWeaponManager.selectedWeapon.GetPart().FindModuleImplementing<ModuleWeapon>();
 						if(mw.weaponState == ModuleWeapon.WeaponStates.Enabled && mw.maxPitch > 1 && !mw.slaved && !mw.aiControlled)
 						{
-							Screen.showCursor = false;
+							//Screen.showCursor = false;
+							Cursor.visible = false;
 							drawCursor = true;
 							return;
 						}
@@ -572,7 +574,8 @@ namespace BahaTurret
 						RocketLauncher rl = ActiveWeaponManager.selectedWeapon.GetPart().FindModuleImplementing<RocketLauncher>();
 						if(rl.readyToFire && rl.turret)
 						{
-							Screen.showCursor = false;
+							//Screen.showCursor = false;
+							Cursor.visible = false;
 							drawCursor = true;
 							return;
 						}
@@ -580,7 +583,8 @@ namespace BahaTurret
 				}
 			}
 
-			Screen.showCursor = true;
+			//Screen.showCursor = true;
+			Cursor.visible = true;
 		}
 		
 	

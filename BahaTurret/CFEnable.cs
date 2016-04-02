@@ -21,7 +21,7 @@ namespace BahaTurret
                     part.parent.fuelLookupTargets.Add(this.part);
                 if (!this.part.fuelLookupTargets.Contains(part.parent))
                     part.fuelLookupTargets.Add(part.parent);
-            }
+			}
         }
 
         public override void OnStart(PartModule.StartState state)

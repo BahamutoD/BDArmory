@@ -713,17 +713,20 @@ namespace BahaTurret
 				audioSource.minDistance = 1;
 				audioSource.maxDistance = 500;
 				audioSource.dopplerLevel = 0;
+				audioSource.spatialBlend = 1;
 
 				warningAudioSource = gameObject.AddComponent<AudioSource>();
 				warningAudioSource.minDistance = 1;
 				warningAudioSource.maxDistance = 500;
 				warningAudioSource.dopplerLevel = 0;
+				warningAudioSource.spatialBlend = 1;
 
 				targetingAudioSource = gameObject.AddComponent<AudioSource>();
 				targetingAudioSource.minDistance = 1;
 				targetingAudioSource.maxDistance = 250;
 				targetingAudioSource.dopplerLevel = 0;
 				targetingAudioSource.loop = true;
+				targetingAudioSource.spatialBlend = 1;
 
 				StartCoroutine (MissileWarningResetRoutine());
 				
@@ -828,7 +831,7 @@ namespace BahaTurret
 				ScreenMessages.RemoveMessage(selectionMessage);
 				selectionText = "Selected Weapon: " + GetWeaponName(weaponArray[weaponIndex]);
 				selectionMessage.message = selectionText;
-				ScreenMessages.PostScreenMessage(selectionMessage, true);
+				ScreenMessages.PostScreenMessage(selectionMessage);
 			}
 		}
 

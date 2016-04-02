@@ -259,6 +259,7 @@ namespace BahaTurret
 				sfAudioSource.maxDistance = 2000;
 				sfAudioSource.dopplerLevel = 0;
 				sfAudioSource.priority = 230;
+				sfAudioSource.spatialBlend = 1;
 				
 				MakeRocketArray();
 				UpdateRocketScales();

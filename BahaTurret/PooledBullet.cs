@@ -105,7 +105,7 @@ namespace BahaTurret
 			if(!lightFlash)
 			{
 				lightFlash = gameObject.AddComponent<Light>();
-				light.type = LightType.Point;
+				lightFlash.type = LightType.Point;
 				lightFlash.range = 8;
 				lightFlash.intensity = 1;
 			}

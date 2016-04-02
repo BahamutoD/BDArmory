@@ -78,6 +78,7 @@ namespace BahaTurret
 				audioSource = gameObject.AddComponent<AudioSource>();
 				audioSource.minDistance = 1;
 				audioSource.maxDistance = 1000;
+				audioSource.spatialBlend = 1;
 
 				UpdateVolume();
 				BDArmorySettings.OnVolumeChange += UpdateVolume;

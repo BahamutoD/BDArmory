@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 namespace BahaTurret
 {
 
@@ -558,6 +559,7 @@ namespace BahaTurret
 			audioSource.loop = true;
 			audioSource.pitch = 1f;
 			audioSource.priority = 255;
+			audioSource.spatialBlend = 1;
 
 			if(audioClipPath!=string.Empty)
 			{
@@ -569,6 +571,7 @@ namespace BahaTurret
 			sfAudioSource.maxDistance = 2000;
 			sfAudioSource.dopplerLevel = 0;
 			sfAudioSource.priority = 230;
+			sfAudioSource.spatialBlend = 1;
 
 
 
@@ -720,7 +723,7 @@ namespace BahaTurret
 				part.force_activate();
 				part.Unpack();
 				vessel.situation = Vessel.Situations.FLYING;
-				rigidbody.isKinematic = false;
+				part.rb.isKinematic = false;
 				BDArmorySettings.Instance.ApplyNewVesselRanges(vessel);
 				part.bodyLiftMultiplier = 0;
 				part.dragModel = Part.DragModel.NONE;
