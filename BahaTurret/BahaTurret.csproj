@@ -52,6 +52,9 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\..\Program Files\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
+    <Reference Include="KSPAssets">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CFEnable.cs" />

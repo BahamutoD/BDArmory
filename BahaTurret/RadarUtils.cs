@@ -33,7 +33,7 @@ namespace BahaTurret
 			//setup shader first
 			if(!radarShader)
 			{
-				radarShader = BDAShaderLoader.LoadManifestShader("BahaTurret.UnlitBlack.shader");
+				radarShader = BDAShaderLoader.UnlitBlackShader;//.LoadManifestShader("BahaTurret.UnlitBlack.shader");
 			}
 
 			//then setup textures

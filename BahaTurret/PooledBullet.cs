@@ -131,7 +131,7 @@ namespace BahaTurret
 			if(!shaderInitialized)
 			{
 				shaderInitialized = true;
-				bulletShader = BDAShaderLoader.LoadManifestShader("BahaTurret.BulletShader.shader");
+				bulletShader = BDAShaderLoader.BulletShader;//.LoadManifestShader("BahaTurret.BulletShader.shader");
 			}
 
 			if(!wasInitiated)

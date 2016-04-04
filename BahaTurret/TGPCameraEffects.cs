@@ -25,7 +25,7 @@ namespace BahaTurret
 		{
 			if(!grayscaleMaterial)
 			{
-				grayscaleMaterial = new Material(BDAShaderLoader.LoadManifestShader("BahaTurret.GrayscaleEffectShader.shader"));
+				grayscaleMaterial = new Material(BDAShaderLoader.GrayscaleEffectShader);//LoadManifestShader("BahaTurret.GrayscaleEffectShader.shader"));
 				grayscaleMaterial.SetTexture("_RampTex", textureRamp);
 				grayscaleMaterial.SetFloat("_RampOffset", rampOffset);
 			}
