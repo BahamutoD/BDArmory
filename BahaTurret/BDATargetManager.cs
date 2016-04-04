@@ -98,7 +98,8 @@ namespace BahaTurret
 
 			FiredMissiles = new List<MissileLauncher>();
 
-			AddToolbarButton();
+			//AddToolbarButton();
+			StartCoroutine(ToolbarButtonRoutine());
 
 		}
 
@@ -146,8 +147,21 @@ namespace BahaTurret
 					Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "icon", false);
 					ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.FLIGHT, buttonTexture);
 					hasAddedButton = true;
+
 				}
 			}
+		}
+
+		IEnumerator ToolbarButtonRoutine()
+		{
+			if(hasAddedButton) yield break;
+			if(!HighLogic.LoadedSceneIsFlight) yield break;
+			while(!ApplicationLauncher.Ready)
+			{
+				yield return null;
+			}
+
+			AddToolbarButton();
 		}
 		public void ShowToolbarGUI()
 		{

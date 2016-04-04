@@ -13,7 +13,7 @@ namespace BahaTurret
 			if(stream!=null)
 			{
 				StreamReader reader = new StreamReader(stream);
-				
+			
 				Material mat = new Material(reader.ReadToEnd());
 				return mat.shader;
 			}
