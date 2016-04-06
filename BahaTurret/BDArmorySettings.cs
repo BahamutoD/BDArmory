@@ -548,7 +548,7 @@ namespace BahaTurret
 			{
 				drawCursor = false;
 				//Screen.showCursor = true;
-				Cursor.visible = false;
+				Cursor.visible = true;
 				return;
 			}
 
