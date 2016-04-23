@@ -894,7 +894,7 @@ namespace BahaTurret
 				  (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
 				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
 				  || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb
-				  || (selectedWeapon.GetWeaponClass() == WeaponClasses.Gun && currentGun.roundsPerMinute < 1500)))
+				  ))
 				{
 					canRipple = true;
 					if(!MapView.MapIsEnabled && triggerTimer > BDArmorySettings.TRIGGER_HOLD_TIME && !hasSingleFired)
@@ -913,6 +913,10 @@ namespace BahaTurret
 							hasSingleFired = true;
 						}
 					}
+				}
+				else if((selectedWeapon.GetWeaponClass() == WeaponClasses.Gun && currentGun.roundsPerMinute < 1500))
+				{
+					canRipple = true;
 				}
 				else
 				{
