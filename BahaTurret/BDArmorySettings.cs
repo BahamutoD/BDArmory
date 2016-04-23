@@ -447,6 +447,8 @@ namespace BahaTurret
 				GameEvents.onVesselChange.Add(VesselChange);
 			}
 		}
+
+
 		
 		void Update()
 		{
@@ -536,19 +538,28 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				DrawAimerCursor();
+				//UpdateCursorState();
 			}
+
+
 		}
 
 
 
-		void DrawAimerCursor()
+		public void UpdateCursorState()
 		{
 			if(ActiveWeaponManager == null)
 			{
 				drawCursor = false;
 				//Screen.showCursor = true;
 				Cursor.visible = true;
+				return;
+			}
+
+			if(!GAME_UI_ENABLED || CameraMouseLook.MouseLocked)
+			{
+				drawCursor = false;
+				Cursor.visible = false;
 				return;
 			}
 
@@ -594,6 +605,7 @@ namespace BahaTurret
 			if(v.isActiveVessel)
 			{
 				GetWeaponManager();
+				BDArmorySettings.Instance.UpdateCursorState();
 			}
 		}
 		

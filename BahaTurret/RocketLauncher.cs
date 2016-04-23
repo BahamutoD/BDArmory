@@ -312,6 +312,7 @@ namespace BahaTurret
 		IEnumerator DeployAnimRoutine(bool forward)
 		{
 			readyToFire = false;
+			BDArmorySettings.Instance.UpdateCursorState();
 
 			if(forward)
 			{
@@ -343,6 +344,7 @@ namespace BahaTurret
 			deployAnimState.speed = 0;
 
 			readyToFire = deployed;
+			BDArmorySettings.Instance.UpdateCursorState();
 		}
 
 		void UpdateAudio()
