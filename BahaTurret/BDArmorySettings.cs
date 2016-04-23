@@ -669,7 +669,8 @@ namespace BahaTurret
 				{
 					settingsRect = GUI.Window(129419, settingsRect, SettingsGUI, GUIContent.none);
 				}
-				
+
+
 				if(drawCursor)
 				{
 					//mouse cursor
@@ -681,7 +682,7 @@ namespace BahaTurret
 					GUI.DrawTexture(cursorRect, cursorTexture);	
 					GUI.depth = origDepth;
 				}
-				
+
 				if(toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
 				{
 					toolbarWindowRect = GUI.Window(321, toolbarWindowRect, ToolbarGUI, "BDA Weapon Manager", HighLogic.Skin.window);

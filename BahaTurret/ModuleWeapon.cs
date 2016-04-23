@@ -1463,9 +1463,9 @@ namespace BahaTurret
 				deployState.enabled = false;
 			}
 
-			BDArmorySettings.Instance.UpdateCursorState();
 			weaponState = WeaponStates.Enabled;
 			UpdateGUIWeaponState();
+			BDArmorySettings.Instance.UpdateCursorState();
 		}
 
 		void UpdateGUIWeaponState()
@@ -1487,10 +1487,9 @@ namespace BahaTurret
 
 		IEnumerator ShutdownRoutine()
 		{
-			BDArmorySettings.Instance.UpdateCursorState();
 			weaponState = WeaponStates.PoweringDown;
 			UpdateGUIWeaponState();
-
+			BDArmorySettings.Instance.UpdateCursorState();
 			if(turret)
 			{
 				yield return new WaitForSeconds(0.2f);
