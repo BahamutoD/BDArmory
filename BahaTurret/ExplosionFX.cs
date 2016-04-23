@@ -24,7 +24,7 @@ namespace BahaTurret
 			{
 				pe.emit = true;	
 
-				if(pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
+				//if(pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
 
 				if(pe.maxEnergy > maxTime)
 				{
