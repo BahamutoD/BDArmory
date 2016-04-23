@@ -594,9 +594,14 @@ namespace BahaTurret
 				if(weaponState == WeaponStates.Enabled && (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
 				{
 					userFiring = (BDInputUtils.GetKey(BDInputSettingsFields.WEAP_FIRE_KEY) && (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING) && !MapView.MapIsEnabled && !aiControlled);
-					if(!pointingAtSelf && (userFiring || autoFire || agHoldFiring) && (yawRange == 0 || (maxPitch - minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
+					if((userFiring || autoFire || agHoldFiring) && (yawRange == 0 || (maxPitch - minPitch) == 0 || turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
 					{
-						if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
+						if(useRippleFire && (pointingAtSelf || isOverheated))
+						{
+							StartCoroutine(IncrementRippleIndex(0));
+							finalFire = false;
+						}
+						else if(eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
 						{
                             finalFire = true;
                         }
@@ -919,20 +924,14 @@ namespace BahaTurret
 			}
 
 			float timeGap = (60/roundsPerMinute) * TimeWarp.CurrentRate;
-			
-			if(Time.time-timeFired > timeGap && !isOverheated && !pointingAtSelf)
+			if(Time.time-timeFired > timeGap && !isOverheated && !pointingAtSelf && !Misc.CheckMouseIsOnGui() && WMgrAuthorized())
 			{
 				bool effectsShot = false;
 				//Transform[] fireTransforms = part.FindModelTransforms("fireTransform");
 				for(int i = 0; i < fireTransforms.Length; i++)
 				{
-					if(!Misc.CheckMouseIsOnGui() && WMgrAuthorized() && (BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount)>0))
+					if((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount)>0))
 					{
-						if(useRippleFire)
-						{
-							StartCoroutine(IncrementRippleIndex(initialFireDelay * TimeWarp.CurrentRate));
-						}
-
 						Transform fireTransform = fireTransforms[i];
 						spinningDown = false;
 
@@ -1126,7 +1125,10 @@ namespace BahaTurret
 					}
 				}
 
-
+				if(useRippleFire)
+				{
+					StartCoroutine(IncrementRippleIndex(initialFireDelay * TimeWarp.CurrentRate));
+				}
 			}
 			else
 			{
@@ -1292,10 +1294,7 @@ namespace BahaTurret
 				}
 			}
 
-			if(useRippleFire && (pointingAtSelf || isOverheated))
-			{
-				StartCoroutine(IncrementRippleIndex(0));
-			}
+
 		}
 
 		void RunTrajectorySimulation()
