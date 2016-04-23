@@ -914,7 +914,9 @@ namespace BahaTurret
 						}
 					}
 				}
-				else if((selectedWeapon.GetWeaponClass() == WeaponClasses.Gun && currentGun.roundsPerMinute < 1500))
+				else if(!guardMode && 
+					selectedWeapon != null &&
+					(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun && currentGun.roundsPerMinute < 1500))
 				{
 					canRipple = true;
 				}
