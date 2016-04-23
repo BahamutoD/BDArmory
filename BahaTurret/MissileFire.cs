@@ -3218,7 +3218,7 @@ namespace BahaTurret
             //if AIRBORNE, try to engage airborne target first
 			if(!vessel.LandedOrSplashed && !targetMissiles)
 			{
-                if (pilotAI.IsExtending)
+                if (pilotAI && pilotAI.IsExtending)
                 {
                     TargetInfo potentialAirTarget = BDATargetManager.GetAirToAirTargetAbortExtend(this, 1500, 0.2f);
                     if (potentialAirTarget)
