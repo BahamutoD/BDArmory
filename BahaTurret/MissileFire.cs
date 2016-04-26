@@ -2451,6 +2451,7 @@ namespace BahaTurret
 				if(ufRoutine != null)
 				{
 					StopCoroutine(ufRoutine);
+					underFire = false;
 				}
                 if (results.threatWeaponManager != null)
                 {
