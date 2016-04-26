@@ -972,8 +972,8 @@ namespace BahaTurret
 			Vector3 targetDirectionYaw;
 			float yawError;
 			float pitchError;
-			float postYawFactor;
-			float postPitchFactor;
+			//float postYawFactor;
+			//float postPitchFactor;
 			if(steerMode == SteerModes.NormalFlight)
 			{
 				targetDirection = velocityTransform.InverseTransformDirection(targetPosition - velocityTransform.position).normalized;
@@ -983,8 +983,8 @@ namespace BahaTurret
 				targetDirectionYaw = Vector3.RotateTowards(Vector3.up, targetDirectionYaw, 45 * Mathf.Deg2Rad, 0);
 
 
-				postYawFactor = 0.25f;
-				postPitchFactor = 0.8f;
+				//postYawFactor = 0.25f;
+				//postPitchFactor = 0.8f;
 			}
 			else//(steerMode == SteerModes.Aiming)
 			{
@@ -992,6 +992,7 @@ namespace BahaTurret
 				targetDirection = Vector3.RotateTowards(Vector3.up, targetDirection, 25 * Mathf.Deg2Rad, 0);
 				targetDirectionYaw = targetDirection;
 
+				/*
 				if(command == PilotCommands.Follow)
 				{
 					postYawFactor = 0.45f;
@@ -999,9 +1000,10 @@ namespace BahaTurret
 				}
 				else
 				{
-					postYawFactor = 1.75f;
-					postPitchFactor = 2f;
+					postYawFactor = 1f;
+					postPitchFactor = 1.2f;
 				}
+				*/
 			}
 
 			pitchError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirection, Vector3.right), Vector3.back);
@@ -1014,12 +1016,9 @@ namespace BahaTurret
 			debugString += "\n   finalMaxSteer: " + finalMaxSteer;
 
 	
-			float steerPitch = (postPitchFactor * 0.015f * steerMult * pitchError) - (postPitchFactor * steerDamping * -localAngVel.x);
-			float steerYaw = (postYawFactor * 0.020f * steerMult * yawError) - (postYawFactor * steerDamping * 0.64f * -localAngVel.z);
 	
 
-			s.yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
-			s.pitch = Mathf.Clamp(steerPitch, Mathf.Min(-finalMaxSteer, -0.2f), finalMaxSteer);
+
 
 
 			//roll
@@ -1059,14 +1058,31 @@ namespace BahaTurret
 				rollTarget = Vector3.ProjectOnPlane(rollTarget, vesselTransform.up);
 			}
 
+			//v/q
+			float dynamicAdjustment = Mathf.Clamp(16*(float)(vessel.srfSpeed/vessel.dynamicPressurekPa), 0, 1.2f);
 
 			float rollError = Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
 			float steerRoll = (steerMult * 0.0015f * rollError);
 			float rollDamping = (.10f * steerDamping * -localAngVel.y);
 			steerRoll -= rollDamping;
+			steerRoll *= dynamicAdjustment;
+
+			if(steerMode == SteerModes.NormalFlight)
+			{
+				//premature dive fix
+				pitchError = pitchError * Mathf.Clamp01((21 - Mathf.Exp(Mathf.Abs(rollError) / 30)) / 20);
+			}
+
+			float steerPitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
+			float steerYaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
+
+			steerPitch *= dynamicAdjustment;
+			steerYaw *= dynamicAdjustment;
 
 			float roll = Mathf.Clamp(steerRoll, -maxSteer, maxSteer);
 			s.roll = roll;
+			s.yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
+			s.pitch = Mathf.Clamp(steerPitch, Mathf.Min(-finalMaxSteer, -0.2f), finalMaxSteer);
 		}
 
 		Vector3 rollTarget;
@@ -1681,7 +1697,7 @@ namespace BahaTurret
 			{
 				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 165f)
 				{
-                    targetPosition = vesselTransform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 2)) * 45, upDirection) * (projectedDirection.normalized * 200));
+                    targetPosition = vesselTransform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 4)) * 45, upDirection) * (projectedDirection.normalized * 200));
 					targetDirection = (targetPosition - vesselTransform.position).normalized;
 				}
                 
