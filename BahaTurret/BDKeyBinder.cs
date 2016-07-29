@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-namespace BDArmory
+namespace BahaTurret
 {
 	public class BDKeyBinder : MonoBehaviour
 	{

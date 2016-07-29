@@ -1,6 +1,6 @@
 ﻿using System;
 using UnityEngine;
-namespace BDArmory
+namespace BahaTurret
 {
 	public class ModuleECMJammer : PartModule
 	{

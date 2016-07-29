@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace BDArmory
+namespace BahaTurret
 {	
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class ParticleTurbulence : MonoBehaviour

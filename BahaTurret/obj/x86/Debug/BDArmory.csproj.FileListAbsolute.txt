@@ -43,3 +43,4 @@ E:\KSP\Mods\PJS\Git\Source\BDArmory\BahaTurret\bin\Debug\Mono.Security.dll
 E:\KSP\Mods\PJS\Git\Source\BDArmory\BahaTurret\bin\Debug\UnityEngine.xml
 E:\KSP\Mods\PJS\Git\Source\BDArmory\BahaTurret\obj\x86\Debug\BahaTurret.dll
 E:\KSP\Mods\PJS\Git\Source\BDArmory\BahaTurret\obj\x86\Debug\BahaTurret.pdb
+E:\KSP\Mods\PJS\Git\Source\BDArmory\BahaTurret\obj\x86\Debug\BDArmory.csprojResolveAssemblyReference.cache

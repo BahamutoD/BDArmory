@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D86F2003-1724-4F4C-BB5A-B0109CB16F35}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>BDArmory</RootNamespace>
+    <RootNamespace>BahaTurret</RootNamespace>
     <AssemblyName>BahaTurret</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>

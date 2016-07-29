@@ -3,7 +3,7 @@ using System.Reflection;
 using UnityEngine;
 
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class BDInputSettingsFields
 	{

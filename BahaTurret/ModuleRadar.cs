@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class ModuleRadar : PartModule
 	{

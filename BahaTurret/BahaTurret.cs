@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BDArmory
+namespace BahaTurret
 {
 	[Obsolete("Use ModuleWeapon and/or ModuleTurret instead")]
 	public class BahaTurret : PartModule

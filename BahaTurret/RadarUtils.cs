@@ -10,7 +10,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-namespace BDArmory
+namespace BahaTurret
 {
 	public static class RadarUtils
 	{

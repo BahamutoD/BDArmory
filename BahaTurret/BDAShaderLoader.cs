@@ -5,7 +5,7 @@ using System.IO;
 using UnityEngine;
 using KSPAssets.Loaders;
 using KSPAssets;
-namespace BDArmory
+namespace BahaTurret
 {
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	public class BDAShaderLoader : MonoBehaviour

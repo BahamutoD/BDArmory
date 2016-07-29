@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class RocketLauncher : PartModule, IBDWeapon
 	{

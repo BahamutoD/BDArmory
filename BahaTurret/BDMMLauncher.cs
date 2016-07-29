@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class BDMMLauncher : PartModule
 	{

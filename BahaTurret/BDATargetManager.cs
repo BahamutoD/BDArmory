@@ -14,7 +14,7 @@ using UnityEngine;
 using KSP.UI.Screens;
 
 
-namespace BDArmory
+namespace BahaTurret
 {
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class BDATargetManager : MonoBehaviour

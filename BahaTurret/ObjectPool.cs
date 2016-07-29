@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class ObjectPool : MonoBehaviour 
 	{

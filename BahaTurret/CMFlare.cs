@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class CMFlare : MonoBehaviour
 	{

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace BDArmory
+namespace BahaTurret
 {
 	public class BulletHitFX : MonoBehaviour
 	{
