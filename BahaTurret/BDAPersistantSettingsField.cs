@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	[AttributeUsage(AttributeTargets.Field)]
 	public class BDAPersistantSettingsField : Attribute

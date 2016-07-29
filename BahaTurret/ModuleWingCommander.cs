@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public class ModuleWingCommander : PartModule
 	{

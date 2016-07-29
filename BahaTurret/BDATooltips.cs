@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public static class BDATooltips
 	{

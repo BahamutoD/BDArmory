@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public class CMDropper : PartModule
 	{

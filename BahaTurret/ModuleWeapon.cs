@@ -12,7 +12,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
-namespace BahaTurret
+namespace BDArmory
 {
 	public class ModuleWeapon : PartModule, IBDWeapon
 	{

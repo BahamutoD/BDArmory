@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public class CMChaff : MonoBehaviour
 	{

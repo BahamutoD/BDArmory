@@ -4,7 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public class MissileFire : PartModule
 	{

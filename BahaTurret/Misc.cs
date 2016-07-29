@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public static class Misc
 	{

@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class BDArmorySettings : MonoBehaviour

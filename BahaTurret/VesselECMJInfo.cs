@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-namespace BahaTurret
+namespace BDArmory
 {
 	[RequireComponent(typeof(Vessel))]
 	public class VesselECMJInfo : MonoBehaviour

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Reflection;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public class BDAirspeedControl : MonoBehaviour //: PartModule
 	{

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public struct GPSTargetInfo
 	{

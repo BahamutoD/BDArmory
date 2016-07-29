@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D86F2003-1724-4F4C-BB5A-B0109CB16F35}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>BahaTurret</RootNamespace>
+    <RootNamespace>BDArmory</RootNamespace>
     <AssemblyName>BahaTurret</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
@@ -455,34 +455,55 @@
     <Content Include="LocalDev\pdb2mdb_exe.txt" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>@echo $(Targetname)
+    <PostBuildEvent>
+@echo $(Targetname)
 @echo ...
 @echo set lpath vars from LocalDev storage...
 set /p KSP_DIR=&lt;"$(ProjectDir)LocalDev\ksp_dir.txt"
 set /p PDB2MDB_EXE=&lt;"$(ProjectDir)LocalDev\pdb2mdb_exe.txt"
-set /p ZA_DIR=&amp;lt;"$(ProjectDir)LocalDev\7za_dir.txt"
-set /p DIST_DIR=&amp;lt;"$(ProjectDir)LocalDev\dist_dir.txt"
+set /p ZA_DIR=&lt;"$(ProjectDir)LocalDev\7za_dir.txt"
+set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
 
 @echo distributing $(Targetname) files...
-copy /Y "$(TargetPath)" "$(ProjectDir)Distribution\GameData\$(Targetname)\Plugins\"
-copy /Y "$(TargetDir)CLSInterfaces.dll" "$(ProjectDir)Distribution\GameData\$(Targetname)\Plugins\"
+copy /Y "$(TargetPath)" "$(ProjectDir)Distribution\GameData\BDArmory\Plugins\"
 
 @echo building $(Targetname).dll.mdb file...
 cd "$(TargetDir)"
-call "%2525PDB2MDB_EXE%2525" $(Targetname).dll
+call "%25PDB2MDB_EXE%25" $(Targetname).dll
 
-copy /Y "$(TargetDir)$(Targetname).dll.mdb" "%2525KSP_DIR%2525\GameData\$(Targetname)\Plugins\"
+copy /Y "$(TargetDir)$(Targetname).dll.mdb" "%25KSP_DIR%25\GameData\BDArmory\Plugins\"
 
 @echo packaging files...
-if exist "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\$(Targetname)*.zip" del "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\$(Targetname)*.zip"
-call "%2525ZA_DIR%2525\7za.exe" a -tzip -r  "%2525DIST_DIR%2525\$(Targetname).@(VersionNumber)_%2525DATE:~4,2%2525%2525DATE:~7,2%2525%2525DATE:~10,4%2525.zip" "$(ProjectDir)Distribution\*.*"
+if exist "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\$(Targetname)*.zip" del "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\BDArmory*.zip"
+call "%25ZA_DIR%25\7za.exe" a -tzip -r  "%25DIST_DIR%25\BDArmory.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25.zip" "$(ProjectDir)Distribution\*.*"
 
-@echo Deploy $(Targetname) Distribution files to test env:  %2525KSP_DIR%2525\GameData...
-xcopy /E /Y "$(SolutionDir)$(ProjectName)\Distribution\GameData" "%2525KSP_DIR%2525\GameData"
-copy /Y "$(TargetDir)$(Targetname).pdb" "%2525KSP_DIR%2525\GameData\$(Targetname)\Plugins\"
+@echo Deploy $(Targetname) Distribution files to test env:  %25KSP_DIR%25\GameData...
+@echo copying:"$(SolutionDir)Distribution\GameData" to "%25KSP_DIR%25\GameData" 
+xcopy /E /Y "$(SolutionDir)Distribution\GameData" "%25KSP_DIR%25\GameData"
+copy /Y "$(TargetDir)$(Targetname).pdb" "%25KSP_DIR%25\GameData\BDArmory\Plugins\"
 
 @echo Build/deploy complete!
-
 </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <Target Name="PostBuildMacros">
+    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+      <Output TaskParameter="Assemblies" ItemName="Targets" />
+    </GetAssemblyIdentity>
+    <ItemGroup>
+      <VersionNumber Include="@(Targets->'%(Version)')" />
+    </ItemGroup>
+  </Target>
+  <PropertyGroup>
+    <PostBuildEventDependsOn>
+    $(PostBuildEventDependsOn);
+    PostBuildMacros;
+  </PostBuildEventDependsOn>
   </PropertyGroup>
 </Project>
