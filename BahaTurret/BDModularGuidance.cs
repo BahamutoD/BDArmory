@@ -29,7 +29,7 @@ namespace BahaTurret
 
         public Vessel SourceVessel;
 
-        public MissileLauncher.TargetingModes TargetingMode = MissileLauncher.TargetingModes.GPS;
+        public MissileLauncher.TargetingModes TargetingMode = MissileLauncher.TargetingModes.Radar;
 
         public MissileFire TargetMf;
 
@@ -39,7 +39,7 @@ namespace BahaTurret
 
         public float TimeToImpact;
 
-        
+
 
         public WeaponClasses GetWeaponClass()
         {
@@ -76,10 +76,10 @@ namespace BahaTurret
                     break;
             }
 
-            if (Fields["cruiseAltitude"] != null)
+            if (Fields["CruiseAltitude"] != null)
             {
-                Fields["cruiseAltitude"].guiActive = GuidanceMode == 3;
-                Fields["cruiseAltitude"].guiActiveEditor = GuidanceMode == 3;
+                Fields["CruiseAltitude"].guiActive = GuidanceMode == 3;
+                Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == 3;
             }
             
 
@@ -206,12 +206,13 @@ namespace BahaTurret
 
         private void UpdateVesselTransform()
         {
-            _vesselTransform = part.vessel.vesselTransform;
-            //if (_vesselTransform != null)
-            //{
-            //    part.SetReferenceTransform(_vesselTransform);
-            //}
-            _parentVessel = vessel;
+            if (this.part.vessel != null && this.part.vessel.vesselTransform != null)
+            {
+                 _vesselTransform = part.vessel.vesselTransform;
+                _parentVessel = vessel;
+
+                part.SetReferenceTransform(_vesselTransform);
+            }
         }
 
 
@@ -320,7 +321,7 @@ namespace BahaTurret
             DropTime;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"),
-         UI_FloatRange(minValue = 0f, maxValue = 50f, stepIncrement = 1f, scene = UI_Scene.All)] public float
+         UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 1f, scene = UI_Scene.All)] public float
             DetonationDistance;
 
 
@@ -331,6 +332,9 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerFactor"),
          UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)] public float
             SteerMult = 10;
+        
+
+
         #endregion
 
         #region KSP ACTIONS
@@ -345,19 +349,46 @@ namespace BahaTurret
         public void AgFire(KSPActionParam param)
         {
             FireMissile();
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
         }
 
         #endregion
 
         #region KSP EVENTS
 
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire Missile", active = true)]
         public void FireMissile()
         {
+            //BDATargetManager.FiredMissiles.Add(this);
+
+            foreach (var wpm in vessel.FindPartModulesImplementing<MissileFire>())
+            {
+                Team = wpm.team;
+                break;
+            }
+
+            SourceVessel = vessel;
+
+            SetTargeting();
+
+
             Jettison();
+
+            vessel.vesselName = GetShortName();
+            vessel.vesselType = VesselType.Station;
+
             _firedTime = DateTime.Now;
             _firedTriggered = true;
+
+
+
         }
+
+        private void SetTargeting()
+        {
+        }
+
+        public Vector3 StartDirection { get; set; }
 
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Start Guidance", active = true)]
         public void StartGuidance()
