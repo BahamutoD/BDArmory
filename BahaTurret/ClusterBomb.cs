@@ -38,7 +38,7 @@ namespace BahaTurret
 		
 		
 		
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart (StartState state)
 		{
 			submunitions = new List<GameObject>();
 			foreach(var sub in part.FindModelTransforms("submunition"))
@@ -79,7 +79,7 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate ()
 		{
-			if(missileLauncher!=null && missileLauncher.timeIndex > deployDelay && !deployed && AltitudeTrigger())
+			if(missileLauncher!=null && missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
 			{
 				DeploySubmunitions();
 			}
@@ -137,7 +137,7 @@ namespace BahaTurret
 			}
 				
 			part.explosionPotential = 0;
-			missileLauncher.hasFired = false;
+			missileLauncher.HasFired = false;
 
 			part.temperature = part.maxTemp + 10;
 		}
@@ -239,7 +239,7 @@ namespace BahaTurret
 		void Detonate(Vector3 pos)
 		{
 			ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, FlightGlobals.getUpAxis(), subExplModelPath, subExplSoundPath);
-			GameObject.Destroy(gameObject); //destroy bullet on collision
+			Destroy(gameObject); //destroy bullet on collision
 		}
 		
 		
@@ -284,15 +284,15 @@ namespace BahaTurret
 				RaycastHit hit;
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
-					GameObject.Destroy(gameObject);
+					Destroy(gameObject);
 				}
 				else if(FlightGlobals.getAltitudeAtPos(currPosition)<=0)
 				{
-					GameObject.Destroy(gameObject);
+					Destroy(gameObject);
 				}
 				else if(Time.time - startTime > 20)
 				{
-					GameObject.Destroy(gameObject);
+					Destroy(gameObject);
 				}
 			}
 		}

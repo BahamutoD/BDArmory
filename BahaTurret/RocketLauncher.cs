@@ -268,7 +268,7 @@ namespace BahaTurret
 
 
 
-        public override void OnStart (PartModule.StartState state)
+        public override void OnStart (StartState state)
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
@@ -1015,7 +1015,7 @@ namespace BahaTurret
 				}
 			}
 
-			GameObject.Destroy(gameObject); //destroy rocket on collision
+			Destroy(gameObject); //destroy rocket on collision
 		}
 
 
@@ -1039,7 +1039,7 @@ namespace BahaTurret
 
         void UpdateVolume()
         {
-            if (this.audioSource)
+            if (audioSource)
             {
                 audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
             }

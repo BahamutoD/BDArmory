@@ -91,7 +91,7 @@ namespace BahaTurret
 			op.poolObjectName = obj.name;
 			if(!destroyOnLoad)
 			{
-				GameObject.DontDestroyOnLoad(poolObject);
+				DontDestroyOnLoad(poolObject);
 			}
 			
 			return op;

@@ -393,7 +393,7 @@ namespace BahaTurret
 						{
 							if(tInfo.isMissile)
 							{
-								MissileLauncher missile;
+								GenericMissile missile;
 								if(missile = tInfo.missileModule)
 								{
 									results.foundMissile = true;
@@ -401,22 +401,22 @@ namespace BahaTurret
 									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missile.part.transform.position;
 									Vector3 relV = missile.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
 									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
-									if(missile.hasFired && missile.timeIndex > 1 && approaching && (missile.targetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
+									if(missile.HasFired && missile.TimeIndex > 1 && approaching && (missile.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
-										if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+										if(missile.TargetingMode == GenericMissile.TargetingModes.Heat)
 										{
 											results.foundHeatMissile = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
 											results.threatPosition = missile.transform.position;
 											break;
 										}
-										else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
+										else if(missile.TargetingMode == GenericMissile.TargetingModes.Radar)
 										{
 											results.foundRadarMissile = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
 											results.threatPosition = missile.transform.position;
 										}
-										else if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
+										else if(missile.TargetingMode == GenericMissile.TargetingModes.Laser)
 										{
 											results.foundAGM = true;
 											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));

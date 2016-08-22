@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
-    public class BDModularGuidance : PartModule, IBDWeapon
+    public class BDModularGuidance : GenericMissile, IBDWeapon
     {
         private DateTime _firedTime;
         private bool _firedTriggered;
@@ -21,21 +21,13 @@ namespace BahaTurret
 
         private PartModule _targetDecoupler;
 
-        public bool HasFired;
-
         public Vessel LegacyTargetVessel;
 
         public AudioSource SfAudioSource;
 
         public Vessel SourceVessel;
 
-        public MissileLauncher.TargetingModes TargetingMode = MissileLauncher.TargetingModes.Radar;
-
         public MissileFire TargetMf;
-
-        public Vector3 TargetPosition = Vector3.zero;
-
-        public bool Team;
 
         public float TimeToImpact;
 
@@ -53,7 +45,9 @@ namespace BahaTurret
 
         public string GetSubLabel()
         {
-            return Enum.GetName(typeof(MissileLauncher.TargetingModes), MissileLauncher.TargetingModes.GPS);
+            // TODO BDModularGuidance: KSP enum targerting modes
+            this.TargetingMode = TargetingModes.Heat;
+            return Enum.GetName(typeof(TargetingModes), this.TargetingMode);
         }
 
         public Part GetPart()
@@ -206,7 +200,7 @@ namespace BahaTurret
 
         private void UpdateVesselTransform()
         {
-            if (this.part.vessel != null && this.part.vessel.vesselTransform != null)
+            if (part.vessel != null && part.vessel.vesselTransform != null)
             {
                  _vesselTransform = part.vessel.vesselTransform;
                 _parentVessel = vessel;

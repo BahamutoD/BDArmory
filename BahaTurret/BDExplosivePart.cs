@@ -35,7 +35,7 @@ namespace BahaTurret
 	//	bool hasFired = false;
 		bool hasDetonated = false;
 		
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart (StartState state)
 		{
 			part.OnJustAboutToBeDestroyed += new Callback(Detonate);
 			part.force_activate();
@@ -56,15 +56,15 @@ namespace BahaTurret
 	    private void CalculateBlast()
 	    {
             
-            if (this.part.Resources["HighExplosive"].amount == this.previousMass) return;
+            if (part.Resources["HighExplosive"].amount == previousMass) return;
            
-	        var explosiveMass = this.part.Resources["HighExplosive"].amount;
+	        var explosiveMass = part.Resources["HighExplosive"].amount;
             //=LOG10(m+1)*(10+(m^1.6/(14*m+1)))
-            this.blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
+            blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
            
-            this.blastRadius = 2 * this.blastPower;
+            blastRadius = 2 * blastPower;
 
-	        this.previousMass = this.part.Resources["HighExplosive"].amount;
+	        previousMass = part.Resources["HighExplosive"].amount;
 	    }
 		
 		public void Detonate()

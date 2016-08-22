@@ -103,7 +103,7 @@ namespace BahaTurret
 		public static void CreateSeismicExplosion(Vector3 pos, Quaternion rot)
 		{
 			GameObject explosionModel = GameDatabase.Instance.GetModel("BDArmory/Models/seismicCharge/seismicExplosion");
-			GameObject explosionObject = (GameObject) GameObject.Instantiate(explosionModel, pos, rot);
+			GameObject explosionObject = (GameObject) Instantiate(explosionModel, pos, rot);
 			explosionObject.SetActive(true);
 			explosionObject.AddComponent<SeismicChargeFX>();
 		}

@@ -420,7 +420,7 @@ namespace BahaTurret
 				{
 					if(missileReferenceTransforms[i])
 					{
-						GameObject.Destroy(missileReferenceTransforms[i].gameObject);
+						Destroy(missileReferenceTransforms[i].gameObject);
 					}
 				}
 			}
@@ -499,7 +499,7 @@ namespace BahaTurret
 
 			for(int i = 0; i < missileChildren.Length; i++)
 			{
-				if(missileTransforms[i] && missileChildren[i] && !missileChildren[i].hasFired)
+				if(missileTransforms[i] && missileChildren[i] && !missileChildren[i].HasFired)
 				{
 					missileTransforms[i].position = missileReferenceTransforms[i].position;
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
@@ -558,8 +558,8 @@ namespace BahaTurret
 			float forwardSpeed = ml.decoupleSpeed;
 			while(ml && Vector3.SqrMagnitude(ml.transform.position - ray.origin) < railLength*railLength)
 			{
-				float thrust = ml.timeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
-				thrust = ml.timeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
+				float thrust = ml.TimeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
+				thrust = ml.TimeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
 				float accel = thrust / ml.part.mass;
 				forwardSpeed += accel * Time.fixedDeltaTime;
 

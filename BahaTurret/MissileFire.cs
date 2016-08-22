@@ -682,7 +682,7 @@ namespace BahaTurret
 			}
 		}
 		
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart (StartState state)
 		{
 			UpdateMaxGuardRange();
 			
@@ -961,7 +961,7 @@ namespace BahaTurret
 			if(selectedWeapon!=null && selectedWeapon.GetWeaponClass() == WeaponClasses.Missile && vessel.isActiveVessel)
 			{
 				MissileLauncher ml = currentMissile;
-				if(ml.targetingMode == MissileLauncher.TargetingModes.Heat)
+				if(ml.TargetingMode == GenericMissile.TargetingModes.Heat)
 				{
 					if(targetingAudioSource.clip != heatGrowlSound)
 					{
@@ -1738,11 +1738,11 @@ namespace BahaTurret
 
 		public void SendTargetDataToMissile(MissileLauncher ml)
 		{
-			if(ml.targetingMode == MissileLauncher.TargetingModes.Laser && laserPointDetected)
+			if(ml.TargetingMode == GenericMissile.TargetingModes.Laser && laserPointDetected)
 			{
 				ml.lockedCamera = foundCam;
 			}
-			else if(ml.targetingMode == MissileLauncher.TargetingModes.GPS)
+			else if(ml.TargetingMode == GenericMissile.TargetingModes.GPS)
 			{
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
@@ -1758,12 +1758,12 @@ namespace BahaTurret
 					ml.targetAcquired = true;
 				}
 			}
-			else if(ml.targetingMode == MissileLauncher.TargetingModes.Heat && heatTarget.exists)
+			else if(ml.TargetingMode == GenericMissile.TargetingModes.Heat && heatTarget.exists)
 			{
 				ml.heatTarget = heatTarget;
 				heatTarget = TargetSignatureData.noTarget;
 			}
-			else if(ml.targetingMode == MissileLauncher.TargetingModes.Radar && vesselRadarData && vesselRadarData.locked)//&& radar && radar.lockedTarget.exists)
+			else if(ml.TargetingMode == GenericMissile.TargetingModes.Radar && vesselRadarData && vesselRadarData.locked)//&& radar && radar.lockedTarget.exists)
 			{
 				//ml.radarTarget = radar.lockedTarget;
 				ml.radarTarget = vesselRadarData.lockedTargetData.targetData;
@@ -1784,7 +1784,7 @@ namespace BahaTurret
 				*/
 
 			}
-			else if(ml.targetingMode == MissileLauncher.TargetingModes.AntiRad && antiRadTargetAcquired)
+			else if(ml.TargetingMode == GenericMissile.TargetingModes.AntiRad && antiRadTargetAcquired)
 			{
 				ml.targetAcquired = true;
 				ml.targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(antiRadiationTarget, vessel.mainBody);
@@ -2012,7 +2012,7 @@ namespace BahaTurret
 				MissileLauncher missile = currentMissile;
 				if(missile)
 				{
-					if(missile.targetingMode == MissileLauncher.TargetingModes.Laser)
+					if(missile.TargetingMode == GenericMissile.TargetingModes.Laser)
 					{
 						if(laserPointDetected && foundCam)
 						{
@@ -2027,7 +2027,7 @@ namespace BahaTurret
 							}
 						}
 					}
-					else if(missile.targetingMode == MissileLauncher.TargetingModes.Heat)
+					else if(missile.TargetingMode == GenericMissile.TargetingModes.Heat)
 					{
 						if(heatTarget.exists)
 						{
@@ -2044,7 +2044,7 @@ namespace BahaTurret
 							BDGUIUtils.DrawTextureOnWorldPos(currentMissile.missileReferenceTransform.position + (2000 * currentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
 						}
 					}
-					else if(missile.targetingMode == MissileLauncher.TargetingModes.Radar)
+					else if(missile.TargetingMode == GenericMissile.TargetingModes.Radar)
 					{
 						//if(radar && radar.locked)
 						if(vesselRadarData && vesselRadarData.locked)
@@ -2066,7 +2066,7 @@ namespace BahaTurret
 							}
 						}
 					}
-					else if(missile.targetingMode == MissileLauncher.TargetingModes.AntiRad)
+					else if(missile.TargetingMode == GenericMissile.TargetingModes.AntiRad)
 					{
 						if(rwr && rwr.rwrEnabled)
 						{
@@ -2088,7 +2088,7 @@ namespace BahaTurret
 
 				}
 
-				if((missile && missile.targetingMode == MissileLauncher.TargetingModes.GPS) || BDArmorySettings.Instance.showingGPSWindow)
+				if((missile && missile.TargetingMode == GenericMissile.TargetingModes.GPS) || BDArmorySettings.Instance.showingGPSWindow)
 				{
 					if(designatedGPSCoords != Vector3d.zero)
 					{
@@ -2459,11 +2459,11 @@ namespace BahaTurret
                     TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
 
                     if (nearbyThreat != null && nearbyFriendly != null)
-                        if (nearbyThreat.weaponManager.team != this.team && nearbyFriendly.weaponManager.team == this.team)          //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
+                        if (nearbyThreat.weaponManager.team != team && nearbyFriendly.weaponManager.team == team)          //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
                         {
-                            if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
+                            if (nearbyThreat == currentTarget && nearbyFriendly.weaponManager.currentTarget != null)       //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
                             {
-                                this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
+                                SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
                                 nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                     Debug.Log(vessel.vesselName + " called for help from " + nearbyFriendly.Vessel.vesselName + " and took its target in return");
@@ -2698,7 +2698,7 @@ namespace BahaTurret
 					StartCoroutine(MissileAwayRoutine(ml));
 					UpdateList();
 				}
-				else if(ml.targetingMode == MissileLauncher.TargetingModes.Radar && vesselRadarData)
+				else if(ml.TargetingMode == GenericMissile.TargetingModes.Radar && vesselRadarData)
 				{
 					float attemptLockTime = Time.time; 
 					while((!vesselRadarData.locked || (vesselRadarData.lockedTargetData.vessel != guardTarget)) && Time.time-attemptLockTime < 2)
@@ -2753,7 +2753,7 @@ namespace BahaTurret
 						StartCoroutine(MissileAwayRoutine(ml));
 					}
 				}
-				else if(ml.targetingMode == MissileLauncher.TargetingModes.Heat)
+				else if(ml.TargetingMode == GenericMissile.TargetingModes.Heat)
 				{
 					if(vesselRadarData && vesselRadarData.locked)
 					{
@@ -2832,12 +2832,12 @@ namespace BahaTurret
 						StartCoroutine(MissileAwayRoutine(ml));
 					}
 				}
-				else if(ml.targetingMode == MissileLauncher.TargetingModes.GPS)
+				else if(ml.TargetingMode == GenericMissile.TargetingModes.GPS)
 				{
 					designatedGPSInfo = new GPSTargetInfo(VectorUtils.WorldPositionToGeoCoords(guardTarget.CoM, vessel.mainBody), guardTarget.vesselName.Substring(0, Mathf.Min(12, guardTarget.vesselName.Length)));
 					FireCurrentMissile(true);
 				}
-				else if(ml.targetingMode == MissileLauncher.TargetingModes.AntiRad)
+				else if(ml.TargetingMode == GenericMissile.TargetingModes.AntiRad)
 				{
 					if(rwr)
 					{
@@ -2862,7 +2862,7 @@ namespace BahaTurret
 						StartCoroutine(MissileAwayRoutine(ml));
 					}
 				}
-				else if(ml.targetingMode == MissileLauncher.TargetingModes.Laser)
+				else if(ml.TargetingMode == GenericMissile.TargetingModes.Laser)
 				{
 					if(targetingPods.Count > 0) //if targeting pods are available, slew them onto target and lock.
 					{
@@ -2915,7 +2915,7 @@ namespace BahaTurret
 			float bombStartTime = Time.time;
 			float bombAttemptDuration = Mathf.Max(targetScanInterval, 12f);
 			float radius = currentMissile.blastRadius * Mathf.Min((1 + ((float)maxMissilesOnTarget/2f)), 1.5f);
-			if(currentMissile.targetingMode == MissileLauncher.TargetingModes.GPS && Vector3.Distance(designatedGPSInfo.worldPos, guardTarget.CoM) > currentMissile.blastRadius)
+			if(currentMissile.TargetingMode == GenericMissile.TargetingModes.GPS && Vector3.Distance(designatedGPSInfo.worldPos, guardTarget.CoM) > currentMissile.blastRadius)
 			{
 				//check database for target first
 				float twoxsqrRad = 4f * radius * radius;
@@ -3085,7 +3085,7 @@ namespace BahaTurret
 
 					if(SwitchToAirMissile ()) //Use missiles if available
 					{
-						if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar)
+						if(currentMissile.TargetingMode == GenericMissile.TargetingModes.Radar)
 						{
 							foreach(var rd in radars)
 							{
@@ -3128,7 +3128,7 @@ namespace BahaTurret
 				{
 					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
 					{
-						if(ml.targetingMode == MissileLauncher.TargetingModes.AntiRad)
+						if(ml.TargetingMode == GenericMissile.TargetingModes.AntiRad)
 						{
 							return true;
 						}
@@ -3171,10 +3171,10 @@ namespace BahaTurret
 						{
 							foreach(var missile in v.FindPartModulesImplementing<MissileLauncher>())
 							{
-								if(missile.hasFired && missile.team != team)
+								if(missile.HasFired && missile.Team != team)
 								{
 									BDATargetManager.ReportVessel(v, this);
-									if(!isFlaring && missile.targetingMode == MissileLauncher.TargetingModes.Heat && Vector3.Angle(missile.transform.forward, transform.position - missile.transform.position) < 20)
+									if(!isFlaring && missile.TargetingMode == GenericMissile.TargetingModes.Heat && Vector3.Angle(missile.transform.forward, transform.position - missile.transform.position) < 20)
 									{
 										StartCoroutine(FlareRoutine(targetScanInterval * 0.75f));
 									}
@@ -3693,7 +3693,7 @@ namespace BahaTurret
 						   || ml.guidanceMode == MissileLauncher.GuidanceModes.STS
 						   || ml.guidanceMode == MissileLauncher.GuidanceModes.Cruise)
 						{
-							if(!BDArmorySettings.ALLOW_LEGACY_TARGETING && ml.targetingMode == MissileLauncher.TargetingModes.AntiRad)
+							if(!BDArmorySettings.ALLOW_LEGACY_TARGETING && ml.TargetingMode == GenericMissile.TargetingModes.AntiRad)
 							{
 								break;
 							}
@@ -3719,7 +3719,7 @@ namespace BahaTurret
 			{
 				if(weaponArray[i].GetWeaponClass() == WeaponClasses.Bomb)
 				{
-					if(weaponArray[i].GetPart().FindModuleImplementing<MissileLauncher>().targetingMode == MissileLauncher.TargetingModes.GPS)
+					if(weaponArray[i].GetPart().FindModuleImplementing<MissileLauncher>().TargetingMode == GenericMissile.TargetingModes.GPS)
 					{
 						if(targetingPods.Count == 0)
 						{
@@ -4225,7 +4225,7 @@ namespace BahaTurret
 				float closestAngle = 360;
 				MissileLauncher missile = currentMissile;
 				if(!missile) return;
-				if(missile.targetingMode != MissileLauncher.TargetingModes.AntiRad) return;
+				if(missile.TargetingMode != GenericMissile.TargetingModes.AntiRad) return;
 				for(int i = 0; i < rwr.pingsData.Length; i++)
 				{
 					if(rwr.pingsData[i].exists && (rwr.pingsData[i].signalStrength == 0 || rwr.pingsData[i].signalStrength == 5))
@@ -4248,7 +4248,7 @@ namespace BahaTurret
 		void SearchForLaserPoint()
 		{
 			MissileLauncher ml = currentMissile;
-			if(!ml || ml.targetingMode != MissileLauncher.TargetingModes.Laser)
+			if(!ml || ml.TargetingMode != GenericMissile.TargetingModes.Laser)
 			{
 				return;
 			}
@@ -4269,7 +4269,7 @@ namespace BahaTurret
 		void SearchForHeatTarget()
 		{
 			MissileLauncher ml = currentMissile;
-			if(!ml || ml.targetingMode != MissileLauncher.TargetingModes.Heat)
+			if(!ml || ml.TargetingMode != GenericMissile.TargetingModes.Heat)
 			{
 				return;
 			}

@@ -8,7 +8,7 @@ namespace BahaTurret
 	public class BDMMLauncher : PartModule
 	{
 		
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart (StartState state)
 		{
 			part.force_activate();
 		}

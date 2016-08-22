@@ -60,7 +60,7 @@ namespace BahaTurret
 
 		}
 		
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart (StartState state)
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{

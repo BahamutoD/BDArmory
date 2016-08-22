@@ -289,7 +289,7 @@ namespace BahaTurret
 				TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
 				if(mf == null || 
 					!tInfo || 
-					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.missileModule.MissileState == MissileLauncher.MissileStates.Boost || tInfo.missileModule.MissileState == MissileLauncher.MissileStates.Cruise)))
+					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.missileModule.MissileState == GenericMissile.MissileStates.Boost || tInfo.missileModule.MissileState == GenericMissile.MissileStates.Cruise)))
 				{
 					if(vessel.GetTotalMass() < minMass)
 					{
@@ -684,11 +684,11 @@ namespace BahaTurret
 					return;
 				}
 
-				foreach(var ml in v.FindPartModulesImplementing<MissileLauncher>())
+				foreach(var ml in v.FindPartModulesImplementing<GenericMissile>())
 				{
-					if(ml.hasFired)
+					if(ml.HasFired)
 					{
-						if(ml.team != reporter.team)
+						if(ml.Team != reporter.team)
 						{
 							info = v.gameObject.AddComponent<TargetInfo>();
 						}
@@ -882,7 +882,7 @@ namespace BahaTurret
 					{
 						if(targetingMeOnly)
 						{
-							if(Vector3.SqrMagnitude(target.missileModule.targetPosition - mf.vessel.CoM) > 60 * 60)
+							if(Vector3.SqrMagnitude(target.missileModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
 							{
 								continue;
 							}

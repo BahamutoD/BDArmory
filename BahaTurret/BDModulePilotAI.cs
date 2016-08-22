@@ -736,7 +736,7 @@ namespace BahaTurret
 							finalMaxSteer = GetSteerLimiterForSpeedAndPower();
 						}
 
-						if(missile.targetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
+						if(missile.TargetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
 						{
 							debugString += "\nAttempting heat lock";
 							target += v.srf_velocity.normalized * 10;
@@ -1770,7 +1770,7 @@ namespace BahaTurret
 
 				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
 				float maxOffBoresight = missile.maxOffBoresight;
-				if(missile.targetingMode == MissileLauncher.TargetingModes.GPS) maxOffBoresight = 45;
+				if(missile.TargetingMode == GenericMissile.TargetingModes.GPS) maxOffBoresight = 45;
 
 				float fTime = 2f;
 				Vector3 futurePos = target + (targetV.srf_velocity * fTime);

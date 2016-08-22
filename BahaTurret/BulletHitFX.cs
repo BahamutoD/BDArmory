@@ -62,7 +62,7 @@ namespace BahaTurret
 		public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet)
 		{
 			GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
-			GameObject newExplosion = (GameObject) GameObject.Instantiate(go, position, Quaternion.LookRotation(normalDirection));
+			GameObject newExplosion = (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));
 			newExplosion.SetActive(true);
 			newExplosion.AddComponent<BulletHitFX>();
 			newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;

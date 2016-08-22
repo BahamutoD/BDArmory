@@ -605,7 +605,7 @@ namespace BahaTurret
 			if(v.isActiveVessel)
 			{
 				GetWeaponManager();
-				BDArmorySettings.Instance.UpdateCursorState();
+				Instance.UpdateCursorState();
 			}
 		}
 		
@@ -693,7 +693,7 @@ namespace BahaTurret
 						BDGUIUtils.UseMouseEventInRect(gpsWindowRect);
 						foreach(var coordinate in BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(coordinate.worldPos, BDArmorySettings.Instance.greenDotTexture, new Vector2(8,8), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(coordinate.worldPos, Instance.greenDotTexture, new Vector2(8,8), 0);
 						}
 					}
 				}
@@ -955,7 +955,7 @@ namespace BahaTurret
 					string rangeLabel = ALLOW_LEGACY_TARGETING ? "Guard Range" : "Visual Range";
 					GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), rangeLabel, leftLabel);
 					float guardRange = ActiveWeaponManager.guardRange;
-					float maxVisRange = ALLOW_LEGACY_TARGETING ? Mathf.Clamp(PHYSICS_RANGE, 2500, 100000) : BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
+					float maxVisRange = ALLOW_LEGACY_TARGETING ? Mathf.Clamp(PHYSICS_RANGE, 2500, 100000) : MAX_GUARD_VISUAL_RANGE;
 					guardRange = GUI.HorizontalSlider(new Rect(leftIndent+90, (guardLines*entryHeight), contentWidth-90-38, entryHeight), guardRange, 100, maxVisRange);
 					guardRange = guardRange/100;
 					guardRange = Mathf.Round(guardRange);
@@ -1631,7 +1631,7 @@ namespace BahaTurret
 		
 		void OnVesselGoOffRails(Vessel v)
 		{
-			if(v.Landed && BDArmorySettings.DRAW_DEBUG_LABELS)
+			if(v.Landed && DRAW_DEBUG_LABELS)
 			{
 				Debug.Log ("Loaded vessel: "+v.vesselName+", Velocity: "+v.srf_velocity+", packed: "+v.packed);
 				//v.SetWorldVelocity(Vector3d.zero);	

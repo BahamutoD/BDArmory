@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BahaTurret
 {
@@ -15,7 +16,7 @@ namespace BahaTurret
 			var strings = color.Split(","[0]);
 			for(int i = 0; i < 4; i++)
 			{
-				outputColor[i] = System.Single.Parse(strings[i])/255;	
+				outputColor[i] = Single.Parse(strings[i])/255;	
 			}
 			
 			return outputColor;
@@ -130,7 +131,7 @@ namespace BahaTurret
 		//refreshes part action window
 		public static void RefreshAssociatedWindows(Part part)
         {
-			foreach ( UIPartActionWindow window in GameObject.FindObjectsOfType( typeof( UIPartActionWindow ) ) ) 
+			foreach ( UIPartActionWindow window in Object.FindObjectsOfType( typeof( UIPartActionWindow ) ) ) 
             {
 				if ( window.part == part )
                 {

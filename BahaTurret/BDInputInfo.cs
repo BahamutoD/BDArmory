@@ -10,7 +10,7 @@ namespace BahaTurret
 		public BDInputInfo(string description)
 		{
 			this.description = description;
-			this.inputString = string.Empty;
+			inputString = string.Empty;
 		}
 
 		public BDInputInfo(string inputString, string description)

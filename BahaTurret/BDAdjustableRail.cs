@@ -24,7 +24,7 @@ namespace BahaTurret
 
 		Dictionary<string,Vector3> originalStackNodePosition;
 		
-		public override void OnStart (PartModule.StartState state)
+		public override void OnStart (StartState state)
 		{
 			railLengthTransform = part.FindModelTransform("Rail");
 			railHeightTransform = part.FindModelTransform("RailSleeve");

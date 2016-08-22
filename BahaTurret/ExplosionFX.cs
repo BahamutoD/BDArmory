@@ -60,7 +60,7 @@ namespace BahaTurret
 
 			if(Time.time-startTime > maxTime)
 			{
-				GameObject.Destroy(gameObject);	
+				Destroy(gameObject);	
 			}
 		}
 		
@@ -76,7 +76,7 @@ namespace BahaTurret
 				
 				
 			Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
-			GameObject newExplosion = (GameObject)GameObject.Instantiate(go, position, rotation);
+			GameObject newExplosion = (GameObject)Instantiate(go, position, rotation);
 			newExplosion.SetActive(true);
 			ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
 			eFx.exSound = soundClip;
