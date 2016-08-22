@@ -21,6 +21,7 @@ namespace BahaTurret
 		{
 			return (from avPart in parts.Where(p => p.partPrefab)
 				let missile = avPart.partPrefab.GetComponent<MissileLauncher>()
+                let modularMissile = avPart.partPrefab.GetComponent<BDModularGuidance>()
 				let moduleWeapon = avPart.partPrefab.GetComponent<ModuleWeapon>()
 				let missileFire = avPart.partPrefab.GetComponent<MissileFire>()
 				let moduleRadar = avPart.partPrefab.GetComponent<ModuleRadar>()

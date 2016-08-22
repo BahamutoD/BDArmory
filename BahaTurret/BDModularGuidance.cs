@@ -163,7 +163,7 @@ namespace BahaTurret
         {
             var ret = true;
             //If the next stage is greater than the number defined of stages the missile is done
-            if (_nextStage >= 128*(StagesNumber + 1))
+            if (_nextStage > 128*(StagesNumber + 1))
             {
                 return false;
             }
@@ -238,6 +238,7 @@ namespace BahaTurret
                 }
                 else
                 {
+
                     targetPosition = MissileGuidance.GetCruiseTarget(targetPosition, vessel, CruiseAltitude);
                 }
 
@@ -293,10 +294,9 @@ namespace BahaTurret
         }
 
         #region KSP FIELDS
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"),
-         UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)] public float
-            CruiseAltitude = 500;
+              UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)]
+        public float CruiseAltitude = 500;
 
         public bool GuidanceActive;
 

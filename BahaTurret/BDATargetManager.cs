@@ -25,7 +25,7 @@ namespace BahaTurret
 
 		public static List<ModuleTargetingCamera> ActiveLasers;
 
-		public static List<MissileLauncher> FiredMissiles;
+		public static List<IBDWeapon> FiredMissiles;
 
 		public static List<DestructibleBuilding> LoadedBuildings;
 
@@ -96,7 +96,7 @@ namespace BahaTurret
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
 
-			FiredMissiles = new List<MissileLauncher>();
+			FiredMissiles = new List<IBDWeapon>();
 
 			//AddToolbarButton();
 			StartCoroutine(ToolbarButtonRoutine());
@@ -206,44 +206,74 @@ namespace BahaTurret
 		/// <param name="maxBoreSight">Max bore sight.</param>
 		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
 		{
-			Transform referenceTransform = ml.transform;
-			float maxOffBoresight = ml.maxOffBoresight;
-			ModuleTargetingCamera finalCam = null;
-			float smallestAngle = 360;
-			foreach(var cam in ActiveLasers)
-			{
-				if(!cam)
-				{
-					continue;
-				}
+            return GetModuleTargeting(parentOnly, ml.transform, ml.maxOffBoresight, ml.vessel, ml.sourceVessel);
+        }
 
-				if(parentOnly && !(cam.vessel == ml.vessel || cam.vessel == ml.sourceVessel))
-				{
-					continue;
-				}
+        public static ModuleTargetingCamera GetLaserTarget(BDModularGuidance ml, bool parentOnly)
+        {
+            Transform referenceTransform = ml.transform;
+            float maxOffBoresight = 45;
+           
+            return GetModuleTargeting(parentOnly,referenceTransform,maxOffBoresight,ml.vessel,ml.SourceVessel);
+        }
+
+        private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Transform referenceTransform, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
+	    {
+            ModuleTargetingCamera finalCam = null;
+            float smallestAngle = 360;
+            foreach (var cam in ActiveLasers)
+            {
+                if (!cam)
+                {
+                    continue;
+                }
+
+                if (parentOnly && !(cam.vessel == vessel || cam.vessel == sourceVessel))
+                {
+                    continue;
+                }
 
 
-				if(cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
-				{
-					/*
-					if(ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding && Vector3.Dot(ml.transform.position - cam.transform.position, ml.transform.forward) < 0)
-					{
-						continue;
-					}
-					*/
+                if (cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
+                {
+                    float angle = Vector3.Angle(referenceTransform.forward, cam.groundTargetPosition - referenceTransform.position);
+                    if (angle < maxOffBoresight && angle < smallestAngle && CanSeePosition(cam.groundTargetPosition, vessel.transform, referenceTransform))
+                    {
+                        smallestAngle = angle;
+                        finalCam = cam;
+                    }
+                }
+            }
+            return finalCam;
+        }
 
-					float angle = Vector3.Angle(referenceTransform.forward, cam.groundTargetPosition-referenceTransform.position);
-					if(angle < maxOffBoresight && angle < smallestAngle && ml.CanSeePosition(cam.groundTargetPosition))
-					{
-						smallestAngle = angle;
-						finalCam = cam;
-					}
-				}
-			}
-			return finalCam;
-		}
+        public static bool CanSeePosition(Vector3 pos, Transform vesselTransform, Transform missileReferenceTransform)
+        {
+            if ((pos - vesselTransform.position).sqrMagnitude < Mathf.Pow(20, 2))
+            {
+                return false;
+            }
 
-		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
+            float dist = 10000;
+            Ray ray = new Ray(missileReferenceTransform.position, pos - missileReferenceTransform.position);
+            ray.origin += 10 * ray.direction;
+            RaycastHit rayHit;
+            if (Physics.Raycast(ray, out rayHit, dist, 557057))
+            {
+                if ((rayHit.point - pos).sqrMagnitude < 200)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
 		{
 			float minScore = highpassThreshold;
 			float minMass = 0.5f;

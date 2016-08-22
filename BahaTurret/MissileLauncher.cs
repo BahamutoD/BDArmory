@@ -1601,7 +1601,7 @@ namespace BahaTurret
 				ModuleTargetingCamera foundCam = null;
 				bool parentOnly = (guidanceMode == GuidanceModes.BeamRiding);
 				foundCam = BDATargetManager.GetLaserTarget(this, parentOnly);
-				if(foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized && CanSeePosition(foundCam.groundTargetPosition))
+				if(foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized &&  BDATargetManager.CanSeePosition(foundCam.groundTargetPosition,vessel.transform, missileReferenceTransform))
 				{
 					Debug.Log("Laser guided missile actively found laser point. Enabling guidance.");
 					lockedCamera = foundCam;
@@ -2077,31 +2077,31 @@ namespace BahaTurret
 
 
 
-		public bool CanSeePosition(Vector3 pos)
-		{
-			if((pos-transform.position).sqrMagnitude < Mathf.Pow(20,2))
-			{
-				return false;
-			}
+		//public bool CanSeePosition(Vector3 pos)
+		//{
+		//	if((pos-transform.position).sqrMagnitude < Mathf.Pow(20,2))
+		//	{
+		//		return false;
+		//	}
 
-			float dist = 10000;
-			Ray ray = new Ray(missileReferenceTransform.position, pos-missileReferenceTransform.position);
-			ray.origin += 10 * ray.direction;
-			RaycastHit rayHit;
-			if(Physics.Raycast(ray, out rayHit, dist, 557057))
-			{
-				if((rayHit.point-pos).sqrMagnitude < 200)
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
+		//	float dist = 10000;
+		//	Ray ray = new Ray(missileReferenceTransform.position, pos-missileReferenceTransform.position);
+		//	ray.origin += 10 * ray.direction;
+		//	RaycastHit rayHit;
+		//	if(Physics.Raycast(ray, out rayHit, dist, 557057))
+		//	{
+		//		if((rayHit.point-pos).sqrMagnitude < 200)
+		//		{
+		//			return true;
+		//		}
+		//		else
+		//		{
+		//			return false;
+		//		}
+		//	}
 
-			return true;
-		}
+		//	return true;
+		//}
 		
 		
 		
