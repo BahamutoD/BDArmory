@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
-    public class BDModularGuidance : GenericMissile, IBDWeapon
+    public class BDModularGuidance : MissileBase
     {
         private DateTime _firedTime;
         private bool _firedTriggered;
@@ -13,13 +13,13 @@ namespace BahaTurret
         private Vessel _parentVessel;
         private bool _readyForGuidance;
 
+        private PartModule _targetDecoupler;
+
         private Vessel _targetVessel;
 
         private Transform _velocityTransform;
 
         private Transform _vesselTransform;
-
-        private PartModule _targetDecoupler;
 
         public Vessel LegacyTargetVessel;
 
@@ -28,32 +28,6 @@ namespace BahaTurret
         public Vessel SourceVessel;
 
         public MissileFire TargetMf;
-
-        public float TimeToImpact;
-
-
-
-        public WeaponClasses GetWeaponClass()
-        {
-            return WeaponClasses.Missile;
-        }
-
-        public string GetShortName()
-        {
-            return ShortName;
-        }
-
-        public string GetSubLabel()
-        {
-            // TODO BDModularGuidance: KSP enum targerting modes
-            this.TargetingMode = TargetingModes.Heat;
-            return Enum.GetName(typeof(TargetingModes), this.TargetingMode);
-        }
-
-        public Part GetPart()
-        {
-            return part;
-        }
 
         private void RefreshGuidanceMode()
         {
@@ -75,7 +49,7 @@ namespace BahaTurret
                 Fields["CruiseAltitude"].guiActive = GuidanceMode == 3;
                 Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == 3;
             }
-            
+
 
             Misc.RefreshAssociatedWindows(part);
         }
@@ -196,13 +170,14 @@ namespace BahaTurret
 
             _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
+            this.weaponClass = WeaponClasses.Missile;
         }
 
         private void UpdateVesselTransform()
         {
             if (part.vessel != null && part.vessel.vesselTransform != null)
             {
-                 _vesselTransform = part.vessel.vesselTransform;
+                _vesselTransform = part.vessel.vesselTransform;
                 _parentVessel = vessel;
 
                 part.SetReferenceTransform(_vesselTransform);
@@ -223,8 +198,11 @@ namespace BahaTurret
 
                 if (GuidanceMode == 1)
                 {
+                    float timeToImpact;
                     targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, targetVelocity,
-                        targetAcceleration, vessel, out TimeToImpact);
+                        targetAcceleration, vessel, out timeToImpact);
+                    TimeToImpact = timeToImpact;
+
                 }
                 else if (GuidanceMode == 2)
                 {
@@ -232,7 +210,6 @@ namespace BahaTurret
                 }
                 else
                 {
-
                     targetPosition = MissileGuidance.GetCruiseTarget(targetPosition, vessel, CruiseAltitude);
                 }
 
@@ -288,15 +265,20 @@ namespace BahaTurret
         }
 
         #region KSP FIELDS
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"),
-              UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)]
-        public float CruiseAltitude = 500;
+         UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)] public float
+            CruiseAltitude = 500;
 
         public bool GuidanceActive;
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)] public
             string GuidanceLabel =
                 "AGM/STS";
+
+
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true)]
+        private string _targetingLabel  = TargetingModes.Laser.ToString();
 
         [KSPField(isPersistant = true)] public int GuidanceMode = 2;
 
@@ -326,8 +308,6 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerFactor"),
          UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)] public float
             SteerMult = 10;
-        
-
 
         #endregion
 
@@ -343,7 +323,8 @@ namespace BahaTurret
         public void AgFire(KSPActionParam param)
         {
             FireMissile();
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
+                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
         }
 
         #endregion
@@ -353,7 +334,7 @@ namespace BahaTurret
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire Missile", active = true)]
         public void FireMissile()
         {
-            //BDATargetManager.FiredMissiles.Add(this);
+            BDATargetManager.FiredMissiles.Add(this);
 
             foreach (var wpm in vessel.FindPartModulesImplementing<MissileFire>())
             {
@@ -373,9 +354,6 @@ namespace BahaTurret
 
             _firedTime = DateTime.Now;
             _firedTriggered = true;
-
-
-
         }
 
         private void SetTargeting()
@@ -407,7 +385,7 @@ namespace BahaTurret
             }
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "GuidanceMode", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Guidance Mode", active = true)]
         public void SwitchGuidanceMode()
         {
             GuidanceMode++;
@@ -419,10 +397,34 @@ namespace BahaTurret
             RefreshGuidanceMode();
         }
 
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Targeting Mode", active = true)]
+        public void SwitchTargetingMode()
+        {
+            var targetingModes = Enum.GetNames(typeof(TargetingModes));
+
+            var currentIndex = targetingModes.IndexOf(TargetingMode.ToString());
+
+            if (currentIndex < targetingModes.Length - 1)
+            {
+                TargetingMode = (TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[currentIndex + 1]);
+            }
+            else
+            {
+                TargetingMode = (TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[0]);
+            }
+
+            RefreshTargetingMode();
+        }
+
+        private void RefreshTargetingMode()
+        {
+            _targetingLabel = TargetingMode.ToString();
+            Misc.RefreshAssociatedWindows(part);
+        }
+
         [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
         public void Jettison()
         {
-
             if (_targetDecoupler == null || !_targetDecoupler || !(_targetDecoupler is IStageSeparator)) return;
             if (_targetDecoupler is ModuleDecouple)
             {

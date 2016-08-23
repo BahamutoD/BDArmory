@@ -393,33 +393,33 @@ namespace BahaTurret
 						{
 							if(tInfo.isMissile)
 							{
-								GenericMissile missile;
-								if(missile = tInfo.missileModule)
+								MissileBase missileBase;
+								if(missileBase = tInfo.MissileBaseModule)
 								{
 									results.foundMissile = true;
-									results.threatVessel = missile.vessel;
-									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missile.part.transform.position;
-									Vector3 relV = missile.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
+									results.threatVessel = missileBase.vessel;
+									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missileBase.part.transform.position;
+									Vector3 relV = missileBase.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
 									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
-									if(missile.HasFired && missile.TimeIndex > 1 && approaching && (missile.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
+									if(missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
-										if(missile.TargetingMode == GenericMissile.TargetingModes.Heat)
+										if(missileBase.TargetingMode == MissileBase.TargetingModes.Heat)
 										{
 											results.foundHeatMissile = true;
-											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
-											results.threatPosition = missile.transform.position;
+											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
+											results.threatPosition = missileBase.transform.position;
 											break;
 										}
-										else if(missile.TargetingMode == GenericMissile.TargetingModes.Radar)
+										else if(missileBase.TargetingMode == MissileBase.TargetingModes.Radar)
 										{
 											results.foundRadarMissile = true;
-											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
-											results.threatPosition = missile.transform.position;
+											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
+											results.threatPosition = missileBase.transform.position;
 										}
-										else if(missile.TargetingMode == GenericMissile.TargetingModes.Laser)
+										else if(missileBase.TargetingMode == MissileBase.TargetingModes.Laser)
 										{
 											results.foundAGM = true;
-											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missile.part.transform.position, myWpnManager.part.transform.position));
+											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
 											break;
 										}
 									}

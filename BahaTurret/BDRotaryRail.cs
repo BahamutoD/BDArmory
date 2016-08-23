@@ -41,7 +41,7 @@ namespace BahaTurret
 
 
 		public int missileCount = 0;
-		MissileLauncher[] missileChildren;
+		MissileLauncher[] _missileChildren;
 		Transform[] missileTransforms;
 		Transform[] missileReferenceTransforms;
 
@@ -69,14 +69,14 @@ namespace BahaTurret
 			}
 		}
 
-		public MissileLauncher nextMissile = null;
+		public MissileLauncher NextMissile = null;
 
-		MissileLauncher rdyMissile = null;
-		public MissileLauncher readyMissile
+		MissileLauncher _rdyMissile = null;
+		public MissileLauncher ReadyMissile
 		{
 			get
 			{
-				return rdyMissile;
+				return _rdyMissile;
 			}
 		}
 
@@ -455,30 +455,30 @@ namespace BahaTurret
 			if(missileCount == 0) return;
 			if(!ml) return;
 
-			if(readyMissile == ml) return;
+			if(ReadyMissile == ml) return;
 
 			//rotate to this missile specifically
-			for(int i = 0; i < missileChildren.Length; i++)
+			for(int i = 0; i < _missileChildren.Length; i++)
 			{
-				if(missileChildren[i] == ml)
+				if(_missileChildren[i] == ml)
 				{
 					RotateToIndex(missileToRailIndex[i], false);
-					nextMissile = ml;
+					NextMissile = ml;
 					return;
 				}
 			}
 				
 			//specific missile isnt here, but check if this type exists here
 
-			if(readyMissile && readyMissile.part.name == ml.part.name) return; //current missile is correct type
+			if(ReadyMissile && ReadyMissile.part.name == ml.part.name) return; //current missile is correct type
 
 			//look for missile type
-			for(int i = 0; i < missileChildren.Length; i++)
+			for(int i = 0; i < _missileChildren.Length; i++)
 			{
-				if(missileChildren[i].GetShortName() == ml.GetShortName())
+				if(_missileChildren[i].GetShortName() == ml.GetShortName())
 				{
 					RotateToIndex(missileToRailIndex[i], false);
-					nextMissile = missileChildren[i];
+					NextMissile = _missileChildren[i];
 					return;
 				}
 			}
@@ -497,7 +497,7 @@ namespace BahaTurret
 				{
 					Vector3 railPos = Quaternion.AngleAxis((float)r*railAngle, part.transform.up) * part.transform.forward;
 					railPos += part.transform.position;
-					float sqrDist = (missileChildren[i].transform.position - railPos).sqrMagnitude;
+					float sqrDist = (_missileChildren[i].transform.position - railPos).sqrMagnitude;
 					if(sqrDist < closestSqr)
 					{
 						rIndex = r;
@@ -527,15 +527,15 @@ namespace BahaTurret
 			{
 				if(railToMissileIndex.ContainsKey(index))
 				{
-					nextMissile = missileChildren[railToMissileIndex[index]];
+					NextMissile = _missileChildren[railToMissileIndex[index]];
 				}
 			}
 			else
 			{
-				nextMissile = null;
+				NextMissile = null;
 			}
 
-			if(!nextMissile && missileCount > 0)
+			if(!NextMissile && missileCount > 0)
 			{
 				RotateToIndex(Mathf.RoundToInt(Mathf.Repeat(index + 1, numberOfRails)), instant);
 				return;
@@ -548,7 +548,7 @@ namespace BahaTurret
 		IEnumerator RotateToIndexRoutine(int index, bool instant)
 		{
 			rdyToFire = false;
-			rdyMissile = null;
+			_rdyMissile = null;
 			railIndex = index;
 
 			/*
@@ -558,10 +558,10 @@ namespace BahaTurret
 			{
 				if(missileToRailIndex[mIndex] == index)
 				{
-					foundMissile = missileChildren[mIndex];
+					foundMissile = _missileChildren[mIndex];
 				}
 			}
-			nextMissile = foundMissile;
+			NextMissile = foundMissile;
 			*/
 
 
@@ -594,18 +594,18 @@ namespace BahaTurret
 				}
 			}
 				
-			if(nextMissile)
+			if(NextMissile)
 			{
-				rdyMissile = nextMissile;
+				_rdyMissile = NextMissile;
 				rdyToFire = true;
-				nextMissile = null;
+				NextMissile = null;
 
 				if(weaponManager)
 				{
-					if(wm.weaponIndex > 0 && wm.selectedWeapon.GetPart().name == rdyMissile.part.name)
+					if(wm.weaponIndex > 0 && wm.selectedWeapon.GetPart().name == _rdyMissile.part.name)
 					{
-						wm.selectedWeapon = rdyMissile;
-						wm.currentMissile = rdyMissile;
+						wm.selectedWeapon = _rdyMissile;
+						wm.CurrentMissile = _rdyMissile;
 					}
 				}
 			}
@@ -613,7 +613,7 @@ namespace BahaTurret
 
 		public void PrepMissileForFire(MissileLauncher ml)
 		{
-			if(ml != readyMissile)
+			if(ml != ReadyMissile)
 			{
 				//Debug.Log("Rotary rail tried prepping a missile for fire, but it is not in firing position");
 				return;
@@ -634,18 +634,18 @@ namespace BahaTurret
 		void PrepMissileForFire(int index)
 		{
 			//Debug.Log("Prepping missile for rotary rail fire.");
-			missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part];
+			_missileChildren[index].part.CoMOffset = comOffsets[_missileChildren[index].part];
 
 			missileTransforms[index].localPosition = Vector3.zero;
 			missileTransforms[index].localRotation = Quaternion.identity;
-			missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
-			missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
+			_missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
+			_missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
 
-			missileChildren[index].decoupleForward = false;
+			_missileChildren[index].decoupleForward = false;
 
-			missileChildren[index].part.rb.velocity = part.rb.GetPointVelocity(missileReferenceTransforms[index].position);
+			_missileChildren[index].part.rb.velocity = part.rb.GetPointVelocity(missileReferenceTransforms[index].position);
 
-			missileChildren[index].rotaryRail = this;
+			_missileChildren[index].rotaryRail = this;
 		}
 
 		public void FireMissile(int missileIndex)
@@ -657,29 +657,29 @@ namespace BahaTurret
 				return;
 			}
 
-			if(missileIndex >= missileChildren.Length)
+			if(missileIndex >= _missileChildren.Length)
 			{
 				return;
 			}
 
-			if(missileIndex < missileCount && missileChildren != null && missileChildren[missileIndex] != null)
+			if(missileIndex < missileCount && _missileChildren != null && _missileChildren[missileIndex] != null)
 			{
-				if(missileChildren[missileIndex] != readyMissile) return;
+				if(_missileChildren[missileIndex] != ReadyMissile) return;
 
 				PrepMissileForFire(missileIndex);
 
 				if(weaponManager)
 				{
-					wm.SendTargetDataToMissile(missileChildren[missileIndex]);
+					wm.SendTargetDataToMissile(_missileChildren[missileIndex]);
 				}
 
-				string firedMissileName = missileChildren[missileIndex].part.name;
+				string firedMissileName = _missileChildren[missileIndex].part.name;
 
-				missileChildren[missileIndex].FireMissile();
+				_missileChildren[missileIndex].FireMissile();
 
-				rdyMissile = null;
+				_rdyMissile = null;
 				rdyToFire = false;
-				//StartCoroutine(MissileRailRoutine(missileChildren[missileIndex]));
+				//StartCoroutine(MissileRailRoutine(_missileChildren[missileIndex]));
 
 				nextRailIndex = Mathf.RoundToInt(Mathf.Repeat(missileToRailIndex[missileIndex] + 1, numberOfRails));
 
@@ -690,7 +690,7 @@ namespace BahaTurret
 					wm.UpdateList();
 				}
 
-				if(railToMissileIndex.ContainsKey(nextRailIndex) && railToMissileIndex[nextRailIndex] < missileCount && missileChildren[railToMissileIndex[nextRailIndex]].part.name == firedMissileName)
+				if(railToMissileIndex.ContainsKey(nextRailIndex) && railToMissileIndex[nextRailIndex] < missileCount && _missileChildren[railToMissileIndex[nextRailIndex]].part.name == firedMissileName)
 				{
 					RotateToIndex(nextRailIndex, false);
 				}
@@ -711,7 +711,7 @@ namespace BahaTurret
 
 		public void FireMissile(MissileLauncher ml)
 		{
-			if(!readyToFire || ml != readyMissile)
+			if(!readyToFire || ml != ReadyMissile)
 			{
 				return;
 			}
@@ -735,7 +735,7 @@ namespace BahaTurret
 
 			for(int i = 0; i < missileCount; i++)
 			{
-				if(missileChildren[i] && missileChildren[i] == ml)
+				if(_missileChildren[i] && _missileChildren[i] == ml)
 				{
 					return i;
 				}
@@ -829,8 +829,8 @@ namespace BahaTurret
 				}
 			}
 
-			missileChildren = msl.ToArray();
-			missileCount = missileChildren.Length;
+			_missileChildren = msl.ToArray();
+			missileCount = _missileChildren.Length;
 			missileTransforms = mtfl.ToArray();
 			missileReferenceTransforms = mrl.ToArray();
 
@@ -879,10 +879,10 @@ namespace BahaTurret
 			/*
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				if(readyMissile)
+				if(ReadyMissile)
 				{
-					BDGUIUtils.DrawLineBetweenWorldPositions(readyMissile.missileReferenceTransform.position, readyMissile.missileReferenceTransform.position + readyMissile.missileReferenceTransform.forward, 3, Color.blue);
-					BDGUIUtils.DrawLineBetweenWorldPositions(readyMissile.missileReferenceTransform.position, readyMissile.missileReferenceTransform.position + readyMissile.missileReferenceTransform.up, 3, Color.green);
+					BDGUIUtils.DrawLineBetweenWorldPositions(ReadyMissile.missileReferenceTransform.position, ReadyMissile.missileReferenceTransform.position + ReadyMissile.missileReferenceTransform.forward, 3, Color.blue);
+					BDGUIUtils.DrawLineBetweenWorldPositions(ReadyMissile.missileReferenceTransform.position, ReadyMissile.missileReferenceTransform.position + ReadyMissile.missileReferenceTransform.up, 3, Color.green);
 
 				}
 
@@ -900,7 +900,7 @@ namespace BahaTurret
 				{
 					for(int i = 0; i < missileCount; i++)
 					{
-						MissileLauncher ml = missileChildren[i];
+						MissileLauncher ml = _missileChildren[i];
 						Vector2 guiPos;
 						if(BDGUIUtils.WorldToGUIPos(ml.transform.position, out guiPos))
 						{
@@ -939,14 +939,14 @@ namespace BahaTurret
 				return;
 			}
 
-			for(int i = 0; i < missileChildren.Length; i++)
+			for(int i = 0; i < _missileChildren.Length; i++)
 			{
-				if(missileTransforms[i] && missileChildren[i] && !missileChildren[i].HasFired)
+				if(missileTransforms[i] && _missileChildren[i] && !_missileChildren[i].HasFired)
 				{
 					missileTransforms[i].position = missileReferenceTransforms[i].position;
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
 
-					Part missilePart = missileChildren[i].part;
+					Part missilePart = _missileChildren[i].part;
 					Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart]));
 					missilePart.CoMOffset = newCoMOffset;
 				}

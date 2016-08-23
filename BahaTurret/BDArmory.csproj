@@ -73,7 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CFEnable.cs" />
-    <Compile Include="GenericMissile.cs" />
+    <Compile Include="MissileBase.cs" />
     <Compile Include="MissileLauncher.cs" />
     <Compile Include="Misc.cs" />
     <Compile Include="ShellCasing.cs" />

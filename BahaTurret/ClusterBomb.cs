@@ -9,7 +9,7 @@ namespace BahaTurret
 		
 		List<GameObject> submunitions;
 		List<GameObject> fairings;
-		MissileLauncher missileLauncher;
+		MissileLauncher _missileLauncher;
 
 		bool deployed = false;
 		
@@ -73,13 +73,13 @@ namespace BahaTurret
 				}
 			}
 			
-			missileLauncher = part.GetComponent<MissileLauncher>();
-			//missileLauncher.deployTime = deployDelay;
+			_missileLauncher = part.GetComponent<MissileLauncher>();
+			//MissileLauncher.deployTime = deployDelay;
 		}
 		
 		public override void OnFixedUpdate ()
 		{
-			if(missileLauncher!=null && missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
+			if(_missileLauncher!=null && _missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
 			{
 				DeploySubmunitions();
 			}
@@ -87,7 +87,7 @@ namespace BahaTurret
 		
 		void DeploySubmunitions()
 		{
-			missileLauncher.sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/flare"));
+			_missileLauncher.sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/flare"));
 			FXMonger.Explode(part, transform.position+part.rb.velocity*Time.fixedDeltaTime, 0.1f);
 			
 			deployed = true;
@@ -99,8 +99,8 @@ namespace BahaTurret
 				}
 			}
 			
-			missileLauncher.sfAudioSource.priority = 999;
-			//missileLauncher.explosionSize = 3;
+			_missileLauncher.sfAudioSource.priority = 999;
+			//MissileLauncher.explosionSize = 3;
 			
 			foreach(var sub in submunitions)
 			{
@@ -114,10 +114,10 @@ namespace BahaTurret
 				Submunition subScript = sub.AddComponent<Submunition>();
 				subScript.enabled = true;
 				subScript.deployed = true;
-				subScript.sourceVessel = missileLauncher.sourceVessel;
-				subScript.blastForce = missileLauncher.blastPower;
-				subScript.blastHeat = missileLauncher.blastHeat;
-				subScript.blastRadius = missileLauncher.blastRadius;
+				subScript.sourceVessel = _missileLauncher.sourceVessel;
+				subScript.blastForce = _missileLauncher.blastPower;
+				subScript.blastHeat = _missileLauncher.blastHeat;
+				subScript.blastRadius = _missileLauncher.blastRadius;
 				subScript.subExplModelPath = subExplModelPath;
 				subScript.subExplSoundPath = subExplSoundPath;
 				sub.AddComponent<KSPForceApplier>();
@@ -137,7 +137,7 @@ namespace BahaTurret
 			}
 				
 			part.explosionPotential = 0;
-			missileLauncher.HasFired = false;
+			_missileLauncher.HasFired = false;
 
 			part.temperature = part.maxTemp + 10;
 		}

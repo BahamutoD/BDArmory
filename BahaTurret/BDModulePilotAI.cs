@@ -726,7 +726,7 @@ namespace BahaTurret
 			float angleToTarget = Vector3.Angle(target - vesselTransform.position, vesselTransform.up);
 			if(weaponManager)
 			{
-				missile = weaponManager.currentMissile;
+				missile = weaponManager.CurrentMissile;
 				if(missile != null)
 				{
 					if(missile.GetWeaponClass() == WeaponClasses.Missile)
@@ -1118,7 +1118,7 @@ namespace BahaTurret
 
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
 
-				if(weaponManager.currentMissile && weaponManager.currentMissile.GetWeaponClass() == WeaponClasses.Bomb)
+				if(weaponManager.CurrentMissile && weaponManager.CurrentMissile.GetWeaponClass() == WeaponClasses.Bomb)
 				{
 					extendDistance = 4500;
 				}
@@ -1760,7 +1760,7 @@ namespace BahaTurret
 		{
 			bool launchAuthorized = false;
 			Vector3 target = targetV.transform.position;
-			MissileLauncher missile = mf.currentMissile;
+			MissileLauncher missile = mf.CurrentMissile;
 			if(missile != null)
 			{
 				if(!targetV.LandedOrSplashed)
@@ -1770,7 +1770,7 @@ namespace BahaTurret
 
 				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
 				float maxOffBoresight = missile.maxOffBoresight;
-				if(missile.TargetingMode == GenericMissile.TargetingModes.GPS) maxOffBoresight = 45;
+				if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
 
 				float fTime = 2f;
 				Vector3 futurePos = target + (targetV.srf_velocity * fTime);

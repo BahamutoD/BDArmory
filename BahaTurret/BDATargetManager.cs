@@ -199,7 +199,7 @@ namespace BahaTurret
 		}
 
 		/// <summary>
-		/// Gets the laser target painter with the least angle off boresight. Set the missile as the reference transform.
+		/// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference transform.
 		/// </summary>
 		/// <returns>The laser target painter.</returns>
 		/// <param name="referenceTransform">Reference transform.</param>
@@ -289,7 +289,7 @@ namespace BahaTurret
 				TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
 				if(mf == null || 
 					!tInfo || 
-					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.missileModule.MissileState == GenericMissile.MissileStates.Boost || tInfo.missileModule.MissileState == GenericMissile.MissileStates.Cruise)))
+					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Boost || tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Cruise)))
 				{
 					if(vessel.GetTotalMass() < minMass)
 					{
@@ -684,7 +684,7 @@ namespace BahaTurret
 					return;
 				}
 
-				foreach(var ml in v.FindPartModulesImplementing<GenericMissile>())
+				foreach(var ml in v.FindPartModulesImplementing<MissileBase>())
 				{
 					if(ml.HasFired)
 					{
@@ -878,11 +878,11 @@ namespace BahaTurret
 			{
 				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
 				{
-					if(target.missileModule)
+					if(target.MissileBaseModule)
 					{
 						if(targetingMeOnly)
 						{
-							if(Vector3.SqrMagnitude(target.missileModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
+							if(Vector3.SqrMagnitude(target.MissileBaseModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
 							{
 								continue;
 							}
@@ -890,7 +890,7 @@ namespace BahaTurret
 					}
 					else
 					{
-						Debug.LogWarning("checking target missile -  doesn't have missile module");
+						Debug.LogWarning("checking target missileBase -  doesn't have missileBase module");
 					}
 
 

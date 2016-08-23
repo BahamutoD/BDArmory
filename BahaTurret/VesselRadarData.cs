@@ -79,7 +79,7 @@ namespace BahaTurret
 		private Transform referenceTransform;
 		private Transform vesselReferenceTransform;
 
-		public MissileLauncher lastMissile;
+		public MissileBase LastMissile;
 
 		//bool boresightScan = false;
 
@@ -756,14 +756,14 @@ namespace BahaTurret
 				{
 					bool canScan = availableRadars[i].canScan;
 					bool canTrackWhileScan = availableRadars[i].canTrackWhileScan;
-					bool locked = availableRadars[i].locked;
+					bool radarLocked = availableRadars[i].locked;
 					float currentAngle = availableRadars[i].currentAngle;
 
 					float radarAngle = VectorUtils.SignedAngle(projectedVesselFwd, Vector3.ProjectOnPlane(availableRadars[i].transform.up, referenceTransform.up), referenceTransform.right);
 
 					if(canScan && availableRadars[i].vessel == vessel)
 					{
-						if((!locked || canTrackWhileScan))
+						if((!radarLocked || canTrackWhileScan))
 						{
 							if(!availableRadars[i].omnidirectional)
 							{
@@ -813,7 +813,7 @@ namespace BahaTurret
 				for(int i = 0; i < rCount; i++)
 				{
 					bool canScan = availableRadars[i].canScan;
-					bool locked = availableRadars[i].locked;
+					bool radarLocked = availableRadars[i].locked;
 					//float lockScanAngle = linkedRadars[i].lockScanAngle;
 					float currentAngle = availableRadars[i].currentAngle;
 					if(canScan)
@@ -822,7 +822,7 @@ namespace BahaTurret
 						Vector2 scanIndicatorPos = RadarUtils.WorldToRadarRadial(referenceTransform.position + (Quaternion.AngleAxis(indicatorAngle, referenceTransform.up) * referenceTransform.forward), referenceTransform, radarRect, 5000, directionalFieldOfView / 2);
 						GUI.DrawTexture(new Rect(scanIndicatorPos.x - 7, scanIndicatorPos.y - 10, 14, 20), BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
 
-						if(locked && availableRadars[i].canTrackWhileScan)
+						if(radarLocked && availableRadars[i].canTrackWhileScan)
 						{
 							Vector2 leftPos = RadarUtils.WorldToRadarRadial(referenceTransform.position + (Quaternion.AngleAxis(availableRadars[i].leftLimit, referenceTransform.up) * referenceTransform.forward), referenceTransform, radarRect, 5000, directionalFieldOfView / 2);
 							Vector2 rightPos = RadarUtils.WorldToRadarRadial(referenceTransform.position + (Quaternion.AngleAxis(availableRadars[i].rightLimit, referenceTransform.up) * referenceTransform.forward), referenceTransform, radarRect, 5000, directionalFieldOfView / 2);
@@ -850,13 +850,13 @@ namespace BahaTurret
 			}
 
 			//missile data
-			if(lastMissile && lastMissile.targetAcquired)
+			if(LastMissile && LastMissile.TargetAcquired)
 			{
 				Rect missileDataRect = new Rect (5, radarRect.height - 65, radarRect.width - 5, 60);
-				string missileDataString = lastMissile.GetShortName(); 
-				missileDataString += "\nT-"+lastMissile.timeToImpact.ToString("0");
+				string missileDataString = LastMissile.GetShortName(); 
+				missileDataString += "\nT-"+LastMissile.TimeToImpact.ToString("0");
 
-				if (lastMissile.activeRadar && Mathf.Round(Time.time*3)%2==0)
+				if (LastMissile.ActiveRadar && Mathf.Round(Time.time*3)%2==0)
 				{
 					missileDataString += "\nACTIVE";
 				}
@@ -1489,8 +1489,8 @@ namespace BahaTurret
 						{
 							if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 							{
-								MissileLauncher currMissile = weaponManager.currentMissile;
-								if(currMissile.TargetingMode == GenericMissile.TargetingModes.Radar || currMissile.TargetingMode == GenericMissile.TargetingModes.Heat)
+								MissileLauncher currMissile = weaponManager.CurrentMissile;
+								if(currMissile.TargetingMode == MissileBase.TargetingModes.Radar || currMissile.TargetingMode == MissileBase.TargetingModes.Heat)
 								{
 									MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currMissile, lockedTarget.velocity, lockedTarget.predictedPosition);
 									float rangeToPixels = (1 / rIncrements[rangeIndex]) * radarRect.height;

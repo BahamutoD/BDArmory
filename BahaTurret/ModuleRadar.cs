@@ -148,7 +148,7 @@ namespace BahaTurret
 
 		public bool slaveTurrets = false;
 
-		public MissileLauncher lastMissile;
+		public MissileLauncher LastMissile;
 
 		public ModuleTurret lockingTurret;
 		public bool lockingPitch = true;
