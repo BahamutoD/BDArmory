@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
 
@@ -110,11 +112,11 @@ namespace BahaTurret
 
         private void CheckGuidanceInit()
         {
-            if (_readyForGuidance)
+            if (_readyForGuidance && DateTime.Now - _firedTime > TimeSpan.FromSeconds(DropTime + 1))
             {
                 _readyForGuidance = false;
                 GuidanceActive = true;
-                part.vessel.SetReferenceTransform(part);
+                UpdateVesselTransform();
 
                 var velocityObject = new GameObject("velObject");
                 velocityObject.transform.position = transform.position;
@@ -125,7 +127,6 @@ namespace BahaTurret
                 Misc.RefreshAssociatedWindows(part);
             }
         }
-
 
         private bool ShouldExecuteNextStage()
         {
@@ -162,6 +163,19 @@ namespace BahaTurret
 
         public override void OnStart(StartState state)
         {
+            Events["HideUI"].active = false;
+            Events["ShowUI"].active = true;
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                WeaponNameWindow.OnActionGroupEditorOpened.Add(OnActionGroupEditorOpened);
+                WeaponNameWindow.OnActionGroupEditorClosed.Add(OnActionGroupEditorClosed);
+            }
+            if (string.IsNullOrEmpty(GetShortName()))
+            {
+                shortName = "Unnamed";
+            }
+
             part.force_activate();
 
             UpdateVesselTransform();
@@ -170,7 +184,14 @@ namespace BahaTurret
 
             _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
-            this.weaponClass = WeaponClasses.Missile;
+            weaponClass = WeaponClasses.Missile;
+            WeaponName = GetShortName();
+        }
+
+        private void OnDestroy()
+        {
+            WeaponNameWindow.OnActionGroupEditorOpened.Remove(OnActionGroupEditorOpened);
+            WeaponNameWindow.OnActionGroupEditorClosed.Remove(OnActionGroupEditorClosed);
         }
 
         private void UpdateVesselTransform()
@@ -183,7 +204,6 @@ namespace BahaTurret
                 part.SetReferenceTransform(_vesselTransform);
             }
         }
-
 
         public void GuidanceSteer(FlightCtrlState s)
         {
@@ -202,7 +222,6 @@ namespace BahaTurret
                     targetPosition = MissileGuidance.GetAirToAirTarget(targetPosition, targetVelocity,
                         targetAcceleration, vessel, out timeToImpact);
                     TimeToImpact = timeToImpact;
-
                 }
                 else if (GuidanceMode == 2)
                 {
@@ -227,6 +246,29 @@ namespace BahaTurret
             }
         }
 
+        private void RefreshTargetingMode()
+        {
+            _targetingLabel = TargetingMode.ToString();
+            Misc.RefreshAssociatedWindows(part);
+        }
+
+        private void UpdateMenus(bool visible)
+        {
+            Events["HideUI"].active = visible;
+            Events["ShowUI"].active = !visible;
+        }
+
+        private void OnActionGroupEditorOpened()
+        {
+            Events["HideUI"].active = false;
+            Events["ShowUI"].active = false;
+        }
+
+        private void OnActionGroupEditorClosed()
+        {
+            Events["HideUI"].active = false;
+            Events["ShowUI"].active = true;
+        }
 
         /// <summary>
         ///     Recursive method to find the top decoupler that should be used to jettison the missile.
@@ -266,6 +308,9 @@ namespace BahaTurret
 
         #region KSP FIELDS
 
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true)] public
+            string WeaponName;
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"),
          UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)] public float
             CruiseAltitude = 500;
@@ -277,16 +322,14 @@ namespace BahaTurret
                 "AGM/STS";
 
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true)]
-        private string _targetingLabel  = TargetingModes.Laser.ToString();
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true)] private
+            string _targetingLabel = TargetingModes.Laser.ToString();
 
         [KSPField(isPersistant = true)] public int GuidanceMode = 2;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerLimiter"),
          UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)] public float MaxSteer
              = 1;
-
-        [KSPField] public string ShortName = "CustomMissile";
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "StagesNumber"),
          UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.All)] public float
@@ -416,11 +459,6 @@ namespace BahaTurret
             RefreshTargetingMode();
         }
 
-        private void RefreshTargetingMode()
-        {
-            _targetingLabel = TargetingMode.ToString();
-            Misc.RefreshAssociatedWindows(part);
-        }
 
         [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
         public void Jettison()
@@ -439,6 +477,299 @@ namespace BahaTurret
                 BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
         }
 
+        [KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Name UI", active = false)]
+        public void HideUI()
+        {
+            WeaponNameWindow.HideGUI();
+            UpdateMenus(false);
+        }
+
+        [KSPEvent(guiActiveEditor = true, guiName = "Set Weapon Name UI", active = false)]
+        public void ShowUI()
+        {
+            WeaponNameWindow.ShowGUI(this);
+            UpdateMenus(true);
+        }
+
         #endregion
+    }
+
+
+    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
+    public class WeaponNameWindow : MonoBehaviour
+    {
+        internal static EventVoid OnActionGroupEditorOpened = new EventVoid("OnActionGroupEditorOpened");
+        internal static EventVoid OnActionGroupEditorClosed = new EventVoid("OnActionGroupEditorClosed");
+
+        private static GUIStyle unchanged;
+        private static GUIStyle changed;
+        private static GUIStyle greyed;
+        private static GUIStyle overfull;
+
+        private static WeaponNameWindow instance;
+        private static Vector3 mousePos = Vector3.zero;
+
+        private bool ActionGroupMode;
+
+        private Rect guiWindowRect = new Rect(0, 0, 0, 0);
+
+        private BDModularGuidance missile_module;
+
+        [KSPField] public int offsetGUIPos = -1;
+
+        private Vector2 scrollPos;
+
+        [KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Weapon Name Editor"),
+         UI_Toggle(enabledText = "Weapon Name GUI", disabledText = "GUI")] [NonSerialized] public bool showRFGUI;
+
+        private bool styleSetup;
+
+        private string txtName = string.Empty;
+
+        public static void HideGUI()
+        {
+            if (instance != null)
+            {
+                instance.missile_module.WeaponName = instance.missile_module.shortName;
+                instance.missile_module = null;
+                instance.UpdateGUIState();
+            }
+            var editor = EditorLogic.fetch;
+            if (editor != null)
+                editor.Unlock("BD_MN_GUILock");
+        }
+
+        public static void ShowGUI(BDModularGuidance missile_module)
+        {
+            if (instance != null)
+            {
+                instance.missile_module = missile_module;
+                instance.UpdateGUIState();
+            }
+        }
+
+        private void UpdateGUIState()
+        {
+            enabled = missile_module != null;
+            var editor = EditorLogic.fetch;
+            if (!enabled && editor != null)
+                editor.Unlock("BD_MN_GUILock");
+        }
+
+        private IEnumerator<YieldInstruction> CheckActionGroupEditor()
+        {
+            while (EditorLogic.fetch == null)
+            {
+                yield return null;
+            }
+            var editor = EditorLogic.fetch;
+            while (EditorLogic.fetch != null)
+            {
+                if (editor.editorScreen == EditorScreen.Actions)
+                {
+                    if (!ActionGroupMode)
+                    {
+                        HideGUI();
+                        OnActionGroupEditorOpened.Fire();
+                    }
+                    var age = EditorActionGroups.Instance;
+                    if (missile_module && !age.GetSelectedParts().Contains(missile_module.part))
+                    {
+                        HideGUI();
+                    }
+                    ActionGroupMode = true;
+                }
+                else
+                {
+                    if (ActionGroupMode)
+                    {
+                        HideGUI();
+                        OnActionGroupEditorClosed.Fire();
+                    }
+                    ActionGroupMode = false;
+                }
+                yield return null;
+            }
+        }
+
+        private void Awake()
+        {
+            enabled = false;
+            instance = this;
+            StartCoroutine(CheckActionGroupEditor());
+        }
+
+        private void OnDestroy()
+        {
+            instance = null;
+        }
+
+        public void OnGUI()
+        {
+            if (!styleSetup)
+            {
+                styleSetup = true;
+                Styles.InitStyles();
+            }
+
+            var editor = EditorLogic.fetch;
+            if (!HighLogic.LoadedSceneIsEditor || !editor)
+            {
+                return;
+            }
+            var cursorInGUI = false; // nicked the locking code from Ferram
+            mousePos = Input.mousePosition; //Mouse location; based on Kerbal Engineer Redux code
+            mousePos.y = Screen.height - mousePos.y;
+
+            var posMult = 0;
+            if (offsetGUIPos != -1)
+            {
+                posMult = offsetGUIPos;
+            }
+            if (ActionGroupMode)
+            {
+                if (guiWindowRect.width == 0)
+                {
+                    guiWindowRect = new Rect(430*posMult, 365, 438, 50);
+                }
+                new Rect(guiWindowRect.xMin + 440, mousePos.y - 5, 300, 20);
+            }
+            else
+            {
+                if (guiWindowRect.width == 0)
+                {
+                    //guiWindowRect = new Rect(Screen.width - 8 - 430 * (posMult + 1), 365, 438, (Screen.height - 365));
+                    guiWindowRect = new Rect(Screen.width - 8 - 430*(posMult + 1), 365, 438, 50);
+                }
+                new Rect(guiWindowRect.xMin - (230 - 8), mousePos.y - 5, 220, 20);
+            }
+            cursorInGUI = guiWindowRect.Contains(mousePos);
+            if (cursorInGUI)
+            {
+                editor.Lock(false, false, false, "BD_MN_GUILock");
+                if (EditorTooltip.Instance != null)
+                    EditorTooltip.Instance.HideToolTip();
+            }
+            else
+            {
+                editor.Unlock("BD_MN_GUILock");
+            }
+            guiWindowRect = GUILayout.Window(GetInstanceID(), guiWindowRect, GUIWindow, "Weapon Name GUI",
+                Styles.styleEditorPanel);
+        }
+
+        public void GUIWindow(int windowID)
+        {
+            InitializeStyles();
+
+            GUILayout.BeginVertical();
+            GUILayout.Space(20);
+
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Label("Weapon Name: ");
+
+
+            txtName = GUILayout.TextField(txtName);
+
+
+            if (GUILayout.Button("Save & Close"))
+            {
+                missile_module.WeaponName = txtName;
+                missile_module.shortName = txtName;
+                instance.missile_module.HideUI();
+            }
+
+            GUILayout.EndHorizontal();
+
+            scrollPos = GUILayout.BeginScrollView(scrollPos);
+
+            GUILayout.EndScrollView();
+
+            GUILayout.EndVertical();
+
+            GUI.DragWindow();
+        }
+
+        private static void InitializeStyles()
+        {
+            if (unchanged == null)
+            {
+                if (GUI.skin == null)
+                {
+                    unchanged = new GUIStyle();
+                    changed = new GUIStyle();
+                    greyed = new GUIStyle();
+                    overfull = new GUIStyle();
+                }
+                else
+                {
+                    unchanged = new GUIStyle(GUI.skin.textField);
+                    changed = new GUIStyle(GUI.skin.textField);
+                    greyed = new GUIStyle(GUI.skin.textField);
+                    overfull = new GUIStyle(GUI.skin.label);
+                }
+
+                unchanged.normal.textColor = Color.white;
+                unchanged.active.textColor = Color.white;
+                unchanged.focused.textColor = Color.white;
+                unchanged.hover.textColor = Color.white;
+
+                changed.normal.textColor = Color.yellow;
+                changed.active.textColor = Color.yellow;
+                changed.focused.textColor = Color.yellow;
+                changed.hover.textColor = Color.yellow;
+
+                greyed.normal.textColor = Color.gray;
+
+                overfull.normal.textColor = Color.red;
+            }
+        }
+    }
+
+    internal class Styles
+    {
+        // Base styles
+        public static GUIStyle styleEditorTooltip;
+        public static GUIStyle styleEditorPanel;
+
+
+        /// <summary>
+        ///     This one sets up the styles we use
+        /// </summary>
+        internal static void InitStyles()
+        {
+            styleEditorTooltip = new GUIStyle();
+            styleEditorTooltip.name = "Tooltip";
+            styleEditorTooltip.fontSize = 12;
+            styleEditorTooltip.normal.textColor = new Color32(207, 207, 207, 255);
+            styleEditorTooltip.stretchHeight = true;
+            styleEditorTooltip.wordWrap = true;
+            styleEditorTooltip.normal.background = CreateColorPixel(new Color32(7, 54, 66, 200));
+            styleEditorTooltip.border = new RectOffset(3, 3, 3, 3);
+            styleEditorTooltip.padding = new RectOffset(4, 4, 6, 4);
+            styleEditorTooltip.alignment = TextAnchor.MiddleLeft;
+
+            styleEditorPanel = new GUIStyle();
+            styleEditorPanel.normal.background = CreateColorPixel(new Color32(7, 54, 66, 200));
+            styleEditorPanel.border = new RectOffset(27, 27, 27, 27);
+            styleEditorPanel.padding = new RectOffset(10, 10, 10, 10);
+            styleEditorPanel.normal.textColor = new Color32(147, 161, 161, 255);
+            styleEditorPanel.fontSize = 12;
+        }
+
+
+        /// <summary>
+        ///     Creates a 1x1 texture
+        /// </summary>
+        /// <param name="Background">Color of the texture</param>
+        /// <returns></returns>
+        internal static Texture2D CreateColorPixel(Color32 Background)
+        {
+            var retTex = new Texture2D(1, 1);
+            retTex.SetPixel(0, 0, Background);
+            retTex.Apply();
+            return retTex;
+        }
     }
 }

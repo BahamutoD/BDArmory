@@ -9,7 +9,8 @@ namespace BahaTurret
 
         [KSPField]
         public string missileType = "missile";
-        [KSPField]
+
+        [KSPField(isPersistant = true)]
         public string shortName = string.Empty;
     
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
