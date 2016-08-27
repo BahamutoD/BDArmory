@@ -397,9 +397,9 @@ namespace BahaTurret
 
 					}
 
-					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel) && !penetrated2)
+					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
 					{
-						if(!penetrated && !hasBounced)
+						if(!penetrated && !hasBounced && !penetrated2)
 						{
 							//ricochet
 							hasBounced = true;
