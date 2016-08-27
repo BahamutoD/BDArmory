@@ -254,7 +254,14 @@ namespace BahaTurret
                     leftPenetration -= armorData.armorThickness / penetration;
                     var penetrated2 = finalPenetration > armorData.armorThickness;
                     var finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
-
+                    if (penetrated2)
+                    {
+                        currentVelocity = finalDirect * currentVelocity.magnitude * leftPenetration;
+                    }
+                    else
+                    {
+                        currPosition = hit.point;
+                    }
                     bool penetrated = true;
 					Part hitPart = null;   //determine when bullet collides with a target
 					float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
