@@ -7,7 +7,7 @@ namespace BahaTurret
 	public class PooledBullet : MonoBehaviour
 	{
         public BulletInfo bullet;
-        public float leftPenetration = 1;
+        public float leftPenetration;
 
         public enum PooledBulletTypes{Standard, Explosive}
         public enum BulletDragTypes { None, AnalyticEstimate, NumericalIntegration }
@@ -155,9 +155,9 @@ namespace BahaTurret
 
 			hasBounced = false;
 
+            leftPenetration = 1;
 
-
-			wasInitiated = true;
+            wasInitiated = true;
 
 			StartCoroutine(FrameDelayedRoutine());
 		}
