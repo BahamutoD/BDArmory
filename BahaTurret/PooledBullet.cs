@@ -6,7 +6,10 @@ namespace BahaTurret
 {
 	public class PooledBullet : MonoBehaviour
 	{
-		public enum PooledBulletTypes{Standard, Explosive}
+        public BulletInfo bullet;
+        public float leftPenetration = 1;
+
+        public enum PooledBulletTypes{Standard, Explosive}
         public enum BulletDragTypes { None, AnalyticEstimate, NumericalIntegration }
 		
 		public PooledBulletTypes bulletType;
@@ -244,7 +247,15 @@ namespace BahaTurret
 				RaycastHit hit;
 				if(Physics.Raycast(ray, out hit, dist, 557057))
 				{
-					bool penetrated = true;
+                    var armorData = new Data(ray, hit);
+                    ArmorCheck(armorData);
+                    var penetration = bullet.penetration.Evaluate(distanceFromStart) / 1000;
+                    var finalPenetration = penetration * leftPenetration;
+                    leftPenetration -= armorData.armorThickness / penetration;
+                    var penetrated2 = finalPenetration > armorData.armorThickness;
+                    var finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
+
+                    bool penetrated = true;
 					Part hitPart = null;   //determine when bullet collides with a target
 					float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
 
@@ -307,7 +318,11 @@ namespace BahaTurret
 							{
 								heatDamage = heatDamage / 8;
 							}
-							if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
+                            if (penetrated2)
+                            {
+                                heatDamage /= 8;
+                            }
+                            if (BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
 							{
 								heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 							}
@@ -375,7 +390,7 @@ namespace BahaTurret
 
 					}
 
-					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
+					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel) && !penetrated2)
 					{
 						if(!penetrated && !hasBounced)
 						{
@@ -407,13 +422,24 @@ namespace BahaTurret
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
 							}
-							
 
-							
-							//GameObject.Destroy(gameObject); //destroy bullet on collision
-							KillBullet();
-							return;
-						}
+
+
+                            //GameObject.Destroy(gameObject); //destroy bullet on collision
+                            if (penetrated2)
+                            {
+                                transform.position = armorData.hitResultOut.point;
+                                flightTimeElapsed -= Time.fixedDeltaTime;
+                                prevPosition = transform.position;
+                                FixedUpdate();
+                                return;
+                            }
+                            else
+                            {
+                                KillBullet();
+                                return;
+                            }
+                        }
 					}
 				}
 				
@@ -510,6 +536,37 @@ namespace BahaTurret
 				return false;
 			}
 		}
-	}
+        private void ArmorCheck(Data data)
+        {
+            var ray = data.rayIn;
+            var hit = data.hitResultIn;
+            var finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
+            var maxDis = hit.collider.bounds.size.magnitude;
+            var point = finalDirect * maxDis + hit.point;
+            var ray1 = new Ray(point, -finalDirect);
+            RaycastHit hit1;
+            if (hit.collider.Raycast(ray1, out hit1, maxDis))
+            {
+                data.rayOut = new Ray(point, -finalDirect);
+                data.hitResultOut = hit1;
+                data.armorThickness = Vector3.Distance(hit.point, hit1.point);
+                return;
+            }
+            data.armorThickness = float.MaxValue;
+        }
+        private class Data
+        {
+            public Ray rayIn;
+            public RaycastHit hitResultIn;
+            public Ray rayOut;
+            public RaycastHit hitResultOut;
+            public float armorThickness;
+            public Data(Ray ray, RaycastHit hitResult)
+            {
+                rayIn = ray;
+                hitResultIn = hitResult;
+            }
+        }
+    }
 }
 
