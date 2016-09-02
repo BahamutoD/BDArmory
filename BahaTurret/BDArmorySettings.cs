@@ -446,6 +446,9 @@ namespace BahaTurret
 
 				GameEvents.onVesselChange.Add(VesselChange);
 			}
+			
+			if (BulletInfo.bullets == null)
+                BulletInfo.Load();
 		}
 
 
