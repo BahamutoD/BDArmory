@@ -103,8 +103,55 @@ namespace BahaTurret
             }
         }
 
+        private void DisableRecursiveFlow(List<Part> children)
+        {
+            foreach (var child in children)
+            {
+                foreach (var resource in child.Resources.list)
+                {
+                    if (resource.flowState)
+                    {
+                        resource.flowState = false;
+                    }
+                }
+                if (child.children.Count > 0)
+                {
+                    DisableRecursiveFlow(child.children);
+                }
+            }
+        }
+
+        private void EnableResourceFlow(List<Part> children)
+        {
+            foreach (var child in children)
+            {
+                foreach (var resource in child.Resources.list)
+                {
+                    if (!resource.flowState)
+                    {
+                        resource.flowState = true;
+                    }
+                }
+                if (child.children.Count > 0)
+                {
+                    EnableResourceFlow(child.children);
+                }
+            }
+        }
+
+        private void DisableResourcesFlow()
+        {
+            if (_targetDecoupler != null)
+            {
+                if (_targetDecoupler.part.children.Count == 0) return;
+
+                DisableRecursiveFlow(_targetDecoupler.part.children);
+
+            }
+        }
         private void MissileIgnition()
         {
+            EnableResourceFlow(_targetDecoupler.part.children);
             StartGuidance();
             ExecuteNextStage();
             HasFired = true;
@@ -183,6 +230,8 @@ namespace BahaTurret
             RefreshGuidanceMode();
 
             _targetDecoupler = FindFirstDecoupler(part.parent, null);
+
+            DisableResourcesFlow();
 
             weaponClass = WeaponClasses.Missile;
             WeaponName = GetShortName();

@@ -55,7 +55,8 @@ namespace BahaTurret
 
 	    private void CalculateBlast()
 	    {
-            
+	        if (!part.Resources.Contains("HighExplosive")) return;
+
             if (part.Resources["HighExplosive"].amount == previousMass) return;
            
 	        var explosiveMass = part.Resources["HighExplosive"].amount;

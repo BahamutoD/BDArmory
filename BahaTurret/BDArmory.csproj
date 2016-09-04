@@ -49,26 +49,26 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="KSPCore">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\KSPCore.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\KSPCore.dll</HintPath>
     </Reference>
     <Reference Include="KSPUtil">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="UnityEngine">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>D:\Kerbal\Kerbal Space Program_dev\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
