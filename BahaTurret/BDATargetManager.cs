@@ -199,25 +199,25 @@ namespace BahaTurret
 		}
 
 		/// <summary>
-		/// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference transform.
+		/// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference missilePosition.
 		/// </summary>
 		/// <returns>The laser target painter.</returns>
-		/// <param name="referenceTransform">Reference transform.</param>
+		/// <param name="referenceTransform">Reference missilePosition.</param>
 		/// <param name="maxBoreSight">Max bore sight.</param>
 		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
 		{
-            return GetModuleTargeting(parentOnly, ml.transform, ml.maxOffBoresight, ml.vessel, ml.sourceVessel);
+            return GetModuleTargeting(parentOnly, ml.transform.forward, ml.transform.position, ml.maxOffBoresight, ml.vessel, ml.sourceVessel);
         }
 
         public static ModuleTargetingCamera GetLaserTarget(BDModularGuidance ml, bool parentOnly)
         {
-            Transform referenceTransform = ml.transform;
+            Transform referenceTransform = ml.part.parent.transform;
             float maxOffBoresight = 45;
            
-            return GetModuleTargeting(parentOnly,referenceTransform,maxOffBoresight,ml.vessel,ml.SourceVessel);
+            return GetModuleTargeting(parentOnly, ml.MissileReferenceTransform.up, ml.MissileReferenceTransform.position, maxOffBoresight,ml.vessel,ml.SourceVessel);
         }
 
-        private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Transform referenceTransform, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
+        private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Vector3 missilePosition, Vector3 position, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
 	    {
             ModuleTargetingCamera finalCam = null;
             float smallestAngle = 360;
@@ -236,8 +236,8 @@ namespace BahaTurret
 
                 if (cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
                 {
-                    float angle = Vector3.Angle(referenceTransform.forward, cam.groundTargetPosition - referenceTransform.position);
-                    if (angle < maxOffBoresight && angle < smallestAngle && CanSeePosition(cam.groundTargetPosition, vessel.transform, referenceTransform))
+                    float angle = Vector3.Angle(missilePosition, cam.groundTargetPosition - position);
+                    if (angle < maxOffBoresight && angle < smallestAngle && CanSeePosition(cam.groundTargetPosition, vessel.transform.position, missilePosition))
                     {
                         smallestAngle = angle;
                         finalCam = cam;
@@ -247,20 +247,20 @@ namespace BahaTurret
             return finalCam;
         }
 
-        public static bool CanSeePosition(Vector3 pos, Transform vesselTransform, Transform missileReferenceTransform)
+        public static bool CanSeePosition(Vector3 groundTargetPosition, Vector3 vesselPosition, Vector3 missilePosition)
         {
-            if ((pos - vesselTransform.position).sqrMagnitude < Mathf.Pow(20, 2))
+            if ((groundTargetPosition - vesselPosition).sqrMagnitude < Mathf.Pow(20, 2))
             {
                 return false;
             }
 
             float dist = 10000;
-            Ray ray = new Ray(missileReferenceTransform.position, pos - missileReferenceTransform.position);
+            Ray ray = new Ray(missilePosition, groundTargetPosition - missilePosition);
             ray.origin += 10 * ray.direction;
             RaycastHit rayHit;
             if (Physics.Raycast(ray, out rayHit, dist, 557057))
             {
-                if ((rayHit.point - pos).sqrMagnitude < 200)
+                if ((rayHit.point - groundTargetPosition).sqrMagnitude < 200)
                 {
                     return true;
                 }

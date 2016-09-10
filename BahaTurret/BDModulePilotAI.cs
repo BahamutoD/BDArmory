@@ -719,7 +719,7 @@ namespace BahaTurret
 		void FlyToTargetVessel(FlightCtrlState s, Vessel v)
 		{
 			Vector3 target = v.CoM;
-			MissileLauncher missile = null;
+			MissileBase missile = null;
 			Vector3 vectorToTarget = v.transform.position - vesselTransform.position;
 			float distanceToTarget = vectorToTarget.magnitude;
 			float planarDistanceToTarget = Vector3.ProjectOnPlane(vectorToTarget, upDirection).magnitude;
@@ -1760,7 +1760,7 @@ namespace BahaTurret
 		{
 			bool launchAuthorized = false;
 			Vector3 target = targetV.transform.position;
-			MissileLauncher missile = mf.CurrentMissile;
+			MissileBase missile = mf.CurrentMissile;
 			if(missile != null)
 			{
 				if(!targetV.LandedOrSplashed)
@@ -1769,18 +1769,35 @@ namespace BahaTurret
 				}
 
 				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
-				float maxOffBoresight = missile.maxOffBoresight;
-				if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
+			    var launcher = missile as MissileLauncher;
+			    float maxOffBoresight = 45;
+                if (launcher != null)
+			    {
+			         maxOffBoresight = launcher.maxOffBoresight;
+			    }
+               
+				//if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
 
 				float fTime = 2f;
 				Vector3 futurePos = target + (targetV.srf_velocity * fTime);
 				Vector3 myFuturePos = vesselTransform.position + (vessel.srf_velocity * fTime);
 				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
 
-				if(fDot && Vector3.Angle(missile.missileReferenceTransform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
-				{
-					launchAuthorized = true;
-				}
+			    if (launcher != null)
+			    {
+			           if (fDot && Vector3.Angle(launcher.MissileReferenceTransform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
+				       {
+					        launchAuthorized = true;
+				       }
+			    }
+			    else
+			    {
+                    if (fDot && Vector3.Angle(missile.transform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
+                    {
+                        launchAuthorized = true;
+                    }
+                }
+                 
 			}
 
 			return launchAuthorized;

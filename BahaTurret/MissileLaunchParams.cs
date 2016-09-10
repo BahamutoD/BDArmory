@@ -35,7 +35,7 @@ namespace BahaTurret
 		/// <returns>The dynamic launch parameters.</returns>
 		/// <param name="launcherVelocity">Launcher velocity.</param>
 		/// <param name="targetVelocity">Target velocity.</param>
-		public static MissileLaunchParams GetDynamicLaunchParams(MissileLauncher missile, Vector3 targetVelocity, Vector3 targetPosition)
+		public static MissileLaunchParams GetDynamicLaunchParams(MissileBase missile, Vector3 targetVelocity, Vector3 targetPosition)
 		{
 			Vector3 launcherVelocity = missile.vessel.srf_velocity;
 			float launcherSpeed = (float)missile.vessel.srfSpeed;

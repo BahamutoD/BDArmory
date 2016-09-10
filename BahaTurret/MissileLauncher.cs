@@ -8,10 +8,9 @@ namespace BahaTurret
 {	
 	public class MissileLauncher : MissileBase
 	{
-		public Transform missileReferenceTransform;
+		
 
-		public enum GuidanceModes{None,AAMLead,AAMPure,AGM,AGMBallistic,Cruise,STS,Bomb,RCS, BeamRiding}
-		public GuidanceModes guidanceMode;
+
 		[KSPField]
 		public string homingType = "AAM";
 
@@ -56,9 +55,7 @@ namespace BahaTurret
 		public float thrust = 30;
 		[KSPField]
 		public float cruiseThrust = 3;
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
-        	UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
-		public float dropTime = 0.4f;
+		
 		[KSPField]
 		public float boostTime = 2.2f;
 		[KSPField]
@@ -129,13 +126,8 @@ namespace BahaTurret
 		Transform rotationTransform;
 
 		[KSPField]
-		public bool terminalManeuvering = false;
+		public bool terminalManeuvering = false;	
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "), 
-			UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
-		public bool inCargoBay = false;
-		
-		
 		[KSPField]
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
 		
@@ -215,9 +207,6 @@ namespace BahaTurret
 		[KSPField]
 		public float boosterMass = 0;
 
-		Vector3 targetVelocity = Vector3.zero;
-		Vector3 targetAcceleration = Vector3.zero;
-
 		public Vessel legacyTargetVessel;
 
 
@@ -230,13 +219,6 @@ namespace BahaTurret
 
 		[KSPField]
 		public float lockedSensorFOV = 2.5f;
-
-
-		//laser stuff
-		public ModuleTargetingCamera lockedCamera = null;
-		Vector3 lastLaserPoint;
-		Vector3 laserStartPosition;
-		Vector3 startDirection;
 
 
 		//heat stuff
@@ -288,15 +270,6 @@ namespace BahaTurret
 			}
 		}
 
-		//firing paramters
-		[KSPField]
-		public float minLaunchSpeed = 0; //only used by AI
-		[KSPField]
-		public float minStaticLaunchRange = 10;
-		[KSPField]
-		public float maxStaticLaunchRange = 3000;
-
-
 		//ballistic options
 		[KSPField]
 		public bool indirect = false;
@@ -335,10 +308,10 @@ namespace BahaTurret
 
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				missileReferenceTransform = part.FindModelTransform("missileTransform");
-				if(!missileReferenceTransform)
+				MissileReferenceTransform = part.FindModelTransform("missileTransform");
+				if(!MissileReferenceTransform)
 				{
-					missileReferenceTransform = part.partTransform;
+					MissileReferenceTransform = part.partTransform;
 				}
 
 				if(!string.IsNullOrEmpty(exhaustPrefabPath))
@@ -475,7 +448,7 @@ namespace BahaTurret
 
 			}
 
-			if(guidanceMode != GuidanceModes.Cruise)
+			if(GuidanceMode != GuidanceModes.Cruise)
 			{
 				Fields["cruiseAltitude"].guiActive = false;
 				Fields["cruiseAltitude"].guiActiveEditor = false;
@@ -601,16 +574,21 @@ namespace BahaTurret
 		}
 
 		[KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
-		public void Jettison()
+		public override void Jettison()
 		{
 			if(missileTurret) return;
 
 			part.decouple(0);
 			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
-		
-		
-		public void FireMissile()
+
+	    public override float GetBlastRadius()
+	    {
+	        return this.blastRadius;
+	    }
+
+
+	    public override void FireMissile()
 		{
 			if(!HasFired)
 			{
@@ -967,27 +945,27 @@ namespace BahaTurret
 
 					finalMaxTorque = Mathf.Clamp((TimeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
 
-					if(guidanceMode == GuidanceModes.AAMLead)
+					if(GuidanceMode == GuidanceModes.AAMLead)
 					{
 						AAMGuidance();
 					}
-					else if(guidanceMode == GuidanceModes.AGM)
+					else if(GuidanceMode == GuidanceModes.AGM)
 					{
 						AGMGuidance();
 					}
-					else if(guidanceMode == GuidanceModes.AGMBallistic)
+					else if(GuidanceMode == GuidanceModes.AGMBallistic)
 					{
 						AGMBallisticGuidance();
 					}
-					else if(guidanceMode == GuidanceModes.BeamRiding)
+					else if(GuidanceMode == GuidanceModes.BeamRiding)
 					{
 						BeamRideGuidance();
 					}
-					else if(guidanceMode == GuidanceModes.RCS)
+					else if(GuidanceMode == GuidanceModes.RCS)
 					{
 						part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition-part.transform.position, part.transform.up), turnRateDPS*Time.fixedDeltaTime);
 					}
-					else if(guidanceMode == GuidanceModes.Cruise)
+					else if(GuidanceMode == GuidanceModes.Cruise)
 					{
 						CruiseGuidance();
 					}
@@ -1333,7 +1311,6 @@ namespace BahaTurret
 		[KSPField]
 		public float beamCorrectionDamping;
 
-		ModuleTargetingCamera targetingPod;
 		Ray previousBeam;
 		void BeamRideGuidance()
 		{
@@ -1428,7 +1405,7 @@ namespace BahaTurret
 			{
 				DrawDebugLine(transform.position+(part.rb.velocity*Time.fixedDeltaTime), TargetPosition);
                 float timeToImpact;
-                aamTarget = MissileGuidance.GetAirToAirTarget(TargetPosition, targetVelocity, targetAcceleration, vessel, out timeToImpact, optimumAirspeed);
+                aamTarget = MissileGuidance.GetAirToAirTarget(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact, optimumAirspeed);
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget-transform.position, transform.forward) > maxOffBoresight*0.75f)
 				{
@@ -1436,7 +1413,7 @@ namespace BahaTurret
 				}
 
 				//proxy detonation
-				if(proxyDetonate && ((TargetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
+				if(proxyDetonate && ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
 				{
 					part.temperature = part.maxTemp + 100;
 				}
@@ -1510,8 +1487,8 @@ namespace BahaTurret
 			if(TargetAcquired)
 			{
 				TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
-				targetVelocity = Vector3.zero;
-				targetAcceleration = Vector3.zero;
+				TargetVelocity = Vector3.zero;
+				TargetAcceleration = Vector3.zero;
 			}
 			else
 			{
@@ -1526,11 +1503,11 @@ namespace BahaTurret
 				if(lockedCamera && lockedCamera.groundStabilized && !lockedCamera.gimbalLimitReached && lockedCamera.surfaceDetected) //active laser target
 				{
 					TargetPosition = lockedCamera.groundTargetPosition;
-					targetVelocity = (TargetPosition - lastLaserPoint) / Time.fixedDeltaTime;
-					targetAcceleration = Vector3.zero;
+					TargetVelocity = (TargetPosition - lastLaserPoint) / Time.fixedDeltaTime;
+					TargetAcceleration = Vector3.zero;
 					lastLaserPoint = TargetPosition;
 
-					if(guidanceMode == GuidanceModes.BeamRiding && TimeIndex > 0.25f && Vector3.Dot(part.transform.forward, part.transform.position - lockedCamera.transform.position) < 0)
+					if(GuidanceMode == GuidanceModes.BeamRiding && TimeIndex > 0.25f && Vector3.Dot(part.transform.forward, part.transform.position - lockedCamera.transform.position) < 0)
 					{
 						TargetAcquired = false;
 						lockedCamera = null;
@@ -1543,8 +1520,8 @@ namespace BahaTurret
 						//Debug.Log("Laser missileBase affected by smoke countermeasure");
 						float angle = VectorUtils.FullRangePerlinNoise(0.75f * Time.time, 10) * BDArmorySettings.SMOKE_DEFLECTION_FACTOR;
 						TargetPosition = VectorUtils.RotatePointAround(lastLaserPoint, transform.position, VectorUtils.GetUpDirection(transform.position), angle);
-						targetVelocity = Vector3.zero;
-						targetAcceleration = Vector3.zero;
+						TargetVelocity = Vector3.zero;
+						TargetAcceleration = Vector3.zero;
 						lastLaserPoint = TargetPosition;
 					}
 					else
@@ -1556,9 +1533,9 @@ namespace BahaTurret
 			else
 			{
 				ModuleTargetingCamera foundCam = null;
-				bool parentOnly = (guidanceMode == GuidanceModes.BeamRiding);
+				bool parentOnly = (GuidanceMode == GuidanceModes.BeamRiding);
 				foundCam = BDATargetManager.GetLaserTarget(this, parentOnly);
-				if(foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized &&  BDATargetManager.CanSeePosition(foundCam.groundTargetPosition,vessel.transform, missileReferenceTransform))
+				if(foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized &&  BDATargetManager.CanSeePosition(foundCam.groundTargetPosition,vessel.transform.position, MissileReferenceTransform.position))
 				{
 					Debug.Log("Laser guided missileBase actively found laser point. Enabling guidance.");
 					lockedCamera = foundCam;
@@ -1592,8 +1569,8 @@ namespace BahaTurret
 					TargetAcquired = true;
 					TargetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.rb_velocity * Time.fixedDeltaTime);
 					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
-					targetVelocity = legacyTargetVessel.srf_velocity;
-					targetAcceleration = legacyTargetVessel.acceleration;
+					TargetVelocity = legacyTargetVessel.srf_velocity;
+					TargetAcceleration = legacyTargetVessel.acceleration;
 					lastLaserPoint = TargetPosition;
 					lockFailTimer = 0;
 				}
@@ -1638,8 +1615,8 @@ namespace BahaTurret
 					TargetAcquired = true;
 					TargetPosition = source;
 					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
-					targetVelocity = Vector3.zero;
-					targetAcceleration = Vector3.zero;
+					TargetVelocity = Vector3.zero;
+					TargetAcceleration = Vector3.zero;
 					lockFailTimer = 0;
 				}
 			}
@@ -1677,8 +1654,8 @@ namespace BahaTurret
 							TargetAcquired = true;
 							radarTarget = t;
 							TargetPosition = radarTarget.predictedPosition;
-							targetVelocity = radarTarget.velocity;
-							targetAcceleration = radarTarget.acceleration;
+							TargetVelocity = radarTarget.velocity;
+							TargetAcceleration = radarTarget.acceleration;
 							_radarFailTimer = 0;
 							return;
 						}
@@ -1701,8 +1678,8 @@ namespace BahaTurret
 								radarTarget.timeAcquired = Time.time;
 								radarTarget.position = radarTarget.predictedPosition;
 								TargetPosition = radarTarget.predictedPosition;
-								targetVelocity = radarTarget.velocity;
-								targetAcceleration = Vector3.zero;
+								TargetVelocity = radarTarget.velocity;
+								TargetAcceleration = Vector3.zero;
 								TargetAcquired = true;
 							}
 						}
@@ -1759,8 +1736,8 @@ namespace BahaTurret
 									TargetAcquired = true;
 									radarLOALSearching = false;
 									TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
-									targetVelocity = radarTarget.velocity;
-									targetAcceleration = radarTarget.acceleration;
+									TargetVelocity = radarTarget.velocity;
+									TargetAcceleration = radarTarget.acceleration;
 									_radarFailTimer = 0;
 									if(!ActiveRadar && Time.time - timeFired > 1)
 									{
@@ -1792,8 +1769,8 @@ namespace BahaTurret
 							radarLOALSearching = true;
 							TargetAcquired = true;
 							TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
-							targetVelocity = radarTarget.velocity;
-							targetAcceleration = Vector3.zero;
+							TargetVelocity = radarTarget.velocity;
+							TargetAcceleration = Vector3.zero;
 							ActiveRadar = false;
 						}
 						else
@@ -1849,8 +1826,8 @@ namespace BahaTurret
 					TargetAcquired = true;
 					radarLOALSearching = false;
 					TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
-					targetVelocity = radarTarget.velocity;
-					targetAcceleration = radarTarget.acceleration;
+					TargetVelocity = radarTarget.velocity;
+					TargetAcceleration = radarTarget.acceleration;
 
 					if(!ActiveRadar && Time.time - timeFired > 1)
 					{
@@ -1863,8 +1840,8 @@ namespace BahaTurret
 				{
 					TargetAcquired = true;
 					TargetPosition = transform.position + (startDirection * 500);
-					targetVelocity = Vector3.zero;
-					targetAcceleration = Vector3.zero;
+					TargetVelocity = Vector3.zero;
+					TargetAcceleration = Vector3.zero;
 					radarLOALSearching = true;
 					return;
 				}
@@ -1900,8 +1877,8 @@ namespace BahaTurret
 				{
 					TargetAcquired = true;
 					TargetPosition = heatTarget.position+(2*heatTarget.velocity*Time.fixedDeltaTime);
-					targetVelocity = heatTarget.velocity;
-					targetAcceleration = heatTarget.acceleration;
+					TargetVelocity = heatTarget.velocity;
+					TargetAcceleration = heatTarget.acceleration;
 					lockFailTimer = 0;
 				}
 				else
@@ -1918,8 +1895,8 @@ namespace BahaTurret
 
 		void CheckMiss()
 		{
-			float sqrDist = ((TargetPosition+(targetVelocity*Time.fixedDeltaTime))-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
-			if(sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (guidanceMode == GuidanceModes.AAMLead || guidanceMode == GuidanceModes.AAMPure)))
+			float sqrDist = ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
+			if(sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
 			{
 				checkMiss = true;	
 			}
@@ -1927,7 +1904,7 @@ namespace BahaTurret
 			//kill guidance if missileBase has missed
 			if(!HasMissed && checkMiss)
 			{
-				bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity-targetVelocity, TargetPosition - vessel.transform.position) < 0);
+				bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity-TargetVelocity, TargetPosition - vessel.transform.position) < 0);
 				if(Vector3.Dot(TargetPosition-transform.position,transform.forward) < 0 || noProgress) 
 				{
 					Debug.Log ("Missile CheckMiss showed miss");
@@ -2164,7 +2141,7 @@ namespace BahaTurret
 
 		void DoRCS()
 		{
-			Vector3 relV = targetVelocity-vessel.obt_velocity;
+			Vector3 relV = TargetVelocity-vessel.obt_velocity;
 
 			for(int i = 0; i < 4; i++)
 			{
@@ -2268,34 +2245,34 @@ namespace BahaTurret
 			switch(homingType)
 			{
 			case "aam":
-				guidanceMode = GuidanceModes.AAMLead;
+				GuidanceMode = GuidanceModes.AAMLead;
 				break;
 			case "aamlead":
-				guidanceMode = GuidanceModes.AAMLead;
+				GuidanceMode = GuidanceModes.AAMLead;
 				break;
 			case "aampure":
-				guidanceMode = GuidanceModes.AAMPure;
+				GuidanceMode = GuidanceModes.AAMPure;
 				break;
 			case "agm":
-				guidanceMode = GuidanceModes.AGM;
+				GuidanceMode = GuidanceModes.AGM;
 				break;
 			case "agmballistic":
-				guidanceMode = GuidanceModes.AGMBallistic;
+				GuidanceMode = GuidanceModes.AGMBallistic;
 				break;
 			case "cruise":
-				guidanceMode = GuidanceModes.Cruise;
+				GuidanceMode = GuidanceModes.Cruise;
 				break;
 			case "sts":
-				guidanceMode = GuidanceModes.STS;
+				GuidanceMode = GuidanceModes.STS;
 				break;
 			case "rcs":
-				guidanceMode = GuidanceModes.RCS;
+				GuidanceMode = GuidanceModes.RCS;
 				break;
 			case "beamriding":
-				guidanceMode = GuidanceModes.BeamRiding;
+				GuidanceMode = GuidanceModes.BeamRiding;
 				break;
 			default:
-				guidanceMode = GuidanceModes.None;
+				GuidanceMode = GuidanceModes.None;
 				break;
 			}
 

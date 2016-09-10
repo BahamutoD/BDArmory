@@ -143,7 +143,7 @@ namespace BahaTurret
 			return finalTarget;
 		}
 
-		public static Vector3 GetAirToAirFireSolution(MissileLauncher missile, Vessel targetVessel)
+		public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
 		{
 			if(!targetVessel)
 			{
@@ -152,9 +152,19 @@ namespace BahaTurret
 			Vector3 targetPosition = targetVessel.transform.position;
 			float leadTime = 0;
 			float targetDistance = Vector3.Distance(targetVessel.transform.position, missile.transform.position);
- 
-			Vector3 simMissileVel = missile.optimumAirspeed * (targetPosition-missile.transform.position).normalized;
-			leadTime = targetDistance/(float)(targetVessel.srf_velocity-simMissileVel).magnitude;
+
+
+		    Vector3 simMissileVel = 500 * (targetPosition - missile.transform.position).normalized;
+
+            var launcher = missile as MissileLauncher;
+		    float optSpeed = 500; //TODO: Add parameter
+		    if (launcher != null)
+		    {
+		        optSpeed = launcher.optimumAirspeed;
+		    }
+            simMissileVel = optSpeed * (targetPosition - missile.transform.position).normalized;
+
+            leadTime = targetDistance/(float)(targetVessel.srf_velocity-simMissileVel).magnitude;
 			leadTime = Mathf.Clamp (leadTime, 0f, 8f);
 			targetPosition = targetPosition + (targetVessel.srf_velocity*leadTime);
 
@@ -166,12 +176,19 @@ namespace BahaTurret
 			return targetPosition;
 		}
 
-		public static Vector3 GetAirToAirFireSolution(MissileLauncher missile, Vector3 targetPosition, Vector3 targetVelocity)
+		public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vector3 targetPosition, Vector3 targetVelocity)
 		{
 			float leadTime = 0;
 			float targetDistance = Vector3.Distance(targetPosition, missile.transform.position);
 
-			Vector3 simMissileVel = missile.optimumAirspeed * (targetPosition-missile.transform.position).normalized;
+            float optSpeed = 500; //TODO: Add parameter
+            var launcher = missile as MissileLauncher;
+            if (launcher != null)
+            {
+                optSpeed = launcher.optimumAirspeed;
+            }
+
+            Vector3 simMissileVel = optSpeed * (targetPosition-missile.transform.position).normalized;
 			leadTime = targetDistance/(targetVelocity-simMissileVel).magnitude;
 			leadTime = Mathf.Clamp (leadTime, 0f, 8f);
 

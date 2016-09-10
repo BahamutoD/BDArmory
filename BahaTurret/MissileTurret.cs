@@ -470,7 +470,7 @@ namespace BahaTurret
 					mRef.parent = finalTransform;
 					mrl.Add(mRef);
 
-					ml.missileReferenceTransform = mTf;
+					ml.MissileReferenceTransform = mTf;
 					ml.missileTurret = this;
 
 					ml.decoupleForward = true;
@@ -552,7 +552,7 @@ namespace BahaTurret
 		IEnumerator MissileRailRoutine(MissileLauncher ml)
 		{
 			yield return null;
-			Ray ray = new Ray(ml.transform.position, ml.missileReferenceTransform.forward);
+			Ray ray = new Ray(ml.transform.position, ml.MissileReferenceTransform.forward);
 			Vector3 localOrigin = turret.pitchTransform.InverseTransformPoint(ray.origin);
 			Vector3 localDirection = turret.pitchTransform.InverseTransformDirection(ray.direction);
 			float forwardSpeed = ml.decoupleSpeed;

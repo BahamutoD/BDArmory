@@ -812,7 +812,7 @@ namespace BahaTurret
 					mRef.parent = rotationTransforms[0];
 					mrl.Add(mRef);
 
-					ml.missileReferenceTransform = mTf;
+					ml.MissileReferenceTransform = mTf;
 					ml.rotaryRail = this;
 
 					ml.decoupleForward = false;

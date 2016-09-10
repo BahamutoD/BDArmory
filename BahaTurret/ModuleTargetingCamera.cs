@@ -868,7 +868,7 @@ namespace BahaTurret
 				{
 					if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 					{
-						MissileLauncher currMissile = weaponManager.CurrentMissile;
+						MissileBase currMissile = weaponManager.CurrentMissile;
 						if(currMissile.TargetingMode == MissileBase.TargetingModes.Gps || currMissile.TargetingMode == MissileLauncher.TargetingModes.Laser)
 						{
 							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currMissile, Vector3.zero, groundTargetPosition);

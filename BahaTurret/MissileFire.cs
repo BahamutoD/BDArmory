@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace BahaTurret
 {
@@ -13,7 +14,7 @@ namespace BahaTurret
 		public IBDWeapon[] weaponArray;
 		
 		[KSPField(guiActiveEditor = false, isPersistant = true, guiActive = false)]
-		public int weaponIndex = 0;
+		public int weaponIndex;
 		
 		ScreenMessage selectionMessage;
 		//ScreenMessage armedMessage;
@@ -22,23 +23,20 @@ namespace BahaTurret
 
 		float startTime;
 
-		public bool hasLoadedRippleData = false;
+		public bool hasLoadedRippleData;
 		float rippleTimer;
 		//[KSPField(isPersistant = true)]
 		public float rippleRPM
 		{
 			get
 			{
-				if(selectedWeapon != null)
+			    if(selectedWeapon != null)
 				{
 					return rippleDictionary[selectedWeapon.GetShortName()].rpm;
 				}
-				else
-				{
-					return 0;
-				}
+			    return 0;
 			}
-			set
+		    set
 			{
 				if(selectedWeapon != null)
 				{
@@ -46,22 +44,14 @@ namespace BahaTurret
 					{
 						rippleDictionary[selectedWeapon.GetShortName()].rpm = value;
 					}
-					else
-					{
-						return;
-					}
-				}
-				else
-				{
-					return;
 				}
 			}
 		}
-		float triggerTimer = 0;
+		float triggerTimer;
 
-		int rippleGunCount = 0;
-		int _gunRippleIndex = 0;
-		public float gunRippleRpm = 0;
+		int rippleGunCount;
+		int _gunRippleIndex;
+		public float gunRippleRpm;
 		public int gunRippleIndex
 		{
 			get
@@ -91,22 +81,16 @@ namespace BahaTurret
 		{
 			get
 			{
-				if(selectedWeapon != null)
+			    if(selectedWeapon != null)
 				{
 					if(rippleDictionary.ContainsKey(selectedWeapon.GetShortName()))
 					{
 						return rippleDictionary[selectedWeapon.GetShortName()].rippleFire;
 					}
-					else
-					{
-						//rippleDictionary.Add(selectedWeapon.GetShortName(), new RippleOption(false, 650));
-						return false;
-					}
+				    //rippleDictionary.Add(selectedWeapon.GetShortName(), new RippleOption(false, 650));
+				    return false;
 				}
-				else
-				{
-					return false;
-				}
+			    return false;
 			}
 		}
 			
@@ -156,11 +140,11 @@ namespace BahaTurret
 				Debug.Log("Ripple data: " + rippleData);
 				try
 				{
-					foreach(string weapon in rippleData.Split(new char[]{';'}))
+					foreach(string weapon in rippleData.Split(';'))
 					{
 						if(weapon == string.Empty) continue;
 
-						string[] options = weapon.Split(new char[]{ ',' });
+						string[] options = weapon.Split(',');
 						string wpnName = options[0];
 						bool rf = bool.Parse(options[1]);
 						float _rpm = float.Parse(options[2]);
@@ -202,7 +186,7 @@ namespace BahaTurret
 				rippleData = string.Empty;
 				foreach(var wpnName in rippleDictionary.Keys)
 				{
-					rippleData += wpnName + "," + rippleDictionary[wpnName].rippleFire.ToString() + "," + rippleDictionary[wpnName].rpm.ToString() + ";";
+					rippleData += wpnName + "," + rippleDictionary[wpnName].rippleFire + "," + rippleDictionary[wpnName].rpm + ";";
 				}
 
 
@@ -211,17 +195,17 @@ namespace BahaTurret
 			Debug.Log("Saved ripple data: "+rippleData);
 		}
 		
-		public bool hasSingleFired = false;
+		public bool hasSingleFired;
 		
 		
 		//
 		
 
 		//bomb aimer
-		Part bombPart = null;
+		Part bombPart;
 		Vector3 bombAimerPosition = Vector3.zero;
 		Texture2D bombAimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
-		bool showBombAimer = false;
+		bool showBombAimer;
 		//
 		
 		
@@ -231,7 +215,7 @@ namespace BahaTurret
 		
 		
 		//rocket aimer handling
-		RocketLauncher currentRocket = null;
+		RocketLauncher currentRocket;
 		
 		
 		//sounds
@@ -245,28 +229,28 @@ namespace BahaTurret
 		AudioClip heatGrowlSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/heatGrowl");
 
 		//missile warning
-		public bool missileIsIncoming = false;
+		public bool missileIsIncoming;
 		public float incomingMissileDistance = float.MaxValue;
 		public Vessel incomingMissileVessel;
 		
 		
 		//guard mode vars
-		float targetScanTimer = 0;
-		Vessel guardTarget = null;
+		float targetScanTimer;
+		Vessel guardTarget;
 		public TargetInfo currentTarget;
         TargetInfo overrideTarget;       //used for setting target next guard scan for stuff like assisting teammates
-        float overrideTimer = 0;
+        float overrideTimer;
         public bool TargetOverride
         {
             get { return overrideTimer > 0; }
         }
 
 		//AIPilot
-		public BDModulePilotAI pilotAI = null;
-		public float timeBombReleased = 0;
+		public BDModulePilotAI pilotAI;
+		public float timeBombReleased;
 
 		//targeting pods
-		public ModuleTargetingCamera mainTGP = null;
+		public ModuleTargetingCamera mainTGP;
 		public List<ModuleTargetingCamera> targetingPods = new List<ModuleTargetingCamera>();
 
 		//radar
@@ -280,7 +264,7 @@ namespace BahaTurret
 		public ModuleWingCommander wingCommander;
 
 		//RWR
-		private RadarWarningReceiver radarWarn = null;
+		private RadarWarningReceiver radarWarn;
 		public RadarWarningReceiver rwr
 		{
 			get
@@ -310,7 +294,7 @@ namespace BahaTurret
 		//Guard view scanning
 		float guardViewScanDirection = 1;
 		float guardViewScanRate = 200;
-		float currentGuardViewAngle = 0;
+		float currentGuardViewAngle;
 		private Transform vrt;
 		public Transform viewReferenceTransform
 		{
@@ -329,16 +313,16 @@ namespace BahaTurret
 		}
 
 		//weapon slaving
-		public bool slavingTurrets = false;
+		public bool slavingTurrets;
 		public Vector3 slavedPosition;
 		public Vector3 slavedVelocity;
 		public Vector3 slavedAcceleration;
 
 		//current weapon ref
-		public MissileLauncher CurrentMissile = null;
-		//MissileLauncher currMiss;
+		public MissileBase CurrentMissile;
+		//MissileBase currMiss;
 		/*
-		public MissileLauncher CurrentMissile
+		public MissileBase CurrentMissile
 		{
 			get
 			{
@@ -350,7 +334,7 @@ namespace BahaTurret
 					}
 					else
 					{
-						currMiss = selectedWeapon.GetPart().FindModuleImplementing<MissileLauncher>();
+						currMiss = selectedWeapon.GetPart().FindModuleImplementing<MissileBase>();
 						return currMiss;
 					}
 				}
@@ -370,14 +354,11 @@ namespace BahaTurret
 		{
 			get
 			{
-				if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
+			    if(selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
 				{
 					return selectedWeapon.GetPart().FindModuleImplementing<ModuleWeapon>();
 				}
-				else
-				{
-					return null;
-				}
+			    return null;
 			}
 		}
 
@@ -434,12 +415,12 @@ namespace BahaTurret
 
 
 		[KSPField(isPersistant = true)]
-		public bool guardMode = false;
+		public bool guardMode;
 
 
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Target Type: "), 
 			UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")]
-		public bool targetMissiles = false;
+		public bool targetMissiles;
 		
 		[KSPAction("Toggle Target Type")]
 		public void AGToggleTargetType(KSPActionParam param)
@@ -458,7 +439,7 @@ namespace BahaTurret
 		{
 			if(CurrentMissile)
 			{
-				foreach(var missile in vessel.FindPartModulesImplementing<MissileLauncher>())
+				foreach(var missile in vessel.FindPartModulesImplementing<MissileBase>())
 				{
 					if(missile.GetShortName() == CurrentMissile.GetShortName())
 					{
@@ -485,7 +466,7 @@ namespace BahaTurret
 		
 		
 		[KSPField(isPersistant = true)]
-		public bool team = false;
+		public bool team;
 
 
 		
@@ -525,7 +506,7 @@ namespace BahaTurret
 		}
 		
 		[KSPField(isPersistant = true)]
-		public bool isArmed = false;
+		public bool isArmed;
 		
 		
 		
@@ -547,7 +528,7 @@ namespace BahaTurret
 		[KSPField(isPersistant = false, guiActive = true, guiName = "Weapon")]
 		public string selectedWeaponString = "None";
 
-		IBDWeapon sw = null;
+		IBDWeapon sw;
 		public IBDWeapon selectedWeapon
 		{
 			get
@@ -656,7 +637,7 @@ namespace BahaTurret
 		#endregion
 
 
-		public bool canRipple = false;
+		public bool canRipple;
 
 		public override void OnSave(ConfigNode node)
 		{
@@ -960,7 +941,7 @@ namespace BahaTurret
 
 			if(selectedWeapon!=null && selectedWeapon.GetWeaponClass() == WeaponClasses.Missile && vessel.isActiveVessel)
 			{
-				MissileLauncher ml = CurrentMissile;
+				MissileBase ml = CurrentMissile;
 				if(ml.TargetingMode == MissileBase.TargetingModes.Heat)
 				{
 					if(targetingAudioSource.clip != heatGrowlSound)
@@ -1080,7 +1061,7 @@ namespace BahaTurret
 				hasSingleFired = true;
 			}
 
-			MissileLauncher aMl = GetAsymMissile();
+			MissileBase aMl = GetAsymMissile();
 			if(aMl)
 			{
 				//Debug.Log("setting asym missile: " + aMl.part.name);
@@ -1088,7 +1069,7 @@ namespace BahaTurret
 				CurrentMissile = aMl;
 			}
 
-			MissileLauncher rMl = GetRotaryReadyMissile();
+			MissileBase rMl = GetRotaryReadyMissile();
 			if(rMl)
 			{
 				//Debug.Log("setting rotary ready missile: " + rMl.part.name);
@@ -1101,7 +1082,7 @@ namespace BahaTurret
 				//Debug.Log("=====selected weapon: " + selectedWeapon.GetPart().name);
 				if(!CurrentMissile || CurrentMissile.part.name != selectedWeapon.GetPart().name)
 				{
-					CurrentMissile = selectedWeapon.GetPart().FindModuleImplementing<MissileLauncher>();
+					CurrentMissile = selectedWeapon.GetPart().FindModuleImplementing<MissileBase>();
 				}
 			}
 			else
@@ -1185,7 +1166,7 @@ namespace BahaTurret
 			{
 				if(CurrentMissile.part.ShieldedFromAirstream)
 				{
-					foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+					foreach(var ml in vessel.FindPartModulesImplementing<MissileBase>())
 					{
 						if(ml.part.ShieldedFromAirstream)
 						{
@@ -1272,73 +1253,83 @@ namespace BahaTurret
 
 			if(!CurrentMissile) return;
 
-			MissileLauncher cm = CurrentMissile;
-			foreach(var rotRail in vessel.FindPartModulesImplementing<BDRotaryRail>())
-			{
-				if(rotRail.missileCount == 0)
-				{
-					//Debug.Log("SetRotaryRails(): rail has no missiles");
-					continue;
-				}
+            //TODO BDModularGuidance: Rotatory Rail?
+            var cm = CurrentMissile as MissileLauncher;
+		    if (cm != null)
+		    {
+		          foreach (var rotRail in vessel.FindPartModulesImplementing<BDRotaryRail>())
+			        {
+				        if(rotRail.missileCount == 0)
+				        {
+					        //Debug.Log("SetRotaryRails(): rail has no missiles");
+					        continue;
+				        }
 
-				//Debug.Log("SetRotaryRails(): rotRail.readyToFire: " + rotRail.readyToFire + ", rotRail.ReadyMissile: " + ((rotRail.ReadyMissile != null) ? rotRail.ReadyMissile.part.name : "null") + ", rotRail.NextMissile: " + ((rotRail.NextMissile != null) ? rotRail.NextMissile.part.name : "null"));
+				        //Debug.Log("SetRotaryRails(): rotRail.readyToFire: " + rotRail.readyToFire + ", rotRail.ReadyMissile: " + ((rotRail.ReadyMissile != null) ? rotRail.ReadyMissile.part.name : "null") + ", rotRail.NextMissile: " + ((rotRail.NextMissile != null) ? rotRail.NextMissile.part.name : "null"));
 
-				//Debug.Log("current missile: " + cm.part.name);
+				        //Debug.Log("current missile: " + cm.part.name);
 
-				if(rotRail.readyToFire)
-				{
-					if(!rotRail.ReadyMissile)
-					{
-						rotRail.RotateToMissile(cm);
-						return;
-					}
+				        if(rotRail.readyToFire)
+				        {
+					        if(!rotRail.ReadyMissile)
+					        {
+						        rotRail.RotateToMissile(cm);
+						        return;
+					        }
 
-					if(rotRail.ReadyMissile.part.name != cm.part.name)
-					{
-						rotRail.RotateToMissile(cm);
-					}
-				}
-				else
-				{
-					if(!rotRail.NextMissile)
-					{
-						rotRail.RotateToMissile(cm);
-					}
-					else if(rotRail.NextMissile.part.name!=cm.part.name)
-					{
-						rotRail.RotateToMissile(cm);
-					}
-				}
+					        if(rotRail.ReadyMissile.part.name != cm.part.name)
+					        {
+						        rotRail.RotateToMissile(cm);
+					        }
+				        }
+				        else
+				        {
+					        if(!rotRail.NextMissile)
+					        {
+						        rotRail.RotateToMissile(cm);
+					        }
+					        else if(rotRail.NextMissile.part.name!=cm.part.name)
+					        {
+						        rotRail.RotateToMissile(cm);
+					        }
+				        }
 
-				/*
-				if((rotRail.readyToFire && (!rotRail.ReadyMissile || rotRail.ReadyMissile.part.name!=cm.part.name)) || (!rotRail.NextMissile || rotRail.NextMissile.part.name!=cm.part.name))
-				{
-					rotRail.RotateToMissile(cm);
-				}
-				*/
-			}
+				        /*
+				        if((rotRail.readyToFire && (!rotRail.ReadyMissile || rotRail.ReadyMissile.part.name!=cm.part.name)) || (!rotRail.NextMissile || rotRail.NextMissile.part.name!=cm.part.name))
+				        {
+					        rotRail.RotateToMissile(cm);
+				        }
+				        */
+			        }
+		    }
+          
 		}
 
 		void SetMissileTurrets()
 		{
-			foreach(var mt in vessel.FindPartModulesImplementing<MissileTurret>())
-			{
-				if(weaponIndex > 0 && mt.ContainsMissileOfType(CurrentMissile))
-				{
-					if(!mt.activeMissileOnly || CurrentMissile.missileTurret == mt)
-					{
-						mt.EnableTurret();
-					}
-					else
-					{
-						mt.DisableTurret();
-					}
-				}
-				else
-				{
-					mt.DisableTurret();
-				}
-			}
+            var cm = CurrentMissile as MissileLauncher;
+		    if (cm != null)
+		    {
+
+		        foreach (var mt in vessel.FindPartModulesImplementing<MissileTurret>())
+		        {
+		            if (weaponIndex > 0 && mt.ContainsMissileOfType(cm))
+		            {
+		                if (!mt.activeMissileOnly || cm.missileTurret == mt)
+		                {
+		                    mt.EnableTurret();
+		                }
+		                else
+		                {
+		                    mt.DisableTurret();
+		                }
+		            }
+		            else
+		            {
+		                mt.DisableTurret();
+		            }
+		        }
+		    }
 		}
 
 		void SetRocketTurrets()
@@ -1411,55 +1402,67 @@ namespace BahaTurret
 
 		void FireCurrentMissile(bool checkClearance)
 		{
-			MissileLauncher ml = CurrentMissile;
-			if(ml == null) return;
+			MissileBase missile = CurrentMissile;
+			if(missile == null) return;
 
-			if(checkClearance && (!CheckBombClearance(ml) || (ml.rotaryRail&&!ml.rotaryRail.ReadyMissile==ml)))
-			{
-				foreach(var otherMissile in vessel.FindPartModulesImplementing<MissileLauncher>())
-				{
-					if(otherMissile != ml && otherMissile.GetShortName() == ml.GetShortName() && CheckBombClearance(otherMissile))
-					{
-						CurrentMissile = otherMissile;
-						selectedWeapon = otherMissile;
-						FireCurrentMissile(false);
-						return;
-					}
-				}
-				CurrentMissile = ml;
-				selectedWeapon = ml;
-				return;
-			}
+		    if (missile is MissileBase)
+		    {
 
-			//Part partSym = FindSym(ml.part);
-			if(ml.missileTurret)
-			{
-				ml.missileTurret.FireMissile(ml);
-			}
-			else if(ml.rotaryRail)
-			{
-				ml.rotaryRail.FireMissile(ml);
-			}
-			else
-			{
-				SendTargetDataToMissile(ml);
-				ml.FireMissile();
-			}
+		        var ml = missile;
+		        if (checkClearance && (!CheckBombClearance(ml) || (ml is MissileLauncher && ((MissileLauncher)ml).rotaryRail && !((MissileLauncher)ml).rotaryRail.ReadyMissile == ml)))
+		        {
+		            foreach (var otherMissile in vessel.FindPartModulesImplementing<MissileBase>())
+		            {
+		                if (otherMissile != ml && otherMissile.GetShortName() == ml.GetShortName() &&
+		                    CheckBombClearance(otherMissile))
+		                {
+		                    CurrentMissile = otherMissile;
+		                    selectedWeapon = otherMissile;
+		                    FireCurrentMissile(false);
+		                    return;
+		                }
+		            }
+		            CurrentMissile = ml;
+		            selectedWeapon = ml;
+		            return;
+		        }
 
-			if(guardMode)
-			{
-				if(ml.GetWeaponClass() == WeaponClasses.Bomb)
-				{
-					StartCoroutine(BombsAwayRoutine(ml));
-				}
-			}
-			else
-			{
-				if(vesselRadarData && vesselRadarData.autoCycleLockOnFire)
-				{
-					vesselRadarData.CycleActiveLock();
-				}
-			}
+		        //Part partSym = FindSym(ml.part);
+		        if (ml is MissileLauncher && ((MissileLauncher)ml).missileTurret)
+		        {
+                    ((MissileLauncher)ml).missileTurret.FireMissile(((MissileLauncher)ml));
+		        }
+		        else if (ml is MissileLauncher && ((MissileLauncher)ml).rotaryRail)
+		        {
+                    ((MissileLauncher)ml).rotaryRail.FireMissile(((MissileLauncher)ml));
+		        }
+		        else
+		        {
+		            SendTargetDataToMissile(ml);
+		            ml.FireMissile();
+		        }
+
+		        if (guardMode)
+		        {
+		            if (ml.GetWeaponClass() == WeaponClasses.Bomb)
+		            {
+		                StartCoroutine(BombsAwayRoutine(ml));
+		            }
+		        }
+		        else
+		        {
+		            if (vesselRadarData && vesselRadarData.autoCycleLockOnFire)
+		            {
+		                vesselRadarData.CycleActiveLock();
+		            }
+		        }
+		    }
+		    else
+		    {
+                SendTargetDataToMissile(missile);
+                missile.FireMissile();
+            }
+			
 
 			UpdateList();
 		}
@@ -1497,7 +1500,7 @@ namespace BahaTurret
 
 				if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
 				{
-					foreach(MissileLauncher ml in lastFiredSym.FindModulesImplementing<MissileLauncher>())
+					foreach(MissileBase ml in lastFiredSym.FindModulesImplementing<MissileBase>())
 					{
 						if(!CheckBombClearance(ml))
 						{
@@ -1548,7 +1551,7 @@ namespace BahaTurret
 						lastFiredSym = nextPart;
 						if(lastFiredSym != null)
 						{
-							CurrentMissile = lastFiredSym.GetComponent<MissileLauncher>();
+							CurrentMissile = lastFiredSym.GetComponent<MissileBase>();
 							selectedWeapon = CurrentMissile;
 							SetMissileTurrets();
 						}
@@ -1582,7 +1585,7 @@ namespace BahaTurret
 			if(!hasFired && lastFiredSym == null)
 			{
 				bool firedMissile = false;
-				foreach(MissileLauncher ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+				foreach(MissileBase ml in vessel.FindPartModulesImplementing<MissileBase>())
 				{
 					if(ml.part.partInfo.title == selectedWeapon.GetPart().partInfo.title)
 					{
@@ -1633,7 +1636,7 @@ namespace BahaTurret
 						firedMissile = true;
 						if(lastFiredSym != null)
 						{
-							CurrentMissile = lastFiredSym.GetComponent<MissileLauncher>();
+							CurrentMissile = lastFiredSym.GetComponent<MissileBase>();
 							selectedWeapon = CurrentMissile;
 							SetMissileTurrets();
 						}
@@ -1736,41 +1739,54 @@ namespace BahaTurret
 			return null;
 		}
 
-		public void SendTargetDataToMissile(MissileLauncher ml)
-		{
+		public void SendTargetDataToMissile(MissileBase ml)
+		{ //TODO BDModularGuidance: implement all targetings on base
 			if(ml.TargetingMode == MissileBase.TargetingModes.Laser && laserPointDetected)
 			{
 				ml.lockedCamera = foundCam;
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Gps)
 			{
-				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
-				{
-					if(vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
-					{
-						ml.TargetAcquired = true;
-						ml.legacyTargetVessel = vessel.targetObject.GetVessel();
-					}
-				}
-				else if(designatedGPSCoords != Vector3d.zero)
-				{
-					ml.targetGPSCoords = designatedGPSCoords;
-					ml.TargetAcquired = true;
-				}
+			    //var mlauncher = (MissileLauncher)ml;
+			    var mlauncher = ml as MissileLauncher;
+			    if (mlauncher != null)
+                {
+                    if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
+                    {
+                        if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
+                        {
+                            mlauncher.TargetAcquired = true;
+                            mlauncher.legacyTargetVessel = vessel.targetObject.GetVessel();
+                        }
+                    }
+                    else if (designatedGPSCoords != Vector3d.zero)
+                    {
+                        mlauncher.targetGPSCoords = designatedGPSCoords;
+                        mlauncher.TargetAcquired = true;
+                    } 
+                }
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Heat && heatTarget.exists)
-			{
-				ml.heatTarget = heatTarget;
-				heatTarget = TargetSignatureData.noTarget;
+            {
+                var mlauncher = ml as MissileLauncher;
+                if (mlauncher != null)
+                {
+                     mlauncher.heatTarget = heatTarget;
+				    heatTarget = TargetSignatureData.noTarget;
+                }           
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Radar && vesselRadarData && vesselRadarData.locked)//&& radar && radar.lockedTarget.exists)
 			{
-				//ml.radarTarget = radar.lockedTarget;
-				ml.radarTarget = vesselRadarData.lockedTargetData.targetData;
+                var mlauncher = ml as MissileLauncher;
+			    if (mlauncher != null)
+			    {
+			        //ml.radarTarget = radar.lockedTarget;
+			        mlauncher.radarTarget = vesselRadarData.lockedTargetData.targetData;
 
-				ml.vrd = vesselRadarData;
-				vesselRadarData.LastMissile = ml;
-				/*
+			        mlauncher.vrd = vesselRadarData;
+			        vesselRadarData.LastMissile = ml;
+			    }
+			    /*
 
 				if(radar.linked && radar.linkedRadar.locked)
 				{
@@ -1785,10 +1801,15 @@ namespace BahaTurret
 
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.AntiRad && antiRadTargetAcquired)
-			{
-				ml.TargetAcquired = true;
-				ml.targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(antiRadiationTarget, vessel.mainBody);
-			}
+            {
+                var mlauncher = ml as MissileLauncher;
+                if (mlauncher != null)
+                {
+                    mlauncher.TargetAcquired = true;
+                    mlauncher.targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(antiRadiationTarget,
+                        vessel.mainBody);
+                }
+            }
 		}
 		
 		
@@ -1871,23 +1892,36 @@ namespace BahaTurret
 			
 			if(showBombAimer || (guardMode && weaponIndex > 0 && selectedWeapon.GetWeaponClass()==WeaponClasses.Bomb))
 			{
-				MissileLauncher ml = bombPart.GetComponent<MissileLauncher>();
+				MissileBase ml = bombPart.GetComponent<MissileBase>();
 
 				float simDeltaTime = 0.1f;
 				float simTime = 0;
 				Vector3 dragForce = Vector3.zero;
-				Vector3 prevPos = ml.missileReferenceTransform.position;
-				Vector3 currPos = ml.missileReferenceTransform.position;
+				Vector3 prevPos = ml.MissileReferenceTransform.position;
+				Vector3 currPos = ml.MissileReferenceTransform.position;
 				Vector3 simVelocity = vessel.rb_velocity;
 
-				simVelocity += ml.decoupleSpeed * (ml.decoupleForward ? ml.missileReferenceTransform.forward : -ml.missileReferenceTransform.up);
-				
+
+			    var launcher = ml as MissileLauncher;
+			    if (launcher != null)
+			    {
+			        simVelocity += launcher.decoupleSpeed*
+			                       (launcher.decoupleForward
+			                           ? launcher.MissileReferenceTransform.forward
+			                           : -launcher.MissileReferenceTransform.up);
+			    }
+			    else
+			    {   //TODO: BDModularGuidance review this value
+                    simVelocity += 5 * -launcher.MissileReferenceTransform.up;
+                }
+               
+			
 				List<Vector3> pointPositions = new List<Vector3>();
 				pointPositions.Add(currPos);
 				
 				
-				prevPos = ml.missileReferenceTransform.position;
-				currPos = ml.missileReferenceTransform.position;
+				prevPos = ml.MissileReferenceTransform.position;
+				currPos = ml.MissileReferenceTransform.position;
 			
 				bombAimerPosition = Vector3.zero;
 
@@ -1902,11 +1936,24 @@ namespace BahaTurret
 
 					simVelocity += FlightGlobals.getGeeForceAtPosition(currPos) * simDeltaTime;
 					float simSpeedSquared = simVelocity.sqrMagnitude;
-					float drag = ml.simpleDrag;
-					if(simTime > ml.deployTime)
-					{
-						drag = 	ml.deployedDrag;
-					}
+
+                    launcher = ml as MissileLauncher;
+				    float drag = 0;
+				    if (launcher != null)
+				    {
+				        drag = launcher.simpleDrag;
+				        if (simTime > launcher.deployTime)
+				        {
+				            drag = launcher.deployedDrag;
+				        }
+				    }
+				    else
+				    {
+                        //TODO:BDModularGuidance drag calculation
+				        drag = ml.vessel.parts.Sum(x => x.dragScalar);
+
+				    }
+                  
 					dragForce = (0.008f * bombPart.mass) * drag * 0.5f * simSpeedSquared * atmDensity * simVelocity.normalized;
 					simVelocity -= (dragForce/bombPart.mass)*simDeltaTime;
 
@@ -1991,13 +2038,14 @@ namespace BahaTurret
 
 				if(showBombAimer)
 				{
-					MissileLauncher ml = CurrentMissile;
+					MissileBase ml = CurrentMissile;
 					if(ml)
 					{
 						float size = 128;
 						Texture2D texture = BDArmorySettings.Instance.greenCircleTexture;
 
-						if(ml.guidanceActive)
+                        
+						if((ml is MissileLauncher &&  ((MissileLauncher)ml).guidanceActive) || ml is BDModularGuidance)
 						{
 							texture = BDArmorySettings.Instance.largeGreenCircleTexture;
 							size = 256;
@@ -2009,7 +2057,7 @@ namespace BahaTurret
 
 
 				//MISSILE LOCK HUD
-				MissileLauncher missile = CurrentMissile;
+				MissileBase missile = CurrentMissile;
 				if(missile)
 				{
 					if(missile.TargetingMode == MissileBase.TargetingModes.Laser)
@@ -2029,32 +2077,34 @@ namespace BahaTurret
 					}
 					else if(missile.TargetingMode == MissileBase.TargetingModes.Heat)
 					{
-						if(heatTarget.exists)
+                        MissileBase ml =CurrentMissile;
+                        if (heatTarget.exists)
 						{
 							BDGUIUtils.DrawTextureOnWorldPos(heatTarget.position, BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
-							float distanceToTarget = Vector3.Distance(heatTarget.position, CurrentMissile.missileReferenceTransform.position);
-							BDGUIUtils.DrawTextureOnWorldPos(CurrentMissile.missileReferenceTransform.position + (distanceToTarget * CurrentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
-							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(CurrentMissile, heatTarget.position, heatTarget.velocity);
-							Vector3 fsDirection = (fireSolution - CurrentMissile.missileReferenceTransform.position).normalized;
-							BDGUIUtils.DrawTextureOnWorldPos(CurrentMissile.missileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+							float distanceToTarget = Vector3.Distance(heatTarget.position, ml.MissileReferenceTransform.position);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
+							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(ml, heatTarget.position, heatTarget.velocity);
+							Vector3 fsDirection = (fireSolution - ml.MissileReferenceTransform.position).normalized;
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 						}
 						else
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(CurrentMissile.missileReferenceTransform.position + (2000 * CurrentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
-							BDGUIUtils.DrawTextureOnWorldPos(CurrentMissile.missileReferenceTransform.position + (2000 * CurrentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
 						}
 					}
 					else if(missile.TargetingMode == MissileBase.TargetingModes.Radar)
-					{
-						//if(radar && radar.locked)
-						if(vesselRadarData && vesselRadarData.locked)
+                    {
+                        MissileBase ml = CurrentMissile;
+                        //if(radar && radar.locked)
+                        if (vesselRadarData && vesselRadarData.locked)
 						{
-							float distanceToTarget = Vector3.Distance(vesselRadarData.lockedTargetData.targetData.predictedPosition, CurrentMissile.missileReferenceTransform.position);
-							BDGUIUtils.DrawTextureOnWorldPos(CurrentMissile.missileReferenceTransform.position + (distanceToTarget * CurrentMissile.missileReferenceTransform.forward), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
+							float distanceToTarget = Vector3.Distance(vesselRadarData.lockedTargetData.targetData.predictedPosition, ml.MissileReferenceTransform.position);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
 							//Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(CurrentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
-							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(CurrentMissile, vesselRadarData.lockedTargetData.targetData.predictedPosition, vesselRadarData.lockedTargetData.targetData.velocity);
-							Vector3 fsDirection = (fireSolution - CurrentMissile.missileReferenceTransform.position).normalized;
-							BDGUIUtils.DrawTextureOnWorldPos(CurrentMissile.missileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(ml, vesselRadarData.lockedTargetData.targetData.predictedPosition, vesselRadarData.lockedTargetData.targetData.velocity);
+							Vector3 fsDirection = (fireSolution - ml.MissileReferenceTransform.position).normalized;
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 
 							if(BDArmorySettings.DRAW_DEBUG_LABELS)
 							{
@@ -2106,7 +2156,7 @@ namespace BahaTurret
 			
 		}
 
-		bool disabledRocketAimers = false;
+		bool disabledRocketAimers;
 		void FindNextRocket(RocketLauncher lastFired)
 		{
 			if(weaponIndex > 0 && selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
@@ -2343,8 +2393,8 @@ namespace BahaTurret
 		}
 			
 		Vector3 debugGuardViewDirection;
-		bool focusingOnTarget = false;
-		float focusingOnTargetTimer = 0;
+		bool focusingOnTarget;
+		float focusingOnTargetTimer;
 		public Vector3 incomingThreatPosition;
         public Vessel incomingThreatVessel;
 		void UpdateGuardViewScan()
@@ -2501,8 +2551,8 @@ namespace BahaTurret
 		}
 
 
-		public bool underFire = false;
-		Coroutine ufRoutine = null;
+		public bool underFire;
+		Coroutine ufRoutine;
 		IEnumerator UnderFireRoutine()
 		{
 			underFire = true;
@@ -2528,16 +2578,13 @@ namespace BahaTurret
 								yield return StartCoroutine(tgp.PointToPositionRoutine(guardTarget.CoM));
 								if(tgp)
 								{
-									if(tgp.groundStabilized && guardTarget && (tgp.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
+								    if(tgp.groundStabilized && guardTarget && (tgp.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
 									{
 										tgp.slaveTurrets = true;
 										StartGuardTurretFiring();
 										yield break;
 									}
-									else
-									{
-										tgp.DisableCamera();
-									}
+								    tgp.DisableCamera();
 								}
 							}
 
@@ -2587,7 +2634,6 @@ namespace BahaTurret
 
 
 			StartGuardTurretFiring();
-			yield break;
 		}
 
 
@@ -2628,28 +2674,50 @@ namespace BahaTurret
 		}
 
 
-		int missilesAway = 0;
-		IEnumerator MissileAwayRoutine(MissileLauncher ml)
+		int missilesAway;
+		IEnumerator MissileAwayRoutine(MissileBase ml)
 		{
 			missilesAway++;
-			float missileThrustTime = ml.dropTime + ml.cruiseTime + ml.boostTime;
+		    float missileThrustTime = 100;
+
+		    var launcher = ml as MissileLauncher;
+		    if (launcher != null)
+		    {
+		        missileThrustTime = launcher.dropTime + launcher.cruiseTime + launcher.boostTime;
+		    }
+		    else
+		    {
+		       //TODO BDModularGuidance: Calculate Thrust Time or new field
+		    }
 			float timeStart = Time.time;
 			float timeLimit = Mathf.Max(missileThrustTime + 4, 10);
 			while(ml)
 			{
-				if(ml.guidanceActive && Time.time-timeStart < timeLimit)
-				{
-					yield return null;
-				}
-				else
-				{
-					break;
-				}
-			}
+			    if (launcher != null)
+			    {
+			        if (launcher.guidanceActive && Time.time-timeStart < timeLimit)
+				    {
+					    yield return null;
+				    }
+				    else
+				    {
+					    break;
+				    }
+			    }
+                else if (Time.time - timeStart < timeLimit)
+                {
+                    yield return null;
+                }
+                else
+                {
+                    break;
+                }
+
+            }
 			missilesAway--;
 		}
 
-		IEnumerator BombsAwayRoutine(MissileLauncher ml)
+		IEnumerator BombsAwayRoutine(MissileBase ml)
 		{
 			missilesAway++;
 			float timeStart = Time.time;
@@ -2669,10 +2737,10 @@ namespace BahaTurret
 		}
 
 
-		bool guardFiringMissile = false;
+		bool guardFiringMissile;
 		IEnumerator GuardMissileRoutine()
 		{
-			MissileLauncher ml = CurrentMissile;
+			MissileBase ml = CurrentMissile;
 
 			if(ml && !guardFiringMissile)
 			{
@@ -2681,19 +2749,20 @@ namespace BahaTurret
 
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
+				   //TODO BDModularGuidance Legacy and turret implementation
 					if(BDArmorySettings.DRAW_DEBUG_LABELS)
 					{
 						Debug.Log("Firing on target: " + guardTarget.GetName() + ", (legacy targeting)");
 					}
-					if(ml.missileTurret)
+					if(ml is MissileLauncher && ((MissileLauncher)ml).missileTurret)
 					{
-						ml.missileTurret.PrepMissileForFire(ml);
-						ml.FireMissileOnTarget(guardTarget);
-						ml.missileTurret.UpdateMissileChildren();
+                        ((MissileLauncher)ml).missileTurret.PrepMissileForFire(((MissileLauncher)ml));
+                        ((MissileLauncher)ml).FireMissileOnTarget(guardTarget);
+                        ((MissileLauncher)ml).missileTurret.UpdateMissileChildren();
 					}
 					else
 					{
-						ml.FireMissileOnTarget(guardTarget);
+                        ((MissileLauncher)ml).FireMissileOnTarget(guardTarget);
 					}
 					StartCoroutine(MissileAwayRoutine(ml));
 					UpdateList();
@@ -2724,22 +2793,28 @@ namespace BahaTurret
 
 						yield return new WaitForSeconds(0.5f);
 					}
+                 
 
-					//wait for missile turret to point at target
-					if(guardTarget && ml && ml.missileTurret && vesselRadarData.locked)
-					{
-						vesselRadarData.SlaveTurrets();
-						float turretStartTime = Time.time;
-						while(Time.time - turretStartTime < 5)
-						{
-							float angle = Vector3.Angle(ml.missileTurret.finalTransform.forward, ml.missileTurret.slavedTargetPosition - ml.missileTurret.finalTransform.position);
-							if(angle < 1)
-							{
-								turretStartTime -= 2 * Time.fixedDeltaTime;
-							}
-							yield return new WaitForFixedUpdate();
-						}
-					}
+                    //wait for missile turret to point at target
+                    //TODO BDModularGuidance: add turret
+				    var mlauncher = ml as MissileLauncher;
+				    if (mlauncher != null)
+                    {
+                        if (guardTarget && ml && mlauncher.missileTurret && vesselRadarData.locked)
+                        {
+                            vesselRadarData.SlaveTurrets();
+                            float turretStartTime = Time.time;
+                            while (Time.time - turretStartTime < 5)
+                            {
+                                float angle = Vector3.Angle(mlauncher.missileTurret.finalTransform.forward, mlauncher.missileTurret.slavedTargetPosition - mlauncher.missileTurret.finalTransform.position);
+                                if (angle < 1)
+                                {
+                                    turretStartTime -= 2 * Time.fixedDeltaTime;
+                                }
+                                yield return new WaitForFixedUpdate();
+                            }
+                        } 
+                    }
 
 					yield return null;
 
@@ -2750,7 +2825,7 @@ namespace BahaTurret
 							Debug.Log("Firing on target: " + guardTarget.GetName());
 						}
 						FireCurrentMissile(true);
-						StartCoroutine(MissileAwayRoutine(ml));
+						StartCoroutine(MissileAwayRoutine(mlauncher));
 					}
 				}
 				else if(ml.TargetingMode == MissileBase.TargetingModes.Heat)
@@ -2763,15 +2838,23 @@ namespace BahaTurret
 					float attemptStartTime = Time.time;
 					float attemptDuration = Mathf.Max(targetScanInterval * 0.75f, 5f);
 					SetCargoBays();
-					while(ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).magnitude >40))
+
+
+				    MissileLauncher mlauncher;
+				    while (ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).magnitude >40))
 					{
-						//try using missile turret to lock target
-						if(ml.missileTurret)
-						{
-							ml.missileTurret.slaved = true;
-							ml.missileTurret.slavedTargetPosition = guardTarget.CoM;
-							ml.missileTurret.SlavedAim();
-						}
+                        //TODO BDModularGuidance: add turret
+                        //try using missile turret to lock target
+                        mlauncher = ml as MissileLauncher;
+					    if (mlauncher != null)
+                        {
+                            if (mlauncher.missileTurret)
+                            {
+                                mlauncher.missileTurret.slaved = true;
+                                mlauncher.missileTurret.slavedTargetPosition = guardTarget.CoM;
+                                mlauncher.missileTurret.SlavedAim();
+                            } 
+                        }
 
 						yield return new WaitForFixedUpdate();
 					}
@@ -2800,24 +2883,28 @@ namespace BahaTurret
 						yield return new WaitForSeconds(0.5f);
 					}
 
-					//wait for missile turret to point at target
-					if(ml && ml.missileTurret && heatTarget.exists)
-					{
-						float turretStartTime = attemptStartTime;
-						while(heatTarget.exists && Time.time - turretStartTime < Mathf.Max(targetScanInterval/2f, 2))
-						{
-							float angle = Vector3.Angle(ml.missileTurret.finalTransform.forward, ml.missileTurret.slavedTargetPosition - ml.missileTurret.finalTransform.position);
-							ml.missileTurret.slaved = true;
-							ml.missileTurret.slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(ml, heatTarget.predictedPosition, heatTarget.velocity);
-							ml.missileTurret.SlavedAim();
+                    //wait for missile turret to point at target
+                    mlauncher = ml as MissileLauncher;
+                    if (mlauncher != null)
+                    {
+                        if (ml && mlauncher.missileTurret && heatTarget.exists)
+                        {
+                            float turretStartTime = attemptStartTime;
+                            while (heatTarget.exists && Time.time - turretStartTime < Mathf.Max(targetScanInterval / 2f, 2))
+                            {
+                                float angle = Vector3.Angle(mlauncher.missileTurret.finalTransform.forward, mlauncher.missileTurret.slavedTargetPosition - mlauncher.missileTurret.finalTransform.position);
+                                mlauncher.missileTurret.slaved = true;
+                                mlauncher.missileTurret.slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(mlauncher, heatTarget.predictedPosition, heatTarget.velocity);
+                                mlauncher.missileTurret.SlavedAim();
 
-							if(angle < 1)
-							{
-								turretStartTime -= 3 * Time.fixedDeltaTime;
-							}
-							yield return new WaitForFixedUpdate();
-						}
-					}
+                                if (angle < 1)
+                                {
+                                    turretStartTime -= 3 * Time.fixedDeltaTime;
+                                }
+                                yield return new WaitForFixedUpdate();
+                            }
+                        } 
+                    }
 
 					yield return null;
 
@@ -2829,7 +2916,7 @@ namespace BahaTurret
 						}
 
 						FireCurrentMissile(true);
-						StartCoroutine(MissileAwayRoutine(ml));
+						StartCoroutine(MissileAwayRoutine(mlauncher));
 					}
 				}
 				else if(ml.TargetingMode == MissileBase.TargetingModes.Gps)
@@ -2838,8 +2925,9 @@ namespace BahaTurret
 					FireCurrentMissile(true);
 				}
 				else if(ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
-				{
-					if(rwr)
+                {
+                    var mlauncher = ml;
+                    if (rwr)
 					{
 						rwr.EnableRWR();
 					}
@@ -2859,7 +2947,7 @@ namespace BahaTurret
 					if(ml && antiRadTargetAcquired && (antiRadiationTarget - guardTarget.CoM).magnitude < 20)
 					{
 						FireCurrentMissile(true);
-						StartCoroutine(MissileAwayRoutine(ml));
+						StartCoroutine(MissileAwayRoutine(mlauncher));
 					}
 				}
 				else if(ml.TargetingMode == MissileBase.TargetingModes.Laser)
@@ -2873,14 +2961,11 @@ namespace BahaTurret
 
 							if(tgp)
 							{
-								if(tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
+							    if(tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
 								{
 									break;
 								}
-								else
-								{
-									tgp.DisableCamera();
-								}
+							    tgp.DisableCamera();
 							}
 						}
 					}
@@ -2898,8 +2983,12 @@ namespace BahaTurret
 					}
 					if(ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).magnitude < 20)
 					{
+                        
 						FireCurrentMissile(true);
-						StartCoroutine(MissileAwayRoutine(ml));
+					    
+                        StartCoroutine(MissileAwayRoutine(ml));
+					    
+					
 					}
 				}
 
@@ -2914,8 +3003,8 @@ namespace BahaTurret
 			bool hasSetCargoBays = false;
 			float bombStartTime = Time.time;
 			float bombAttemptDuration = Mathf.Max(targetScanInterval, 12f);
-			float radius = CurrentMissile.blastRadius * Mathf.Min((1 + ((float)maxMissilesOnTarget/2f)), 1.5f);
-			if(CurrentMissile.TargetingMode == MissileBase.TargetingModes.Gps && Vector3.Distance(designatedGPSInfo.worldPos, guardTarget.CoM) > CurrentMissile.blastRadius)
+			float radius = CurrentMissile.GetBlastRadius() * Mathf.Min((1 + (maxMissilesOnTarget/2f)), 1.5f);
+			if(CurrentMissile.TargetingMode == MissileBase.TargetingModes.Gps && Vector3.Distance(designatedGPSInfo.worldPos, guardTarget.CoM) > CurrentMissile.GetBlastRadius())
 			{
 				//check database for target first
 				float twoxsqrRad = 4f * radius * radius;
@@ -2947,7 +3036,7 @@ namespace BahaTurret
 
 						if(tgp)
 						{
-							if(guardTarget && tgp.groundStabilized && Vector3.Distance(tgp.groundTargetPosition, guardTarget.transform.position) < CurrentMissile.blastRadius)
+							if(guardTarget && tgp.groundStabilized && Vector3.Distance(tgp.groundTargetPosition, guardTarget.transform.position) < CurrentMissile.GetBlastRadius())
 							{
 								radius = 500;
 								designatedGPSInfo = new GPSTargetInfo(tgp.bodyRelativeGTP, "Guard Target");
@@ -3075,7 +3164,7 @@ namespace BahaTurret
 
 			if(distance > turretRange || !vessel.LandedOrSplashed)
 			{
-				//missiles
+			    //missiles
 				if(!target.isLanded)
 				{
 					if(!targetMissiles && target.isMissile && !vessel.LandedOrSplashed) //don't fire on missiles if airborne
@@ -3101,20 +3190,17 @@ namespace BahaTurret
 					//return SwitchToTurret(distance); //Long range turrets?
 					return false;
 				}
-				else
-				{
-					if(SwitchToGroundMissile())
-					{
-						return true;
-					}
-					else if(SwitchToBomb())
-					{
-						return true;
-					}
-				}
+			    if(SwitchToGroundMissile())
+			    {
+			        return true;
+			    }
+			    if(SwitchToBomb())
+			    {
+			        return true;
+			    }
 			}
 
-			return false;
+		    return false;
 		}
 
 		bool TryPickAntiRad(TargetInfo target)
@@ -3126,35 +3212,29 @@ namespace BahaTurret
 				if(selectedWeapon == null) return false;
 				if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 				{
-					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
+					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileBase>())
 					{
-						if(ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
+					    if(ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
 						{
 							return true;
 						}
-						else
-						{
-							break;
-						}
+					    break;
 					}
-					//return;
+				    //return;
 				}
 			}
 		}
 
 		public bool CanSeeTarget(Vessel target)
 		{
-			if(RadarUtils.TerrainCheck(target.transform.position, transform.position))
+		    if(RadarUtils.TerrainCheck(target.transform.position, transform.position))
 			{
 				return false;
 			}
-			else
-			{
-				return true;
-			}
+		    return true;
 		}
-		
-		void ScanAllTargets()
+
+	    void ScanAllTargets()
 		{
 			//get a target.
 			//float angle = 0;
@@ -3169,7 +3249,7 @@ namespace BahaTurret
 						float angle = Vector3.Angle (-transform.forward, v.transform.position-transform.position);
 						if(angle < guardAngle/2)
 						{
-							foreach(var missile in v.FindPartModulesImplementing<MissileLauncher>())
+							foreach(var missile in v.FindPartModulesImplementing<MissileBase>())
 							{
 								if(missile.HasFired && missile.Team != team)
 								{
@@ -3215,7 +3295,7 @@ namespace BahaTurret
                     //overrideTarget = null;
                     return;
                 }
-                else if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log(vessel.vesselName + " is engaging an override target with failed to engage its override target!");
                 }
@@ -3523,7 +3603,7 @@ namespace BahaTurret
 					}
 				}
 			}
-			else return true;
+		    return true;
 		}
 
 		/*
@@ -3574,9 +3654,9 @@ namespace BahaTurret
 
 				if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 				{
-					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
+					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileBase>())
 					{
-						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure)
+						if(ml.GuidanceMode == MissileBase.GuidanceModes.AAMLead || ml.GuidanceMode == MissileBase.GuidanceModes.AAMPure)
 						{
 							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.srf_velocity, guardTarget.transform.position);
 							if(vessel.srfSpeed > ml.minLaunchSpeed && targetDistance < dlz.maxLaunchRange && targetDistance > dlz.minLaunchRange)
@@ -3623,9 +3703,9 @@ namespace BahaTurret
 				if(selectedWeapon == null) break;//return false;
 				if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 				{
-					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
+					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileBase>())
 					{
-						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure)
+						if(ml.guidanceMode == MissileBase.GuidanceModes.AAMLead || ml.guidanceMode == MissileBase.GuidanceModes.AAMPure)
 						{
 							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.srf_velocity, guardTarget.transform.position);
 							if(vessel.srfSpeed > ml.minLaunchSpeed && targetDistance < dlz.maxLaunchRange && targetDistance > dlz.minLaunchRange)
@@ -3665,16 +3745,12 @@ namespace BahaTurret
 				}
 				return true;
 			}
-			else
-			{
-				
-				if(BDArmorySettings.DRAW_DEBUG_LABELS)
-				{
-					Debug.Log(" - " + vessel.vesselName + " : no result.");
-				}
+		    if(BDArmorySettings.DRAW_DEBUG_LABELS)
+		    {
+		        Debug.Log(" - " + vessel.vesselName + " : no result.");
+		    }
 			
-				return false;
-			}
+		    return false;
 		}
 
 		bool SwitchToGroundMissile()
@@ -3686,12 +3762,12 @@ namespace BahaTurret
 				if(selectedWeapon == null) return false;
 				if(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 				{
-					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
+					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileBase>())
 					{
-						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AGM 
-						   || ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding
-						   || ml.guidanceMode == MissileLauncher.GuidanceModes.STS
-						   || ml.guidanceMode == MissileLauncher.GuidanceModes.Cruise)
+					    if(ml.GuidanceMode == MissileBase.GuidanceModes.AGM 
+						   || ml.GuidanceMode == MissileBase.GuidanceModes.BeamRiding
+						   || ml.GuidanceMode == MissileBase.GuidanceModes.STS
+						   || ml.GuidanceMode == MissileBase.GuidanceModes.Cruise)
 						{
 							if(!BDArmorySettings.ALLOW_LEGACY_TARGETING && ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
 							{
@@ -3702,10 +3778,7 @@ namespace BahaTurret
 
 							return true;
 						}
-						else
-						{
-							break;
-						}
+					    break;
 					}
 				}
 			}
@@ -3719,7 +3792,7 @@ namespace BahaTurret
 			{
 				if(weaponArray[i].GetWeaponClass() == WeaponClasses.Bomb)
 				{
-					if(weaponArray[i].GetPart().FindModuleImplementing<MissileLauncher>().TargetingMode == MissileBase.TargetingModes.Gps)
+					if(weaponArray[i].GetPart().FindModuleImplementing<MissileBase>().TargetingMode == MissileBase.TargetingModes.Gps)
 					{
 						if(targetingPods.Count == 0)
 						{
@@ -3737,7 +3810,7 @@ namespace BahaTurret
 
 		bool SwitchToLaser()
 		{
-			if(selectedWeapon == null || selectedWeapon.GetWeaponClass() != WeaponClasses.DefenseLaser)
+		    if(selectedWeapon == null || selectedWeapon.GetWeaponClass() != WeaponClasses.DefenseLaser)
 			{
 				CycleWeapon(0); //go to start of array
 				while(true)
@@ -3747,12 +3820,11 @@ namespace BahaTurret
 					if(selectedWeapon.GetWeaponClass() == WeaponClasses.DefenseLaser) return true;
 				}
 			}
-			else return true;
+		    return true;
 		}
 
-	
 
-		int CheckTurret(float distance)
+	    int CheckTurret(float distance)
 		{
 			if(weaponIndex == 0 || selectedWeapon == null || !(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun || selectedWeapon.GetWeaponClass() == WeaponClasses.DefenseLaser || selectedWeapon.GetWeaponClass()==WeaponClasses.Rocket))
 			{
@@ -3791,7 +3863,7 @@ namespace BahaTurret
 						float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
 						if(((!vessel.LandedOrSplashed && pilotAI) || (TargetInTurretRange(weapon.turret, gimbalTolerance))) && weapon.maxEffectiveDistance >= finalDistance)
 						{
-							if(weapon.isOverheated)
+						    if(weapon.isOverheated)
 							{
 								if(BDArmorySettings.DRAW_DEBUG_LABELS)
 								{
@@ -3799,31 +3871,25 @@ namespace BahaTurret
 								}
 								return -1;
 							}
-							else if(CheckAmmo(weapon) || BDArmorySettings.INFINITE_AMMO)
-							{
-								if(BDArmorySettings.DRAW_DEBUG_LABELS)
-								{
-									Debug.Log(selectedWeapon + " is valid!");
-								}
-								return 1;
-							}
-							else
-							{
-								if(BDArmorySettings.DRAW_DEBUG_LABELS)
-								{
-									Debug.Log(selectedWeapon + " has no ammo.");
-								}
-								return -1;
-							}
+						    if(CheckAmmo(weapon) || BDArmorySettings.INFINITE_AMMO)
+						    {
+						        if(BDArmorySettings.DRAW_DEBUG_LABELS)
+						        {
+						            Debug.Log(selectedWeapon + " is valid!");
+						        }
+						        return 1;
+						    }
+						    if(BDArmorySettings.DRAW_DEBUG_LABELS)
+						    {
+						        Debug.Log(selectedWeapon + " has no ammo.");
+						    }
+						    return -1;
 						}
-						else
-						{
-							if(BDArmorySettings.DRAW_DEBUG_LABELS)
-							{
-								Debug.Log(selectedWeapon + " can not reach target (" + distance + " vs " + weapon.maxEffectiveDistance + ", yawRange: " + weapon.yawRange + "). Continuing.");
-							}
-						}
-						//else return 0;
+					    if(BDArmorySettings.DRAW_DEBUG_LABELS)
+					    {
+					        Debug.Log(selectedWeapon + " can not reach target (" + distance + " vs " + weapon.maxEffectiveDistance + ", yawRange: " + weapon.yawRange + "). Continuing.");
+					    }
+					    //else return 0;
 					}
 				}
 			}
@@ -3876,14 +3942,11 @@ namespace BahaTurret
 				}
 				return true;
 			}
-			else
-			{
-				if(BDArmorySettings.DRAW_DEBUG_LABELS)
-				{
-					Debug.Log("Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: " + signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch + ", angleYaw: " + angleYaw);
-				}
-				return false;
-			}
+		    if(BDArmorySettings.DRAW_DEBUG_LABELS)
+		    {
+		        Debug.Log("Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: " + signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch + ", angleYaw: " + angleYaw);
+		    }
+		    return false;
 		}
 		
 		bool CheckAmmo(ModuleWeapon weapon)
@@ -3922,7 +3985,7 @@ namespace BahaTurret
 			}
 		}
 		
-		public void MissileWarning(float distance, MissileLauncher ml)//take distance parameter
+		public void MissileWarning(float distance, MissileBase ml)//take distance parameter
 		{
 			if(vessel.isActiveVessel && !warningSounding)
 			{
@@ -3933,8 +3996,8 @@ namespace BahaTurret
 			incomingMissileDistance = distance;
 		}
 
-		bool warningSounding = false;
-		IEnumerator WarningSoundRoutine(float distance, MissileLauncher ml)//give distance parameter
+		bool warningSounding;
+		IEnumerator WarningSoundRoutine(float distance, MissileBase ml)//give distance parameter
 		{
 			if(distance < 4000)
 			{
@@ -3983,13 +4046,13 @@ namespace BahaTurret
 		}
 
 
-		bool CheckBombClearance(MissileLauncher ml)
-		{
-			if(!BDArmorySettings.BOMB_CLEARANCE_CHECK) return true;
+	    bool CheckBombClearance(MissileBase ml)
+	    {
+	        if (!BDArmorySettings.BOMB_CLEARANCE_CHECK) return true;
 
-			if(ml.part.ShieldedFromAirstream)
-			{
-				/*
+	        if (ml.part.ShieldedFromAirstream)
+	        {
+	            /*
 				foreach(var shield in ml.part.airstreamShields)
 				{
 					
@@ -4004,106 +4067,115 @@ namespace BahaTurret
 					}
 				}
 				*/
-				return false;
-			}
+	            return false;
+	        }
 
-			if(ml.rotaryRail && ml.rotaryRail.ReadyMissile != ml)
-			{
-				return false;
-			}
+	        //TODO BDModularGuidance: Bombs and turrents
+	        var launcher = ml as MissileLauncher;
+	        if (launcher != null)
+	        {
+	            if (launcher.rotaryRail && launcher.rotaryRail.ReadyMissile != ml)
+	            {
+	                return false;
+	            }
 
-			if(ml.missileTurret && !ml.missileTurret.turretEnabled)
-			{
-				return false;
-			}
-
-			if(ml.dropTime > 0.3f)
-			{
-				//debug lines
-				LineRenderer lr = null;
-				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
-				{
-					lr = GetComponent<LineRenderer>();
-					if(!lr)
-					{
-						lr = gameObject.AddComponent<LineRenderer>();
-					}
-					lr.enabled = true;
-					lr.SetWidth(.1f, .1f);
-				}
-				else
-				{
-					if(gameObject.GetComponent<LineRenderer>())
-					{
-						gameObject.GetComponent<LineRenderer>().enabled = false;	
-					}
-				}
+	            if (launcher.missileTurret && !launcher.missileTurret.turretEnabled)
+	            {
+	                return false;
+	            }
 
 
-				float radius = 0.28f / 2;
-				float time = ml.dropTime;
-				Vector3 direction = ((ml.decoupleForward ? ml.missileReferenceTransform.transform.forward : -ml.missileReferenceTransform.transform.up) * ml.decoupleSpeed * time) + ((FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration) * 0.5f * time*time);
-				Vector3 crossAxis = Vector3.Cross(direction, ml.missileReferenceTransform.forward).normalized;
+	            if (ml.dropTime > 0.3f)
+	            {
+	                //debug lines
+	                LineRenderer lr = null;
+	                if (BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
+	                {
+	                    lr = GetComponent<LineRenderer>();
+	                    if (!lr)
+	                    {
+	                        lr = gameObject.AddComponent<LineRenderer>();
+	                    }
+	                    lr.enabled = true;
+	                    lr.SetWidth(.1f, .1f);
+	                }
+	                else
+	                {
+	                    if (gameObject.GetComponent<LineRenderer>())
+	                    {
+	                        gameObject.GetComponent<LineRenderer>().enabled = false;
+	                    }
+	                }
 
-				float rayDistance;
-				if(ml.thrust == 0 || ml.cruiseThrust == 0)
-				{
-					rayDistance = 8;
-				}
-				else
-				{
-					//distance till engine starts based on grav accel and vessel accel
-					rayDistance = direction.magnitude;
-				}
 
-				Ray[] rays = new Ray[] {
-					new Ray(ml.missileReferenceTransform.position - (radius * crossAxis), direction),
-					new Ray(ml.missileReferenceTransform.position + (radius * crossAxis), direction),
-					new Ray(ml.missileReferenceTransform.position, direction)
-				};
+	                float radius = 0.28f/2;
+	                float time = ml.dropTime;
+	                Vector3 direction = ((launcher.decoupleForward
+	                    ? ml.MissileReferenceTransform.transform.forward
+	                    : -ml.MissileReferenceTransform.transform.up)* launcher.decoupleSpeed*time) +
+	                                    ((FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration)*
+	                                     0.5f*time*time);
+	                Vector3 crossAxis = Vector3.Cross(direction, ml.MissileReferenceTransform.forward).normalized;
 
-				if(lr)
-				{
-					lr.useWorldSpace = false;
-					lr.SetVertexCount(4);
-					lr.SetPosition(0, transform.InverseTransformPoint(rays[0].origin));
-					lr.SetPosition(1, transform.InverseTransformPoint(rays[0].GetPoint(rayDistance)));
-					lr.SetPosition(2, transform.InverseTransformPoint(rays[1].GetPoint(rayDistance)));
-					lr.SetPosition(3, transform.InverseTransformPoint(rays[1].origin));
-				}
+	                float rayDistance;
+	                if (launcher.thrust == 0 || launcher.cruiseThrust == 0)
+	                {
+	                    rayDistance = 8;
+	                }
+	                else
+	                {
+	                    //distance till engine starts based on grav accel and vessel accel
+	                    rayDistance = direction.magnitude;
+	                }
 
-				for(int i = 0; i < rays.Length; i++)
-				{
-					RaycastHit[] hits = Physics.RaycastAll(rays[i], rayDistance, 557057);
-					for(int h = 0; h < hits.Length; h++)
-					{
-						Part p = hits[h].collider.GetComponentInParent<Part>();
+	                Ray[] rays =
+	                {
+	                    new Ray(ml.MissileReferenceTransform.position - (radius*crossAxis), direction),
+	                    new Ray(ml.MissileReferenceTransform.position + (radius*crossAxis), direction),
+	                    new Ray(ml.MissileReferenceTransform.position, direction)
+	                };
 
-						if((p != null && p != ml.part) || p == null) return false;
-					}
-				}
+	                if (lr)
+	                {
+	                    lr.useWorldSpace = false;
+	                    lr.SetVertexCount(4);
+	                    lr.SetPosition(0, transform.InverseTransformPoint(rays[0].origin));
+	                    lr.SetPosition(1, transform.InverseTransformPoint(rays[0].GetPoint(rayDistance)));
+	                    lr.SetPosition(2, transform.InverseTransformPoint(rays[1].GetPoint(rayDistance)));
+	                    lr.SetPosition(3, transform.InverseTransformPoint(rays[1].origin));
+	                }
 
-				return true;
-			}
-			else
-			{
-				//forward check for no-drop missiles
-				if(Physics.Raycast(new Ray(ml.missileReferenceTransform.position, ml.missileReferenceTransform.forward), 50, 557057))
-				{
-					return false;
-				}
-			}
+	                for (int i = 0; i < rays.Length; i++)
+	                {
+	                    RaycastHit[] hits = Physics.RaycastAll(rays[i], rayDistance, 557057);
+	                    for (int h = 0; h < hits.Length; h++)
+	                    {
+	                        Part p = hits[h].collider.GetComponentInParent<Part>();
 
-			return true;
-		}
+	                        if ((p != null && p != ml.part) || p == null) return false;
+	                    }
+	                }
 
-		bool isLegacyCMing = false;
-		int cmCounter = 0;
+	                return true;
+	            }
+	            //forward check for no-drop missiles
+	            if (Physics.Raycast(new Ray(ml.MissileReferenceTransform.position, ml.MissileReferenceTransform.forward),
+	                50, 557057))
+	            {
+	                return false;
+	            }
+	        }
+	    
+	    return true;
+	    }
+
+		bool isLegacyCMing;
+		int cmCounter;
 		int cmAmount = 5;
 		IEnumerator LegacyCMRoutine()
 		{
 			isLegacyCMing = true;
-			yield return new WaitForSeconds(UnityEngine.Random.Range(.2f, 1f));
+			yield return new WaitForSeconds(Random.Range(.2f, 1f));
 			if(incomingMissileDistance < 2500)
 			{
 				cmAmount = Mathf.RoundToInt((2500-incomingMissileDistance)/400);
@@ -4119,7 +4191,7 @@ namespace BahaTurret
 				else
 				{	
 					cmCounter = 0;
-					yield return new WaitForSeconds(UnityEngine.Random.Range(.5f, 1f));
+					yield return new WaitForSeconds(Random.Range(.5f, 1f));
 				}
 			}
 			isLegacyCMing = false;
@@ -4160,11 +4232,11 @@ namespace BahaTurret
 			}
 		}
 
-		public bool isChaffing = false;
+		public bool isChaffing;
 		IEnumerator ChaffRoutine()
 		{
 			isChaffing = true;
-			yield return new WaitForSeconds(UnityEngine.Random.Range(0.2f, 1f));
+			yield return new WaitForSeconds(Random.Range(0.2f, 1f));
 
 			foreach(var cm in vessel.FindPartModulesImplementing<CMDropper>())
 			{
@@ -4179,13 +4251,13 @@ namespace BahaTurret
 			isChaffing = false;
 		}
 
-		public bool isFlaring = false;
+		public bool isFlaring;
 		IEnumerator FlareRoutine(float time)
 		{
 			if(isFlaring) yield break;
 			time = Mathf.Clamp(time, 2, 8);
 			isFlaring = true;
-			yield return new WaitForSeconds(UnityEngine.Random.Range(0f, 1f));
+			yield return new WaitForSeconds(Random.Range(0f, 1f));
 			float flareStartTime = Time.time;
 			while(Time.time - flareStartTime < time)
 			{
@@ -4204,34 +4276,40 @@ namespace BahaTurret
 		
 		string GetWeaponName(IBDWeapon weapon)
 		{
-			if(weapon == null)
+		    if(weapon == null)
 			{
 				return "None";
 			}
-			else
-			{
-				return weapon.GetShortName();
-			}
+		    return weapon.GetShortName();
 		}
 
-		//ANTIRADIATION
-		bool antiRadTargetAcquired = false;
+	    //ANTIRADIATION
+		bool antiRadTargetAcquired;
 		Vector3 antiRadiationTarget;
 		void SearchForRadarSource()
 		{
 			antiRadTargetAcquired = false;
-			if(rwr && rwr.rwrEnabled)
+        
+            if (rwr && rwr.rwrEnabled)
 			{
 				float closestAngle = 360;
-				MissileLauncher missile = CurrentMissile;
+				MissileBase missile = CurrentMissile;
+
 				if(!missile) return;
-				if(missile.TargetingMode != MissileBase.TargetingModes.AntiRad) return;
+
+			    float maxOffBoresight = 45;
+			    if (missile is MissileLauncher)
+			    {
+			        maxOffBoresight = ((MissileLauncher) (missile)).maxOffBoresight;
+			    }
+
+                if (missile.TargetingMode != MissileBase.TargetingModes.AntiRad) return;
 				for(int i = 0; i < rwr.pingsData.Length; i++)
 				{
 					if(rwr.pingsData[i].exists && (rwr.pingsData[i].signalStrength == 0 || rwr.pingsData[i].signalStrength == 5))
 					{
 						float angle = Vector3.Angle(rwr.pingWorldPositions[i] - missile.transform.position, missile.transform.forward);
-						if(angle < closestAngle && angle < missile.maxOffBoresight)
+						if(angle < closestAngle && angle < maxOffBoresight)
 						{
 							closestAngle = angle;
 							antiRadiationTarget = rwr.pingWorldPositions[i];
@@ -4243,17 +4321,27 @@ namespace BahaTurret
 		}
 
 		//LASER LOCKING
-		bool laserPointDetected = false;
+		bool laserPointDetected;
 		ModuleTargetingCamera foundCam;
 		void SearchForLaserPoint()
 		{
-			MissileLauncher ml = CurrentMissile;
+			MissileBase ml = CurrentMissile;
 			if(!ml || ml.TargetingMode != MissileBase.TargetingModes.Laser)
 			{
 				return;
 			}
 
-			foundCam = BDATargetManager.GetLaserTarget(ml, (ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding));
+		    var launcher = ml as MissileLauncher;
+		    if (launcher != null)
+		    {
+		        foundCam = BDATargetManager.GetLaserTarget(launcher,
+		            launcher.GuidanceMode == MissileBase.GuidanceModes.BeamRiding);
+		    }
+		    else
+		    {
+                foundCam = BDATargetManager.GetLaserTarget((BDModularGuidance) ml, false);
+		    }
+			
 			if(foundCam)
 			{
 				laserPointDetected = true;
@@ -4268,33 +4356,37 @@ namespace BahaTurret
 		public TargetSignatureData heatTarget = TargetSignatureData.noTarget;
 		void SearchForHeatTarget()
 		{
-			MissileLauncher ml = CurrentMissile;
-			if(!ml || ml.TargetingMode != MissileBase.TargetingModes.Heat)
-			{
-				return;
-			}
+            //TODO BDModularGuidance : Implement heat target
+		    var ml = CurrentMissile as MissileLauncher;
+		    if (ml != null)
+            {
+                if (!ml || ml.TargetingMode != MissileBase.TargetingModes.Heat)
+                {
+                    return;
+                }
 
-			float scanRadius = ml.lockedSensorFOV*2;
-			float maxOffBoresight = ml.maxOffBoresight*0.85f;
+                float scanRadius = ml.lockedSensorFOV * 2;
+                float maxOffBoresight = ml.maxOffBoresight * 0.85f;
 
-			bool radarSlaved = false;
-			if(vesselRadarData && vesselRadarData.locked)
-			{
-				heatTarget = vesselRadarData.lockedTargetData.targetData;
-				radarSlaved = true;
-			}
+                bool radarSlaved = false;
+                if (vesselRadarData && vesselRadarData.locked)
+                {
+                    heatTarget = vesselRadarData.lockedTargetData.targetData;
+                    radarSlaved = true;
+                }
 
-			Vector3 direction = 
-				heatTarget.exists && Vector3.Angle(heatTarget.position - ml.missileReferenceTransform.position, ml.missileReferenceTransform.forward) < maxOffBoresight ? 
-				heatTarget.predictedPosition - ml.missileReferenceTransform.position 
-				: ml.missileReferenceTransform.forward;
+                Vector3 direction =
+                    heatTarget.exists && Vector3.Angle(heatTarget.position - ml.MissileReferenceTransform.position, ml.MissileReferenceTransform.forward) < maxOffBoresight ?
+                    heatTarget.predictedPosition - ml.MissileReferenceTransform.position
+                    : ml.MissileReferenceTransform.forward;
 
-			float heatThresh = radarSlaved ? ml.heatThreshold*0.5f : ml.heatThreshold;
+                float heatThresh = radarSlaved ? ml.heatThreshold * 0.5f : ml.heatThreshold;
 
-			heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.missileReferenceTransform.position + (50*ml.missileReferenceTransform.forward), direction), scanRadius, ml.heatThreshold, ml.allAspect);
+                heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.MissileReferenceTransform.position + (50 * ml.MissileReferenceTransform.forward), direction), scanRadius, ml.heatThreshold, ml.allAspect); 
+            }
 		}
 
-		void ClampVisualRange()
+	    void ClampVisualRange()
 		{
 			if(!BDArmorySettings.ALLOW_LEGACY_TARGETING)
 			{
@@ -4327,14 +4419,14 @@ namespace BahaTurret
 			targetingPods = vessel.FindPartModulesImplementing<ModuleTargetingCamera>();
 		}
 
-		private MissileLauncher GetAsymMissile() 
+		private MissileBase GetAsymMissile() 
 		{
 			if(weaponIndex == 0) return null;
 			if(weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Bomb ||
 			   weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile)
 			{
-				MissileLauncher firstMl = null;
-				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+				MissileBase firstMl = null;
+				foreach(var ml in vessel.FindPartModulesImplementing<MissileBase>())
 				{
 					if(ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
 					
@@ -4347,49 +4439,48 @@ namespace BahaTurret
 				}
 				return firstMl;
 			}
-			else
-			{
-				return null;
-			}
+		    return null;
 		}
 
-		private MissileLauncher GetRotaryReadyMissile()
+		private MissileBase GetRotaryReadyMissile()
 		{
 			if(weaponIndex == 0) return null;
 			if(weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Bomb ||
 				weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile)
 			{
-				if(CurrentMissile && CurrentMissile.part.name == weaponArray[weaponIndex].GetPart().name)
-				{
-					if(!CurrentMissile.rotaryRail)
-					{
-						return CurrentMissile;
-					}
-					else if(CurrentMissile.rotaryRail.readyToFire && CurrentMissile.rotaryRail.ReadyMissile == CurrentMissile)
-					{
-						return CurrentMissile;
-					}
-				}
+                //TODO BDModularGuidance: Implemente rotaryRail support
+			    var missile = CurrentMissile as MissileLauncher;
+			    if (missile != null)
+                {
+                    if (missile && missile.part.name == weaponArray[weaponIndex].GetPart().name)
+                    {
+                        if (!missile.rotaryRail)
+                        {
+                            return missile;
+                        }
+                        if (missile.rotaryRail.readyToFire && missile.rotaryRail.ReadyMissile == CurrentMissile)
+                        {
+                            return missile;
+                        }
+                    }
 
-				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
-				{
-					if(ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
+                    foreach (var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+                    {
+                        if (ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
 
-					if(!ml.rotaryRail)
-					{
-						return ml;
-					}
-					else if(ml.rotaryRail.readyToFire && ml.rotaryRail.ReadyMissile.part.name == weaponArray[weaponIndex].GetPart().name)
-					{
-						return ml.rotaryRail.ReadyMissile;
-					}
-				}
+                        if (!ml.rotaryRail)
+                        {
+                            return ml;
+                        }
+                        if (ml.rotaryRail.readyToFire && ml.rotaryRail.ReadyMissile.part.name == weaponArray[weaponIndex].GetPart().name)
+                        {
+                            return ml.rotaryRail.ReadyMissile;
+                        }
+                    } 
+                }
 				return null;
 			}
-			else
-			{
-				return null;
-			}
+		    return null;
 		}
 		
 		
