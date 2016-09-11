@@ -126,7 +126,7 @@ namespace BahaTurret
 			}
 			if(!foundMf)
 			{
-				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+				foreach(var ml in vessel.FindPartModulesImplementing<MissileBase>())
 				{
 					isMissile = true;
 					MissileBaseModule = ml;

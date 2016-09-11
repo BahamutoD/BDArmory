@@ -8,7 +8,7 @@ namespace BahaTurret
 {
     public class BDModularGuidance : MissileBase
     {
-        private DateTime _firedTime;
+
         private bool _missileIgnited;
         private int _nextStage = (int) KSPActionGroup.Custom01;
 
@@ -82,10 +82,7 @@ namespace BahaTurret
             if (!((_targetVessel.transform.position - vessel.transform.position).magnitude <=
                   DetonationDistance)) return;
 
-            foreach (var highExplosive in vessel.FindPartModulesImplementing<BDExplosivePart>())
-            {
-                highExplosive.Detonate();
-            }
+            Detonate();
         }
 
         private void CheckNextStage()
@@ -100,7 +97,7 @@ namespace BahaTurret
         {
             if (HasFired && !_missileIgnited)
             {
-                if (DateTime.Now - _firedTime > TimeSpan.FromSeconds(dropTime))
+                if (Time.time - timeFired > dropTime)
                 {
                     MissileIgnition();
                 }
@@ -168,10 +165,11 @@ namespace BahaTurret
 
         private void CheckGuidanceInit()
         {
-            if (_readyForGuidance && DateTime.Now - _firedTime > TimeSpan.FromSeconds(dropTime + 1))
+            if (_readyForGuidance && Time.time - timeFired > dropTime + 1)
             {
                 _readyForGuidance = false;
                 GuidanceActive = true;
+                RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, MissileReferenceTransform.up);
                 UpdateVesselTransform();
 
                 var velocityObject = new GameObject("velObject");
@@ -483,6 +481,8 @@ namespace BahaTurret
             if (!HasFired)
             {
                 HasFired = true;
+
+                GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
                 foreach (var wpm in vessel.FindPartModulesImplementing<MissileFire>())
@@ -492,17 +492,24 @@ namespace BahaTurret
                 }
 
                 SourceVessel = vessel;
+                SetTargeting();
+
+                //add target info to vessel
+             
 
                 Jettison();
+
+                AddTargetInfoToVessel();
 
                 vessel.vesselName = GetShortName();
                 vessel.vesselType = VesselType.Station;
 
-                _firedTime = DateTime.Now;
-                
+                timeFired = Time.time;
 
-                SetTargeting();
-               
+                MissileState = MissileStates.Drop;
+
+
+
             }
         }
 
@@ -557,10 +564,10 @@ namespace BahaTurret
 
         private void SetTargeting()
         {
-            startDirection = transform.forward;
+            startDirection = MissileReferenceTransform.forward;
             if (TargetingMode == TargetingModes.Laser)
             {
-                laserStartPosition = transform.position;
+                laserStartPosition = MissileReferenceTransform.position;
                 if (lockedCamera)
                 {
                     TargetAcquired = true;
@@ -655,6 +662,27 @@ namespace BahaTurret
             {
                 return 5;
             }        
+        }
+
+        protected override void PartDie(Part p)
+        {
+            if (p == part)
+            {
+                Detonate();
+                BDATargetManager.FiredMissiles.Remove(this);
+                GameEvents.onPartDie.Remove(PartDie);
+            }
+        }
+
+        public override void Detonate()
+        {
+            if (HasFired)
+            {
+                foreach (var highExplosive in vessel.FindPartModulesImplementing<BDExplosivePart>())
+                {
+                    highExplosive.Detonate();
+                }
+            }
         }
 
         [KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Name UI", active = false)]

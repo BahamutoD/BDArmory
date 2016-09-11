@@ -63,6 +63,8 @@ namespace BahaTurret
 
         public bool ActiveRadar { get; set; } = false;
 
+        public float timeFired = -1;
+
         public Transform MissileReferenceTransform;
 
         protected ModuleTargetingCamera targetingPod;
@@ -104,5 +106,22 @@ namespace BahaTurret
 
         public abstract float GetBlastRadius();
 
+
+        protected abstract void PartDie(Part p);
+
+        public abstract void Detonate();
+
+        protected void  AddTargetInfoToVessel()
+        {
+                TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
+				info.team = BDATargetManager.BoolToTeam(Team);
+				info.isMissile = true;
+				info.MissileBaseModule = this;
+        }
+
+        public override void OnFixedUpdate()
+        {
+            TimeIndex = Time.time - timeFired;
+        }
     }
 }

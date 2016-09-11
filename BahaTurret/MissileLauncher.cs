@@ -17,9 +17,6 @@ namespace BahaTurret
 		[KSPField]
 		public string targetingType = "none";
 
-		
-		public float timeFired = -1;
-
 		public MissileTurret missileTurret = null;
 		public BDRotaryRail rotaryRail = null;
 
@@ -662,13 +659,11 @@ namespace BahaTurret
 				part.bodyLiftMultiplier = 0;
 				part.dragModel = Part.DragModel.NONE;
 
-				//add target info to vessel
-				TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
-				info.team = BDATargetManager.BoolToTeam(Team);
-				info.isMissile = true;
-				info.MissileBaseModule = this;
+                //add target info to vessel
+			    AddTargetInfoToVessel();
 
-				StartCoroutine(DecoupleRoutine());
+
+                StartCoroutine(DecoupleRoutine());
 				
 
 				
@@ -744,7 +739,8 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate()
 		{
-			debugString = "";
+            base.OnFixedUpdate();
+            debugString = "";
 			if(HasFired && !hasExploded && part!=null)
 			{
 				part.rb.isKinematic = false;
@@ -778,10 +774,6 @@ namespace BahaTurret
 				{
 					audioSource.dopplerLevel = 1f;
 				}
-
-				
-				//Missile State
-				TimeIndex = Time.time - timeFired;
 
 				if(TimeIndex > 0.5f)
 				{
@@ -1959,7 +1951,7 @@ namespace BahaTurret
 		
 		
 		
-		public void Detonate()
+		public override void Detonate()
 		{
 			if(isSeismicCharge)
 			{
@@ -1999,8 +1991,8 @@ namespace BahaTurret
 		}
 
 
-		void PartDie(Part p)
-		{
+        protected override void PartDie(Part p)
+        {
 			if(p == part)
 			{
 				Detonate();
