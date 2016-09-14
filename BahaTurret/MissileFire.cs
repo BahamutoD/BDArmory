@@ -1962,7 +1962,7 @@ namespace BahaTurret
 		bool AltitudeTrigger()
 		{
 			float maxAlt = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE * 0.75f, 2250, 5000);
-			double asl = vessel.mainBody.GetAltitude(vessel.findWorldCenterOfMass());
+			double asl = vessel.mainBody.GetAltitude(vessel.CoM);
 			double radarAlt = asl - vessel.terrainAltitude;
 			
 			return radarAlt < maxAlt || asl < maxAlt;
@@ -2120,7 +2120,7 @@ namespace BahaTurret
 					{
 						RocketLauncher rl = pSym.FindModuleImplementing<RocketLauncher>();
 						bool hasRocket = false;
-						foreach(PartResource r in rl.part.Resources.list)
+						foreach(PartResource r in rl.part.Resources)
 						{
 							if(r.resourceName == rl.rocketType && r.amount > 0)
 							{
@@ -2155,7 +2155,7 @@ namespace BahaTurret
 					if(!foundRocket && rl.part.partInfo.title == selectedWeapon.GetPart().partInfo.title)
 					{
 						bool hasRocket = false;
-						foreach(PartResource r in rl.part.Resources.list)
+						foreach(PartResource r in rl.part.Resources)
 						{
 							if(r.amount>0) hasRocket = true;
 							else
@@ -3892,7 +3892,7 @@ namespace BahaTurret
 			
 			foreach(Part p in vessel.parts)
 			{
-				foreach(var resource in p.Resources.list)	
+				foreach(var resource in p.Resources)	
 				{
 					if(resource.resourceName == ammoName)
 					{

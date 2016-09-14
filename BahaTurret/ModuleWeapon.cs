@@ -417,8 +417,10 @@ namespace BahaTurret
 		public override void OnStart (StartState state)
 		{
 			base.OnStart (state);
+      // Git Issue #39  StageIcon object is missing due to changes in KSP 1.1.  added create to replace missing icon.
+      if (part.stackIcon.StageIcon == null) part.stackIcon.CreateIcon();
 
-			ParseWeaponType();
+      ParseWeaponType();
             ParseBulletDragType();
 
             bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000;        //1000 to convert from tonnes to kilograms
@@ -707,11 +709,12 @@ namespace BahaTurret
 
 				if(showReloadMeter)
 				{
-					//UpdateReloadMeter();
+          // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
+					UpdateReloadMeter();
 				}
 				else
 				{
-					//UpdateHeatMeter();
+					UpdateHeatMeter();
 				}
 				UpdateHeat();
 
