@@ -198,24 +198,33 @@ namespace BahaTurret
 			}
 		}
 
-		/// <summary>
+		///// <summary>
+		///// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference missilePosition.
+		///// </summary>
+		///// <returns>The laser target painter.</returns>
+		///// <param name="referenceTransform">Reference missilePosition.</param>
+		///// <param name="maxBoreSight">Max bore sight.</param>
+		//public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
+		//{
+  //          return GetModuleTargeting(parentOnly, ml.transform.forward, ml.transform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
+  //      }
+
+  //      public static ModuleTargetingCamera GetLaserTarget(BDModularGuidance ml, bool parentOnly)
+  //      {
+  //          float maxOffBoresight = 45;
+           
+  //          return GetModuleTargeting(parentOnly, ml.MissileReferenceTransform.forward, ml.MissileReferenceTransform.position, maxOffBoresight,ml.vessel,ml.SourceVessel);
+  //      }
+
+        /// <summary>
 		/// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference missilePosition.
 		/// </summary>
 		/// <returns>The laser target painter.</returns>
-		/// <param name="referenceTransform">Reference missilePosition.</param>
-		/// <param name="maxBoreSight">Max bore sight.</param>
-		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
-		{
-            return GetModuleTargeting(parentOnly, ml.transform.forward, ml.transform.position, ml.maxOffBoresight, ml.vessel, ml.sourceVessel);
+	    public static ModuleTargetingCamera GetLaserTarget(MissileBase ml, bool parentOnly)
+	    {
+            return GetModuleTargeting(parentOnly, ml.GetForwardTransform(), ml.MissileReferenceTransform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
         }
 
-        public static ModuleTargetingCamera GetLaserTarget(BDModularGuidance ml, bool parentOnly)
-        {
-            Transform referenceTransform = ml.part.parent.transform;
-            float maxOffBoresight = 45;
-           
-            return GetModuleTargeting(parentOnly, ml.MissileReferenceTransform.up, ml.MissileReferenceTransform.position, maxOffBoresight,ml.vessel,ml.SourceVessel);
-        }
 
         private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Vector3 missilePosition, Vector3 position, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
 	    {

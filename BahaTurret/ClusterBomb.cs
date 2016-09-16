@@ -114,7 +114,7 @@ namespace BahaTurret
 				Submunition subScript = sub.AddComponent<Submunition>();
 				subScript.enabled = true;
 				subScript.deployed = true;
-				subScript.sourceVessel = _missileLauncher.sourceVessel;
+				subScript.sourceVessel = _missileLauncher.SourceVessel;
 				subScript.blastForce = _missileLauncher.blastPower;
 				subScript.blastHeat = _missileLauncher.blastHeat;
 				subScript.blastRadius = _missileLauncher.blastRadius;

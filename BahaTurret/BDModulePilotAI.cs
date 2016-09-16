@@ -1783,21 +1783,11 @@ namespace BahaTurret
 				Vector3 myFuturePos = vesselTransform.position + (vessel.srf_velocity * fTime);
 				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
 
-			    if (launcher != null)
-			    {
-			           if (fDot && Vector3.Angle(launcher.MissileReferenceTransform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
-				       {
-					        launchAuthorized = true;
-				       }
-			    }
-			    else
-			    {
-                    if (fDot && Vector3.Angle(missile.transform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
-                    {
+               if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < maxOffBoresight * boresightFactor)
+               {
                         launchAuthorized = true;
-                    }
-                }
-                 
+               }
+                    
 			}
 
 			return launchAuthorized;

@@ -22,6 +22,9 @@ namespace BahaTurret
         [KSPField]
         public float minLaunchSpeed = 0;
 
+        [KSPField]
+        public float maxOffBoresight = 45;
+
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
             UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float dropTime = 0.4f;
@@ -63,8 +66,11 @@ namespace BahaTurret
 
         public bool ActiveRadar { get; set; } = false;
 
+        public Vessel SourceVessel { get; set; } = null;
+
         public float timeFired = -1;
 
+       
         public Transform MissileReferenceTransform;
 
         protected ModuleTargetingCamera targetingPod;
@@ -111,6 +117,8 @@ namespace BahaTurret
 
         public abstract void Detonate();
 
+        public abstract Vector3 GetForwardTransform();
+
         protected void  AddTargetInfoToVessel()
         {
                 TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
@@ -123,5 +131,8 @@ namespace BahaTurret
         {
             TimeIndex = Time.time - timeFired;
         }
+
+        
+
     }
 }

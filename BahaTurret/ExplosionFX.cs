@@ -121,7 +121,7 @@ namespace BahaTurret
 						MissileLauncher ml = part.FindModuleImplementing<MissileLauncher>();
 						if(ml)
 						{
-							missileSource = ml.sourceVessel;
+							missileSource = ml.SourceVessel;
 						}
 					}
 

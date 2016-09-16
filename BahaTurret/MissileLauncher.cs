@@ -61,9 +61,7 @@ namespace BahaTurret
 		public float cruiseDelay = 0;
 		[KSPField]
 		public bool guidanceActive = true;
-		[KSPField]
-		public float maxOffBoresight = 45;
-		
+	
 		[KSPField]
 		public float maxAoA = 35;
 		
@@ -146,7 +144,6 @@ namespace BahaTurret
 		KSPParticleEmitter forwardRCS;
 		float rcsAudioMinInterval = 0.2f;
 
-		public Vessel sourceVessel = null;
 		bool checkMiss = false;
 		bool hasExploded = false;
 		private AudioSource audioSource;
@@ -610,7 +607,7 @@ namespace BahaTurret
 				
 				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
 				
-				sourceVessel = vessel;
+				SourceVessel = vessel;
 
 
 
@@ -757,7 +754,7 @@ namespace BahaTurret
 				float mCamRelVSqr = (float)(FlightGlobals.ActiveVessel.srf_velocity-vessel.srf_velocity).sqrMagnitude;
 				if(!hasPlayedFlyby 
 				   && FlightGlobals.ActiveVessel != vessel 
-				   && FlightGlobals.ActiveVessel != sourceVessel 
+				   && FlightGlobals.ActiveVessel != SourceVessel 
 				   && mCamDistanceSqr < 400*400 && mCamRelVSqr > 300*300  
 				   && mCamRelVSqr < 800*800 
 					&& Vector3.Angle(vessel.srf_velocity, FlightGlobals.ActiveVessel.transform.position-transform.position)<60)
@@ -1975,8 +1972,8 @@ namespace BahaTurret
 				
 				if(part!=null) part.temperature = part.maxTemp + 100;
 				Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
-				if(sourceVessel==null) sourceVessel = vessel;
-				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, sourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage
+				if(SourceVessel==null) SourceVessel = vessel;
+				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, SourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage
 
 				foreach(var e in gaplessEmitters)
 				{
@@ -1990,8 +1987,13 @@ namespace BahaTurret
 			}
 		}
 
+	    public override Vector3 GetForwardTransform()
+	    {
+	        return this.MissileReferenceTransform.forward;
+	    }
 
-        protected override void PartDie(Part p)
+
+	    protected override void PartDie(Part p)
         {
 			if(p == part)
 			{
@@ -2072,7 +2074,7 @@ namespace BahaTurret
 					part.temperature = part.maxTemp + 100;
 				}
 				Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
-				if(sourceVessel==null) sourceVessel = vessel;
+				if(SourceVessel==null) SourceVessel = vessel;
 				
 				SeismicChargeFX.CreateSeismicExplosion(transform.position-(part.rb.velocity.normalized*15), UnityEngine.Random.rotation);
 				

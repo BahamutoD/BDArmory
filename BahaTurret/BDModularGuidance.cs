@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
@@ -23,11 +24,17 @@ namespace BahaTurret
 
         public Vessel LegacyTargetVessel;
 
-        public Vessel SourceVessel;
-
         public MissileFire TargetMf;
 
+        public TransformAxisVectors ForwardTransformAxis { get; set; }
 
+        public enum TransformAxisVectors
+        {
+            UpPositive,
+            UpNegative,
+            ForwardPositive,
+            ForwardNegative,
+        }
         private void RefreshGuidanceMode()
         {
             switch (_guidanceIndex)
@@ -169,8 +176,7 @@ namespace BahaTurret
             {
                 _readyForGuidance = false;
                 GuidanceActive = true;
-                RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, MissileReferenceTransform.up);
-                UpdateVesselTransform();
+                RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, GetForwardTransform());
 
                 var velocityObject = new GameObject("velObject");
                 velocityObject.transform.position = transform.position;
@@ -225,6 +231,10 @@ namespace BahaTurret
                 WeaponNameWindow.OnActionGroupEditorOpened.Add(OnActionGroupEditorOpened);
                 WeaponNameWindow.OnActionGroupEditorClosed.Add(OnActionGroupEditorClosed);
             }
+            else
+            {
+                 SetMissileTransform();
+            }
             if (string.IsNullOrEmpty(GetShortName()))
             {
                 shortName = "Unnamed";
@@ -234,11 +244,11 @@ namespace BahaTurret
                 TargetingMode = (TargetingModes)Enum.Parse(typeof(TargetingModes), _targetingLabel);
             }
             part.force_activate();
-
-            UpdateVesselTransform();
-
             RefreshGuidanceMode();
-          
+            RefreshTargetingMode();
+
+           
+              
 
             _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
@@ -258,23 +268,55 @@ namespace BahaTurret
             WeaponNameWindow.OnActionGroupEditorClosed.Remove(OnActionGroupEditorClosed);
         }
 
-        private void UpdateVesselTransform()
-        {
-            if (part.vessel != null && part.vessel.vesselTransform != null)
-            {
-                MissileReferenceTransform = part.vessel.vesselTransform;
-                _parentVessel = vessel;
+        private void SetMissileTransform()
+        {  
+               MissileReferenceTransform = part.transform;
 
-                part.SetReferenceTransform(MissileReferenceTransform);
-            }
+               this.ForwardTransformAxis =  CalculateForwardTransform();
+               _parentVessel = vessel;
         }
 
+        
+
+        /// <summary>
+        /// This method will obtain the expected transform forward that matches the expected BD missile transform
+        /// </summary>
+        private TransformAxisVectors CalculateForwardTransform()
+        {
+            var BDMissileForward = new Vector3(-0.5685818f, -0.00697496533f, -0.822597265f);
+
+            var vectorAngles = new Dictionary<TransformAxisVectors, float>
+            {
+                {
+                    TransformAxisVectors.ForwardPositive,
+                    Vector3.Angle(MissileReferenceTransform.forward, BDMissileForward)
+                },
+                {
+                    TransformAxisVectors.ForwardNegative,
+                    Vector3.Angle(-MissileReferenceTransform.forward, BDMissileForward)
+                },
+                {
+                    TransformAxisVectors.UpNegative,
+                    Vector3.Angle(-MissileReferenceTransform.up, BDMissileForward)
+                },
+                {
+                    TransformAxisVectors.UpPositive,
+                    Vector3.Angle(MissileReferenceTransform.up, BDMissileForward)
+                }
+            };
+
+            return  vectorAngles.First(x => x.Value == vectorAngles.Min( y => y.Value)).Key;
+        }
+        
+
         void UpdateGuidance()
-        {    
+        {
+            if (GuidanceActive)
+            {
                 if (TargetingMode == TargetingModes.Laser)
                 {
                     UpdateLaserTarget();
-           
+                }
             }           
         }
 
@@ -285,13 +327,14 @@ namespace BahaTurret
                 _velocityTransform != null)
             {
                 _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -MissileReferenceTransform.forward);
-                //if (TargetingMode == TargetingModes.None && _targetVessel != null)
-                //{
-                //    TargetPosition = _targetVessel.CurrentCoM;
-                //    TargetVelocity = _targetVessel.rb_velocity;
-                //     TargetAcceleration = _targetVessel.acceleration;
-                //}
-              
+
+                if (TargetingMode == TargetingModes.None && _targetVessel != null)
+                {
+                    TargetPosition = _targetVessel.CurrentCoM;
+                    TargetVelocity = _targetVessel.rb_velocity;
+                    TargetAcceleration = _targetVessel.acceleration;
+                }
+
                 var localAngVel = vessel.angularVelocity;
 
                 if (_guidanceIndex == 1)
@@ -308,7 +351,7 @@ namespace BahaTurret
                         if (TargetAcquired)
                         {
                             //lose lock if seeker reaches gimbal limit
-                            float targetViewAngle = Vector3.Angle(MissileReferenceTransform.up, TargetPosition - MissileReferenceTransform.position);
+                            float targetViewAngle = Vector3.Angle(GetForwardTransform(), TargetPosition - MissileReferenceTransform.position);
 
                             if (targetViewAngle > 45)
                             {
@@ -499,6 +542,8 @@ namespace BahaTurret
 
                 Jettison();
 
+                //this.MissileReferenceTransform = this.vessel.transform;
+
                 AddTargetInfoToVessel();
 
                 vessel.vesselName = GetShortName();
@@ -685,6 +730,27 @@ namespace BahaTurret
             }
         }
 
+        public override Vector3 GetForwardTransform()
+        {
+            switch (ForwardTransformAxis)
+            {
+                case TransformAxisVectors.UpPositive:
+                    return this.MissileReferenceTransform.up;
+                case TransformAxisVectors.UpNegative:
+                    return -this.MissileReferenceTransform.up;
+                case TransformAxisVectors.ForwardPositive:
+                    return this.MissileReferenceTransform.forward;
+                case TransformAxisVectors.ForwardNegative:
+                    return -this.MissileReferenceTransform.forward;
+                    break;
+
+                default:
+                     return this.MissileReferenceTransform.forward;
+            }
+          
+        }
+
+
         [KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Name UI", active = false)]
         public void HideUI()
         {
@@ -727,8 +793,7 @@ namespace BahaTurret
 
         private Vector2 scrollPos;
 
-        [KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Weapon Name Editor"),
-         UI_Toggle(enabledText = "Weapon Name GUI", disabledText = "GUI")] [NonSerialized] public bool showRFGUI;
+        [KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Weapon Name Editor"), UI_Toggle(enabledText = "Weapon Name GUI", disabledText = "GUI")] [NonSerialized] public bool showRFGUI;
 
         private bool styleSetup;
 
@@ -862,8 +927,7 @@ namespace BahaTurret
             {
                 editor.Unlock("BD_MN_GUILock");
             }
-            guiWindowRect = GUILayout.Window(GetInstanceID(), guiWindowRect, GUIWindow, "Weapon Name GUI",
-                Styles.styleEditorPanel);
+            guiWindowRect = GUILayout.Window(GetInstanceID(), guiWindowRect, GUIWindow, "Weapon Name GUI", Styles.styleEditorPanel);
         }
 
         public void GUIWindow(int windowID)
