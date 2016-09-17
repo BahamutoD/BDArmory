@@ -707,12 +707,13 @@ namespace BahaTurret
 					return;
 				}
 
+
 				if(showReloadMeter)
 				{
           // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
 					UpdateReloadMeter();
 				}
-				else
+				else if(vessel.isActiveVessel)
 				{
 					UpdateHeatMeter();
 				}
@@ -1714,15 +1715,15 @@ namespace BahaTurret
 
 		private ProtoStageIconInfo InitHeatGauge()  //thanks DYJ
 		{
-			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-			
-			v.SetMsgBgColor(XKCDColors.DarkRed);
-			v.SetMsgTextColor(XKCDColors.Orange);
-			v.SetMessage("Overheat");
-			v.SetProgressBarBgColor(XKCDColors.DarkRed);
-			v.SetProgressBarColor(XKCDColors.Orange);
-			
-			return v;
+	           ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+
+		        v.SetMsgBgColor(XKCDColors.DarkRed);
+		        v.SetMsgTextColor(XKCDColors.Orange);
+		        v.SetMessage("Overheat");
+		        v.SetProgressBarBgColor(XKCDColors.DarkRed);
+		        v.SetProgressBarColor(XKCDColors.Orange);
+		    
+		    return v;
 		}
 
 		void SetupBulletPool()
