@@ -412,15 +412,13 @@ namespace BahaTurret
 		}
 
 
-
-
-		public override void OnStart (StartState state)
+	    public override void OnStart (StartState state)
 		{
 			base.OnStart (state);
-      // Git Issue #39  StageIcon object is missing due to changes in KSP 1.1.  added create to replace missing icon.
-      if (part.stackIcon.StageIcon == null) part.stackIcon.CreateIcon();
+    
+     
 
-      ParseWeaponType();
+           ParseWeaponType();
             ParseBulletDragType();
 
             bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000;        //1000 to convert from tonnes to kilograms
@@ -551,8 +549,9 @@ namespace BahaTurret
 				fireState.enabled = false;	
 			}
 
-			BDArmorySettings.OnVolumeChange += UpdateVolume;
-		}
+	        BDArmorySettings.OnVolumeChange += UpdateVolume;
+
+        }
 
 		void UpdateVolume()
 		{
@@ -707,16 +706,24 @@ namespace BahaTurret
 					return;
 				}
 
+			    if (part.stackIcon.StageIcon == null)
+			    {
+			        part.stackIcon.CreateIcon();
+			    }
 
-				if(showReloadMeter)
-				{
-          // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
-					UpdateReloadMeter();
-				}
-				else if(vessel.isActiveVessel)
-				{
-					UpdateHeatMeter();
-				}
+
+                if (vessel.isActiveVessel)
+                {
+                    if (showReloadMeter)
+                    {
+                        // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
+                        UpdateReloadMeter();
+                    }
+                    else
+                    {
+                        UpdateHeatMeter();
+                    } 
+                }
 				UpdateHeat();
 
 
@@ -1702,8 +1709,7 @@ namespace BahaTurret
         
 		private ProtoStageIconInfo InitReloadBar()
 		{
-			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-
+            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();        
 			v.SetMsgBgColor(XKCDColors.DarkGrey);
 			v.SetMsgTextColor(XKCDColors.White);
 			v.SetMessage("Reloading");
@@ -1715,7 +1721,7 @@ namespace BahaTurret
 
 		private ProtoStageIconInfo InitHeatGauge()  //thanks DYJ
 		{
-	           ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+               ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
 
 		        v.SetMsgBgColor(XKCDColors.DarkRed);
 		        v.SetMsgTextColor(XKCDColors.Orange);
