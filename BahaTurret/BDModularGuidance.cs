@@ -239,27 +239,29 @@ namespace BahaTurret
             {
                 shortName = "Unnamed";
             }
-            if (_targetingLabel != TargetingMode.ToString())
-            {
-                TargetingMode = (TargetingModes)Enum.Parse(typeof(TargetingModes), _targetingLabel);
-            }
             part.force_activate();
             RefreshGuidanceMode();
-            RefreshTargetingMode();
 
+            UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes),_targetingLabel));
            
               
-
             _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
             DisableResourcesFlow();
 
             weaponClass = WeaponClasses.Missile;
             WeaponName = GetShortName();
-
-
-            
+                      
             this.maxStaticLaunchRange = MaxLaunchRange;
+
+        }
+
+        private void UpdateTargetingMode(TargetingModes newTargetingMode)
+        {
+            this.TargetingMode = newTargetingMode;
+            this._targetingLabel = newTargetingMode.ToString();
+
+            Misc.RefreshAssociatedWindows(part);
         }
 
         private void OnDestroy()
@@ -270,10 +272,10 @@ namespace BahaTurret
 
         private void SetMissileTransform()
         {  
-               MissileReferenceTransform = part.transform;
+            MissileReferenceTransform = part.transform;
 
-               this.ForwardTransformAxis =  CalculateForwardTransform();
-               _parentVessel = vessel;
+            this.ForwardTransformAxis =  CalculateForwardTransform();
+            _parentVessel = vessel;
         }
 
         
@@ -307,7 +309,7 @@ namespace BahaTurret
 
             return  vectorAngles.First(x => x.Value == vectorAngles.Min( y => y.Value)).Key;
         }
-        
+
 
         void UpdateGuidance()
         {
@@ -379,8 +381,8 @@ namespace BahaTurret
 
                 var targetDirection = _velocityTransform.InverseTransformPoint(newTargerPosition).normalized;
                 targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
-
-
+       
+                        
                 var steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
                 var steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
 
@@ -389,12 +391,6 @@ namespace BahaTurret
 
                 s.mainThrottle = 1;
             }
-        }
-
-        private void RefreshTargetingMode()
-        {
-            _targetingLabel = TargetingMode.ToString();
-            Misc.RefreshAssociatedWindows(part);
         }
 
         private void UpdateMenus(bool visible)
@@ -568,7 +564,7 @@ namespace BahaTurret
                     TargetVelocity = (TargetPosition - lastLaserPoint) / Time.fixedDeltaTime;
                     TargetAcceleration = Vector3.zero;
                     lastLaserPoint = TargetPosition;
-
+              
                     //Not yet 
                     //if (guidanceMode == MissileLauncher.GuidanceModes.BeamRiding && TimeIndex > 0.25f && Vector3.Dot(part.transform.forward, part.transform.position - lockedCamera.transform.position) < 0)
                     //{
@@ -668,14 +664,12 @@ namespace BahaTurret
 
             if (currentIndex < targetingModes.Length - 1)
             {
-                TargetingMode = (TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[currentIndex + 1]);
+                UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[currentIndex + 1]));             
             }
             else
             {
-                TargetingMode = (TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[0]);
-            }
-
-            RefreshTargetingMode();
+                UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[0]));
+            }          
         }
 
 
