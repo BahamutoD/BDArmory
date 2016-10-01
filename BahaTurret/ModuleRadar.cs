@@ -198,6 +198,8 @@ namespace BahaTurret
 
 		public void EnsureVesselRadarData()
 		{
+		    if (vessel == null) return;
+
 			myVesselID = vessel.id.ToString();
 
 			if(vesselRadarData == null || vesselRadarData.vessel!=vessel)

@@ -82,7 +82,7 @@ namespace BahaTurret
 			}
 		}
 
-		void OnPartJointBreak(PartJoint j)
+		void OnPartJointBreak(PartJoint j, float breakForce)
 		{
 			if(gameObject.activeInHierarchy)
 			{

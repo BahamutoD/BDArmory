@@ -24,8 +24,10 @@ namespace BahaTurret
 
 		public bool hasLoadedRippleData = false;
 		float rippleTimer;
-		//[KSPField(isPersistant = true)]
-		public float rippleRPM
+
+	    public TargetSignatureData heatTarget;
+        //[KSPField(isPersistant = true)]
+        public float rippleRPM
 		{
 			get
 			{
@@ -238,11 +240,11 @@ namespace BahaTurret
 		AudioSource audioSource;
 		public AudioSource warningAudioSource;
 		AudioSource targetingAudioSource;
-		AudioClip clickSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/click");
-		AudioClip warningSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/warning");
-		AudioClip armOnSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOn");
-		AudioClip armOffSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOff");
-		AudioClip heatGrowlSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/heatGrowl");
+		AudioClip clickSound;
+		AudioClip warningSound;
+		AudioClip armOnSound;
+		AudioClip armOffSound;
+		AudioClip heatGrowlSound;
 
 		//missile warning
 		public bool missileIsIncoming = false;
@@ -681,8 +683,20 @@ namespace BahaTurret
 				ParseRippleOptions();
 			}
 		}
-		
-		public override void OnStart (PartModule.StartState state)
+
+	    public override void OnAwake()
+	    {
+            clickSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/click");
+            warningSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/warning");
+            armOnSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOn");
+            armOffSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOff");
+            heatGrowlSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/heatGrowl");
+
+            //HEAT LOCKING
+            heatTarget = TargetSignatureData.noTarget;
+        }
+
+	    public override void OnStart (PartModule.StartState state)
 		{
 			UpdateMaxGuardRange();
 			
@@ -771,7 +785,7 @@ namespace BahaTurret
 			RefreshModules();
 		}
 
-		void OnPartJointBreak(PartJoint j)
+		void OnPartJointBreak(PartJoint j, float breakForce)
 		{
 			if(!part)
 			{
@@ -2594,7 +2608,8 @@ namespace BahaTurret
 
 		void StartGuardTurretFiring()
 		{
-			if(!guardTarget) return;
+			if (!guardTarget) return;
+		    if (selectedWeapon == null) return;
 
 			if(selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
 			{
@@ -4264,8 +4279,7 @@ namespace BahaTurret
 			}
 		}
 
-		//HEAT LOCKING
-		public TargetSignatureData heatTarget = TargetSignatureData.noTarget;
+
 		void SearchForHeatTarget()
 		{
 			MissileLauncher ml = currentMissile;

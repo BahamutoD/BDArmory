@@ -1862,16 +1862,14 @@ namespace BahaTurret
 
 		}
 
-
-
-		void OnGUI()
+        void OnGUI()
 		{
 			if(weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
 			{
 				float size = 30;
 				
 				Vector3 reticlePosition;
-				if(BDArmorySettings.AIM_ASSIST && vessel.srfSpeed < Krakensbane.Threshold)
+				if(BDArmorySettings.AIM_ASSIST && vessel.GetSrfVelocity().sqrMagnitude < Krakensbane.SqrThreshold)
 				{
 					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{

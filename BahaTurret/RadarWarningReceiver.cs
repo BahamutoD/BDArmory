@@ -24,9 +24,9 @@ namespace BahaTurret
 
 		public static Texture2D rwrDiamondTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrDiamond", false);
 		public static Texture2D rwrMissileTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrMissileIcon", false);
-		public static AudioClip radarPingSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrPing");
-		public static AudioClip missileLockSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrMissileLock");
-		public static AudioClip missileLaunchSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/mLaunchWarning");
+	    public static AudioClip radarPingSound;
+	    public static AudioClip missileLockSound;
+	    public static AudioClip missileLaunchSound;
 
 		//float lastTimePinged = 0;
 		const float minPingInterval = 0.12f;
@@ -63,12 +63,17 @@ namespace BahaTurret
 		AudioSource audioSource;
 		public static bool WindowRectRWRInitialized = false;
 
+	    public override void OnAwake()
+	    {
+            radarPingSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrPing");
+            missileLockSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrMissileLock");
+            missileLaunchSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/mLaunchWarning");
+        }
 
-	  public override void OnStart(StartState state)
+	    public override void OnStart(StartState state)
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-
 				pingsData = new TargetSignatureData[dataCount];
 				pingWorldPositions = new Vector3[dataCount];
 				TargetSignatureData.ResetTSDArray(ref pingsData);
