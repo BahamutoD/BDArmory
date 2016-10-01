@@ -1747,24 +1747,21 @@ namespace BahaTurret
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Gps)
 			{
-			    //var mlauncher = (MissileLauncher)ml;
-			    var mlauncher = ml as MissileLauncher;
-			    if (mlauncher != null)
+
+                if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
                 {
-                    if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
+                    if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
                     {
-                        if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
-                        {
-                            mlauncher.TargetAcquired = true;
-                            mlauncher.legacyTargetVessel = vessel.targetObject.GetVessel();
-                        }
+                        ml.TargetAcquired = true;
+                        ml.legacyTargetVessel = vessel.targetObject.GetVessel();
                     }
-                    else if (designatedGPSCoords != Vector3d.zero)
-                    {
-                        mlauncher.targetGPSCoords = designatedGPSCoords;
-                        mlauncher.TargetAcquired = true;
-                    } 
                 }
+                else if (designatedGPSCoords != Vector3d.zero)
+                {
+                    ml.targetGPSCoords = designatedGPSCoords;
+                    ml.TargetAcquired = true;
+                } 
+                
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Heat && heatTarget.exists)
             {

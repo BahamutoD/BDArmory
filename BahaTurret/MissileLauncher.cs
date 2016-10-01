@@ -59,8 +59,6 @@ namespace BahaTurret
 		public float cruiseTime = 45;
 		[KSPField]
 		public float cruiseDelay = 0;
-		[KSPField]
-		public bool guidanceActive = true;
 	
 		[KSPField]
 		public float maxAoA = 35;
@@ -201,9 +199,6 @@ namespace BahaTurret
 		[KSPField]
 		public float boosterMass = 0;
 
-		public Vessel legacyTargetVessel;
-
-
 		Transform vesselReferenceTransform;
 
 		[KSPField]
@@ -240,10 +235,6 @@ namespace BahaTurret
 		[KSPField]
 		public bool radarLOAL = false;
 		bool radarLOALSearching = false;
-
-		//GPS stuff
-		public Vector3d targetGPSCoords;
-
 
 		//torpedo
 		[KSPField]
@@ -1469,20 +1460,6 @@ namespace BahaTurret
 			}
 
 			DoAero(agmTarget);
-		}
-
-		void UpdateGPSTarget()
-		{
-			if(TargetAcquired)
-			{
-				TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
-				TargetVelocity = Vector3.zero;
-				TargetAcceleration = Vector3.zero;
-			}
-			else
-			{
-				guidanceActive = false;
-			}
 		}
 
 		void UpdateLaserTarget()

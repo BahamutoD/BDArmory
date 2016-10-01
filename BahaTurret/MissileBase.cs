@@ -25,6 +25,9 @@ namespace BahaTurret
         [KSPField]
         public float maxOffBoresight = 45;
 
+        [KSPField]
+        public bool guidanceActive = true;
+
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
             UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float dropTime = 0.4f;
@@ -70,7 +73,8 @@ namespace BahaTurret
 
         public float timeFired = -1;
 
-       
+        public Vessel legacyTargetVessel;
+
         public Transform MissileReferenceTransform;
 
         protected ModuleTargetingCamera targetingPod;
@@ -80,6 +84,9 @@ namespace BahaTurret
         protected Vector3 lastLaserPoint;
         protected Vector3 laserStartPosition;
         protected Vector3 startDirection;
+
+        //GPS stuff
+        public Vector3d targetGPSCoords;
 
         public WeaponClasses GetWeaponClass()
         {
@@ -132,7 +139,21 @@ namespace BahaTurret
             TimeIndex = Time.time - timeFired;
         }
 
-        
+        protected void UpdateGPSTarget()
+        {
+            if (TargetAcquired)
+            {
+                TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
+                TargetVelocity = Vector3.zero;
+                TargetAcceleration = Vector3.zero;
+            }
+            else
+            {
+
+                guidanceActive = false;
+            }
+        }
+
 
     }
 }

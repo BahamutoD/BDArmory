@@ -175,7 +175,7 @@ namespace BahaTurret
             if (_readyForGuidance && Time.time - timeFired > dropTime + 1)
             {
                 _readyForGuidance = false;
-                GuidanceActive = true;
+                guidanceActive = true;
                 RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, GetForwardTransform());
 
                 var velocityObject = new GameObject("velObject");
@@ -313,11 +313,15 @@ namespace BahaTurret
 
         void UpdateGuidance()
         {
-            if (GuidanceActive)
+            if (guidanceActive)
             {
                 if (TargetingMode == TargetingModes.Laser)
                 {
                     UpdateLaserTarget();
+                }
+                else if (TargetingMode == TargetingModes.Gps)
+                {
+                    UpdateGPSTarget();
                 }
             }           
         }
@@ -325,7 +329,7 @@ namespace BahaTurret
         public void GuidanceSteer(FlightCtrlState s)
         {
             Vector3 newTargerPosition;
-            if (GuidanceActive && MissileReferenceTransform != null &&
+            if (guidanceActive && MissileReferenceTransform != null &&
                 _velocityTransform != null)
             {
                 _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -MissileReferenceTransform.forward);
@@ -358,7 +362,7 @@ namespace BahaTurret
                             if (targetViewAngle > 45)
                             {
                                 Debug.Log("AGM Missile guidance failed - target out of view");
-                                GuidanceActive = false;
+                                guidanceActive = false;
                               
                             }
                             //CheckMiss();
@@ -454,8 +458,6 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"),
          UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)] public float
             CruiseAltitude = 500;
-
-        public bool GuidanceActive;
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)] public
             string GuidanceLabel =
