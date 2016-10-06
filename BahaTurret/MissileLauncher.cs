@@ -205,23 +205,7 @@ namespace BahaTurret
 		public string boostTransformName = string.Empty;
 		List<KSPParticleEmitter> boostEmitters;
 		List<BDAGaplessParticleEmitter> boostGaplessEmitters;
-
-		[KSPField]
-		public float lockedSensorFOV = 2.5f;
-
-
-		//heat stuff
-		public TargetSignatureData heatTarget;
-		[KSPField]
-		public float heatThreshold = 200;
-		[KSPField]
-		public bool allAspect = false;
-
-
-
-		float lockFailTimer = -1;
-
-
+		
 		//radar stuff
 		//public ModuleRadar radar;
 		public VesselRadarData vrd;
@@ -623,17 +607,9 @@ namespace BahaTurret
 						}
 					}
 				}
-				if(TargetingMode == TargetingModes.Laser)
-				{
-					laserStartPosition = transform.position;
-					if(lockedCamera)
-					{
-						TargetAcquired = true;
-						TargetPosition = lastLaserPoint = lockedCamera.groundTargetPosition;
-						targetingPod = lockedCamera;
-					}
-				}
-				else if(TargetingMode == TargetingModes.AntiRad && TargetAcquired)
+                SetLaserTargeting();
+
+			    if (TargetingMode == TargetingModes.AntiRad && TargetAcquired)
 				{
 					RadarWarningReceiver.OnRadarPing += ReceiveRadarPing;
 				}
@@ -1462,53 +1438,7 @@ namespace BahaTurret
 			DoAero(agmTarget);
 		}
 
-		void UpdateLaserTarget()
-		{
-			if(TargetAcquired)
-			{
-				if(lockedCamera && lockedCamera.groundStabilized && !lockedCamera.gimbalLimitReached && lockedCamera.surfaceDetected) //active laser target
-				{
-					TargetPosition = lockedCamera.groundTargetPosition;
-					TargetVelocity = (TargetPosition - lastLaserPoint) / Time.fixedDeltaTime;
-					TargetAcceleration = Vector3.zero;
-					lastLaserPoint = TargetPosition;
-
-					if(GuidanceMode == GuidanceModes.BeamRiding && TimeIndex > 0.25f && Vector3.Dot(part.transform.forward, part.transform.position - lockedCamera.transform.position) < 0)
-					{
-						TargetAcquired = false;
-						lockedCamera = null;
-					}
-				}
-				else //lost active laser target, home on last known position
-				{
-					if(CMSmoke.RaycastSmoke(new Ray(transform.position, lastLaserPoint - transform.position)))
-					{
-						//Debug.Log("Laser missileBase affected by smoke countermeasure");
-						float angle = VectorUtils.FullRangePerlinNoise(0.75f * Time.time, 10) * BDArmorySettings.SMOKE_DEFLECTION_FACTOR;
-						TargetPosition = VectorUtils.RotatePointAround(lastLaserPoint, transform.position, VectorUtils.GetUpDirection(transform.position), angle);
-						TargetVelocity = Vector3.zero;
-						TargetAcceleration = Vector3.zero;
-						lastLaserPoint = TargetPosition;
-					}
-					else
-					{
-						TargetPosition = lastLaserPoint;
-					}
-				}
-			}
-			else
-			{
-				ModuleTargetingCamera foundCam = null;
-				bool parentOnly = (GuidanceMode == GuidanceModes.BeamRiding);
-				foundCam = BDATargetManager.GetLaserTarget(this, parentOnly);
-				if(foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized &&  BDATargetManager.CanSeePosition(foundCam.groundTargetPosition,vessel.transform.position, MissileReferenceTransform.position))
-				{
-					Debug.Log("Laser guided missileBase actively found laser point. Enabling guidance.");
-					lockedCamera = foundCam;
-					TargetAcquired = true;
-				}
-			}
-		}
+		
 
 		void UpdateLegacyTarget()
 		{
@@ -1817,46 +1747,6 @@ namespace BahaTurret
 			{
 				legacyTargetVessel = null;
 			}
-		}
-
-		void UpdateHeatTarget()
-		{
-			TargetAcquired = false;
-
-			if(lockFailTimer > 1)
-			{
-				legacyTargetVessel = null;
-
-				return;
-			}
-			
-			if(heatTarget.exists && lockFailTimer < 0)
-			{
-				lockFailTimer = 0;
-			}
-			if(lockFailTimer >= 0)
-			{
-				Ray lookRay = new Ray(transform.position, heatTarget.position+(heatTarget.velocity*Time.fixedDeltaTime)-transform.position);
-				heatTarget = BDATargetManager.GetHeatTarget(lookRay, lockedSensorFOV/2, heatThreshold, allAspect);
-				
-				if(heatTarget.exists)
-				{
-					TargetAcquired = true;
-					TargetPosition = heatTarget.position+(2*heatTarget.velocity*Time.fixedDeltaTime);
-					TargetVelocity = heatTarget.velocity;
-					TargetAcceleration = heatTarget.acceleration;
-					lockFailTimer = 0;
-				}
-				else
-				{
-					if(FlightGlobals.ready)
-					{
-						lockFailTimer += Time.fixedDeltaTime;
-					}
-				}
-			}
-
-
 		}
 
 		void CheckMiss()

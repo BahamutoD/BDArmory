@@ -1747,7 +1747,6 @@ namespace BahaTurret
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Gps)
 			{
-
                 if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
                 {
                     if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
@@ -1765,12 +1764,10 @@ namespace BahaTurret
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Heat && heatTarget.exists)
             {
-                var mlauncher = ml as MissileLauncher;
-                if (mlauncher != null)
-                {
-                     mlauncher.heatTarget = heatTarget;
-				    heatTarget = TargetSignatureData.noTarget;
-                }           
+               
+                ml.heatTarget = heatTarget;
+				heatTarget = TargetSignatureData.noTarget;
+                           
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Radar && vesselRadarData && vesselRadarData.locked)//&& radar && radar.lockedTarget.exists)
 			{
@@ -2079,15 +2076,15 @@ namespace BahaTurret
 						{
 							BDGUIUtils.DrawTextureOnWorldPos(heatTarget.position, BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
 							float distanceToTarget = Vector3.Distance(heatTarget.position, ml.MissileReferenceTransform.position);
-							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.GetForwardTransform()), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
 							Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(ml, heatTarget.position, heatTarget.velocity);
 							Vector3 fsDirection = (fireSolution - ml.MissileReferenceTransform.position).normalized;
 							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
 						}
 						else
 						{
-							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
-							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.MissileReferenceTransform.forward), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.GetForwardTransform()), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+							BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.GetForwardTransform()), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
 						}
 					}
 					else if(missile.TargetingMode == MissileBase.TargetingModes.Radar)
@@ -3251,7 +3248,7 @@ namespace BahaTurret
 								if(missile.HasFired && missile.Team != team)
 								{
 									BDATargetManager.ReportVessel(v, this);
-									if(!isFlaring && missile.TargetingMode == MissileBase.TargetingModes.Heat && Vector3.Angle(missile.transform.forward, transform.position - missile.transform.position) < 20)
+									if(!isFlaring && missile.TargetingMode == MissileBase.TargetingModes.Heat && Vector3.Angle(missile.GetForwardTransform(), transform.position - missile.transform.position) < 20)
 									{
 										StartCoroutine(FlareRoutine(targetScanInterval * 0.75f));
 									}
@@ -4352,34 +4349,28 @@ namespace BahaTurret
 		//HEAT LOCKING
 		public TargetSignatureData heatTarget = TargetSignatureData.noTarget;
 		void SearchForHeatTarget()
-		{
-            //TODO BDModularGuidance : Implement heat target
-		    var ml = CurrentMissile as MissileLauncher;
-		    if (ml != null)
+		{    
+		    if (CurrentMissile != null)
             {
-                if (!ml || ml.TargetingMode != MissileBase.TargetingModes.Heat)
+                if (!CurrentMissile || CurrentMissile.TargetingMode != MissileBase.TargetingModes.Heat)
                 {
                     return;
                 }
 
-                float scanRadius = ml.lockedSensorFOV * 2;
-                float maxOffBoresight = ml.maxOffBoresight * 0.85f;
+                var scanRadius = CurrentMissile.lockedSensorFOV * 2;
+                var maxOffBoresight = CurrentMissile.maxOffBoresight * 0.85f;
 
-                bool radarSlaved = false;
                 if (vesselRadarData && vesselRadarData.locked)
                 {
                     heatTarget = vesselRadarData.lockedTargetData.targetData;
-                    radarSlaved = true;
                 }
 
                 Vector3 direction =
-                    heatTarget.exists && Vector3.Angle(heatTarget.position - ml.MissileReferenceTransform.position, ml.MissileReferenceTransform.forward) < maxOffBoresight ?
-                    heatTarget.predictedPosition - ml.MissileReferenceTransform.position
-                    : ml.MissileReferenceTransform.forward;
+                    heatTarget.exists && Vector3.Angle(heatTarget.position - CurrentMissile.MissileReferenceTransform.position, CurrentMissile.GetForwardTransform()) < maxOffBoresight ?
+                    heatTarget.predictedPosition - CurrentMissile.MissileReferenceTransform.position
+                    : CurrentMissile.GetForwardTransform();
 
-                float heatThresh = radarSlaved ? ml.heatThreshold * 0.5f : ml.heatThreshold;
-
-                heatTarget = BDATargetManager.GetHeatTarget(new Ray(ml.MissileReferenceTransform.position + (50 * ml.MissileReferenceTransform.forward), direction), scanRadius, ml.heatThreshold, ml.allAspect); 
+                heatTarget = BDATargetManager.GetHeatTarget(new Ray(CurrentMissile.MissileReferenceTransform.position + (50 * CurrentMissile.GetForwardTransform()), direction), scanRadius, CurrentMissile.heatThreshold, CurrentMissile.allAspect); 
             }
 		}
 
