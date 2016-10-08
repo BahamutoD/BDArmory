@@ -73,11 +73,34 @@ namespace BahaTurret
 
             CheckDetonationDistance();
 
+            CheckDetonationOnClosestApproach();
+
             CheckNextStage();
 
             UpdateGuidance();
+        }
 
+        private float _previousDistanceToTarget = float.MaxValue;
+        private void CheckDetonationOnClosestApproach()
+        {
+            if (!ClosestDetonation) return;
+            if (!_missileIgnited) return;
+            if (!guidanceActive) return;
 
+            //safe distance detonation
+            if((_parentVessel.CoM - vessel.CurrentCoM).magnitude < this.GetBlastRadius()*2) return;
+           
+            var currentDistanceToTarget = (vessel.CurrentCoM - TargetPosition).magnitude;
+
+            if (currentDistanceToTarget > this.GetBlastRadius()*5) return;
+
+            //We are getting farther or not closer from the target, so it is a good moment to detonate our explosives
+            if (currentDistanceToTarget >= _previousDistanceToTarget)
+            {
+                Detonate();
+            }
+
+            _previousDistanceToTarget = currentDistanceToTarget;
         }
 
         private void CheckDetonationDistance()
@@ -491,6 +514,9 @@ namespace BahaTurret
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 1f, scene = UI_Scene.All)] public float DetonationDistance;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation on closest approach"),
+        UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
+        public bool ClosestDetonation = true;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.All)] public float SteerDamping = 5;
 

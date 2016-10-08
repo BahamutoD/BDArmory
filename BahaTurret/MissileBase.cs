@@ -14,7 +14,7 @@ namespace BahaTurret
         public string shortName = string.Empty;
 
         [KSPField]
-        public float maxStaticLaunchRange = 3000;
+        public float maxStaticLaunchRange = 5000;
 
         [KSPField]
         public float minStaticLaunchRange = 10;
@@ -23,7 +23,7 @@ namespace BahaTurret
         public float minLaunchSpeed = 0;
 
         [KSPField]
-        public float maxOffBoresight = 45;
+        public float maxOffBoresight = 50;
 
         [KSPField]
         public bool guidanceActive = true;
@@ -32,7 +32,7 @@ namespace BahaTurret
         public float lockedSensorFOV = 2.5f;
 
         [KSPField]
-        public float heatThreshold = 200;
+        public float heatThreshold = 150;
 
         [KSPField]
         public bool allAspect = false;
