@@ -67,40 +67,14 @@ namespace BahaTurret
         {
             base.OnFixedUpdate();
 
-            CheckGuidanceInit();
+            UpdateGuidance();
 
             CheckDelayedFired();
 
             CheckDetonationDistance();
 
-            CheckDetonationOnClosestApproach();
-
             CheckNextStage();
-
-            UpdateGuidance();
-        }
-
-        private float _previousDistanceToTarget = float.MaxValue;
-        private void CheckDetonationOnClosestApproach()
-        {
-            if (!ClosestDetonation) return;
-            if (!_missileIgnited) return;
-            if (!guidanceActive) return;
-
-            //safe distance detonation
-            if((_parentVessel.CoM - vessel.CurrentCoM).magnitude < this.GetBlastRadius()*2) return;
-           
-            var currentDistanceToTarget = (vessel.CurrentCoM - TargetPosition).magnitude;
-
-            if (currentDistanceToTarget > this.GetBlastRadius()*5) return;
-
-            //We are getting farther or not closer from the target, so it is a good moment to detonate our explosives
-            if (currentDistanceToTarget >= _previousDistanceToTarget)
-            {
-                Detonate();
-            }
-
-            _previousDistanceToTarget = currentDistanceToTarget;
+         
         }
 
         private void CheckDetonationDistance()
@@ -184,31 +158,14 @@ namespace BahaTurret
         {
             EnableResourceFlow(_targetDecoupler.part.children);
 
-            if (TargetAcquired)
-            {
-                _readyForGuidance = true;
-            }
+            var velocityObject = new GameObject("velObject");
+            velocityObject.transform.position = transform.position;
+            velocityObject.transform.parent = transform;
+            _velocityTransform = velocityObject.transform;
 
             ExecuteNextStage();
             _missileIgnited = true;
-        }
-
-        private void CheckGuidanceInit()
-        {
-            if (_readyForGuidance && Time.time - timeFired > dropTime + 1)
-            {
-                _readyForGuidance = false;
-                guidanceActive = true;
-                RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, GetForwardTransform());
-
-                var velocityObject = new GameObject("velObject");
-                velocityObject.transform.position = transform.position;
-                velocityObject.transform.parent = transform;
-                _velocityTransform = velocityObject.transform;
-
-                Events["StartGuidance"].guiActive = false;
-                Misc.RefreshAssociatedWindows(part);
-            }
+            RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, GetForwardTransform());
         }
 
         private bool ShouldExecuteNextStage()
@@ -341,6 +298,12 @@ namespace BahaTurret
                 switch (TargetingMode)
                 {
                     case TargetingModes.None:
+                        if (_targetVessel != null)
+                        {
+                            TargetPosition = _targetVessel.CurrentCoM;
+                            TargetVelocity = _targetVessel.rb_velocity;
+                            TargetAcceleration = _targetVessel.acceleration;
+                        }
                         break;
                     case TargetingModes.Radar:
                         break;
@@ -358,40 +321,31 @@ namespace BahaTurret
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-
-
-                if (TargetingMode == TargetingModes.Laser)
-                {
-                    UpdateLaserTarget();
-                }
-                else if (TargetingMode == TargetingModes.Gps)
-                {
-                    
-                }
             }
         }
 
         public void GuidanceSteer(FlightCtrlState s)
         {
-            Vector3 newTargerPosition;
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
-            {
-                _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -MissileReferenceTransform.forward);
-
-                if (TargetingMode == TargetingModes.None && _targetVessel != null)
-                {
-                    TargetPosition = _targetVessel.CurrentCoM;
-                    TargetVelocity = _targetVessel.rb_velocity;
-                    TargetAcceleration = _targetVessel.acceleration;
-                }
-
-                var localAngVel = vessel.angularVelocity;
-
+            {         
+                Vector3 newTargerPosition = new Vector3();
                 if (_guidanceIndex == 1)
                 {
-                    float timeToImpact;
-                    newTargerPosition = MissileGuidance.GetAirToAirTarget(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact);
-                    TimeToImpact = timeToImpact;
+                    if (TargetAcquired)
+                    {
+                        float timeToImpact;
+                        newTargerPosition = MissileGuidance.GetAirToAirTarget(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact,  (float) (vessel.srfSpeed + vessel.acceleration.magnitude));
+                        TimeToImpact = timeToImpact;
+                        if (Vector3.Angle(newTargerPosition - MissileReferenceTransform.position, GetForwardTransform()) > maxOffBoresight * 0.75f)
+                        {
+                            newTargerPosition = TargetPosition;
+                        }
+                        //proxy detonation
+                        if (((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(GetBlastRadius() * 0.5f, 2))
+                        {
+                            Detonate();
+                        } 
+                    }
                 }
                 else if (_guidanceIndex == 2)
                 {
@@ -425,15 +379,20 @@ namespace BahaTurret
                     newTargerPosition = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
                 }
 
-                var targetDirection = _velocityTransform.InverseTransformPoint(newTargerPosition).normalized;
-                targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
+                //Updating aero surfaces
+                if (Time.time - timeFired > dropTime + 0.5f)
+                {
+                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -MissileReferenceTransform.forward);
+                    var targetDirection = _velocityTransform.InverseTransformPoint(newTargerPosition).normalized;
+                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15 * Mathf.Deg2Rad, 0);
 
+                    var localAngVel = vessel.angularVelocity;
+                    var steerYaw = SteerMult * targetDirection.x - SteerDamping * -localAngVel.z;
+                    var steerPitch = SteerMult * targetDirection.y - SteerDamping * -localAngVel.x;
 
-                var steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
-                var steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
-
-                s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
-                s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
+                    s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
+                    s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer); 
+                }
 
                 s.mainThrottle = 1;
             }
@@ -514,10 +473,6 @@ namespace BahaTurret
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 1f, scene = UI_Scene.All)] public float DetonationDistance;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation on closest approach"),
-        UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
-        public bool ClosestDetonation = true;
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.All)] public float SteerDamping = 5;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)] public float SteerMult = 10;
@@ -578,6 +533,8 @@ namespace BahaTurret
                 timeFired = Time.time;
 
                 MissileState = MissileStates.Drop;
+                Events["StartGuidance"].guiActive = false;
+                Misc.RefreshAssociatedWindows(part);
             }
         }
 
@@ -689,6 +646,7 @@ namespace BahaTurret
                 {
                     highExplosive.Detonate();
                 }
+                part.temperature = part.maxTemp + 100;
             }
         }
 

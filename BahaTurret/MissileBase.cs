@@ -170,12 +170,10 @@ namespace BahaTurret
 
         protected void UpdateHeatTarget()
         {
-            TargetAcquired = false;
-
             if (lockFailTimer > 1)
             {
                 legacyTargetVessel = null;
-
+                TargetAcquired = false;
                 return;
             }
 
@@ -198,6 +196,7 @@ namespace BahaTurret
                 }
                 else
                 {
+                    TargetAcquired = false;
                     if (FlightGlobals.ready)
                     {
                         lockFailTimer += Time.fixedDeltaTime;
