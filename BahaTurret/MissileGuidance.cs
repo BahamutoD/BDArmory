@@ -143,11 +143,24 @@ namespace BahaTurret
 			return finalTarget;
 		}
 
-		public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
+        public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity, Vector3 targetAcceleration, Vessel missileVessel, out float timeToImpact)
+        {
+            float targetDistance = Vector3.Distance(targetPosition, missileVessel.transform.position);
+
+            Vector3 currVel = (float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized;
+
+            var timeToImpactWithCurrVel = targetDistance / (targetVelocity - currVel).magnitude;
+
+            timeToImpact = timeToImpactWithCurrVel;            
+            
+            return targetPosition + (targetVelocity * timeToImpact) + 0.5f * targetAcceleration * timeToImpact * timeToImpact;
+        }
+
+        public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
 		{
 			if(!targetVessel)
 			{
-				return missile.transform.position + (missile.transform.forward*1000);
+				return missile.transform.position + (missile.GetForwardTransform()*1000);
 			}
 			Vector3 targetPosition = targetVessel.transform.position;
 			float leadTime = 0;

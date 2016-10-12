@@ -103,13 +103,6 @@ namespace BahaTurret
 		[KSPField]
 		public float rndAngVel = 0;
 		
-		[KSPField]
-		public bool isTimed = false;
-		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Detonation Time"),
-        	UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
-		public float detonationTime = 2;
-
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"),
 		 UI_FloatRange(minValue = 30, maxValue = 2500f, stepIncrement = 5f, scene = UI_Scene.All)]
 		public float cruiseAltitude = 500;
@@ -142,16 +135,12 @@ namespace BahaTurret
 		KSPParticleEmitter forwardRCS;
 		float rcsAudioMinInterval = 0.2f;
 
-		bool checkMiss = false;
 		bool hasExploded = false;
 		private AudioSource audioSource;
 		public AudioSource sfAudioSource;
 		List<KSPParticleEmitter> pEmitters;
 		List<BDAGaplessParticleEmitter> gaplessEmitters;
 		
-		public MissileFire targetMf = null;
-
-
 		LineRenderer LR;
 		float cmTimer;
 		
@@ -597,7 +586,7 @@ namespace BahaTurret
 
 						foreach(var mf in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
 						{
-							targetMf = mf;
+							TargetMf = mf;
 							break;
 						}
 
@@ -773,7 +762,7 @@ namespace BahaTurret
 			}
 		}
 
-		Vector3 previousPos;
+        Vector3 previousPos;
 		void RaycastCollisions()
 		{
 			if(weaponClass == WeaponClasses.Bomb) return;
@@ -931,7 +920,7 @@ namespace BahaTurret
 				else
 				{
 					CheckMiss();
-					targetMf = null;
+					TargetMf = null;
 					if(aero)
 					{
 						aeroTorque = MissileGuidance.DoAeroForces(this, transform.position + (20*vessel.srf_velocity), liftArea, .25f, aeroTorque, maxTorque, maxAoA);
@@ -1749,33 +1738,6 @@ namespace BahaTurret
 			}
 		}
 
-		void CheckMiss()
-		{
-			float sqrDist = ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position+(part.rb.velocity*Time.fixedDeltaTime))).sqrMagnitude;
-			if(sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
-			{
-				checkMiss = true;	
-			}
-			
-			//kill guidance if missileBase has missed
-			if(!HasMissed && checkMiss)
-			{
-				bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity-TargetVelocity, TargetPosition - vessel.transform.position) < 0);
-				if(Vector3.Dot(TargetPosition-transform.position,transform.forward) < 0 || noProgress) 
-				{
-					Debug.Log ("Missile CheckMiss showed miss");
-                    HasMissed = true;
-					guidanceActive = false;
-					targetMf = null;
-					if(hasRCS) KillRCS();
-					if(sqrDist < Mathf.Pow(blastRadius * 0.5f, 2)) part.temperature = part.maxTemp + 100;
-
-					isTimed = true;
-					detonationTime = Time.time - timeFired + 1.5f;
-					return;
-				}
-			}
-		}
 
 		void RayDetonator()
 		{
@@ -1791,8 +1753,6 @@ namespace BahaTurret
 			}
 			
 		}
-
-	
 
 		void DrawDebugLine(Vector3 start, Vector3 end)
 		{
@@ -2040,8 +2000,8 @@ namespace BahaTurret
 
 
 		}
-		
-		void KillRCS()
+
+	    public void KillRCS()
 		{
 			upRCS.emit = false;
 			downRCS.emit = false;

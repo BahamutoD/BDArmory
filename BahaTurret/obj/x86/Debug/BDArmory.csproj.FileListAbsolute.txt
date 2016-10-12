@@ -64,3 +64,4 @@ C:\Users\jesus\Source\Repos\BDArmory\BahaTurret\bin\Debug\Mono.Security.dll
 C:\Users\jesus\Source\Repos\BDArmory\BahaTurret\bin\Debug\UnityEngine.xml
 C:\Users\jesus\Source\Repos\BDArmory\BahaTurret\obj\x86\Debug\BahaTurret.dll
 C:\Users\jesus\Source\Repos\BDArmory\BahaTurret\obj\x86\Debug\BahaTurret.pdb
+C:\Users\jesus\Source\Repos\BDArmory\BahaTurret\obj\x86\Debug\BDArmory.csprojResolveAssemblyReference.cache

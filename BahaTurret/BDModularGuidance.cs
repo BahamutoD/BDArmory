@@ -24,8 +24,6 @@ namespace BahaTurret
 
         public Vessel LegacyTargetVessel;
 
-        public MissileFire TargetMf;
-
         public TransformAxisVectors ForwardTransformAxis { get; set; }
 
         public enum TransformAxisVectors
@@ -74,7 +72,12 @@ namespace BahaTurret
             CheckDetonationDistance();
 
             CheckNextStage();
-         
+
+            if (isTimed && TimeIndex > detonationTime)
+            {
+                AutoDestruction();
+            }
+
         }
 
         private void CheckDetonationDistance()
@@ -156,14 +159,18 @@ namespace BahaTurret
         }
         private void MissileIgnition()
         {
-            EnableResourceFlow(_targetDecoupler.part.children);
+            var vesselParts = vessel.Parts;
+            EnableResourceFlow(vesselParts);
 
             var velocityObject = new GameObject("velObject");
             velocityObject.transform.position = transform.position;
             velocityObject.transform.parent = transform;
             _velocityTransform = velocityObject.transform;
 
+            MissileState = MissileStates.Boost;
+
             ExecuteNextStage();
+
             _missileIgnited = true;
             RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, GetForwardTransform());
         }
@@ -174,6 +181,7 @@ namespace BahaTurret
             //If the next stage is greater than the number defined of stages the missile is done
             if (_nextStage > 128*(StagesNumber + 1))
             {
+                if(vessel.acceleration.magnitude <= 0) MissileState = MissileStates.PostThrust;
                 return false;
             }
 
@@ -205,6 +213,17 @@ namespace BahaTurret
         {
             Events["HideUI"].active = false;
             Events["ShowUI"].active = true;
+
+            if (isTimed)
+            {
+                Fields["detonationTime"].guiActive = true;
+                Fields["detonationTime"].guiActiveEditor = true;
+            }
+            else
+            {
+                Fields["detonationTime"].guiActive = false;
+                Fields["detonationTime"].guiActiveEditor = false;
+            }
 
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -327,14 +346,14 @@ namespace BahaTurret
         public void GuidanceSteer(FlightCtrlState s)
         {
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
-            {         
+            {    
                 Vector3 newTargerPosition = new Vector3();
                 if (_guidanceIndex == 1)
                 {
                     if (TargetAcquired)
                     {
                         float timeToImpact;
-                        newTargerPosition = MissileGuidance.GetAirToAirTarget(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact,  (float) (vessel.srfSpeed + vessel.acceleration.magnitude));
+                        newTargerPosition = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact);
                         TimeToImpact = timeToImpact;
                         if (Vector3.Angle(newTargerPosition - MissileReferenceTransform.position, GetForwardTransform()) > maxOffBoresight * 0.75f)
                         {
@@ -395,7 +414,9 @@ namespace BahaTurret
                 }
 
                 s.mainThrottle = 1;
+                CheckMiss();
             }
+           
         }
 
         private void UpdateMenus(bool visible)
@@ -605,10 +626,13 @@ namespace BahaTurret
             if (_targetDecoupler == null || !_targetDecoupler || !(_targetDecoupler is IStageSeparator)) return;
             if (_targetDecoupler is ModuleDecouple)
             {
-                (_targetDecoupler as ModuleDecouple).Decouple();
+                (_targetDecoupler as ModuleDecouple).ejectionForce *= 10;
+
+                 (_targetDecoupler as ModuleDecouple).Decouple();
             }
             else
             {
+                (_targetDecoupler as ModuleAnchoredDecoupler).ejectionForce *= 5;
                 (_targetDecoupler as ModuleAnchoredDecoupler).Decouple();
             }
 
@@ -632,9 +656,20 @@ namespace BahaTurret
         {
             if (p == part)
             {
-                Detonate();
+                AutoDestruction();
                 BDATargetManager.FiredMissiles.Remove(this);
                 GameEvents.onPartDie.Remove(PartDie);
+            }
+        }
+
+        private void AutoDestruction()
+        {
+            foreach (var p in vessel.Parts)
+            {
+                if (p)
+                {
+                    p.temperature = part.maxTemp + 100;
+                }
             }
         }
 
@@ -646,7 +681,7 @@ namespace BahaTurret
                 {
                     highExplosive.Detonate();
                 }
-                part.temperature = part.maxTemp + 100;
+                AutoDestruction();
             }
         }
 

@@ -37,6 +37,9 @@ namespace BahaTurret
         [KSPField]
         public bool allAspect = false;
 
+        [KSPField]
+        public bool isTimed = false;
+
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
             UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float dropTime = 0.4f;
@@ -44,6 +47,10 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "),
         UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
         public bool inCargoBay = false;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Detonation Time"),
+    UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+        public float detonationTime = 2;
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
@@ -101,6 +108,10 @@ namespace BahaTurret
 
         //heat stuff
         public TargetSignatureData heatTarget;
+
+        public MissileFire TargetMf = null;
+
+        protected bool checkMiss = false;
 
         public WeaponClasses GetWeaponClass()
         {
@@ -201,6 +212,41 @@ namespace BahaTurret
                     {
                         lockFailTimer += Time.fixedDeltaTime;
                     }
+                }
+            }
+        }
+
+        protected void CheckMiss()
+        {
+            float sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position + (part.rb.velocity * Time.fixedDeltaTime))).sqrMagnitude;
+            if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
+            {
+                checkMiss = true;
+            }
+
+            //kill guidance if missileBase has missed
+            if (!HasMissed && checkMiss)
+            {
+                bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity - TargetVelocity, TargetPosition - vessel.transform.position) < 0);
+                if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
+                {
+                    Debug.Log("Missile CheckMiss showed miss");
+                    HasMissed = true;
+                    guidanceActive = false;
+                    
+                    TargetMf = null;
+
+                    var launcher = this as MissileLauncher;
+                    if (launcher != null)
+                    {
+                        if (launcher.hasRCS) launcher.KillRCS();
+                    }
+                    
+                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
+
+                    isTimed = true;
+                    detonationTime = Time.time - timeFired + 1.5f;
+                    return;
                 }
             }
         }
