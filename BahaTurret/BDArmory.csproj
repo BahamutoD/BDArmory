@@ -31,6 +31,21 @@
     <PlatformTarget>x86</PlatformTarget>
     <ConsolePause>False</ConsolePause>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -138,9 +153,7 @@
     <None Include="BahaTurretBullet.cs" />
     <None Include="Distribution\GameData\BDArmory\Agencies\Agents.cfg" />
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdabulletshader.ksp" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdagrayscaleshader.ksp" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdaunlitblack.ksp" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\Shaders.bundle" />
     <None Include="Distribution\GameData\BDArmory\ATM_BDArmory.cfg" />
     <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
     <None Include="Distribution\GameData\BDArmory\Models\bulletHit\bulletHit.mu" />
