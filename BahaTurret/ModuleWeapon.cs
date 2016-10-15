@@ -412,13 +412,13 @@ namespace BahaTurret
 		}
 
 
-
-
-		public override void OnStart (StartState state)
+	    public override void OnStart (StartState state)
 		{
 			base.OnStart (state);
+    
+     
 
-			ParseWeaponType();
+           ParseWeaponType();
             ParseBulletDragType();
 
             bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000;        //1000 to convert from tonnes to kilograms
@@ -549,8 +549,9 @@ namespace BahaTurret
 				fireState.enabled = false;	
 			}
 
-			BDArmorySettings.OnVolumeChange += UpdateVolume;
-		}
+	        BDArmorySettings.OnVolumeChange += UpdateVolume;
+
+        }
 
 		void UpdateVolume()
 		{
@@ -705,14 +706,24 @@ namespace BahaTurret
 					return;
 				}
 
-				if(showReloadMeter)
-				{
-					//UpdateReloadMeter();
-				}
-				else
-				{
-					//UpdateHeatMeter();
-				}
+			    if (part.stackIcon.StageIcon == null)
+			    {
+			        part.stackIcon.CreateIcon();
+			    }
+
+
+                if (vessel.isActiveVessel)
+                {
+                    if (showReloadMeter)
+                    {
+                        // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
+                        UpdateReloadMeter();
+                    }
+                    else
+                    {
+                        UpdateHeatMeter();
+                    } 
+                }
 				UpdateHeat();
 
 
@@ -1698,8 +1709,7 @@ namespace BahaTurret
         
 		private ProtoStageIconInfo InitReloadBar()
 		{
-			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-
+            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();        
 			v.SetMsgBgColor(XKCDColors.DarkGrey);
 			v.SetMsgTextColor(XKCDColors.White);
 			v.SetMessage("Reloading");
@@ -1711,15 +1721,15 @@ namespace BahaTurret
 
 		private ProtoStageIconInfo InitHeatGauge()  //thanks DYJ
 		{
-			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-			
-			v.SetMsgBgColor(XKCDColors.DarkRed);
-			v.SetMsgTextColor(XKCDColors.Orange);
-			v.SetMessage("Overheat");
-			v.SetProgressBarBgColor(XKCDColors.DarkRed);
-			v.SetProgressBarColor(XKCDColors.Orange);
-			
-			return v;
+               ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+
+		        v.SetMsgBgColor(XKCDColors.DarkRed);
+		        v.SetMsgTextColor(XKCDColors.Orange);
+		        v.SetMessage("Overheat");
+		        v.SetProgressBarBgColor(XKCDColors.DarkRed);
+		        v.SetProgressBarColor(XKCDColors.Orange);
+		    
+		    return v;
 		}
 
 		void SetupBulletPool()
@@ -1852,16 +1862,14 @@ namespace BahaTurret
 
 		}
 
-
-
-		void OnGUI()
+        void OnGUI()
 		{
 			if(weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
 			{
 				float size = 30;
 				
 				Vector3 reticlePosition;
-				if(BDArmorySettings.AIM_ASSIST && vessel.srfSpeed < Krakensbane.Threshold)
+				if(BDArmorySettings.AIM_ASSIST && vessel.GetSrfVelocity().sqrMagnitude < Krakensbane.SqrThreshold)
 				{
 					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{

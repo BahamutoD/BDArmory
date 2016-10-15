@@ -1,91 +1,72 @@
-using System;
 using System.Collections;
-using System.Reflection;
 using System.IO;
 using UnityEngine;
-using KSPAssets.Loaders;
-using KSPAssets;
+
 namespace BahaTurret
 {
-	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
-	public class BDAShaderLoader : MonoBehaviour
-	{
-		private static bool loaded = false;
-		public static Shader GrayscaleEffectShader;
-		public static Shader UnlitBlackShader;
-		public static Shader BulletShader;
+    [KSPAddon(KSPAddon.Startup.MainMenu, false)]
+    public class BDAShaderLoader : MonoBehaviour
+    {
+        private static bool loaded;
 
-		void Start()
-		{
-			if(!loaded)
-			{
-				StartCoroutine(LoadRoutine());
-				loaded = true;
-			}
-		}
+        private static readonly string bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
+                                                    Path.DirectorySeparatorChar +
+                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles" +
+                                                    Path.DirectorySeparatorChar + "Shaders.bundle";
 
-		IEnumerator LoadRoutine()
-		{
-			while(!AssetLoader.Ready)
-			{
-				yield return null;
-			}
+        public static Shader GrayscaleEffectShader;
+        public static Shader UnlitBlackShader;
+        public static Shader BulletShader;
 
 
-			AssetDefinition bulletDef = AssetLoader.GetAssetDefinitionWithName("BDArmory/AssetBundles/bdabulletshader", "BDArmory/Bullet");
-			AssetDefinition unlitBlackDef = AssetLoader.GetAssetDefinitionWithName("BDArmory/AssetBundles/bdaunlitblack", "BDArmory/Unlit Black");
-			AssetDefinition grayscaleDef = AssetLoader.GetAssetDefinitionWithName("BDArmory/AssetBundles/bdagrayscaleshader", "BDArmory/Grayscale Effect");
-			AssetDefinition[] assetDefs = new AssetDefinition[]{ bulletDef, unlitBlackDef, grayscaleDef };
-			AssetLoader.LoadAssets(AssetLoaded, assetDefs);
-		}
+        private void Start()
+        {
+            if (!loaded)
+            {
+                Debug.Log("[BDArmory] start bundle load process");
+                StartCoroutine(LoadBundleAssets());
+                loaded = true;
+            }
+        }
 
+        private IEnumerator LoadBundleAssets()
+        {
+            Debug.Log("[BDArmory] Loading bundle data");
 
-		void AssetLoaded(AssetLoader.Loader loader)
-		{
-			Debug.Log("BDArmory loaded shaders: ");
-			for(int i = 0; i < loader.objects.Length; i++)
-			{
-				Shader s = (Shader)loader.objects[i];
-				if(s == null) continue;
+            var shaderBundle = AssetBundle.LoadFromFile(bundlePath);
 
-				Debug.Log("- " + s.name);
+            if (shaderBundle != null)
+            {
+                var shaders = shaderBundle.LoadAllAssets<Shader>();
 
-				if(s.name == "BDArmory/Bullet")
-				{
-					BulletShader = s;
-				}
-				else if(s.name == "BDArmory/Unlit Black")
-				{
-					UnlitBlackShader = s;
-				}
-				else if(s.name == "BDArmory/Grayscale Effect")
-				{
-					GrayscaleEffectShader = s;
-				}
-			}
-		}
+                foreach (var shader in shaders)
+                {
+                    Debug.Log($"[BDArmory] Shader \"{shader.name}\" loaded. Shader supported? {shader.isSupported}");
 
-		/*
-		public static Shader LoadManifestShader(string manifestResource)
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			Stream stream = assembly.GetManifestResourceStream(manifestResource);
-			if(stream!=null)
-			{
-				StreamReader reader = new StreamReader(stream);
-			
-				Material mat = new Material(reader.ReadToEnd());
-				return mat.shader;
-			}
-			else
-			{
-				Debug.Log ("ShaderLoader: Failed to acquire stream from manifest resource.");
-			}
-			return null;
-		}
-		*/
-	}
-
-
+                    switch (shader.name)
+                    {
+                        case "BDArmory/Particles/Bullet":
+                            BulletShader = shader;
+                            break;
+                        case "Custom/Unlit Black":
+                            UnlitBlackShader = shader;
+                            break;
+                        case "Hidden/Grayscale Effect":
+                            GrayscaleEffectShader = shader;
+                            break;
+                        default:
+                            Debug.Log($"[BDArmory] Not expected shader : {shader.name}");
+                            break;
+                    }
+                }
+                yield return null;
+                Debug.Log("[BDArmory] unloading bundle");
+                shaderBundle.Unload(false); // unload the raw asset bundle
+            }
+            else
+            {
+                Debug.Log("[BDArmory] Error: Found no asset bundle to load");
+            }
+        }
+    }
 }
-

@@ -24,9 +24,9 @@ namespace BahaTurret
 
 		public static Texture2D rwrDiamondTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrDiamond", false);
 		public static Texture2D rwrMissileTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrMissileIcon", false);
-		public static AudioClip radarPingSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrPing");
-		public static AudioClip missileLockSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrMissileLock");
-		public static AudioClip missileLaunchSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/mLaunchWarning");
+	    public static AudioClip radarPingSound;
+	    public static AudioClip missileLockSound;
+	    public static AudioClip missileLaunchSound;
 
 		//float lastTimePinged = 0;
 		const float minPingInterval = 0.12f;
@@ -61,16 +61,19 @@ namespace BahaTurret
 		GUIStyle rwrIconLabelStyle;
 
 		AudioSource audioSource;
-		public static Rect windowRect;
-		public static bool windowRectInitialized = false;
+		public static bool WindowRectRWRInitialized = false;
 
-	
+	    public override void OnAwake()
+	    {
+            radarPingSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrPing");
+            missileLockSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrMissileLock");
+            missileLaunchSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/mLaunchWarning");
+        }
 
-		public override void OnStart(StartState state)
+	    public override void OnStart(StartState state)
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-
 				pingsData = new TargetSignatureData[dataCount];
 				pingWorldPositions = new Vector3[dataCount];
 				TargetSignatureData.ResetTSDArray(ref pingsData);
@@ -96,10 +99,10 @@ namespace BahaTurret
 				BDArmorySettings.OnVolumeChange += UpdateVolume;
 
 				float size = displayRect.height + 20;
-				if(!windowRectInitialized)
+				if(!WindowRectRWRInitialized)
 				{
-					windowRect = new Rect(40, Screen.height - size - 20, size, size+20);
-					windowRectInitialized = true;
+				  BDArmorySettings.WindowRectRwr = new Rect(40, Screen.height - size - 20, size, size+20);
+					WindowRectRWRInitialized = true;
 				}
 
 				foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
@@ -257,15 +260,15 @@ namespace BahaTurret
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySettings.GAME_UI_ENABLED && vessel.isActiveVessel && rwrEnabled)
 			{
-				windowRect = GUI.Window(94353, windowRect, RWRWindow, "Radar Warning Receiver", HighLogic.Skin.window); 
-				BDGUIUtils.UseMouseEventInRect(windowRect);
+			  BDArmorySettings.WindowRectRwr = GUI.Window(94353, BDArmorySettings.WindowRectRwr, RWRWindow, "Radar Warning Receiver", HighLogic.Skin.window); 
+				BDGUIUtils.UseMouseEventInRect(BDArmorySettings.WindowRectRwr);
 			}
 		}
 
 		void RWRWindow(int windowID)
 		{
-			GUI.DragWindow(new Rect(0,0,windowRect.width-18, 30));
-			if(GUI.Button(new Rect(windowRect.width - 28, 2, 26, 26), "X", HighLogic.Skin.button))
+			GUI.DragWindow(new Rect(0,0, BDArmorySettings.WindowRectRwr.width-18, 30));
+			if(GUI.Button(new Rect(BDArmorySettings.WindowRectRwr.width - 28, 2, 26, 26), "X", HighLogic.Skin.button))
 			{
 				DisableRWR();
 			}

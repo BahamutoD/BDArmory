@@ -39,8 +39,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Optimize>true</Optimize>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\Release\</OutputPath>
@@ -50,30 +48,26 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPAssets">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPCore">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\KSPCore.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPUtil">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
+    <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="UnityEngine">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_11\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BDAWindowSettingsField.cs" />
     <Compile Include="CFEnable.cs" />
     <Compile Include="MissileBase.cs" />
     <Compile Include="MissileLauncher.cs" />
@@ -160,9 +154,7 @@
     <None Include="BahaTurretBullet.cs" />
     <None Include="Distribution\GameData\BDArmory\Agencies\Agents.cfg" />
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdabulletshader.ksp" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdagrayscaleshader.ksp" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdaunlitblack.ksp" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\Shaders.bundle" />
     <None Include="Distribution\GameData\BDArmory\ATM_BDArmory.cfg" />
     <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
     <None Include="Distribution\GameData\BDArmory\Models\bulletHit\bulletHit.mu" />

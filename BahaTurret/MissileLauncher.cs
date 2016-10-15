@@ -854,7 +854,7 @@ namespace BahaTurret
 
 					if(legacyTargetVessel && legacyTargetVessel.loaded)
 					{
-						Vector3 targetCoMPos = legacyTargetVessel.findWorldCenterOfMass();
+						Vector3 targetCoMPos = legacyTargetVessel.CoM;
 						targetPosition = targetCoMPos+legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
 					}
 
