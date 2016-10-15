@@ -9,10 +9,7 @@ namespace BahaTurret
     {
         private static bool loaded;
 
-        private static readonly string bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
-                                                    Path.DirectorySeparatorChar +
-                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles" +
-                                                    Path.DirectorySeparatorChar + "Shaders.bundle";
+        private static string bundlePath;
 
         public static Shader GrayscaleEffectShader;
         public static Shader UnlitBlackShader;
@@ -23,6 +20,11 @@ namespace BahaTurret
         {
             if (!loaded)
             {
+                bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
+                                                    Path.DirectorySeparatorChar +
+                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles" +
+                                                    Path.DirectorySeparatorChar + "Shaders.bundle";
+
                 Debug.Log("[BDArmory] start bundle load process");
                 StartCoroutine(LoadBundleAssets());
                 loaded = true;

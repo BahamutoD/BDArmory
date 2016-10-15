@@ -115,7 +115,7 @@ namespace BahaTurret
         {
             foreach (var child in children)
             {
-                foreach (var resource in child.Resources.list)
+                foreach (var resource in child.Resources)
                 {
                     if (resource.flowState)
                     {
@@ -133,7 +133,7 @@ namespace BahaTurret
         {
             foreach (var child in children)
             {
-                foreach (var resource in child.Resources.list)
+                foreach (var resource in child.Resources)
                 {
                     if (!resource.flowState)
                     {
@@ -755,7 +755,7 @@ namespace BahaTurret
 
         public static void HideGUI()
         {
-            if (instance != null)
+            if (instance != null && instance.missile_module != null)
             {
                 instance.missile_module.WeaponName = instance.missile_module.shortName;
                 instance.missile_module = null;
@@ -874,8 +874,8 @@ namespace BahaTurret
             if (cursorInGUI)
             {
                 editor.Lock(false, false, false, "BD_MN_GUILock");
-                if (EditorTooltip.Instance != null)
-                    EditorTooltip.Instance.HideToolTip();
+                //if (EditorTooltip.Instance != null)
+                //    EditorTooltip.Instance.HideToolTip();
             }
             else
             {

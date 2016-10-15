@@ -37,8 +37,12 @@ namespace BahaTurret
 		
 		public override void OnStart (StartState state)
 		{
-			part.OnJustAboutToBeDestroyed += new Callback(Detonate);
-			part.force_activate();
+		    if (HighLogic.LoadedSceneIsFlight)
+		    {
+		        part.OnJustAboutToBeDestroyed += Detonate;
+                part.force_activate();
+		    }
+		    
 		    CalculateBlast();
 		}
 
@@ -63,7 +67,7 @@ namespace BahaTurret
             //=LOG10(m+1)*(10+(m^1.6/(14*m+1)))
             blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
            
-            blastRadius = 2 * blastPower;
+            blastRadius = 1.75f * blastPower;
 
 	        previousMass = part.Resources["HighExplosive"].amount;
 	    }
