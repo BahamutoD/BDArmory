@@ -830,7 +830,7 @@ namespace BahaTurret
 				//if weapon can ripple, show option and slider.
 				if(ActiveWeaponManager.hasLoadedRippleData && ActiveWeaponManager.canRipple)
 				{
-					if(ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
+					if(ActiveWeaponManager.selectedWeapon != null && ActiveWeaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
 					{
 						string rippleText = ActiveWeaponManager.rippleFire ? "Barrage: " + ActiveWeaponManager.gunRippleRpm.ToString("0") + " RPM" : "Salvo";
 						GUIStyle rippleStyle = ActiveWeaponManager.rippleFire ? HighLogic.Skin.box : HighLogic.Skin.button;

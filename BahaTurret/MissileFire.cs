@@ -4430,15 +4430,21 @@ namespace BahaTurret
 				MissileBase firstMl = null;
 				foreach(var ml in vessel.FindPartModulesImplementing<MissileBase>())
 				{
-					if(ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
-					
-					if(firstMl == null) firstMl = ml;
+				    if (ml is MissileLauncher)
+				    {
+				        if(ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;			      
+				    }
+                    else if (ml is BDModularGuidance)
+                    { //We have set of parts not only a part
+                        if (ml.GetShortName() != weaponArray[weaponIndex].GetShortName()) continue;              
+                    }
+                    if (firstMl == null) firstMl = ml;
 
-					if(!FindSym(ml.part))
-					{
-						return ml;
-					}
-				}
+                    if (!FindSym(ml.part))
+                    {
+                        return ml;
+                    }
+                }
 				return firstMl;
 			}
 		    return null;

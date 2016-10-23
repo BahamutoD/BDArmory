@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
@@ -23,6 +22,8 @@ namespace BahaTurret
         private Transform _velocityTransform;
 
         public Vessel LegacyTargetVessel;
+
+        private float detonationRadius;
 
         public TransformAxisVectors ForwardTransformAxis { get; set; }
 
@@ -65,11 +66,11 @@ namespace BahaTurret
         {
             base.OnFixedUpdate();
 
+            CheckDetonationDistance();
+
             UpdateGuidance();
 
             CheckDelayedFired();
-
-            CheckDetonationDistance();
 
             CheckNextStage();
 
@@ -82,13 +83,10 @@ namespace BahaTurret
 
         private void CheckDetonationDistance()
         {
-            if (_targetVessel == null) return;
             if (!HasFired) return;
-            if (DetonationDistance == 0) return;
 
-            if (!((_targetVessel.transform.position - vessel.transform.position).magnitude <=
-                  DetonationDistance)) return;
-
+            if (!((TargetPosition - vessel.CoM).magnitude <= DetonationDistance)) return;
+            Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated");
             Detonate();
         }
 
@@ -233,6 +231,7 @@ namespace BahaTurret
             else
             {
                  SetMissileTransform();
+                 detonationRadius = DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
             }
             if (string.IsNullOrEmpty(GetShortName()))
             {
@@ -242,8 +241,7 @@ namespace BahaTurret
             RefreshGuidanceMode();
 
             UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes),_targetingLabel));
-           
-              
+
             _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
             DisableResourcesFlow();
@@ -346,7 +344,7 @@ namespace BahaTurret
         public void GuidanceSteer(FlightCtrlState s)
         {
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
-            {    
+            {
                 Vector3 newTargerPosition = new Vector3();
                 if (_guidanceIndex == 1)
                 {
@@ -359,11 +357,7 @@ namespace BahaTurret
                         {
                             newTargerPosition = TargetPosition;
                         }
-                        //proxy detonation
-                        if (((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(GetBlastRadius() * 0.5f, 2))
-                        {
-                            Detonate();
-                        } 
+
                     }
                 }
                 else if (_guidanceIndex == 2)
@@ -397,7 +391,9 @@ namespace BahaTurret
                 {
                     newTargerPosition = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
                 }
-
+                //proxy detonation
+                ProxyDetonation();
+              
                 //Updating aero surfaces
                 if (Time.time - timeFired > dropTime + 0.5f)
                 {
@@ -414,9 +410,20 @@ namespace BahaTurret
                 }
 
                 s.mainThrottle = 1;
-                CheckMiss();
+               
+                CheckMiss();              
             }
            
+        }
+
+        private void ProxyDetonation()
+        {
+            if (((TargetPosition + (TargetVelocity*Time.fixedDeltaTime)) - (vessel.CoM)).sqrMagnitude <
+                Mathf.Pow(detonationRadius*0.5f, 2))
+            {
+                Debug.Log("BDModularGuidance::ProxyDetonation - Proximity detonation activated");
+                Detonate();
+            }
         }
 
         private void UpdateMenus(bool visible)
@@ -492,11 +499,12 @@ namespace BahaTurret
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.All)] public float StagesNumber = 1;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 1f, scene = UI_Scene.All)] public float DetonationDistance;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 1f, scene = UI_Scene.All)] public float DetonationDistance = 0;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.All)] public float SteerDamping = 5;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)] public float SteerMult = 10;
+       
 
         #endregion
 
@@ -664,11 +672,12 @@ namespace BahaTurret
 
         private void AutoDestruction()
         {
-            foreach (var p in vessel.Parts)
+            var partArray = vessel.parts.ToArray();
+            for (int i = 0; i < partArray.Length; i++)
             {
-                if (p)
+                if (partArray[i] != null && partArray[i])
                 {
-                    p.temperature = part.maxTemp + 100;
+                    partArray[i].temperature = part.maxTemp + 100;
                 }
             }
         }
@@ -681,7 +690,7 @@ namespace BahaTurret
                 {
                     highExplosive.Detonate();
                 }
-                AutoDestruction();
+                AutoDestruction();          
             }
         }
 

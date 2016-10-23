@@ -65,11 +65,14 @@ namespace BahaTurret
            
 	        var explosiveMass = part.Resources["HighExplosive"].amount;
             //=LOG10(m+1)*(10+(m^1.6/(14*m+1)))
-            blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
-           
-            blastRadius = 1.75f * blastPower;
+            //blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
 
-	        previousMass = part.Resources["HighExplosive"].amount;
+	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
+            blastRadius = (float) (10 * Math.Pow(blastPower, (1.0 / 3.0)));
+
+            //blastRadius = 1.75f * blastPower;
+
+            previousMass = part.Resources["HighExplosive"].amount;
 	    }
 		
 		public void Detonate()

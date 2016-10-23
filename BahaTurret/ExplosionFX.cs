@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BahaTurret
@@ -36,11 +37,8 @@ namespace BahaTurret
 			lightFX.intensity = 8;
 			lightFX.range = range*3f;
 			lightFX.shadows = LightShadows.None;
-			
-			
-			
-			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-			
+				
+			audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;		
 			audioSource.PlayOneShot(exSound);
 		}
 		
@@ -53,9 +51,7 @@ namespace BahaTurret
 				foreach(KSPParticleEmitter pe in pEmitters)
 				{
 					pe.emit = false;	
-				}
-				
-				
+				}								
 			}
 
 			if(Time.time-startTime > maxTime)
@@ -68,13 +64,10 @@ namespace BahaTurret
 	
 		public static void CreateExplosion(Vector3 position, float radius, float power, float heat, Vessel sourceVessel, Vector3 direction, string explModelPath, string soundPath)
 		{
-			GameObject go;
-			AudioClip soundClip;
-				
-			go = GameDatabase.Instance.GetModel(explModelPath);
-			soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
-				
-				
+	
+            var go = GameDatabase.Instance.GetModel(explModelPath);
+			var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
+							
 			Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
 			GameObject newExplosion = (GameObject)Instantiate(go, position, rotation);
 			newExplosion.SetActive(true);
@@ -118,13 +111,12 @@ namespace BahaTurret
 					Vessel missileSource = null;
 					if(sourceVessel != null)
 					{
-						MissileLauncher ml = part.FindModuleImplementing<MissileLauncher>();
+                        var ml = part.FindModuleImplementing<MissileBase>();
 						if(ml)
 						{
 							missileSource = ml.SourceVessel;
 						}
 					}
-
 
 					if(!ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL && (!sourceVessel || sourceVessel != missileSource))
 					{
@@ -171,19 +163,19 @@ namespace BahaTurret
 			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("======= Doing explosion sphere =========");
 			ignoreParts.Clear();
 			ignoreBuildings.Clear();
-			foreach(var vessel in BDATargetManager.LoadedVessels)
-			{
-				if(vessel == null) continue;
-				if(vessel.loaded && !vessel.packed && (vessel.transform.position - position).magnitude < maxDistance * 4)
-				{
-					foreach(var part in vessel.parts)
-					{
-						if(!part) continue;
-						DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
-					}
-				}
-			}
 
+		    var vesselsAffected =
+		        BDATargetManager.LoadedVessels.Where(
+		            v => v != null && v.loaded && !v.packed && (v.transform.position - position).magnitude < maxDistance*4);
+
+		    var partsAffected =
+		        vesselsAffected.SelectMany(v => v.parts).Where(p => p!=null && p && (p.transform.position - position).magnitude < maxDistance);
+
+		    foreach (var part in partsAffected)
+		    {
+                DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
+            }
+		      
 			foreach(var bldg in BDATargetManager.LoadedBuildings)
 			{
 				if(bldg == null) continue;

@@ -148,12 +148,16 @@ namespace BahaTurret
             float targetDistance = Vector3.Distance(targetPosition, missileVessel.transform.position);
 
             Vector3 currVel = (float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized;
-
+           
             var timeToImpactWithCurrVel = targetDistance / (targetVelocity - currVel).magnitude;
 
-            timeToImpact = timeToImpactWithCurrVel;            
+            Vector3 maxVel = (float)(missileVessel.srfSpeed + missileVessel.acceleration.magnitude * timeToImpactWithCurrVel) * missileVessel.srf_velocity.normalized;
+
+            var timeToImpactWitMaxVel = targetDistance / (targetVelocity - maxVel).magnitude;
+
+            timeToImpact = (timeToImpactWithCurrVel + timeToImpactWitMaxVel)/2;
             
-            return targetPosition + (targetVelocity * timeToImpact) + 0.5f * targetAcceleration * timeToImpact * timeToImpact;
+            return targetPosition + (targetVelocity * timeToImpact) + 0.5f* targetAcceleration * timeToImpact * timeToImpact;
         }
 
         public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
