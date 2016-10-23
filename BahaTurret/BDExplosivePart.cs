@@ -68,7 +68,7 @@ namespace BahaTurret
             //blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
 
 	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
-            blastRadius = (float) (10 * Math.Pow(blastPower, (1.0 / 3.0)));
+            blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
 
             //blastRadius = 1.75f * blastPower;
 

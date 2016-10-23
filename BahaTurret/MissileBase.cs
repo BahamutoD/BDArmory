@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BahaTurret
@@ -40,6 +41,9 @@ namespace BahaTurret
         [KSPField]
         public bool isTimed = false;
 
+        [KSPField]
+        public bool radarLOAL = false;
+
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
             UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float dropTime = 0.4f;
@@ -51,6 +55,12 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Detonation Time"),
     UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float detonationTime = 2;
+
+        [KSPField]
+        public float activeRadarRange = 6000;
+
+        [KSPField]
+        public float activeRadarMinThresh = 140;
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
@@ -108,6 +118,18 @@ namespace BahaTurret
 
         //heat stuff
         public TargetSignatureData heatTarget;
+
+        //radar stuff
+        //public ModuleRadar radar;
+        public VesselRadarData vrd;
+        public TargetSignatureData radarTarget;
+        private int snapshotTicker;
+        private int locksCount = 0;
+        private TargetSignatureData[] scannedTargets;
+        private float _radarFailTimer = 0;
+        private float maxRadarFailTime = 1;
+        private float lastRWRPing = 0;
+        private bool radarLOALSearching = false;
 
         public MissileFire TargetMf = null;
 
@@ -309,6 +331,232 @@ namespace BahaTurret
                     lockedCamera = foundCam;
                     TargetAcquired = true;
                 }
+            }
+        }
+
+        protected void UpdateRadarTarget()
+        {
+            TargetAcquired = false;
+
+            float angleToTarget = Vector3.Angle(radarTarget.predictedPosition - transform.position, transform.forward);
+            if (radarTarget.exists)
+            {
+                if (!ActiveRadar && ((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f))
+                {
+                    if (vrd)
+                    {
+                        TargetSignatureData t = TargetSignatureData.noTarget;
+                        List<TargetSignatureData> possibleTargets = vrd.GetLockedTargets();
+                        for (int i = 0; i < possibleTargets.Count; i++)
+                        {
+                            if (possibleTargets[i].vessel == radarTarget.vessel)
+                            {
+                                t = possibleTargets[i];
+                            }
+                        }
+
+
+                        if (t.exists)
+                        {
+                            TargetAcquired = true;
+                            radarTarget = t;
+                            TargetPosition = radarTarget.predictedPosition;
+                            TargetVelocity = radarTarget.velocity;
+                            TargetAcceleration = radarTarget.acceleration;
+                            _radarFailTimer = 0;
+                            return;
+                        }
+                        else
+                        {
+                            if (_radarFailTimer > maxRadarFailTime)
+                            {
+                                Debug.Log("Semi-Active Radar guidance failed. Parent radar lost target.");
+                                radarTarget = TargetSignatureData.noTarget;
+                                legacyTargetVessel = null;
+                                return;
+                            }
+                            else
+                            {
+                                if (_radarFailTimer == 0)
+                                {
+                                    Debug.Log("Semi-Active Radar guidance failed - waiting for data");
+                                }
+                                _radarFailTimer += Time.fixedDeltaTime;
+                                radarTarget.timeAcquired = Time.time;
+                                radarTarget.position = radarTarget.predictedPosition;
+                                TargetPosition = radarTarget.predictedPosition;
+                                TargetVelocity = radarTarget.velocity;
+                                TargetAcceleration = Vector3.zero;
+                                TargetAcquired = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("Semi-Active Radar guidance failed. Out of range and no data feed.");
+                        radarTarget = TargetSignatureData.noTarget;
+                        legacyTargetVessel = null;
+                        return;
+                    }
+                }
+                else
+                {
+                    vrd = null;
+
+                    if (angleToTarget > maxOffBoresight)
+                    {
+                        Debug.Log("Radar guidance failed.  Target is out of active seeker gimbal limits.");
+                        radarTarget = TargetSignatureData.noTarget;
+                        legacyTargetVessel = null;
+                        return;
+                    }
+                    else
+                    {
+                        if (scannedTargets == null) scannedTargets = new TargetSignatureData[5];
+                        TargetSignatureData.ResetTSDArray(ref scannedTargets);
+                        Ray ray = new Ray(transform.position, radarTarget.predictedPosition - transform.position);
+                        bool pingRWR = Time.time - lastRWRPing > 0.4f;
+                        if (pingRWR) lastRWRPing = Time.time;
+                        bool radarSnapshot = (snapshotTicker > 20);
+                        if (radarSnapshot)
+                        {
+                            snapshotTicker = 0;
+                        }
+                        else
+                        {
+                            snapshotTicker++;
+                        }
+                        RadarUtils.UpdateRadarLock(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
+                        float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(40, 2);
+
+                        if (radarLOAL && radarLOALSearching && !radarSnapshot)
+                        {
+                            //only scan on snapshot interval
+                        }
+                        else
+                        {
+                            for (int i = 0; i < scannedTargets.Length; i++)
+                            {
+                                if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
+                                {
+                                    radarTarget = scannedTargets[i];
+                                    TargetAcquired = true;
+                                    radarLOALSearching = false;
+                                    TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+                                    TargetVelocity = radarTarget.velocity;
+                                    TargetAcceleration = radarTarget.acceleration;
+                                    _radarFailTimer = 0;
+                                    if (!ActiveRadar && Time.time - timeFired > 1)
+                                    {
+                                        if (locksCount == 0)
+                                        {
+                                            RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+                                            Debug.Log("Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+
+                                        }
+                                        else if (locksCount > 2)
+                                        {
+                                            guidanceActive = false;
+                                            checkMiss = true;
+                                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                            {
+                                                Debug.Log("Radar missileBase reached max re-lock attempts.");
+                                            }
+                                        }
+                                        locksCount++;
+                                    }
+                                    ActiveRadar = true;
+                                    return;
+                                }
+                            }
+                        }
+
+                        if (radarLOAL)
+                        {
+                            radarLOALSearching = true;
+                            TargetAcquired = true;
+                            TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+                            TargetVelocity = radarTarget.velocity;
+                            TargetAcceleration = Vector3.zero;
+                            ActiveRadar = false;
+                        }
+                        else
+                        {
+                            radarTarget = TargetSignatureData.noTarget;
+                        }
+
+                    }
+                }
+            }
+            else if (radarLOAL && radarLOALSearching)
+            {
+                if (scannedTargets == null) scannedTargets = new TargetSignatureData[5];
+                TargetSignatureData.ResetTSDArray(ref scannedTargets);
+                Ray ray = new Ray(transform.position, transform.forward);
+                bool pingRWR = Time.time - lastRWRPing > 0.4f;
+                if (pingRWR) lastRWRPing = Time.time;
+                bool radarSnapshot = (snapshotTicker > 6);
+                if (radarSnapshot)
+                {
+                    snapshotTicker = 0;
+                }
+                else
+                {
+                    snapshotTicker++;
+                }
+                RadarUtils.UpdateRadarLock(ray, lockedSensorFOV * 3, activeRadarMinThresh * 2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
+                float sqrThresh = Mathf.Pow(300, 2);
+
+                float smallestAngle = 360;
+                TargetSignatureData lockedTarget = TargetSignatureData.noTarget;
+
+                for (int i = 0; i < scannedTargets.Length; i++)
+                {
+                    if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
+                    {
+                        float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, transform.forward);
+                        if (angle < smallestAngle)
+                        {
+                            lockedTarget = scannedTargets[i];
+                            smallestAngle = angle;
+                        }
+
+
+                        ActiveRadar = true;
+                        return;
+                    }
+                }
+
+                if (lockedTarget.exists)
+                {
+                    radarTarget = lockedTarget;
+                    TargetAcquired = true;
+                    radarLOALSearching = false;
+                    TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+                    TargetVelocity = radarTarget.velocity;
+                    TargetAcceleration = radarTarget.acceleration;
+
+                    if (!ActiveRadar && Time.time - timeFired > 1)
+                    {
+                        RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+                        Debug.Log("Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+                    }
+                    return;
+                }
+                else
+                {
+                    TargetAcquired = true;
+                    TargetPosition = transform.position + (startDirection * 500);
+                    TargetVelocity = Vector3.zero;
+                    TargetAcceleration = Vector3.zero;
+                    radarLOALSearching = true;
+                    return;
+                }
+            }
+
+            if (!radarTarget.exists)
+            {
+                legacyTargetVessel = null;
             }
         }
     }

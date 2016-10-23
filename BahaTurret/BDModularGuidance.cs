@@ -249,12 +249,22 @@ namespace BahaTurret
             weaponClass = WeaponClasses.Missile;
             WeaponName = GetShortName();
                       
-            this.maxStaticLaunchRange = MaxLaunchRange;
+            this.activeRadarRange = ActiveRadarRange;
 
         }
 
         private void UpdateTargetingMode(TargetingModes newTargetingMode)
         {
+            if (newTargetingMode == TargetingModes.Radar)
+            {
+                Fields["ActiveRadarRange"].guiActive = true;
+                Fields["ActiveRadarRange"].guiActiveEditor = true;
+            }
+            else
+            {
+                Fields["ActiveRadarRange"].guiActive = false;
+                Fields["ActiveRadarRange"].guiActiveEditor = false;
+            }
             this.TargetingMode = newTargetingMode;
             this._targetingLabel = newTargetingMode.ToString();
 
@@ -323,6 +333,7 @@ namespace BahaTurret
                         }
                         break;
                     case TargetingModes.Radar:
+                        UpdateRadarTarget();
                         break;
                     case TargetingModes.Heat:
                         UpdateHeatTarget();
@@ -493,13 +504,13 @@ namespace BahaTurret
 
         [KSPField(isPersistant = true)] public int _guidanceIndex = 2;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Launch Range"), UI_FloatRange(minValue = 1000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.All)] public float MaxLaunchRange = 5000;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Active Radar Range"), UI_FloatRange(minValue = 6000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.All)] public float ActiveRadarRange = 6000;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SteerLimiter"), UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)] public float MaxSteer = 1;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"), UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)] public float MaxSteer = 1;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.All)] public float StagesNumber = 1;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 1f, scene = UI_Scene.All)] public float DetonationDistance = 0;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.All)] public float DetonationDistance = 0;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.All)] public float SteerDamping = 5;
 

@@ -1785,15 +1785,13 @@ namespace BahaTurret
 			}
 			else if(ml.TargetingMode == MissileBase.TargetingModes.Radar && vesselRadarData && vesselRadarData.locked)//&& radar && radar.lockedTarget.exists)
 			{
-                var mlauncher = ml as MissileLauncher;
-			    if (mlauncher != null)
-			    {
-			        //ml.radarTarget = radar.lockedTarget;
-			        mlauncher.radarTarget = vesselRadarData.lockedTargetData.targetData;
 
-			        mlauncher.vrd = vesselRadarData;
-			        vesselRadarData.LastMissile = ml;
-			    }
+                //ml.radarTarget = radar.lockedTarget;
+                ml.radarTarget = vesselRadarData.lockedTargetData.targetData;
+
+                ml.vrd = vesselRadarData;
+			    vesselRadarData.LastMissile = ml;
+			    
 			    /*
 
 				if(radar.linked && radar.linkedRadar.locked)
