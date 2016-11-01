@@ -1,3 +1,8 @@
+v0.11.1.4
+- Ready for KSP 1.2
+- Shaders and asset bundle. Fixes Git issue #47 and partially #48
+- Fix for weapons freezing when firing. Git Issue #49
+
 v0.11.1.3beta
 - Updated to be compatible with KSP 1.2. (Prerelease only)
 - Add window persistence.  Remember where I put my windows, darn it! Git Issue #13 - Partial implementation.
