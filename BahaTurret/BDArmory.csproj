@@ -45,6 +45,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -155,6 +156,7 @@
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
     <None Include="Distribution\GameData\BDArmory\AssetBundles\Shaders.bundle" />
     <None Include="Distribution\GameData\BDArmory\ATM_BDArmory.cfg" />
+    <None Include="Distribution\GameData\BDArmory\BDArmory.version" />
     <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
     <None Include="Distribution\GameData\BDArmory\Models\bulletHit\bulletHit.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
@@ -476,20 +478,23 @@ set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
 @echo distributing $(Targetname) files...
 copy /Y "$(TargetPath)" "$(ProjectDir)Distribution\GameData\BDArmory\Plugins\"
 
+if $(ConfigurationName) == Debug (
 @echo building $(Targetname).dll.mdb file...
 cd "$(TargetDir)"
 call "%25PDB2MDB_EXE%25" $(Targetname).dll
-
 copy /Y "$(TargetDir)$(Targetname).dll.mdb" "%25KSP_DIR%25\GameData\BDArmory\Plugins\"
+)
 
 @echo packaging files...
-if exist "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\$(Targetname)*.zip" del "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\BDArmory*.zip"
-call "%25ZA_DIR%25\7za.exe" a -tzip -r  "%25DIST_DIR%25\BDArmory.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25.zip" "$(ProjectDir)Distribution\*.*"
+if exist %25DIST_DIR%25\BDArmory*.zip" del "%25DIST_DIR%25\BDArmory*.zip" call "%25ZA_DIR \7za.exe" a -tzip -r  "%25DIST_DIR%25\BDArmory.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25.zip" "$(ProjectDir)Distribution\*.*"
 
 @echo Deploy $(Targetname) Distribution files to test env:  %25KSP_DIR%25\GameData...
 @echo copying:"$(SolutionDir)Distribution\GameData" to "%25KSP_DIR%25\GameData" 
 xcopy /E /Y "$(SolutionDir)Distribution\GameData" "%25KSP_DIR%25\GameData"
+
+if $(ConfigurationName) == Debug (
 copy /Y "$(TargetDir)$(Targetname).pdb" "%25KSP_DIR%25\GameData\BDArmory\Plugins\"
+)
 
 @echo Build/deploy complete!
 </PostBuildEvent>
