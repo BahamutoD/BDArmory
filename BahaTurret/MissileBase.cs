@@ -135,6 +135,9 @@ namespace BahaTurret
 
         protected bool checkMiss = false;
 
+        private LineRenderer LR;
+        protected string debugString = "";
+
         public WeaponClasses GetWeaponClass()
         {
             return weaponClass;
@@ -238,41 +241,6 @@ namespace BahaTurret
             }
         }
 
-        protected void CheckMiss()
-        {
-            float sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position + (part.rb.velocity * Time.fixedDeltaTime))).sqrMagnitude;
-            if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
-            {
-                checkMiss = true;
-            }
-
-            //kill guidance if missileBase has missed
-            if (!HasMissed && checkMiss)
-            {
-                bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity - TargetVelocity, TargetPosition - vessel.transform.position) < 0);
-                if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
-                {
-                    Debug.Log("Missile CheckMiss showed miss");
-                    HasMissed = true;
-                    guidanceActive = false;
-                    
-                    TargetMf = null;
-
-                    var launcher = this as MissileLauncher;
-                    if (launcher != null)
-                    {
-                        if (launcher.hasRCS) launcher.KillRCS();
-                    }
-                    
-                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
-
-                    isTimed = true;
-                    detonationTime = Time.time - timeFired + 1.5f;
-                    return;
-                }
-            }
-        }
-
         protected void SetLaserTargeting()
         {
             if (TargetingMode == TargetingModes.Laser)
@@ -338,7 +306,7 @@ namespace BahaTurret
         {
             TargetAcquired = false;
 
-            float angleToTarget = Vector3.Angle(radarTarget.predictedPosition - transform.position, transform.forward);
+            float angleToTarget = Vector3.Angle(radarTarget.predictedPosition - transform.position, GetForwardTransform());
             if (radarTarget.exists)
             {
                 if (!ActiveRadar && ((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f))
@@ -492,7 +460,7 @@ namespace BahaTurret
             {
                 if (scannedTargets == null) scannedTargets = new TargetSignatureData[5];
                 TargetSignatureData.ResetTSDArray(ref scannedTargets);
-                Ray ray = new Ray(transform.position, transform.forward);
+                Ray ray = new Ray(transform.position, GetForwardTransform());
                 bool pingRWR = Time.time - lastRWRPing > 0.4f;
                 if (pingRWR) lastRWRPing = Time.time;
                 bool radarSnapshot = (snapshotTicker > 6);
@@ -514,7 +482,7 @@ namespace BahaTurret
                 {
                     if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
                     {
-                        float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, transform.forward);
+                        float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, GetForwardTransform());
                         if (angle < smallestAngle)
                         {
                             lockedTarget = scannedTargets[i];
@@ -557,6 +525,26 @@ namespace BahaTurret
             if (!radarTarget.exists)
             {
                 legacyTargetVessel = null;
+            }
+        }
+
+        protected void DrawDebugLine(Vector3 start, Vector3 end)
+        {
+            if (BDArmorySettings.DRAW_DEBUG_LINES)
+            {
+                if (!gameObject.GetComponent<LineRenderer>())
+                {
+                    LR = gameObject.AddComponent<LineRenderer>();
+                    LR.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
+                    LR.material.SetColor("_EmissiveColor", Color.red);
+                }
+                else
+                {
+                    LR = gameObject.GetComponent<LineRenderer>();
+                }
+                LR.SetVertexCount(2);
+                LR.SetPosition(0, start);
+                LR.SetPosition(1, end);
             }
         }
     }

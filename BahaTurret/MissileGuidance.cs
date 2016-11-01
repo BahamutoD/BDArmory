@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace BahaTurret
@@ -143,24 +144,54 @@ namespace BahaTurret
 			return finalTarget;
 		}
 
-        public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity, Vector3 targetAcceleration, Vessel missileVessel, out float timeToImpact)
-        {
-            float targetDistance = Vector3.Distance(targetPosition, missileVessel.transform.position);
+	    public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity,
+	        Vector3 previousTargetVelocity, Vector3 targetAcceleration, Vessel missileVessel,
+	        Vector3 previousMissileVelocity, out float timeToImpact)
+	    {
+	        var targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
+            var effectiveTargetAcceleration = targetAcceleration;
+	        var effectiveMissileAcceleration = missileVessel.acceleration;
 
-            Vector3 currVel = (float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized;
-           
-            var timeToImpactWithCurrVel = targetDistance / (targetVelocity - currVel).magnitude;
+	        if (previousTargetVelocity != Vector3.zero && previousMissileVelocity != Vector3.zero)
+	        {
+	            effectiveTargetAcceleration = targetVelocity - previousTargetVelocity;
+	            effectiveMissileAcceleration = (float) missileVessel.srfSpeed*missileVessel.srf_velocity.normalized -
+	                                           previousMissileVelocity;
+	        }
 
-            Vector3 maxVel = (float)(missileVessel.srfSpeed + missileVessel.acceleration.magnitude * timeToImpactWithCurrVel) * missileVessel.srf_velocity.normalized;
+            Vector3 currVel = ((float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized);
 
-            var timeToImpactWitMaxVel = targetDistance / (targetVelocity - maxVel).magnitude;
+            timeToImpact = targetDistance / (targetVelocity - currVel).magnitude;
+          
 
-            timeToImpact = (timeToImpactWithCurrVel + timeToImpactWitMaxVel)/2;
-            
-            return targetPosition + (targetVelocity * timeToImpact) + 0.5f* targetAcceleration * timeToImpact * timeToImpact;
+	        if (targetDistance < 1600)
+	        {
+	            var iterations = 0;
+                var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
+                var relativeVelocity = (float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized - targetVelocity;
+                var missileFinalPosition = missileVessel.CoM;
+
+                while (Vector3.Distance(missileFinalPosition, missileVessel.CoM) < targetDistance && iterations < 1000)
+	            {
+	                missileFinalPosition += relativeVelocity*Time.fixedDeltaTime +
+	                                        0.5f*relativeAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
+	                iterations++;
+	            }
+
+	            if (iterations < 1000)
+	            {
+	               timeToImpact = iterations*Time.fixedDeltaTime;
+                    Debug.Log("Time to impact = "+timeToImpact +" Iterations="+iterations);
+	            }
+	        }
+
+            return targetPosition + (targetVelocity * timeToImpact) +
+                         (Vector3)effectiveTargetAcceleration * 0.5f * Mathf.Pow(timeToImpact, 2);
+
         }
 
-        public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
+
+	    public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
 		{
 			if(!targetVessel)
 			{

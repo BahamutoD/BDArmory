@@ -141,7 +141,6 @@ namespace BahaTurret
 		List<KSPParticleEmitter> pEmitters;
 		List<BDAGaplessParticleEmitter> gaplessEmitters;
 		
-		LineRenderer LR;
 		float cmTimer;
 		
 		//deploy animation
@@ -177,7 +176,6 @@ namespace BahaTurret
 		bool hasPlayedFlyby = false;
 	
 		float debugTurnRate = 0;
-		string debugString = "";
 
 
 		List<GameObject> boosters;
@@ -784,8 +782,41 @@ namespace BahaTurret
 
 			previousPos = part.transform.position;
 		}
+        private void CheckMiss()
+        {
+            float sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position + (part.rb.velocity * Time.fixedDeltaTime))).sqrMagnitude;
+            if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
+            {
+                checkMiss = true;
+            }
 
-		void UpdateGuidance()
+            //kill guidance if missileBase has missed
+            if (!HasMissed && checkMiss)
+            {
+                bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity - TargetVelocity, TargetPosition - vessel.transform.position) < 0);
+                if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
+                {
+                    Debug.Log("Missile CheckMiss showed miss");
+                    HasMissed = true;
+                    guidanceActive = false;
+
+                    TargetMf = null;
+
+                    var launcher = this as MissileLauncher;
+                    if (launcher != null)
+                    {
+                        if (launcher.hasRCS) launcher.KillRCS();
+                    }
+
+                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
+
+                    isTimed = true;
+                    detonationTime = Time.time - timeFired + 1.5f;
+                    return;
+                }
+            }
+        }
+        void UpdateGuidance()
 		{
 			if(guidanceActive)
 			{
@@ -1508,27 +1539,6 @@ namespace BahaTurret
 			
 		}
 
-		void DrawDebugLine(Vector3 start, Vector3 end)
-		{
-			if(BDArmorySettings.DRAW_DEBUG_LINES)
-			{
-				if(!gameObject.GetComponent<LineRenderer>())
-				{
-					LR = gameObject.AddComponent<LineRenderer>();
-					LR.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
-					LR.material.SetColor("_EmissiveColor", Color.red);
-				}else
-				{
-					LR = gameObject.GetComponent<LineRenderer>();
-				}
-				LR.SetVertexCount(2);
-				LR.SetPosition(0, start);
-				LR.SetPosition(1, end);
-			}
-		}
-		
-		
-		
 		public override void Detonate()
 		{
 			if(isSeismicCharge)
