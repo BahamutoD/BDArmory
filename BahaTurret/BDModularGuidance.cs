@@ -86,9 +86,8 @@ namespace BahaTurret
             //Guard clauses
             if (!HasFired) return;
             if (!TargetAcquired) return;
-            if (Vector3.Distance(TargetPosition, SourceVessel.CoM) < 4 *DetonationDistance) return;
-            if (!(Vector3.Distance(TargetPosition, vessel.CoM) <= DetonationDistance)) return;
-
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * GetBlastRadius()) return;
+            if ((Vector3.Distance(TargetPosition, vessel.CoM) > detonationRadius)) return;
             Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated");
             Detonate();
         }
@@ -198,7 +197,6 @@ namespace BahaTurret
                 if (_nextStage > 128*(StagesNumber + 1))
                 {
                     MissileState = MissileStates.PostThrust;
-                    AutoDestruction();
                     return false;
                 }
 
@@ -477,7 +475,7 @@ namespace BahaTurret
 
                     TargetMf = null;
 
-                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) AutoDestruction();
+                    if (sqrDist < Mathf.Pow(detonationRadius * 0.5f, 2)) AutoDestruction();
 
                     isTimed = true;
                     detonationTime = Time.time - timeFired + 1.5f;
@@ -501,8 +499,6 @@ namespace BahaTurret
                 {
                     TargetPosition = CruiseGuidance();
                 }
-                //proxy detonation
-                ProxyDetonation();
                 CheckMiss();
                 //Updating aero surfaces
                 if (Time.time - timeFired > dropTime + 0.5f)
@@ -522,18 +518,6 @@ namespace BahaTurret
                 s.mainThrottle = 1;          
             }
            
-        }
-
-        private void ProxyDetonation()
-        {
-            if (Vector3.Distance(SourceVessel.CoM, vessel.CoM) < detonationRadius) return;
-
-            if (((TargetPosition + (TargetVelocity*Time.fixedDeltaTime)) - (vessel.CoM)).sqrMagnitude >=
-                Mathf.Pow(detonationRadius*0.5f, 2)) return;
-            
-                Debug.Log("BDModularGuidance::ProxyDetonation - Proximity detonation activated");
-                Detonate();
-            
         }
 
         private void UpdateMenus(bool visible)
@@ -766,10 +750,10 @@ namespace BahaTurret
         {
             if (HasFired)
             {
-                foreach (var highExplosive in vessel.FindPartModulesImplementing<BDExplosivePart>())
-                {
-                    highExplosive.Detonate();
-                }
+                //foreach (var highExplosive in vessel.FindPartModulesImplementing<BDExplosivePart>())
+                //{
+                //    highExplosive.Detonate();
+                //}
                 AutoDestruction();          
             }
         }

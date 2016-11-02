@@ -181,7 +181,6 @@ namespace BahaTurret
 	            if (iterations < 1000)
 	            {
 	               timeToImpact = iterations*Time.fixedDeltaTime;
-                    Debug.Log("Time to impact = "+timeToImpact +" Iterations="+iterations);
 	            }
 	        }
 
