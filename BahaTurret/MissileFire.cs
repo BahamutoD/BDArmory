@@ -21,6 +21,7 @@ namespace BahaTurret
 		Transform cameraTransform;
 
 		float startTime;
+		int missilesAway = 0;
 
 		public bool hasLoadedRippleData = false;
 		float rippleTimer;
@@ -754,6 +755,7 @@ namespace BahaTurret
 				BDArmorySettings.OnSavedSettings += ClampVisualRange;
 
 				StartCoroutine(StartupListUpdater());
+				missilesAway = 0;
 
 				GameEvents.onVesselCreate.Add(OnVesselCreate);
 				GameEvents.onPartJointBreak.Add(OnPartJointBreak);
@@ -850,7 +852,6 @@ namespace BahaTurret
 		}
 
 	
-
 		public override void OnUpdate()
 		{
 			base.OnUpdate();
@@ -859,6 +860,7 @@ namespace BahaTurret
 			{
 				return;
 			}
+				
 
 			if(!vessel.packed)
 			{
@@ -1337,7 +1339,7 @@ namespace BahaTurret
 		{
 			foreach(var mt in vessel.FindPartModulesImplementing<MissileTurret>())
 			{
-				if(weaponIndex > 0 && mt.ContainsMissileOfType(currentMissile))
+				if(weaponIndex > 0 && currentMissile != null && mt.ContainsMissileOfType(currentMissile))
 				{
 					if(!mt.activeMissileOnly || currentMissile.missileTurret == mt)
 					{
@@ -2264,6 +2266,9 @@ namespace BahaTurret
 				}
 			}
 
+			if (missilesAway < 0)
+				missilesAway = 0;
+
 			if(missileIsIncoming)
 			{
 				if(!isLegacyCMing)
@@ -2315,12 +2320,15 @@ namespace BahaTurret
 								launchAuthorized = false;
 							}
 
-							if(missilesAway < maxMissilesOnTarget)
-							{
-								if(!guardFiringMissile && launchAuthorized && (pilotAuthorized || !BDArmorySettings.ALLOW_LEGACY_TARGETING))
-								{
-									StartCoroutine(GuardMissileRoutine());
+							Debug.Log (vessel.vesselName + " launchAut=" + launchAuthorized + ", pilotAut="+pilotAuthorized+", missilesAway/Max=" + missilesAway + "/" + maxMissilesOnTarget);
+							if (missilesAway < maxMissilesOnTarget) {
+								if (!guardFiringMissile && launchAuthorized && (pilotAuthorized || !BDArmorySettings.ALLOW_LEGACY_TARGETING)) {
+									StartCoroutine (GuardMissileRoutine ());
 								}
+							} 
+							else
+							{
+								Debug.Log (vessel.vesselName + " waiting for missile to be ready...");
 							}
 
 							if(!launchAuthorized || !pilotAuthorized || missilesAway >= maxMissilesOnTarget)
@@ -2523,7 +2531,7 @@ namespace BahaTurret
 			yield return new WaitForSeconds(3);
 			underFire = false;
 		}
-
+			
 
 
 		IEnumerator GuardTurretRoutine()
@@ -2643,7 +2651,6 @@ namespace BahaTurret
 		}
 
 
-		int missilesAway = 0;
 		IEnumerator MissileAwayRoutine(MissileLauncher ml)
 		{
 			missilesAway++;
@@ -2850,7 +2857,10 @@ namespace BahaTurret
 				else if(ml.targetingMode == MissileLauncher.TargetingModes.GPS)
 				{
 					designatedGPSInfo = new GPSTargetInfo(VectorUtils.WorldPositionToGeoCoords(guardTarget.CoM, vessel.mainBody), guardTarget.vesselName.Substring(0, Mathf.Min(12, guardTarget.vesselName.Length)));
+
 					FireCurrentMissile(true);
+					StartCoroutine(MissileAwayRoutine(ml)); //NEW: try to prevent launching all missile complements at once...
+
 				}
 				else if(ml.targetingMode == MissileLauncher.TargetingModes.AntiRad)
 				{
@@ -3054,6 +3064,7 @@ namespace BahaTurret
 
 		bool SmartPickWeapon(TargetInfo target, float turretRange) 
 		{
+
 			if(!target)
 			{
 				return false;
@@ -3068,6 +3079,9 @@ namespace BahaTurret
 
 
 			float distance = Vector3.Distance(transform.position+vessel.srf_velocity, target.position+target.velocity); //take velocity into account (test)
+
+			Debug.Log(vessel.vesselName + " SmartPickWeapon: dist="+distance + ", turrentRange="+turretRange+", targetMIssile="+target.isMissile);
+
 			if(distance < turretRange || (target.isMissile && distance < turretRange*1.5f))
 			{
 				if((target.isMissile) && SwitchToLaser()) //need to favor ballistic for ground units
@@ -3088,25 +3102,18 @@ namespace BahaTurret
 
 			}
 
-			if(distance > turretRange || !vessel.LandedOrSplashed)
-			{
+			if (distance > turretRange || !vessel.LandedOrSplashed) {
 				//missiles
-				if(!target.isLanded)
-				{
-					if(!targetMissiles && target.isMissile && !vessel.LandedOrSplashed) //don't fire on missiles if airborne
-					{
+				if (!target.isLanded) {
+					if (!targetMissiles && target.isMissile && !vessel.LandedOrSplashed) { //don't fire on missiles if airborne
 						return false;
 					}
 
-					if(SwitchToAirMissile ()) //Use missiles if available
-					{
-						if(currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar)
-						{
-							foreach(var rd in radars)
-							{
-								if(rd.canLock)
-								{
-									rd.EnableRadar();
+					if (SwitchToAirMissile ()) { //Use missiles if available
+						if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar) {
+							foreach (var rd in radars) {
+								if (rd.canLock) {
+									rd.EnableRadar ();
 									break;
 								}
 							}
@@ -3115,19 +3122,37 @@ namespace BahaTurret
 					}
 					//return SwitchToTurret(distance); //Long range turrets?
 					return false;
-				}
-				else
-				{
-					if(SwitchToGroundMissile())
-					{
-						return true;
+				} else {
+
+					if (target.isMissile) {
+						//TRY to pick guns or aa missiles for defense
+						Debug.Log(vessel.vesselName + ": Trying to pick aa missiles for defense...");
+						if (SwitchToAirMissile ()) {
+							if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar) {
+								foreach (var rd in radars) {
+									if (rd.canLock) {
+										rd.EnableRadar ();
+										break;
+									}
+								}
+							}
+							return true;
+						} else
+							SwitchToTurret (distance);
 					}
-					else if(SwitchToBomb())
-					{
-						return true;
+						
+					if (target.Vessel.LandedOrSplashed) {
+
+						if (SwitchToGroundMissile ()) {
+							return true;
+						} else if (SwitchToBomb ()) {
+							return true;
+						}
 					}
+
+					SwitchToTurret (distance);
 				}
-			}
+			} 
 
 			return false;
 		}
