@@ -1,6 +1,7 @@
 v0.11.1.5
 - Ready for KSP 1.2.1
 - New feature: Bullets penetration system.
+- New parts: Goalkeeper Mk1 and Mk2 - legacy textures
 - AI improvements: for air-ground missiles, prevent firing full complement at once (respect maxMissilesTarget).
 - AI improvements: prevent gps guided missiles being used on air targets/incoming missiles.
 - AI improvements: improve selection of AA missiles/guns against incoming missiles.
