@@ -1,3 +1,11 @@
+v0.11.1.5
+- Ready for KSP 1.2.1
+- New feature: Bullets penetration system.
+- AI improvements: for air-ground missiles, prevent firing full complement at once (respect maxMissilesTarget).
+- AI improvements: prevent gps guided missiles being used on air targets/incoming missiles.
+- AI improvements: improve selection of AA missiles/guns against incoming missiles.
+- Missile cost rebalance.
+
 v0.11.1.4
 - Ready for KSP 1.2
 - Shaders and asset bundle. Fixes Git issue #47 and partially #48
