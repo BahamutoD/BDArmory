@@ -206,6 +206,10 @@
     <None Include="Distribution\GameData\BDArmory\Parts\ecmJammer\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\gau8.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMk1.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMK1.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\goalkeeper\goalkeeper.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\goalkeeper\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\groundRadar\radar1.cfg" />
@@ -336,6 +340,12 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8Cannon.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8End.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\texture.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBD.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\muzzle.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\smoketest3.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\GoalKeeperBD.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\muzzle.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\smoketest3.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\smoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\Texture.png" />
