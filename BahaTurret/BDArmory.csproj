@@ -68,7 +68,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArmorPenetration.cs" />
+    <Compile Include="BDArmor.cs" />
     <Compile Include="BDAWindowSettingsField.cs" />
+    <Compile Include="BulletInfo.cs" />
     <Compile Include="CFEnable.cs" />
     <Compile Include="MissileLauncher.cs" />
     <Compile Include="Misc.cs" />

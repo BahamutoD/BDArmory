@@ -201,12 +201,16 @@ namespace BahaTurret
         Vector3 lastFinalAimTarget;
 		public Vessel legacyTargetVessel;
 		bool targetAcquired = false;
-		
-		//used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
-		//private int numberOfGuns = 0;
 
-		//UI gauges(next to staging icon)
-		private ProtoStageIconInfo heatGauge = null;
+
+        private BulletInfo bulletInfo;
+        [KSPField]
+        public string bulletType = "def";
+        //used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
+        //private int numberOfGuns = 0;
+
+        //UI gauges(next to staging icon)
+        private ProtoStageIconInfo heatGauge = null;
 		private ProtoStageIconInfo reloadBar = null;
 		[KSPField]
 		public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
@@ -419,7 +423,7 @@ namespace BahaTurret
     
      
 
-           ParseWeaponType();
+            ParseWeaponType();
             ParseBulletDragType();
 
             bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000;        //1000 to convert from tonnes to kilograms
@@ -549,10 +553,11 @@ namespace BahaTurret
 				fireState = Misc.SetUpSingleAnimation (fireAnimName, this.part);
 				fireState.enabled = false;	
 			}
-
-	        BDArmorySettings.OnVolumeChange += UpdateVolume;
-
-        }
+            bulletInfo = BulletInfo.bullets[bulletType];
+            if (bulletInfo == null)
+                Debug.Log("Failed To load bullet!");
+            BDArmorySettings.OnVolumeChange += UpdateVolume;
+		}
 
 		void UpdateVolume()
 		{
@@ -1118,8 +1123,9 @@ namespace BahaTurret
                                 pBullet.dragType = PooledBullet.BulletDragTypes.NumericalIntegration;
                                 break;
                         }
+                        pBullet.bullet = BulletInfo.bullets[bulletType];
 
-						pBullet.gameObject.SetActive(true);
+                        pBullet.gameObject.SetActive(true);
 
 						
 						//heat
