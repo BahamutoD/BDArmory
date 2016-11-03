@@ -6,7 +6,7 @@
     {
         "USERNAME":"PapaJoesSoup",
         "REPOSITORY":"BDArmory",
-        "ALLOW_PRE_RELEASE":false,
+        "ALLOW_PRE_RELEASE":false
     },
     "VERSION":
     {
@@ -25,7 +25,7 @@
     {
         "MAJOR":1,
         "MINOR":2,
-        "PATCH":1
+        "PATCH":0
     },
     "KSP_VERSION_MAX":
     {
