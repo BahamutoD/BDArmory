@@ -1088,7 +1088,7 @@ namespace BahaTurret
 		}
 
         [KSPField]
-        public double resourceDrain = 1;
+        public double resourceDrain = 0.25;
 
         void DrainElectricity()
         {
