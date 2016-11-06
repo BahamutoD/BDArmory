@@ -1101,6 +1101,7 @@ namespace BahaTurret
             double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
             if (chargeAvailable < drainAmount * 0.95f)
             {
+                ScreenMessages.PostScreenMessage("Radar Requires EC", 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 DisableRadar();
             }
         }
