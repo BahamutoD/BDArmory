@@ -709,7 +709,7 @@ namespace BahaTurret
 			{
 				part.force_activate();
 
-				selectionMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
+				selectionMessage = new ScreenMessage("", 2.0f, ScreenMessageStyle.LOWER_CENTER);
 				
 				UpdateList();
 				if(weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
@@ -845,7 +845,9 @@ namespace BahaTurret
 			if(BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
 			{
 				ScreenMessages.RemoveMessage(selectionMessage);
-				selectionText = "Selected Weapon: " + GetWeaponName(weaponArray[weaponIndex]);
+                selectionMessage.textInstance = null;
+
+				selectionText = "Selected Weapon: " + (GetWeaponName(weaponArray[weaponIndex])).ToString();
 				selectionMessage.message = selectionText;
 				ScreenMessages.PostScreenMessage(selectionMessage);
 			}
@@ -1943,7 +1945,7 @@ namespace BahaTurret
 					pointPositions.Add(currPos);
 				}
 				
-				/*
+				
 				//debug lines
 				if(BDArmorySettings.DRAW_DEBUG_LINES && BDArmorySettings.DRAW_AIMERS)
 				{
@@ -1969,7 +1971,7 @@ namespace BahaTurret
 					}
 				}
 
-				*/
+				
 				
 			}
 			
@@ -2001,9 +2003,6 @@ namespace BahaTurret
 						BDGUIUtils.DrawLineBetweenWorldPositions(part.transform.position, incomingMissileVessel.transform.position, 5, Color.cyan);
 					}
 				}
-
-
-
 
 				if(showBombAimer)
 				{
@@ -2444,7 +2443,9 @@ namespace BahaTurret
 			if(results.foundRadarMissile)
 			{
 				FireChaff();
-				incomingThreatPosition = results.threatPosition;
+                FireECM();
+
+                incomingThreatPosition = results.threatPosition;
 
 				if(results.threatVessel)
 				{
@@ -4191,6 +4192,34 @@ namespace BahaTurret
 			isChaffing = false;
 		}
 
+        public void FireECM()
+        {
+            if (!isECMJamming)
+            {
+                StartCoroutine(ECMRoutine());
+            }
+        }
+
+        public bool isECMJamming = false;
+        IEnumerator ECMRoutine()
+        {
+            isECMJamming = true;
+            //yield return new WaitForSeconds(UnityEngine.Random.Range(0.2f, 1f));
+
+            foreach (var ecm in vessel.FindPartModulesImplementing<ModuleECMJammer>())
+            {
+                if (ecm.jammerEnabled) yield break;
+                ecm.EnableJammer();
+            }
+
+            yield return new WaitForSeconds(10.0f);
+            isECMJamming = false;
+
+            foreach (var ecm in vessel.FindPartModulesImplementing<ModuleECMJammer>())
+            {
+                ecm.DisableJammer();
+            }
+        }
 
 		public void FireChaff()
 		{
