@@ -179,7 +179,20 @@ namespace BahaTurret
 
 		public VesselRadarData vesselRadarData;
 
-		[KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
+        [KSPAction("Toggle Radar")]
+        public void AGEnable(KSPActionParam param)
+        {
+            if (radarEnabled)
+            {
+                DisableRadar();
+            }
+            else
+            {
+                EnableRadar();
+            }
+        }
+
+        [KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
 		public void Toggle()
 		{
 			if(radarEnabled)
