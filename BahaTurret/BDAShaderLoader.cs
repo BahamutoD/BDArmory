@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -9,22 +10,40 @@ namespace BahaTurret
     {
         private static bool loaded;
 
-        private static string bundlePath;
+        private static readonly string bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
+                                                    Path.DirectorySeparatorChar +
+                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles";
+                                                   
 
         public static Shader GrayscaleEffectShader;
         public static Shader UnlitBlackShader;
         public static Shader BulletShader;
 
+        public string BundlePath {
+            get
+            {
+                switch (Application.platform)
+                {
+                    case RuntimePlatform.OSXPlayer:
+                        return bundlePath + Path.DirectorySeparatorChar +
+                               "bdarmoryshaders_macosx.bundle";
+                    case RuntimePlatform.WindowsPlayer:
+                        return bundlePath + Path.DirectorySeparatorChar +
+                                "bdarmoryshaders_windows.bundle";
+                    case RuntimePlatform.LinuxPlayer:
+                        return bundlePath + Path.DirectorySeparatorChar +
+                                "bdarmoryshaders_macosx.bundle";
+                    default:
+                        return bundlePath + Path.DirectorySeparatorChar +
+                                "bdarmoryshaders_windows.bundle";
+                }
+            }
+        }
 
         private void Start()
         {
             if (!loaded)
             {
-                bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
-                                                    Path.DirectorySeparatorChar +
-                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles" +
-                                                    Path.DirectorySeparatorChar + "Shaders.bundle";
-
                 Debug.Log("[BDArmory] start bundle load process");
                 StartCoroutine(LoadBundleAssets());
                 loaded = true;
@@ -35,7 +54,7 @@ namespace BahaTurret
         {
             Debug.Log("[BDArmory] Loading bundle data");
 
-            var shaderBundle = AssetBundle.LoadFromFile(bundlePath);
+            var shaderBundle = AssetBundle.LoadFromFile(BundlePath);
 
             if (shaderBundle != null)
             {

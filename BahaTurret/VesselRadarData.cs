@@ -725,7 +725,7 @@ namespace BahaTurret
 			//==============================
 			GUI.BeginGroup(displayRect);
 
-
+		    if (availableRadars.Count == 0) return;
 			//bool omnidirectionalDisplay = (radarCount == 1 && linkedRadars[0].omnidirectional);
 			float directionalFieldOfView = omniDisplay ? 0 : availableRadars[0].directionalFieldOfView;
 			//bool linked = (radarCount > 1);
@@ -1208,7 +1208,7 @@ namespace BahaTurret
 			availableExternalVRDs = new List<VesselRadarData>();
 			foreach(var v in FlightGlobals.Vessels)
 			{
-				if(v.loaded && v!=vessel)
+				if(v != null &&  v && v.loaded && vessel != null && v !=vessel)
 				{
 					BDArmorySettings.BDATeams team = BDArmorySettings.BDATeams.None;
 					foreach(var mf in v.FindPartModulesImplementing<MissileFire>())

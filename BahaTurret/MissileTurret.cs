@@ -29,7 +29,7 @@ namespace BahaTurret
 		Coroutine returnRoutine;
 
 		int missileCount = 0;
-		MissileLauncher[] _missileChildren;
+		MissileLauncher[] missileChildren;
 		Transform[] missileTransforms;
 		Transform[] missileReferenceTransforms;
 
@@ -235,8 +235,8 @@ namespace BahaTurret
 			{
 				yield return new WaitForFixedUpdate();
 			}
-
-			while(!turret.ReturnTurret())
+             
+			while(turret != null && !turret.ReturnTurret())
 			{
 				UpdateMissilePositions();
 				yield return new WaitForFixedUpdate();
@@ -420,7 +420,7 @@ namespace BahaTurret
 				{
 					if(missileReferenceTransforms[i])
 					{
-						Destroy(missileReferenceTransforms[i].gameObject);
+						GameObject.Destroy(missileReferenceTransforms[i].gameObject);
 					}
 				}
 			}
@@ -485,7 +485,7 @@ namespace BahaTurret
 				}
 			}
 
-			_missileChildren = msl.ToArray();
+			missileChildren = msl.ToArray();
 			missileTransforms = mtfl.ToArray();
 			missileReferenceTransforms = mrl.ToArray();
 		}
@@ -497,16 +497,19 @@ namespace BahaTurret
 				return;
 			}
 
-			for(int i = 0; i < _missileChildren.Length; i++)
+			for(int i = 0; i < missileChildren.Length; i++)
 			{
-				if(missileTransforms[i] && _missileChildren[i] && !_missileChildren[i].HasFired)
+				if(missileTransforms[i] && missileChildren[i] && !missileChildren[i].hasFired)
 				{
 					missileTransforms[i].position = missileReferenceTransforms[i].position;
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
 
-					Part missilePart = _missileChildren[i].part;
-					Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.name]));
-					missilePart.CoMOffset = newCoMOffset;
+					Part missilePart = missileChildren[i].part;
+                    if (missilePart != null)
+                    {
+                        Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.name]));
+                        missilePart.CoMOffset = newCoMOffset; 
+                    }
 				}
 			}
 		}
@@ -514,16 +517,16 @@ namespace BahaTurret
 
 		public void FireMissile(int index)
 		{
-			if(index < missileCount && _missileChildren != null && _missileChildren[index] != null)
+			if(index < missileCount && missileChildren != null && missileChildren[index] != null)
 			{
 				PrepMissileForFire(index);
 			
 				if(weaponManager)
 				{
-					wm.SendTargetDataToMissile(_missileChildren[index]);
+					wm.SendTargetDataToMissile(missileChildren[index]);
 				}
-				_missileChildren[index].FireMissile();
-				StartCoroutine(MissileRailRoutine(_missileChildren[index]));
+				missileChildren[index].FireMissile();
+				StartCoroutine(MissileRailRoutine(missileChildren[index]));
 				if(wm)
 				{
 					wm.UpdateList();
@@ -588,13 +591,13 @@ namespace BahaTurret
 			Debug.Log("Prepping missile for turret fire.");
 			missileTransforms[index].localPosition = Vector3.zero;
 			missileTransforms[index].localRotation = Quaternion.identity;
-			_missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
-			_missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
+			missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
+			missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
 
-			_missileChildren[index].dropTime = 0;
-			_missileChildren[index].decoupleForward = true;
+			missileChildren[index].dropTime = 0;
+			missileChildren[index].decoupleForward = true;
 
-			_missileChildren[index].part.CoMOffset = comOffsets[_missileChildren[index].part.name];
+			missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part.name];
 		}
 
 		public void PrepMissileForFire(MissileLauncher ml)
@@ -617,7 +620,7 @@ namespace BahaTurret
 
 			for(int i = 0; i < missileCount; i++)
 			{
-				if(_missileChildren[i] && _missileChildren[i] == ml)
+				if(missileChildren[i] && missileChildren[i] == ml)
 				{
 					return i;
 				}
@@ -633,7 +636,7 @@ namespace BahaTurret
 
 			for(int i = 0; i < missileCount; i++)
 			{
-				if(_missileChildren[i].part.name == ml.part.name)
+				if((missileChildren[i]) && missileChildren[i].part.name == ml.part.name)
 				{
 					return true;
 				}

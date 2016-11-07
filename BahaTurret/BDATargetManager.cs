@@ -899,10 +899,11 @@ namespace BahaTurret
 					}
 					else
 					{
-						Debug.LogWarning("checking target missileBase -  doesn't have missileBase module");
+						Debug.LogWarning("checking target missile -  doesn't have missile module");
 					}
 
-					if((finalTarget == null && target.numFriendliesEngaging < 2) || (finalTarget != null && target.numFriendliesEngaging < finalTarget.numFriendliesEngaging))
+
+					if(((finalTarget == null && target.numFriendliesEngaging < 2) || (finalTarget != null && target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
 					{
 						finalTarget = target;
 					}

@@ -68,7 +68,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArmorPenetration.cs" />
+    <Compile Include="BDArmor.cs" />
     <Compile Include="BDAWindowSettingsField.cs" />
+    <Compile Include="BulletInfo.cs" />
     <Compile Include="CFEnable.cs" />
     <Compile Include="MissileBase.cs" />
     <Compile Include="MissileLauncher.cs" />
@@ -155,10 +158,14 @@
     <None Include="BahaTurretBullet.cs" />
     <None Include="Distribution\GameData\BDArmory\Agencies\Agents.cfg" />
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\Shaders.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_linux.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_macosx.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_windows.bundle" />
     <None Include="Distribution\GameData\BDArmory\ATM_BDArmory.cfg" />
     <None Include="Distribution\GameData\BDArmory\BDArmory.version" />
+    <None Include="Distribution\GameData\BDArmory\bullets.cfg" />
     <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
+    <None Include="Distribution\GameData\BDArmory\MMPatches\squad_tanks.cfg" />
     <None Include="Distribution\GameData\BDArmory\Models\bulletHit\bulletHit.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />
@@ -204,6 +211,10 @@
     <None Include="Distribution\GameData\BDArmory\Parts\ecmJammer\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\gau8.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMk1.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMK1.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\goalkeeper\goalkeeper.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\goalkeeper\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\groundRadar\radar1.cfg" />
@@ -334,6 +345,12 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8Cannon.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8End.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\texture.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBD.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\muzzle.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\smoketest3.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\GoalKeeperBD.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\muzzle.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\smoketest3.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\smoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\Texture.png" />
