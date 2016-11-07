@@ -1633,7 +1633,7 @@ namespace BahaTurret
 				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
 			}
 
-			if(!lowpassFilter)
+			if(!lowpassFilter && gameObject.GetComponents<AudioLowPassFilter>().Length == 0)
 			{
 				lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
 				lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
