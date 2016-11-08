@@ -179,7 +179,20 @@ namespace BahaTurret
 
 		public VesselRadarData vesselRadarData;
 
-		[KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
+        [KSPAction("Toggle Radar")]
+        public void AGEnable(KSPActionParam param)
+        {
+            if (radarEnabled)
+            {
+                DisableRadar();
+            }
+            else
+            {
+                EnableRadar();
+            }
+        }
+
+        [KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
 		public void Toggle()
 		{
 			if(radarEnabled)
@@ -215,7 +228,7 @@ namespace BahaTurret
 			}
 		}
 
-		public void EnableRadar()
+        public void EnableRadar()
 		{
 			EnsureVesselRadarData();
 
@@ -446,7 +459,7 @@ namespace BahaTurret
 		}
 		
 		// Update is called once per frame
-		void Update ()
+		void Update()
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled)
 			{
@@ -465,15 +478,15 @@ namespace BahaTurret
 
 			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
 
-			//UpdateSlaveData();
-		}
-
-
-
+            //UpdateSlaveData();
+            if (radarEnabled)
+            {
+                DrainElectricity();
+            }
+        }       
+        
 		void FixedUpdate()
 		{
-
-
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && startupComplete)
 			{
 				if(!vessel.IsControllable && radarEnabled)
@@ -502,9 +515,7 @@ namespace BahaTurret
 					else if(canScan)
 					{
 						Scan ();
-					}
-
-				
+					}				
 				}
 			}
 		}
@@ -530,9 +541,7 @@ namespace BahaTurret
 				UpdateModel ();
 			}
 		}
-
-
-
+        
 		void UpdateModel()
 		{
 			//model rotation
@@ -632,8 +641,6 @@ namespace BahaTurret
 			}
 		}
 
-
-
 		public bool TryLockTarget(Vector3 position)
 		{
 			if(!canLock)
@@ -680,7 +687,6 @@ namespace BahaTurret
 			return false;
 		}
 
-
 		void BoresightScan()
 		{
 			if(locked)
@@ -711,7 +717,6 @@ namespace BahaTurret
 				}
 			}
 		}
-
 
 		int snapshotTicker = 0;
 		void UpdateLock(int index)
@@ -808,9 +813,7 @@ namespace BahaTurret
 				}
 			}
 		}
-
-
-
+        
 		public void UnlockAllTargets()
 		{
 			if(!locked)	return;
@@ -993,10 +996,7 @@ namespace BahaTurret
 					BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500 * transform.up), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
 				}
 			}
-		}
-
-
-	
+		}	
 
 		public void RecoverLinkedVessels()
 		{
@@ -1039,12 +1039,7 @@ namespace BahaTurret
 			vesselRadarData.LinkVRD(vrd);
 			Debug.Log("Radar data link recovered: Local - " + vessel.vesselName + ", External - " + vrd.vessel.vesselName);
 		}
-
-	
-
-		////////////////END GUI
-
-
+        
 		public string getRWRType(int i)
 		{
 			switch (i) {
@@ -1063,8 +1058,7 @@ namespace BahaTurret
 			return "UNKNOWN";
 			//{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5}
 		}
-
-
+        
 		// RMB info in editor
 		public override string GetInfo()
 		{
@@ -1093,6 +1087,25 @@ namespace BahaTurret
 
 		}
 
-	}
+        [KSPField]
+        public double resourceDrain = 0.25;
+
+        void DrainElectricity()
+        {
+            if (resourceDrain <= 0)
+            {
+                return;
+            }
+
+            double drainAmount = resourceDrain * TimeWarp.fixedDeltaTime;
+            double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
+            if (chargeAvailable < drainAmount * 0.95f)
+            {
+                ScreenMessages.PostScreenMessage("Radar Requires EC", 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                DisableRadar();
+            }
+        }
+
+    }
 }
 

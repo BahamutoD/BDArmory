@@ -864,7 +864,7 @@ namespace BahaTurret
 					}
 
 
-					if(((finalTarget == null && target.numFriendliesEngaging < 2) || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging))
+					if(((finalTarget == null && target.numFriendliesEngaging < 2) || (finalTarget != null && target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
 					{
 						finalTarget = target;
 					}

@@ -157,10 +157,14 @@
     <None Include="BahaTurretBullet.cs" />
     <None Include="Distribution\GameData\BDArmory\Agencies\Agents.cfg" />
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\Shaders.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_linux.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_macosx.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_windows.bundle" />
     <None Include="Distribution\GameData\BDArmory\ATM_BDArmory.cfg" />
     <None Include="Distribution\GameData\BDArmory\BDArmory.version" />
+    <None Include="Distribution\GameData\BDArmory\bullets.cfg" />
     <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
+    <None Include="Distribution\GameData\BDArmory\MMPatches\squad_tanks.cfg" />
     <None Include="Distribution\GameData\BDArmory\Models\bulletHit\bulletHit.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />

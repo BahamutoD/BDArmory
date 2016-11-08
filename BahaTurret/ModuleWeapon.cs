@@ -1633,7 +1633,7 @@ namespace BahaTurret
 				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
 			}
 
-			if(!lowpassFilter)
+			if(!lowpassFilter && gameObject.GetComponents<AudioLowPassFilter>().Length == 0)
 			{
 				lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
 				lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
@@ -1876,7 +1876,7 @@ namespace BahaTurret
 				float size = 30;
 				
 				Vector3 reticlePosition;
-				if(BDArmorySettings.AIM_ASSIST && vessel.GetSrfVelocity().sqrMagnitude < Krakensbane.SqrThreshold)
+				if(BDArmorySettings.AIM_ASSIST)
 				{
 					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{
