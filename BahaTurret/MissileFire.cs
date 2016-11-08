@@ -1351,7 +1351,7 @@ namespace BahaTurret
 
 		        foreach (var mt in vessel.FindPartModulesImplementing<MissileTurret>())
 		        {
-		            if (weaponIndex > 0 && && currentMissile && mt.ContainsMissileOfType(cm))
+		            if (weaponIndex > 0 && cm && mt.ContainsMissileOfType(cm))
 		            {
 		                if (!mt.activeMissileOnly || cm.missileTurret == mt)
 		                {
@@ -2713,8 +2713,6 @@ namespace BahaTurret
 			}
 		}
 
-
-		int missilesAway;
 		IEnumerator MissileAwayRoutine(MissileBase ml)
 		{
 			missilesAway++;
@@ -3217,7 +3215,7 @@ namespace BahaTurret
 					}
 
 					if (SwitchToAirMissile ()) { //Use missiles if available
-						if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar) {
+						if (CurrentMissile.TargetingMode == MissileBase.TargetingModes.Radar) {
 							foreach (var rd in radars) {
 								if (rd.canLock) {
 									rd.EnableRadar ();
@@ -3235,7 +3233,7 @@ namespace BahaTurret
 						//TRY to pick guns or aa missiles for defense
 						Debug.Log(vessel.vesselName + ": Trying to pick aa missiles for defense...");
 						if (SwitchToAirMissile ()) {
-							if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar) {
+							if (CurrentMissile.TargetingMode == MissileBase.TargetingModes.Radar) {
 								foreach (var rd in radars) {
 									if (rd.canLock) {
 										rd.EnableRadar ();

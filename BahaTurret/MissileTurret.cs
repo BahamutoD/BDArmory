@@ -499,7 +499,7 @@ namespace BahaTurret
 
 			for(int i = 0; i < missileChildren.Length; i++)
 			{
-				if(missileTransforms[i] && missileChildren[i] && !missileChildren[i].hasFired)
+				if(missileTransforms[i] && missileChildren[i] && !missileChildren[i].HasFired)
 				{
 					missileTransforms[i].position = missileReferenceTransforms[i].position;
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;

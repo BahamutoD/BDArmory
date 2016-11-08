@@ -1900,7 +1900,8 @@ namespace BahaTurret
 			output.Append(Environment.NewLine);
 			output.Append(String.Format("Targetting Mode: {0}", targetingType.ToString().ToUpper()));
 			output.Append(Environment.NewLine);
-			if (activeRadar) {
+
+            if (ActiveRadar) {
 				output.Append(String.Format("Active Radar Range: {0}", activeRadarRange));
 				output.Append(Environment.NewLine);
 			}

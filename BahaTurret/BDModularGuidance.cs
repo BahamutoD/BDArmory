@@ -87,9 +87,14 @@ namespace BahaTurret
             if (!HasFired) return;
             if (!TargetAcquired) return;
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * GetBlastRadius()) return;
-            if ((Vector3.Distance(TargetPosition, vessel.CoM) > detonationRadius)) return;
-            Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated");
-            Detonate();
+
+
+            if ((Vector3.Distance(TargetPosition, vessel.CoM) < detonationRadius) || 
+                ((TargetPosition + (TargetVelocity*Time.fixedDeltaTime) - (vessel.CoM)).sqrMagnitude < Mathf.Pow(detonationRadius*0.5f, 2)))
+            {
+                Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated");
+                Detonate();
+            }
         }
 
         private void CheckNextStage()
@@ -375,16 +380,17 @@ namespace BahaTurret
             Vector3 aamTarget;
             if (TargetAcquired)
             {
-                DrawDebugLine(vessel.CoM + vessel.srfSpeed * vessel.srf_velocity.normalized, TargetPosition);
                 float timeToImpact;
                 aamTarget = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, previousTargetVelocity, TargetAcceleration, vessel, previousMissileVelocity, out timeToImpact);
                 previousTargetVelocity = TargetVelocity;
                 previousMissileVelocity = vessel.srf_velocity;
                 TimeToImpact = timeToImpact;
-                if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
-                {
-                    aamTarget = TargetPosition;
-                }
+                //if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
+                //{
+                //    Debug.Log("BDModularGuidance:AAMGuidance not tracking");
+                //    aamTarget = TargetPosition;
+                //}
+                DrawDebugLine(vessel.CoM, aamTarget);
             }
             else
             {

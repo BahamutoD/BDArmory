@@ -162,31 +162,37 @@ namespace BahaTurret
             Vector3 currVel = ((float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized);
 
             timeToImpact = targetDistance / (targetVelocity - currVel).magnitude;
-          
 
-	        if (targetDistance < 1600)
+
+	        if (targetDistance < 1000)
 	        {
 	            var iterations = 0;
-                var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
-                var relativeVelocity = (float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized - targetVelocity;
-                var missileFinalPosition = missileVessel.CoM;
+	            var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
+	            var relativeVelocity = (float) missileVessel.srfSpeed*missileVessel.srf_velocity.normalized -
+	                                   targetVelocity;
+	            var missileFinalPosition = missileVessel.CoM;
 
-                while (Vector3.Distance(missileFinalPosition, missileVessel.CoM) < targetDistance && iterations < 1000)
+	            while (Vector3.Distance(missileFinalPosition, missileVessel.CoM) < targetDistance && iterations < 500)
 	            {
 	                missileFinalPosition += relativeVelocity*Time.fixedDeltaTime +
 	                                        0.5f*relativeAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
 	                iterations++;
 	            }
 
-	            if (iterations < 1000)
+	            if (iterations < 500)
 	            {
-	               timeToImpact = iterations*Time.fixedDeltaTime;
+	                timeToImpact = iterations*Time.fixedDeltaTime;
 	            }
+	            return targetPosition + (targetVelocity*timeToImpact) +
+	                   (Vector3) effectiveTargetAcceleration*0.5f*Mathf.Pow(timeToImpact, 2);
+
+	        }
+	        else
+	        {
+	            return targetPosition + (targetVelocity*timeToImpact);
 	        }
 
-            return targetPosition + (targetVelocity * timeToImpact) +
-                         (Vector3)effectiveTargetAcceleration * 0.5f * Mathf.Pow(timeToImpact, 2);
-
+         
         }
 
 
