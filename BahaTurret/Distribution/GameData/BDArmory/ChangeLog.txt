@@ -1,3 +1,12 @@
+v0.11.1.6
+- Fix shaders not working on Linux and Mac OS X. Git Issue #73.
+- Fix bomb aimer not working. Git Issue #75.
+- Fix selected weapon message missing. Git Issue #50.
+- Enhancement: Allow assigning of Toggle Radar to action groups. Git Issue #58.
+- Enhancement: Ground Radar use resources now.
+- Enhancement: Allow the Weapon Manager to turn on the ECM when in guard mode. Git Issue #27
+- Known issues: Adjustable Rotary Bomb Rack is officially broken and it has been tagged as (BROKEN)
+
 v0.11.1.5
 - Ready for KSP 1.2.1
 - New feature: Bullets penetration system.
