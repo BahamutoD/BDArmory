@@ -1159,7 +1159,7 @@ namespace BahaTurret
                 }
                 gunRippleRpm = weaponRPM*counter;
                 float timeDelayPerGun = 60f/(weaponRPM*counter);
-                    //number of seconds between each gun firing; will reduce with increasing RPM or number of guns
+                //number of seconds between each gun firing; will reduce with increasing RPM or number of guns
                 foreach (ModuleWeapon weapon in tempListModuleWeapon)
                 {
                     if (selectedWeapon.GetShortName() == weapon.GetShortName())
@@ -2351,7 +2351,7 @@ namespace BahaTurret
                         {
                             bool launchAuthorized = true;
                             bool pilotAuthorized = true;
-                                //(!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this));
+                            //(!pilotAI || pilotAI.GetLaunchAuthorization(guardTarget, this));
 
                             float targetAngle = Vector3.Angle(-transform.forward,
                                 guardTarget.transform.position - transform.position);
@@ -2949,7 +2949,7 @@ namespace BahaTurret
 
                     FireCurrentMissile(true);
                     StartCoroutine(MissileAwayRoutine(ml));
-                        //NEW: try to prevent launching all missile complements at once...
+                    //NEW: try to prevent launching all missile complements at once...
                 }
                 else if (ml.targetingMode == MissileLauncher.TargetingModes.AntiRad)
                 {
@@ -3934,7 +3934,7 @@ namespace BahaTurret
                 Debug.Log("Checking turrets");
             }
             float finalDistance = distance;
-                //vessel.LandedOrSplashed ? distance : distance/2; //decrease distance requirement if airborne
+            //vessel.LandedOrSplashed ? distance : distance/2; //decrease distance requirement if airborne
 
             if (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
             {

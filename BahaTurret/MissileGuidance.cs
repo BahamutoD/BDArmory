@@ -9,10 +9,10 @@ namespace BahaTurret
         public static Vector3 GetAirToGroundTarget(Vector3 targetPosition, Vessel missileVessel, float descentRatio)
         {
             Vector3 upDirection = missileVessel.upAxis;
-                //-FlightGlobals.getGeeForceAtPosition(targetPosition).normalized;
+            //-FlightGlobals.getGeeForceAtPosition(targetPosition).normalized;
             Vector3 surfacePos = missileVessel.transform.position +
                                  Vector3.Project(targetPosition - missileVessel.transform.position, upDirection);
-                //((float)missileVessel.altitude*upDirection);
+            //((float)missileVessel.altitude*upDirection);
             Vector3 targetSurfacePos;
 
             targetSurfacePos = targetPosition;

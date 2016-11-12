@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -771,7 +770,7 @@ namespace BahaTurret
                 {
                     bool canScan = availableRadars[i].canScan;
                     bool canTrackWhileScan = availableRadars[i].canTrackWhileScan;
-                    bool locked = availableRadars[i].locked;
+                    bool islocked = availableRadars[i].locked;
                     float currentAngle = availableRadars[i].currentAngle;
 
                     float radarAngle = VectorUtils.SignedAngle(projectedVesselFwd,
@@ -780,7 +779,7 @@ namespace BahaTurret
 
                     if (canScan && availableRadars[i].vessel == vessel)
                     {
-                        if ((!locked || canTrackWhileScan))
+                        if ((!islocked || canTrackWhileScan))
                         {
                             if (!availableRadars[i].omnidirectional)
                             {
@@ -834,7 +833,7 @@ namespace BahaTurret
                 for (int i = 0; i < rCount; i++)
                 {
                     bool canScan = availableRadars[i].canScan;
-                    bool locked = availableRadars[i].locked;
+                    bool islocked = availableRadars[i].locked;
                     //float lockScanAngle = linkedRadars[i].lockScanAngle;
                     float currentAngle = availableRadars[i].currentAngle;
                     if (canScan)
@@ -848,7 +847,7 @@ namespace BahaTurret
                         GUI.DrawTexture(new Rect(scanIndicatorPos.x - 7, scanIndicatorPos.y - 10, 14, 20),
                             BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
 
-                        if (locked && availableRadars[i].canTrackWhileScan)
+                        if (islocked && availableRadars[i].canTrackWhileScan)
                         {
                             Vector2 leftPos =
                                 RadarUtils.WorldToRadarRadial(

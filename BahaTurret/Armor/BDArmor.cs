@@ -63,9 +63,8 @@ namespace BahaTurret
         public void CreateExplosion(Part part)
         {
             float explodeScale = 0;
-            for (int i = 0; i < part.Resources.Count; i++)
+            foreach (var current in part.Resources)
             {
-                var current = part.Resources[i];
                 switch (current.resourceName)
                 {
                     case "LiquidFuel":
@@ -87,9 +86,9 @@ namespace BahaTurret
             if (!hitPart)
                 return null;
             var nodes = hitPart.partInfo.partConfig.GetNodes("BDARMOR");
-            for (int i = 0; i < nodes.Length; i++)
+            foreach (ConfigNode configNode in nodes)
             {
-                var current = nodes[i];
+                var current = configNode;
                 Transform transform;
                 if (current.HasValue("ArmorRootTransform"))
                     transform = hitPart.FindModelTransform(current.GetValue("ArmorRootTransform"));
@@ -102,7 +101,7 @@ namespace BahaTurret
                 }
                 if (collider.transform == transform || collider.transform.IsChildOf(transform))
                 {
-                    return new BDArmor(nodes[i]);
+                    return new BDArmor(configNode);
                 }
             }
             return null;

@@ -325,7 +325,7 @@ namespace BahaTurret
 
             // window position settings
             WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
-                // Default, if not in file.
+            // Default, if not in file.
             WindowRectGps = new Rect(0, 0, WindowRectToolbar.width - 10, 0);
             SetupSettingsSize();
             BDAWindowSettingsField.Load();
@@ -789,7 +789,7 @@ namespace BahaTurret
                 line++;
                 line += 0.25f;
                 string weaponName = ActiveWeaponManager.selectedWeaponString;
-                    // = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
+                // = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
                 string selectionText = "Weapon: " + weaponName;
                 GUI.Label(new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth, entryHeight*1.25f),
                     selectionText, HighLogic.Skin.box);
@@ -1177,7 +1177,7 @@ namespace BahaTurret
 
             toolWindowHeight = Mathf.Lerp(toolWindowHeight, contentTop + (line*entryHeight) + 5, 1);
             WindowRectToolbar.height = toolWindowHeight;
-                // = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
+            // = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
         }
 
         bool validGPSName = true;

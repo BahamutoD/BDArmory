@@ -657,7 +657,7 @@ namespace BahaTurret
 
                 //TARGETING
                 targetPosition = transform.position + (transform.forward*5000);
-                    //set initial target position so if no target update, missile will count a miss if it nears this point or is flying post-thrust
+                //set initial target position so if no target update, missile will count a miss if it nears this point or is flying post-thrust
                 startDirection = transform.forward;
                 if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
                 {
@@ -2290,7 +2290,7 @@ namespace BahaTurret
             part.rb.angularDrag = 0;
             part.angularDrag = 0;
             Vector3 spin = Vector3.Project(part.rb.angularVelocity, part.rb.transform.forward);
-                // * 8 * Time.fixedDeltaTime;
+            // * 8 * Time.fixedDeltaTime;
             part.rb.angularVelocity -= spin;
             //rigidbody.maxAngularVelocity = 7;
 
