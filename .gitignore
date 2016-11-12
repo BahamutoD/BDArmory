@@ -7,6 +7,7 @@ BahaTurret/BDArmory.csproj.user
 BahaTurret/Distribution/GameData/BDArmory/Plugins/BahaTurret.dll
 BahaTurret/.vs
 BahaTurret/obj
+BahaTurret/bin/Debug/
 
 BahaTurret/.vs/config
 BahaTurret/LocalDev/7za_dir.txt
@@ -77,4 +78,3 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
-
