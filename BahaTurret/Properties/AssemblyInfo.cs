@@ -14,7 +14,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCulture("")]
 
 
-
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
 // The form "{Major}.{Minor}.*" will automatically update the build and revision,
 // and "{Major}.{Minor}.{Build}.*" will update just the revision.
@@ -29,5 +28,5 @@ using System.Runtime.CompilerServices;
 //[assembly: AssemblyKeyFile("")]
 
 //ksp assembly
-[assembly: KSPAssembly("BahaTurret", 1, 0)]
 
+[assembly: KSPAssembly("BahaTurret", 1, 0)]
