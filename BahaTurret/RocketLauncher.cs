@@ -251,7 +251,7 @@ namespace BahaTurret
                 part.force_activate();
 
                 aimerTexture = BDArmorySettings.Instance.greenPointCircleTexture;
-                    // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
+                // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
 
 
                 MakeRocketArray();
@@ -856,7 +856,7 @@ namespace BahaTurret
             {
                 transform.rotation = transform.parent.rotation;
                 transform.position = spawnTransform.position;
-                    //+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
+                //+(transform.parent.rigidbody.velocity*Time.fixedDeltaTime);
             }
             else
             {

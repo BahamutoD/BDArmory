@@ -17,21 +17,21 @@ namespace BahaTurret
             base.OnLoad(node);
             if (part.parent != null && part.parent.fuelLookupTargets != null)
             {
-                if (!part.parent.fuelLookupTargets.Contains(this.part))
-                    part.parent.fuelLookupTargets.Add(this.part);
-                if (!this.part.fuelLookupTargets.Contains(part.parent))
+                if (!part.parent.fuelLookupTargets.Contains(part))
+                    part.parent.fuelLookupTargets.Add(part);
+                if (!part.fuelLookupTargets.Contains(part.parent))
                     part.fuelLookupTargets.Add(part.parent);
             }
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             base.OnStart(state);
             if (part.parent != null && part.parent.fuelLookupTargets != null)
             {
-                if (!part.parent.fuelLookupTargets.Contains(this.part))
-                    part.parent.fuelLookupTargets.Add(this.part);
-                if (!this.part.fuelLookupTargets.Contains(part.parent))
+                if (!part.parent.fuelLookupTargets.Contains(part))
+                    part.parent.fuelLookupTargets.Add(part);
+                if (!part.fuelLookupTargets.Contains(part.parent))
                     part.fuelLookupTargets.Add(part.parent);
             }
         }
@@ -41,9 +41,9 @@ namespace BahaTurret
             base.OnInitialize();
             if (part.parent != null && part.parent.fuelLookupTargets != null)
             {
-                if (!part.parent.fuelLookupTargets.Contains(this.part))
-                    part.parent.fuelLookupTargets.Add(this.part);
-                if (!this.part.fuelLookupTargets.Contains(part.parent))
+                if (!part.parent.fuelLookupTargets.Contains(part))
+                    part.parent.fuelLookupTargets.Add(part);
+                if (!part.fuelLookupTargets.Contains(part.parent))
                     part.fuelLookupTargets.Add(part.parent);
             }
         }
@@ -52,8 +52,8 @@ namespace BahaTurret
         {
             if (part.parent != null && part.parent.fuelLookupTargets != null)
             {
-                if (part.parent.fuelLookupTargets.Contains(this.part))
-                    part.parent.fuelLookupTargets.Remove(this.part);
+                if (part.parent.fuelLookupTargets.Contains(part))
+                    part.parent.fuelLookupTargets.Remove(part);
             }
         }
     }
