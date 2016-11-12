@@ -265,7 +265,7 @@ namespace BahaTurret
                     TargetAcceleration = Vector3.zero;
                     lastLaserPoint = TargetPosition;
 
-                    if (GuidanceMode == GuidanceModes.BeamRiding && TimeIndex > 0.25f && Vector3.Dot(part.transform.forward, part.transform.position - lockedCamera.transform.position) < 0)
+                    if (GuidanceMode == GuidanceModes.BeamRiding && TimeIndex > 0.25f && Vector3.Dot(GetForwardTransform(), part.transform.position - lockedCamera.transform.position) < 0)
                     {
                         TargetAcquired = false;
                         lockedCamera = null;

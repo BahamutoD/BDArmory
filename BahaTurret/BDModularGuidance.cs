@@ -89,8 +89,7 @@ namespace BahaTurret
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * GetBlastRadius()) return;
 
 
-            if ((Vector3.Distance(TargetPosition, vessel.CoM) < detonationRadius) || 
-                ((TargetPosition + (TargetVelocity*Time.fixedDeltaTime) - (vessel.CoM)).sqrMagnitude < Mathf.Pow(detonationRadius*0.5f, 2)))
+            if ((Vector3.Distance(TargetPosition, vessel.CoM) < detonationRadius))
             {
                 Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated");
                 Detonate();
