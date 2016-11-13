@@ -151,10 +151,10 @@ namespace BahaTurret
         void ParseRippleOptions()
         {
             rippleDictionary = new Dictionary<string, RippleOption>();
-            Debug.Log("Parsing ripple options");
+            Debug.Log("[BDArmory] : Parsing ripple options");
             if (!string.IsNullOrEmpty(rippleData))
             {
-                Debug.Log("Ripple data: " + rippleData);
+                Debug.Log("[BDArmory] : Ripple data: " + rippleData);
                 try
                 {
                     foreach (string weapon in rippleData.Split(new char[] {';'}))
@@ -171,13 +171,13 @@ namespace BahaTurret
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    Debug.Log("Ripple data was invalid.");
+                    Debug.Log("[BDArmory] : Ripple data was invalid.");
                     rippleData = string.Empty;
                 }
             }
             else
             {
-                Debug.Log("Ripple data is empty.");
+                Debug.Log("[BDArmory] : Ripple data is empty.");
             }
 
             if (vessel)
@@ -210,7 +210,7 @@ namespace BahaTurret
 
                 node.SetValue("RippleData", rippleData, true);
             }
-            Debug.Log("Saved ripple data: " + rippleData);
+            Debug.Log("[BDArmory] : Saved ripple data: " + rippleData);
         }
 
         public bool hasSingleFired = false;
@@ -1098,7 +1098,7 @@ namespace BahaTurret
             MissileLauncher aMl = GetAsymMissile();
             if (aMl)
             {
-                //Debug.Log("setting asym missile: " + aMl.part.name);
+                //Debug.Log("[BDArmory] : setting asym missile: " + aMl.part.name);
                 selectedWeapon = aMl;
                 currentMissile = aMl;
             }
@@ -1106,7 +1106,7 @@ namespace BahaTurret
             MissileLauncher rMl = GetRotaryReadyMissile();
             if (rMl)
             {
-                //Debug.Log("setting rotary ready missile: " + rMl.part.name);
+                //Debug.Log("[BDArmory] : setting rotary ready missile: " + rMl.part.name);
                 selectedWeapon = rMl;
                 currentMissile = rMl;
             }
@@ -1115,7 +1115,7 @@ namespace BahaTurret
                 (selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb ||
                  selectedWeapon.GetWeaponClass() == WeaponClasses.Missile))
             {
-                //Debug.Log("=====selected weapon: " + selectedWeapon.GetPart().name);
+                //Debug.Log("[BDArmory] : =====selected weapon: " + selectedWeapon.GetPart().name);
                 if (!currentMissile || currentMissile.part.name != selectedWeapon.GetPart().name)
                 {
                     currentMissile = selectedWeapon.GetPart().FindModuleImplementing<MissileLauncher>();
@@ -1303,13 +1303,13 @@ namespace BahaTurret
             {
                 if (rotRail.missileCount == 0)
                 {
-                    //Debug.Log("SetRotaryRails(): rail has no missiles");
+                    //Debug.Log("[BDArmory] : SetRotaryRails(): rail has no missiles");
                     continue;
                 }
 
-                //Debug.Log("SetRotaryRails(): rotRail.readyToFire: " + rotRail.readyToFire + ", rotRail.readyMissile: " + ((rotRail.readyMissile != null) ? rotRail.readyMissile.part.name : "null") + ", rotRail.nextMissile: " + ((rotRail.nextMissile != null) ? rotRail.nextMissile.part.name : "null"));
+                //Debug.Log("[BDArmory] : SetRotaryRails(): rotRail.readyToFire: " + rotRail.readyToFire + ", rotRail.readyMissile: " + ((rotRail.readyMissile != null) ? rotRail.readyMissile.part.name : "null") + ", rotRail.nextMissile: " + ((rotRail.nextMissile != null) ? rotRail.nextMissile.part.name : "null"));
 
-                //Debug.Log("current missile: " + cm.part.name);
+                //Debug.Log("[BDArmory] : current missile: " + cm.part.name);
 
                 if (rotRail.readyToFire)
                 {
@@ -1842,7 +1842,6 @@ namespace BahaTurret
                 foreach (Vessel v in loadedVessels)
                 {
                     float viewAngle = Vector3.Angle(-transform.forward, v.transform.position - transform.position);
-                    //if(v!= vessel && v.loaded) Debug.Log ("view angle: "+viewAngle);
                     if (v != null && v != vessel && v.loaded && viewAngle < smallestAngle && CanSeeTarget(v))
                     {
                         acquiredTarget = v;
@@ -1854,7 +1853,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log("found target! : " + acquiredTarget.name);
+                        Debug.Log("[BDArmory] : found target! : " + acquiredTarget.name);
                     }
                     FlightGlobals.fetch.SetVesselTarget(acquiredTarget);
                 }
@@ -2368,7 +2367,7 @@ namespace BahaTurret
                                 launchAuthorized = false;
                             }
 
-                            Debug.Log(vessel.vesselName + " launchAut=" + launchAuthorized + ", pilotAut=" +
+                            Debug.Log("[BDArmory]:" + vessel.vesselName + " launchAut=" + launchAuthorized + ", pilotAut=" +
                                       pilotAuthorized + ", missilesAway/Max=" + missilesAway + "/" + maxMissilesOnTarget);
                             if (missilesAway < maxMissilesOnTarget)
                             {
@@ -2380,7 +2379,7 @@ namespace BahaTurret
                             }
                             else
                             {
-                                Debug.Log(vessel.vesselName + " waiting for missile to be ready...");
+                                Debug.Log("[BDArmory]:" + vessel.vesselName + " waiting for missile to be ready...");
                             }
 
                             if (!launchAuthorized || !pilotAuthorized || missilesAway >= maxMissilesOnTarget)
@@ -2555,7 +2554,7 @@ namespace BahaTurret
                                 this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
                                 nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log(vessel.vesselName + " called for help from " +
+                                    Debug.Log("[BDArmory]:" + vessel.vesselName + " called for help from " +
                                               nearbyFriendly.Vessel.vesselName + " and took its target in return");
                                 //basically, swap targets to cover each other
                             }
@@ -2564,7 +2563,7 @@ namespace BahaTurret
                                 //otherwise, continue engaging the current target for now
                                 nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log(vessel.vesselName + " called for help from " +
+                                    Debug.Log("[BDArmory]:" + vessel.vesselName + " called for help from " +
                                               nearbyFriendly.Vessel.vesselName);
                             }
                         }
@@ -2702,7 +2701,7 @@ namespace BahaTurret
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
-                            Debug.Log("Setting rocket to auto fire");
+                            Debug.Log("[BDArmory] : Setting rocket to auto fire");
                         }
                         weapon.legacyGuardTarget = guardTarget;
                         weapon.autoFireStartTime = Time.time;
@@ -2781,7 +2780,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log("Firing on target: " + guardTarget.GetName() + ", (legacy targeting)");
+                        Debug.Log("[BDArmory] : Firing on target: " + guardTarget.GetName() + ", (legacy targeting)");
                     }
                     if (ml.missileTurret)
                     {
@@ -2849,7 +2848,7 @@ namespace BahaTurret
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
-                            Debug.Log("Firing on target: " + guardTarget.GetName());
+                            Debug.Log("[BDArmory] : Firing on target: " + guardTarget.GetName());
                         }
                         FireCurrentMissile(true);
                         StartCoroutine(MissileAwayRoutine(ml));
@@ -2934,7 +2933,7 @@ namespace BahaTurret
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
-                            Debug.Log("Firing on target: " + guardTarget.GetName());
+                            Debug.Log("[BDArmory] : Firing on target: " + guardTarget.GetName());
                         }
 
                         FireCurrentMissile(true);
@@ -3178,8 +3177,7 @@ namespace BahaTurret
             float distance = Vector3.Distance(transform.position + vessel.srf_velocity,
                 target.position + target.velocity); //take velocity into account (test)
 
-            Debug.Log(vessel.vesselName + " SmartPickWeapon: dist=" + distance + ", turrentRange=" + turretRange +
-                      ", targetMIssile=" + target.isMissile);
+            Debug.Log("[BDArmory]:" + vessel.vesselName + " SmartPickWeapon: dist=" + distance + ", turrentRange=" + turretRange +", targetMIssile=" + target.isMissile);
 
             if (distance < turretRange || (target.isMissile && distance < turretRange*1.5f))
             {
@@ -3235,7 +3233,7 @@ namespace BahaTurret
                     if (target.isMissile)
                     {
                         //TRY to pick guns or aa missiles for defense
-                        Debug.Log(vessel.vesselName + ": Trying to pick aa missiles for defense...");
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + ": Trying to pick aa missiles for defense...");
                         if (SwitchToAirMissile())
                         {
                             if (currentMissile.targetingMode == MissileLauncher.TargetingModes.Radar)
@@ -3368,7 +3366,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(vessel.vesselName + " is engaging an override target with " + selectedWeapon);
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging an override target with " + selectedWeapon);
                     }
                     overrideTimer = 15f;
                     //overrideTarget = null;
@@ -3376,7 +3374,7 @@ namespace BahaTurret
                 }
                 else if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log(vessel.vesselName +
+                    Debug.Log("[BDArmory] :"  + vessel.vesselName +
                               " is engaging an override target with failed to engage its override target!");
                 }
             }
@@ -3396,7 +3394,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(vessel.vesselName +
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName +
                                           " is aborting extend and engaging an incoming airborne target with " +
                                           selectedWeapon);
                             }
@@ -3415,7 +3413,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging an airborne target with " + selectedWeapon);
                             }
                             return;
                         }
@@ -3435,7 +3433,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(vessel.vesselName + " is engaging incoming missile with " + selectedWeapon);
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging incoming missile with " + selectedWeapon);
                     }
                     return;
                 }
@@ -3451,7 +3449,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(vessel.vesselName + " is engaging unengaged missile with " + selectedWeapon);
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging unengaged missile with " + selectedWeapon);
                     }
                     return;
                 }
@@ -3475,7 +3473,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(vessel.vesselName + " is engaging the least engaged radar target with " +
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging the least engaged radar target with " +
                                           selectedWeapon.GetShortName());
                             }
                             return;
@@ -3485,7 +3483,7 @@ namespace BahaTurret
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
-                            Debug.Log(vessel.vesselName + " is engaging the least engaged target with " +
+                            Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging the least engaged target with " +
                                       selectedWeapon.GetShortName());
                         }
                         return;
@@ -3504,7 +3502,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(vessel.vesselName + " is engaging the closest radar target with " +
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging the closest radar target with " +
                                           selectedWeapon.GetShortName());
                             }
                             return;
@@ -3514,7 +3512,7 @@ namespace BahaTurret
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
-                            Debug.Log(vessel.vesselName + " is engaging the closest target with " +
+                            Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging the closest target with " +
                                       selectedWeapon.GetShortName());
                         }
                         return;
@@ -3526,7 +3524,7 @@ namespace BahaTurret
                         {
                             if(BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(vessel.vesselName + " is engaging the closest target with extended turret range (" + selectedWeapon.GetShortName() + ")");
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging the closest target with extended turret range (" + selectedWeapon.GetShortName() + ")");
                             }
                             return;
                         }
@@ -3548,7 +3546,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(vessel.vesselName + " is engaging a missile with " + selectedWeapon.GetShortName());
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging a missile with " + selectedWeapon.GetShortName());
                     }
                     return;
                 }
@@ -3564,7 +3562,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(vessel.vesselName + " is engaging a missile with " + selectedWeapon.GetShortName());
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging a missile with " + selectedWeapon.GetShortName());
                     }
                     return;
                 }
@@ -3575,7 +3573,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log(vessel.vesselName + " is disengaging - no valid weapons");
+                    Debug.Log("[BDArmory] :"  + vessel.vesselName + " is disengaging - no valid weapons");
                 }
                 CycleWeapon(0);
                 SetTarget(null);
@@ -3591,7 +3589,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(vessel.vesselName + " is engaging a final target with " +
+                        Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging a final target with " +
                                   selectedWeapon.GetShortName());
                     }
                     return;
@@ -3604,7 +3602,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log(vessel.vesselName + " is disengaging - no valid weapons");
+                    Debug.Log("[BDArmory] :"  + vessel.vesselName + " is disengaging - no valid weapons");
                 }
                 CycleWeapon(0);
                 SetTarget(null);
@@ -3615,7 +3613,7 @@ namespace BahaTurret
                 return;
             }
 
-            Debug.Log("Unhandled target case.");
+            Debug.Log("[BDArmory] : Unhandled target case.");
         }
 
         bool CrossCheckWithRWR(TargetInfo v)
@@ -3716,7 +3714,7 @@ namespace BahaTurret
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log(vessel.vesselName + "Checking air missiles");
+                Debug.Log("[BDArmory] :"  + vessel.vesselName + "Checking air missiles");
             }
 
             int selectedIndex = 0;
@@ -3727,7 +3725,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log(" - no weapons");
+                    Debug.Log("[BDArmory] :  - no weapons");
                 }
                 return false;
             }
@@ -3759,7 +3757,7 @@ namespace BahaTurret
                             {
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                 {
-                                    Debug.Log(" - " + vessel.vesselName + " : " + ml.GetShortName() +
+                                    Debug.Log("[BDArmory] :  - " + vessel.vesselName + " : " + ml.GetShortName() +
                                               " failed DLZ test.");
                                 }
                             }
@@ -3770,7 +3768,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(" - " + vessel.vesselName + " : " + ml.GetShortName() + " not an AAM.");
+                                Debug.Log("[BDArmory] :  - " + vessel.vesselName + " : " + ml.GetShortName() + " not an AAM.");
                             }
                         }
                     }
@@ -3779,7 +3777,7 @@ namespace BahaTurret
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
-                        Debug.Log(" - " + vessel.vesselName + " : " + selectedWeapon.GetShortName() + " not a missile.");
+                        Debug.Log("[BDArmory] :  - " + vessel.vesselName + " : " + selectedWeapon.GetShortName() + " not a missile.");
                     }
                 }
             }
@@ -3809,7 +3807,7 @@ namespace BahaTurret
                             {
                                 if(BDArmorySettings.DRAW_DEBUG_LABELS)
                                 {
-                                    Debug.Log(vessel.vesselName + " : " + ml.GetShortName() + " failed DLZ test.");
+                                    Debug.Log("[BDArmory] :"  + vessel.vesselName + " : " + ml.GetShortName() + " failed DLZ test.");
                                 }
                             }
                             break;
@@ -3829,7 +3827,7 @@ namespace BahaTurret
                 CycleWeapon(selectedIndex);
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log(" - " + vessel.vesselName + " : selecting " + selectedWeapon.GetShortName());
+                    Debug.Log("[BDArmory] :  - " + vessel.vesselName + " : selecting " + selectedWeapon.GetShortName());
                 }
                 return true;
             }
@@ -3837,7 +3835,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log(" - " + vessel.vesselName + " : no result.");
+                    Debug.Log("[BDArmory] :  - " + vessel.vesselName + " : no result.");
                 }
 
                 return false;
@@ -3931,7 +3929,7 @@ namespace BahaTurret
             }
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("Checking turrets");
+                Debug.Log("[BDArmory] : Checking turrets");
             }
             float finalDistance = distance;
             //vessel.LandedOrSplashed ? distance : distance/2; //decrease distance requirement if airborne
@@ -4018,7 +4016,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("Checking turret range but no guard target");
+                    Debug.Log("[BDArmory] : Checking turret range but no guard target");
                 }
                 return false;
             }
@@ -4026,7 +4024,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("Checking turret range - turret has full swivel");
+                    Debug.Log("[BDArmory] : Checking turret range - turret has full swivel");
                 }
                 return true;
             }
@@ -4049,7 +4047,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("Checking turret range - target is INSIDE gimbal limits! signedAnglePitch: " +
+                    Debug.Log("[BDArmory] : Checking turret range - target is INSIDE gimbal limits! signedAnglePitch: " +
                               signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch);
                 }
                 return true;
@@ -4058,7 +4056,7 @@ namespace BahaTurret
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: " +
+                    Debug.Log("[BDArmory] : Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: " +
                               signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch +
                               ", angleYaw: " + angleYaw);
                 }
