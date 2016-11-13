@@ -443,7 +443,7 @@ namespace BahaTurret
                     mTf.localScale = Vector3.one;
                     for (int i = 0; i < tfchildren.Length; i++)
                     {
-                        Debug.Log("MissileTurret moving transform: " + tfchildren[i].gameObject.name);
+                        Debug.Log("[BDArmory] : MissileTurret moving transform: " + tfchildren[i].gameObject.name);
                         tfchildren[i].parent = mTf;
                     }
                 }
@@ -533,12 +533,12 @@ namespace BahaTurret
             int index = IndexOfMissile(ml);
             if (index >= 0)
             {
-                Debug.Log("Firing missile index: " + index);
+                Debug.Log("[BDArmory] : Firing missile index: " + index);
                 FireMissile(index);
             }
             else
             {
-                Debug.Log("Tried to fire a missile that doesn't exist or is not attached to the turret.");
+                Debug.Log("[BDArmory] : Tried to fire a missile that doesn't exist or is not attached to the turret.");
             }
         }
 
@@ -576,7 +576,7 @@ namespace BahaTurret
 
         void PrepMissileForFire(int index)
         {
-            Debug.Log("Prepping missile for turret fire.");
+            Debug.Log("[BDArmory] : Prepping missile for turret fire.");
             missileTransforms[index].localPosition = Vector3.zero;
             missileTransforms[index].localRotation = Quaternion.identity;
             missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
@@ -598,7 +598,7 @@ namespace BahaTurret
             }
             else
             {
-                Debug.Log("Tried to prep a missile for firing that doesn't exist or is not attached to the turret.");
+                Debug.Log("[BDArmory] : Tried to prep a missile for firing that doesn't exist or is not attached to the turret.");
             }
         }
 
