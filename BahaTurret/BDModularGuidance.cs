@@ -25,7 +25,13 @@ namespace BahaTurret
 
         private float detonationRadius;
 
+        private List<Part> vesselParts = new List<Part>();
+
         public TransformAxisVectors ForwardTransformAxis { get; set; }
+
+        public float Mass {
+            get { return this.vesselParts.Sum(p => p.mass); }
+        }
 
         public enum TransformAxisVectors
         {
@@ -78,7 +84,6 @@ namespace BahaTurret
             {
                 AutoDestruction();
             }
-
         }
 
         private void CheckDetonationDistance()
@@ -119,6 +124,8 @@ namespace BahaTurret
         {
             foreach (var child in children)
             {
+                if(!this.vesselParts.Contains(child)) this.vesselParts.Add(child);
+
                 foreach (var resource in child.Resources)
                 {
                     if (resource.flowState)
@@ -156,19 +163,20 @@ namespace BahaTurret
             if (_targetDecoupler != null)
             {
                 if (_targetDecoupler.part.children.Count == 0) return;
-
+                this.vesselParts.Clear();
                 DisableRecursiveFlow(_targetDecoupler.part.children);
 
             }
         }
         private void MissileIgnition()
         {
-            var vesselParts = vessel.Parts;
+            this.vesselParts.Clear();
+            this.vesselParts = vessel.parts;
             EnableResourceFlow(vesselParts);
 
             var velocityObject = new GameObject("velObject");
-            velocityObject.transform.position = transform.position;
-            velocityObject.transform.parent = transform;
+            velocityObject.transform.position = vessel.transform.position;
+            velocityObject.transform.parent = vessel.transform;
             _velocityTransform = velocityObject.transform;
 
             MissileState = MissileStates.Boost;
@@ -240,10 +248,14 @@ namespace BahaTurret
                 WeaponNameWindow.OnActionGroupEditorOpened.Add(OnActionGroupEditorOpened);
                 WeaponNameWindow.OnActionGroupEditorClosed.Add(OnActionGroupEditorClosed);
                 Fields["CruiseAltitude"].guiActiveEditor = true;
+                Events["SwitchTargetingMode"].guiActiveEditor = true;
+                Events["SwitchGuidanceMode"].guiActiveEditor = true;
             }
             else
             {
                 Fields["CruiseAltitude"].guiActiveEditor = false;
+                Events["SwitchTargetingMode"].guiActiveEditor = false;
+                Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
                 detonationRadius = DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
             }
@@ -299,11 +311,13 @@ namespace BahaTurret
         }
 
         private void SetMissileTransform()
-        {  
-            MissileReferenceTransform = part.transform;
+        {
+                MissileReferenceTransform = part.transform;
+                this.ForwardTransformAxis = CalculateForwardTransform();
+                
 
-            this.ForwardTransformAxis =  CalculateForwardTransform();
-            _parentVessel = vessel;
+
+                _parentVessel = vessel;        
         }
 
         
@@ -334,8 +348,8 @@ namespace BahaTurret
                     Vector3.Angle(MissileReferenceTransform.up, BDMissileForward)
                 }
             };
-
-            return  vectorAngles.First(x => x.Value == vectorAngles.Min( y => y.Value)).Key;
+            var result = vectorAngles.First(x => x.Value == vectorAngles.Min(y => y.Value)).Key;
+            return result;
         }
 
 
@@ -494,7 +508,7 @@ namespace BahaTurret
             {
                 if (_guidanceIndex == 1)
                 {
-                   TargetPosition = AAMGuidance();
+                    TargetPosition = AAMGuidance();
                 }
                 else if (_guidanceIndex == 2)
                 {
@@ -508,19 +522,20 @@ namespace BahaTurret
                 //Updating aero surfaces
                 if (Time.time - timeFired > dropTime + 0.5f)
                 {
-                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -MissileReferenceTransform.forward);
+                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity,
+                        -MissileReferenceTransform.forward);
                     var targetDirection = _velocityTransform.InverseTransformPoint(TargetPosition).normalized;
-                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15 * Mathf.Deg2Rad, 0);
+                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 
                     var localAngVel = vessel.angularVelocity;
-                    var steerYaw = SteerMult * targetDirection.x - SteerDamping * -localAngVel.z;
-                    var steerPitch = SteerMult * targetDirection.y - SteerDamping * -localAngVel.x;
+                    var steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
+                    var steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
 
                     s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
-                    s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer); 
+                    s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
                 }
 
-                s.mainThrottle = 1;          
+                s.mainThrottle = 1;
             }
            
         }
@@ -580,29 +595,41 @@ namespace BahaTurret
         }
 
         #region KSP FIELDS
+     //   [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "),
+     //UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true)] public string WeaponName;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label (affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
+        public string WeaponName;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"), UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.All)] public float CruiseAltitude = 500;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"), UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float CruiseAltitude = 500;
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)] public string GuidanceLabel = "AGM/STS";
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
+        public string GuidanceLabel = "AGM/STS";
 
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
+        private string _targetingLabel = TargetingModes.None.ToString();
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true)] private string _targetingLabel = TargetingModes.None.ToString();
+        [KSPField(isPersistant = true)]
+        public int _guidanceIndex = 2;
 
-        [KSPField(isPersistant = true)] public int _guidanceIndex = 2;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Active Radar Range"), UI_FloatRange(minValue = 6000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float ActiveRadarRange = 6000;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Active Radar Range"), UI_FloatRange(minValue = 6000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.All)] public float ActiveRadarRange = 6000;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"), UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float MaxSteer = 1;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"), UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)] public float MaxSteer = 1;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float StagesNumber = 1;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.All)] public float StagesNumber = 1;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float DetonationDistance = 0;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.All)] public float DetonationDistance = 0;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float SteerDamping = 5;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.All)] public float SteerDamping = 5;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)] public float SteerMult = 10;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float SteerMult = 10;
        
 
         #endregion
@@ -625,8 +652,6 @@ namespace BahaTurret
         {
             if (!HasFired)
             {
-                HasFired = true;
-
                 GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
@@ -655,6 +680,8 @@ namespace BahaTurret
 
                 MissileState = MissileStates.Drop;
                 Misc.RefreshAssociatedWindows(part);
+
+                HasFired = true;
             }
         }
 
@@ -667,7 +694,7 @@ namespace BahaTurret
 
         public Vector3 StartDirection { get; set; }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Guidance Mode", active = true)]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Guidance Mode", active = true)]
         public void SwitchGuidanceMode()
         {
             _guidanceIndex++;
@@ -679,7 +706,7 @@ namespace BahaTurret
             RefreshGuidanceMode();
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Targeting Mode", active = true)]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Targeting Mode", active = true)]
         public void SwitchTargetingMode()
         {
             var targetingModes = Enum.GetNames(typeof(TargetingModes));
@@ -701,16 +728,19 @@ namespace BahaTurret
         public override void Jettison()
         {
             if (_targetDecoupler == null || !_targetDecoupler || !(_targetDecoupler is IStageSeparator)) return;
-            if (_targetDecoupler is ModuleDecouple)
-            {
-                (_targetDecoupler as ModuleDecouple).ejectionForce *= 10;
 
-                 (_targetDecoupler as ModuleDecouple).Decouple();
+
+            var decouple = _targetDecoupler as ModuleDecouple;
+            if (decouple != null)
+            {
+                decouple.ejectionForce = 2 * (float) ((Mass * decoupleSpeed) / decouple.ejectionForcePercent * 0.01);
+
+                 decouple.Decouple();
             }
             else
             {
-                (_targetDecoupler as ModuleAnchoredDecoupler).ejectionForce *= 5;
-                (_targetDecoupler as ModuleAnchoredDecoupler).Decouple();
+                ((ModuleAnchoredDecoupler) _targetDecoupler).ejectionForce = 2 * (float)((Mass * decoupleSpeed) / ((ModuleAnchoredDecoupler)_targetDecoupler).ejectionForcePercent * 0.01);
+                ((ModuleAnchoredDecoupler) _targetDecoupler).Decouple();
             }
 
             if (BDArmorySettings.Instance.ActiveWeaponManager != null)
@@ -741,13 +771,9 @@ namespace BahaTurret
 
         private void AutoDestruction()
         {
-            var partArray = vessel.parts.ToArray();
-            for (int i = 0; i < partArray.Length; i++)
+            foreach (var vesselPart in vesselParts)
             {
-                if (partArray[i] != null && partArray[i])
-                {
-                    partArray[i].temperature = part.maxTemp + 100;
-                }
+                vesselPart.temperature= part.maxTemp + 100;
             }
         }
 
@@ -777,7 +803,7 @@ namespace BahaTurret
                     return -this.MissileReferenceTransform.forward;
                 default:
                     return this.MissileReferenceTransform.forward;
-            }
+            }         
         }
 
 

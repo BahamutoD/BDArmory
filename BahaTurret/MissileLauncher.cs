@@ -64,16 +64,10 @@ namespace BahaTurret
 		[KSPField]
 		public float maxAoA = 35;
 		
-		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
-        	UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
-		public float decoupleSpeed = 0;
-		
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Direction: "), 
 			UI_Toggle(disabledText = "Lateral", enabledText = "Forward")]
 		public bool decoupleForward = false;
 		
-
-
 		[KSPField]
 		public float optimumAirspeed = 220;
 		
@@ -239,8 +233,10 @@ namespace BahaTurret
 			else
 			{
 				Fields["detonationTime"].guiActive = false;
-				Fields["detonationTime"].guiActiveEditor = false;
-			}
+
+                Fields["detonationTime"].guiActiveEditor = false;
+
+            }
 
 			ParseModes();
 
