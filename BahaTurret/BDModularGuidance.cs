@@ -8,12 +8,10 @@ namespace BahaTurret
 {
     public class BDModularGuidance : MissileBase
     {
-
+        private static readonly Vector3 ForwardReference = new Vector3(-0.6f, 0.0f, -0.8f);
+        private static readonly  Vector3 UpReference = new Vector3(0.0f, 1.0f, 0.0f);
         private bool _missileIgnited;
         private int _nextStage = (int) KSPActionGroup.Custom01;
-
-        private Vessel _parentVessel;
-        private bool _readyForGuidance;
 
         private PartModule _targetDecoupler;
 
@@ -28,6 +26,8 @@ namespace BahaTurret
         private List<Part> vesselParts = new List<Part>();
 
         public TransformAxisVectors ForwardTransformAxis { get; set; }
+        public TransformAxisVectors UpTransformAxis { get; set; }
+
 
         public float Mass {
             get { return this.vesselParts.Sum(p => p.mass); }
@@ -39,6 +39,8 @@ namespace BahaTurret
             UpNegative,
             ForwardPositive,
             ForwardNegative,
+            RightPositive,
+            RightNegative
         }
         private void RefreshGuidanceMode()
         {
@@ -91,12 +93,22 @@ namespace BahaTurret
             //Guard clauses
             if (!HasFired) return;
             if (!TargetAcquired) return;
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * GetBlastRadius()) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
 
+            var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
+            var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
+                                           previousMissileVelocity;
 
-            if ((Vector3.Distance(TargetPosition, vessel.CoM) < detonationRadius))
+            var futureTargetPosition = TargetPosition + (TargetVelocity*Time.fixedDeltaTime) +
+                                        0.5f*effectiveTargetAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
+            var missileTargetPosition = vessel.CoM +
+                                        (float) vessel.srfSpeed*vessel.srf_velocity.normalized*Time.fixedDeltaTime +
+                                        0.5f*effectiveMissileAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
+            float distance;
+            if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
             {
-                Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated");
+                Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance="+distance);
                 Detonate();
             }
         }
@@ -312,12 +324,9 @@ namespace BahaTurret
 
         private void SetMissileTransform()
         {
-                MissileReferenceTransform = part.transform;
-                this.ForwardTransformAxis = CalculateForwardTransform();
-                
-
-
-                _parentVessel = vessel;        
+            MissileReferenceTransform = part.transform;
+            this.ForwardTransformAxis = CalculateTransform(ForwardReference);
+            this.UpTransformAxis = CalculateTransform(UpReference);
         }
 
         
@@ -325,28 +334,35 @@ namespace BahaTurret
         /// <summary>
         /// This method will obtain the expected transform forward that matches the expected BD missile transform
         /// </summary>
-        private TransformAxisVectors CalculateForwardTransform()
+        private TransformAxisVectors CalculateTransform(Vector3 referenceVector)
         {
-            var BDMissileForward = new Vector3(-0.5685818f, -0.00697496533f, -0.822597265f);
-
             var vectorAngles = new Dictionary<TransformAxisVectors, float>
             {
                 {
                     TransformAxisVectors.ForwardPositive,
-                    Vector3.Angle(MissileReferenceTransform.forward, BDMissileForward)
+                    Vector3.Angle(MissileReferenceTransform.forward.normalized, referenceVector)
                 },
                 {
                     TransformAxisVectors.ForwardNegative,
-                    Vector3.Angle(-MissileReferenceTransform.forward, BDMissileForward)
+                    Vector3.Angle(-MissileReferenceTransform.forward.normalized, referenceVector)
                 },
                 {
                     TransformAxisVectors.UpNegative,
-                    Vector3.Angle(-MissileReferenceTransform.up, BDMissileForward)
+                    Vector3.Angle(-MissileReferenceTransform.up.normalized, referenceVector)
                 },
                 {
                     TransformAxisVectors.UpPositive,
-                    Vector3.Angle(MissileReferenceTransform.up, BDMissileForward)
-                }
+                    Vector3.Angle(MissileReferenceTransform.up.normalized, referenceVector)
+                },
+                {
+                    TransformAxisVectors.RightPositive,
+                    Vector3.Angle(MissileReferenceTransform.right.normalized, referenceVector)
+                },
+                 {
+                    TransformAxisVectors.RightNegative,
+                    Vector3.Angle(-MissileReferenceTransform.right.normalized, referenceVector)
+                 }
+
             };
             var result = vectorAngles.First(x => x.Value == vectorAngles.Min(y => y.Value)).Key;
             return result;
@@ -522,8 +538,7 @@ namespace BahaTurret
                 //Updating aero surfaces
                 if (Time.time - timeFired > dropTime + 0.5f)
                 {
-                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity,
-                        -MissileReferenceTransform.forward);
+                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, GetTransform(UpTransformAxis));
                     var targetDirection = _velocityTransform.InverseTransformPoint(TargetPosition).normalized;
                     targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 
@@ -669,8 +684,6 @@ namespace BahaTurret
 
                 Jettison();
 
-                //this.MissileReferenceTransform = this.vessel.transform;
-
                 AddTargetInfoToVessel();
 
                 vessel.vesselName = GetShortName();
@@ -687,7 +700,7 @@ namespace BahaTurret
 
         private void SetTargeting()
         {
-            startDirection = MissileReferenceTransform.forward;
+            startDirection = GetForwardTransform();
             SetLaserTargeting();
         }
 
@@ -733,13 +746,13 @@ namespace BahaTurret
             var decouple = _targetDecoupler as ModuleDecouple;
             if (decouple != null)
             {
-                decouple.ejectionForce = 2 * (float) ((Mass * decoupleSpeed) / decouple.ejectionForcePercent * 0.01);
+                decouple.ejectionForce =  (float) ((100*Mass * decoupleSpeed) / decouple.ejectionForcePercent * 0.01);
 
                  decouple.Decouple();
             }
             else
             {
-                ((ModuleAnchoredDecoupler) _targetDecoupler).ejectionForce = 2 * (float)((Mass * decoupleSpeed) / ((ModuleAnchoredDecoupler)_targetDecoupler).ejectionForcePercent * 0.01);
+                ((ModuleAnchoredDecoupler) _targetDecoupler).ejectionForce =  (float)((100*Mass * decoupleSpeed) / ((ModuleAnchoredDecoupler)_targetDecoupler).ejectionForcePercent * 0.01);
                 ((ModuleAnchoredDecoupler) _targetDecoupler).Decouple();
             }
 
@@ -772,7 +785,7 @@ namespace BahaTurret
         private void AutoDestruction()
         {
             foreach (var vesselPart in vesselParts)
-            {
+            { 
                 vesselPart.temperature= part.maxTemp + 100;
             }
         }
@@ -791,7 +804,12 @@ namespace BahaTurret
 
         public override Vector3 GetForwardTransform()
         {
-            switch (ForwardTransformAxis)
+            return GetTransform(ForwardTransformAxis);
+        }
+
+        public Vector3 GetTransform(TransformAxisVectors transformAxis)
+        {
+            switch (transformAxis)
             {
                 case TransformAxisVectors.UpPositive:
                     return this.MissileReferenceTransform.up;
@@ -801,9 +819,13 @@ namespace BahaTurret
                     return this.MissileReferenceTransform.forward;
                 case TransformAxisVectors.ForwardNegative:
                     return -this.MissileReferenceTransform.forward;
+                case TransformAxisVectors.RightNegative:
+                    return -this.MissileReferenceTransform.right;
+                case TransformAxisVectors.RightPositive:
+                    return this.MissileReferenceTransform.right;
                 default:
                     return this.MissileReferenceTransform.forward;
-            }         
+            }
         }
 
 
