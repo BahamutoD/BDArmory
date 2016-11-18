@@ -1999,7 +1999,6 @@ namespace BahaTurret
             if (HighLogic.LoadedSceneIsFlight && vessel == FlightGlobals.ActiveVessel &&
                 BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled)
             {
-                //debug
                 if (BDArmorySettings.DRAW_DEBUG_LINES)
                 {
                     if (guardMode && !BDArmorySettings.ALLOW_LEGACY_TARGETING)
