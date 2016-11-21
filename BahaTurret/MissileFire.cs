@@ -1902,7 +1902,8 @@ namespace BahaTurret
                 Vector3 dragForce = Vector3.zero;
                 Vector3 prevPos = ml.missileReferenceTransform.position;
                 Vector3 currPos = ml.missileReferenceTransform.position;
-                Vector3 simVelocity = vessel.rb_velocity;
+                //Vector3 simVelocity = vessel.rb_velocity;
+                Vector3 simVelocity = vessel.srf_velocity; // Issue #92
 
                 simVelocity += ml.decoupleSpeed*
                                (ml.decoupleForward
