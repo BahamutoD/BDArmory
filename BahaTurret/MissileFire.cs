@@ -1902,7 +1902,8 @@ namespace BahaTurret
                 Vector3 dragForce = Vector3.zero;
                 Vector3 prevPos = ml.missileReferenceTransform.position;
                 Vector3 currPos = ml.missileReferenceTransform.position;
-                Vector3 simVelocity = vessel.rb_velocity;
+                //Vector3 simVelocity = vessel.rb_velocity;
+                Vector3 simVelocity = vessel.srf_velocity; // Issue #92
 
                 simVelocity += ml.decoupleSpeed*
                                (ml.decoupleForward
@@ -1999,7 +2000,6 @@ namespace BahaTurret
             if (HighLogic.LoadedSceneIsFlight && vessel == FlightGlobals.ActiveVessel &&
                 BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled)
             {
-                //debug
                 if (BDArmorySettings.DRAW_DEBUG_LINES)
                 {
                     if (guardMode && !BDArmorySettings.ALLOW_LEGACY_TARGETING)
