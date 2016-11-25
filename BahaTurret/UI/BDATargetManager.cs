@@ -25,7 +25,7 @@ namespace BahaTurret
 
 		public static List<ModuleTargetingCamera> ActiveLasers;
 
-		public static List<MissileLauncher> FiredMissiles;
+		public static List<IBDWeapon> FiredMissiles;
 
 		public static List<DestructibleBuilding> LoadedBuildings;
 
@@ -96,7 +96,7 @@ namespace BahaTurret
 			//Laser points
 			ActiveLasers = new List<ModuleTargetingCamera>();
 
-			FiredMissiles = new List<MissileLauncher>();
+			FiredMissiles = new List<IBDWeapon>();
 
 			//AddToolbarButton();
 			StartCoroutine(ToolbarButtonRoutine());
@@ -198,52 +198,91 @@ namespace BahaTurret
 			}
 		}
 
-		/// <summary>
-		/// Gets the laser target painter with the least angle off boresight. Set the missile as the reference transform.
+		///// <summary>
+		///// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference missilePosition.
+		///// </summary>
+		///// <returns>The laser target painter.</returns>
+		///// <param name="referenceTransform">Reference missilePosition.</param>
+		///// <param name="maxBoreSight">Max bore sight.</param>
+		//public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
+		//{
+  //          return GetModuleTargeting(parentOnly, ml.transform.forward, ml.transform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
+  //      }
+
+  //      public static ModuleTargetingCamera GetLaserTarget(BDModularGuidance ml, bool parentOnly)
+  //      {
+  //          float maxOffBoresight = 45;
+           
+  //          return GetModuleTargeting(parentOnly, ml.MissileReferenceTransform.forward, ml.MissileReferenceTransform.position, maxOffBoresight,ml.vessel,ml.SourceVessel);
+  //      }
+
+        /// <summary>
+		/// Gets the laser target painter with the least angle off boresight. Set the missileBase as the reference missilePosition.
 		/// </summary>
 		/// <returns>The laser target painter.</returns>
-		/// <param name="referenceTransform">Reference transform.</param>
-		/// <param name="maxBoreSight">Max bore sight.</param>
-		public static ModuleTargetingCamera GetLaserTarget(MissileLauncher ml, bool parentOnly)
-		{
-			Transform referenceTransform = ml.transform;
-			float maxOffBoresight = ml.maxOffBoresight;
-			ModuleTargetingCamera finalCam = null;
-			float smallestAngle = 360;
-			foreach(var cam in ActiveLasers)
-			{
-				if(!cam)
-				{
-					continue;
-				}
-
-				if(parentOnly && !(cam.vessel == ml.vessel || cam.vessel == ml.sourceVessel))
-				{
-					continue;
-				}
+	    public static ModuleTargetingCamera GetLaserTarget(MissileBase ml, bool parentOnly)
+	    {
+            return GetModuleTargeting(parentOnly, ml.GetForwardTransform(), ml.MissileReferenceTransform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
+        }
 
 
-				if(cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
-				{
-					/*
-					if(ml.guidanceMode == MissileLauncher.GuidanceModes.BeamRiding && Vector3.Dot(ml.transform.position - cam.transform.position, ml.transform.forward) < 0)
-					{
-						continue;
-					}
-					*/
+        private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Vector3 missilePosition, Vector3 position, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
+	    {
+            ModuleTargetingCamera finalCam = null;
+            float smallestAngle = 360;
+            foreach (var cam in ActiveLasers)
+            {
+                if (!cam)
+                {
+                    continue;
+                }
 
-					float angle = Vector3.Angle(referenceTransform.forward, cam.groundTargetPosition-referenceTransform.position);
-					if(angle < maxOffBoresight && angle < smallestAngle && ml.CanSeePosition(cam.groundTargetPosition))
-					{
-						smallestAngle = angle;
-						finalCam = cam;
-					}
-				}
-			}
-			return finalCam;
-		}
+                if (parentOnly && !(cam.vessel == vessel || cam.vessel == sourceVessel))
+                {
+                    continue;
+                }
 
-		public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
+
+                if (cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
+                {
+                    float angle = Vector3.Angle(missilePosition, cam.groundTargetPosition - position);
+                    if (angle < maxOffBoresight && angle < smallestAngle && CanSeePosition(cam.groundTargetPosition, vessel.transform.position, missilePosition))
+                    {
+                        smallestAngle = angle;
+                        finalCam = cam;
+                    }
+                }
+            }
+            return finalCam;
+        }
+
+        public static bool CanSeePosition(Vector3 groundTargetPosition, Vector3 vesselPosition, Vector3 missilePosition)
+        {
+            if ((groundTargetPosition - vesselPosition).sqrMagnitude < Mathf.Pow(20, 2))
+            {
+                return false;
+            }
+
+            float dist = 10000;
+            Ray ray = new Ray(missilePosition, groundTargetPosition - missilePosition);
+            ray.origin += 10 * ray.direction;
+            RaycastHit rayHit;
+            if (Physics.Raycast(ray, out rayHit, dist, 557057))
+            {
+                if ((rayHit.point - groundTargetPosition).sqrMagnitude < 200)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
 		{
 			float minScore = highpassThreshold;
 			float minMass = 0.5f;
@@ -259,7 +298,7 @@ namespace BahaTurret
 				TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
 				if(mf == null || 
 					!tInfo || 
-					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.missileModule.MissileState == MissileLauncher.MissileStates.Boost || tInfo.missileModule.MissileState == MissileLauncher.MissileStates.Cruise)))
+					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Boost || tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Cruise)))
 				{
 					if(vessel.GetTotalMass() < minMass)
 					{
@@ -654,11 +693,11 @@ namespace BahaTurret
 					return;
 				}
 
-				foreach(var ml in v.FindPartModulesImplementing<MissileLauncher>())
+				foreach(var ml in v.FindPartModulesImplementing<MissileBase>())
 				{
-					if(ml.hasFired)
+					if(ml.HasFired)
 					{
-						if(ml.team != reporter.team)
+						if(ml.Team != reporter.team)
 						{
 							info = v.gameObject.AddComponent<TargetInfo>();
 						}
@@ -848,11 +887,11 @@ namespace BahaTurret
 			{
 				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
 				{
-					if(target.missileModule)
+					if(target.MissileBaseModule)
 					{
 						if(targetingMeOnly)
 						{
-							if(Vector3.SqrMagnitude(target.missileModule.targetPosition - mf.vessel.CoM) > 60 * 60)
+							if(Vector3.SqrMagnitude(target.MissileBaseModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
 							{
 								continue;
 							}

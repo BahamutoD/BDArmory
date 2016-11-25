@@ -190,7 +190,7 @@ namespace BahaTurret
         {
             if (BDArmorySettings.DRAW_DEBUG_LABELS && vessel.isActiveVessel)
             {
-                GUI.Label(new Rect(400, 500, 200, 200), "Total jammer strength: " + jammerStrength);
+                GUI.Label(new Rect(400, 700, 200, 200), "Total jammer strength: " + jammerStrength);
             }
         }
     }

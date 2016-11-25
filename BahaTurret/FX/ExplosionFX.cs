@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BahaTurret
@@ -100,28 +101,27 @@ namespace BahaTurret
         public static float ExplosionHeatMultiplier = 4200;
         public static float ExplosionImpulseMultiplier = 1.5f;
 
-        public static void DoExplosionRay(Ray ray, float power, float heat, float maxDistance,
-            ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs, Vessel sourceVessel = null)
-        {
-            RaycastHit rayHit;
-            if (Physics.Raycast(ray, out rayHit, maxDistance, 557057))
-            {
-                float sqrDist = (rayHit.point - ray.origin).sqrMagnitude;
-                float sqrMaxDist = maxDistance*maxDistance;
-                float distanceFactor = Mathf.Clamp01((sqrMaxDist - sqrDist)/sqrMaxDist);
-                //parts
-                Part part = rayHit.collider.GetComponentInParent<Part>();
-                if (part)
-                {
-                    Vessel missileSource = null;
-                    if (sourceVessel != null)
-                    {
-                        MissileLauncher ml = part.FindModuleImplementing<MissileLauncher>();
-                        if (ml)
-                        {
-                            missileSource = ml.sourceVessel;
-                        }
-                    }
+		public static void DoExplosionRay(Ray ray, float power, float heat, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs, Vessel sourceVessel = null)
+		{
+			RaycastHit rayHit;
+			if(Physics.Raycast(ray, out rayHit, maxDistance, 557057))
+			{
+				float sqrDist = (rayHit.point - ray.origin).sqrMagnitude;
+				float sqrMaxDist = maxDistance * maxDistance;
+				float distanceFactor = Mathf.Clamp01((sqrMaxDist - sqrDist) / sqrMaxDist);
+				//parts
+				Part part = rayHit.collider.GetComponentInParent<Part>();
+				if(part)
+				{
+					Vessel missileSource = null;
+					if(sourceVessel != null)
+					{
+                        var ml = part.FindModuleImplementing<MissileBase>();
+						if(ml)
+						{
+							missileSource = ml.SourceVessel;
+						}
+					}
 
 
                     if (!ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL &&
@@ -171,35 +171,33 @@ namespace BahaTurret
         public static List<Part> ignoreParts = new List<Part>();
         public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
 
-        public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance,
-            Vessel sourceVessel)
-        {
-            if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:======= Doing explosion sphere =========");
-            ignoreParts.Clear();
-            ignoreBuildings.Clear();
-            foreach (var vessel in BDATargetManager.LoadedVessels)
-            {
-                if (vessel == null) continue;
-                if (vessel.loaded && !vessel.packed && (vessel.transform.position - position).magnitude < maxDistance*4)
-                {
-                    foreach (var part in vessel.parts)
-                    {
-                        if (!part) continue;
-                        DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position),
-                            power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
-                    }
-                }
-            }
+		public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel)
+		{
+			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("======= Doing explosion sphere =========");
+			ignoreParts.Clear();
+			ignoreBuildings.Clear();
 
-            foreach (var bldg in BDATargetManager.LoadedBuildings)
-            {
-                if (bldg == null) continue;
-                if ((bldg.transform.position - position).magnitude < maxDistance*1000)
-                {
-                    DoExplosionRay(new Ray(position, bldg.transform.position - position), power, heat, maxDistance,
-                        ref ignoreParts, ref ignoreBuildings);
-                }
+		    var vesselsAffected =
+		        BDATargetManager.LoadedVessels.Where(
+		            v => v != null && v.loaded && !v.packed && (v.transform.position - position).magnitude < maxDistance*4);
+
+		    var partsAffected =
+		        vesselsAffected.SelectMany(v => v.parts).Where(p => p!=null && p && (p.transform.position - position).magnitude < maxDistance);
+
+		    foreach (var part in partsAffected)
+		    {
+                DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
             }
-        }
-    }
+		      
+			foreach(var bldg in BDATargetManager.LoadedBuildings)
+			{
+				if(bldg == null) continue;
+				if((bldg.transform.position - position).magnitude < maxDistance * 1000)
+				{
+					DoExplosionRay(new Ray(position, bldg.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
+				}
+			}
+		}
+	}
 }
+

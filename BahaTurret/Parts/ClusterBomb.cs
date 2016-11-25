@@ -71,7 +71,7 @@ namespace BahaTurret
 
         public override void OnFixedUpdate()
         {
-            if (missileLauncher != null && missileLauncher.timeIndex > deployDelay && !deployed && AltitudeTrigger())
+            if (missileLauncher != null && missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
             {
                 DeploySubmunitions();
             }
@@ -107,7 +107,7 @@ namespace BahaTurret
                 Submunition subScript = sub.AddComponent<Submunition>();
                 subScript.enabled = true;
                 subScript.deployed = true;
-                subScript.sourceVessel = missileLauncher.sourceVessel;
+                subScript.sourceVessel = missileLauncher.SourceVessel;
                 subScript.blastForce = missileLauncher.blastPower;
                 subScript.blastHeat = missileLauncher.blastHeat;
                 subScript.blastRadius = missileLauncher.blastRadius;
@@ -130,7 +130,7 @@ namespace BahaTurret
             }
 
             part.explosionPotential = 0;
-            missileLauncher.hasFired = false;
+            missileLauncher.HasFired = false;
 
             part.temperature = part.maxTemp + 10;
         }

@@ -719,14 +719,14 @@ namespace BahaTurret
 		void FlyToTargetVessel(FlightCtrlState s, Vessel v)
 		{
 			Vector3 target = v.CoM;
-			MissileLauncher missile = null;
+			MissileBase missile = null;
 			Vector3 vectorToTarget = v.transform.position - vesselTransform.position;
 			float distanceToTarget = vectorToTarget.magnitude;
 			float planarDistanceToTarget = Vector3.ProjectOnPlane(vectorToTarget, upDirection).magnitude;
 			float angleToTarget = Vector3.Angle(target - vesselTransform.position, vesselTransform.up);
 			if(weaponManager)
 			{
-				missile = weaponManager.currentMissile;
+				missile = weaponManager.CurrentMissile;
 				if(missile != null)
 				{
 					if(missile.GetWeaponClass() == WeaponClasses.Missile)
@@ -736,7 +736,7 @@ namespace BahaTurret
 							finalMaxSteer = GetSteerLimiterForSpeedAndPower();
 						}
 
-						if(missile.targetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
+						if(missile.TargetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
 						{
 							debugString += "\nAttempting heat lock";
 							target += v.srf_velocity.normalized * 10;
@@ -1118,7 +1118,7 @@ namespace BahaTurret
 
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
 
-				if(weaponManager.currentMissile && weaponManager.currentMissile.GetWeaponClass() == WeaponClasses.Bomb)
+				if(weaponManager.CurrentMissile && weaponManager.CurrentMissile.GetWeaponClass() == WeaponClasses.Bomb)
 				{
 					extendDistance = 4500;
 				}
@@ -1760,7 +1760,7 @@ namespace BahaTurret
 		{
 			bool launchAuthorized = false;
 			Vector3 target = targetV.transform.position;
-			MissileLauncher missile = mf.currentMissile;
+			MissileBase missile = mf.CurrentMissile;
 			if(missile != null)
 			{
 				if(!targetV.LandedOrSplashed)
@@ -1769,18 +1769,25 @@ namespace BahaTurret
 				}
 
 				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
-				float maxOffBoresight = missile.maxOffBoresight;
-				if(missile.targetingMode == MissileLauncher.TargetingModes.GPS) maxOffBoresight = 45;
+			    var launcher = missile as MissileLauncher;
+			    float maxOffBoresight = 45;
+                if (launcher != null)
+			    {
+			         maxOffBoresight = launcher.maxOffBoresight;
+			    }
+               
+				//if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
 
 				float fTime = 2f;
 				Vector3 futurePos = target + (targetV.srf_velocity * fTime);
 				Vector3 myFuturePos = vesselTransform.position + (vessel.srf_velocity * fTime);
 				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
 
-				if(fDot && Vector3.Angle(missile.missileReferenceTransform.forward, target - missile.transform.position) < maxOffBoresight * boresightFactor)
-				{
-					launchAuthorized = true;
-				}
+               if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < maxOffBoresight * boresightFactor)
+               {
+                        launchAuthorized = true;
+               }
+                    
 			}
 
 			return launchAuthorized;

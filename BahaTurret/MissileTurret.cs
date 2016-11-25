@@ -343,10 +343,10 @@ namespace BahaTurret
         {
             slaved = false;
 
-            if (weaponManager && wm.slavingTurrets && wm.currentMissile)
+            if (weaponManager && wm.slavingTurrets && wm.CurrentMissile)
             {
                 slaved = true;
-                slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.currentMissile, wm.slavedPosition,
+                slavedTargetPosition = MissileGuidance.GetAirToAirFireSolution(wm.CurrentMissile, wm.slavedPosition,
                     wm.slavedVelocity);
             }
         }
@@ -458,7 +458,7 @@ namespace BahaTurret
                     mRef.parent = finalTransform;
                     mrl.Add(mRef);
 
-                    ml.missileReferenceTransform = mTf;
+                    ml.MissileReferenceTransform = mTf;
                     ml.missileTurret = this;
 
                     ml.decoupleForward = true;
@@ -487,7 +487,7 @@ namespace BahaTurret
 
             for (int i = 0; i < missileChildren.Length; i++)
             {
-                if (missileTransforms[i] && missileChildren[i] && !missileChildren[i].hasFired)
+                if (missileTransforms[i] && missileChildren[i] && !missileChildren[i].HasFired)
                 {
                     missileTransforms[i].position = missileReferenceTransforms[i].position;
                     missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
@@ -545,14 +545,14 @@ namespace BahaTurret
         IEnumerator MissileRailRoutine(MissileLauncher ml)
         {
             yield return null;
-            Ray ray = new Ray(ml.transform.position, ml.missileReferenceTransform.forward);
+            Ray ray = new Ray(ml.transform.position, ml.MissileReferenceTransform.forward);
             Vector3 localOrigin = turret.pitchTransform.InverseTransformPoint(ray.origin);
             Vector3 localDirection = turret.pitchTransform.InverseTransformDirection(ray.direction);
             float forwardSpeed = ml.decoupleSpeed;
             while (ml && Vector3.SqrMagnitude(ml.transform.position - ray.origin) < railLength*railLength)
             {
-                float thrust = ml.timeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
-                thrust = ml.timeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
+                float thrust = ml.TimeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
+                thrust = ml.TimeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
                 float accel = thrust/ml.part.mass;
                 forwardSpeed += accel*Time.fixedDeltaTime;
 

@@ -18,7 +18,7 @@ namespace BahaTurret
 		public BDArmorySettings.BDATeams team;
 		public bool isMissile = false;
 
-		public MissileLauncher missileModule = null;
+		public MissileBase MissileBaseModule = null;
 
 		public MissileFire weaponManager;
 
@@ -75,7 +75,7 @@ namespace BahaTurret
 					return false;
 				}
 
-				if(isMissile && missileModule && !missileModule.hasMissed)
+				if(isMissile && MissileBaseModule && !MissileBaseModule.HasMissed)
 				{
 					return true;
 				}
@@ -126,11 +126,11 @@ namespace BahaTurret
 			}
 			if(!foundMf)
 			{
-				foreach(var ml in vessel.FindPartModulesImplementing<MissileLauncher>())
+				foreach(var ml in vessel.FindPartModulesImplementing<MissileBase>())
 				{
 					isMissile = true;
-					missileModule = ml;
-					team = BDATargetManager.BoolToTeam(ml.team);
+					MissileBaseModule = ml;
+					team = BDATargetManager.BoolToTeam(ml.Team);
 					break;
 				}
 			}

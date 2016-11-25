@@ -90,7 +90,7 @@ namespace BahaTurret
         private Transform referenceTransform;
         private Transform vesselReferenceTransform;
 
-        public MissileLauncher lastMissile;
+		public MissileBase LastMissile;
 
         //bool boresightScan = false;
 
@@ -889,13 +889,13 @@ namespace BahaTurret
             }
 
             //missile data
-            if (lastMissile && lastMissile.targetAcquired)
+            if (LastMissile && LastMissile.TargetAcquired)
             {
                 Rect missileDataRect = new Rect(5, radarRect.height - 65, radarRect.width - 5, 60);
-                string missileDataString = lastMissile.GetShortName();
-                missileDataString += "\nT-" + lastMissile.timeToImpact.ToString("0");
+                string missileDataString = LastMissile.GetShortName();
+                missileDataString += "\nT-" + LastMissile.TimeToImpact.ToString("0");
 
-                if (lastMissile.activeRadar && Mathf.Round(Time.time*3)%2 == 0)
+                if (LastMissile.ActiveRadar && Mathf.Round(Time.time*3)%2 == 0)
                 {
                     missileDataString += "\nACTIVE";
                 }
@@ -1538,20 +1538,18 @@ namespace BahaTurret
                     {
                         int lTarInd = lockedTargetIndexes[activeLockedTargetIndex];
 
-                        if (i == lTarInd && weaponManager && weaponManager.selectedWeapon != null)
-                        {
-                            if (weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
-                            {
-                                MissileLauncher currMissile = weaponManager.currentMissile;
-                                if (currMissile.targetingMode == MissileLauncher.TargetingModes.Radar ||
-                                    currMissile.targetingMode == MissileLauncher.TargetingModes.Heat)
-                                {
-                                    MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currMissile,
-                                        lockedTarget.velocity, lockedTarget.predictedPosition);
-                                    float rangeToPixels = (1/rIncrements[rangeIndex])*radarRect.height;
-                                    float dlzWidth = 12;
-                                    float lineWidth = 2;
-                                    float dlzX = radarRect.width - dlzWidth - lineWidth;
+						if(i == lTarInd && weaponManager && weaponManager.selectedWeapon != null)
+						{
+							if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+							{
+								MissileBase currMissile = weaponManager.CurrentMissile;
+								if(currMissile.TargetingMode == MissileBase.TargetingModes.Radar || currMissile.TargetingMode == MissileBase.TargetingModes.Heat)
+								{
+									MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currMissile, lockedTarget.velocity, lockedTarget.predictedPosition);
+									float rangeToPixels = (1 / rIncrements[rangeIndex]) * radarRect.height;
+									float dlzWidth = 12;
+									float lineWidth = 2;
+									float dlzX = radarRect.width - dlzWidth - lineWidth;
 
                                     BDGUIUtils.DrawRectangle(new Rect(dlzX, 0, dlzWidth, radarRect.height), Color.black);
 

@@ -599,7 +599,7 @@ namespace BahaTurret
                     if (wm.weaponIndex > 0 && wm.selectedWeapon.GetPart().name == rdyMissile.part.name)
                     {
                         wm.selectedWeapon = rdyMissile;
-                        wm.currentMissile = rdyMissile;
+                        wm.CurrentMissile = rdyMissile;
                     }
                 }
             }
@@ -806,7 +806,7 @@ namespace BahaTurret
                     mRef.parent = rotationTransforms[0];
                     mrl.Add(mRef);
 
-                    ml.missileReferenceTransform = mTf;
+                    ml.MissileReferenceTransform = mTf;
                     ml.rotaryRail = this;
 
                     ml.decoupleForward = false;
@@ -935,7 +935,7 @@ namespace BahaTurret
 
             for (int i = 0; i < missileChildren.Length; i++)
             {
-                if (missileTransforms[i] && missileChildren[i] && !missileChildren[i].hasFired)
+                if (missileTransforms[i] && missileChildren[i] && !missileChildren[i].HasFired)
                 {
                     missileTransforms[i].position = missileReferenceTransforms[i].position;
                     missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;

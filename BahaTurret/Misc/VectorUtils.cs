@@ -123,6 +123,7 @@ namespace BahaTurret
 
 		public static Vector3 GetUpDirection(Vector3 position)
 		{
+            if(FlightGlobals.currentMainBody == null) return Vector3.up;
 			return (position-FlightGlobals.currentMainBody.transform.position).normalized;
 		}
 
