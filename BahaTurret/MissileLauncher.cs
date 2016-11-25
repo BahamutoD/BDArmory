@@ -67,8 +67,12 @@ namespace BahaTurret
 		[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Direction: "), 
 			UI_Toggle(disabledText = "Lateral", enabledText = "Forward")]
 		public bool decoupleForward = false;
-		
-		[KSPField]
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
+UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+        public float decoupleSpeed = 0;
+
+        [KSPField]
 		public float optimumAirspeed = 220;
 		
 		[KSPField]

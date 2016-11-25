@@ -8,8 +8,6 @@ namespace BahaTurret
 {
     public class BDModularGuidance : MissileBase
     {
-        private static readonly Vector3 ForwardReference = new Vector3(-0.6f, 0.0f, -0.8f);
-        private static readonly  Vector3 UpReference = new Vector3(0.0f, 1.0f, 0.0f);
         private bool _missileIgnited;
         private int _nextStage = (int) KSPActionGroup.Custom01;
 
@@ -136,8 +134,6 @@ namespace BahaTurret
         {
             foreach (var child in children)
             {
-                if(!this.vesselParts.Contains(child)) this.vesselParts.Add(child);
-
                 foreach (var resource in child.Resources)
                 {
                     if (resource.flowState)
@@ -149,6 +145,7 @@ namespace BahaTurret
                 {
                     DisableRecursiveFlow(child.children);
                 }
+                 if(!this.vesselParts.Contains(child)) this.vesselParts.Add(child);
             }
         }
 
@@ -185,7 +182,6 @@ namespace BahaTurret
             this.vesselParts.Clear();
             this.vesselParts = vessel.parts;
             EnableResourceFlow(vesselParts);
-
             var velocityObject = new GameObject("velObject");
             velocityObject.transform.position = vessel.transform.position;
             velocityObject.transform.parent = vessel.transform;
@@ -291,7 +287,6 @@ namespace BahaTurret
 
 
             //TODO: BDModularGuidance should be configurable?
-            maxOffBoresight = 50;
             lockedSensorFOV = 5;
             maxStaticLaunchRange = ActiveRadarRange*1.25f;
             minStaticLaunchRange = 500;
@@ -325,52 +320,51 @@ namespace BahaTurret
         private void SetMissileTransform()
         {
             MissileReferenceTransform = part.transform;
-            this.ForwardTransformAxis = CalculateTransform(ForwardReference);
-            this.UpTransformAxis = CalculateTransform(UpReference);
-        }
-
-        
+            this.ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
+            this.UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
+        }      
 
         /// <summary>
         /// This method will obtain the expected transform forward that matches the expected BD missile transform
         /// </summary>
-        private TransformAxisVectors CalculateTransform(Vector3 referenceVector)
-        {
-            var vectorAngles = new Dictionary<TransformAxisVectors, float>
-            {
-                {
-                    TransformAxisVectors.ForwardPositive,
-                    Vector3.Angle(MissileReferenceTransform.forward.normalized, referenceVector)
-                },
-                {
-                    TransformAxisVectors.ForwardNegative,
-                    Vector3.Angle(-MissileReferenceTransform.forward.normalized, referenceVector)
-                },
-                {
-                    TransformAxisVectors.UpNegative,
-                    Vector3.Angle(-MissileReferenceTransform.up.normalized, referenceVector)
-                },
-                {
-                    TransformAxisVectors.UpPositive,
-                    Vector3.Angle(MissileReferenceTransform.up.normalized, referenceVector)
-                },
-                {
-                    TransformAxisVectors.RightPositive,
-                    Vector3.Angle(MissileReferenceTransform.right.normalized, referenceVector)
-                },
-                 {
-                    TransformAxisVectors.RightNegative,
-                    Vector3.Angle(-MissileReferenceTransform.right.normalized, referenceVector)
-                 }
+        //private TransformAxisVectors CalculateTransform(Vector3 referenceVector)
+        //{
+        //    var vectorAngles = new Dictionary<TransformAxisVectors, float>
+        //    {
+        //        {
+        //            TransformAxisVectors.ForwardPositive,
+        //            Vector3.Angle(MissileReferenceTransform.forward.normalized, referenceVector)
+        //        },
+        //        {
+        //            TransformAxisVectors.ForwardNegative,
+        //            Vector3.Angle(-MissileReferenceTransform.forward.normalized, referenceVector)
+        //        },
+        //        {
+        //            TransformAxisVectors.UpNegative,
+        //            Vector3.Angle(-MissileReferenceTransform.up.normalized, referenceVector)
+        //        },
+        //        {
+        //            TransformAxisVectors.UpPositive,
+        //            Vector3.Angle(MissileReferenceTransform.up.normalized, referenceVector)
+        //        },
+        //        {
+        //            TransformAxisVectors.RightPositive,
+        //            Vector3.Angle(MissileReferenceTransform.right.normalized, referenceVector)
+        //        },
+        //         {
+        //            TransformAxisVectors.RightNegative,
+        //            Vector3.Angle(-MissileReferenceTransform.right.normalized, referenceVector)
+        //         }
 
-            };
-            var result = vectorAngles.First(x => x.Value == vectorAngles.Min(y => y.Value)).Key;
-            return result;
-        }
+        //    };
+        //    var result = vectorAngles.First(x => x.Value == vectorAngles.Min(y => y.Value)).Key;
+        //    return result;
+        //}
 
 
         void UpdateGuidance()
         {
+            if (!HasFired) return;
             if (guidanceActive)
             {
                 switch (TargetingMode)
@@ -525,6 +519,7 @@ namespace BahaTurret
                 if (_guidanceIndex == 1)
                 {
                     TargetPosition = AAMGuidance();
+                    CheckMiss();
                 }
                 else if (_guidanceIndex == 2)
                 {
@@ -534,7 +529,6 @@ namespace BahaTurret
                 {
                     TargetPosition = CruiseGuidance();
                 }
-                CheckMiss();
                 //Updating aero surfaces
                 if (Time.time - timeFired > dropTime + 0.5f)
                 {
@@ -610,8 +604,11 @@ namespace BahaTurret
         }
 
         #region KSP FIELDS
-     //   [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "),
-     //UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
+
+        [KSPField]
+        public string ForwardTransform = "ForwardNegative";
+        [KSPField]
+        public string UpTransform = "RightPositive";
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label (affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
         public string WeaponName;
@@ -645,7 +642,9 @@ namespace BahaTurret
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerMult = 10;
-       
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Off Boresight"), UI_FloatRange(minValue = 0f, maxValue = 180f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public new float maxOffBoresight = 1;
 
         #endregion
 
@@ -746,13 +745,12 @@ namespace BahaTurret
             var decouple = _targetDecoupler as ModuleDecouple;
             if (decouple != null)
             {
-                decouple.ejectionForce =  (float) ((100*Mass * decoupleSpeed) / decouple.ejectionForcePercent * 0.01);
-
+                decouple.ejectionForce *= 5; 
                  decouple.Decouple();
             }
             else
             {
-                ((ModuleAnchoredDecoupler) _targetDecoupler).ejectionForce =  (float)((100*Mass * decoupleSpeed) / ((ModuleAnchoredDecoupler)_targetDecoupler).ejectionForcePercent * 0.01);
+                ((ModuleAnchoredDecoupler) _targetDecoupler).ejectionForce *= 5;
                 ((ModuleAnchoredDecoupler) _targetDecoupler).Decouple();
             }
 
@@ -760,6 +758,7 @@ namespace BahaTurret
                 BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
         }
 
+     
         public override float GetBlastRadius()
         {
             if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
@@ -786,7 +785,7 @@ namespace BahaTurret
         {
             foreach (var vesselPart in vesselParts)
             { 
-                vesselPart.temperature= part.maxTemp + 100;
+                vesselPart.temperature = part.maxTemp + 100;
             }
         }
 
@@ -794,10 +793,6 @@ namespace BahaTurret
         {
             if (HasFired)
             {
-                //foreach (var highExplosive in vessel.FindPartModulesImplementing<BDExplosivePart>())
-                //{
-                //    highExplosive.Detonate();
-                //}
                 AutoDestruction();          
             }
         }
