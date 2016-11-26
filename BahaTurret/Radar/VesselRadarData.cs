@@ -1087,7 +1087,7 @@ namespace BahaTurret
 
         void UnlinkVRD(VesselRadarData vrd)
         {
-            Debug.Log("Unlinking VRD: " + vrd.vessel.vesselName);
+            Debug.Log("[BDArmory]: Unlinking VRD: " + vrd.vessel.vesselName);
             externalVRDs.Remove(vrd);
 
             List<ModuleRadar> radarsToUnlink = new List<ModuleRadar>();
@@ -1102,7 +1102,7 @@ namespace BahaTurret
 
             foreach (var mr in radarsToUnlink)
             {
-                Debug.Log(" - Unlinking radar: " + mr.radarName);
+                Debug.Log("[BDArmory]:  - Unlinking radar: " + mr.radarName);
                 UnlinkRadar(mr);
             }
 
@@ -1209,7 +1209,7 @@ namespace BahaTurret
                 yield return null;
             }
             LinkVRD(vrd);
-            Debug.Log("Radar data link recovered: Local - " + vessel.vesselName + ", External - " +
+            Debug.Log("[BDArmory]: Radar data link recovered: Local - " + vessel.vesselName + ", External - " +
                       vrd.vessel.vesselName);
         }
 

@@ -376,7 +376,7 @@ namespace BahaTurret
 
         IEnumerator StartUpRoutine()
         {
-            Debug.Log("StartupRoutine: " + radarName + " enabled: " + radarEnabled);
+            Debug.Log("[BDArmory]: StartupRoutine: " + radarName + " enabled: " + radarEnabled);
             while (!FlightGlobals.ready || vessel.packed)
             {
                 yield return null;
@@ -409,7 +409,7 @@ namespace BahaTurret
                 }
                 if(!linkedRadar)
                 {
-                    Debug.Log("Radar was linked, but linked radar doesn't exist.");
+                    Debug.Log("[BDArmory]: Radar was linked, but linked radar doesn't exist.");
                     UnlinkRadar();
                 }
 
@@ -629,11 +629,11 @@ namespace BahaTurret
             {
                 return false;
             }
-            Debug.Log("Trying to radar lock target");
+            Debug.Log("[BDArmory]: Trying to radar lock target");
 
             if (currentLocks == maxLocks)
             {
-                Debug.Log("This radar (" + radarName + ") already has the maximum allowed targets locked.");
+                Debug.Log("[BDArmory]: This radar (" + radarName + ") already has the maximum allowed targets locked.");
                 return false;
             }
 
@@ -663,14 +663,14 @@ namespace BahaTurret
                     }
                     lockedTargets.Add(attemptedLocks[i]);
                     currLocks = lockedTargets.Count;
-                    Debug.Log("- Acquired lock on target.");
+                    Debug.Log("[BDArmory]: - Acquired lock on target.");
                     vesselRadarData.AddRadarContact(this, lockedTarget, true);
                     vesselRadarData.UpdateLockedTargets();
                     return true;
                 }
             }
 
-            Debug.Log("- Failed to lock on target.");
+            Debug.Log("[BDArmory]: - Failed to lock on target.");
             return false;
         }
 
@@ -1039,7 +1039,7 @@ namespace BahaTurret
             }
             yield return null;
             vesselRadarData.LinkVRD(vrd);
-            Debug.Log("Radar data link recovered: Local - " + vessel.vesselName + ", External - " +
+            Debug.Log("[BDArmory]: Radar data link recovered: Local - " + vessel.vesselName + ", External - " +
                       vrd.vessel.vesselName);
         }
 

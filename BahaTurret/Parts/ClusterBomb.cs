@@ -215,7 +215,7 @@ namespace BahaTurret
                         {
                             destroyChance = 100;
                         }
-                        Debug.Log("Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
+                        Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
                         if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
                         {
                             hitPart.temperature = hitPart.maxTemp + 100;

@@ -196,7 +196,7 @@ namespace BahaTurret
 						{
                             heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 						}
-                        if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
+                        if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
 
                         if (hitPart.mass <= 0.01)   //if part mass is below 0.01, instakill it and do minor collateral (anti-exploit and to keep people from abusing near massless or massless crap as armor)
                         {
@@ -232,7 +232,7 @@ namespace BahaTurret
 						{
 							hitBuilding.Demolish();
 						}
-						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("bullet hit destructible building! Damage: "+(damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
+						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " + (damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
 					}
 					
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))

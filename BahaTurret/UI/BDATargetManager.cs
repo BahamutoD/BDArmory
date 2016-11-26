@@ -441,7 +441,7 @@ namespace BahaTurret
 		void SaveGPSTargets(ConfigNode saveNode)
 		{
 			string saveTitle = HighLogic.CurrentGame.Title;
-			Debug.Log("Save title: " + saveTitle);
+			Debug.Log("[BDArmory]: Save title: " + saveTitle);
 			ConfigNode fileNode = ConfigNode.Load("GameData/BDArmory/gpsTargets.cfg");
 			if(fileNode == null)
 			{
@@ -493,7 +493,7 @@ namespace BahaTurret
 				string targetString = GPSListToString();
 				gpsNode.SetValue("Targets", targetString, true);
 				fileNode.Save("GameData/BDArmory/gpsTargets.cfg");
-				Debug.Log("==== Saved BDA GPS Targets ====");
+				Debug.Log("[BDArmory]: ==== Saved BDA GPS Targets ====");
 			}
 		}
 
@@ -517,18 +517,18 @@ namespace BahaTurret
 							string targetString = gpsNode.GetValue("Targets");
 							if(targetString == string.Empty)
 							{
-								Debug.Log("==== BDA GPS Target string was empty! ====");
+								Debug.Log("[BDArmory]: ==== BDA GPS Target string was empty! ====");
 								return;
 							}
 							else
 							{
 								StringToGPSList(targetString);
-								Debug.Log("==== Loaded BDA GPS Targets ====");
+								Debug.Log("[BDArmory]: ==== Loaded BDA GPS Targets ====");
 							}
 						}
 						else
 						{
-							Debug.Log("==== No BDA GPS Targets value found! ====");
+							Debug.Log("[BDArmory]: ==== No BDA GPS Targets value found! ====");
 						}
 					}
 				}
@@ -591,13 +591,13 @@ namespace BahaTurret
 
 			if(listString == null || listString == string.Empty)
 			{
-				Debug.Log("=== GPS List string was empty or null ===");
+				Debug.Log("[BDArmory]: === GPS List string was empty or null ===");
 				return;
 			}
 
 			string[] teams = listString.Split(new char[]{ ':' });
 
-			Debug.Log("==== Loading GPS Targets. Number of teams: " + teams.Length);
+			Debug.Log("[BDArmory]: ==== Loading GPS Targets. Number of teams: " + teams.Length);
 
 			if(teams[0] != null && teams[0].Length > 0 && teams[0] != "null")
 			{

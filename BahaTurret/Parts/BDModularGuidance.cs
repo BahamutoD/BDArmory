@@ -434,7 +434,7 @@ namespace BahaTurret
 
                     if (targetViewAngle > maxOffBoresight)
                     {
-                        Debug.Log("AGM Missile guidance failed - target out of view");
+                        Debug.Log("[BDArmory]: AGM Missile guidance failed - target out of view");
                         guidanceActive = false;
                     }
                 }
@@ -498,7 +498,7 @@ namespace BahaTurret
             {
                 if (Vector3.Dot(TargetPosition - vessel.CoM, GetForwardTransform()) < 0 )
                 {
-                    Debug.Log("Missile CheckMiss showed miss");
+                    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
                     HasMissed = true;
                     guidanceActive = false;
 

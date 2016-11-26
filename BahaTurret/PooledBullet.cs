@@ -362,7 +362,7 @@ namespace BahaTurret
                                 //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
                             }
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
+                                Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
 
                             if (hitPart.vessel != sourceVessel)
                                 hitPart.temperature += heatDamage; //apply heat damage to the hit part.
@@ -427,7 +427,7 @@ namespace BahaTurret
                                 hitBuilding.Demolish();
                             }
                             if (BDArmorySettings.DRAW_DEBUG_LINES)
-                                Debug.Log("bullet hit destructible building! Damage: " +
+                                Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " +
                                           (damageToBuilding).ToString("0.00") + ", total Damage: " + hitBuilding.Damage);
                         }
                     }

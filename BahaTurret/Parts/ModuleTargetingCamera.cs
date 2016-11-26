@@ -317,7 +317,7 @@ namespace BahaTurret
 
 				if(cameraEnabled)
 				{
-					Debug.Log("saved gtp: " + bodyRelativeGTP);
+					Debug.Log("[BDArmory]: saved gtp: " + bodyRelativeGTP);
 					DelayedEnable();
 				}
 
@@ -354,8 +354,8 @@ namespace BahaTurret
 			delayedEnabling = true;
 
 			Vector3d savedGTP = bodyRelativeGTP;
-			Debug.Log("saved gtp: " + Misc.FormattedGeoPos(savedGTP, true));
-			Debug.Log("groundStabilized: " + groundStabilized);
+			Debug.Log("[BDArmory]: saved gtp: " + Misc.FormattedGeoPos(savedGTP, true));
+			Debug.Log("[BDArmory]: groundStabilized: " + groundStabilized);
 
 			while(TargetingCamera.Instance == null)
 			{
@@ -386,7 +386,7 @@ namespace BahaTurret
 			EnableCamera();
 			if(groundStabilized)
 			{
-				Debug.Log("Camera delayed enabled");
+				Debug.Log("[BDArmory]: Camera delayed enabled");
 				groundTargetPosition = VectorUtils.GetWorldSurfacePostion(savedGTP, vessel.mainBody);// vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
 				Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
 				PointCameraModel(lookVector);
@@ -394,7 +394,7 @@ namespace BahaTurret
 			}
 			delayedEnabling = false;
 
-			Debug.Log("post load saved gtp: " + bodyRelativeGTP);
+			Debug.Log("[BDArmory]: post load saved gtp: " + bodyRelativeGTP);
 		}
 
 		void PointCameraModel(Vector3 lookVector)
@@ -699,7 +699,7 @@ namespace BahaTurret
 
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					GUI.Label(new Rect(500, 500, 500, 500), "Slew rate: " + finalSlewSpeed);
+					GUI.Label(new Rect(500, 700, 500, 500), "Slew rate: " + finalSlewSpeed);
 				}
 
 				if(BDArmorySettings.DRAW_DEBUG_LINES)

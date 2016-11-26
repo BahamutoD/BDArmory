@@ -21,7 +21,7 @@ namespace BahaTurret
             vessel = GetComponent<Vessel>();
             if (!vessel)
             {
-                Debug.Log("VesselChaffInfo was added to an object with no vessel component");
+                Debug.Log("[BDArmory]: VesselChaffInfo was added to an object with no vessel component");
                 Destroy(this);
                 return;
             }

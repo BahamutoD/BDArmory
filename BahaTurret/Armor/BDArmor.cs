@@ -96,7 +96,7 @@ namespace BahaTurret
                     transform = hitPart.partTransform;
                 if (!transform)
                 {
-                    Debug.LogError("Armor Transform not found!");
+                    Debug.LogError("[BDArmory]: Armor Transform not found!");
                     return null;
                 }
                 if (collider.transform == transform || collider.transform.IsChildOf(transform))
