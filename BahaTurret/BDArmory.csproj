@@ -31,32 +31,47 @@
     <PlatformTarget>x86</PlatformTarget>
     <ConsolePause>False</ConsolePause>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPAssets">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPCore">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPCore.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPUtil">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
+    <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\..\..\..\..\..\SteamLibrary\SteamApps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArmorPenetration.cs" />
+    <Compile Include="BDArmor.cs" />
+    <Compile Include="BDAWindowSettingsField.cs" />
+    <Compile Include="BulletInfo.cs" />
     <Compile Include="CFEnable.cs" />
     <Compile Include="MissileLauncher.cs" />
     <Compile Include="Misc.cs" />
@@ -142,11 +157,28 @@
     <None Include="BahaTurretBullet.cs" />
     <None Include="Distribution\GameData\BDArmory\Agencies\Agents.cfg" />
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdabulletshader.ksp" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdagrayscaleshader.ksp" />
-    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdaunlitblack.ksp" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_linux.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_macosx.bundle" />
+    <None Include="Distribution\GameData\BDArmory\AssetBundles\bdarmoryshaders_windows.bundle" />
     <None Include="Distribution\GameData\BDArmory\ATM_BDArmory.cfg" />
+    <None Include="Distribution\GameData\BDArmory\BDArmory.version" />
+    <None Include="Distribution\GameData\BDArmory\bullets.cfg" />
+    <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Platform.craft" />
+    <None Include="Distribution\GameData\BDArmory\craft\BDA - TestPlaneAI - v3.craft" />
     <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac addons.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac ammunition.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac control systems.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac countermeasures.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac faq.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac fixed guns.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac guidance types.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac modules.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac ordinance.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac radar and targeting.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac settings.ksp" />
+    <None Include="Distribution\GameData\BDArmory\KSPedia\bdac turrets.ksp" />
+    <None Include="Distribution\GameData\BDArmory\MMPatches\squad_tanks.cfg" />
     <None Include="Distribution\GameData\BDArmory\Models\bulletHit\bulletHit.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />
@@ -192,6 +224,10 @@
     <None Include="Distribution\GameData\BDArmory\Parts\ecmJammer\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\gau8.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMk1.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMK1.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\goalkeeper\goalkeeper.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\goalkeeper\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\groundRadar\radar1.cfg" />
@@ -322,6 +358,12 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8Cannon.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8End.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\texture.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBD.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\muzzle.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\smoketest3.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\GoalKeeperBD.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\muzzle.png" />
+    <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\smoketest3.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\smoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\goalkeeper\Texture.png" />
@@ -467,20 +509,25 @@ set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
 @echo distributing $(Targetname) files...
 copy /Y "$(TargetPath)" "$(ProjectDir)Distribution\GameData\BDArmory\Plugins\"
 
+if $(ConfigurationName) == Debug (
 @echo building $(Targetname).dll.mdb file...
 cd "$(TargetDir)"
 call "%25PDB2MDB_EXE%25" $(Targetname).dll
-
 copy /Y "$(TargetDir)$(Targetname).dll.mdb" "%25KSP_DIR%25\GameData\BDArmory\Plugins\"
+)
 
-@echo packaging files...
-if exist "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\$(Targetname)*.zip" del "E:\KSP\Mods\PJS\Releases\$(Targetname)\Build\BDArmory*.zip"
+@echo deleting previous build ...
+if exist "%25DIST_DIR%25\BDArmory*.zip" del "%25DIST_DIR%25\BDArmory*.zip"
+@echo packaging new build...
 call "%25ZA_DIR%25\7za.exe" a -tzip -r  "%25DIST_DIR%25\BDArmory.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25.zip" "$(ProjectDir)Distribution\*.*"
 
 @echo Deploy $(Targetname) Distribution files to test env:  %25KSP_DIR%25\GameData...
 @echo copying:"$(SolutionDir)Distribution\GameData" to "%25KSP_DIR%25\GameData" 
 xcopy /E /Y "$(SolutionDir)Distribution\GameData" "%25KSP_DIR%25\GameData"
+
+if $(ConfigurationName) == Debug (
 copy /Y "$(TargetDir)$(Targetname).pdb" "%25KSP_DIR%25\GameData\BDArmory\Plugins\"
+)
 
 @echo Build/deploy complete!
 </PostBuildEvent>

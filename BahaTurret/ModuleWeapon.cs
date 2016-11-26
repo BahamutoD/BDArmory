@@ -8,6 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -200,12 +201,16 @@ namespace BahaTurret
         Vector3 lastFinalAimTarget;
 		public Vessel legacyTargetVessel;
 		bool targetAcquired = false;
-		
-		//used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
-		//private int numberOfGuns = 0;
 
-		//UI gauges(next to staging icon)
-		private ProtoStageIconInfo heatGauge = null;
+
+        private BulletInfo bulletInfo;
+        [KSPField]
+        public string bulletType = "def";
+        //used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
+        //private int numberOfGuns = 0;
+
+        //UI gauges(next to staging icon)
+        private ProtoStageIconInfo heatGauge = null;
 		private ProtoStageIconInfo reloadBar = null;
 		[KSPField]
 		public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
@@ -412,13 +417,13 @@ namespace BahaTurret
 		}
 
 
-
-
-		public override void OnStart (StartState state)
+	    public override void OnStart (StartState state)
 		{
 			base.OnStart (state);
+    
+     
 
-			ParseWeaponType();
+            ParseWeaponType();
             ParseBulletDragType();
 
             bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000;        //1000 to convert from tonnes to kilograms
@@ -548,8 +553,10 @@ namespace BahaTurret
 				fireState = Misc.SetUpSingleAnimation (fireAnimName, this.part);
 				fireState.enabled = false;	
 			}
-
-			BDArmorySettings.OnVolumeChange += UpdateVolume;
+            bulletInfo = BulletInfo.bullets[bulletType];
+            if (bulletInfo == null)
+                Debug.Log("Failed To load bullet!");
+            BDArmorySettings.OnVolumeChange += UpdateVolume;
 		}
 
 		void UpdateVolume()
@@ -705,14 +712,24 @@ namespace BahaTurret
 					return;
 				}
 
-				if(showReloadMeter)
-				{
-					//UpdateReloadMeter();
-				}
-				else
-				{
-					//UpdateHeatMeter();
-				}
+			    if (part.stackIcon.StageIcon == null)
+			    {
+			        part.stackIcon.CreateIcon();
+			    }
+
+
+                if (vessel.isActiveVessel)
+                {
+                    if (showReloadMeter)
+                    {
+                        // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
+                        UpdateReloadMeter();
+                    }
+                    else
+                    {
+                        UpdateHeatMeter();
+                    } 
+                }
 				UpdateHeat();
 
 
@@ -1106,8 +1123,9 @@ namespace BahaTurret
                                 pBullet.dragType = PooledBullet.BulletDragTypes.NumericalIntegration;
                                 break;
                         }
+                        pBullet.bullet = BulletInfo.bullets[bulletType];
 
-						pBullet.gameObject.SetActive(true);
+                        pBullet.gameObject.SetActive(true);
 
 						
 						//heat
@@ -1615,7 +1633,7 @@ namespace BahaTurret
 				reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
 			}
 
-			if(!lowpassFilter)
+			if(!lowpassFilter && gameObject.GetComponents<AudioLowPassFilter>().Length == 0)
 			{
 				lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
 				lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
@@ -1698,8 +1716,7 @@ namespace BahaTurret
         
 		private ProtoStageIconInfo InitReloadBar()
 		{
-			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-
+            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();        
 			v.SetMsgBgColor(XKCDColors.DarkGrey);
 			v.SetMsgTextColor(XKCDColors.White);
 			v.SetMessage("Reloading");
@@ -1711,15 +1728,15 @@ namespace BahaTurret
 
 		private ProtoStageIconInfo InitHeatGauge()  //thanks DYJ
 		{
-			ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-			
-			v.SetMsgBgColor(XKCDColors.DarkRed);
-			v.SetMsgTextColor(XKCDColors.Orange);
-			v.SetMessage("Overheat");
-			v.SetProgressBarBgColor(XKCDColors.DarkRed);
-			v.SetProgressBarColor(XKCDColors.Orange);
-			
-			return v;
+               ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+
+		        v.SetMsgBgColor(XKCDColors.DarkRed);
+		        v.SetMsgTextColor(XKCDColors.Orange);
+		        v.SetMessage("Overheat");
+		        v.SetProgressBarBgColor(XKCDColors.DarkRed);
+		        v.SetProgressBarColor(XKCDColors.Orange);
+		    
+		    return v;
 		}
 
 		void SetupBulletPool()
@@ -1852,16 +1869,14 @@ namespace BahaTurret
 
 		}
 
-
-
-		void OnGUI()
+        void OnGUI()
 		{
 			if(weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel && BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
 			{
 				float size = 30;
 				
 				Vector3 reticlePosition;
-				if(BDArmorySettings.AIM_ASSIST && vessel.srfSpeed < Krakensbane.Threshold)
+				if(BDArmorySettings.AIM_ASSIST)
 				{
 					if(targetAcquired && (slaved || yawRange < 1 || maxPitch-minPitch < 1))
 					{
@@ -1972,6 +1987,23 @@ namespace BahaTurret
 			}
 		}
 
+
+		// RMB info in editor
+		public override string GetInfo()
+		{
+			var output = new StringBuilder();
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Weapon Type: {0}", eWeaponType.ToString()));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Rounds Per Minute: {0}", roundsPerMinute));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Ammunition: {0}", ammoName));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Max Range: {0} meters", maxEffectiveDistance));
+			output.Append(Environment.NewLine);
+			return output.ToString();
+
+		}
 
 
 	}

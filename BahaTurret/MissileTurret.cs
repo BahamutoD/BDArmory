@@ -235,8 +235,8 @@ namespace BahaTurret
 			{
 				yield return new WaitForFixedUpdate();
 			}
-
-			while(!turret.ReturnTurret())
+             
+			while(turret != null && !turret.ReturnTurret())
 			{
 				UpdateMissilePositions();
 				yield return new WaitForFixedUpdate();
@@ -505,8 +505,11 @@ namespace BahaTurret
 					missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
 
 					Part missilePart = missileChildren[i].part;
-					Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.name]));
-					missilePart.CoMOffset = newCoMOffset;
+                    if (missilePart != null)
+                    {
+                        Vector3 newCoMOffset = missilePart.transform.InverseTransformPoint(missileTransforms[i].TransformPoint(comOffsets[missilePart.name]));
+                        missilePart.CoMOffset = newCoMOffset; 
+                    }
 				}
 			}
 		}
@@ -633,7 +636,7 @@ namespace BahaTurret
 
 			for(int i = 0; i < missileCount; i++)
 			{
-				if(missileChildren[i].part.name == ml.part.name)
+				if((missileChildren[i]) && missileChildren[i].part.name == ml.part.name)
 				{
 					return true;
 				}

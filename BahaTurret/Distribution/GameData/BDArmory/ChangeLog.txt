@@ -1,4 +1,42 @@
-v-.11.1.0
+v0.11.1.6
+- Fix shaders not working on Linux and Mac OS X. Git Issue #73.
+- Fix bomb aimer not working. Git Issue #75.
+- Fix selected weapon message missing. Git Issue #50.
+- Enhancement: Allow assigning of Toggle Radar to action groups. Git Issue #58.
+- Enhancement: Ground Radar use resources now.
+- Enhancement: Allow the Weapon Manager to turn on the ECM when in guard mode. Git Issue #27
+- Known issues: Adjustable Rotary Bomb Rack is officially broken and it has been tagged as (BROKEN)
+
+v0.11.1.5
+- Ready for KSP 1.2.1
+- New feature: Bullets penetration system.
+- New parts: Goalkeeper Mk1 and Mk2 - legacy textures.
+- AI improvements: for air-ground missiles, prevent firing full complement at once (respect maxMissilesTarget).
+- AI improvements: prevent gps guided missiles being used on air targets/incoming missiles.
+- AI improvements: improve selection of AA missiles/guns against incoming missiles.
+- Missile cost rebalance.
+
+v0.11.1.4 (not released)
+- Ready for KSP 1.2
+- Shaders and asset bundle. Fixes Git issue #47 and partially #48
+- Fix for weapons freezing when firing. Git Issue #49
+
+v0.11.1.3beta
+- Updated to be compatible with KSP 1.2. (Prerelease only)
+- Add window persistence.  Remember where I put my windows, darn it! Git Issue #13 - Partial implementation.
+- Fix reload sounds on M1Abrams and M102 parts.  Git Issue #39
+- Fix missing weapon icon in staging part list.
+- Fix missing reload bar next to icon.
+- Fix missing heat guage next to icon.
+
+v0.11.1.2
+- Fix sound issue with Hydra 70.  Git Issue #1
+- Fix PAC Lag issue.  Git Issue #3
+
+v0.11.1.1
+- Revert Assembly version back to 1.0.  Some mods depend on the version number of the assembly when reflecting.
+
+v-0.11.1.0
 - KSP 1.1.3 compatibility update.
 - Mod authorship change.  Papa_Joe assumed coding support
 

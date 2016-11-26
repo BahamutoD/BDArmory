@@ -63,10 +63,10 @@ namespace BahaTurret
 		
 		Transform[] rockets;
 		
-		AudioSource sfAudioSource;
+		public AudioSource sfAudioSource;
 
-		//animation
-		[KSPField]
+        //animation
+        [KSPField]
 		public string deployAnimationName;
 		[KSPField]
 		public float deployAnimationSpeed = 1;
@@ -244,9 +244,31 @@ namespace BahaTurret
 			hasReturned = true;
 
 		}
-		
-		
-		public override void OnStart (PartModule.StartState state)
+
+        void SetupAudio()
+        {     
+            sfAudioSource = gameObject.AddComponent<AudioSource>();
+		    sfAudioSource.minDistance = 1;
+		    sfAudioSource.maxDistance = 2000;
+		    sfAudioSource.dopplerLevel = 0;
+		    sfAudioSource.priority = 230;
+			sfAudioSource.spatialBlend = 1;
+
+            UpdateVolume();
+            BDArmorySettings.OnVolumeChange += UpdateVolume;
+        }
+
+        void UpdateVolume()
+        {          
+            if (sfAudioSource)
+            {
+                sfAudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+            }
+        }
+
+
+
+        public override void OnStart (PartModule.StartState state)
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
@@ -254,12 +276,7 @@ namespace BahaTurret
 				
 				aimerTexture = BDArmorySettings.Instance.greenPointCircleTexture;// GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
 				
-				sfAudioSource = gameObject.AddComponent<AudioSource>();
-				sfAudioSource.minDistance = 1;
-				sfAudioSource.maxDistance = 2000;
-				sfAudioSource.dopplerLevel = 0;
-				sfAudioSource.priority = 230;
-				sfAudioSource.spatialBlend = 1;
+				
 				
 				MakeRocketArray();
 				UpdateRocketScales();
@@ -307,7 +324,8 @@ namespace BahaTurret
 					readyToFire = false;
 				}
 			}
-		}
+            SetupAudio();
+        }
 
 		IEnumerator DeployAnimRoutine(bool forward)
 		{
@@ -382,8 +400,8 @@ namespace BahaTurret
 			if(deployed && readyToFire && turret)
 			{
 				Aim();		
-			}
-		}
+			}         
+        }
 
 		public override void OnUpdate()
 		{
@@ -738,7 +756,7 @@ namespace BahaTurret
 		
 		public PartResource GetRocketResource()
 		{
-			foreach(var res in part.Resources.list)
+			foreach(var res in part.Resources)
 			{
 				if(res.resourceName == rocketType) return res;	
 			}
@@ -783,7 +801,7 @@ namespace BahaTurret
 		public Rigidbody parentRB;
 
 		float startTime;
-		AudioSource audioSource;
+		public AudioSource audioSource;
 		
 		Vector3 prevPosition;
 		Vector3 currPosition;
@@ -832,22 +850,15 @@ namespace BahaTurret
 			rb.isKinematic = true;
 			//rigidbody.velocity = startVelocity;
 			if(!FlightGlobals.RefFrameIsRotating) rb.useGravity = false;
-			
-			audioSource = gameObject.AddComponent<AudioSource>();
-			audioSource.loop = true;
-			audioSource.minDistance = 1;
-			audioSource.maxDistance = 2000;
-			audioSource.dopplerLevel = 0.5f;
-			audioSource.volume = 0.9f * BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-			audioSource.pitch = 1.4f;
-			audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
-			
+				
 			rb.useGravity = false;
 
 			randThrustSeed = UnityEngine.Random.Range(0f, 100f);
+
+		    SetupAudio();
 		}
-		
-		void FixedUpdate()
+
+        void FixedUpdate()
 		{
 			//floatingOrigin fix
 			if(sourceVessel!=null && (transform.position-sourceVessel.transform.position-relativePos).sqrMagnitude > 800*800)
@@ -897,14 +908,9 @@ namespace BahaTurret
 				}
 
 			}
-			
 
-			
 
-			
-
-			
-			if(Time.time - startTime > thrustTime)
+            if (Time.time - startTime > thrustTime)
 			{
 				//isThrusting = false;
 				foreach(var pEmitter in pEmitters)
@@ -930,7 +936,7 @@ namespace BahaTurret
 
 			if(Time.time - startTime > 0.1f+stayTime)
 			{
-				//audioSource.pitch = SoundUtil.getDopplerPitchFactor(rigidbody.velocity, transform.position)*1.4f;
+				
 				currPosition = transform.position;
 				float dist = (currPosition-prevPosition).magnitude;
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
@@ -1011,13 +1017,35 @@ namespace BahaTurret
 
 			GameObject.Destroy(gameObject); //destroy rocket on collision
 		}
-		
-		
-		
-		
-		
-		
-		
-	}
+
+
+        void SetupAudio()
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.loop = true;
+            audioSource.minDistance = 1;
+            audioSource.maxDistance = 2000;
+            audioSource.dopplerLevel = 0.5f;
+            audioSource.volume = 0.9f * BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+            audioSource.pitch = 1f;
+            audioSource.priority = 255;
+            audioSource.spatialBlend = 1;
+
+            audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
+
+            UpdateVolume();
+            BDArmorySettings.OnVolumeChange += UpdateVolume;
+        }
+
+        void UpdateVolume()
+        {
+            if (this.audioSource)
+            {
+                audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+            }
+        }
+
+
+    }
 }
 

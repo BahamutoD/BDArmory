@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -178,7 +179,20 @@ namespace BahaTurret
 
 		public VesselRadarData vesselRadarData;
 
-		[KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
+        [KSPAction("Toggle Radar")]
+        public void AGEnable(KSPActionParam param)
+        {
+            if (radarEnabled)
+            {
+                DisableRadar();
+            }
+            else
+            {
+                EnableRadar();
+            }
+        }
+
+        [KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
 		public void Toggle()
 		{
 			if(radarEnabled)
@@ -198,6 +212,8 @@ namespace BahaTurret
 
 		public void EnsureVesselRadarData()
 		{
+		    if (vessel == null) return;
+
 			myVesselID = vessel.id.ToString();
 
 			if(vesselRadarData == null || vesselRadarData.vessel!=vessel)
@@ -212,7 +228,7 @@ namespace BahaTurret
 			}
 		}
 
-		public void EnableRadar()
+        public void EnableRadar()
 		{
 			EnsureVesselRadarData();
 
@@ -443,7 +459,7 @@ namespace BahaTurret
 		}
 		
 		// Update is called once per frame
-		void Update ()
+		void Update()
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled)
 			{
@@ -462,9 +478,13 @@ namespace BahaTurret
 
 			drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled && vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
 
-			//UpdateSlaveData();
-		}
-
+            //UpdateSlaveData();
+            if (radarEnabled)
+            {
+                DrainElectricity();
+            }
+        }       
+        
 		void FixedUpdate()
 		{
 			if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && startupComplete)
@@ -495,9 +515,7 @@ namespace BahaTurret
 					else if(canScan)
 					{
 						Scan ();
-					}
-
-				
+					}				
 				}
 			}
 		}
@@ -523,9 +541,7 @@ namespace BahaTurret
 				UpdateModel ();
 			}
 		}
-
-
-
+        
 		void UpdateModel()
 		{
 			//model rotation
@@ -625,8 +641,6 @@ namespace BahaTurret
 			}
 		}
 
-
-
 		public bool TryLockTarget(Vector3 position)
 		{
 			if(!canLock)
@@ -673,7 +687,6 @@ namespace BahaTurret
 			return false;
 		}
 
-
 		void BoresightScan()
 		{
 			if(locked)
@@ -704,7 +717,6 @@ namespace BahaTurret
 				}
 			}
 		}
-
 
 		int snapshotTicker = 0;
 		void UpdateLock(int index)
@@ -801,9 +813,7 @@ namespace BahaTurret
 				}
 			}
 		}
-
-
-
+        
 		public void UnlockAllTargets()
 		{
 			if(!locked)	return;
@@ -986,10 +996,7 @@ namespace BahaTurret
 					BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500 * transform.up), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
 				}
 			}
-		}
-
-
-	
+		}	
 
 		public void RecoverLinkedVessels()
 		{
@@ -1032,13 +1039,73 @@ namespace BahaTurret
 			vesselRadarData.LinkVRD(vrd);
 			Debug.Log("Radar data link recovered: Local - " + vessel.vesselName + ", External - " + vrd.vessel.vesselName);
 		}
+        
+		public string getRWRType(int i)
+		{
+			switch (i) {
+			case 0:
+				return "SAM";
+			case 1:
+				return "FIGHTER";
+			case 2:
+				return "AWACS";
+			case 3:
+			case 4:
+				return "MISSILE";
+			case 5:
+				return "DETECTION";
+			}
+			return "UNKNOWN";
+			//{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5}
+		}
+        
+		// RMB info in editor
+		public override string GetInfo()
+		{
+			var output = new StringBuilder();
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Radar Type: {0}", this.radarName));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Range: {0} meters", this.maxRange));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("RWR Threat Type: {0}", getRWRType(rwrThreatType)));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Can Scan: {0}", canScan));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Track-While-Scan: {0}", canTrackWhileScan));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Can Lock: {0}", canLock));
+			output.Append(Environment.NewLine);
+			output.Append(String.Format("Can Receive Data: {0}", canRecieveRadarData));
+			output.Append(Environment.NewLine);
+			if (canLock) {
+				output.Append(String.Format("Simultaneous Locks: {0}", maxLocks));
+				output.Append(Environment.NewLine);
+			}
 
-	
+			return output.ToString();
 
-		////////////////END GUI
+		}
 
+        [KSPField]
+        public double resourceDrain = 0.25;
 
+        void DrainElectricity()
+        {
+            if (resourceDrain <= 0)
+            {
+                return;
+            }
 
-	}
+            double drainAmount = resourceDrain * TimeWarp.fixedDeltaTime;
+            double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
+            if (chargeAvailable < drainAmount * 0.95f)
+            {
+                ScreenMessages.PostScreenMessage("Radar Requires EC", 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                DisableRadar();
+            }
+        }
+
+    }
 }
 

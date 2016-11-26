@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace BahaTurret
 {
@@ -21,7 +22,7 @@ namespace BahaTurret
 
 			ConfigNode settings = fileNode.GetNode("BDASettings");
 
-			foreach(var field in typeof(BDArmorySettings).GetFields())
+			foreach(FieldInfo field in typeof(BDArmorySettings).GetFields())
 			{
 				if(!field.IsDefined(typeof(BDAPersistantSettingsField), false)) continue;
 
@@ -38,49 +39,18 @@ namespace BahaTurret
 
 			ConfigNode settings = fileNode.GetNode("BDASettings");
 
-			foreach(var field in typeof(BDArmorySettings).GetFields())
+			foreach(FieldInfo field in typeof(BDArmorySettings).GetFields())
 			{
 				if(!field.IsDefined(typeof(BDAPersistantSettingsField), false)) continue;
 
-				if(settings.HasValue(field.Name))
-				{
-					object parsedValue = ParseValue(field.FieldType, settings.GetValue(field.Name));
-					if(parsedValue != null)
-					{
-						field.SetValue(null, parsedValue);
-					}
-				}
+			  if (!settings.HasValue(field.Name)) continue;
+			  object parsedValue = BDArmorySettings.ParseValue(field.FieldType, settings.GetValue(field.Name));
+			  if(parsedValue != null)
+			  {
+			    field.SetValue(null, parsedValue);
+			  }
 			}
 		}
-
-		public static object ParseValue(Type type, string value)
-		{
-			if(type == typeof(string))
-			{
-				return value;
-			}
-
-			if(type == typeof(bool))
-			{
-				return bool.Parse(value);
-			}
-			else if(type.IsEnum)
-			{
-				return Enum.Parse(type, value);
-			}
-			else if(type == typeof(float))
-			{
-				return float.Parse(value);
-			}
-			else if(type == typeof(Single))
-			{
-				return Single.Parse(value);
-			}
-			UnityEngine.Debug.LogError("BDAPersistantSettingsField to parse settings field of type "+type.ToString()+" and value "+value);
-
-			return null;
-		}
-
 	}
 }
 
