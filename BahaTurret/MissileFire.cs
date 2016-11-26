@@ -3625,7 +3625,7 @@ namespace BahaTurret
 				{
 					foreach(var ml in selectedWeapon.GetPart().FindModulesImplementing<MissileLauncher>())
 					{
-						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure)
+						if(ml.guidanceMode == MissileLauncher.GuidanceModes.AAMLead || ml.guidanceMode == MissileLauncher.GuidanceModes.AAMPure || ml.guidanceMode == MissileLauncher.GuidanceModes.RCS)
 						{
 							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.srf_velocity, guardTarget.transform.position);
 							if(vessel.srfSpeed > ml.minLaunchSpeed && targetDistance < dlz.maxLaunchRange && targetDistance > dlz.minLaunchRange)
