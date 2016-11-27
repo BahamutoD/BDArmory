@@ -797,7 +797,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
                 bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity - TargetVelocity, TargetPosition - vessel.transform.position) < 0);
                 if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
                 {
-                    Debug.Log("Missile CheckMiss showed miss");
+                    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
                     HasMissed = true;
                     guidanceActive = false;
 
@@ -1406,7 +1406,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				
 					if(targetViewAngle > maxOffBoresight)
 					{
-						Debug.Log("AGM Missile guidance failed - target out of view");
+						Debug.Log("[BDArmory]: AGM Missile guidance failed - target out of view");
 						guidanceActive = false;
 					}
 					CheckMiss();

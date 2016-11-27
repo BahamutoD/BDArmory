@@ -99,7 +99,7 @@ namespace BahaTurret
 
             if (pilots[BDArmorySettings.BDATeams.A].Count == 0 || pilots[BDArmorySettings.BDATeams.B].Count == 0)
             {
-                Debug.Log("Unable to start competition mode - one or more teams is empty");
+                Debug.Log("[BDArmory]: Unable to start competition mode - one or more teams is empty");
                 competitionStatus = "Competition: Failed!  One or more teams is empty.";
                 yield return new WaitForSeconds(2);
                 competitionStarting = false;

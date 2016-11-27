@@ -173,7 +173,7 @@ namespace BahaTurret
 
 		public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel)
 		{
-			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("======= Doing explosion sphere =========");
+			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: ======= Doing explosion sphere =========");
 			ignoreParts.Clear();
 			ignoreBuildings.Clear();
 

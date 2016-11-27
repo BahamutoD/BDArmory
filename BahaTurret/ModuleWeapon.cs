@@ -526,7 +526,7 @@ namespace BahaTurret
             }
             bulletInfo = BulletInfo.bullets[bulletType];
             if (bulletInfo == null)
-                Debug.Log("Failed To load bullet!");
+                Debug.Log("[BDArmory]: Failed To load bullet!");
             BDArmorySettings.OnVolumeChange += UpdateVolume;
         }
 

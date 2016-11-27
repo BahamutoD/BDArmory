@@ -295,7 +295,7 @@ namespace BahaTurret
                 foundCam = BDATargetManager.GetLaserTarget(this, parentOnly);
                 if (foundCam != null && foundCam.cameraEnabled && foundCam.groundStabilized && BDATargetManager.CanSeePosition(foundCam.groundTargetPosition, vessel.transform.position, MissileReferenceTransform.position))
                 {
-                    Debug.Log("Laser guided missileBase actively found laser point. Enabling guidance.");
+                    Debug.Log("[BDArmory]: Laser guided missileBase actively found laser point. Enabling guidance.");
                     lockedCamera = foundCam;
                     TargetAcquired = true;
                 }
@@ -338,7 +338,7 @@ namespace BahaTurret
                         {
                             if (_radarFailTimer > maxRadarFailTime)
                             {
-                                Debug.Log("Semi-Active Radar guidance failed. Parent radar lost target.");
+                                Debug.Log("[BDArmory]: Semi-Active Radar guidance failed. Parent radar lost target.");
                                 radarTarget = TargetSignatureData.noTarget;
                                 legacyTargetVessel = null;
                                 return;
@@ -347,7 +347,7 @@ namespace BahaTurret
                             {
                                 if (_radarFailTimer == 0)
                                 {
-                                    Debug.Log("Semi-Active Radar guidance failed - waiting for data");
+                                    Debug.Log("[BDArmory]: Semi-Active Radar guidance failed - waiting for data");
                                 }
                                 _radarFailTimer += Time.fixedDeltaTime;
                                 radarTarget.timeAcquired = Time.time;
@@ -361,7 +361,7 @@ namespace BahaTurret
                     }
                     else
                     {
-                        Debug.Log("Semi-Active Radar guidance failed. Out of range and no data feed.");
+                        Debug.Log("[BDArmory]: Semi-Active Radar guidance failed. Out of range and no data feed.");
                         radarTarget = TargetSignatureData.noTarget;
                         legacyTargetVessel = null;
                         return;
@@ -373,7 +373,7 @@ namespace BahaTurret
 
                     if (angleToTarget > maxOffBoresight)
                     {
-                        Debug.Log("Radar guidance failed.  Target is out of active seeker gimbal limits.");
+                        Debug.Log("[BDArmory]: Radar guidance failed.  Target is out of active seeker gimbal limits.");
                         radarTarget = TargetSignatureData.noTarget;
                         legacyTargetVessel = null;
                         return;
@@ -419,7 +419,7 @@ namespace BahaTurret
                                         if (locksCount == 0)
                                         {
                                             RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
-                                            Debug.Log("Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+                                            Debug.Log("[BDArmory]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
 
                                         }
                                         else if (locksCount > 2)
@@ -428,7 +428,7 @@ namespace BahaTurret
                                             checkMiss = true;
                                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                             {
-                                                Debug.Log("Radar missileBase reached max re-lock attempts.");
+                                                Debug.Log("[BDArmory]: Radar missileBase reached max re-lock attempts.");
                                             }
                                         }
                                         locksCount++;
@@ -507,7 +507,7 @@ namespace BahaTurret
                     if (!ActiveRadar && Time.time - timeFired > 1)
                     {
                         RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
-                        Debug.Log("Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+                        Debug.Log("[BDArmory]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
                     }
                     return;
                 }

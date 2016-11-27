@@ -1554,7 +1554,7 @@ namespace BahaTurret
                 }
                 catch (NullReferenceException)
                 {
-                    Debug.Log("Reflection failed to find input info of field: " + fieldName);
+                    Debug.Log("[BDArmory]: Reflection failed to find input info of field: " + fieldName);
                     editKeys = false;
                     return;
                 }
@@ -1699,7 +1699,7 @@ namespace BahaTurret
         {
             if (v.Landed && BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("Loaded vessel: " + v.vesselName + ", Velocity: " + v.srf_velocity + ", packed: " + v.packed);
+                Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.srf_velocity + ", packed: " + v.packed);
                 //v.SetWorldVelocity(Vector3d.zero);	
             }
         }
@@ -1750,7 +1750,7 @@ namespace BahaTurret
                 };
                 return rectVal;
             }
-            Debug.LogError("BDAPersistantSettingsField to parse settings field of type " + type.ToString() +
+            Debug.LogError("[BDArmory]: BDAPersistantSettingsField to parse settings field of type " + type.ToString() +
                            " and value " + value);
 
             return null;

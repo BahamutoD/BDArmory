@@ -1114,8 +1114,8 @@ namespace BahaTurret
 
 			if(selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile))
 			{
-				//Debug.Log("=====selected weapon: " + selectedWeapon.GetPart().name);
-				if(!CurrentMissile || CurrentMissile.part.name != selectedWeapon.GetPart().name)
+                //Debug.Log("[BDArmory]: =====selected weapon: " + selectedWeapon.GetPart().name);
+                if (!CurrentMissile || CurrentMissile.part.name != selectedWeapon.GetPart().name)
 				{
 					CurrentMissile = selectedWeapon.GetPart().FindModuleImplementing<MissileBase>();
 				}
@@ -1881,7 +1881,7 @@ namespace BahaTurret
 				{
 					if(BDArmorySettings.DRAW_DEBUG_LABELS)
 					{
-						Debug.Log("found target! : " + acquiredTarget.name);
+						Debug.Log("[BDArmory]: found target! : " + acquiredTarget.name);
 					}
 					FlightGlobals.fetch.SetVesselTarget(acquiredTarget);
 				}
@@ -1931,10 +1931,13 @@ namespace BahaTurret
 				Vector3 dragForce = Vector3.zero;
 				Vector3 prevPos = ml.MissileReferenceTransform.position;
 				Vector3 currPos = ml.MissileReferenceTransform.position;
-				Vector3 simVelocity = vessel.rb_velocity;
+                //Vector3 simVelocity = vessel.rb_velocity;
+			    Vector3 simVelocity = vessel.srf_velocity; //Issue #92
 
 
-			    var launcher = ml as MissileLauncher;
+
+
+                var launcher = ml as MissileLauncher;
 			    if (launcher != null)
 			    {
 			        simVelocity += launcher.decoupleSpeed*
@@ -2142,7 +2145,7 @@ namespace BahaTurret
 								MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(missile, vesselRadarData.lockedTargetData.targetData.velocity, vesselRadarData.lockedTargetData.targetData.predictedPosition);
 								dynRangeDebug += "MaxDLZ: " + dlz.maxLaunchRange;
 								dynRangeDebug += "\nMinDLZ: " + dlz.minLaunchRange;
-								GUI.Label(new Rect(800, 800, 200, 200), dynRangeDebug);
+								GUI.Label(new Rect(800, 600, 200, 200), dynRangeDebug);
 							}
 						}
 					}
@@ -2816,7 +2819,7 @@ namespace BahaTurret
 				   //TODO BDModularGuidance Legacy and turret implementation
 					if(BDArmorySettings.DRAW_DEBUG_LABELS)
 					{
-						Debug.Log("Firing on target: " + guardTarget.GetName() + ", (legacy targeting)");
+						Debug.Log("[BDArmory]: Firing on target: " + guardTarget.GetName() + ", (legacy targeting)");
 					}
 					if(ml is MissileLauncher && ((MissileLauncher)ml).missileTurret)
 					{
@@ -3771,7 +3774,7 @@ namespace BahaTurret
 							{
 								if(BDArmorySettings.DRAW_DEBUG_LABELS)
 								{
-									Debug.Log(" - " + vessel.vesselName + " : " + ml.GetShortName() + " failed DLZ test.");
+									Debug.Log("[BDArmory]:  - " + vessel.vesselName + " : " + ml.GetShortName() + " failed DLZ test.");
 								}
 							}
 							//break;
@@ -3781,7 +3784,7 @@ namespace BahaTurret
 						{
 							if(BDArmorySettings.DRAW_DEBUG_LABELS)
 							{
-								Debug.Log(" - " + vessel.vesselName + " : " + ml.GetShortName() + " not an AAM.");
+								Debug.Log("[BDArmory]:  - " + vessel.vesselName + " : " + ml.GetShortName() + " not an AAM.");
 							}
 						}
 					}
@@ -3790,7 +3793,7 @@ namespace BahaTurret
 				{
 					if(BDArmorySettings.DRAW_DEBUG_LABELS)
 					{
-						Debug.Log(" - " + vessel.vesselName + " : " + selectedWeapon.GetShortName() + " not a missile.");
+						Debug.Log("[BDArmory]:  - " + vessel.vesselName + " : " + selectedWeapon.GetShortName() + " not a missile.");
 					}
 				}
 			}
@@ -4044,7 +4047,7 @@ namespace BahaTurret
 			{
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					Debug.Log("Checking turret range - target is INSIDE gimbal limits! signedAnglePitch: " + signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch);
+					Debug.Log("[BDArmory]: Checking turret range - target is INSIDE gimbal limits! signedAnglePitch: " + signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch);
 				}
 				return true;
 			}
@@ -4052,7 +4055,7 @@ namespace BahaTurret
 			{
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					Debug.Log("Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: " + signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch + ", angleYaw: " + angleYaw);
+					Debug.Log("[BDArmory]: Checking turret range - target is OUTSIDE gimbal limits! signedAnglePitch: " + signedAnglePitch + ", minPitch: " + turret.minPitch + ", maxPitch: " + turret.maxPitch + ", angleYaw: " + angleYaw);
 				}
 				return false;
 			}

@@ -6,13 +6,17 @@ namespace BahaTurret
 	public class BDExplosivePart : PartModule
 	{
 		
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius" ),
-            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Blast Radius" ),
+            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All),
+            UI_FloatRange(minValue = 5, maxValue = 200,stepIncrement = 1)]
+            
 		public float blastRadius = 50;
 
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Power"),
-        UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Blast Power"),
+        UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All),
+            UI_FloatRange(minValue = 5, maxValue = 200, stepIncrement = 1)]
+
         public float blastPower = 25;
 
 		[KSPField]

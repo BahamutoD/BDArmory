@@ -26,9 +26,9 @@ namespace BahaTurret
         public TransformAxisVectors ForwardTransformAxis { get; set; }
         public TransformAxisVectors UpTransformAxis { get; set; }
 
-
         public float Mass {
-            get { return this.vesselParts.Sum(p => p.mass); }
+            //get { return this.vesselParts.Sum(p => p.mass); }
+            get { return (float) vessel.totalMass; }
         }
 
         public enum TransformAxisVectors
@@ -56,6 +56,10 @@ namespace BahaTurret
                     GuidanceMode = GuidanceModes.Cruise;
                     GuidanceLabel = "Cruise";
                     break;
+                //case 4: 
+                //    GuidanceMode = GuidanceModes.AGMBallistic;
+                //    GuidanceLabel = "Ballistic";
+                //    break;
             }
 
             if (Fields["CruiseAltitude"] != null)
@@ -63,7 +67,6 @@ namespace BahaTurret
                 Fields["CruiseAltitude"].guiActive = _guidanceIndex == 3;
                 Fields["CruiseAltitude"].guiActiveEditor = _guidanceIndex == 3;
             }
-
 
             Misc.RefreshAssociatedWindows(part);
         }
@@ -177,6 +180,7 @@ namespace BahaTurret
 
             }
         }
+
         private void MissileIgnition()
         {
             this.vesselParts.Clear();
@@ -396,8 +400,10 @@ namespace BahaTurret
                 }
             }
         }
+
         private  Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
+
         private Vector3 AAMGuidance()
         {
             Vector3 aamTarget;
@@ -434,7 +440,7 @@ namespace BahaTurret
 
                     if (targetViewAngle > maxOffBoresight)
                     {
-                        Debug.Log("AGM Missile guidance failed - target out of view");
+                        Debug.Log("[BDArmory]: AGM Missile guidance failed - target out of view");
                         guidanceActive = false;
                     }
                 }
@@ -484,6 +490,7 @@ namespace BahaTurret
 
             return cruiseTarget;
         }
+
         private void CheckMiss()
         {
           
@@ -498,7 +505,7 @@ namespace BahaTurret
             {
                 if (Vector3.Dot(TargetPosition - vessel.CoM, GetForwardTransform()) < 0 )
                 {
-                    Debug.Log("Missile CheckMiss showed miss");
+                    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
                     HasMissed = true;
                     guidanceActive = false;
 
@@ -512,6 +519,7 @@ namespace BahaTurret
                 }
             }
         }
+
         public void GuidanceSteer(FlightCtrlState s)
         {
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)

@@ -1188,7 +1188,7 @@ namespace BahaTurret
 
 			if(command != PilotCommands.Free && Vector3.Distance(vessel.transform.position, flightCenter) < radius*1.5f)
 			{
-				Debug.Log("AI Pilot reached command destination.");
+				Debug.Log("[BDArmory]: AI Pilot reached command destination.");
 				command = PilotCommands.Free;
 			}
 

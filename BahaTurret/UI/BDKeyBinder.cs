@@ -59,7 +59,7 @@ namespace BahaTurret
         {
             if (current != null)
             {
-                Debug.Log("Tried to bind key but key binder is in use.");
+                Debug.Log("[BDArmory]: Tried to bind key but key binder is in use.");
                 return;
             }
 

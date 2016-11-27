@@ -333,7 +333,7 @@ namespace BahaTurret
                         }
                         else //see if it will ricochet off scenery
                         {
-                            float reflectRandom = UnityEngine.Random.Range(-150f, 90f);
+                            float reflectRandom = UnityEngine.Random.Range(-75f, 90f);
                             if (reflectRandom > 90 - hitAngle)
                             {
                                 penetrated = false;
@@ -362,7 +362,7 @@ namespace BahaTurret
                                 //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
                             }
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("Hit! damage applied: " + heatDamage); //debugging stuff
+                                Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
 
                             if (hitPart.vessel != sourceVessel)
                                 hitPart.temperature += heatDamage; //apply heat damage to the hit part.
@@ -426,8 +426,8 @@ namespace BahaTurret
                             {
                                 hitBuilding.Demolish();
                             }
-                            if (BDArmorySettings.DRAW_DEBUG_LINES)
-                                Debug.Log("bullet hit destructible building! Damage: " +
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " +
                                           (damageToBuilding).ToString("0.00") + ", total Damage: " + hitBuilding.Damage);
                         }
                     }
@@ -585,7 +585,7 @@ namespace BahaTurret
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
             float chance = (((angleFromNormal - 5)/75)*(hitTolerance/150))*100/Mathf.Clamp01(impactVel/600);
             float random = UnityEngine.Random.Range(0f, 100f);
-            //Debug.Log ("Ricochet chance: "+chance);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:Ricochet chance: "+chance);
             if (random < chance)
             {
                 return true;
