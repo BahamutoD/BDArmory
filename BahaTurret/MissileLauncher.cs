@@ -229,7 +229,10 @@ namespace BahaTurret
 			boostEmitters = new List<KSPParticleEmitter>();
 			boostGaplessEmitters = new List<BDAGaplessParticleEmitter>();
 
-			if(isTimed)
+            Fields["maxOffBoresight"].guiActive = false;
+            Fields["maxOffBoresight"].guiActiveEditor = false;
+
+            if (isTimed)
 			{
 				Fields["detonationTime"].guiActive = true;
 				Fields["detonationTime"].guiActiveEditor = true;

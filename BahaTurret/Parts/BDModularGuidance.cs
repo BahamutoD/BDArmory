@@ -415,11 +415,11 @@ namespace BahaTurret
                 previousTargetVelocity = TargetVelocity;
                 previousMissileVelocity = vessel.srf_velocity;
                 TimeToImpact = timeToImpact;
-                //if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
-                //{
-                //    Debug.Log("BDModularGuidance:AAMGuidance not tracking");
-                //    aamTarget = TargetPosition;
-                //}
+                if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
+                {
+                    Debug.Log("BDModularGuidance:AAMGuidance not tracking");
+                    aamTarget = TargetPosition;
+                }
                 DrawDebugLine(vessel.CoM, aamTarget);
             }
             else
@@ -651,9 +651,6 @@ namespace BahaTurret
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerMult = 10;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Off Boresight"), UI_FloatRange(minValue = 0f, maxValue = 180f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public new float maxOffBoresight = 1;
 
         #endregion
 
