@@ -229,7 +229,10 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			boostEmitters = new List<KSPParticleEmitter>();
 			boostGaplessEmitters = new List<BDAGaplessParticleEmitter>();
 
-			if(isTimed)
+            Fields["maxOffBoresight"].guiActive = false;
+            Fields["maxOffBoresight"].guiActiveEditor = false;
+
+            if (isTimed)
 			{
 				Fields["detonationTime"].guiActive = true;
 				Fields["detonationTime"].guiActiveEditor = true;
