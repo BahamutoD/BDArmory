@@ -4,14 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 namespace BahaTurret
 {	
 	public class MissileLauncher : MissileBase
 	{
-		
-
-
 		[KSPField]
 		public string homingType = "AAM";
 
@@ -30,8 +26,9 @@ namespace BahaTurret
 		[KSPField]
 		public string boostExhaustTransformName;
 
-		//aero
-		[KSPField]
+        #region Aero
+
+        [KSPField]
 		public bool aero = false;
 		[KSPField]
 		public float liftArea = 0.015f;
@@ -45,10 +42,11 @@ namespace BahaTurret
 		[KSPField]
 		public float aeroSteerDamping = 0;
 
-		[KSPField]
-		public float maxTorque = 90;
-		//
+        #endregion
 
+        [KSPField]
+		public float maxTorque = 90;
+	
 		[KSPField]
 		public float thrust = 30;
 		[KSPField]
@@ -69,8 +67,12 @@ namespace BahaTurret
 		public bool decoupleForward = false;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
-UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+                  UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float decoupleSpeed = 0;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Detonation Range"),
+          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+        public float detonationRadius = 0;
 
         [KSPField]
 		public float optimumAirspeed = 220;
@@ -117,7 +119,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
 		
 		public string explSoundPath = "BDArmory/Sounds/explode1";
-			
 		
 		[KSPField]
 		public bool spoolEngine = false;
@@ -175,7 +176,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		bool hasPlayedFlyby = false;
 	
 		float debugTurnRate = 0;
-
 
 		List<GameObject> boosters;
 		[KSPField]
@@ -530,18 +530,13 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 	        return this.blastRadius;
 	    }
 
-
 	    public override void FireMissile()
 		{
 			if(!HasFired)
 			{
-
-
                 HasFired = true;
-
-				GameEvents.onPartDie.Add(PartDie);
-
-				BDATargetManager.FiredMissiles.Add(this);
+                GameEvents.onPartDie.Add(PartDie);
+                BDATargetManager.FiredMissiles.Add(this);
 
 				if(GetComponentInChildren<KSPParticleEmitter>())
 				{
@@ -555,14 +550,12 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				}
 				
 				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
-				
 				SourceVessel = vessel;
-
-
-
+                
 				//TARGETING
 				TargetPosition = transform.position + (transform.forward * 5000); //set initial target position so if no target update, missileBase will count a miss if it nears this point or is flying post-thrust
 				startDirection = transform.forward;
+
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
 					if(vessel.targetObject!=null && vessel.targetObject.GetVessel()!=null)
@@ -599,19 +592,12 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
                 //add target info to vessel
 			    AddTargetInfoToVessel();
-
-
                 StartCoroutine(DecoupleRoutine());
-				
-
-				
 
 				vessel.vesselName = GetShortName();
 				vessel.vesselType = VesselType.Probe;
-
 				
 				timeFired = Time.time;
-
 
 				//setting ref transform for navball
 				GameObject refObject = new GameObject();
@@ -622,12 +608,8 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				vesselReferenceTransform = refObject.transform;
 
 				MissileState = MissileStates.Drop;
-
 				part.crashTolerance = 9999;
-
-
 				StartCoroutine(MissileRoutine());
-				
 			}
 		}
 
@@ -673,7 +655,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
 			}
 		}
-		
 		
 		public override void OnFixedUpdate()
 		{
@@ -731,18 +712,20 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 						part.crashTolerance = 1;
 					}
 				}
-					
 				
 				UpdateThrustForces();
-
 				UpdateGuidance();
-
 				RaycastCollisions();
-
-				//Timed detonation
-				if(isTimed && TimeIndex > detonationTime)
+			    if (detonationRadius > 0)
+			    {
+                  mbCheckDetonationDistance(detonationRadius);
+                }
+            
+                //Timed detonation
+                if (isTimed && TimeIndex > detonationTime)
 				{
-					part.temperature = part.maxTemp+100;
+					//part.temperature = part.maxTemp+100; //This is already done in Detonate()
+                    Detonate();
 				}
 			}
 		}
@@ -775,7 +758,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				{
 					if(lineHit.collider.GetComponentInParent<Part>() != part)
 					{
-						Debug.Log(part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
+						Debug.Log("[BDArmory]:" + part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
 						part.temperature = part.maxTemp + 100;
 					}
 				}
@@ -783,6 +766,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
 			previousPos = part.transform.position;
 		}
+
         private void CheckMiss()
         {
             float sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position + (part.rb.velocity * Time.fixedDeltaTime))).sqrMagnitude;
@@ -817,6 +801,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
                 }
             }
         }
+
         void UpdateGuidance()
 		{
 			if(guidanceActive)
@@ -1089,6 +1074,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 
 		}
+
 		void EndBoost()
 		{
 			foreach(var emitter in boostEmitters)
@@ -1445,8 +1431,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			DoAero(agmTarget);
 		}
 
-		
-
 		void UpdateLegacyTarget()
 		{
 			if(legacyTargetVessel)
@@ -1537,7 +1521,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 					part.temperature = part.temperature + 100;
 				}
 			}
-			
 		}
 
 		public override void Detonate()
@@ -1545,14 +1528,12 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			if(isSeismicCharge)
 			{
 				DetonateSeismicCharge();
-			
 			}
 			else if(!hasExploded && HasFired)
 			{
 				BDArmorySettings.numberOfParticleEmitters--;
 				
 				hasExploded = true;
-
 				
 				if(legacyTargetVessel!=null)
 				{
@@ -1584,7 +1565,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 	        return this.MissileReferenceTransform.forward;
 	    }
 
-
 	    protected override void PartDie(Part p)
         {
 			if(p == part)
@@ -1594,8 +1574,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				GameEvents.onPartDie.Remove(PartDie);
 			}
 		}
-
-
 
 		//public bool CanSeePosition(Vector3 pos)
 		//{
@@ -1622,9 +1600,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
 		//	return true;
 		//}
-		
-		
-		
 		
 		void DetonateSeismicCharge()
 		{
@@ -1673,8 +1648,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}	
 		}
 		
-		
-		
 		public static bool CheckIfMissile(Part p)
 		{
 			if(p.GetComponent<MissileLauncher>())
@@ -1683,8 +1656,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 			else return false;
 		}
-			
-
 		
 		void WarnTarget()
 		{
@@ -1714,7 +1685,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 		}
 
-
 		float[] rcsFiredTimes;
 		KSPParticleEmitter[] rcsTransforms;
 		void SetupRCS()
@@ -1722,8 +1692,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			rcsFiredTimes = new float[]{0,0,0,0};
 			rcsTransforms = new KSPParticleEmitter[]{upRCS, leftRCS, rightRCS, downRCS};
 		}
-
-
 
 		void DoRCS()
 		{
@@ -1774,7 +1742,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			rightRCS.emit = false;
 		}
 
-
 		void OnGUI()
 		{
 			if(HasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
@@ -1788,7 +1755,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				BDGUIUtils.DrawLineBetweenWorldPositions(transform.position, TargetPosition, 2, Color.red);
 			}
 		}
-
 
 		void AntiSpin()
 		{
@@ -1807,7 +1773,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				part.rb.angularVelocity -= 0.02f * part.rb.angularVelocity;
 			}
 		}
-		
+
 		void SimpleDrag()
 		{
 			part.dragModel = Part.DragModel.NONE;
@@ -1887,8 +1853,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 		}
 
-
-
 		// RMB info in editor
 		public override string GetInfo()
 		{
@@ -1911,7 +1875,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			return output.ToString();
 
 		}
-
 		
 	}
 }

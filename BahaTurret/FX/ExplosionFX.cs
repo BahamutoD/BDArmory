@@ -16,7 +16,6 @@ namespace BahaTurret
 
         public float range;
 
-
         void Start()
         {
             startTime = Time.time;
@@ -44,7 +43,6 @@ namespace BahaTurret
             audioSource.PlayOneShot(exSound);
         }
 
-
         void FixedUpdate()
         {
             lightFX.intensity -= 12*Time.fixedDeltaTime;
@@ -61,7 +59,6 @@ namespace BahaTurret
                 GameObject.Destroy(gameObject);
             }
         }
-
 
         public static void CreateExplosion(Vector3 position, float radius, float power, float heat, Vessel sourceVessel,
             Vector3 direction, string explModelPath, string soundPath)

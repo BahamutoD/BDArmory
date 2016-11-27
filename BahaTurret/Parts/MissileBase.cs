@@ -164,11 +164,9 @@ namespace BahaTurret
 
         public abstract void FireMissile();
 
-
         public abstract void Jettison();
 
         public abstract float GetBlastRadius();
-
 
         protected abstract void PartDie(Part p);
 
@@ -254,6 +252,7 @@ namespace BahaTurret
                 }
             }
         }
+
         protected void UpdateLaserTarget()
         {
             if (TargetAcquired)
@@ -547,5 +546,35 @@ namespace BahaTurret
                 LR.SetPosition(1, end);
             }
         }
+
+
+        private Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
+        private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
+
+        protected void mbCheckDetonationDistance(float detonationRadius)
+        {
+            //Guard clauses
+            if (!HasFired) return;
+            if (!TargetAcquired) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
+
+            var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
+            var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
+                                           previousMissileVelocity;
+
+            var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
+                                        0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
+            var missileTargetPosition = vessel.CoM +
+                                        (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
+                                        0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
+            float distance;
+            if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
+            {
+                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
+                Detonate();
+            }
+        }
+
     }
 }

@@ -8,6 +8,7 @@ namespace BahaTurret
 {
     public class BDModularGuidance : MissileBase
     {
+
         private bool _missileIgnited;
         private int _nextStage = (int) KSPActionGroup.Custom01;
 
