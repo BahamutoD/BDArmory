@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Armor\ArmorPenetration.cs" />
     <Compile Include="Armor\BDArmor.cs" />
+    <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
@@ -155,7 +156,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BahaTurret.cs" />
-    <None Include="BahaTurretBullet.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LocalDev\7za_dir.txt" />

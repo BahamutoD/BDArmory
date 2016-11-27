@@ -149,7 +149,8 @@ namespace BahaTurret
 			
 			if(Time.time - startTime > 0.01f)
 			{
-				light.intensity = 0;	
+			    Light light = gameObject.GetComponent<Light>();
+                light.intensity = 0;	
 				float dist = initialSpeed*TimeWarp.fixedDeltaTime;
 				
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
@@ -263,7 +264,7 @@ namespace BahaTurret
 
 							if(bulletType == BulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+								ExplosionFX.CreateExplosion(hit.point, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 							}
 
 							GameObject.Destroy(gameObject); //destroy bullet on collision
@@ -298,7 +299,7 @@ namespace BahaTurret
 			if(airDetonation && distanceFromStart > detonationRange)
 			{
 				//detonate
-				ExplosionFX.CreateExplosion(transform.position, radius, blastPower, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+				ExplosionFX.CreateExplosion(transform.position, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 				GameObject.Destroy(gameObject); //destroy bullet on collision
 			}
 
