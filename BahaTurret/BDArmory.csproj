@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Armor\ArmorPenetration.cs" />
     <Compile Include="Armor\BDArmor.cs" />
+    <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
     <Compile Include="Armor\BulletInfo.cs" />
@@ -86,7 +87,6 @@
     <Compile Include="FX\ParticleTurbulence.cs" />
     <Compile Include="Parts\ClusterBomb.cs" />
     <Compile Include="Misc\KSPForceApplier.cs" />
-    <Compile Include="BDExplosivePart.cs" />
     <Compile Include="Parts\BDModularGuidance.cs" />
     <Compile Include="Parts\BDMMLauncher.cs" />
     <Compile Include="Parts\BDAdjustableRail.cs" />
@@ -95,6 +95,7 @@
     <Compile Include="Animation\BDAScaleByDistance.cs" />
     <Compile Include="Animation\BDALookConstraintUp.cs" />
     <Compile Include="Parts\SeismicChargeFX.cs" />
+    <Compile Include="UI\BDGUIUtils.cs" />
     <Compile Include="UI\BDInputUtils.cs" />
     <Compile Include="TargetInfo.cs" />
     <Compile Include="UI\BDATargetManager.cs" />
@@ -111,7 +112,6 @@
     <Compile Include="Misc\IBDWeapon.cs" />
     <Compile Include="MissileFire.cs" />
     <Compile Include="Parts\TGPCameraEffects.cs" />
-    <Compile Include="BDGUIUtils.cs" />
     <Compile Include="Parts\TGPCamRotator.cs" />
     <Compile Include="CounterMeasure\CMSmoke.cs" />
     <Compile Include="TargetSignatureData.cs" />
@@ -176,6 +176,7 @@ set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
 
 @echo distributing $(Targetname) files...
 copy /Y "$(TargetPath)" "$(ProjectDir)Distribution\GameData\%25ModName%25\Plugins\"
+copy /Y "$(TargetPath)" "C:\Users\dlane\Dropbox\Kerbal\ModDevelopment\Release"
 
 if $(ConfigurationName) == Debug (
 @echo building $(Targetname).dll.mdb file...
