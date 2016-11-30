@@ -135,7 +135,6 @@ namespace BahaTurret
 		KSPParticleEmitter forwardRCS;
 		float rcsAudioMinInterval = 0.2f;
 
-		bool hasExploded = false;
 		private AudioSource audioSource;
 		public AudioSource sfAudioSource;
 		List<KSPParticleEmitter> pEmitters;
@@ -588,7 +587,7 @@ namespace BahaTurret
 				vessel.vesselName = GetShortName();
 				vessel.vesselType = VesselType.Probe;
 				
-				timeFired = Time.time;
+				TimeFired = Time.time;
 
 				//setting ref transform for navball
 				GameObject refObject = new GameObject();
@@ -651,7 +650,7 @@ namespace BahaTurret
 		{
             base.OnFixedUpdate();
             debugString = "";
-			if(HasFired && !hasExploded && part!=null)
+			if(HasFired && !HasExploded && part!=null)
 			{
 				part.rb.isKinematic = false;
 				AntiSpin();
@@ -787,7 +786,7 @@ namespace BahaTurret
                     if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
 
                     isTimed = true;
-                    detonationTime = Time.time - timeFired + 1.5f;
+                    detonationTime = Time.time - TimeFired + 1.5f;
                     return;
                 }
             }
@@ -1364,7 +1363,7 @@ namespace BahaTurret
 			}
 
 
-			if(Time.time-timeFired > dropTime+0.25f)
+			if(Time.time-TimeFired > dropTime+0.25f)
 			{
 				DoAero(aamTarget);
 			}
@@ -1520,11 +1519,11 @@ namespace BahaTurret
 			{
 				DetonateSeismicCharge();
 			}
-			else if(!hasExploded && HasFired)
+			else if(!HasExploded && HasFired)
 			{
 				BDArmorySettings.numberOfParticleEmitters--;
-				
-				hasExploded = true;
+	
+				HasExploded = true;
 				
 				if(legacyTargetVessel!=null)
 				{
@@ -1594,7 +1593,7 @@ namespace BahaTurret
 		
 		void DetonateSeismicCharge()
 		{
-			if(!hasExploded && HasFired)
+			if(!HasExploded && HasFired)
 			{
 				GameSettings.SHIP_VOLUME = 0;
 				GameSettings.MUSIC_VOLUME = 0;
@@ -1602,7 +1601,7 @@ namespace BahaTurret
 				
 				BDArmorySettings.numberOfParticleEmitters--;
 				
-				hasExploded = true;
+				HasExploded = true;
 
 				/*
 				if(targetVessel == null)

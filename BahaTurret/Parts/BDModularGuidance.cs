@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
@@ -74,27 +75,28 @@ namespace BahaTurret
 
         public override void OnFixedUpdate()
         {
-            base.OnFixedUpdate();
-
-            CheckDetonationDistance();
-
-            UpdateGuidance();
-
-            CheckDelayedFired();
-
-            CheckNextStage();
-
-            if (isTimed && TimeIndex > detonationTime)
+            if (HasFired && !HasExploded)
             {
-                AutoDestruction();
+                CheckDetonationDistance();
+
+                UpdateGuidance();
+
+                CheckDelayedFired();
+
+                CheckNextStage();
+
+                if (isTimed && TimeIndex > detonationTime)
+                {
+                    AutoDestruction();
+                } 
             }
         }
 
         private void CheckDetonationDistance()
         {
-            //Guard clauses
-            if (!HasFired) return;
+            //Guard clauses     
             if (!TargetAcquired) return;
+
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
 
@@ -117,7 +119,7 @@ namespace BahaTurret
 
         private void CheckNextStage()
         {
-            if (HasFired && ShouldExecuteNextStage())
+            if (ShouldExecuteNextStage())
             {
                 ExecuteNextStage();
             }
@@ -125,9 +127,9 @@ namespace BahaTurret
 
         private void CheckDelayedFired()
         {
-            if (HasFired && !_missileIgnited)
+            if (!_missileIgnited)
             {
-                if (Time.time - timeFired > dropTime)
+                if (Time.time - TimeFired > dropTime)
                 {
                     MissileIgnition();
                 }
@@ -369,7 +371,6 @@ namespace BahaTurret
 
         void UpdateGuidance()
         {
-            if (!HasFired) return;
             if (guidanceActive)
             {
                 switch (TargetingMode)
@@ -515,7 +516,7 @@ namespace BahaTurret
                     if (sqrDist < Mathf.Pow(detonationRadius * 0.5f, 2)) AutoDestruction();
 
                     isTimed = true;
-                    detonationTime = Time.time - timeFired + 1.5f;
+                    detonationTime = Time.time - TimeFired + 1.5f;
                     return;
                 }
             }
@@ -539,7 +540,7 @@ namespace BahaTurret
                     TargetPosition = CruiseGuidance();
                 }
                 //Updating aero surfaces
-                if (Time.time - timeFired > dropTime + 0.5f)
+                if (Time.time - TimeFired > dropTime + 0.5f)
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, GetTransform(UpTransformAxis));
                     var targetDirection = _velocityTransform.InverseTransformPoint(TargetPosition).normalized;
@@ -694,7 +695,7 @@ namespace BahaTurret
                 vessel.vesselName = GetShortName();
                 vessel.vesselType = VesselType.Station;
 
-                timeFired = Time.time;
+                TimeFired = Time.time;
 
                 MissileState = MissileStates.Drop;
                 Misc.RefreshAssociatedWindows(part);
@@ -799,7 +800,8 @@ namespace BahaTurret
         {
             if (HasFired)
             {
-                AutoDestruction();          
+                AutoDestruction();
+                HasExploded = true;
             }
         }
 
