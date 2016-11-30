@@ -9,9 +9,6 @@ namespace BahaTurret
 {	
 	public class MissileLauncher : MissileBase
 	{
-		
-
-
 		[KSPField]
 		public string homingType = "AAM";
 
@@ -134,7 +131,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		KSPParticleEmitter forwardRCS;
 		float rcsAudioMinInterval = 0.2f;
 
-		bool hasExploded = false;
 		private AudioSource audioSource;
 		public AudioSource sfAudioSource;
 		List<KSPParticleEmitter> pEmitters;
@@ -613,7 +609,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				vessel.vesselType = VesselType.Probe;
 
 				
-				timeFired = Time.time;
+				TimeFired = Time.time;
 
 
 				//setting ref transform for navball
@@ -682,7 +678,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		{
             base.OnFixedUpdate();
             debugString = "";
-			if(HasFired && !hasExploded && part!=null)
+			if(HasFired && !HasExploded && part!=null)
 			{
 				part.rb.isKinematic = false;
 				AntiSpin();
@@ -815,7 +811,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
                     if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
 
                     isTimed = true;
-                    detonationTime = Time.time - timeFired + 1.5f;
+                    detonationTime = Time.time - TimeFired + 1.5f;
                     return;
                 }
             }
@@ -1390,7 +1386,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 
 
-			if(Time.time-timeFired > dropTime+0.25f)
+			if(Time.time-TimeFired > dropTime+0.25f)
 			{
 				DoAero(aamTarget);
 			}
@@ -1550,11 +1546,11 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				DetonateSeismicCharge();
 			
 			}
-			else if(!hasExploded && HasFired)
+			else if(!HasExploded && HasFired)
 			{
 				BDArmorySettings.numberOfParticleEmitters--;
 				
-				hasExploded = true;
+				HasExploded = true;
 
 				
 				if(legacyTargetVessel!=null)
@@ -1631,7 +1627,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		
 		void DetonateSeismicCharge()
 		{
-			if(!hasExploded && HasFired)
+			if(!HasExploded && HasFired)
 			{
 				GameSettings.SHIP_VOLUME = 0;
 				GameSettings.MUSIC_VOLUME = 0;
@@ -1639,7 +1635,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				
 				BDArmorySettings.numberOfParticleEmitters--;
 				
-				hasExploded = true;
+				HasExploded = true;
 
 				/*
 				if(targetVessel == null)
