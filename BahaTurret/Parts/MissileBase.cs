@@ -546,8 +546,7 @@ namespace BahaTurret
                 LR.SetPosition(1, end);
             }
         }
-
-
+        
         private Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
 
@@ -556,6 +555,7 @@ namespace BahaTurret
             //Guard clauses
             if (!HasFired) return;
             if (!TargetAcquired) return;
+
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
 

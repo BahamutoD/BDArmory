@@ -176,6 +176,7 @@ set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
 
 @echo distributing $(Targetname) files...
 copy /Y "$(TargetPath)" "$(ProjectDir)Distribution\GameData\%25ModName%25\Plugins\"
+copy /Y "$(TargetPath)" "C:\Users\dlane\Dropbox\Kerbal\ModDevelopment\Release"
 
 if $(ConfigurationName) == Debug (
 @echo building $(Targetname).dll.mdb file...

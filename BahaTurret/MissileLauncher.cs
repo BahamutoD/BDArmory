@@ -70,8 +70,8 @@ namespace BahaTurret
                   UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float decoupleSpeed = 0;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Detonation Range"),
-          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation Radius"),
+          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.All)]
         public float detonationRadius = 0;
 
         [KSPField]
@@ -375,23 +375,13 @@ namespace BahaTurret
 				{
 					rotationTransform = part.FindModelTransform(rotationTransformName);
 				}
-
-
-
-
-
-
 				
 				if(hasRCS)
 				{
 					SetupRCS();
 					KillRCS();
 				}
-
 				SetupAudio();
-
-
-
 			}
 
 			if(GuidanceMode != GuidanceModes.Cruise)
@@ -447,8 +437,6 @@ namespace BahaTurret
 			sfAudioSource.dopplerLevel = 0;
 			sfAudioSource.priority = 230;
 			sfAudioSource.spatialBlend = 1;
-
-
 
 			if(audioClipPath != string.Empty)
 			{
