@@ -12,7 +12,6 @@ namespace BahaTurret
             
 		public float blastRadius = 50;
 
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Blast Power"),
         UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All),
             UI_FloatRange(minValue = 5, maxValue = 200, stepIncrement = 1)]

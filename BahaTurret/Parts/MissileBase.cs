@@ -97,7 +97,9 @@ namespace BahaTurret
 
         public Vessel SourceVessel { get; set; } = null;
 
-        public float timeFired = -1;
+        public bool HasExploded { get; set; } = false;
+
+        public float TimeFired = -1;
 
         protected float lockFailTimer = -1;
 
@@ -184,7 +186,10 @@ namespace BahaTurret
 
         public override void OnFixedUpdate()
         {
-            TimeIndex = Time.time - timeFired;
+            if (HasFired && !HasExploded && part != null)
+            {
+                TimeIndex = Time.time - TimeFired;
+            }
         }
 
         protected void UpdateGPSTarget()
@@ -413,7 +418,7 @@ namespace BahaTurret
                                     TargetVelocity = radarTarget.velocity;
                                     TargetAcceleration = radarTarget.acceleration;
                                     _radarFailTimer = 0;
-                                    if (!ActiveRadar && Time.time - timeFired > 1)
+                                    if (!ActiveRadar && Time.time - TimeFired > 1)
                                     {
                                         if (locksCount == 0)
                                         {
@@ -503,7 +508,7 @@ namespace BahaTurret
                     TargetVelocity = radarTarget.velocity;
                     TargetAcceleration = radarTarget.acceleration;
 
-                    if (!ActiveRadar && Time.time - timeFired > 1)
+                    if (!ActiveRadar && Time.time - TimeFired > 1)
                     {
                         RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
                         Debug.Log("[BDArmory]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
@@ -546,8 +551,7 @@ namespace BahaTurret
                 LR.SetPosition(1, end);
             }
         }
-
-
+        
         private Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
 
@@ -556,6 +560,7 @@ namespace BahaTurret
             //Guard clauses
             if (!HasFired) return;
             if (!TargetAcquired) return;
+
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
 
