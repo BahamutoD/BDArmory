@@ -593,14 +593,14 @@ namespace BahaTurret
         {
             try
             {
-                Debug.Log("== BDArmory : Loading settings.cfg ==");
+                Debug.Log("[BDArmory]=== Loading settings.cfg ===");
 
                 BDAPersistantSettingsField.Load();
                 BDInputSettingsFields.LoadSettings();
             }
             catch (NullReferenceException)
             {
-                Debug.Log("== BDArmory : Failed to load settings config==");
+                Debug.Log("[BDArmory]=== Failed to load settings config ===");
             }
         }
 
@@ -608,7 +608,7 @@ namespace BahaTurret
         {
             try
             {
-                Debug.Log("== BDArmory : Saving settings.cfg ==	");
+                Debug.Log("[BDArmory] == Saving settings.cfg ==	");
 
                 BDAPersistantSettingsField.Save();
 
@@ -621,7 +621,7 @@ namespace BahaTurret
             }
             catch (NullReferenceException)
             {
-                Debug.Log("== BDArmory : Failed to save settings.cfg ==");
+                Debug.Log("[BDArmory]: === Failed to save settings.cfg ====");
             }
         }
 
