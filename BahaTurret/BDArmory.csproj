@@ -71,11 +71,11 @@
     <Compile Include="Armor\ArmorPenetration.cs" />
     <Compile Include="Armor\BDArmor.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
+    <Compile Include="Misc\CFEnable.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
     <Compile Include="Armor\BulletInfo.cs" />
-    <Compile Include="CounterMeasure\CFEnable.cs" />
     <Compile Include="MissileLauncher.cs" />
     <Compile Include="Misc\Misc.cs" />
     <Compile Include="FX\ShellCasing.cs" />
