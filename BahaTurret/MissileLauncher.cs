@@ -8,7 +8,10 @@ namespace BahaTurret
 {	
 	public class MissileLauncher : MissileBase
 	{
-		[KSPField]
+
+	    #region  Variable Declarations
+        
+        [KSPField]
 		public string homingType = "AAM";
 
 		[KSPField]
@@ -79,13 +82,17 @@ namespace BahaTurret
 		
 		[KSPField]
 		public float blastRadius = 150;
-		[KSPField]
-		public float blastPower = 25;
-		[KSPField]
+
+        [KSPField]
+        public float blastPower = 25;
+
+        [KSPField]
 		public float blastHeat = -1;
-		[KSPField]
+
+        [KSPField]
 		public float maxTurnRateDPS = 20;
-		[KSPField]
+
+        [KSPField]
 		public bool proxyDetonate = true;
 		
 		[KSPField]
@@ -154,9 +161,11 @@ namespace BahaTurret
 
 		[KSPField]
 		public bool useSimpleDrag = false;
-		[KSPField]
+
+        [KSPField]
 		public float simpleDrag = 0.02f;
-		[KSPField]
+
+        [KSPField]
 		public float simpleStableTorque = 5;
 
 		[KSPField]
@@ -197,7 +206,9 @@ namespace BahaTurret
 		[KSPField]
 		public float waterImpactTolerance = 25;
 
-		void ParseWeaponClass()
+#endregion
+
+        void ParseWeaponClass()
 		{
 			missileType = missileType.ToLower();
 			if(missileType == "bomb")
@@ -1017,7 +1028,7 @@ namespace BahaTurret
 			}
 			EndBoost();
 		}
-		//boost
+		
 		void StartBoost()
 		{
 			MissileState = MissileStates.Boost;
@@ -1209,7 +1220,7 @@ namespace BahaTurret
 			}
 		}
 
-		IEnumerator FadeOutEmitters()
+        IEnumerator FadeOutEmitters()
 		{
 			float fadeoutStartTime = Time.time;
 			while(Time.time-fadeoutStartTime < 5)
