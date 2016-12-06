@@ -1353,7 +1353,7 @@ namespace BahaTurret
 
 			float radarAlt = MissileGuidance.GetRadarAltitude(vessel);
 
-			Vector3 forwardPoint = vessel.transform.position + Vector3.ProjectOnPlane(vesselTransform.up * 100, upDirection);
+			Vector3 forwardPoint = vessel.transform.position + Vector3.ProjectOnPlane((vessel.horizontalSrfSpeed < 10 ? vesselTransform.up : (Vector3)vessel.srf_vel_direction) * 100, upDirection);
 			float terrainDiff = MissileGuidance.GetRaycastRadarAltitude(forwardPoint) - radarAlt;
 			terrainDiff = Mathf.Max(terrainDiff, 0);
 
