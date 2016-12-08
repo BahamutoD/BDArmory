@@ -14,10 +14,10 @@ namespace BahaTurret
         [KSPField(isPersistant = true)]
         public string shortName = string.Empty;
 
-        [KSPField]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Static Launch Range"), UI_FloatRange(minValue = 5000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float maxStaticLaunchRange = 5000;
 
-        [KSPField]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Static Launch Range"), UI_FloatRange(minValue = 10f, maxValue = 4000f, stepIncrement = 100f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float minStaticLaunchRange = 10;
 
         [KSPField]

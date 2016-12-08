@@ -24,6 +24,48 @@ namespace BahaTurret
 
         private List<Part> vesselParts = new List<Part>();
 
+        #region KSP FIELDS
+
+        [KSPField]
+        public string ForwardTransform = "ForwardNegative";
+        [KSPField]
+        public string UpTransform = "RightPositive";
+
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
+        public string WeaponName;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"), UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float CruiseAltitude = 500;
+
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
+        public string GuidanceLabel = "AGM/STS";
+
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
+        private string _targetingLabel = TargetingModes.None.ToString();
+
+        [KSPField(isPersistant = true)]
+        public int _guidanceIndex = 2;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Active Radar Range"), UI_FloatRange(minValue = 6000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float ActiveRadarRange = 6000;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"), UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float MaxSteer = 1;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float StagesNumber = 1;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float DetonationDistance = 0;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float SteerDamping = 5;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float SteerMult = 10;
+
+        #endregion
+
         public TransformAxisVectors ForwardTransformAxis { get; set; }
         public TransformAxisVectors UpTransformAxis { get; set; }
 
@@ -612,47 +654,7 @@ namespace BahaTurret
             part.vessel.OnFlyByWire += GuidanceSteer;
         }
 
-        #region KSP FIELDS
-
-        [KSPField]
-        public string ForwardTransform = "ForwardNegative";
-        [KSPField]
-        public string UpTransform = "RightPositive";
-
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label (affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
-        public string WeaponName;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"), UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float CruiseAltitude = 500;
-
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
-        public string GuidanceLabel = "AGM/STS";
-
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
-        private string _targetingLabel = TargetingModes.None.ToString();
-
-        [KSPField(isPersistant = true)]
-        public int _guidanceIndex = 2;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Active Radar Range"), UI_FloatRange(minValue = 6000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float ActiveRadarRange = 6000;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"), UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float MaxSteer = 1;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float StagesNumber = 1;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float DetonationDistance = 0;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float SteerDamping = 5;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float SteerMult = 10;
-
-        #endregion
+        
 
         #region KSP ACTIONS
         [KSPAction("Fire Missile")]

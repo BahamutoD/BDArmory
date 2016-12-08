@@ -227,7 +227,11 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
             Fields["maxOffBoresight"].guiActive = false;
             Fields["maxOffBoresight"].guiActiveEditor = false;
-
+		    Fields["maxStaticLaunchRange"].guiActive = false;
+            Fields["maxStaticLaunchRange"].guiActiveEditor = false;
+            Fields["minStaticLaunchRange"].guiActive = false;
+            Fields["minStaticLaunchRange"].guiActiveEditor = false;
+     
             if (isTimed)
 			{
 				Fields["detonationTime"].guiActive = true;
