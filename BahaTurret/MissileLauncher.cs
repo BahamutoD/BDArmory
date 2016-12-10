@@ -717,10 +717,6 @@ namespace BahaTurret
 				UpdateThrustForces();
 				UpdateGuidance();
 				RaycastCollisions();
-			    if (detonationRadius > 0)
-			    {
-                  mbCheckDetonationDistance(detonationRadius);
-                }
             
                 //Timed detonation
                 if (isTimed && TimeIndex > detonationTime)
@@ -731,7 +727,15 @@ namespace BahaTurret
 			}
 		}
 
-        Vector3 previousPos;
+	    public void  LateUpdate()
+	    {
+            if (detonationRadius > 0)
+            {
+                mbCheckDetonationDistance(detonationRadius);
+            }
+        }
+
+	    Vector3 previousPos;
 		void RaycastCollisions()
 		{
 			if(weaponClass == WeaponClasses.Bomb) return;
