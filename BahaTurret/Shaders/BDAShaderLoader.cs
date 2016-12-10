@@ -1,18 +1,15 @@
-using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BahaTurret.Shaders
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, false)]
     public class BDAShaderLoader : MonoBehaviour
     {
-        private static bool loaded;
+        private static bool _loaded;
 
-        private static readonly string bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
-                                                    Path.DirectorySeparatorChar +
-                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles";
+        private static string _bundlePath;
 
 
         public static Shader GrayscaleEffectShader;
@@ -26,28 +23,34 @@ namespace BahaTurret
                 switch (Application.platform)
                 {
                     case RuntimePlatform.OSXPlayer:
-                        return bundlePath + Path.DirectorySeparatorChar +
+                        return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_macosx.bundle";
                     case RuntimePlatform.WindowsPlayer:
-                        return bundlePath + Path.DirectorySeparatorChar +
+                        return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_windows.bundle";
                     case RuntimePlatform.LinuxPlayer:
-                        return bundlePath + Path.DirectorySeparatorChar +
+                        return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_macosx.bundle";
                     default:
-                        return bundlePath + Path.DirectorySeparatorChar +
+                        return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_windows.bundle";
                 }
             }
         }
 
+        private void Awake()
+        {
+            _bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
+                                                    Path.DirectorySeparatorChar +
+                                                    "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles";
+        }
         private void Start()
         {
-            if (!loaded)
+            if (!_loaded)
             {
                 Debug.Log("[BDArmory] start bundle load process");
                 StartCoroutine(LoadBundleAssets());
-                loaded = true;
+                _loaded = true;
             }
         }
 
