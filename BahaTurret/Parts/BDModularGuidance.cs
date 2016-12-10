@@ -113,7 +113,6 @@ namespace BahaTurret
 
             Misc.RefreshAssociatedWindows(part);
         }
-
         public override void OnFixedUpdate()
         {
             if (HasFired && !HasExploded)
@@ -124,7 +123,7 @@ namespace BahaTurret
 
                 CheckDelayedFired();
 
-                CheckNextStage();
+                CheckNextStage();            
 
                 if (isTimed && TimeIndex > detonationTime)
                 {
@@ -145,15 +144,15 @@ namespace BahaTurret
             var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
                                            previousMissileVelocity;
 
-            var futureTargetPosition = TargetPosition + (TargetVelocity*Time.fixedDeltaTime) +
-                                        0.5f*effectiveTargetAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
+            var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
+                                        0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
             var missileTargetPosition = vessel.CoM +
-                                        (float) vessel.srfSpeed*vessel.srf_velocity.normalized*Time.fixedDeltaTime +
-                                        0.5f*effectiveMissileAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
+                                        (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
+                                        0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
             float distance;
             if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
             {
-                Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance="+distance);
+                Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
                 Detonate();
             }
         }
@@ -163,6 +162,7 @@ namespace BahaTurret
             if (ShouldExecuteNextStage())
             {
                 ExecuteNextStage();
+
             }
         }
 
@@ -245,6 +245,7 @@ namespace BahaTurret
 
         private bool ShouldExecuteNextStage()
         {
+            if (!_missileIgnited) return false;
             var ret = true;
             //If the next stage is greater than the number defined of stages the missile is done
           
@@ -437,6 +438,7 @@ namespace BahaTurret
                          UpdateGPSTarget();
                         break;
                     case TargetingModes.AntiRad:
+                        UpdateAntiRadiationTarget();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -686,8 +688,7 @@ namespace BahaTurret
                 SourceVessel = vessel;
                 SetTargeting();
 
-                //add target info to vessel
-
+               
 
                 Jettison();
 
@@ -709,6 +710,7 @@ namespace BahaTurret
         {
             startDirection = GetForwardTransform();
             SetLaserTargeting();
+            SetAntiRadTargeting();
         }
 
 

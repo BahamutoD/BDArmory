@@ -585,11 +585,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 					}
 				}
                 SetLaserTargeting();
-
-			    if (TargetingMode == TargetingModes.AntiRad && TargetAcquired)
-				{
-					RadarWarningReceiver.OnRadarPing += ReceiveRadarPing;
-				}
+                SetAntiRadTargeting();
 
 				part.decouple(0);
 				part.force_activate();
@@ -668,16 +664,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				FireMissile();
 			}
 		}
-		
-		void OnDisable()
-		{
-			if(TargetingMode == TargetingModes.AntiRad)
-			{
-				RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
-			}
-		}
-		
-		
+			
 		public override void OnFixedUpdate()
 		{
             base.OnFixedUpdate();
@@ -1482,52 +1469,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				}
 			}
 		}
-
-		void UpdateAntiRadiationTarget()
-		{
-			if(!TargetAcquired)
-			{
-				guidanceActive = false;
-				return;
-			}
-
-			if(FlightGlobals.ready)
-			{
-				if(lockFailTimer < 0)
-				{
-					lockFailTimer = 0;
-				}
-				lockFailTimer += Time.fixedDeltaTime;
-			}
-
-			if(lockFailTimer > 8)
-			{
-				guidanceActive = false;
-				TargetAcquired = false;
-			}
-			else
-			{
-				TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
-			}
-		}
-
-		void ReceiveRadarPing(Vessel v, Vector3 source, RadarWarningReceiver.RWRThreatTypes type, float persistTime)
-		{
-			if(TargetingMode == TargetingModes.AntiRad && TargetAcquired && v == vessel)
-			{
-				if((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(50, 2)
-					&& Vector3.Angle(source-transform.position, transform.forward) < maxOffBoresight)
-				{
-					TargetAcquired = true;
-					TargetPosition = source;
-					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
-					TargetVelocity = Vector3.zero;
-					TargetAcceleration = Vector3.zero;
-					lockFailTimer = 0;
-				}
-			}
-		}
-		
+	
 		void RayDetonator()
 		{
 			Vector3 lineStart = transform.position;
