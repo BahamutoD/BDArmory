@@ -378,7 +378,7 @@ namespace BahaTurret
                         if (_targetVessel != null)
                         {
                             TargetPosition = _targetVessel.CurrentCoM;
-                            TargetVelocity = _targetVessel.rb_velocity;
+                            TargetVelocity = _targetVessel.srf_velocity;
                             TargetAcceleration = _targetVessel.acceleration;
                         }
                         break;
@@ -603,13 +603,12 @@ namespace BahaTurret
         ///     And a missile is not an active vessel. I had to use a different way handle stages. And action groups works perfect!
         /// </summary>
         public void ExecuteNextStage()
-        {
-            part.vessel.OnFlyByWire -= GuidanceSteer;
-            part.vessel.ActionGroups.ToggleGroup((KSPActionGroup) _nextStage);
+        { 
+            vessel.ActionGroups.ToggleGroup((KSPActionGroup) _nextStage);
 
             _nextStage *= 2;
 
-            part.vessel.OnFlyByWire += GuidanceSteer;
+            vessel.OnFlyByWire += GuidanceSteer;
         }
 
         #region KSP FIELDS

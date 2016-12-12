@@ -113,7 +113,7 @@ namespace BahaTurret
 
             prevPosition = gameObject.transform.position;
 
-            sourceOriginalV = sourceVessel.rb_velocity;
+            sourceOriginalV = sourceVessel.srf_velocity;
 
             if (!lightFlash)
             {
@@ -229,7 +229,7 @@ namespace BahaTurret
                 bulletTrail.SetPosition(0,
                     transform.position +
                     (currentVelocity*tracerDeltaFactor*TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate) -
-                    (FlightGlobals.ActiveVessel.rb_velocity*TimeWarp.fixedDeltaTime));
+                    (FlightGlobals.ActiveVessel.srf_velocity*TimeWarp.fixedDeltaTime));
             }
             else
             {
