@@ -227,7 +227,11 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
             Fields["maxOffBoresight"].guiActive = false;
             Fields["maxOffBoresight"].guiActiveEditor = false;
-
+		    Fields["maxStaticLaunchRange"].guiActive = false;
+            Fields["maxStaticLaunchRange"].guiActiveEditor = false;
+            Fields["minStaticLaunchRange"].guiActive = false;
+            Fields["minStaticLaunchRange"].guiActiveEditor = false;
+     
             if (isTimed)
 			{
 				Fields["detonationTime"].guiActive = true;
@@ -581,11 +585,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 					}
 				}
                 SetLaserTargeting();
-
-			    if (TargetingMode == TargetingModes.AntiRad && TargetAcquired)
-				{
-					RadarWarningReceiver.OnRadarPing += ReceiveRadarPing;
-				}
+                SetAntiRadTargeting();
 
 				part.decouple(0);
 				part.force_activate();
@@ -664,16 +664,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				FireMissile();
 			}
 		}
-		
-		void OnDisable()
-		{
-			if(TargetingMode == TargetingModes.AntiRad)
-			{
-				RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
-			}
-		}
-		
-		
+			
 		public override void OnFixedUpdate()
 		{
             base.OnFixedUpdate();
@@ -872,7 +863,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 					if(legacyTargetVessel && legacyTargetVessel.loaded)
 					{
 						Vector3 targetCoMPos = legacyTargetVessel.CoM;
-						targetPosition = targetCoMPos+legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
+						targetPosition = targetCoMPos+legacyTargetVessel.srf_velocity*Time.fixedDeltaTime;
 					}
 
 					//increaseTurnRate after launch
@@ -1287,7 +1278,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				guidanceActive = false;
 				return;
 			}
-			Ray laserBeam = new Ray(targetingPod.cameraParentTransform.position + (targetingPod.vessel.rb_velocity * Time.fixedDeltaTime), targetingPod.targetPointPosition - targetingPod.cameraParentTransform.position);
+			Ray laserBeam = new Ray(targetingPod.cameraParentTransform.position + (targetingPod.vessel.srf_velocity * Time.fixedDeltaTime), targetingPod.targetPointPosition - targetingPod.cameraParentTransform.position);
 			Vector3 target = MissileGuidance.GetBeamRideTarget(laserBeam, part.transform.position, vessel.srf_velocity, beamCorrectionFactor, beamCorrectionDamping, (TimeIndex > 0.25f ? previousBeam : laserBeam));
 			previousBeam = laserBeam;
 			DrawDebugLine(part.transform.position, target);
@@ -1469,7 +1460,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				if(TargetingMode != TargetingModes.Gps || TargetAcquired)
 				{
 					TargetAcquired = true;
-					TargetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.rb_velocity * Time.fixedDeltaTime);
+					TargetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.srf_velocity * Time.fixedDeltaTime);
 					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
 					TargetVelocity = legacyTargetVessel.srf_velocity;
 					TargetAcceleration = legacyTargetVessel.acceleration;
@@ -1478,52 +1469,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				}
 			}
 		}
-
-		void UpdateAntiRadiationTarget()
-		{
-			if(!TargetAcquired)
-			{
-				guidanceActive = false;
-				return;
-			}
-
-			if(FlightGlobals.ready)
-			{
-				if(lockFailTimer < 0)
-				{
-					lockFailTimer = 0;
-				}
-				lockFailTimer += Time.fixedDeltaTime;
-			}
-
-			if(lockFailTimer > 8)
-			{
-				guidanceActive = false;
-				TargetAcquired = false;
-			}
-			else
-			{
-				TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
-			}
-		}
-
-		void ReceiveRadarPing(Vessel v, Vector3 source, RadarWarningReceiver.RWRThreatTypes type, float persistTime)
-		{
-			if(TargetingMode == TargetingModes.AntiRad && TargetAcquired && v == vessel)
-			{
-				if((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(50, 2)
-					&& Vector3.Angle(source-transform.position, transform.forward) < maxOffBoresight)
-				{
-					TargetAcquired = true;
-					TargetPosition = source;
-					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
-					TargetVelocity = Vector3.zero;
-					TargetAcceleration = Vector3.zero;
-					lockFailTimer = 0;
-				}
-			}
-		}
-		
+	
 		void RayDetonator()
 		{
 			Vector3 lineStart = transform.position;
