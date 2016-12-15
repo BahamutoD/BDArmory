@@ -8,35 +8,78 @@ namespace BahaTurret
 {
     public class ModuleRadar : PartModule
     {
-        [KSPField] public string radarName;
+        [KSPField]
+        public string radarName;
 
-        [KSPField] public int turretID = 0;
+        [KSPField]
+        public int turretID = 0;
 
+        [KSPField]
+        public bool canLock = true;
 
-        [KSPField] public bool canLock = true;
+        [KSPField]
+        public int maxLocks = 1;
+
+        [KSPField]
+        public bool canScan = true;
+
+        [KSPField]
+        public bool canRecieveRadarData = false;
+
+        [KSPField(isPersistant = true)]
+        public string linkedVesselID;
+
+        [KSPField]
+        public bool omnidirectional = true;
+
+        [KSPField]
+        public float directionalFieldOfView = 90;
+
+        [KSPField]
+        public float boresightFOV = 10;
+
+        [KSPField]
+        public float scanRotationSpeed = 120; //in degrees per second
+
+        [KSPField]
+        public float lockRotationSpeed = 120;
+
+        [KSPField]
+        public float lockRotationAngle = 4;
+
+        [KSPField]
+        public string rotationTransformName = string.Empty;
+        Transform rotationTransform;
+
+        [KSPField(isPersistant = true)]
+        public bool radarEnabled = false;
+
+        [KSPField]
+        public float minSignalThreshold = 90;
+
+        [KSPField]
+        public float minLockedSignalThreshold = 90;
+
+        [KSPField]
+        public bool canTrackWhileScan = false;
+
+        [KSPField]
+        public float multiLockFOV = 30;
+
+        [KSPField]
+        public int rwrThreatType = 0;
 
         public bool locked
         {
             get { return currLocks > 0; }
         }
-
-        [KSPField] public int maxLocks = 1;
-
         public int currentLocks
         {
             get { return currLocks; }
         }
-
         private int currLocks = 0;
-
-        [KSPField] public bool canScan = true;
-
-        [KSPField] public bool canRecieveRadarData = false;
         private List<VesselRadarData> linkedToVessels;
-
-        [KSPField(isPersistant = true)] public string linkedVesselID;
-
-        //[KSPField]
+ 
         //public string rangeIncrements = "5000,10000,20000";
         //public float[] rIncrements;
 
@@ -44,34 +87,6 @@ namespace BahaTurret
 
         public float maxRange;
 
-        [KSPField] public bool omnidirectional = true;
-
-        [KSPField] public float directionalFieldOfView = 90;
-
-        [KSPField] public float boresightFOV = 10;
-
-
-        [KSPField] public float scanRotationSpeed = 120; //in degrees per second
-
-        [KSPField] public float lockRotationSpeed = 120;
-
-        [KSPField] public float lockRotationAngle = 4;
-
-        [KSPField] public string rotationTransformName = string.Empty;
-        Transform rotationTransform;
-
-
-        [KSPField(isPersistant = true)] public bool radarEnabled = false;
-
-        [KSPField] public float minSignalThreshold = 90;
-
-        [KSPField] public float minLockedSignalThreshold = 90;
-
-        [KSPField] public bool canTrackWhileScan = false;
-
-        [KSPField] public float multiLockFOV = 30;
-
-        [KSPField] public int rwrThreatType = 0;
         public RadarWarningReceiver.RWRThreatTypes rwrType = RadarWarningReceiver.RWRThreatTypes.SAM;
 
         //contacts
@@ -101,7 +116,6 @@ namespace BahaTurret
         bool drawGUI = false;
         public float signalPersistTime;
 
-
         //scanning
         [KSPField] public bool showDirectionWhileScan = false;
         [KSPField(isPersistant = true)] public float currentAngle = 0;
@@ -109,7 +123,6 @@ namespace BahaTurret
         public Transform referenceTransform;
         float radialScanDirection = 1;
         float lockScanDirection = 1;
-
 
         public bool boresightScan = false;
 
@@ -1091,7 +1104,7 @@ namespace BahaTurret
             return output.ToString();
         }
 
-        [KSPField] public double resourceDrain = 0.25;
+        [KSPField] public double resourceDrain = 0.825;
 
         void DrainElectricity()
         {

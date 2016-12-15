@@ -651,7 +651,7 @@ namespace BahaTurret
 					//cameraParentTransform.rotation = lookRotation;
 					if(tgt.vessel)
 					{
-						targetDirection = ((tgt.vessel.CoM+(tgt.vessel.rb_velocity*Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
+						targetDirection = ((tgt.vessel.CoM+(tgt.vessel.srf_velocity*Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
 					}
 					PointCameraModel(targetDirection);
 					GroundStabilize();
@@ -1230,7 +1230,7 @@ namespace BahaTurret
 						Part p = rayHit.collider.GetComponentInParent<Part>();
 						if(p && p.vessel && p.vessel.CoM != Vector3.zero)
 						{
-							groundTargetPosition = p.vessel.CoM + (p.vessel.rb_velocity * Time.fixedDeltaTime);
+							groundTargetPosition = p.vessel.CoM + (p.vessel.srf_velocity * Time.fixedDeltaTime);
 							StartCoroutine(StabilizeNextFrame());
 						}
 					}

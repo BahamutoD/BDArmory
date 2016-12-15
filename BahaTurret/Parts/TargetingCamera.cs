@@ -141,7 +141,7 @@ namespace BahaTurret
 			bool moduleFound = false;
 			foreach(var mtc in v.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
-				Debug.Log ("Vessel switched to vessel with targeting camera.  Refreshing camera state.");
+				Debug.Log ("[BDArmory] : Vessel switched to vessel with targeting camera.  Refreshing camera state.");
 
 				if(mtc.cameraEnabled)
 				{

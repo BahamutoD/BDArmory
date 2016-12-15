@@ -2,12 +2,12 @@ ship = BDA - Test Platform - Missile
 version = 1.2.1
 description = 
 type = SPH
-size = 15.9169903,9.33360672,11.9954557
+size = 16.3415413,9.33362198,11.9954672
 PART
 {
 	part = sasModule_4284270764
 	partName = Part
-	pos = -3.57586646,8.04845428,-0.272817731
+	pos = -3.57586646,8.04845428,-0.27281782
 	attPos = 0,0,0
 	attPos0 = 1.56324098E-14,-1.56634903,1.78813906E-07
 	rot = -0.707106829,0,0,-0.707106829
@@ -227,30 +227,6 @@ PART
 	}
 	MODULE
 	{
-		name = ModuleTCA
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			onActionUpdate
-			{
-				actionGroup = None
-				active = False
-			}
-			ToggleTCA
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = ModuleTripLogger
 		isEnabled = True
 		stagingEnabled = True
@@ -284,7 +260,7 @@ PART
 {
 	part = trussPiece3x_4291143996
 	partName = Part
-	pos = -3.57586646,8.04845333,-1.83917773
+	pos = -3.57586646,8.04845333,-1.83918023
 	attPos = -1.57232896E-14,-0.0202863198,0.238357604
 	attPos0 = 0,-1.56634903,1.86723398E-07
 	rot = -0.707106829,0,0,0.707106829
@@ -342,7 +318,7 @@ PART
 {
 	part = trussPiece3x_4291143972
 	partName = Part
-	pos = -3.57586646,8.04845238,-3.93917942
+	pos = -3.57586646,8.04845238,-3.93918395
 	attPos = 0,-0.850475311,1.28207176E-07
 	attPos0 = 0,2.95047593,-3.51724196E-07
 	rot = -0.707106829,0,0,0.707106829
@@ -400,7 +376,7 @@ PART
 {
 	part = trussPiece3x_4291143948
 	partName = Part
-	pos = -3.57586646,8.04845238,-5.93918133
+	pos = -3.57586646,8.04845238,-5.93918705
 	attPos = 0,-0.950474501,-1.25112621E-07
 	attPos0 = 0,2.95047688,-3.51724196E-07
 	rot = -0.707106829,0,0,0.707106829
@@ -458,7 +434,7 @@ PART
 {
 	part = structuralPanel2_4291143924
 	partName = Part
-	pos = -2.57586575,8.37392616,-5.82176399
+	pos = -2.57586575,8.37392712,-5.82176971
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1,-0.117423102,0.325475812
 	rot = 2.38418579E-07,0,0,-1.00000012
@@ -517,7 +493,7 @@ PART
 {
 	part = structuralPanel2_4291143900
 	partName = Part
-	pos = -4.57586765,8.37392616,-5.82176304
+	pos = -4.57586765,8.37392712,-5.82176876
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = -1,-0.117423996,0.325475812
 	rot = -1.0658141E-14,-1.00000012,2.38418579E-07,4.37113918E-08
@@ -575,7 +551,7 @@ PART
 {
 	part = structuralPanel2_4291411116
 	partName = Part
-	pos = -2.57586575,8.37401581,-3.85023832
+	pos = -2.57586575,8.37401676,-3.85024261
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.5,-0.0889410973,0.32556349
 	rot = 2.38418579E-07,0,0,-1.00000012
@@ -600,7 +576,8 @@ PART
 	link = baha50CalAmmo_4291141500
 	link = ksp.r.largeBatteryPack_4291140924
 	link = ksp.r.largeBatteryPack_4291140766
-	link = patriotLauncherTurret_4293140508
+	link = trussPiece3x_4293023608
+	link = trussPiece3x_4293018120
 	sym = structuralPanel2_4291411092
 	srfN = srfAttach,trussPiece3x_4291143972
 	EVENTS
@@ -636,7 +613,7 @@ PART
 {
 	part = structuralPanel2_4291411092
 	partName = Part
-	pos = -4.57586575,8.37401581,-3.85023737
+	pos = -4.57586575,8.37401676,-3.85024166
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = -1.5,-0.0889415666,0.32556349
 	rot = -1.0658141E-14,-1.00000012,2.38418579E-07,4.37113918E-08
@@ -696,7 +673,7 @@ PART
 {
 	part = structuralPanel2_4291143828
 	partName = Part
-	pos = -2.57586575,8.37343884,-1.83867097
+	pos = -2.57586575,8.37343884,-1.83867288
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.5,-0.000504255295,0.324986488
 	rot = 2.38418579E-07,0,0,-1.00000012
@@ -753,7 +730,7 @@ PART
 {
 	part = structuralPanel2_4291143804
 	partName = Part
-	pos = -4.57586575,8.37343884,-1.83867097
+	pos = -4.57586575,8.37343884,-1.83867288
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = -1.5,-0.000504493713,0.324986488
 	rot = -1.0658141E-14,-1.00000012,2.38418579E-07,4.37113918E-08
@@ -810,7 +787,7 @@ PART
 {
 	part = trussPiece3x_4291143732
 	partName = Part
-	pos = -3.57586646,8.04844761,-8.88966274
+	pos = -3.57586646,8.04844856,-8.88967514
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 0,2.95047593,-8.28561383E-07
 	rot = 0.707106829,0,0,0.707106829
@@ -866,7 +843,7 @@ PART
 {
 	part = scanLockRadar1_4291143708
 	partName = Part
-	pos = -3.57586646,8.37413502,-9.4284296
+	pos = -3.57586646,8.37413692,-9.428442
 	attPos = 0,0,0
 	attPos0 = 0,-0.538788795,-0.325687408
 	rot = 0,1.00000012,-2.08616257E-07,0
@@ -964,7 +941,7 @@ PART
 {
 	part = structuralPanel2_4291143602
 	partName = Part
-	pos = -0.581191301,8.39059448,-5.82176971
+	pos = -0.581191301,8.39059544,-5.82177544
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.99201012,0.0250024796,-1.89840705E-06
 	rot = -1.00000012,0,0,-5.96046448E-07
@@ -1021,10 +998,10 @@ PART
 {
 	part = structuralPanel2_4293205498
 	partName = Part
-	pos = -6.57055759,8.39059448,-5.82176781
+	pos = -6.57056046,8.39059544,-5.82177353
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.99201012,0.0250024796,2.1540161E-06
-	rot = 4.37114309E-08,-5.96046448E-07,-1.00000012,3.55271368E-14
+	rot = 4.37114451E-08,-5.96046448E-07,-1.00000012,4.26325641E-14
 	attRot = 0.499999911,-0.499999911,-0.499999911,-0.499999911
 	attRot0 = -1,2.36533898E-16,-8.74227766E-08,2.38418608E-07
 	mir = 1,1,1
@@ -1078,7 +1055,7 @@ PART
 {
 	part = structuralPanel2_4291358240
 	partName = Part
-	pos = -0.616768122,8.39068413,-3.85024023
+	pos = -0.616768122,8.39068508,-3.85024452
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.93864489,0.0250024796,-9.4473279E-07
 	rot = -1.00000012,0,0,-5.96046448E-07
@@ -1099,6 +1076,8 @@ PART
 	modMass = 0
 	modSize = 0,0,0
 	link = structuralPanel2_4290933368
+	link = trussPiece3x_4293025040
+	link = trussPiece3x_4293088154
 	sym = structuralPanel2_4291357748
 	srfN = srfAttach,structuralPanel2_4291411116
 	EVENTS
@@ -1134,10 +1113,10 @@ PART
 {
 	part = structuralPanel2_4291357748
 	partName = Part
-	pos = -6.53497887,8.39068413,-3.85023928
+	pos = -6.53498173,8.39068508,-3.85024357
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.93864608,0.0250024796,1.19567596E-06
-	rot = 4.37114309E-08,-5.96046448E-07,-1.00000012,3.55271368E-14
+	rot = 4.37114451E-08,-5.96046448E-07,-1.00000012,4.26325641E-14
 	attRot = 0.499999911,-0.499999911,-0.499999911,-0.499999911
 	attRot0 = -1,2.36533898E-16,-8.74227766E-08,2.38418608E-07
 	mir = 1,1,1
@@ -1190,7 +1169,7 @@ PART
 {
 	part = structuralPanel2_4291143506
 	partName = Part
-	pos = -0.58692956,8.39010715,-1.83867216
+	pos = -0.58692956,8.39010715,-1.83867407
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
 	rot = 1.00000012,0,0,5.96046448E-07
@@ -1247,10 +1226,10 @@ PART
 {
 	part = structuralPanel2_4291143482
 	partName = Part
-	pos = -6.56481647,8.39010715,-1.83867192
+	pos = -6.56481934,8.39010715,-1.83867383
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,2.45914691E-07
-	rot = 4.37114309E-08,-5.96046448E-07,-1.00000012,3.55271368E-14
+	rot = 4.37114451E-08,-5.96046448E-07,-1.00000012,4.26325641E-14
 	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
 	attRot0 = -1,2.36533898E-16,-8.74227766E-08,2.38418608E-07
 	mir = 1,1,1
@@ -1304,7 +1283,7 @@ PART
 {
 	part = trussPiece3x_4291143458
 	partName = Part
-	pos = -3.59602427,9.86584091,-6.41076183
+	pos = -3.59602427,9.86584377,-6.41077042
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = -1.53023696,1.50023997,-0.883486271
 	rot = -5.96046448E-07,0,0,1.00000012
@@ -1360,7 +1339,7 @@ PART
 {
 	part = trussPiece3x_4291143434
 	partName = Part
-	pos = -3.59602427,12.8163109,-6.41076708
+	pos = -3.59602427,12.8163214,-6.41077566
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 0,2.95047808,-3.2976601E-07
 	rot = 2.38418579E-07,0,0,-1.00000012
@@ -1422,7 +1401,7 @@ PART
 {
 	part = bahaFlirBall_4291143410
 	partName = Part
-	pos = -3.59602427,14.369688,-6.41076851
+	pos = -3.59602427,14.3697033,-6.41077614
 	attPos = 0,0,0
 	attPos0 = 0,1.55337095,-1.00847001E-06
 	rot = -0.707106829,0,0,0.707106948
@@ -1504,7 +1483,7 @@ PART
 {
 	part = trussPiece3x_4291143328
 	partName = Part
-	pos = 0.153492689,6.89868498,-6.55646133
+	pos = 0.153492689,6.89868402,-6.55647182
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 1.10202599,1.50024104,1.10202599
 	rot = 1.00000012,0,0,6.85453415E-07
@@ -1559,10 +1538,10 @@ PART
 {
 	part = trussPiece3x_4293205224
 	partName = Part
-	pos = -7.30524635,6.89867973,-6.55646324
+	pos = -7.30524921,6.89867878,-6.55647373
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 1.10202599,1.50024104,-1.10202706
-	rot = -1.00000012,-1.50776388E-14,2.26093372E-14,-6.85453415E-07
+	rot = -1.00000012,-2.03396599E-14,1.25607456E-14,-6.85453415E-07
 	attRot = 0,0,0,-0.999999881
 	attRot0 = 1.02006001E-14,-1,-3.66099897E-07,-4.37113883E-08
 	mir = 1,1,1
@@ -1614,7 +1593,7 @@ PART
 {
 	part = trussPiece3x_4291143280
 	partName = Part
-	pos = 0.154841185,6.89819956,-1.09689236
+	pos = 0.154841185,6.89819765,-1.09689331
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 1.11265802,1.50023901,-1.11265802
 	rot = -1.00000012,0,0,-6.85453415E-07
@@ -1669,10 +1648,10 @@ PART
 {
 	part = trussPiece3x_4291143256
 	partName = Part
-	pos = -7.30659199,6.89820671,-1.09689903
+	pos = -7.30659485,6.89820576,-1.0969007
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 1.11265802,1.50023901,1.11265802
-	rot = -1.00000012,-1.50776388E-14,2.26093372E-14,-6.85453415E-07
+	rot = -1.00000012,-2.03396599E-14,1.25607456E-14,-6.85453415E-07
 	attRot = 0,0,0,0.999999881
 	attRot0 = 1.02006001E-14,-1,-3.66099897E-07,-4.37113883E-08
 	mir = 1,1,1
@@ -1724,7 +1703,7 @@ PART
 {
 	part = LgRadialSolarPanel_4291143136
 	partName = Part
-	pos = -3.58620119,13.4887123,-6.73533916
+	pos = -3.58620119,13.4887238,-6.73534822
 	attPos = 0,0,0
 	attPos0 = 0.00982248783,0.672397614,-0.324572086
 	rot = 0,1.00000012,-5.96046448E-07,0
@@ -1817,7 +1796,7 @@ PART
 {
 	part = LgRadialSolarPanel_4291143082
 	partName = Part
-	pos = -3.92059445,13.4887056,-6.42059183
+	pos = -3.92059445,13.488718,-6.42060041
 	attPos = 0,0,0
 	attPos0 = -0.324569792,0.672397614,-0.00982451439
 	rot = 2.98023224E-08,0.707106948,-3.57627869E-07,-0.707106829
@@ -1910,7 +1889,7 @@ PART
 {
 	part = LgRadialSolarPanel_4291143028
 	partName = Part
-	pos = -3.60584617,13.4887142,-6.08619118
+	pos = -3.60584617,13.4887257,-6.0861969
 	attPos = 0,0,0
 	attPos0 = -0.00982248783,0.672397077,0.324568987
 	rot = -1.1920929E-07,-4.37114061E-08,3.55271368E-14,-1.00000012
@@ -2003,7 +1982,7 @@ PART
 {
 	part = LgRadialSolarPanel_4291142974
 	partName = Part
-	pos = -3.2714541,13.4887104,-6.40094614
+	pos = -3.2714541,13.4887228,-6.40095472
 	attPos = 0,0,0
 	attPos0 = 0.324569792,0.672397614,0.00982022285
 	rot = 2.98023224E-08,-0.707106948,3.57627869E-07,-0.707106829
@@ -2096,7 +2075,7 @@ PART
 {
 	part = missileController_4291142920
 	partName = Part
-	pos = -3.3074553,12.0170231,-6.42090893
+	pos = -3.3074553,12.0170336,-6.42091703
 	attPos = 0,0,0
 	attPos0 = 0.288569093,-0.799296916,-0.0101445299
 	rot = -0.49999994,-0.49999994,0.500000179,-0.500000179
@@ -2231,10 +2210,10 @@ PART
 {
 	part = rtg_4291142622
 	partName = Part
-	pos = -5.14399052,8.03045559,-5.49375629
+	pos = -5.14399052,8.03045654,-5.49376154
 	attPos = 0,0,0
 	attPos0 = 0.568121672,-0.343470216,-0.328006238
-	rot = -4.98307958E-15,0,1.00000012,3.31795299E-16
+	rot = -4.82908984E-15,0,1.00000012,1.77805768E-16
 	attRot = 0,0,0,1
 	attRot0 = 1,-7.10542524E-15,4.37113883E-08,2.68220873E-07
 	mir = 1,1,1
@@ -2336,7 +2315,7 @@ PART
 {
 	part = rtg_4291142590
 	partName = Part
-	pos = -2.00774336,8.03045559,-5.49375629
+	pos = -2.00774336,8.03045654,-5.49376154
 	attPos = 0,0,0
 	attPos0 = 0.568121672,-0.343470216,0.328007311
 	rot = 3.55271368E-15,-1.1920929E-07,1.00000012,-3.55271326E-15
@@ -2441,10 +2420,10 @@ PART
 {
 	part = bahaCannonShellBox_4291142406
 	partName = Part
-	pos = -4.35461378,8.13145828,-5.82176208
+	pos = -4.35461378,8.13145924,-5.82176781
 	attPos = 0,0,0
 	attPos0 = -0.221253514,-0.242467403,-3.42726793E-07
-	rot = -4.98307958E-15,0,1.00000012,3.31795299E-16
+	rot = -4.82908984E-15,0,1.00000012,1.77805768E-16
 	attRot = 0,0,0,1
 	attRot0 = 1,-7.10542524E-15,4.37113883E-08,2.68220873E-07
 	mir = 1,1,1
@@ -2537,7 +2516,7 @@ PART
 {
 	part = bahaCannonShellBox_4291142374
 	partName = Part
-	pos = -2.79711914,8.13145828,-5.82176208
+	pos = -2.79711914,8.13145924,-5.82176781
 	attPos = 0,0,0
 	attPos0 = -0.221253514,-0.242467403,1.34110485E-06
 	rot = 3.55271368E-15,-1.1920929E-07,1.00000012,-3.55271326E-15
@@ -2633,10 +2612,10 @@ PART
 {
 	part = baha30mmAmmo_4291149408
 	partName = Part
-	pos = -4.21401119,8.22186852,-4.47698641
+	pos = -4.21401119,8.22186852,-4.47699118
 	attPos = 0,0,0
 	attPos0 = -0.361854225,-0.152147025,0.626749218
-	rot = -4.98307958E-15,0,1.00000012,3.31795299E-16
+	rot = -4.82908984E-15,0,1.00000012,1.77805768E-16
 	attRot = 0,0,0,1
 	attRot0 = 1,-7.10542524E-15,4.37113883E-08,2.68220873E-07
 	mir = 1,1,1
@@ -2729,7 +2708,7 @@ PART
 {
 	part = baha30mmAmmo_4291147338
 	partName = Part
-	pos = -2.93772149,8.22186852,-4.47698641
+	pos = -2.93772149,8.22186852,-4.47699118
 	attPos = 0,0,0
 	attPos0 = -0.361856103,-0.152147025,-0.626748264
 	rot = 3.55271368E-15,-1.1920929E-07,1.00000012,-3.55271326E-15
@@ -2825,10 +2804,10 @@ PART
 {
 	part = baha50CalAmmo_4291142462
 	partName = Part
-	pos = -4.2234025,8.24444675,-3.49777508
+	pos = -4.2234025,8.24444771,-3.49777937
 	attPos = 0,0,0
 	attPos0 = -0.352463275,-0.129569143,-0.352462083
-	rot = -2.74046363E-14,-1.1920929E-07,1.00000012,1.53997281E-15
+	rot = -3.64742687E-14,-1.1920929E-07,1.00000012,5.61011944E-16
 	attRot = 0,0,0,1
 	attRot0 = 1,-5.32906586E-15,4.37113989E-08,3.27825518E-07
 	mir = 1,1,1
@@ -2921,7 +2900,7 @@ PART
 {
 	part = baha50CalAmmo_4291141500
 	partName = Part
-	pos = -2.92833042,8.24444675,-3.49777508
+	pos = -2.92833042,8.24444771,-3.49777937
 	attPos = 0,0,0
 	attPos0 = -0.352464616,-0.129569143,0.352463037
 	rot = 8.88178759E-15,0,1.00000012,-8.88178928E-15
@@ -3017,10 +2996,10 @@ PART
 {
 	part = baha20mmAmmo_4291142342
 	partName = Part
-	pos = -4.18111038,8.24386978,-2.52240872
+	pos = -4.18111038,8.24386978,-2.52241182
 	attPos = 0,0,0
 	attPos0 = -0.394754976,-0.129568338,0.683736801
-	rot = -2.74046363E-14,-1.1920929E-07,1.00000012,1.53997281E-15
+	rot = -3.64742687E-14,-1.1920929E-07,1.00000012,5.61011944E-16
 	attRot = 0,0,0,1
 	attRot0 = 1,-5.32906586E-15,4.37113989E-08,3.27825518E-07
 	mir = 1,1,1
@@ -3113,7 +3092,7 @@ PART
 {
 	part = baha20mmAmmo_4291141366
 	partName = Part
-	pos = -2.97062182,8.24386978,-2.52240753
+	pos = -2.97062182,8.24386978,-2.52240968
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
 	rot = 8.88178759E-15,0,1.00000012,-8.88178928E-15
@@ -3209,10 +3188,10 @@ PART
 {
 	part = ksp.r.largeBatteryPack_4291149656
 	partName = Part
-	pos = -4.95362663,8.35734558,-4.50453758
+	pos = -4.95362663,8.35734558,-4.5045414
 	attPos = 0,0,0
 	attPos0 = 0.377760649,-0.0166690387,0.65430063
-	rot = -0.707106829,-1.25607405E-15,-1.3816815E-14,0.707106948
+	rot = -0.707106829,0,-1.75850376E-14,0.707106948
 	attRot = 0,0,0,1
 	attRot0 = -3.09086232E-08,0.707107067,0.70710659,3.09086303E-08
 	mir = 1,1,1
@@ -3275,7 +3254,7 @@ PART
 {
 	part = ksp.r.largeBatteryPack_4291140924
 	partName = Part
-	pos = -2.19810653,8.35734653,-4.50453901
+	pos = -2.19810653,8.35734749,-4.50454378
 	attPos = 0,0,0
 	attPos0 = 0.377759248,-0.0166690387,-0.654299676
 	rot = 0.707106709,-2.96461532E-21,-1.25607481E-14,-0.707107067
@@ -3341,10 +3320,10 @@ PART
 {
 	part = ksp.r.largeBatteryPack_4291142510
 	partName = Part
-	pos = -4.92299032,8.35734653,-3.50311399
+	pos = -4.92299032,8.35734749,-3.50311804
 	attPos = 0,0,0
 	attPos0 = 0.347124368,-0.0166693665,-0.347122699
-	rot = -0.707106829,-1.25607405E-15,-1.3816815E-14,0.707106948
+	rot = -0.707106829,0,-1.75850376E-14,0.707106948
 	attRot = 0,0,0,1
 	attRot0 = -3.09086232E-08,0.707107067,0.70710659,3.09086303E-08
 	mir = 1,1,1
@@ -3407,7 +3386,7 @@ PART
 {
 	part = ksp.r.largeBatteryPack_4291140766
 	partName = Part
-	pos = -2.2287426,8.35734653,-3.50311399
+	pos = -2.2287426,8.35734749,-3.50311804
 	attPos = 0,0,0
 	attPos0 = 0.347123265,-0.0166693665,0.347123682
 	rot = 0.707106709,-2.96461532E-21,-1.25607481E-14,-0.707107067
@@ -3473,7 +3452,7 @@ PART
 {
 	part = structuralPanel2_4290935030
 	partName = Part
-	pos = 1.32734609,8.40677452,-1.83867288
+	pos = 1.32734609,8.40677452,-1.83867478
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.91427612,-0.0166683327,5.79530251E-07
 	rot = 8.34465027E-07,0,0,-1.00000012
@@ -3530,7 +3509,7 @@ PART
 {
 	part = structuralPanel2_4290934996
 	partName = Part
-	pos = 3.3162806,8.42344284,-1.83867407
+	pos = 3.3162806,8.42344284,-1.83867598
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
 	rot = 1.00000012,0,0,1.1920929E-06
@@ -3551,7 +3530,6 @@ PART
 	modMass = 0
 	modSize = 0,0,0
 	link = trussPiece3x_4290934962
-	link = missileTurretTest_4293300400
 	sym = structuralPanel2_4290933618
 	srfN = srfAttach,structuralPanel2_4290935030
 	EVENTS
@@ -3587,7 +3565,7 @@ PART
 {
 	part = trussPiece3x_4290934962
 	partName = Part
-	pos = 4.05805111,6.93153858,-1.09689283
+	pos = 4.05805111,6.93153667,-1.09689379
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 1.11265802,1.50023901,-1.11265802
 	rot = -1.00000012,0,0,-1.28149986E-06
@@ -3642,10 +3620,10 @@ PART
 {
 	part = baha20mmAmmo_4290934928
 	partName = Part
-	pos = 0.932590723,8.27720547,-2.52240872
+	pos = 0.932590723,8.27720547,-2.52241135
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
-	rot = 8.8817969E-15,5.96046448E-07,1.00000012,-8.88178843E-15
+	rot = 8.88179944E-15,5.96046448E-07,1.00000012,-8.88178928E-15
 	attRot = 0,0,0,1
 	attRot0 = -8.8817842E-15,2.38418551E-07,-1,8.88179097E-15
 	mir = 1,1,1
@@ -3738,7 +3716,7 @@ PART
 {
 	part = structuralPanel2_4290933658
 	partName = Part
-	pos = -8.47908878,8.40677452,-1.8386724
+	pos = -8.47909451,8.40677452,-1.83867431
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.91426837,-0.0166683327,-1.72185807E-07
 	rot = -3.55271368E-14,-1.00000012,8.34465027E-07,4.37113918E-08
@@ -3795,10 +3773,10 @@ PART
 {
 	part = structuralPanel2_4290933618
 	partName = Part
-	pos = -10.4680223,8.42344379,-1.83867335
+	pos = -10.468029,8.42344379,-1.83867526
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
-	rot = 4.3711438E-08,-1.1920929E-06,-1.00000012,4.79616347E-14
+	rot = 4.37114664E-08,-1.1920929E-06,-1.00000012,4.79616347E-14
 	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
 	attRot0 = -1,0,0,-2.38418608E-07
 	mir = 1,1,1
@@ -3851,10 +3829,10 @@ PART
 {
 	part = trussPiece3x_4290933578
 	partName = Part
-	pos = -11.2098017,6.93154049,-1.09689426
+	pos = -11.2098131,6.93153906,-1.09689569
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 1.11265802,1.50023901,-1.11265802
-	rot = -1.00000012,-7.42847048E-16,-5.02429621E-15,-1.28149986E-06
+	rot = -1.00000012,2.02114555E-16,-5.02429875E-15,-1.28149986E-06
 	attRot = 0,0,0,0.999999881
 	attRot0 = 3.66099897E-07,0,0,-1
 	mir = 1,1,1
@@ -3906,10 +3884,10 @@ PART
 {
 	part = baha20mmAmmo_4290933538
 	partName = Part
-	pos = -8.08433342,8.27720547,-2.52240825
+	pos = -8.08433914,8.27720547,-2.52241087
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
-	rot = 1.2662664E-14,-5.96046448E-07,-1.00000012,6.69133751E-15
+	rot = 1.36622823E-14,-5.96046448E-07,-1.00000012,1.07160154E-14
 	attRot = 0,0,0,1
 	attRot0 = -8.8817842E-15,2.38418551E-07,-1,8.88179097E-15
 	mir = 1,1,1
@@ -4002,7 +3980,7 @@ PART
 {
 	part = structuralPanel2_4290933368
 	partName = Part
-	pos = 1.33332324,8.40735245,-3.85024166
+	pos = 1.33332324,8.4073534,-3.85024595
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.95009184,-0.016668329,1.1755767E-06
 	rot = 8.34465027E-07,0,0,-1.00000012
@@ -4059,7 +4037,7 @@ PART
 {
 	part = structuralPanel2_4290933328
 	partName = Part
-	pos = 3.32225823,8.42402077,-3.85024261
+	pos = 3.32225823,8.42402172,-3.85024691
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
 	rot = 1.00000012,0,0,1.1920929E-06
@@ -4114,10 +4092,10 @@ PART
 {
 	part = baha20mmAmmo_4290933248
 	partName = Part
-	pos = 0.9385674,8.27778244,-4.53397799
+	pos = 0.9385674,8.27778339,-4.53398275
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
-	rot = 8.8817969E-15,5.96046448E-07,1.00000012,-8.88178843E-15
+	rot = 8.88179944E-15,5.96046448E-07,1.00000012,-8.88178928E-15
 	attRot = 0,0,0,1
 	attRot0 = -8.8817842E-15,2.38418551E-07,-1,8.88179097E-15
 	mir = 1,1,1
@@ -4210,7 +4188,7 @@ PART
 {
 	part = structuralPanel2_4290932338
 	partName = Part
-	pos = -8.48506641,8.40735245,-3.85024118
+	pos = -8.48507214,8.4073534,-3.85024548
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.95008361,-0.016668329,-1.47908884E-06
 	rot = -3.55271368E-14,-1.00000012,8.34465027E-07,4.37113918E-08
@@ -4268,10 +4246,10 @@ PART
 {
 	part = structuralPanel2_4290932292
 	partName = Part
-	pos = -10.474,8.42402077,-3.85024214
+	pos = -10.4740067,8.42402172,-3.85024643
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
-	rot = 4.3711438E-08,-1.1920929E-06,-1.00000012,4.79616347E-14
+	rot = 4.37114664E-08,-1.1920929E-06,-1.00000012,4.79616347E-14
 	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
 	attRot0 = -1,0,0,-2.38418608E-07
 	mir = 1,1,1
@@ -4323,10 +4301,10 @@ PART
 {
 	part = baha20mmAmmo_4290932200
 	partName = Part
-	pos = -8.0903101,8.27778244,-4.53397799
+	pos = -8.09031582,8.27778244,-4.53398275
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
-	rot = 1.2662664E-14,-5.96046448E-07,-1.00000012,6.69133751E-15
+	rot = 1.36622823E-14,-5.96046448E-07,-1.00000012,1.07160154E-14
 	attRot = 0,0,0,1
 	attRot0 = -8.8817842E-15,2.38418551E-07,-1,8.88179097E-15
 	mir = 1,1,1
@@ -4419,7 +4397,7 @@ PART
 {
 	part = structuralPanel2_4290932024
 	partName = Part
-	pos = 1.25660253,8.4072628,-5.82177067
+	pos = 1.25660253,8.40726376,-5.82177639
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.83779407,-0.016668329,9.37158006E-07
 	rot = 8.34465027E-07,0,0,-1.00000012
@@ -4476,7 +4454,7 @@ PART
 {
 	part = structuralPanel2_4290931978
 	partName = Part
-	pos = 3.245538,8.42393112,-5.82177162
+	pos = 3.245538,8.42393208,-5.82177734
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
 	rot = 1.00000012,0,0,1.1920929E-06
@@ -4497,6 +4475,7 @@ PART
 	modMass = 0
 	modSize = 0,0,0
 	link = trussPiece3x_4290867756
+	link = trussPiece3x_4293095624
 	sym = structuralPanel2_4293203954
 	srfN = srfAttach,structuralPanel2_4290932024
 	EVENTS
@@ -4532,10 +4511,10 @@ PART
 {
 	part = baha20mmAmmo_4290931886
 	partName = Part
-	pos = 0.861846209,8.27769279,-6.50550985
+	pos = 0.861846209,8.2776947,-6.50551891
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
-	rot = 8.8817969E-15,5.96046448E-07,1.00000012,-8.88178843E-15
+	rot = 8.88179944E-15,5.96046448E-07,1.00000012,-8.88178928E-15
 	attRot = 0,0,0,1
 	attRot0 = -8.8817842E-15,2.38418551E-07,-1,8.88179097E-15
 	mir = 1,1,1
@@ -4628,7 +4607,7 @@ PART
 {
 	part = structuralPanel2_4293203978
 	partName = Part
-	pos = -8.40834522,8.4072628,-5.82177019
+	pos = -8.40835094,8.40726376,-5.82177591
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 1.83778369,-0.016668329,-2.20280413E-06
 	rot = -3.55271368E-14,-1.00000012,8.34465027E-07,4.37113918E-08
@@ -4685,10 +4664,10 @@ PART
 {
 	part = structuralPanel2_4293203954
 	partName = Part
-	pos = -10.3972797,8.42393112,-5.82177162
+	pos = -10.3972864,8.42393208,-5.82177734
 	attPos = -0.0130749,1.492257,7.70547715E-08
 	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
-	rot = 4.3711438E-08,-1.1920929E-06,-1.00000012,4.79616347E-14
+	rot = 4.37114664E-08,-1.1920929E-06,-1.00000012,4.79616347E-14
 	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
 	attRot0 = -1,0,0,-2.38418608E-07
 	mir = 1,1,1
@@ -4741,10 +4720,10 @@ PART
 {
 	part = baha20mmAmmo_4293203930
 	partName = Part
-	pos = -8.01358891,8.27769279,-6.50550985
+	pos = -8.01359463,8.2776947,-6.50551891
 	attPos = 0,0,0
 	attPos0 = -0.394756258,-0.129568338,-0.683736742
-	rot = 1.2662664E-14,-5.96046448E-07,-1.00000012,6.69133751E-15
+	rot = 1.36622823E-14,-5.96046448E-07,-1.00000012,1.07160154E-14
 	attRot = 0,0,0,1
 	attRot0 = -8.8817842E-15,2.38418551E-07,-1,8.88179097E-15
 	mir = 1,1,1
@@ -4837,10 +4816,10 @@ PART
 {
 	part = trussPiece3x_4293203898
 	partName = Part
-	pos = -11.0543709,6.93202162,-6.4788537
+	pos = -11.0543833,6.93202066,-6.47886276
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 0.657082438,1.49190676,-0.65708214
-	rot = -9.63331672E-15,-1.07288361E-06,-1.00000012,5.91456256E-15
+	rot = -8.33362767E-15,-1.07288361E-06,-1.00000012,-4.09422692E-16
 	attRot = 0,0,0,0.999999881
 	attRot0 = -8.94069956E-08,-4.37114096E-08,1.29075658E-14,1
 	mir = 1,1,1
@@ -4892,7 +4871,7 @@ PART
 {
 	part = trussPiece3x_4290867756
 	partName = Part
-	pos = 3.90261865,6.93202209,-6.47885609
+	pos = 3.90261865,6.93202114,-6.47886658
 	attPos = -0.701286316,-0.0126867704,4.0231148E-06
 	attPos0 = 0.657081842,1.49190676,0.657081664
 	rot = 2.131626E-14,-9.23871994E-07,-1.00000012,-2.13162567E-14
@@ -4945,639 +4924,12 @@ PART
 }
 PART
 {
-	part = missileTurretTest_4293300400
-	partName = Part
-	pos = 2.82489705,8.87633133,-2.1223774
-	attPos = 0,0,0
-	attPos0 = -0.491383553,-0.452889472,0.283701748
-	rot = -1.43051147E-06,-8.63974899E-20,8.63974899E-20,1.00000012
-	attRot = 0,0,0,1
-	attRot0 = -1,8.63973735E-20,8.63975739E-20,-2.68220873E-07
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 1
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	link = bahaAGM-114_4293235958
-	link = bahaAGM-114_4293233306
-	link = bahaAGM-114_4293231882
-	link = bahaAGM-114_4293230448
-	link = bahaAGM-65_4293411994
-	link = bahaAGM-65_4293226184
-	link = bahaAGM-65_4293224756
-	link = bahaAGM-65_4293223318
-	srfN = srfAttach,structuralPanel2_4290934996
-	attN = missile1,bahaAGM-65_4293411994
-	attN = missile2,bahaAGM-114_4293233306
-	attN = missile3,bahaAGM-65_4293226184
-	attN = missile4,bahaAGM-114_4293235958
-	attN = missile5,bahaAGM-65_4293224756
-	attN = missile6,bahaAGM-114_4293230448
-	attN = missile7,bahaAGM-65_4293223318
-	attN = missile8,bahaAGM-114_4293231882
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = ModuleTurret
-		isEnabled = True
-		maxPitch = 75
-		minPitch = -8
-		yawRange = 360
-		minPitchLimit = -8
-		maxPitchLimit = 75
-		yawRangeLimit = 360
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = MissileTurret
-		isEnabled = True
-		autoReturn = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = ModuleRadar
-		isEnabled = True
-		linkedVesselID = 
-		rangeIndex = 99
-		radarEnabled = False
-		currentAngle = 0
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGEnable
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = ModuleTurret
-		isEnabled = True
-		maxPitch = 80
-		minPitch = -1
-		yawRange = 360
-		minPitchLimit = -1
-		maxPitchLimit = 80
-		yawRangeLimit = 360
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-114_4293235958
-	partName = Part
-	pos = 4.11419964,9.40516186,-1.2484957
-	attPos = 0,0,0
-	attPos0 = 1.28930306,0.528827071,0.873881578
-	rot = -8.63973929E-20,4.76837158E-07,1.00000012,-8.6397561E-20
-	attRot = 0,0.707106709,0.707106709,0
-	attRot0 = 0,-9.53674203E-07,1,0
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-114_4293233306
-	partName = Part
-	pos = 3.5318892,9.40516186,-1.2484957
-	attPos = 0,0,0
-	attPos0 = 0.706992149,0.528827071,0.873881578
-	rot = -8.63973929E-20,4.76837158E-07,1.00000012,-8.6397561E-20
-	attRot = 0,0.707106709,0.707106709,0
-	attRot0 = 0,-9.53674203E-07,1,0
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-114_4293231882
-	partName = Part
-	pos = 4.11419964,8.91423893,-1.24849498
-	attPos = 0,0,0
-	attPos0 = 1.28930306,0.0379052535,0.873880863
-	rot = -4.76837158E-07,-8.63973929E-20,8.6397561E-20,1.00000012
-	attRot = -0.707106709,0,0,0.707106709
-	attRot0 = 9.53674203E-07,0,0,1
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-114_4293230448
-	partName = Part
-	pos = 3.5318892,8.91423893,-1.24849498
-	attPos = 0,0,0
-	attPos0 = 0.706992149,0.0379052535,0.873880863
-	rot = -4.76837158E-07,-8.63973929E-20,8.6397561E-20,1.00000012
-	attRot = -0.707106709,0,0,0.707106709
-	attRot0 = 9.53674203E-07,0,0,1
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-65_4293411994
-	partName = Part
-	pos = 2.1179049,9.46616268,-1.14849603
-	attPos = 0,0,0
-	attPos0 = -0.706992149,0.589826822,0.973881721
-	rot = 8.63973929E-20,-4.76837158E-07,-1.00000012,8.6397561E-20
-	attRot = 0,-0.707106709,-0.707106709,0
-	attRot0 = 0,9.53674203E-07,-1,0
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-65_4293226184
-	partName = Part
-	pos = 1.53559422,9.46616268,-1.14849603
-	attPos = 0,0,0
-	attPos0 = -1.28930306,0.589826822,0.973881721
-	rot = 8.63973929E-20,-4.76837158E-07,-1.00000012,8.6397561E-20
-	attRot = 0,-0.707106709,-0.707106709,0
-	attRot0 = 0,9.53674203E-07,-1,0
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-65_4293224756
-	partName = Part
-	pos = 2.1179049,8.85323906,-1.1484952
-	attPos = 0,0,0
-	attPos0 = -0.706992149,-0.0230949931,0.973880768
-	rot = 4.76837158E-07,8.63973929E-20,-8.6397561E-20,-1.00000012
-	attRot = 0.707106709,0,0,-0.707106709
-	attRot0 = -9.53674203E-07,0,0,-1
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
-	part = bahaAGM-65_4293223318
-	partName = Part
-	pos = 1.53559422,8.85323906,-1.1484952
-	attPos = 0,0,0
-	attPos0 = -1.28930306,-0.0230949931,0.973880768
-	rot = 4.76837158E-07,8.63973929E-20,-8.6397561E-20,-1.00000012
-	attRot = 0.707106709,0,0,-0.707106709
-	attRot0 = -9.53674203E-07,0,0,-1
-	mir = 1,1,1
-	symMethod = Mirror
-	autostrutMode = Off
-	rigidAttachment = False
-	istg = -1
-	resPri = 0
-	dstg = 0
-	sidx = -1
-	sqor = -1
-	sepI = -1
-	attm = 0
-	modCost = 0
-	modMass = 0
-	modSize = 0,0,0
-	attN = top,missileTurretTest_4293300400
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = MissileLauncher
-		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
-		decoupleForward = False
-		detonationTime = 2
-		cruiseAltitude = 500
-		inCargoBay = False
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-			AGFire
-			{
-				actionGroup = None
-			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-}
-PART
-{
 	part = patriotLauncherTurret_4293312890
 	partName = Part
-	pos = -8.85588264,10.0164528,-3.01746583
+	pos = -8.85588932,10.0164566,-3.01746702
 	attPos = 0,0,0
 	attPos0 = 0.370816618,1.60909629,-0.832774401
-	rot = -8.34465027E-07,1.25607405E-14,-1.25607405E-14,1.00000012
+	rot = -8.34465027E-07,1.25607405E-14,-7.53644431E-15,1.00000012
 	attRot = 0,0,0,1
 	attRot0 = -1.53958657E-14,1,0,4.37113741E-08
 	mir = 1,1,1
@@ -5723,10 +5075,10 @@ PART
 {
 	part = bahaPac-3_4293290768
 	partName = Part
-	pos = -7.99713039,10.0901718,-2.21120191
+	pos = -7.99713612,10.0901775,-2.21120095
 	attPos = 0,0,0
 	attPos0 = 0.858752072,0.0737156868,0.806262314
-	rot = 2.38418579E-07,-3.26579245E-14,2.763363E-14,-1.00000012
+	rot = 2.38418579E-07,-2.51214827E-14,3.01457772E-14,-1.00000012
 	attRot = 0.707106709,0,0,-0.707106709
 	attRot0 = -5.66244069E-07,-2.48689839E-14,2.29749623E-14,-1
 	mir = 1,1,1
@@ -5757,12 +5109,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = PAC-3 Intercept Missile
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -5783,10 +5138,10 @@ PART
 {
 	part = bahaPac-3_4293288512
 	partName = Part
-	pos = -7.99713039,9.64968109,-2.21120238
+	pos = -7.99713612,9.64968491,-2.21120191
 	attPos = 0,0,0
 	attPos0 = 0.858752072,-0.366773248,0.806262434
-	rot = 2.38418579E-07,-3.26579245E-14,2.763363E-14,-1.00000012
+	rot = 2.38418579E-07,-2.51214827E-14,3.01457772E-14,-1.00000012
 	attRot = 0.707106709,0,0,-0.707106709
 	attRot0 = -5.66244069E-07,-2.48689839E-14,2.29749623E-14,-1
 	mir = 1,1,1
@@ -5817,12 +5172,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = PAC-3 Intercept Missile
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -5843,10 +5201,10 @@ PART
 {
 	part = bahaPac-3_4293286886
 	partName = Part
-	pos = -8.44280052,9.64968109,-2.21120191
+	pos = -8.44280624,9.64968491,-2.21120143
 	attPos = 0,0,0
 	attPos0 = 0.413081825,-0.366773248,0.806262553
-	rot = 2.38418579E-07,-3.26579245E-14,2.763363E-14,-1.00000012
+	rot = 2.38418579E-07,-2.51214827E-14,3.01457772E-14,-1.00000012
 	attRot = 0.707106709,0,0,-0.707106709
 	attRot0 = -5.66244069E-07,-2.48689839E-14,2.29749623E-14,-1
 	mir = 1,1,1
@@ -5877,12 +5235,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = PAC-3 Intercept Missile
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -5903,10 +5264,10 @@ PART
 {
 	part = bahaPac-3_4293285260
 	partName = Part
-	pos = -8.44280052,10.0901718,-2.21120191
+	pos = -8.44280624,10.0901775,-2.21120095
 	attPos = 0,0,0
 	attPos0 = 0.413081825,0.0737156868,0.806262434
-	rot = 2.38418579E-07,-3.26579245E-14,2.763363E-14,-1.00000012
+	rot = 2.38418579E-07,-2.51214827E-14,3.01457772E-14,-1.00000012
 	attRot = 0.707106709,0,0,-0.707106709
 	attRot0 = -5.66244069E-07,-2.48689839E-14,2.29749623E-14,-1
 	mir = 1,1,1
@@ -5937,12 +5298,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = PAC-3 Intercept Missile
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -5963,10 +5327,10 @@ PART
 {
 	part = bahaAim120_4293395484
 	partName = Part
-	pos = -7.99713039,11.1714334,-3.25175023
+	pos = -7.99713612,11.1714382,-3.25175238
 	attPos = 0,0,0
 	attPos0 = 0.858752012,1.15497804,-0.234282166
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -5997,12 +5361,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AIM-120
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6023,10 +5390,10 @@ PART
 {
 	part = bahaAim120_4293278820
 	partName = Part
-	pos = -7.99713039,10.7309427,-3.25175071
+	pos = -7.99713612,10.7309484,-3.25175309
 	attPos = 0,0,0
 	attPos0 = 0.858752012,0.714490175,-0.234281749
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6057,12 +5424,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AIM-120
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6083,10 +5453,10 @@ PART
 {
 	part = bahaAim120_4293277176
 	partName = Part
-	pos = -8.44280148,10.7309418,-3.25175071
+	pos = -8.4428072,10.7309465,-3.25175357
 	attPos = 0,0,0
 	attPos0 = 0.413081855,0.714489222,-0.234281719
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6117,12 +5487,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AIM-120
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6143,10 +5516,10 @@ PART
 {
 	part = bahaAim120_4293275522
 	partName = Part
-	pos = -8.44280148,11.1714334,-3.25175023
+	pos = -8.4428072,11.1714382,-3.25175238
 	attPos = 0,0,0
 	attPos0 = 0.413081855,1.15497804,-0.234282136
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6177,12 +5550,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AIM-120
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6203,10 +5579,10 @@ PART
 {
 	part = bahaAim9_4293372468
 	partName = Part
-	pos = -9.27601719,11.1714325,-3.5817492
+	pos = -9.27602291,11.1714382,-3.58175039
 	attPos = 0,0,0
 	attPos0 = -0.420135051,1.15497804,-0.56428194
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6237,12 +5613,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 0
+		detonationRadius = 5
 		cruiseAltitude = 500
+		shortName = AIM-9
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6263,10 +5642,10 @@ PART
 {
 	part = bahaAim9_4293272228
 	partName = Part
-	pos = -9.72168827,11.1714325,-3.5817492
+	pos = -9.72169495,11.1714392,-3.58175087
 	attPos = 0,0,0
 	attPos0 = -0.865805566,1.15497804,-0.564281881
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6297,12 +5676,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 0
+		detonationRadius = 5
 		cruiseAltitude = 500
+		shortName = AIM-9
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6323,10 +5705,10 @@ PART
 {
 	part = bahaAim9_4293270538
 	partName = Part
-	pos = -9.72168827,10.7309418,-3.58175159
+	pos = -9.72169495,10.7309456,-3.58175445
 	attPos = 0,0,0
 	attPos0 = -0.865805566,0.714490175,-0.564283311
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6357,12 +5739,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 0
+		detonationRadius = 5
 		cruiseAltitude = 500
+		shortName = AIM-9
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6383,10 +5768,10 @@ PART
 {
 	part = bahaAim9_4293268838
 	partName = Part
-	pos = -9.27601719,10.7309427,-3.58175159
+	pos = -9.27602291,10.7309465,-3.58175397
 	attPos = 0,0,0
 	attPos0 = -0.420135051,0.714490175,-0.564283431
-	rot = -3.65893601E-14,-2.38418579E-07,-1.00000012,-2.87264888E-14
+	rot = -3.07017527E-14,-2.38418579E-07,-1.00000012,-2.45655072E-14
 	attRot = 0,-0.707106709,-0.707106709,0
 	attRot0 = -2.48689924E-14,5.66244069E-07,-1,-2.29749623E-14
 	mir = 1,1,1
@@ -6417,12 +5802,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 0
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 0
+		detonationRadius = 5
 		cruiseAltitude = 500
+		shortName = AIM-9
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6443,7 +5831,7 @@ PART
 {
 	part = bahaHarm_4293167794
 	partName = Part
-	pos = -9.27601814,9.64968014,-3.01174664
+	pos = -9.27602482,9.64968395,-3.01174831
 	attPos = 0,0,0
 	attPos0 = -0.420135468,-0.366772652,0.00571874483
 	rot = 0,1.00485924E-14,0,-1.00000012
@@ -6477,12 +5865,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = HARM
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6503,7 +5894,7 @@ PART
 {
 	part = bahaHarm_4293165564
 	partName = Part
-	pos = -9.27601814,10.090169,-3.0117476
+	pos = -9.27602482,10.0901728,-3.01174879
 	attPos = 0,0,0
 	attPos0 = -0.420135468,0.07371521,0.00571862562
 	rot = 0,1.00485924E-14,0,-1.00000012
@@ -6537,12 +5928,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = HARM
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6563,7 +5957,7 @@ PART
 {
 	part = bahaHarm_4293164264
 	partName = Part
-	pos = -9.72168827,10.090167,-3.0117476
+	pos = -9.72169495,10.0901709,-3.01174855
 	attPos = 0,0,0
 	attPos0 = -0.865805387,0.0737142563,0.00571848592
 	rot = 0,1.00485924E-14,0,-1.00000012
@@ -6597,12 +5991,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = False
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = HARM
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6623,7 +6020,7 @@ PART
 {
 	part = bahaHarm_4293162954
 	partName = Part
-	pos = -9.72168827,9.64968014,-3.01174688
+	pos = -9.72169495,9.64968395,-3.0117476
 	attPos = 0,0,0
 	attPos0 = -0.865805387,-0.366772652,0.00571860513
 	rot = 0,1.00485924E-14,0,-1.00000012
@@ -6657,12 +6054,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0.550000012
-		decoupleSpeed = 5
 		decoupleForward = True
-		detonationTime = 2
+		decoupleSpeed = 5
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = HARM
+		maxOffBoresight = 50
+		dropTime = 0.550000012
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6681,14 +6081,14 @@ PART
 }
 PART
 {
-	part = patriotLauncherTurret_4293140508
+	part = trussPiece3x_4293095624
 	partName = Part
-	pos = -1.62575305,9.9831152,-3.0579555
-	attPos = 0,0,0
-	attPos0 = 0.9501127,1.609097,0.792280972
-	rot = -4.76837158E-07,0,0,1.00000012
-	attRot = 0,0,0,1
-	attRot0 = 2.38418551E-07,0,0,-1
+	pos = 3.3136847,9.91584015,-5.56745529
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.0681467056,-1.49190712,-0.254325151
+	rot = -1.43051147E-06,0,0,1.00000012
+	attRot = 0,0,0,0.999999881
+	attRot0 = -1,0,0,-2.68220873E-07
 	mir = 1,1,1
 	symMethod = Mirror
 	autostrutMode = Off
@@ -6703,15 +6103,79 @@ PART
 	modCost = 0
 	modMass = 0
 	modSize = 0,0,0
-	link = bahaRBS-15Cruise_4293253720
-	link = bahaRBS-15Cruise_4293134874
-	link = bahaRBS-15Cruise_4293128434
-	link = bahaRBS-15Cruise_4293124924
-	srfN = srfAttach,structuralPanel2_4291411116
-	attN = missile2,bahaRBS-15Cruise_4293134874
-	attN = missile15,bahaRBS-15Cruise_4293253720
-	attN = missile13,bahaRBS-15Cruise_4293128434
-	attN = missile11,bahaRBS-15Cruise_4293124924
+	link = missileTurretTest_4293300400
+	srfN = srfAttach,structuralPanel2_4290931978
+	attN = top,missileTurretTest_4293300400
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = missileTurretTest_4293300400
+	partName = Part
+	pos = 3.3136847,11.827301,-5.56746006
+	attPos = 0,0,0
+	attPos0 = 0,1.91146147,3.84952273E-07
+	rot = 0,0,0,-1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = -1.43051136E-06,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaAGM-114_4293235958
+	link = bahaAGM-114_4293233306
+	link = bahaAGM-114_4293231882
+	link = bahaAGM-114_4293230448
+	link = bahaAGM-65_4293411994
+	link = bahaAGM-65_4293226184
+	link = bahaAGM-65_4293224756
+	link = bahaAGM-65_4293223318
+	attN = bottom,trussPiece3x_4293095624
+	attN = missile1,bahaAGM-65_4293411994
+	attN = missile2,bahaAGM-114_4293233306
+	attN = missile3,bahaAGM-65_4293226184
+	attN = missile4,bahaAGM-114_4293235958
+	attN = missile5,bahaAGM-65_4293224756
+	attN = missile6,bahaAGM-114_4293230448
+	attN = missile7,bahaAGM-65_4293223318
+	attN = missile8,bahaAGM-114_4293231882
 	EVENTS
 	{
 	}
@@ -6725,11 +6189,11 @@ PART
 	{
 		name = ModuleTurret
 		isEnabled = True
-		maxPitch = 65
-		minPitch = 0
+		maxPitch = 75
+		minPitch = -8
 		yawRange = 360
-		minPitchLimit = 0
-		maxPitchLimit = 65
+		minPitchLimit = -8
+		maxPitchLimit = 75
 		yawRangeLimit = 360
 		stagingEnabled = True
 		EVENTS
@@ -6760,14 +6224,22 @@ PART
 	}
 	MODULE
 	{
-		name = BDALookConstraintUp
+		name = ModuleRadar
 		isEnabled = True
+		linkedVesselID = 
+		rangeIndex = 99
+		radarEnabled = False
+		currentAngle = 0
 		stagingEnabled = True
 		EVENTS
 		{
 		}
 		ACTIONS
 		{
+			AGEnable
+			{
+				actionGroup = None
+			}
 		}
 		UPGRADESAPPLIED
 		{
@@ -6775,8 +6247,14 @@ PART
 	}
 	MODULE
 	{
-		name = BDALookConstraintUp
+		name = ModuleTurret
 		isEnabled = True
+		maxPitch = 80
+		minPitch = -1
+		yawRange = 360
+		minPitchLimit = -1
+		maxPitchLimit = 80
+		yawRangeLimit = 360
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6806,14 +6284,14 @@ PART
 }
 PART
 {
-	part = bahaRBS-15Cruise_4293253720
+	part = bahaAGM-114_4293235958
 	partName = Part
-	pos = -0.979701281,9.74960709,-3.39224124
-	attPos = 0.232969284,0.133265659,-1.84774399E-06
-	attPos0 = 0.41308248,-0.366771042,-0.334282011
-	rot = 0,0,-1.00000012,0
-	attRot = 0,-0.707106709,-0.707106709,0
-	attRot0 = 0,4.76837101E-07,-1,0
+	pos = 4.60298729,12.3561306,-4.69357538
+	attPos = 0,0,0
+	attPos0 = 1.28930306,0.528827071,0.873881578
+	rot = -1.29246986E-26,9.23871994E-07,-1.00000012,-1.93870471E-26
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-9.53674203E-07,1,0
 	mir = 1,1,1
 	symMethod = Mirror
 	autostrutMode = Off
@@ -6828,7 +6306,7 @@ PART
 	modCost = 0
 	modMass = 0
 	modSize = 0,0,0
-	attN = bottom,patriotLauncherTurret_4293140508
+	attN = top,missileTurretTest_4293300400
 	EVENTS
 	{
 	}
@@ -6842,12 +6320,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 1
-		decoupleForward = True
-		detonationTime = 2
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AGM-114
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6866,14 +6347,14 @@ PART
 }
 PART
 {
-	part = bahaRBS-15Cruise_4293134874
+	part = bahaAGM-114_4293233306
 	partName = Part
-	pos = -0.971817255,10.827157,-3.35795879
-	attPos = 0.24085331,0.129551828,0.0342820883
-	attPos0 = 0.41308248,0.714490056,-0.334282696
-	rot = 0,0,-1.00000012,0
-	attRot = 0,-0.707106709,-0.707106709,0
-	attRot0 = 0,4.76837101E-07,-1,0
+	pos = 4.02067661,12.3561306,-4.69357538
+	attPos = 0,0,0
+	attPos0 = 0.706992149,0.528827071,0.873881578
+	rot = -1.29246986E-26,9.23871994E-07,-1.00000012,-1.93870471E-26
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-9.53674203E-07,1,0
 	mir = 1,1,1
 	symMethod = Mirror
 	autostrutMode = Off
@@ -6888,7 +6369,7 @@ PART
 	modCost = 0
 	modMass = 0
 	modSize = 0,0,0
-	attN = bottom,patriotLauncherTurret_4293140508
+	attN = top,missileTurretTest_4293300400
 	EVENTS
 	{
 	}
@@ -6902,12 +6383,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 1
-		decoupleForward = True
-		detonationTime = 2
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AGM-114
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6926,14 +6410,14 @@ PART
 }
 PART
 {
-	part = bahaRBS-15Cruise_4293128434
+	part = bahaAGM-114_4293231882
 	partName = Part
-	pos = -2.25281191,9.74171448,-3.39224029
-	attPos = -0.206925154,0.125373051,-8.94069672E-07
-	attPos0 = -0.42013371,-0.366771042,-0.334282011
-	rot = 0,0,-1.00000012,0
-	attRot = 0,-0.707106709,-0.707106709,0
-	attRot0 = 0,4.76837101E-07,-1,0
+	pos = 4.60298729,11.8652067,-4.69357586
+	attPos = 0,0,0
+	attPos0 = 1.28930306,0.0379052535,0.873880863
+	rot = -9.23871994E-07,-1.45402411E-26,1.93870487E-26,-1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 9.53674203E-07,0,0,1
 	mir = 1,1,1
 	symMethod = Mirror
 	autostrutMode = Off
@@ -6948,7 +6432,7 @@ PART
 	modCost = 0
 	modMass = 0
 	modSize = 0,0,0
-	attN = bottom,patriotLauncherTurret_4293140508
+	attN = top,missileTurretTest_4293300400
 	EVENTS
 	{
 	}
@@ -6962,12 +6446,15 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 1
-		decoupleForward = True
-		detonationTime = 2
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AGM-114
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6986,14 +6473,14 @@ PART
 }
 PART
 {
-	part = bahaRBS-15Cruise_4293124924
+	part = bahaAGM-114_4293230448
 	partName = Part
-	pos = -2.24372625,10.8082094,-3.39224148
-	attPos = 0.247830629,0.110604286,-6.55651093E-07
-	attPos0 = -0.865803838,0.714490056,-0.334282696
-	rot = 0,0,-1.00000012,0
-	attRot = 0,-0.707106709,-0.707106709,0
-	attRot0 = 0,4.76837101E-07,-1,0
+	pos = 4.02067661,11.8652067,-4.69357586
+	attPos = 0,0,0
+	attPos0 = 0.706992149,0.0379052535,0.873880863
+	rot = -9.23871994E-07,-1.45402411E-26,1.93870487E-26,-1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 9.53674203E-07,0,0,1
 	mir = 1,1,1
 	symMethod = Mirror
 	autostrutMode = Off
@@ -7008,7 +6495,7 @@ PART
 	modCost = 0
 	modMass = 0
 	modSize = 0,0,0
-	attN = bottom,patriotLauncherTurret_4293140508
+	attN = top,missileTurretTest_4293300400
 	EVENTS
 	{
 	}
@@ -7022,12 +6509,743 @@ PART
 	{
 		name = MissileLauncher
 		isEnabled = True
-		dropTime = 0
-		decoupleSpeed = 1
-		decoupleForward = True
-		detonationTime = 2
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
 		cruiseAltitude = 500
+		shortName = AGM-114
+		maxOffBoresight = 50
+		dropTime = 0
 		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4293411994
+	partName = Part
+	pos = 2.60669255,12.4171305,-4.59357452
+	attPos = 0,0,0
+	attPos0 = -0.706992149,0.589826822,0.973881721
+	rot = 1.29246986E-26,-9.23871994E-07,1.00000012,1.93870471E-26
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = 0,9.53674203E-07,-1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4293300400
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = AGM-65
+		maxOffBoresight = 50
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4293226184
+	partName = Part
+	pos = 2.02438188,12.4171305,-4.59357452
+	attPos = 0,0,0
+	attPos0 = -1.28930306,0.589826822,0.973881721
+	rot = 1.29246986E-26,-9.23871994E-07,1.00000012,1.93870471E-26
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = 0,9.53674203E-07,-1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4293300400
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = AGM-65
+		maxOffBoresight = 50
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4293224756
+	partName = Part
+	pos = 2.60669255,11.8042049,-4.59357595
+	attPos = 0,0,0
+	attPos0 = -0.706992149,-0.0230949931,0.973880768
+	rot = 9.23871994E-07,1.45402411E-26,-1.93870487E-26,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = -9.53674203E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4293300400
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = AGM-65
+		maxOffBoresight = 50
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4293223318
+	partName = Part
+	pos = 2.02438188,11.8042049,-4.59357595
+	attPos = 0,0,0
+	attPos0 = -1.28930306,-0.0230949931,0.973880768
+	rot = 9.23871994E-07,1.45402411E-26,-1.93870487E-26,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = -9.53674203E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4293300400
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = False
+		decoupleSpeed = 0
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = AGM-65
+		maxOffBoresight = 50
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4293025040
+	partName = Part
+	pos = -1.11866045,9.74437332,-3.60440707
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = -0.501892328,-1.35368872,-0.245838583
+	rot = 0,-0.976296067,0.216440469,0
+	attRot = 0,-0.976295948,0.216439605,0
+	attRot0 = 0,-0.216439888,-0.976296008,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4293025000
+	srfN = srfAttach,structuralPanel2_4291358240
+	attN = top,bahaRBS-15Cruise_4293025000
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4293025000
+	partName = Part
+	pos = -1.11866045,11.2987003,-4.32920408
+	attPos = 0,0,0
+	attPos0 = -3.89947975E-13,1.71500933,4.27082796E-07
+	rot = 1.35598564E-13,-0.216441602,-0.97629571,-8.63856512E-14
+	attRot = -0.707106709,0,0,-0.707106709
+	attRot0 = -1,-1.13686946E-13,-1.13686946E-13,1.16229046E-06
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,trussPiece3x_4293025040
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = RBS-15 Cruise Missile
+		maxOffBoresight = 360
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4293088154
+	partName = Part
+	pos = -0.139160395,9.74437523,-3.64646935
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.477607727,-1.35368979,-0.203776151
+	rot = 0,-0.976296067,0.216440469,0
+	attRot = 0,-0.976295948,0.216439605,0
+	attRot0 = 0,-0.216439888,-0.976296008,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4293032738
+	srfN = srfAttach,structuralPanel2_4291358240
+	attN = top,bahaRBS-15Cruise_4293032738
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4293032738
+	partName = Part
+	pos = -0.139160395,11.2987013,-4.37126637
+	attPos = 0,0,0
+	attPos0 = -3.89947975E-13,1.71500933,4.27082796E-07
+	rot = 1.35598564E-13,-0.216441602,-0.97629571,-8.63856512E-14
+	attRot = -0.707106709,0,0,-0.707106709
+	attRot0 = -1,-1.13686946E-13,-1.13686946E-13,1.16229046E-06
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,trussPiece3x_4293088154
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = RBS-15 Cruise Missile
+		maxOffBoresight = 360
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4293023608
+	partName = Part
+	pos = -2.06247878,9.72770691,-3.55487084
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.513386965,1.35368955,0.29537183
+	rot = 1.3407063E-10,-0.976296008,0.216440141,-2.10448728E-10
+	attRot = 0,-0.976295948,0.216439605,0
+	attRot0 = -1.3407056E-10,0.976295948,-0.216439873,2.10448742E-10
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4293023562
+	srfN = srfAttach,structuralPanel2_4291411116
+	attN = top,bahaRBS-15Cruise_4293023562
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4293023562
+	partName = Part
+	pos = -2.06247878,11.2820339,-4.27966642
+	attPos = 0,0,0
+	attPos0 = -3.89947975E-13,1.71500933,4.27082796E-07
+	rot = 2.10584494E-10,-0.216441274,-0.97629571,1.33984018E-10
+	attRot = -0.707106709,0,0,-0.707106709
+	attRot0 = -1,-1.13686946E-13,-1.13686946E-13,1.16229046E-06
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,trussPiece3x_4293023608
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = RBS-15 Cruise Missile
+		maxOffBoresight = 360
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4293018120
+	partName = Part
+	pos = -3.0194962,9.72770691,-3.66680026
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = -0.443630457,1.35368967,0.183442399
+	rot = 1.3407063E-10,-0.976296008,0.216440141,-2.10448728E-10
+	attRot = 0,-0.976295948,0.216439605,0
+	attRot0 = -1.3407056E-10,0.976295948,-0.216439873,2.10448742E-10
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4293018068
+	srfN = srfAttach,structuralPanel2_4291411116
+	attN = top,bahaRBS-15Cruise_4293018068
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4293018068
+	partName = Part
+	pos = -3.0194962,11.282033,-4.39159584
+	attPos = 0,0,0
+	attPos0 = -3.89947975E-13,1.71500933,4.27082796E-07
+	rot = 2.10584494E-10,-0.216441274,-0.97629571,1.33984018E-10
+	attRot = -0.707106709,0,0,-0.707106709
+	attRot0 = -1,-1.13686946E-13,-1.13686946E-13,1.16229046E-06
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,trussPiece3x_4293018120
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		detonationRadius = 0
+		cruiseAltitude = 500
+		shortName = RBS-15 Cruise Missile
+		maxOffBoresight = 360
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
 		stagingEnabled = True
 		EVENTS
 		{
