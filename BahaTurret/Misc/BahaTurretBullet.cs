@@ -77,8 +77,8 @@ namespace BahaTurret
 			}
 			startTime = Time.time;
 			prevPosition = gameObject.transform.position;
-			
-			sourceOriginalV = sourceVessel.rb_velocity;
+
+            sourceOriginalV = sourceVessel.srf_velocity;
 			
 			Light light = gameObject.AddComponent<Light>();
 			light.type = LightType.Point;
@@ -117,7 +117,7 @@ namespace BahaTurret
 			
 			if(tracerLength == 0)
 			{
-				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.rb_velocity*TimeWarp.fixedDeltaTime));
+				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.srf_velocity*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{
