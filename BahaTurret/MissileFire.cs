@@ -299,10 +299,7 @@ namespace BahaTurret
         //GPS
         public GPSTargetInfo designatedGPSInfo;
 
-        public Vector3d designatedGPSCoords
-        {
-            get { return designatedGPSInfo.gpsCoordinates; }
-        }
+        public Vector3d designatedGPSCoords => designatedGPSInfo.gpsCoordinates;
 
         //Guard view scanning
         float guardViewScanDirection = 1;
@@ -378,9 +375,6 @@ namespace BahaTurret
                 }
             }
         }
-
-
-        //KSP fields and events
 
         #region kspFields,events,actions
 
