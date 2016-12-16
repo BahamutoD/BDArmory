@@ -74,7 +74,7 @@ namespace BahaTurret
 		public float defaultAltitude = 1500;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Altitude"),
-			UI_FloatRange(minValue = 150f, maxValue = 6000, stepIncrement = 10f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 150f, maxValue = 6000, stepIncrement = 50f, scene = UI_Scene.All)]
 		public float minAltitude = 500f;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
