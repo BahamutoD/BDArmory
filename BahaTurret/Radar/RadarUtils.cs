@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using BahaTurret.Shaders;
 using UnityEngine;
 namespace BahaTurret
 {
@@ -69,7 +70,7 @@ namespace BahaTurret
 			radarCam.fieldOfView = camFoV;
 
 			radarCam.transform.position = origin;
-			radarCam.transform.LookAt(v.CoM+(v.rb_velocity*Time.fixedDeltaTime));
+			radarCam.transform.LookAt(v.CoM+(v.srf_velocity*Time.fixedDeltaTime));
 
 			float pixels = 0;
 			RenderTexture.active = radarRT;
@@ -401,7 +402,7 @@ namespace BahaTurret
 									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missileBase.part.transform.position;
 									Vector3 relV = missileBase.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
 									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
-									if(missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.rb_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
+									if(missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
 										if(missileBase.TargetingMode == MissileBase.TargetingModes.Heat)
 										{

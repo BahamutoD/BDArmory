@@ -796,7 +796,7 @@ namespace BahaTurret
             {
                 if (legacyTargetVessel)
                 {
-                    targetPosition += legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
+                    targetPosition += legacyTargetVessel.srf_velocity*Time.fixedDeltaTime;
                 }
                 else if (!targetAcquired)
                 {
@@ -1185,7 +1185,7 @@ namespace BahaTurret
 
                     if (legacyTargetVessel != null && legacyTargetVessel.loaded)
                     {
-                        physStepFix = legacyTargetVessel.rb_velocity*Time.fixedDeltaTime;
+                        physStepFix = legacyTargetVessel.srf_velocity*Time.fixedDeltaTime;
                         targetDirection = (legacyTargetVessel.CoM + physStepFix) - tf.position;
 
 
@@ -1800,7 +1800,7 @@ namespace BahaTurret
                     if (targetData.vessel)
                     {
                         targetVelocity = targetData.vessel.srf_velocity;
-                        targetPosition = targetData.vessel.CoM + (targetData.vessel.rb_velocity*Time.fixedDeltaTime);
+                        targetPosition = targetData.vessel.CoM + (targetVelocity*Time.fixedDeltaTime);
                     }
                     targetAcceleration = targetData.acceleration;
                     targetAcquired = true;
