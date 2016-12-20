@@ -616,7 +616,7 @@ namespace BahaTurret
         private Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
 
-        protected void mbCheckDetonationDistance(float detonationRadius)
+        protected void CheckDetonationDistance(float detonationRadius)
         {
             //Guard clauses
             if (!HasFired) return;

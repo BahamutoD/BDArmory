@@ -731,7 +731,7 @@ namespace BahaTurret
 	    {
             if (detonationRadius > 0)
             {
-                mbCheckDetonationDistance(detonationRadius);
+                CheckDetonationDistance(detonationRadius);
             }
         }
 
