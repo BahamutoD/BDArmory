@@ -134,6 +134,7 @@ namespace BahaTurret
             }
         }
 
+        //Moving to Missilebase
         //private void CheckDetonationDistance()
         //{
         //    //Guard clauses     
