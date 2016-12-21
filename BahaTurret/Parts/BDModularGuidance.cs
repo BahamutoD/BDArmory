@@ -117,9 +117,9 @@ namespace BahaTurret
         {
             if (HasFired && !HasExploded)
             {
-                CheckDetonationDistance();
-
                 UpdateGuidance();
+
+                CheckDetonationDistance();
 
                 CheckDelayedFired();
 
@@ -136,6 +136,7 @@ namespace BahaTurret
         {
             //Guard clauses     
             if (!TargetAcquired) return;
+            if (!targetingUpdated) return;
 
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
@@ -443,8 +444,12 @@ namespace BahaTurret
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+                this.targetingUpdated = true;
             }
+           
         }
+
+        public bool targetingUpdated { get; set; }
 
         private  Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
@@ -582,6 +587,8 @@ namespace BahaTurret
                 {
                     TargetPosition = CruiseGuidance();
                 }
+                targetingUpdated = false;
+
                 //Updating aero surfaces
                 if (Time.time - TimeFired > dropTime + 0.5f)
                 {
