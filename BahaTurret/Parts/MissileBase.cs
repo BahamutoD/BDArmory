@@ -615,11 +615,14 @@ namespace BahaTurret
         private Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
 
+        public static bool targetingUpdated { get; set; }
+
         protected void CheckDetonationDistance(float detonationRadius)
         {
             //Guard clauses
-            if (!HasFired) return;
+            
             if (!TargetAcquired) return;
+            if (!targetingUpdated) return;
 
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
