@@ -83,7 +83,6 @@ namespace BahaTurret
 
         public Vector3 TargetVelocity { get; set; } = Vector3.zero;
 
-
         public Vector3 TargetAcceleration { get; set; } = Vector3.zero;
 
         public float TimeIndex { get; set; } = 0;

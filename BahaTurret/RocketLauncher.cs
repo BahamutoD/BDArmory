@@ -15,7 +15,6 @@ namespace BahaTurret
 
         [KSPField(isPersistant = false)] public string rocketModelPath;
 
-
         [KSPField(isPersistant = false)] public float rocketMass;
 
         [KSPField(isPersistant = false)] public float thrust;
@@ -31,7 +30,6 @@ namespace BahaTurret
         [KSPField(isPersistant = false)] public bool descendingOrder = true;
 
         [KSPField(isPersistant = false)] public string explModelPath = "BDArmory/Models/explosion/explosion";
-
 
         [KSPField(isPersistant = false)] public string explSoundPath = "BDArmory/Sounds/explode1";
 
