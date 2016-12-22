@@ -62,7 +62,6 @@ namespace BahaTurret
         }
 
         float triggerTimer = 0;
-
         int rippleGunCount = 0;
         int _gunRippleIndex = 0;
         public float gunRippleRpm = 0;
@@ -79,16 +78,16 @@ namespace BahaTurret
                 }
             }
         }
-
-
+        
         //ripple stuff
         string rippleData = string.Empty;
         Dictionary<string, RippleOption> rippleDictionary; //weapon name, ripple option
-
+        public bool canRipple = false;
 
         //public float triggerHoldTime = 0.3f;
 
         //[KSPField(isPersistant = true)]
+
         public bool rippleFire
         {
             get
@@ -216,27 +215,19 @@ namespace BahaTurret
 
         public bool hasSingleFired = false;
 
-
-        //
-
-
         //bomb aimer
         Part bombPart = null;
         Vector3 bombAimerPosition = Vector3.zero;
         Texture2D bombAimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
         bool showBombAimer = false;
-        //
-
-
+        
         //targeting
         private List<Vessel> loadedVessels = new List<Vessel>();
         float targetListTimer;
-
-
+        
         //rocket aimer handling
         RocketLauncher currentRocket = null;
-
-
+        
         //sounds
         AudioSource audioSource;
         public AudioSource warningAudioSource;
@@ -302,10 +293,7 @@ namespace BahaTurret
         //GPS
         public GPSTargetInfo designatedGPSInfo;
 
-        public Vector3d designatedGPSCoords
-        {
-            get { return designatedGPSInfo.gpsCoordinates; }
-        }
+        public Vector3d designatedGPSCoords => designatedGPSInfo.gpsCoordinates;
 
         //Guard view scanning
         float guardViewScanDirection = 1;
@@ -382,10 +370,7 @@ namespace BahaTurret
             }
         }
 
-
-        //KSP fields and events
-
-        #region kspFields,events,actions
+        #region KSPFields,events,actions
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Firing Interval"),
          UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)] public float
@@ -657,7 +642,7 @@ namespace BahaTurret
 
         #endregion
 
-        public bool canRipple = false;
+
 
         public override void OnSave(ConfigNode node)
         {
@@ -774,8 +759,6 @@ namespace BahaTurret
                 GameEvents.onPartDie.Remove(OnPartDie);
                 GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
             }
-
-
             RefreshModules();
             UpdateList();
         }
@@ -837,7 +820,6 @@ namespace BahaTurret
             GameEvents.onPartDie.Remove(OnPartDie);
         }
 
-
         void DisplaySelectedWeaponMessage()
         {
             if (BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
@@ -850,7 +832,6 @@ namespace BahaTurret
                 ScreenMessages.PostScreenMessage(selectionMessage);
             }
         }
-
 
         public override void OnUpdate()
         {
@@ -1016,7 +997,6 @@ namespace BahaTurret
                 }
             }
         }
-
 
         IEnumerator MissileWarningResetRoutine()
         {
@@ -1505,7 +1485,6 @@ namespace BahaTurret
 
 			UpdateList();
 		}
-		
 
         /*
         public void FireMissile()
@@ -1840,7 +1819,6 @@ namespace BahaTurret
             }
 		}
 		
-		
 		public void TargetAcquire() 
 		{
 			if(isArmed && BDArmorySettings.ALLOW_LEGACY_TARGETING)
@@ -1883,8 +1861,6 @@ namespace BahaTurret
 				}
 			}
 		}
-		
-		
 	
 		void BombAimer()
 		{
@@ -2272,7 +2248,6 @@ namespace BahaTurret
             targetScanTimer = 0;
         }
 
-
         void GuardMode()
         {
             if (!gameObject.activeInHierarchy)
@@ -2597,13 +2572,11 @@ namespace BahaTurret
             targetScanTimer = -100;
         }
 
-
         IEnumerator ResetMissileThreatDistanceRoutine()
         {
             yield return new WaitForSeconds(8);
             incomingMissileDistance = float.MaxValue;
         }
-
 
         public bool underFire = false;
         Coroutine ufRoutine = null;
@@ -2614,7 +2587,6 @@ namespace BahaTurret
             yield return new WaitForSeconds(3);
             underFire = false;
         }
-
 
         IEnumerator GuardTurretRoutine()
         {
@@ -2700,7 +2672,6 @@ namespace BahaTurret
             StartGuardTurretFiring();
             yield break;
         }
-
 
         void StartGuardTurretFiring()
         {
@@ -2798,7 +2769,6 @@ namespace BahaTurret
 			}
 			missilesAway--;
 		}
-
 
 		bool guardFiringMissile = false;
 		IEnumerator GuardMissileRoutine()
@@ -3389,8 +3359,7 @@ namespace BahaTurret
                 }
                 else if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory] :"  + vessel.vesselName +
-                              " is engaging an override target with failed to engage its override target!");
+                    Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging an override target with failed to engage its override target!");
                 }
             }
             overrideTarget = null; //null the override target if it cannot be used
@@ -3409,9 +3378,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log("[BDArmory] :"  + vessel.vesselName +
-                                          " is aborting extend and engaging an incoming airborne target with " +
-                                          selectedWeapon);
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName + " is aborting extend and engaging an incoming airborne target with " + selectedWeapon);
                             }
                             return;
                         }
@@ -3678,7 +3645,6 @@ namespace BahaTurret
             }
         }
 
-
         bool SwitchToTurret(float distance)
         {
             UpdateList();
@@ -3923,7 +3889,6 @@ namespace BahaTurret
             else return true;
         }
 
-
         int CheckTurret(float distance)
         {
             if (weaponIndex == 0 || selectedWeapon == null ||
@@ -4150,7 +4115,6 @@ namespace BahaTurret
         {
             return Misc.CheckMouseIsOnGui();
         }
-
 
         bool CheckBombClearance(MissileBase ml)
         {
@@ -4411,7 +4375,6 @@ namespace BahaTurret
             isFlaring = false;
         }
 
-
         string GetWeaponName(IBDWeapon weapon)
         {
             if (weapon == null)
@@ -4491,7 +4454,6 @@ namespace BahaTurret
 				laserPointDetected = false;
 			}
 		}
-
 
 		void SearchForHeatTarget()
 		{    
