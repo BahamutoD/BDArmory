@@ -17,7 +17,7 @@ namespace BahaTurret
 		[KSPField]
 		public string targetingType = "none";
 
-		public MissileTurret missileTurret = null;
+        public MissileTurret missileTurret = null;
 		public BDRotaryRail rotaryRail = null;
 
 		[KSPField]
@@ -206,7 +206,58 @@ namespace BahaTurret
 		[KSPField]
 		public float waterImpactTolerance = 25;
 
-#endregion
+        //ballistic options
+        [KSPField]
+        public bool indirect = false;
+
+        #endregion
+
+        [KSPAction("Fire Missile")]
+        public void AGFire(KSPActionParam param)
+        {
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            if (missileTurret)
+            {
+                missileTurret.FireMissile(this);
+            }
+            else if (rotaryRail)
+            {
+                rotaryRail.FireMissile(this);
+            }
+            else
+            {
+                FireMissile();
+            }
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+        }
+
+        [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
+        public void GuiFire()
+        {
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            if (missileTurret)
+            {
+                missileTurret.FireMissile(this);
+            }
+            else if (rotaryRail)
+            {
+                rotaryRail.FireMissile(this);
+            }
+            else
+            {
+                FireMissile();
+            }
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+        }
+
+        [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
+        public override void Jettison()
+        {
+            if (missileTurret) return;
+
+            part.decouple(0);
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+        }
 
         void ParseWeaponClass()
 		{
@@ -220,11 +271,7 @@ namespace BahaTurret
 				weaponClass = WeaponClasses.Missile;
 			}
 		}
-
-		//ballistic options
-		[KSPField]
-		public bool indirect = false;
-
+        
 		public override void OnStart(StartState state)
 		{
 			ParseWeaponClass();
@@ -254,9 +301,7 @@ namespace BahaTurret
 			else
 			{
 				Fields["detonationTime"].guiActive = false;
-
                 Fields["detonationTime"].guiActiveEditor = false;
-
             }
 
 			ParseModes();
@@ -419,17 +464,19 @@ namespace BahaTurret
 				deployedDrag = simpleDrag;	
 			}
 		}
-
+		
 		/*
-		void OnCollisionEnter(Collision col)
+        void OnCollisionEnter(Collision col)
 		{
-			if(!hasExploded && hasFired && Time.time - timeFired > 1)
+            Debug.Log("[BDArmory]: Something Collided");
+
+            if (!HasExploded && HasFired && Time.time - TimeFired > 1)
 			{
 				Detonate();
 			}
 		}
-		*/
-
+        */
+        
 		void SetupAudio()
 		{
 			audioSource = gameObject.AddComponent<AudioSource>();
@@ -481,53 +528,6 @@ namespace BahaTurret
 		void OnDestroy()
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
-		}
-		
-		[KSPAction("Fire Missile")]
-		public void AGFire(KSPActionParam param)
-		{
-			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
-			if(missileTurret)
-			{
-				missileTurret.FireMissile(this);
-			}
-			else if(rotaryRail)
-			{
-				rotaryRail.FireMissile(this);
-			}
-			else
-			{
-				FireMissile();	
-			}
-			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-		}
-		
-		[KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
-		public void GuiFire()
-		{
-			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
-			if(missileTurret)
-			{
-				missileTurret.FireMissile(this);
-			}
-			else if(rotaryRail)
-			{
-				rotaryRail.FireMissile(this);
-			}
-			else
-			{
-				FireMissile();	
-			}
-			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-		}
-
-		[KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
-		public override void Jettison()
-		{
-			if(missileTurret) return;
-
-			part.decouple(0);
-			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
 		}
 
 	    public override float GetBlastRadius()
@@ -644,7 +644,6 @@ namespace BahaTurret
 			if(!HasFired)
 			{
 				legacyTargetVessel = v;
-
 				FireMissile();
 			}
 		}
@@ -731,7 +730,7 @@ namespace BahaTurret
 	    {
             if (detonationRadius > 0)
             {
-                mbCheckDetonationDistance(detonationRadius);
+                CheckDetonationDistance(detonationRadius);
             }
         }
 
@@ -1485,14 +1484,16 @@ namespace BahaTurret
 
 		public override void Detonate()
 		{
-			if(isSeismicCharge)
+            /*
+            if (isSeismicCharge)
 			{
 				DetonateSeismicCharge();
 			}
-			else if(!HasExploded && HasFired)
+            */
+
+            if (!HasExploded && HasFired)
 			{
-				BDArmorySettings.numberOfParticleEmitters--;
-	
+				BDArmorySettings.numberOfParticleEmitters--;	
 				HasExploded = true;
 				
 				if(legacyTargetVessel!=null)
@@ -1535,80 +1536,84 @@ namespace BahaTurret
 			}
 		}
 
-		//public bool CanSeePosition(Vector3 pos)
-		//{
-		//	if((pos-transform.position).sqrMagnitude < Mathf.Pow(20,2))
-		//	{
-		//		return false;
-		//	}
 
-		//	float dist = 10000;
-		//	Ray ray = new Ray(missileReferenceTransform.position, pos-missileReferenceTransform.position);
-		//	ray.origin += 10 * ray.direction;
-		//	RaycastHit rayHit;
-		//	if(Physics.Raycast(ray, out rayHit, dist, 557057))
-		//	{
-		//		if((rayHit.point-pos).sqrMagnitude < 200)
-		//		{
-		//			return true;
-		//		}
-		//		else
-		//		{
-		//			return false;
-		//		}
-		//	}
+        /*public bool CanSeePosition(Vector3 pos)
+    {
+        if((pos-transform.position).sqrMagnitude < Mathf.Pow(20,2))
+        {
+            return false;
+        }
 
-		//	return true;
-		//}
-		
-		void DetonateSeismicCharge()
-		{
-			if(!HasExploded && HasFired)
-			{
-				GameSettings.SHIP_VOLUME = 0;
-				GameSettings.MUSIC_VOLUME = 0;
-				GameSettings.AMBIENCE_VOLUME = 0;
-				
-				BDArmorySettings.numberOfParticleEmitters--;
-				
-				HasExploded = true;
+        float dist = 10000;
+        Ray ray = new Ray(missileReferenceTransform.position, pos-missileReferenceTransform.position);
+        ray.origin += 10 * ray.direction;
+        RaycastHit rayHit;
+        if(Physics.Raycast(ray, out rayHit, dist, 557057))
+        {
+            if((rayHit.point-pos).sqrMagnitude < 200)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
-				/*
-				if(targetVessel == null)
-				{
-					if(target!=null && FlightGlobals.ActiveVessel.gameObject == target)
-					{
-						targetVessel = FlightGlobals.ActiveVessel;
-					}
-					else if(target!=null && !BDArmorySettings.Flares.Contains(t => t.gameObject == target))
-					{
-						targetVessel = Part.FromGO(target).vessel;
-					}
-					
-				}
-				*/
-				if(legacyTargetVessel!=null)
-				{
-					foreach(var wpm in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
-					{
-						wpm.missileIsIncoming = false;
-					}
-				}
-				
-				if(part!=null)
-				{
-					
-					part.temperature = part.maxTemp + 100;
-				}
-				Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
-				if(SourceVessel==null) SourceVessel = vessel;
-				
-				SeismicChargeFX.CreateSeismicExplosion(transform.position-(part.rb.velocity.normalized*15), UnityEngine.Random.rotation);
-				
-			}	
-		}
-		
-		public static bool CheckIfMissile(Part p)
+        return true;
+    }
+    */
+
+
+        //      void DetonateSeismicCharge()
+        //{
+        //	if(!HasExploded && HasFired)
+        //	{
+        //		GameSettings.SHIP_VOLUME = 0;
+        //		GameSettings.MUSIC_VOLUME = 0;
+        //		GameSettings.AMBIENCE_VOLUME = 0;
+
+        //		BDArmorySettings.numberOfParticleEmitters--;
+
+        //		HasExploded = true;
+
+        //		/*
+        //		if(targetVessel == null)
+        //		{
+        //			if(target!=null && FlightGlobals.ActiveVessel.gameObject == target)
+        //			{
+        //				targetVessel = FlightGlobals.ActiveVessel;
+        //			}
+        //			else if(target!=null && !BDArmorySettings.Flares.Contains(t => t.gameObject == target))
+        //			{
+        //				targetVessel = Part.FromGO(target).vessel;
+        //			}
+
+        //		}
+        //		*/
+        //		if(legacyTargetVessel!=null)
+        //		{
+        //			foreach(var wpm in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
+        //			{
+        //				wpm.missileIsIncoming = false;
+        //			}
+        //		}
+
+        //		if(part!=null)
+        //		{
+
+        //			part.temperature = part.maxTemp + 100;
+        //		}
+        //		Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
+        //		if(SourceVessel==null) SourceVessel = vessel;
+
+        //		SeismicChargeFX.CreateSeismicExplosion(transform.position-(part.rb.velocity.normalized*15), UnityEngine.Random.rotation);
+
+        //	}	
+        //} 
+
+
+        public static bool CheckIfMissile(Part p)
 		{
 			if(p.GetComponent<MissileLauncher>())
 			{
@@ -1706,9 +1711,7 @@ namespace BahaTurret
 		{
 			if(HasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
 			{
-				GUI.Label(new Rect(200,200,200,200), debugString);	
-
-
+				GUI.Label(new Rect(200,300,200,200), debugString);	
 			}
 			if(HasFired && hasRCS)
 			{

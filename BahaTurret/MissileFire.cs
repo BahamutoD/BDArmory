@@ -62,7 +62,6 @@ namespace BahaTurret
         }
 
         float triggerTimer = 0;
-
         int rippleGunCount = 0;
         int _gunRippleIndex = 0;
         public float gunRippleRpm = 0;
@@ -79,16 +78,16 @@ namespace BahaTurret
                 }
             }
         }
-
-
+        
         //ripple stuff
         string rippleData = string.Empty;
         Dictionary<string, RippleOption> rippleDictionary; //weapon name, ripple option
-
+        public bool canRipple = false;
 
         //public float triggerHoldTime = 0.3f;
 
         //[KSPField(isPersistant = true)]
+
         public bool rippleFire
         {
             get
@@ -216,24 +215,19 @@ namespace BahaTurret
 
         public bool hasSingleFired = false;
 
-        //
-
-
         //bomb aimer
         Part bombPart = null;
         Vector3 bombAimerPosition = Vector3.zero;
         Texture2D bombAimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
         bool showBombAimer = false;
-        //
-
-
+        
         //targeting
         private List<Vessel> loadedVessels = new List<Vessel>();
         float targetListTimer;
-
+        
         //rocket aimer handling
         RocketLauncher currentRocket = null;
-
+        
         //sounds
         AudioSource audioSource;
         public AudioSource warningAudioSource;
@@ -376,7 +370,7 @@ namespace BahaTurret
             }
         }
 
-        #region kspFields,events,actions
+        #region KSPFields,events,actions
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Firing Interval"),
          UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)] public float
@@ -648,7 +642,7 @@ namespace BahaTurret
 
         #endregion
 
-        public bool canRipple = false;
+
 
         public override void OnSave(ConfigNode node)
         {
@@ -2776,7 +2770,6 @@ namespace BahaTurret
 			missilesAway--;
 		}
 
-
 		bool guardFiringMissile = false;
 		IEnumerator GuardMissileRoutine()
 		{
@@ -3366,8 +3359,7 @@ namespace BahaTurret
                 }
                 else if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory] :"  + vessel.vesselName +
-                              " is engaging an override target with failed to engage its override target!");
+                    Debug.Log("[BDArmory] :"  + vessel.vesselName + " is engaging an override target with failed to engage its override target!");
                 }
             }
             overrideTarget = null; //null the override target if it cannot be used
@@ -3386,9 +3378,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log("[BDArmory] :"  + vessel.vesselName +
-                                          " is aborting extend and engaging an incoming airborne target with " +
-                                          selectedWeapon);
+                                Debug.Log("[BDArmory] :"  + vessel.vesselName + " is aborting extend and engaging an incoming airborne target with " + selectedWeapon);
                             }
                             return;
                         }

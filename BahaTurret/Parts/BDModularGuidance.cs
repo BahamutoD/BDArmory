@@ -118,7 +118,8 @@ namespace BahaTurret
         {
             if (HasFired && !HasExploded)
             {
-                CheckDetonationDistance();
+               
+                CheckDetonationDistance(detonationRadius);
 
                 UpdateGuidance();
 
@@ -133,30 +134,31 @@ namespace BahaTurret
             }
         }
 
-        private void CheckDetonationDistance()
-        {
-            //Guard clauses     
-            if (!TargetAcquired) return;
+        //Moving to Missilebase
+        //private void CheckDetonationDistance()
+        //{
+        //    //Guard clauses     
+        //    if (!TargetAcquired) return;
 
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
+        //    if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
+        //    if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
 
-            var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
-            var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
-                                           previousMissileVelocity;
+        //    var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
+        //    var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
+        //                                   previousMissileVelocity;
 
-            var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
-                                        0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
-            var missileTargetPosition = vessel.CoM +
-                                        (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
-                                        0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
-            float distance;
-            if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
-            {
-                Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
-                Detonate();
-            }
-        }
+        //    var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
+        //                                0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
+        //    var missileTargetPosition = vessel.CoM +
+        //                                (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
+        //                                0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
+        //    float distance;
+        //    if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
+        //    {
+        //        Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
+        //        Detonate();
+        //    }
+        //}
 
         private void CheckNextStage()
         {
@@ -444,8 +446,10 @@ namespace BahaTurret
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+                targetingUpdated = true;
             }
-        }
+           
+        }        
 
         private  Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
@@ -583,6 +587,8 @@ namespace BahaTurret
                 {
                     TargetPosition = CruiseGuidance();
                 }
+                targetingUpdated = false;
+
                 //Updating aero surfaces
                 if (Time.time - TimeFired > dropTime + 0.5f)
                 {
