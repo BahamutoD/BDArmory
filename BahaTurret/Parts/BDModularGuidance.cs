@@ -446,8 +446,12 @@ namespace BahaTurret
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+                this.targetingUpdated = true;
             }
+           
         }
+
+        public bool targetingUpdated { get; set; }
 
         private  Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
@@ -585,6 +589,8 @@ namespace BahaTurret
                 {
                     TargetPosition = CruiseGuidance();
                 }
+                targetingUpdated = false;
+
                 //Updating aero surfaces
                 if (Time.time - TimeFired > dropTime + 0.5f)
                 {
