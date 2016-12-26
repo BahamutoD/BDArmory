@@ -6,13 +6,22 @@ namespace BahaTurret
 {
     public abstract class MissileBase : PartModule, IBDWeapon
     {
-        protected WeaponClasses weaponClass;
-
-        [KSPField]
-        public string missileType = "missile";
+       protected WeaponClasses weaponClass;
+        public WeaponClasses GetWeaponClass()
+        {
+            return weaponClass;
+        }
 
         [KSPField(isPersistant = true)]
         public string shortName = string.Empty;
+
+        public string GetShortName()
+        {
+            return shortName;
+        }
+
+        [KSPField]
+        public string missileType = "missile";
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Static Launch Range"), UI_FloatRange(minValue = 5000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float maxStaticLaunchRange = 5000;
@@ -139,17 +148,7 @@ namespace BahaTurret
 
         private LineRenderer LR;
         protected string debugString = "";
-
-        public WeaponClasses GetWeaponClass()
-        {
-            return weaponClass;
-        }
-
-        public string GetShortName()
-        {
-            return shortName;
-        }
-
+        
         public string GetSubLabel()
         {
             if (Enum.GetName(typeof(TargetingModes), TargetingMode) == "None")
