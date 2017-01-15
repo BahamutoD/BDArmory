@@ -13,6 +13,7 @@ BahaTurret/.vs/config
 BahaTurret/LocalDev/7za_dir.txt
 BahaTurret/LocalDev/dist_dir.txt
 BahaTurret/LocalDev/ksp_dir.txt
+BahaTurret/LocalDev/ksp_production_dir.txt
 BahaTurret/LocalDev/mono_exe.txt
 BahaTurret/LocalDev/pdb2mdb_exe.txt
 BahaTurret/BahaTurret.userprefs
