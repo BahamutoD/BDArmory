@@ -9,8 +9,21 @@ namespace BahaTurret
 {
     public class ModuleWeapon : PartModule, IBDWeapon
     {
+        #region Declarations
+
+        #region Variables
+
+        #endregion
+
         public static ObjectPool bulletPool;
         public static ObjectPool shellPool;
+
+        Coroutine startupRoutine;
+        Coroutine shutdownRoutine;
+
+        bool finalFire = false;
+
+        public int rippleIndex = 0;
 
         public enum WeaponTypes
         {
@@ -18,7 +31,7 @@ namespace BahaTurret
             Cannon,
             Laser
         }
-
+       
         public enum WeaponStates
         {
             Enabled,
@@ -32,135 +45,20 @@ namespace BahaTurret
             None,
             AnalyticEstimate,
             NumericalIntegration
-        }
-
+        }          
+               
         public WeaponStates weaponState = WeaponStates.Disabled;
-
-        //name
-        [KSPField] public string shortName = string.Empty;
-
-        //transforms
-        [KSPField] public string fireTransformName = "fireTransform";
-        public Transform[] fireTransforms;
-
-        [KSPField] public string shellEjectTransformName = "shellEject";
-        public Transform[] shellEjectTransforms;
-
-
+        
         //animations
         private float fireAnimSpeed = 1;
             //is set when setting up animation so it plays a full animation for each shot (animation speed depends on rate of fire)
 
-        [KSPField] public bool hasDeployAnim = false;
-        [KSPField] public string deployAnimName = "deployAnim";
-        AnimationState deployState;
-        [KSPField] public bool hasFireAnimation = false;
-        [KSPField] public string fireAnimName = "fireAnim";
-        private AnimationState fireState;
-        [KSPField] public bool spinDownAnimation = false;
-        private bool spinningDown = false;
-
-
-        //weapon specifications
-        [KSPField] public float maxTargetingRange = 2000; //max range for raycasting and sighting
-        [KSPField] public float roundsPerMinute = 850; //rate of fire
-        [KSPField] public float maxDeviation = 1; //max inaccuracy deviation in degrees
-        [KSPField] public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
-        [KSPField] public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
-        [KSPField] public float bulletVelocity = 860; //velocity in meters/second
-
-        [KSPField] public string bulletDragTypeName = "AnalyticEstimate";
-        public BulletDragTypes bulletDragType;
-
-        [KSPField] public float bulletDragArea = 1.209675e-5f;
-            //drag area of the bullet in m^2; equal to Cd * A with A being the frontal area of the bullet; as a first approximation, take Cd to be 0.3
-
-        public float bulletBallisticCoefficient;
-            //bullet mass / bullet drag area.  Used in analytic estimate to speed up code
-
-        [KSPField] public string ammoName = "50CalAmmo"; //resource usage TODO: multi resource requirement
-        [KSPField] public float requestResourceAmount = 1; //amount of resource/ammo to deplete per shot
-        [KSPField] public float shellScale = 0.66f; //scale of shell to eject
-        [KSPField] public bool hasRecoil = true;
-
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"),
-         UI_Toggle(disabledText = "None", enabledText = "In range")] public bool onlyFireInRange = true;
-            //prevent firing when gun's turret is trying to exceed gimbal limits
-
-        [KSPField] public bool bulletDrop = true; //projectiles are affected by gravity
-
-        [KSPField] public string weaponType = "ballistic";
-            //ballistic(normal bullets), cannon(explosive bullets), or laser
-
+        public float bulletBallisticCoefficient;     
+        
         public WeaponTypes eWeaponType;
-        [KSPField] public float laserDamage = 10000; //base damage/second of lasers
-
-        //cannon shell specfications
-        [KSPField] public float cannonShellRadius = 30; //max radius of explosion forces/damage
-        [KSPField] public float cannonShellPower = 8; //explosion's impulse force
-        [KSPField] public float cannonShellHeat = -1; //if non-negative, heat damage
-
-        //projectile graphics
-        [KSPField] public string projectileColor = "255, 130, 0, 255"; //final color of projectile
-        Color projectileColorC;
-        [KSPField] public bool fadeColor = false;
-
-        [KSPField] public string startColor = "255, 160, 0, 200";
-            //if fade color is true, projectile starts at this color
-
-        Color startColorC;
-        [KSPField] public float tracerStartWidth = 0.25f;
-        [KSPField] public float tracerEndWidth = 0.2f;
-
-        [KSPField] public float tracerLength = 0;
-            //if set to zero, tracer will be the length of the distance covered by the projectile in one physics timestep
-
-        [KSPField] public float tracerDeltaFactor = 2.65f;
-        [KSPField] public float nonTracerWidth = 0.01f;
-        [KSPField] public int tracerInterval = 0;
-        [KSPField] public float tracerLuminance = 1.75f;
-        int tracerIntervalCounter = 0;
-        [KSPField] public string bulletTexturePath = "BDArmory/Textures/bullet";
-
-        [KSPField] public bool oneShotWorldParticles = false;
-
-
-        //heat
-        [KSPField] public float maxHeat = 3600;
-        [KSPField] public float heatPerShot = 75;
-        [KSPField] public float heatLoss = 250;
+                
         public float heat = 0;
-        public bool isOverheated = false;
-
-        //canon explosion effects
-        [KSPField] public string explModelPath = "BDArmory/Models/explosion/explosion";
-
-        [KSPField] public string explSoundPath = "BDArmory/Sounds/explode1";
-        //
-
-
-        //Used for scaling laser damage down based on distance.
-        [KSPField] public float tanAngle = 0.0001f;
-        //Angle of divergeance/2. Theoretical minimum value calculated using θ = (1.22 L/RL)/2, 
-        //where L is laser's wavelength and RL is the radius of the mirror (=gun).
-
-
-        //audioclip paths
-        [KSPField] public string fireSoundPath = "BDArmory/Parts/50CalTurret/sounds/shot";
-        [KSPField] public string overheatSoundPath = "BDArmory/Parts/50CalTurret/sounds/turretOverheat";
-        [KSPField] public string chargeSoundPath = "BDArmory/Parts/laserTest/sounds/charge";
-
-        //audio
-        [KSPField] public bool oneShotSound = true;
-            //play audioclip on every shot, instead of playing looping audio while firing
-
-        [KSPField] public float soundRepeatTime = 1;
-            //looped audio will loop back to this time (used for not playing the opening bit, eg the ramp up in pitch of gatling guns)
-
-        [KSPField] public string reloadAudioPath = string.Empty;
-        AudioClip reloadAudioClip;
-        [KSPField] public string reloadCompletePath = string.Empty;
-
+        public bool isOverheated = false;       
         private bool wasFiring = false;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
@@ -170,12 +68,14 @@ namespace BahaTurret
         AudioClip chargeSound;
         AudioSource audioSource;
         AudioSource audioSource2;
+        AudioLowPassFilter lowpassFilter;
 
         //AI
         public bool aiControlled = false;
         public bool autoFire = false;
         public float autoFireLength = 0;
         public float autoFireTimer = 0;
+
         //used by AI to lead moving targets
         private float targetDistance = 0;
         private Vector3 targetPosition;
@@ -186,17 +86,17 @@ namespace BahaTurret
         public Vessel legacyTargetVessel;
         bool targetAcquired = false;
 
-
-        private BulletInfo bulletInfo;
-        [KSPField] public string bulletType = "def";
+        public bool recentlyFiring //used by guard to know if it should evaid this
+        {
+            get { return Time.time - timeFired < 1; }
+        }
+        
         //used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
         //private int numberOfGuns = 0;
 
         //UI gauges(next to staging icon)
         private ProtoStageIconInfo heatGauge = null;
-        private ProtoStageIconInfo reloadBar = null;
-        [KSPField] public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
-
+       
         //AI will fire gun if target is within this Cos(angle) of barrel
         public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
 
@@ -205,33 +105,13 @@ namespace BahaTurret
         Vector3 bulletPrediction;
         Vector3 fixedLeadOffset = Vector3.zero;
         float targetLeadDistance = 0;
-
-
-        //SPECAL FEATURES
-
-        //Air Detonating Rounds
-        [KSPField] public bool airDetonation = false;
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
-         UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)] public float
-            defaultDetonationRange = 3500;
-
-        [KSPField] public float maxAirDetonationRange = 3500;
-        float detonationRange = 2000;
-        [KSPField] public bool airDetonationTiming = true;
-
-        //auto proximity tracking
-        [KSPField] public float autoProxyTrackRange = 0;
-        bool atprAcquired = false;
-        int aptrTicker = 0;
-
+        
         //gapless particles
         List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
 
         //muzzleflash emitters
         List<KSPParticleEmitter> muzzleFlashEmitters;
-
-
+        
         //module references
         [KSPField] public int turretID = 0;
         public ModuleTurret turret;
@@ -254,28 +134,6 @@ namespace BahaTurret
         }
 
         LineRenderer[] laserRenderers;
-
-        //
-        float timeFired = 0;
-        public float initialFireDelay = 0; //used to ripple fire multiple weapons of this type
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")] public bool
-            useRippleFire = true;
-
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Toggle Barrage")]
-        public void ToggleRipple()
-        {
-            foreach (var craftPart in EditorLogic.fetch.ship.parts)
-            {
-                if (craftPart.name == part.name)
-                {
-                    foreach (var weapon in craftPart.FindModulesImplementing<ModuleWeapon>())
-                    {
-                        weapon.useRippleFire = !weapon.useRippleFire;
-                    }
-                }
-            }
-        }
 
         bool pointingAtSelf = false; //true if weapon is pointing at own vessel
         bool userFiring = false;
@@ -331,7 +189,239 @@ namespace BahaTurret
         public string GetSubLabel()
         {
             return string.Empty;
+        }  
+                
+        #endregion
+
+        #region KSPFields
+                
+        [KSPField]
+        public string shortName = string.Empty;
+                
+        [KSPField]
+        public string fireTransformName = "fireTransform";
+        public Transform[] fireTransforms;
+
+        [KSPField]
+        public string shellEjectTransformName = "shellEject";
+        public Transform[] shellEjectTransforms;
+
+        [KSPField]
+        public bool hasDeployAnim = false;
+        [KSPField]
+        public string deployAnimName = "deployAnim";
+        AnimationState deployState;
+        [KSPField]
+        public bool hasFireAnimation = false;
+        [KSPField]
+        public string fireAnimName = "fireAnim";
+        private AnimationState fireState;
+        [KSPField]
+        public bool spinDownAnimation = false;
+        private bool spinningDown = false;
+
+        //weapon specifications
+        [KSPField]
+        public float maxTargetingRange = 2000; //max range for raycasting and sighting
+        [KSPField]
+        public float roundsPerMinute = 850; //rate of fire
+        [KSPField]
+        public float maxDeviation = 1; //max inaccuracy deviation in degrees
+        [KSPField]
+        public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
+        [KSPField]
+        public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
+        [KSPField]
+        public float bulletVelocity = 860; //velocity in meters/second
+
+        [KSPField]
+        public string bulletDragTypeName = "AnalyticEstimate";
+        public BulletDragTypes bulletDragType;
+
+        //drag area of the bullet in m^2; equal to Cd * A with A being the frontal area of the bullet; as a first approximation, take Cd to be 0.3
+        //bullet mass / bullet drag area.  Used in analytic estimate to speed up code
+        [KSPField]
+        public float bulletDragArea = 1.209675e-5f;
+
+        private BulletInfo bulletInfo;
+        [KSPField]
+        public string bulletType = "def";
+
+        [KSPField]
+        public string ammoName = "50CalAmmo"; //resource usage TODO: multi resource requirement
+        [KSPField]
+        public float requestResourceAmount = 1; //amount of resource/ammo to deplete per shot
+        [KSPField]
+        public float shellScale = 0.66f; //scale of shell to eject
+        [KSPField]
+        public bool hasRecoil = true;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"),
+         UI_Toggle(disabledText = "None", enabledText = "In range")]
+        public bool onlyFireInRange = true;
+        //prevent firing when gun's turret is trying to exceed gimbal limits
+
+        [KSPField]
+        public bool bulletDrop = true; //projectiles are affected by gravity
+
+        [KSPField]
+        public string weaponType = "ballistic";
+        //ballistic(normal bullets), cannon(explosive bullets), or laser
+
+        [KSPField]
+        public float laserDamage = 10000; //base damage/second of lasers
+
+        //cannon shell specfications
+        [KSPField]
+        public float cannonShellRadius = 30; //max radius of explosion forces/damage
+        [KSPField]
+        public float cannonShellPower = 8; //explosion's impulse force
+        [KSPField]
+        public float cannonShellHeat = -1; //if non-negative, heat damage
+
+        //projectile graphics
+        [KSPField]
+        public string projectileColor = "255, 130, 0, 255"; //final color of projectile
+        Color projectileColorC;
+        [KSPField]
+        public bool fadeColor = false;
+
+        [KSPField]
+        public string startColor = "255, 160, 0, 200";
+        //if fade color is true, projectile starts at this color
+
+        Color startColorC;
+        [KSPField]
+        public float tracerStartWidth = 0.25f;
+        [KSPField]
+        public float tracerEndWidth = 0.2f;
+
+        [KSPField]
+        public float tracerLength = 0;
+        //if set to zero, tracer will be the length of the distance covered by the projectile in one physics timestep
+
+        [KSPField]
+        public float tracerDeltaFactor = 2.65f;
+        [KSPField]
+        public float nonTracerWidth = 0.01f;
+        [KSPField]
+        public int tracerInterval = 0;
+        [KSPField]
+        public float tracerLuminance = 1.75f;
+        int tracerIntervalCounter = 0;
+        [KSPField]
+        public string bulletTexturePath = "BDArmory/Textures/bullet";
+
+        [KSPField]
+        public bool oneShotWorldParticles = false;
+
+        //heat
+        [KSPField]
+        public float maxHeat = 3600;
+        [KSPField]
+        public float heatPerShot = 75;
+        [KSPField]
+        public float heatLoss = 250;
+
+        //canon explosion effects
+        [KSPField]
+        public string explModelPath = "BDArmory/Models/explosion/explosion";
+
+        [KSPField]
+        public string explSoundPath = "BDArmory/Sounds/explode1";
+
+        //Used for scaling laser damage down based on distance.
+        [KSPField]
+        public float tanAngle = 0.0001f;
+        //Angle of divergeance/2. Theoretical minimum value calculated using θ = (1.22 L/RL)/2, 
+        //where L is laser's wavelength and RL is the radius of the mirror (=gun).
+
+
+        //audioclip paths
+        [KSPField]
+        public string fireSoundPath = "BDArmory/Parts/50CalTurret/sounds/shot";
+        [KSPField]
+        public string overheatSoundPath = "BDArmory/Parts/50CalTurret/sounds/turretOverheat";
+        [KSPField]
+        public string chargeSoundPath = "BDArmory/Parts/laserTest/sounds/charge";
+
+        //audio
+        [KSPField]
+        public bool oneShotSound = true;
+        //play audioclip on every shot, instead of playing looping audio while firing
+
+        [KSPField]
+        public float soundRepeatTime = 1;
+        //looped audio will loop back to this time (used for not playing the opening bit, eg the ramp up in pitch of gatling guns)
+
+        [KSPField]
+        public string reloadAudioPath = string.Empty;
+        AudioClip reloadAudioClip;
+        [KSPField]
+        public string reloadCompletePath = string.Empty;
+
+
+        private ProtoStageIconInfo reloadBar = null;
+        [KSPField]
+        public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
+
+        //Air Detonating Rounds
+        [KSPField]
+        public bool airDetonation = false;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
+         UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public float
+            defaultDetonationRange = 3500;
+
+        [KSPField]
+        public float maxAirDetonationRange = 3500;
+        float detonationRange = 2000;
+        [KSPField]
+        public bool airDetonationTiming = true;
+
+        //auto proximity tracking
+        [KSPField]
+        public float autoProxyTrackRange = 0;
+        bool atprAcquired = false;
+        int aptrTicker = 0;
+
+        float timeFired = 0;
+        public float initialFireDelay = 0; //used to ripple fire multiple weapons of this type
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
+        public bool
+            useRippleFire = true;
+
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Toggle Barrage")]
+        public void ToggleRipple()
+        {
+            foreach (var craftPart in EditorLogic.fetch.ship.parts)
+            {
+                if (craftPart.name == part.name)
+                {
+                    foreach (var weapon in craftPart.FindModulesImplementing<ModuleWeapon>())
+                    {
+                        weapon.useRippleFire = !weapon.useRippleFire;
+                    }
+                }
+            }
         }
+
+        IEnumerator IncrementRippleIndex(float delay)
+        {
+            if (delay > 0)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+            weaponManager.gunRippleIndex = weaponManager.gunRippleIndex + 1;
+
+            //Debug.Log("incrementing ripple index to: " + weaponManager.gunRippleIndex);
+        }
+        
+        #endregion
+
+        #region KSPActions
 
         [KSPAction("Toggle Weapon")]
         public void AGToggle(KSPActionParam param)
@@ -339,7 +429,8 @@ namespace BahaTurret
             Toggle();
         }
 
-        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Status")] public string guiStatusString =
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Status")]
+        public string guiStatusString =
             "Disabled";
 
         //PartWindow buttons
@@ -388,6 +479,9 @@ namespace BahaTurret
             yield break;
         }
 
+        #endregion
+
+        #region KSP Events
 
         public override void OnStart(StartState state)
         {
@@ -397,7 +491,7 @@ namespace BahaTurret
             ParseWeaponType();
             ParseBulletDragType();
 
-            bulletBallisticCoefficient = bulletMass/bulletDragArea*1000; //1000 to convert from tonnes to kilograms
+            bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000; //1000 to convert from tonnes to kilograms
 
             if (shortName == string.Empty)
             {
@@ -417,7 +511,7 @@ namespace BahaTurret
 
             if (airDetonation)
             {
-                var detRange = (UI_FloatRange) Fields["defaultDetonationRange"].uiControlEditor;
+                var detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
                 detRange.maxValue = maxAirDetonationRange;
             }
             else
@@ -530,28 +624,10 @@ namespace BahaTurret
             BDArmorySettings.OnVolumeChange += UpdateVolume;
         }
 
-        void UpdateVolume()
-        {
-            if (audioSource)
-            {
-                audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-            }
-            if (audioSource2)
-            {
-                audioSource2.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-            }
-            if (lowpassFilter)
-            {
-                lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
-            }
-        }
-
         void OnDestroy()
         {
             BDArmorySettings.OnVolumeChange -= UpdateVolume;
         }
-
-        public int rippleIndex = 0;
 
         void Update()
         {
@@ -614,62 +690,6 @@ namespace BahaTurret
                     fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
                 }
             }
-        }
-
-        IEnumerator AimAndFireAtEndOfFrame()
-        {
-            RunTrajectorySimulation();
-            Aim();
-            CheckWeaponSafety();
-
-            if (eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
-            if (finalFire)
-            {
-                if (eWeaponType == WeaponTypes.Laser)
-                {
-                    if (FireLaser())
-                    {
-                        for (int i = 0; i < laserRenderers.Length; i++)
-                        {
-                            laserRenderers[i].enabled = true;
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < laserRenderers.Length; i++)
-                        {
-                            laserRenderers[i].enabled = false;
-                        }
-                        audioSource.Stop();
-                    }
-                }
-                else
-                {
-                    if (useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
-                    {
-                        //timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
-                        finalFire = false;
-                    }
-                    else
-                    {
-                        finalFire = true;
-                    }
-
-                    if (finalFire)
-                        Fire();
-                }
-
-                finalFire = false;
-            }
-
-            yield break;
-        }
-
-        bool finalFire = false;
-
-        public bool recentlyFiring //used by guard to know if it should evaid this
-        {
-            get { return Time.time - timeFired < 1; }
         }
 
         void FixedUpdate()
@@ -762,7 +782,7 @@ namespace BahaTurret
                     if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) &&
                         //~1 degree of unsafe angle
                         (targetCosAngle >= maxAutoFireCosAngle || //check if directly on target
-                         (Vector3.Dot(targetDiffVec, targetRelPos)*Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0 &&
+                         (Vector3.Dot(targetDiffVec, targetRelPos) * Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0 &&
                           targetCosAngle > 0))) //check if target will pass this point soon
                     {
                         autoFire = true;
@@ -787,131 +807,76 @@ namespace BahaTurret
             lastFinalAimTarget = finalAimTarget;
         }
 
-
-        //Aiming used if part has a turret module
-        void Aim()
+        void OnGUI()
         {
-            //AI control
-            if (aiControlled && !slaved)
+            if (weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel &&
+                BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
             {
-                if (legacyTargetVessel)
-                {
-                    targetPosition += legacyTargetVessel.srf_velocity*Time.fixedDeltaTime;
-                }
-                else if (!targetAcquired)
-                {
-                    autoFire = false;
-                    return;
-                }
-            }
+                float size = 30;
 
-
-            if (!slaved && !aiControlled && (yawRange > 0 || maxPitch - minPitch > 0))
-            {
-                //MouseControl
-                Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height,
-                    0);
-                Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+                Vector3 reticlePosition;
+                if (BDArmorySettings.AIM_ASSIST)
                 {
-                    targetPosition = hit.point;
-
-                    //aim through self vessel if occluding mouseray
-                    Part p = hit.collider.gameObject.GetComponentInParent<Part>();
-                    if (p && p.vessel && p.vessel == vessel)
+                    if (targetAcquired && (slaved || yawRange < 1 || maxPitch - minPitch < 1))
                     {
-                        targetPosition = ray.direction*maxTargetingRange +
-                                         FlightCamera.fetch.mainCamera.transform.position;
+                        reticlePosition = pointingAtPosition + fixedLeadOffset;
+
+                        if (!slaved)
+                        {
+                            BDGUIUtils.DrawLineBetweenWorldPositions(pointingAtPosition, reticlePosition, 2,
+                                new Color(0, 1, 0, 0.6f));
+                        }
+
+                        BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture,
+                            new Vector2(6, 6), 0);
+
+                        if (atprAcquired)
+                        {
+                            BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySettings.Instance.openGreenSquare,
+                                new Vector2(20, 20), 0);
+                        }
+                    }
+                    else
+                    {
+                        reticlePosition = bulletPrediction;
                     }
                 }
                 else
                 {
-                    targetPosition = (ray.direction*(maxTargetingRange + (FlightCamera.fetch.Distance*0.75f))) +
-                                     FlightCamera.fetch.mainCamera.transform.position;
-                    if (legacyTargetVessel != null && legacyTargetVessel.loaded)
+                    reticlePosition = pointingAtPosition;
+                }
+
+
+                Texture2D texture;
+                if (Vector3.Angle(pointingAtPosition - transform.position, finalAimTarget - transform.position) < 1f)
+                {
+                    texture = BDArmorySettings.Instance.greenSpikedPointCircleTexture;
+                }
+                else
+                {
+                    texture = BDArmorySettings.Instance.greenPointCircleTexture;
+                }
+                BDGUIUtils.DrawTextureOnWorldPos(reticlePosition, texture, new Vector2(size, size), 0);
+
+                if (BDArmorySettings.DRAW_DEBUG_LINES)
+                {
+                    if (targetAcquired)
                     {
-                        targetPosition = ray.direction*
-                                         Vector3.Distance(legacyTargetVessel.transform.position,
-                                             FlightCamera.fetch.mainCamera.transform.position) +
-                                         FlightCamera.fetch.mainCamera.transform.position;
+                        BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, targetPosition, 2,
+                            Color.blue);
                     }
                 }
             }
 
-
-            //aim assist
-            Vector3 finalTarget = targetPosition;
-            Vector3 originalTarget = targetPosition;
-            targetDistance = Vector3.Distance(finalTarget, transform.position);
-            targetLeadDistance = targetDistance;
-            if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
+            if (HighLogic.LoadedSceneIsEditor && BDArmorySettings.showWeaponAlignment)
             {
-                float gAccel = (float) FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude;
-                float time = targetDistance/(bulletVelocity);
-
-                if (targetAcquired)
-                {
-                    float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        targetVelocity - vessel.srf_velocity, bulletVelocity);
-                    if (time2 > 0) time = time2;
-                    finalTarget += (targetVelocity - vessel.srf_velocity)*time;
-                        //target vessel relative velocity compensation
-
-                    Vector3 acceleration = targetAcceleration;
-                    finalTarget += (0.5f*acceleration*time*time); //target acceleration
-                }
-                else if (vessel.altitude < 6000)
-                {
-                    float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        -part.rb.velocity, bulletVelocity);
-                    if (time2 > 0) time = time2;
-                    finalTarget += (-part.rb.velocity*(time + Time.fixedDeltaTime));
-                        //this vessel velocity compensation against stationary
-                }
-                Vector3 up = (finalTarget - vessel.mainBody.transform.position).normalized;
-                if (bulletDrop && vessel.srfSpeed < 750)
-                    finalTarget += (0.5f*gAccel*time*time*up); //gravity compensation
-
-                targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
-
-                fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
-
-
-                //airdetonation
-                if (airDetonation)
-                {
-                    if (targetAcquired && airDetonationTiming)
-                    {
-                        detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
-                    }
-                    else
-                    {
-                        detonationRange = defaultDetonationRange;
-                    }
-                }
-            }
-
-            if (airDetonation)
-            {
-                detonationRange *= UnityEngine.Random.Range(0.97f, 1.03f);
-            }
-
-            finalAimTarget = finalTarget;
-
-            //final turret aiming
-            if (slaved && !targetAcquired) return;
-            if (turret)
-            {
-                bool origSmooth = turret.smoothRotation;
-                if (aiControlled || slaved)
-                {
-                    turret.smoothRotation = false;
-                }
-                turret.AimToTarget(finalTarget);
-                turret.smoothRotation = origSmooth;
+                DrawAlignmentIndicator();
             }
         }
+
+        #endregion
+
+        #region Fire
 
         private void Fire()
         {
@@ -924,7 +889,7 @@ namespace BahaTurret
                 return;
             }
 
-            float timeGap = (60/roundsPerMinute)*TimeWarp.CurrentRate;
+            float timeGap = (60 / roundsPerMinute) * TimeWarp.CurrentRate;
             if (Time.time - timeFired > timeGap && !isOverheated && !pointingAtSelf && !Misc.CheckMouseIsOnGui() &&
                 WMgrAuthorized())
             {
@@ -940,7 +905,7 @@ namespace BahaTurret
                         //recoil
                         if (hasRecoil)
                         {
-                            part.rb.AddForceAtPosition((-fireTransform.forward)*(bulletVelocity*bulletMass),
+                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass),
                                 fireTransform.position, ForceMode.Impulse);
                         }
 
@@ -974,13 +939,13 @@ namespace BahaTurret
                             //animation
                             if (hasFireAnimation)
                             {
-                                float unclampedSpeed = (roundsPerMinute*fireState.length)/60f;
+                                float unclampedSpeed = (roundsPerMinute * fireState.length) / 60f;
                                 float lowFramerateFix = 1;
                                 if (roundsPerMinute > 500f)
                                 {
-                                    lowFramerateFix = (0.02f/Time.deltaTime);
+                                    lowFramerateFix = (0.02f / Time.deltaTime);
                                 }
-                                fireAnimSpeed = Mathf.Clamp(unclampedSpeed, 1f*lowFramerateFix, 20f*lowFramerateFix);
+                                fireAnimSpeed = Mathf.Clamp(unclampedSpeed, 1f * lowFramerateFix, 20f * lowFramerateFix);
                                 fireState.enabled = true;
                                 if (unclampedSpeed == fireAnimSpeed || fireState.normalizedTime > 1)
                                 {
@@ -1001,9 +966,9 @@ namespace BahaTurret
                                 {
                                     if (pEmitter.maxEnergy < 0.5f)
                                     {
-                                        float twoFrameTime = Mathf.Clamp(Time.deltaTime*2f, 0.02f, 0.499f);
+                                        float twoFrameTime = Mathf.Clamp(Time.deltaTime * 2f, 0.02f, 0.499f);
                                         pEmitter.maxEnergy = twoFrameTime;
-                                        pEmitter.minEnergy = twoFrameTime/3f;
+                                        pEmitter.minEnergy = twoFrameTime / 3f;
                                     }
                                     pEmitter.Emit();
                                 }
@@ -1023,9 +988,9 @@ namespace BahaTurret
                                     //GameObject ejectedShell = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"), sTf.position + (part.rb.velocity*Time.fixedDeltaTime), sTf.rotation);
                                     GameObject ejectedShell = shellPool.GetPooledObject();
                                     ejectedShell.transform.position = sTf.position;
-                                        //+(part.rb.velocity*TimeWarp.fixedDeltaTime);
+                                    //+(part.rb.velocity*TimeWarp.fixedDeltaTime);
                                     ejectedShell.transform.rotation = sTf.rotation;
-                                    ejectedShell.transform.localScale = Vector3.one*shellScale;
+                                    ejectedShell.transform.localScale = Vector3.one * shellScale;
                                     ShellCasing shellComponent = ejectedShell.GetComponent<ShellCasing>();
                                     shellComponent.initialV = part.rb.velocity;
                                     ejectedShell.SetActive(true);
@@ -1048,11 +1013,11 @@ namespace BahaTurret
 
                         //Vector3 firedVelocity = fireTransform.rotation * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
                         Vector3 firedVelocity =
-                            VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation)*bulletVelocity;
+                            VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
 
 
                         //firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
-                        firedBullet.transform.position += part.rb.velocity*Time.fixedDeltaTime;
+                        firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
                         pBullet.currentVelocity = part.rb.velocity + firedVelocity;
 
                         pBullet.initialSpeed = bulletVelocity;
@@ -1133,7 +1098,7 @@ namespace BahaTurret
 
                 if (useRippleFire)
                 {
-                    StartCoroutine(IncrementRippleIndex(initialFireDelay*TimeWarp.CurrentRate));
+                    StartCoroutine(IncrementRippleIndex(initialFireDelay * TimeWarp.CurrentRate));
                 }
             }
             else
@@ -1142,24 +1107,12 @@ namespace BahaTurret
             }
         }
 
-        IEnumerator IncrementRippleIndex(float delay)
-        {
-            if (delay > 0)
-            {
-                yield return new WaitForSeconds(delay);
-            }
-            weaponManager.gunRippleIndex = weaponManager.gunRippleIndex + 1;
-
-            //Debug.Log("incrementing ripple index to: " + weaponManager.gunRippleIndex);
-        }
-
-
         private bool FireLaser()
         {
             float maxDistance = BDArmorySettings.PHYSICS_RANGE;
             if (BDArmorySettings.PHYSICS_RANGE == 0) maxDistance = 2500;
 
-            float chargeAmount = requestResourceAmount*TimeWarp.fixedDeltaTime;
+            float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
             if (!pointingAtSelf && !Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated &&
                 (part.RequestResource(ammoName, chargeAmount) >= chargeAmount || BDArmorySettings.INFINITE_AMMO))
             {
@@ -1185,14 +1138,14 @@ namespace BahaTurret
 
                     if (legacyTargetVessel != null && legacyTargetVessel.loaded)
                     {
-                        physStepFix = legacyTargetVessel.srf_velocity*Time.fixedDeltaTime;
+                        physStepFix = legacyTargetVessel.srf_velocity * Time.fixedDeltaTime;
                         targetDirection = (legacyTargetVessel.CoM + physStepFix) - tf.position;
 
 
                         if (Vector3.Angle(rayDirection, targetDirection) < 1)
                         {
                             rayDirection = targetDirection;
-                            targetDirectionLR = legacyTargetVessel.CoM + (2*physStepFix) - tf.position;
+                            targetDirectionLR = legacyTargetVessel.CoM + (2 * physStepFix) - tf.position;
                         }
                     }
                     else if (slaved)
@@ -1217,11 +1170,11 @@ namespace BahaTurret
                         laserPoint = hit.point + physStepFix;
 
                         //lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
-                        lr.SetPosition(0, tf.position + (part.rb.velocity*Time.fixedDeltaTime));
+                        lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
                         lr.SetPosition(1, laserPoint);
 
 
-                        if (Time.time - timeFired > 6/120 && BDArmorySettings.BULLET_HITS)
+                        if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
                         {
                             BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
                         }
@@ -1231,7 +1184,7 @@ namespace BahaTurret
                         {
                             float distance = hit.distance;
                             //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
-                            p.temperature += laserDamage/(1 + Mathf.PI*Mathf.Pow(tanAngle*distance, 2))*
+                            p.temperature += laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
                                              TimeWarp.fixedDeltaTime;
 
                             if (BDArmorySettings.INSTAKILL) p.temperature += p.maxTemp;
@@ -1239,11 +1192,11 @@ namespace BahaTurret
                     }
                     else
                     {
-                        laserPoint = lr.transform.InverseTransformPoint((targetDirectionLR*maxDistance) + tf.position);
+                        laserPoint = lr.transform.InverseTransformPoint((targetDirectionLR * maxDistance) + tf.position);
                         lr.SetPosition(1, laserPoint);
                     }
                 }
-                heat += heatPerShot*TimeWarp.CurrentRate;
+                heat += heatPerShot * TimeWarp.CurrentRate;
                 return true;
             }
             else
@@ -1252,6 +1205,36 @@ namespace BahaTurret
             }
         }
 
+        void SetupLaserSpecifics()
+        {
+            chargeSound = GameDatabase.Instance.GetAudioClip(chargeSoundPath);
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                audioSource.clip = fireSound;
+            }
+
+            laserRenderers = new LineRenderer[fireTransforms.Length];
+
+            for (int i = 0; i < fireTransforms.Length; i++)
+            {
+                Transform tf = fireTransforms[i];
+                laserRenderers[i] = tf.gameObject.AddComponent<LineRenderer>();
+                Color laserColor = Misc.ParseColor255(projectileColor);
+                laserColor.a = laserColor.a / 2;
+                laserRenderers[i].material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
+                laserRenderers[i].material.SetColor("_TintColor", laserColor);
+                laserRenderers[i].material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser",
+                    false);
+                laserRenderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; //= false;
+                laserRenderers[i].receiveShadows = false;
+                laserRenderers[i].SetWidth(tracerStartWidth, tracerEndWidth);
+                laserRenderers[i].SetVertexCount(2);
+                laserRenderers[i].SetPosition(0, Vector3.zero);
+                laserRenderers[i].SetPosition(1, Vector3.zero);
+                laserRenderers[i].useWorldSpace = false;
+                laserRenderers[i].enabled = false;
+            }
+        }
 
         bool WMgrAuthorized()
         {
@@ -1291,13 +1274,306 @@ namespace BahaTurret
 
                 if (targetAcquired)
                 {
-                    pointingAtPosition = fireTransforms[i].transform.position + (ray.direction*targetLeadDistance);
+                    pointingAtPosition = fireTransforms[i].transform.position + (ray.direction * targetLeadDistance);
                 }
                 else
                 {
-                    pointingAtPosition = fireTransforms[i].position + (ray.direction*(maxTargetingRange));
+                    pointingAtPosition = fireTransforms[i].position + (ray.direction * (maxTargetingRange));
                 }
             }
+        }
+
+        public void EnableWeapon()
+        {
+            if (weaponState == WeaponStates.Enabled || weaponState == WeaponStates.PoweringUp)
+            {
+                return;
+            }
+
+            StopShutdownStartupRoutines();
+
+            startupRoutine = StartCoroutine(StartupRoutine());
+        }
+
+        public void DisableWeapon()
+        {
+            if (weaponState == WeaponStates.Disabled || weaponState == WeaponStates.PoweringDown)
+            {
+                return;
+            }
+
+            StopShutdownStartupRoutines();
+
+            shutdownRoutine = StartCoroutine(ShutdownRoutine());
+        }
+
+        void ParseWeaponType()
+        {
+            weaponType = weaponType.ToLower();
+
+            switch (weaponType)
+            {
+                case "ballistic":
+                    eWeaponType = WeaponTypes.Ballistic;
+                    break;
+
+                case "cannon":
+                    eWeaponType = WeaponTypes.Cannon;
+                    break;
+
+                case "laser":
+                    eWeaponType = WeaponTypes.Laser;
+                    break;
+            }
+        }
+
+
+        #endregion
+
+        #region Audio
+
+        void UpdateVolume()
+        {
+            if (audioSource)
+            {
+                audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+            }
+            if (audioSource2)
+            {
+                audioSource2.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+            }
+            if (lowpassFilter)
+            {
+                lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
+            }
+        }
+
+        void SetupAudio()
+        {
+            fireSound = GameDatabase.Instance.GetAudioClip(fireSoundPath);
+            overheatSound = GameDatabase.Instance.GetAudioClip(overheatSoundPath);
+            if (!audioSource)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.bypassListenerEffects = true;
+                audioSource.minDistance = .3f;
+                audioSource.maxDistance = 1000;
+                audioSource.priority = 10;
+                audioSource.dopplerLevel = 0;
+                audioSource.spatialBlend = 1;
+            }
+
+            if (!audioSource2)
+            {
+                audioSource2 = gameObject.AddComponent<AudioSource>();
+                audioSource2.bypassListenerEffects = true;
+                audioSource2.minDistance = .3f;
+                audioSource2.maxDistance = 1000;
+                audioSource2.dopplerLevel = 0;
+                audioSource2.priority = 10;
+                audioSource2.spatialBlend = 1;
+            }
+
+            if (reloadAudioPath != string.Empty)
+            {
+                reloadAudioClip = (AudioClip)GameDatabase.Instance.GetAudioClip(reloadAudioPath);
+            }
+            if (reloadCompletePath != string.Empty)
+            {
+                reloadCompleteAudioClip = (AudioClip)GameDatabase.Instance.GetAudioClip(reloadCompletePath);
+            }
+
+            if (!lowpassFilter && gameObject.GetComponents<AudioLowPassFilter>().Length == 0)
+            {
+                lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
+                lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
+                lowpassFilter.lowpassResonanceQ = 1f;
+            }
+
+            UpdateVolume();
+        }
+             
+
+        #endregion
+
+        #region Targeting
+
+        void Aim()
+        {
+            //AI control
+            if (aiControlled && !slaved)
+            {
+                if (legacyTargetVessel)
+                {
+                    targetPosition += legacyTargetVessel.srf_velocity * Time.fixedDeltaTime;
+                }
+                else if (!targetAcquired)
+                {
+                    autoFire = false;
+                    return;
+                }
+            }
+
+
+            if (!slaved && !aiControlled && (yawRange > 0 || maxPitch - minPitch > 0))
+            {
+                //MouseControl
+                Vector3 mouseAim = new Vector3(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height,
+                    0);
+                Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+                {
+                    targetPosition = hit.point;
+
+                    //aim through self vessel if occluding mouseray
+                    Part p = hit.collider.gameObject.GetComponentInParent<Part>();
+                    if (p && p.vessel && p.vessel == vessel)
+                    {
+                        targetPosition = ray.direction * maxTargetingRange +
+                                         FlightCamera.fetch.mainCamera.transform.position;
+                    }
+                }
+                else
+                {
+                    targetPosition = (ray.direction * (maxTargetingRange + (FlightCamera.fetch.Distance * 0.75f))) +
+                                     FlightCamera.fetch.mainCamera.transform.position;
+                    if (legacyTargetVessel != null && legacyTargetVessel.loaded)
+                    {
+                        targetPosition = ray.direction *
+                                         Vector3.Distance(legacyTargetVessel.transform.position,
+                                             FlightCamera.fetch.mainCamera.transform.position) +
+                                         FlightCamera.fetch.mainCamera.transform.position;
+                    }
+                }
+            }
+
+
+            //aim assist
+            Vector3 finalTarget = targetPosition;
+            Vector3 originalTarget = targetPosition;
+            targetDistance = Vector3.Distance(finalTarget, transform.position);
+            targetLeadDistance = targetDistance;
+            if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
+            {
+                float gAccel = (float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude;
+                float time = targetDistance / (bulletVelocity);
+
+                if (targetAcquired)
+                {
+                    float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
+                        targetVelocity - vessel.srf_velocity, bulletVelocity);
+                    if (time2 > 0) time = time2;
+                    finalTarget += (targetVelocity - vessel.srf_velocity) * time;
+                    //target vessel relative velocity compensation
+
+                    Vector3 acceleration = targetAcceleration;
+                    finalTarget += (0.5f * acceleration * time * time); //target acceleration
+                }
+                else if (vessel.altitude < 6000)
+                {
+                    float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
+                        -part.rb.velocity, bulletVelocity);
+                    if (time2 > 0) time = time2;
+                    finalTarget += (-part.rb.velocity * (time + Time.fixedDeltaTime));
+                    //this vessel velocity compensation against stationary
+                }
+                Vector3 up = (finalTarget - vessel.mainBody.transform.position).normalized;
+                if (bulletDrop && vessel.srfSpeed < 750)
+                    finalTarget += (0.5f * gAccel * time * time * up); //gravity compensation
+
+                targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
+
+                fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
+
+
+                //airdetonation
+                if (airDetonation)
+                {
+                    if (targetAcquired && airDetonationTiming)
+                    {
+                        detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
+                    }
+                    else
+                    {
+                        detonationRange = defaultDetonationRange;
+                    }
+                }
+            }
+
+            if (airDetonation)
+            {
+                detonationRange *= UnityEngine.Random.Range(0.97f, 1.03f);
+            }
+
+            finalAimTarget = finalTarget;
+
+            //final turret aiming
+            if (slaved && !targetAcquired) return;
+            if (turret)
+            {
+                bool origSmooth = turret.smoothRotation;
+                if (aiControlled || slaved)
+                {
+                    turret.smoothRotation = false;
+                }
+                turret.AimToTarget(finalTarget);
+                turret.smoothRotation = origSmooth;
+            }
+        }
+
+        IEnumerator AimAndFireAtEndOfFrame()
+        {
+            RunTrajectorySimulation();
+            Aim();
+            CheckWeaponSafety();
+
+            if (eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
+            if (finalFire)
+            {
+                if (eWeaponType == WeaponTypes.Laser)
+                {
+                    if (FireLaser())
+                    {
+                        for (int i = 0; i < laserRenderers.Length; i++)
+                        {
+                            laserRenderers[i].enabled = true;
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < laserRenderers.Length; i++)
+                        {
+                            laserRenderers[i].enabled = false;
+                        }
+                        audioSource.Stop();
+                    }
+                }
+                else
+                {
+                    if (useRippleFire && weaponManager.gunRippleIndex != rippleIndex)
+                    {
+                        //timeFired = Time.time + (initialFireDelay - (60f / roundsPerMinute)) * TimeWarp.CurrentRate;
+                        finalFire = false;
+                    }
+                    else
+                    {
+                        finalFire = true;
+                    }
+
+                    if (finalFire)
+                        Fire();
+                }
+
+                finalFire = false;
+            }
+
+            yield break;
+        }
+
+        public Vector3 GetLeadOffset()
+        {
+            return fixedLeadOffset;
         }
 
         void RunTrajectorySimulation()
@@ -1327,8 +1603,8 @@ namespace BahaTurret
                     float simDeltaTime = 0.15f;
 
 
-                    Vector3 simVelocity = part.rb.velocity + (bulletVelocity*fireTransform.forward);
-                    Vector3 simCurrPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
+                    Vector3 simVelocity = part.rb.velocity + (bulletVelocity * fireTransform.forward);
+                    Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
                     Vector3 simPrevPos = simCurrPos;
                     Vector3 simStartPos = simCurrPos;
                     bool simulating = true;
@@ -1339,8 +1615,8 @@ namespace BahaTurret
                     while (simulating)
                     {
                         RaycastHit hit;
-                        if (bulletDrop) simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos)*simDeltaTime;
-                        simCurrPos += simVelocity*simDeltaTime;
+                        if (bulletDrop) simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
+                        simCurrPos += simVelocity * simDeltaTime;
                         pointPositions.Add(simCurrPos);
                         if (Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit,
                             Vector3.Distance(simPrevPos, simCurrPos), 557057))
@@ -1367,13 +1643,13 @@ namespace BahaTurret
                         if (legacyTargetVessel != null && legacyTargetVessel.loaded && !legacyTargetVessel.Landed &&
                             Vector3.Distance(simStartPos, simCurrPos) > targetLeadDistance)
                         {
-                            bulletPrediction = simStartPos + (simCurrPos - simStartPos).normalized*targetLeadDistance;
+                            bulletPrediction = simStartPos + (simCurrPos - simStartPos).normalized * targetLeadDistance;
                             simulating = false;
                         }
 
                         if ((simStartPos - simCurrPos).magnitude > maxTargetingRange)
                         {
-                            bulletPrediction = simStartPos + ((simCurrPos - simStartPos).normalized*maxTargetingRange);
+                            bulletPrediction = simStartPos + ((simCurrPos - simStartPos).normalized * maxTargetingRange);
                             simulating = false;
                         }
                     }
@@ -1416,34 +1692,264 @@ namespace BahaTurret
             }
         }
 
-        Coroutine startupRoutine;
-        Coroutine shutdownRoutine;
-
-        public void EnableWeapon()
+        void DrawAlignmentIndicator()
         {
-            if (weaponState == WeaponStates.Enabled || weaponState == WeaponStates.PoweringUp)
+            if (fireTransforms == null || fireTransforms[0] == null) return;
+
+            Transform refTransform = EditorLogic.RootPart.GetReferenceTransform();
+
+            if (!refTransform) return;
+
+            Vector3 fwdPos = fireTransforms[0].position + (5 * fireTransforms[0].forward);
+            BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, fwdPos, 4, Color.green);
+
+            Vector3 referenceDirection = refTransform.up;
+            Vector3 refUp = -refTransform.forward;
+            Vector3 refRight = refTransform.right;
+
+            Vector3 refFwdPos = fireTransforms[0].position + (5 * referenceDirection);
+            BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, refFwdPos, 2, Color.white);
+
+            BDGUIUtils.DrawLineBetweenWorldPositions(fwdPos, refFwdPos, 2, XKCDColors.Orange);
+
+            Vector2 guiPos;
+            if (BDGUIUtils.WorldToGUIPos(fwdPos, out guiPos))
             {
-                return;
+                Rect angleRect = new Rect(guiPos.x, guiPos.y, 100, 200);
+
+                Vector3 pitchVector = (5 * Vector3.ProjectOnPlane(fireTransforms[0].forward, refRight));
+                Vector3 yawVector = (5 * Vector3.ProjectOnPlane(fireTransforms[0].forward, refUp));
+
+                BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position + pitchVector, fwdPos, 3,
+                    Color.white);
+                BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position + yawVector, fwdPos, 3, Color.white);
+
+                float pitch = Vector3.Angle(pitchVector, referenceDirection);
+                float yaw = Vector3.Angle(yawVector, referenceDirection);
+
+                string convergeDistance;
+
+                Vector3 projAxis = Vector3.Project(refTransform.position - fireTransforms[0].transform.position,
+                    refRight);
+                float xDist = projAxis.magnitude;
+                float convergeAngle = 90 - Vector3.Angle(yawVector, refTransform.up);
+                if (Vector3.Dot(fireTransforms[0].forward, projAxis) > 0)
+                {
+                    convergeDistance = "Converge: " +
+                                       Mathf.Round((xDist * Mathf.Tan(convergeAngle * Mathf.Deg2Rad))).ToString() + "m";
+                }
+                else
+                {
+                    convergeDistance = "Diverging";
+                }
+
+                string xAngle = "X: " + Vector3.Angle(fireTransforms[0].forward, pitchVector).ToString("0.00");
+                string yAngle = "Y: " + Vector3.Angle(fireTransforms[0].forward, yawVector).ToString("0.00");
+
+                GUI.Label(angleRect, xAngle + "\n" + yAngle + "\n" + convergeDistance);
             }
-
-            StopShutdownStartupRoutines();
-
-            startupRoutine = StartCoroutine(StartupRoutine());
         }
 
-        void StopShutdownStartupRoutines()
+
+        #endregion
+
+        #region Updates
+        void UpdateHeat()
         {
-            if (shutdownRoutine != null)
+            heat = Mathf.Clamp(heat - heatLoss * TimeWarp.fixedDeltaTime, 0, Mathf.Infinity);
+            if (heat > maxHeat && !isOverheated)
             {
-                StopCoroutine(shutdownRoutine);
-                shutdownRoutine = null;
+                isOverheated = true;
+                autoFire = false;
+                audioSource.Stop();
+                wasFiring = false;
+                audioSource2.PlayOneShot(overheatSound);
+                weaponManager.ResetGuardInterval();
+            }
+            if (heat < maxHeat / 3 && isOverheated) //reset on cooldown
+            {
+                isOverheated = false;
+                heat = 0;
+            }
+        }
+
+        void UpdateHeatMeter()
+        {
+            //heat
+            if (heat > maxHeat / 3)
+            {
+                if (heatGauge == null)
+                {
+                    heatGauge = InitHeatGauge();
+                }
+                heatGauge.SetValue(heat, maxHeat / 3, maxHeat);
+            }
+            else if (heatGauge != null && heat < maxHeat / 4)
+            {
+                part.stackIcon.ClearInfoBoxes();
+                heatGauge = null;
+            }
+        }
+
+        void UpdateReloadMeter()
+        {
+            if (Time.time - timeFired < (60 / roundsPerMinute) && Time.time - timeFired > 0.1f)
+            {
+                if (reloadBar == null)
+                {
+                    reloadBar = InitReloadBar();
+                    if (reloadAudioClip)
+                    {
+                        audioSource.PlayOneShot(reloadAudioClip);
+                    }
+                }
+                reloadBar.SetValue(Time.time - timeFired, 0, 60 / roundsPerMinute);
+            }
+            else if (reloadBar != null)
+            {
+                part.stackIcon.ClearInfoBoxes();
+                reloadBar = null;
+                if (reloadCompleteAudioClip)
+                {
+                    audioSource.PlayOneShot(reloadCompleteAudioClip);
+                }
+            }
+        }
+
+        void UpdateTargetVessel()
+        {
+            targetAcquired = false;
+            slaved = false;
+            bool atprWasAcquired = atprAcquired;
+            atprAcquired = false;
+
+            //targetVessel = null;
+            if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
+            {
+                if (!aiControlled)
+                {
+                    if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
+                    {
+                        legacyTargetVessel = vessel.targetObject.GetVessel();
+                    }
+                }
             }
 
-            if (startupRoutine != null)
+            if (weaponManager)
             {
-                StopCoroutine(startupRoutine);
-                startupRoutine = null;
+                //legacy or visual range guard targeting
+                if (aiControlled && weaponManager && legacyTargetVessel &&
+                    (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
+                     (legacyTargetVessel.transform.position - transform.position).magnitude < weaponManager.guardRange))
+                {
+                    targetPosition = legacyTargetVessel.CoM;
+                    targetVelocity = legacyTargetVessel.srf_velocity;
+                    targetAcceleration = legacyTargetVessel.acceleration;
+                    targetPosition += targetVelocity * Time.fixedDeltaTime;
+                    targetAcquired = true;
+                    return;
+                }
+
+                if (weaponManager.slavingTurrets && turret)
+                {
+                    slaved = true;
+                    targetPosition = weaponManager.slavedPosition + (3 * weaponManager.slavedVelocity * Time.fixedDeltaTime);
+                    targetVelocity = weaponManager.slavedVelocity;
+                    targetAcceleration = weaponManager.slavedAcceleration;
+                    targetAcquired = true;
+                    return;
+                }
+
+                if (weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
+                {
+                    TargetSignatureData targetData = weaponManager.vesselRadarData.lockedTargetData.targetData;
+                    targetVelocity = targetData.velocity;
+                    targetPosition = targetData.predictedPosition + (3 * targetVelocity * Time.fixedDeltaTime);
+                    if (targetData.vessel)
+                    {
+                        targetVelocity = targetData.vessel.srf_velocity;
+                        targetPosition = targetData.vessel.CoM + (targetVelocity * Time.fixedDeltaTime);
+                    }
+                    targetAcceleration = targetData.acceleration;
+                    targetAcquired = true;
+                    return;
+                }
+
+                //auto proxy tracking
+                if (vessel.isActiveVessel && autoProxyTrackRange > 0)
+                {
+                    if (aptrTicker < 20)
+                    {
+                        aptrTicker++;
+
+                        if (atprWasAcquired)
+                        {
+                            targetVelocity += targetAcceleration * Time.fixedDeltaTime;
+                            targetPosition += targetVelocity * Time.fixedDeltaTime;
+                            targetAcquired = true;
+                            atprAcquired = true;
+                        }
+                    }
+                    else
+                    {
+                        aptrTicker = 0;
+                        Vessel tgt = null;
+                        float closestSqrDist = autoProxyTrackRange * autoProxyTrackRange;
+                        foreach (var v in BDATargetManager.LoadedVessels)
+                        {
+                            if (!v || !v.loaded) continue;
+                            if (!v.IsControllable) continue;
+                            if (v == vessel) continue;
+                            Vector3 targetVector = v.transform.position - part.transform.position;
+                            if (Vector3.Dot(targetVector, fireTransforms[0].forward) < 0) continue;
+                            float sqrDist = (v.transform.position - part.transform.position).sqrMagnitude;
+                            if (sqrDist > closestSqrDist) continue;
+                            if (Vector3.Angle(targetVector, fireTransforms[0].forward) > 20) continue;
+                            tgt = v;
+                            closestSqrDist = sqrDist;
+                        }
+
+                        if (tgt != null)
+                        {
+                            targetAcquired = true;
+                            atprAcquired = true;
+                            targetPosition = tgt.CoM;
+                            targetVelocity = tgt.srf_velocity;
+                            targetAcceleration = tgt.acceleration;
+                        }
+                    }
+                }
             }
+        }
+
+        void UpdateGUIWeaponState()
+        {
+            guiStatusString = weaponState.ToString();
+        }
+
+        private ProtoStageIconInfo InitReloadBar()
+        {
+            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+            v.SetMsgBgColor(XKCDColors.DarkGrey);
+            v.SetMsgTextColor(XKCDColors.White);
+            v.SetMessage("Reloading");
+            v.SetProgressBarBgColor(XKCDColors.DarkGrey);
+            v.SetProgressBarColor(XKCDColors.Silver);
+
+            return v;
+        }
+
+        private ProtoStageIconInfo InitHeatGauge() //thanks DYJ
+        {
+            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
+
+            v.SetMsgBgColor(XKCDColors.DarkRed);
+            v.SetMsgTextColor(XKCDColors.Orange);
+            v.SetMessage("Overheat");
+            v.SetProgressBarBgColor(XKCDColors.DarkRed);
+            v.SetProgressBarColor(XKCDColors.Orange);
+
+            return v;
         }
 
         IEnumerator StartupRoutine()
@@ -1467,23 +1973,6 @@ namespace BahaTurret
             weaponState = WeaponStates.Enabled;
             UpdateGUIWeaponState();
             BDArmorySettings.Instance.UpdateCursorState();
-        }
-
-        void UpdateGUIWeaponState()
-        {
-            guiStatusString = weaponState.ToString();
-        }
-
-        public void DisableWeapon()
-        {
-            if (weaponState == WeaponStates.Disabled || weaponState == WeaponStates.PoweringDown)
-            {
-                return;
-            }
-
-            StopShutdownStartupRoutines();
-
-            shutdownRoutine = StartCoroutine(ShutdownRoutine());
         }
 
         IEnumerator ShutdownRoutine()
@@ -1518,165 +2007,24 @@ namespace BahaTurret
             UpdateGUIWeaponState();
         }
 
-        void UpdateHeat()
+        void StopShutdownStartupRoutines()
         {
-            heat = Mathf.Clamp(heat - heatLoss*TimeWarp.fixedDeltaTime, 0, Mathf.Infinity);
-            if (heat > maxHeat && !isOverheated)
+            if (shutdownRoutine != null)
             {
-                isOverheated = true;
-                autoFire = false;
-                audioSource.Stop();
-                wasFiring = false;
-                audioSource2.PlayOneShot(overheatSound);
-                weaponManager.ResetGuardInterval();
+                StopCoroutine(shutdownRoutine);
+                shutdownRoutine = null;
             }
-            if (heat < maxHeat/3 && isOverheated) //reset on cooldown
+
+            if (startupRoutine != null)
             {
-                isOverheated = false;
-                heat = 0;
+                StopCoroutine(startupRoutine);
+                startupRoutine = null;
             }
         }
 
-        void UpdateHeatMeter()
-        {
-            //heat
-            if (heat > maxHeat/3)
-            {
-                if (heatGauge == null)
-                {
-                    heatGauge = InitHeatGauge();
-                }
-                heatGauge.SetValue(heat, maxHeat/3, maxHeat);
-            }
-            else if (heatGauge != null && heat < maxHeat/4)
-            {
-                part.stackIcon.ClearInfoBoxes();
-                heatGauge = null;
-            }
-        }
+        #endregion
 
-        void UpdateReloadMeter()
-        {
-            if (Time.time - timeFired < (60/roundsPerMinute) && Time.time - timeFired > 0.1f)
-            {
-                if (reloadBar == null)
-                {
-                    reloadBar = InitReloadBar();
-                    if (reloadAudioClip)
-                    {
-                        audioSource.PlayOneShot(reloadAudioClip);
-                    }
-                }
-                reloadBar.SetValue(Time.time - timeFired, 0, 60/roundsPerMinute);
-            }
-            else if (reloadBar != null)
-            {
-                part.stackIcon.ClearInfoBoxes();
-                reloadBar = null;
-                if (reloadCompleteAudioClip)
-                {
-                    audioSource.PlayOneShot(reloadCompleteAudioClip);
-                }
-            }
-        }
-
-        AudioLowPassFilter lowpassFilter;
-
-        void SetupAudio()
-        {
-            fireSound = GameDatabase.Instance.GetAudioClip(fireSoundPath);
-            overheatSound = GameDatabase.Instance.GetAudioClip(overheatSoundPath);
-            if (!audioSource)
-            {
-                audioSource = gameObject.AddComponent<AudioSource>();
-                audioSource.bypassListenerEffects = true;
-                audioSource.minDistance = .3f;
-                audioSource.maxDistance = 1000;
-                audioSource.priority = 10;
-                audioSource.dopplerLevel = 0;
-                audioSource.spatialBlend = 1;
-            }
-
-            if (!audioSource2)
-            {
-                audioSource2 = gameObject.AddComponent<AudioSource>();
-                audioSource2.bypassListenerEffects = true;
-                audioSource2.minDistance = .3f;
-                audioSource2.maxDistance = 1000;
-                audioSource2.dopplerLevel = 0;
-                audioSource2.priority = 10;
-                audioSource2.spatialBlend = 1;
-            }
-
-            if (reloadAudioPath != string.Empty)
-            {
-                reloadAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadAudioPath);
-            }
-            if (reloadCompletePath != string.Empty)
-            {
-                reloadCompleteAudioClip = (AudioClip) GameDatabase.Instance.GetAudioClip(reloadCompletePath);
-            }
-
-            if (!lowpassFilter && gameObject.GetComponents<AudioLowPassFilter>().Length == 0)
-            {
-                lowpassFilter = gameObject.AddComponent<AudioLowPassFilter>();
-                lowpassFilter.cutoffFrequency = BDArmorySettings.IVA_LOWPASS_FREQ;
-                lowpassFilter.lowpassResonanceQ = 1f;
-            }
-
-            UpdateVolume();
-        }
-
-        void SetupLaserSpecifics()
-        {
-            chargeSound = GameDatabase.Instance.GetAudioClip(chargeSoundPath);
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                audioSource.clip = fireSound;
-            }
-
-            laserRenderers = new LineRenderer[fireTransforms.Length];
-
-            for (int i = 0; i < fireTransforms.Length; i++)
-            {
-                Transform tf = fireTransforms[i];
-                laserRenderers[i] = tf.gameObject.AddComponent<LineRenderer>();
-                Color laserColor = Misc.ParseColor255(projectileColor);
-                laserColor.a = laserColor.a/2;
-                laserRenderers[i].material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
-                laserRenderers[i].material.SetColor("_TintColor", laserColor);
-                laserRenderers[i].material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser",
-                    false);
-                laserRenderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; //= false;
-                laserRenderers[i].receiveShadows = false;
-                laserRenderers[i].SetWidth(tracerStartWidth, tracerEndWidth);
-                laserRenderers[i].SetVertexCount(2);
-                laserRenderers[i].SetPosition(0, Vector3.zero);
-                laserRenderers[i].SetPosition(1, Vector3.zero);
-                laserRenderers[i].useWorldSpace = false;
-                laserRenderers[i].enabled = false;
-            }
-        }
-
-        void ParseWeaponType()
-        {
-            weaponType = weaponType.ToLower();
-
-            switch (weaponType)
-            {
-                case "ballistic":
-                    eWeaponType = WeaponTypes.Ballistic;
-                    break;
-
-                case "cannon":
-                    eWeaponType = WeaponTypes.Cannon;
-                    break;
-
-                case "laser":
-                    eWeaponType = WeaponTypes.Laser;
-                    break;
-            }
-        }
+        #region Bullets
 
         void ParseBulletDragType()
         {
@@ -1698,30 +2046,6 @@ namespace BahaTurret
             }
         }
 
-        private ProtoStageIconInfo InitReloadBar()
-        {
-            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-            v.SetMsgBgColor(XKCDColors.DarkGrey);
-            v.SetMsgTextColor(XKCDColors.White);
-            v.SetMessage("Reloading");
-            v.SetProgressBarBgColor(XKCDColors.DarkGrey);
-            v.SetProgressBarColor(XKCDColors.Silver);
-
-            return v;
-        }
-
-        private ProtoStageIconInfo InitHeatGauge() //thanks DYJ
-        {
-            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-
-            v.SetMsgBgColor(XKCDColors.DarkRed);
-            v.SetMsgTextColor(XKCDColors.Orange);
-            v.SetMessage("Overheat");
-            v.SetProgressBarBgColor(XKCDColors.DarkRed);
-            v.SetProgressBarColor(XKCDColors.Orange);
-
-            return v;
-        }
 
         void SetupBulletPool()
         {
@@ -1736,249 +2060,15 @@ namespace BahaTurret
         void SetupShellPool()
         {
             GameObject templateShell =
-                (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"));
+                (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"));
             templateShell.SetActive(false);
             templateShell.AddComponent<ShellCasing>();
 
             shellPool = ObjectPool.CreateObjectPool(templateShell, 50, true, true);
         }
 
-        public Vector3 GetLeadOffset()
-        {
-            return fixedLeadOffset;
-        }
 
-        void UpdateTargetVessel()
-        {
-            targetAcquired = false;
-            slaved = false;
-            bool atprWasAcquired = atprAcquired;
-            atprAcquired = false;
-
-            //targetVessel = null;
-            if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
-            {
-                if (!aiControlled)
-                {
-                    if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
-                    {
-                        legacyTargetVessel = vessel.targetObject.GetVessel();
-                    }
-                }
-            }
-
-            if (weaponManager)
-            {
-                //legacy or visual range guard targeting
-                if (aiControlled && weaponManager && legacyTargetVessel &&
-                    (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
-                     (legacyTargetVessel.transform.position - transform.position).magnitude < weaponManager.guardRange))
-                {
-                    targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.srf_velocity;
-                    targetAcceleration = legacyTargetVessel.acceleration;
-                    targetPosition += targetVelocity*Time.fixedDeltaTime;
-                    targetAcquired = true;
-                    return;
-                }
-
-                if (weaponManager.slavingTurrets && turret)
-                {
-                    slaved = true;
-                    targetPosition = weaponManager.slavedPosition + (3*weaponManager.slavedVelocity*Time.fixedDeltaTime);
-                    targetVelocity = weaponManager.slavedVelocity;
-                    targetAcceleration = weaponManager.slavedAcceleration;
-                    targetAcquired = true;
-                    return;
-                }
-
-                if (weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
-                {
-                    TargetSignatureData targetData = weaponManager.vesselRadarData.lockedTargetData.targetData;
-                    targetVelocity = targetData.velocity;
-                    targetPosition = targetData.predictedPosition + (3*targetVelocity*Time.fixedDeltaTime);
-                    if (targetData.vessel)
-                    {
-                        targetVelocity = targetData.vessel.srf_velocity;
-                        targetPosition = targetData.vessel.CoM + (targetVelocity*Time.fixedDeltaTime);
-                    }
-                    targetAcceleration = targetData.acceleration;
-                    targetAcquired = true;
-                    return;
-                }
-
-                //auto proxy tracking
-                if (vessel.isActiveVessel && autoProxyTrackRange > 0)
-                {
-                    if (aptrTicker < 20)
-                    {
-                        aptrTicker++;
-
-                        if (atprWasAcquired)
-                        {
-                            targetVelocity += targetAcceleration*Time.fixedDeltaTime;
-                            targetPosition += targetVelocity*Time.fixedDeltaTime;
-                            targetAcquired = true;
-                            atprAcquired = true;
-                        }
-                    }
-                    else
-                    {
-                        aptrTicker = 0;
-                        Vessel tgt = null;
-                        float closestSqrDist = autoProxyTrackRange*autoProxyTrackRange;
-                        foreach (var v in BDATargetManager.LoadedVessels)
-                        {
-                            if (!v || !v.loaded) continue;
-                            if (!v.IsControllable) continue;
-                            if (v == vessel) continue;
-                            Vector3 targetVector = v.transform.position - part.transform.position;
-                            if (Vector3.Dot(targetVector, fireTransforms[0].forward) < 0) continue;
-                            float sqrDist = (v.transform.position - part.transform.position).sqrMagnitude;
-                            if (sqrDist > closestSqrDist) continue;
-                            if (Vector3.Angle(targetVector, fireTransforms[0].forward) > 20) continue;
-                            tgt = v;
-                            closestSqrDist = sqrDist;
-                        }
-
-                        if (tgt != null)
-                        {
-                            targetAcquired = true;
-                            atprAcquired = true;
-                            targetPosition = tgt.CoM;
-                            targetVelocity = tgt.srf_velocity;
-                            targetAcceleration = tgt.acceleration;
-                        }
-                    }
-                }
-            }
-        }
-
-        void OnGUI()
-        {
-            if (weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel &&
-                BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
-            {
-                float size = 30;
-
-                Vector3 reticlePosition;
-                if (BDArmorySettings.AIM_ASSIST)
-                {
-                    if (targetAcquired && (slaved || yawRange < 1 || maxPitch - minPitch < 1))
-                    {
-                        reticlePosition = pointingAtPosition + fixedLeadOffset;
-
-                        if (!slaved)
-                        {
-                            BDGUIUtils.DrawLineBetweenWorldPositions(pointingAtPosition, reticlePosition, 2,
-                                new Color(0, 1, 0, 0.6f));
-                        }
-
-                        BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture,
-                            new Vector2(6, 6), 0);
-
-                        if (atprAcquired)
-                        {
-                            BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySettings.Instance.openGreenSquare,
-                                new Vector2(20, 20), 0);
-                        }
-                    }
-                    else
-                    {
-                        reticlePosition = bulletPrediction;
-                    }
-                }
-                else
-                {
-                    reticlePosition = pointingAtPosition;
-                }
-
-
-                Texture2D texture;
-                if (Vector3.Angle(pointingAtPosition - transform.position, finalAimTarget - transform.position) < 1f)
-                {
-                    texture = BDArmorySettings.Instance.greenSpikedPointCircleTexture;
-                }
-                else
-                {
-                    texture = BDArmorySettings.Instance.greenPointCircleTexture;
-                }
-                BDGUIUtils.DrawTextureOnWorldPos(reticlePosition, texture, new Vector2(size, size), 0);
-
-                if (BDArmorySettings.DRAW_DEBUG_LINES)
-                {
-                    if (targetAcquired)
-                    {
-                        BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, targetPosition, 2,
-                            Color.blue);
-                    }
-                }
-            }
-
-            if (HighLogic.LoadedSceneIsEditor && BDArmorySettings.showWeaponAlignment)
-            {
-                DrawAlignmentIndicator();
-            }
-        }
-
-        void DrawAlignmentIndicator()
-        {
-            if (fireTransforms == null || fireTransforms[0] == null) return;
-
-            Transform refTransform = EditorLogic.RootPart.GetReferenceTransform();
-
-            if (!refTransform) return;
-
-            Vector3 fwdPos = fireTransforms[0].position + (5*fireTransforms[0].forward);
-            BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, fwdPos, 4, Color.green);
-
-            Vector3 referenceDirection = refTransform.up;
-            Vector3 refUp = -refTransform.forward;
-            Vector3 refRight = refTransform.right;
-
-            Vector3 refFwdPos = fireTransforms[0].position + (5*referenceDirection);
-            BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position, refFwdPos, 2, Color.white);
-
-            BDGUIUtils.DrawLineBetweenWorldPositions(fwdPos, refFwdPos, 2, XKCDColors.Orange);
-
-            Vector2 guiPos;
-            if (BDGUIUtils.WorldToGUIPos(fwdPos, out guiPos))
-            {
-                Rect angleRect = new Rect(guiPos.x, guiPos.y, 100, 200);
-
-                Vector3 pitchVector = (5*Vector3.ProjectOnPlane(fireTransforms[0].forward, refRight));
-                Vector3 yawVector = (5*Vector3.ProjectOnPlane(fireTransforms[0].forward, refUp));
-
-                BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position + pitchVector, fwdPos, 3,
-                    Color.white);
-                BDGUIUtils.DrawLineBetweenWorldPositions(fireTransforms[0].position + yawVector, fwdPos, 3, Color.white);
-
-                float pitch = Vector3.Angle(pitchVector, referenceDirection);
-                float yaw = Vector3.Angle(yawVector, referenceDirection);
-
-                string convergeDistance;
-
-                Vector3 projAxis = Vector3.Project(refTransform.position - fireTransforms[0].transform.position,
-                    refRight);
-                float xDist = projAxis.magnitude;
-                float convergeAngle = 90 - Vector3.Angle(yawVector, refTransform.up);
-                if (Vector3.Dot(fireTransforms[0].forward, projAxis) > 0)
-                {
-                    convergeDistance = "Converge: " +
-                                       Mathf.Round((xDist*Mathf.Tan(convergeAngle*Mathf.Deg2Rad))).ToString() + "m";
-                }
-                else
-                {
-                    convergeDistance = "Diverging";
-                }
-
-                string xAngle = "X: " + Vector3.Angle(fireTransforms[0].forward, pitchVector).ToString("0.00");
-                string yAngle = "Y: " + Vector3.Angle(fireTransforms[0].forward, yawVector).ToString("0.00");
-
-                GUI.Label(angleRect, xAngle + "\n" + yAngle + "\n" + convergeDistance);
-            }
-        }
-
+        #endregion
 
         // RMB info in editor
         public override string GetInfo()
@@ -1995,5 +2085,6 @@ namespace BahaTurret
             output.Append(Environment.NewLine);
             return output.ToString();
         }
-    }
+
+     }
 }
