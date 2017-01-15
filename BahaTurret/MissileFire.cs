@@ -2250,15 +2250,8 @@ namespace BahaTurret
 
         void GuardMode()
         {
-            if (!gameObject.activeInHierarchy)
-            {
-                return;
-            }
-
-            if (BDArmorySettings.PEACE_MODE)
-            {
-                return;
-            }
+            if (!gameObject.activeInHierarchy) return;
+            if (BDArmorySettings.PEACE_MODE) return;
 
             if (!BDArmorySettings.ALLOW_LEGACY_TARGETING)
             {
@@ -4154,7 +4147,6 @@ namespace BahaTurret
                     return false;
                 }
 
-
                 if (ml.dropTime > 0.3f)
                 {
                     //debug lines
@@ -4229,8 +4221,7 @@ namespace BahaTurret
                     return true;
                 }
                 //forward check for no-drop missiles
-                if (Physics.Raycast(new Ray(ml.MissileReferenceTransform.position, ml.MissileReferenceTransform.forward),
-                    50, 557057))
+                if (Physics.Raycast(new Ray(ml.MissileReferenceTransform.position, ml.MissileReferenceTransform.forward),50, 557057))
                 {
                     return false;
                 }
