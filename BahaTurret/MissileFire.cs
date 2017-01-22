@@ -750,8 +750,15 @@ namespace BahaTurret
         {
             if (p == part)
             {
-                GameEvents.onPartDie.Remove(OnPartDie);
-                GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
+                try
+                {
+                    GameEvents.onPartDie.Remove(OnPartDie);
+                    GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
+                }
+                catch(Exception e)
+                {
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Error OnPartDie" + e.Message);
+                }                
             }
             RefreshTargetingModules();
             UpdateList();
@@ -879,7 +886,6 @@ namespace BahaTurret
             {
                 targetScanTimer = -100;
             }
-
 
             if (vessel.isActiveVessel)
             {
@@ -2221,6 +2227,8 @@ namespace BahaTurret
 
                 selectionText = "Selected Weapon: " + (GetWeaponName(weaponArray[weaponIndex])).ToString();
                 selectionMessage.message = selectionText;
+                selectionMessage.style = ScreenMessageStyle.UPPER_CENTER;
+
                 ScreenMessages.PostScreenMessage(selectionMessage);
             }
         }
@@ -3993,12 +4001,12 @@ namespace BahaTurret
                             {
                                 launchAuthorized = false;
                             }
-                            else if (targetDistance >= dlz.maxLaunchRange && targetDistance <= dlz.minLaunchRange)  //fire the missile only if target is further than missiles min launch range
+                            else if (targetDistance >= dlz.maxLaunchRange || targetDistance <= dlz.minLaunchRange)  //fire the missile only if target is further than missiles min launch range
                             {
                                 launchAuthorized = false;
                             }
 
-                            Debug.Log("[BDArmory]:" + vessel.vesselName + " launchAut=" + launchAuthorized + ", pilotAut=" +
+                            Debug.Log("[BDArmory]:" + vessel.vesselName + " launchAuth=" + launchAuthorized + ", pilotAut=" +
                                       pilotAuthorized + ", missilesAway/Max=" + missilesAway + "/" + maxMissilesOnTarget);
                             if (missilesAway < maxMissilesOnTarget)
                             {
@@ -4176,10 +4184,10 @@ namespace BahaTurret
                             if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)
                             //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
                             {
-                                this.SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
+                                SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);
                                 nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log("[BDArmory]:" + vessel.vesselName + " called for help from " +
+                                    Debug.Log("[BDArmory]: " + vessel.vesselName + " called for help from " +
                                               nearbyFriendly.Vessel.vesselName + " and took its target in return");
                                 //basically, swap targets to cover each other
                             }
@@ -4188,7 +4196,7 @@ namespace BahaTurret
                                 //otherwise, continue engaging the current target for now
                                 nearbyFriendly.weaponManager.SetOverrideTarget(nearbyThreat);
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log("[BDArmory]:" + vessel.vesselName + " called for help from " +
+                                    Debug.Log("[BDArmory]: " + vessel.vesselName + " called for help from " +
                                               nearbyFriendly.Vessel.vesselName);
                             }
                         }
@@ -4247,7 +4255,7 @@ namespace BahaTurret
         public void SetOverrideTarget(TargetInfo target)
         {
             overrideTarget = target;
-            ForceScan();
+            targetScanTimer = -100;
         }
 
         public void UpdateMaxGuardRange()
@@ -4300,7 +4308,7 @@ namespace BahaTurret
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(selectedWeapon + " is valid!");
+                                Debug.Log("[BDArmory]: " + selectedWeapon + " is valid!");
                             }
                             return 1;
                         }
@@ -4320,7 +4328,7 @@ namespace BahaTurret
                             {
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                 {
-                                    Debug.Log(selectedWeapon + " is overheated!");
+                                    Debug.Log("[BDArmory]: " + selectedWeapon + " is overheated!");
                                 }
                                 return -1;
                             }
@@ -4328,19 +4336,19 @@ namespace BahaTurret
                             {
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                 {
-                                    Debug.Log(selectedWeapon + " is valid!");
+                                    Debug.Log("[BDArmory]: " + selectedWeapon + " is valid!");
                                 }
                                 return 1;
                             }
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
-                                Debug.Log(selectedWeapon + " has no ammo.");
+                                Debug.Log("[BDArmory]: " + selectedWeapon + " has no ammo.");
                             }
                             return -1;
                         }
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
-                            Debug.Log(selectedWeapon + " can not reach target (" + distance + " vs " + weapon.maxEffectiveDistance + ", yawRange: " + weapon.yawRange + "). Continuing.");
+                            Debug.Log("[BDArmory]: " + selectedWeapon + " cannot reach target (" + distance + " vs " + weapon.maxEffectiveDistance + ", yawRange: " + weapon.yawRange + "). Continuing.");
                         }
                         //else return 0;
                     }
