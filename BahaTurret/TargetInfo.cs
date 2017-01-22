@@ -8,18 +8,18 @@ namespace BahaTurret
 	{
 		public BDArmorySettings.BDATeams team;
 		public bool isMissile = false;
-
 		public MissileBase MissileBaseModule = null;
-
 		public MissileFire weaponManager;
+        List<MissileFire> friendliesEngaging;
+        public float detectedTime;
+        Coroutine lifeRoutine;
+        Coroutine massRoutine;
 
-
-		public bool isLanded
+        public bool isLanded
 		{
 			get
 			{
 				if(!vessel) return false;
-
 				return vessel.LandedOrSplashed;
 			}
 		}
@@ -32,12 +32,12 @@ namespace BahaTurret
 			}
 		}
 		public Vector3 position
-		{
-			get
-			{
-				return vessel.vesselTransform.position;
-			}
-		}
+        {
+            get
+            {
+                return vessel.vesselTransform.position;
+            }
+        }
 
 		private Vessel vessel;
 		public Vessel Vessel
@@ -77,11 +77,8 @@ namespace BahaTurret
 
 				return false;
 			}
-		}
-
-		List<MissileFire> friendliesEngaging;
-
-
+		}		
+        
 		void Awake()
 		{
 			if(!vessel)
@@ -90,7 +87,7 @@ namespace BahaTurret
 			}
 			if(!vessel)
 			{
-				Debug.Log ("TargetInfo was added to a non-vessel");
+				Debug.Log ("[BDArmory]:TargetInfo was added to a non-vessel");
 				Destroy (this);
 				return;
 			}
@@ -166,9 +163,7 @@ namespace BahaTurret
 			//remove delegate from peace enable event
 			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
 		}
-
-		public float detectedTime;
-		Coroutine lifeRoutine;
+	
 		IEnumerator LifetimeRoutine()
 		{
 			detectedTime = Time.time;
@@ -182,8 +177,7 @@ namespace BahaTurret
 			}
 			Destroy(this);
 		}
-
-		Coroutine massRoutine;
+		
 		IEnumerator MassRoutine()
 		{
 			float startMass = vessel.GetTotalMass();
@@ -199,7 +193,6 @@ namespace BahaTurret
 					RemoveFromDatabases();
 					yield break;
 				}
-
 				yield return new WaitForSeconds(1);
 			}
 		}
