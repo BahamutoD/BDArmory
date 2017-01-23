@@ -63,9 +63,7 @@ namespace BahaTurret
 
             if (part.Resources["HighExplosive"].amount == previousMass) return;
            
-	        var explosiveMass = part.Resources["HighExplosive"].amount;
-            //=LOG10(m+1)*(10+(m^1.6/(14*m+1)))
-            //blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
+	        var explosiveMass = part.Resources["HighExplosive"].amount;   
 
 	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
             blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
@@ -81,7 +79,7 @@ namespace BahaTurret
 			{
 				hasDetonated = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
-				Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
+			    Vector3 position = part.vessel.CoM;
 				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(), "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 			}
 		}

@@ -179,13 +179,15 @@ namespace BahaTurret
 
 		    var vesselsAffected =
 		        BDATargetManager.LoadedVessels.Where(
-		            v => v != null && v.loaded && !v.packed && (v.transform.position - position).magnitude < maxDistance*4);
+		            v => v != null && v.loaded && !v.packed && (v.CoM - position).magnitude < maxDistance*4);
 
 		    var partsAffected =
 		        vesselsAffected.SelectMany(v => v.parts).Where(p => p!=null && p && (p.transform.position - position).magnitude < maxDistance);
 
 		    foreach (var part in partsAffected)
 		    {
+                //TODO: DELETE
+                Debug.LogFormat("[BDArmory]: Explosion sphere, part affected:{1}.{0}", part.vessel.vesselName, part.name);
                 DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
             }
 		      

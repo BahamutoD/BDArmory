@@ -140,18 +140,8 @@ namespace BahaTurret
 
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
-
-            var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
-            var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
-                                           previousMissileVelocity;
-
-            var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
-                                        0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
-            var missileTargetPosition = vessel.CoM +
-                                        (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
-                                        0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
             float distance;
-            if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
+            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < detonationRadius)
             {
                 Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
                 Detonate();
@@ -800,15 +790,21 @@ namespace BahaTurret
         private void AutoDestruction()
         {
             foreach (var vesselPart in vesselParts)
-            { 
-                vesselPart.temperature = part.maxTemp + 100;
+            {
+                if (vesselPart != null)
+                {
+                    vesselPart.temperature = part.maxTemp + 100; 
+                }
             }
         }
 
         public override void Detonate()
         {
-            if (HasFired)
+            if (!HasExploded && HasFired)
             {
+                if (SourceVessel == null) SourceVessel = vessel;
+
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.Detonate());
                 AutoDestruction();
                 HasExploded = true;
             }
