@@ -4,18 +4,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 namespace BahaTurret
 {	
 	public class MissileLauncher : MissileBase
 	{
-		[KSPField]
+
+	    #region  Variable Declarations
+        
+        [KSPField]
 		public string homingType = "AAM";
 
 		[KSPField]
 		public string targetingType = "none";
 
-		public MissileTurret missileTurret = null;
+        public MissileTurret missileTurret = null;
 		public BDRotaryRail rotaryRail = null;
 
 		[KSPField]
@@ -27,8 +29,9 @@ namespace BahaTurret
 		[KSPField]
 		public string boostExhaustTransformName;
 
-		//aero
-		[KSPField]
+        #region Aero
+
+        [KSPField]
 		public bool aero = false;
 		[KSPField]
 		public float liftArea = 0.015f;
@@ -42,10 +45,11 @@ namespace BahaTurret
 		[KSPField]
 		public float aeroSteerDamping = 0;
 
-		[KSPField]
-		public float maxTorque = 90;
-		//
+        #endregion
 
+        [KSPField]
+		public float maxTorque = 90;
+	
 		[KSPField]
 		public float thrust = 30;
 		[KSPField]
@@ -66,21 +70,29 @@ namespace BahaTurret
 		public bool decoupleForward = false;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
-UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+                  UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float decoupleSpeed = 0;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation Radius"),
+          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.All)]
+        public float detonationRadius = 0;
 
         [KSPField]
 		public float optimumAirspeed = 220;
 		
 		[KSPField]
 		public float blastRadius = 150;
-		[KSPField]
-		public float blastPower = 25;
-		[KSPField]
+
+        [KSPField]
+        public float blastPower = 25;
+
+        [KSPField]
 		public float blastHeat = -1;
-		[KSPField]
+
+        [KSPField]
 		public float maxTurnRateDPS = 20;
-		[KSPField]
+
+        [KSPField]
 		public bool proxyDetonate = true;
 		
 		[KSPField]
@@ -114,7 +126,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
 		
 		public string explSoundPath = "BDArmory/Sounds/explode1";
-			
 		
 		[KSPField]
 		public bool spoolEngine = false;
@@ -150,9 +161,11 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
 		[KSPField]
 		public bool useSimpleDrag = false;
-		[KSPField]
+
+        [KSPField]
 		public float simpleDrag = 0.02f;
-		[KSPField]
+
+        [KSPField]
 		public float simpleStableTorque = 5;
 
 		[KSPField]
@@ -171,7 +184,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		bool hasPlayedFlyby = false;
 	
 		float debugTurnRate = 0;
-
 
 		List<GameObject> boosters;
 		[KSPField]
@@ -194,7 +206,60 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		[KSPField]
 		public float waterImpactTolerance = 25;
 
-		void ParseWeaponClass()
+        //ballistic options
+        [KSPField]
+        public bool indirect = false;
+
+        #endregion
+
+        [KSPAction("Fire Missile")]
+        public void AGFire(KSPActionParam param)
+        {
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            if (missileTurret)
+            {
+                missileTurret.FireMissile(this);
+            }
+            else if (rotaryRail)
+            {
+                rotaryRail.FireMissile(this);
+            }
+            else
+            {
+                FireMissile();
+            }
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+        }
+
+        [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
+        public void GuiFire()
+        {
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            if (missileTurret)
+            {
+                missileTurret.FireMissile(this);
+            }
+            else if (rotaryRail)
+            {
+                rotaryRail.FireMissile(this);
+            }
+            else
+            {
+                FireMissile();
+            }
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+        }
+
+        [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
+        public override void Jettison()
+        {
+            if (missileTurret) return;
+
+            part.decouple(0);
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+        }
+
+        void ParseWeaponClass()
 		{
 			missileType = missileType.ToLower();
 			if(missileType == "bomb")
@@ -206,11 +271,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				weaponClass = WeaponClasses.Missile;
 			}
 		}
-
-		//ballistic options
-		[KSPField]
-		public bool indirect = false;
-
+        
 		public override void OnStart(StartState state)
 		{
 			ParseWeaponClass();
@@ -240,9 +301,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			else
 			{
 				Fields["detonationTime"].guiActive = false;
-
                 Fields["detonationTime"].guiActiveEditor = false;
-
             }
 
 			ParseModes();
@@ -375,23 +434,13 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				{
 					rotationTransform = part.FindModelTransform(rotationTransformName);
 				}
-
-
-
-
-
-
 				
 				if(hasRCS)
 				{
 					SetupRCS();
 					KillRCS();
 				}
-
 				SetupAudio();
-
-
-
 			}
 
 			if(GuidanceMode != GuidanceModes.Cruise)
@@ -415,17 +464,19 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				deployedDrag = simpleDrag;	
 			}
 		}
-
+		
 		/*
-		void OnCollisionEnter(Collision col)
+        void OnCollisionEnter(Collision col)
 		{
-			if(!hasExploded && hasFired && Time.time - timeFired > 1)
+            Debug.Log("[BDArmory]: Something Collided");
+
+            if (!HasExploded && HasFired && Time.time - TimeFired > 1)
 			{
 				Detonate();
 			}
 		}
-		*/
-
+        */
+        
 		void SetupAudio()
 		{
 			audioSource = gameObject.AddComponent<AudioSource>();
@@ -447,8 +498,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			sfAudioSource.dopplerLevel = 0;
 			sfAudioSource.priority = 230;
 			sfAudioSource.spatialBlend = 1;
-
-
 
 			if(audioClipPath != string.Empty)
 			{
@@ -480,71 +529,19 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 		}
-		
-		[KSPAction("Fire Missile")]
-		public void AGFire(KSPActionParam param)
-		{
-			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
-			if(missileTurret)
-			{
-				missileTurret.FireMissile(this);
-			}
-			else if(rotaryRail)
-			{
-				rotaryRail.FireMissile(this);
-			}
-			else
-			{
-				FireMissile();	
-			}
-			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-		}
-		
-		[KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
-		public void GuiFire()
-		{
-			if(BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
-			if(missileTurret)
-			{
-				missileTurret.FireMissile(this);
-			}
-			else if(rotaryRail)
-			{
-				rotaryRail.FireMissile(this);
-			}
-			else
-			{
-				FireMissile();	
-			}
-			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-		}
-
-		[KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
-		public override void Jettison()
-		{
-			if(missileTurret) return;
-
-			part.decouple(0);
-			if(BDArmorySettings.Instance.ActiveWeaponManager!=null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-		}
 
 	    public override float GetBlastRadius()
 	    {
 	        return this.blastRadius;
 	    }
 
-
 	    public override void FireMissile()
 		{
 			if(!HasFired)
 			{
-
-
                 HasFired = true;
-
-				GameEvents.onPartDie.Add(PartDie);
-
-				BDATargetManager.FiredMissiles.Add(this);
+                GameEvents.onPartDie.Add(PartDie);
+                BDATargetManager.FiredMissiles.Add(this);
 
 				if(GetComponentInChildren<KSPParticleEmitter>())
 				{
@@ -558,14 +555,12 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				}
 				
 				sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/deployClick"));
-				
 				SourceVessel = vessel;
-
-
-
+                
 				//TARGETING
 				TargetPosition = transform.position + (transform.forward * 5000); //set initial target position so if no target update, missileBase will count a miss if it nears this point or is flying post-thrust
 				startDirection = transform.forward;
+
 				if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
 				{
 					if(vessel.targetObject!=null && vessel.targetObject.GetVessel()!=null)
@@ -598,19 +593,12 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
                 //add target info to vessel
 			    AddTargetInfoToVessel();
-
-
                 StartCoroutine(DecoupleRoutine());
-				
-
-				
 
 				vessel.vesselName = GetShortName();
 				vessel.vesselType = VesselType.Probe;
-
 				
 				TimeFired = Time.time;
-
 
 				//setting ref transform for navball
 				GameObject refObject = new GameObject();
@@ -621,12 +609,8 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				vesselReferenceTransform = refObject.transform;
 
 				MissileState = MissileStates.Drop;
-
 				part.crashTolerance = 9999;
-
-
 				StartCoroutine(MissileRoutine());
-				
 			}
 		}
 
@@ -660,11 +644,18 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			if(!HasFired)
 			{
 				legacyTargetVessel = v;
-
 				FireMissile();
 			}
 		}
-			
+		
+		void OnDisable()
+		{
+			if(TargetingMode == TargetingModes.AntiRad)
+			{
+				RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
+			}
+		}
+		
 		public override void OnFixedUpdate()
 		{
             base.OnFixedUpdate();
@@ -721,23 +712,29 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 						part.crashTolerance = 1;
 					}
 				}
-					
 				
 				UpdateThrustForces();
-
 				UpdateGuidance();
-
 				RaycastCollisions();
-
-				//Timed detonation
-				if(isTimed && TimeIndex > detonationTime)
+            
+                //Timed detonation
+                if (isTimed && TimeIndex > detonationTime)
 				{
-					part.temperature = part.maxTemp+100;
+					//part.temperature = part.maxTemp+100; //This is already done in Detonate()
+                    Detonate();
 				}
 			}
 		}
 
-        Vector3 previousPos;
+	    public void  LateUpdate()
+	    {
+            if (detonationRadius > 0)
+            {
+                CheckDetonationDistance(detonationRadius);
+            }
+        }
+
+	    Vector3 previousPos;
 		void RaycastCollisions()
 		{
 			if(weaponClass == WeaponClasses.Bomb) return;
@@ -765,7 +762,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				{
 					if(lineHit.collider.GetComponentInParent<Part>() != part)
 					{
-						Debug.Log(part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
+						Debug.Log("[BDArmory]:" + part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
 						part.temperature = part.maxTemp + 100;
 					}
 				}
@@ -773,6 +770,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 
 			previousPos = part.transform.position;
 		}
+
         private void CheckMiss()
         {
             float sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position + (part.rb.velocity * Time.fixedDeltaTime))).sqrMagnitude;
@@ -807,6 +805,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
                 }
             }
         }
+
         void UpdateGuidance()
 		{
 			if(guidanceActive)
@@ -1032,7 +1031,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 			EndBoost();
 		}
-		//boost
+		
 		void StartBoost()
 		{
 			MissileState = MissileStates.Boost;
@@ -1079,6 +1078,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 
 		}
+
 		void EndBoost()
 		{
 			foreach(var emitter in boostEmitters)
@@ -1223,7 +1223,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 		}
 
-		IEnumerator FadeOutEmitters()
+        IEnumerator FadeOutEmitters()
 		{
 			float fadeoutStartTime = Time.time;
 			while(Time.time-fadeoutStartTime < 5)
@@ -1435,8 +1435,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			DoAero(agmTarget);
 		}
 
-		
-
 		void UpdateLegacyTarget()
 		{
 			if(legacyTargetVessel)
@@ -1482,22 +1480,21 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 					part.temperature = part.temperature + 100;
 				}
 			}
-			
 		}
 
 		public override void Detonate()
 		{
-			if(isSeismicCharge)
+            /*
+            if (isSeismicCharge)
 			{
 				DetonateSeismicCharge();
-			
 			}
-			else if(!HasExploded && HasFired)
-			{
-				BDArmorySettings.numberOfParticleEmitters--;
-				
-				HasExploded = true;
+            */
 
+            if (!HasExploded && HasFired)
+			{
+				BDArmorySettings.numberOfParticleEmitters--;	
+				HasExploded = true;
 				
 				if(legacyTargetVessel!=null)
 				{
@@ -1529,7 +1526,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 	        return this.MissileReferenceTransform.forward;
 	    }
 
-
 	    protected override void PartDie(Part p)
         {
 			if(p == part)
@@ -1541,86 +1537,83 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 		}
 
 
+        /*public bool CanSeePosition(Vector3 pos)
+    {
+        if((pos-transform.position).sqrMagnitude < Mathf.Pow(20,2))
+        {
+            return false;
+        }
 
-		//public bool CanSeePosition(Vector3 pos)
-		//{
-		//	if((pos-transform.position).sqrMagnitude < Mathf.Pow(20,2))
-		//	{
-		//		return false;
-		//	}
+        float dist = 10000;
+        Ray ray = new Ray(missileReferenceTransform.position, pos-missileReferenceTransform.position);
+        ray.origin += 10 * ray.direction;
+        RaycastHit rayHit;
+        if(Physics.Raycast(ray, out rayHit, dist, 557057))
+        {
+            if((rayHit.point-pos).sqrMagnitude < 200)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
-		//	float dist = 10000;
-		//	Ray ray = new Ray(missileReferenceTransform.position, pos-missileReferenceTransform.position);
-		//	ray.origin += 10 * ray.direction;
-		//	RaycastHit rayHit;
-		//	if(Physics.Raycast(ray, out rayHit, dist, 557057))
-		//	{
-		//		if((rayHit.point-pos).sqrMagnitude < 200)
-		//		{
-		//			return true;
-		//		}
-		//		else
-		//		{
-		//			return false;
-		//		}
-		//	}
+        return true;
+    }
+    */
 
-		//	return true;
-		//}
-		
-		
-		
-		
-		void DetonateSeismicCharge()
-		{
-			if(!HasExploded && HasFired)
-			{
-				GameSettings.SHIP_VOLUME = 0;
-				GameSettings.MUSIC_VOLUME = 0;
-				GameSettings.AMBIENCE_VOLUME = 0;
-				
-				BDArmorySettings.numberOfParticleEmitters--;
-				
-				HasExploded = true;
 
-				/*
-				if(targetVessel == null)
-				{
-					if(target!=null && FlightGlobals.ActiveVessel.gameObject == target)
-					{
-						targetVessel = FlightGlobals.ActiveVessel;
-					}
-					else if(target!=null && !BDArmorySettings.Flares.Contains(t => t.gameObject == target))
-					{
-						targetVessel = Part.FromGO(target).vessel;
-					}
-					
-				}
-				*/
-				if(legacyTargetVessel!=null)
-				{
-					foreach(var wpm in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
-					{
-						wpm.missileIsIncoming = false;
-					}
-				}
-				
-				if(part!=null)
-				{
-					
-					part.temperature = part.maxTemp + 100;
-				}
-				Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
-				if(SourceVessel==null) SourceVessel = vessel;
-				
-				SeismicChargeFX.CreateSeismicExplosion(transform.position-(part.rb.velocity.normalized*15), UnityEngine.Random.rotation);
-				
-			}	
-		}
-		
-		
-		
-		public static bool CheckIfMissile(Part p)
+        //      void DetonateSeismicCharge()
+        //{
+        //	if(!HasExploded && HasFired)
+        //	{
+        //		GameSettings.SHIP_VOLUME = 0;
+        //		GameSettings.MUSIC_VOLUME = 0;
+        //		GameSettings.AMBIENCE_VOLUME = 0;
+
+        //		BDArmorySettings.numberOfParticleEmitters--;
+
+        //		HasExploded = true;
+
+        //		/*
+        //		if(targetVessel == null)
+        //		{
+        //			if(target!=null && FlightGlobals.ActiveVessel.gameObject == target)
+        //			{
+        //				targetVessel = FlightGlobals.ActiveVessel;
+        //			}
+        //			else if(target!=null && !BDArmorySettings.Flares.Contains(t => t.gameObject == target))
+        //			{
+        //				targetVessel = Part.FromGO(target).vessel;
+        //			}
+
+        //		}
+        //		*/
+        //		if(legacyTargetVessel!=null)
+        //		{
+        //			foreach(var wpm in legacyTargetVessel.FindPartModulesImplementing<MissileFire>())
+        //			{
+        //				wpm.missileIsIncoming = false;
+        //			}
+        //		}
+
+        //		if(part!=null)
+        //		{
+
+        //			part.temperature = part.maxTemp + 100;
+        //		}
+        //		Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
+        //		if(SourceVessel==null) SourceVessel = vessel;
+
+        //		SeismicChargeFX.CreateSeismicExplosion(transform.position-(part.rb.velocity.normalized*15), UnityEngine.Random.rotation);
+
+        //	}	
+        //} 
+
+
+        public static bool CheckIfMissile(Part p)
 		{
 			if(p.GetComponent<MissileLauncher>())
 			{
@@ -1628,8 +1621,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 			else return false;
 		}
-			
-
 		
 		void WarnTarget()
 		{
@@ -1659,7 +1650,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 		}
 
-
 		float[] rcsFiredTimes;
 		KSPParticleEmitter[] rcsTransforms;
 		void SetupRCS()
@@ -1667,8 +1657,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			rcsFiredTimes = new float[]{0,0,0,0};
 			rcsTransforms = new KSPParticleEmitter[]{upRCS, leftRCS, rightRCS, downRCS};
 		}
-
-
 
 		void DoRCS()
 		{
@@ -1719,21 +1707,17 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			rightRCS.emit = false;
 		}
 
-
 		void OnGUI()
 		{
 			if(HasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
 			{
-				GUI.Label(new Rect(200,200,200,200), debugString);	
-
-
+				GUI.Label(new Rect(200,300,200,200), debugString);	
 			}
 			if(HasFired && hasRCS)
 			{
 				BDGUIUtils.DrawLineBetweenWorldPositions(transform.position, TargetPosition, 2, Color.red);
 			}
 		}
-
 
 		void AntiSpin()
 		{
@@ -1752,7 +1736,7 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 				part.rb.angularVelocity -= 0.02f * part.rb.angularVelocity;
 			}
 		}
-		
+
 		void SimpleDrag()
 		{
 			part.dragModel = Part.DragModel.NONE;
@@ -1832,8 +1816,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			}
 		}
 
-
-
 		// RMB info in editor
 		public override string GetInfo()
 		{
@@ -1856,7 +1838,6 @@ UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Sc
 			return output.ToString();
 
 		}
-
 		
 	}
 }
