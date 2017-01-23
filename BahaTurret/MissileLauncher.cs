@@ -7,16 +7,16 @@ using UnityEngine;
 namespace BahaTurret
 {	
 	public class MissileLauncher : MissileBase
-	{
+    {
 
-	    #region  Variable Declarations
-        
+        #region  Variable Declarations
+
         [KSPField]
 		public string homingType = "AAM";
 
-		[KSPField]
+        [KSPField]
 		public string targetingType = "none";
-
+ 
         public MissileTurret missileTurret = null;
 		public BDRotaryRail rotaryRail = null;
 
@@ -278,13 +278,13 @@ namespace BahaTurret
 
 			if(shortName == string.Empty)
 			{
-				shortName = part.partInfo.title;
-			}
+				shortName = part.partInfo.title;                
+            }
 
 			gaplessEmitters = new List<BDAGaplessParticleEmitter>();
 			pEmitters = new List<KSPParticleEmitter>();
-			boostEmitters = new List<KSPParticleEmitter>();
-			boostGaplessEmitters = new List<BDAGaplessParticleEmitter>();
+            boostEmitters = new List<KSPParticleEmitter>();
+            boostGaplessEmitters = new List<BDAGaplessParticleEmitter>();
 
             Fields["maxOffBoresight"].guiActive = false;
             Fields["maxOffBoresight"].guiActiveEditor = false;
