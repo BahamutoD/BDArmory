@@ -183,8 +183,6 @@ namespace BahaTurret
 
 		    foreach (var part in partsAffected)
 		    {
-                //TODO: DELETE
-                Debug.LogFormat("[BDArmory]: Explosion sphere, part affected:{1}.{0}", part.vessel.vesselName, part.name);
                 DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
             }
 		      

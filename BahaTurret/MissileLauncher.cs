@@ -791,7 +791,7 @@ namespace BahaTurret
                     if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
 
                     isTimed = true;
-                    detonationTime = Time.time - TimeFired + 1.5f;
+                    detonationTime = TimeIndex + 1.5f;
                     return;
                 }
             }
@@ -1364,7 +1364,7 @@ namespace BahaTurret
 				aamTarget = transform.position + (20*vessel.srf_velocity.normalized);
 			}
 
-            if (Time.time-TimeFired > dropTime+0.25f)
+            if (TimeIndex > dropTime+0.25f)
 			{
 				DoAero(aamTarget);
 			}

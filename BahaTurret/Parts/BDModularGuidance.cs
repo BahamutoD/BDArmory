@@ -141,7 +141,7 @@ namespace BahaTurret
         {
             if (!_missileIgnited)
             {
-                if (Time.time - TimeFired > dropTime)
+                if (TimeIndex > dropTime)
                 {
                     MissileIgnition();
                 }
@@ -532,7 +532,7 @@ namespace BahaTurret
                     if (sqrDist < Mathf.Pow(DetonationRadius * 0.5f, 2)) AutoDestruction();
 
                     isTimed = true;
-                    detonationTime = Time.time - TimeFired + 1.5f;
+                    detonationTime = TimeIndex + 1.5f;
                     return;
                 }
             }
@@ -558,7 +558,7 @@ namespace BahaTurret
                 }
 
                 //Updating aero surfaces
-                if (Time.time - TimeFired > dropTime + 0.5f)
+                if (TimeIndex > dropTime + 0.5f)
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, GetTransform(UpTransformAxis));
                     var targetDirection = _velocityTransform.InverseTransformPoint(aamTarget).normalized;
