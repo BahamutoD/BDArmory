@@ -73,10 +73,6 @@ namespace BahaTurret
                   UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float decoupleSpeed = 0;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation Radius"),
-          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.All)]
-        public float detonationRadius = 0;
-
         [KSPField]
 		public float optimumAirspeed = 220;
 		
@@ -274,7 +270,9 @@ namespace BahaTurret
         
 		public override void OnStart(StartState state)
 		{
-			ParseWeaponClass();
+
+            //base.OnStart(state);
+            ParseWeaponClass();
 
 			if(shortName == string.Empty)
 			{
@@ -658,11 +656,12 @@ namespace BahaTurret
 		
 		public override void OnFixedUpdate()
 		{
-            base.OnFixedUpdate();
             debugString = "";
 			if(HasFired && !HasExploded && part!=null)
 			{
-				part.rb.isKinematic = false;
+                CheckDetonationDistance();
+
+                part.rb.isKinematic = false;
 				AntiSpin();
 
 				//simpleDrag
@@ -725,14 +724,6 @@ namespace BahaTurret
 				}
 			}
 		}
-
-	    public void  LateUpdate()
-	    {
-            if (detonationRadius > 0)
-            {
-                CheckDetonationDistance(detonationRadius);
-            }
-        }
 
 	    Vector3 previousPos;
 		void RaycastCollisions()
@@ -800,7 +791,7 @@ namespace BahaTurret
                     if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.temperature = part.maxTemp + 100;
 
                     isTimed = true;
-                    detonationTime = Time.time - TimeFired + 1.5f;
+                    detonationTime = TimeIndex + 1.5f;
                     return;
                 }
             }
@@ -835,8 +826,7 @@ namespace BahaTurret
 				{
 					UpdateAntiRadiationTarget();
 				}
-
-			}
+            }
 
 			if(MissileState != MissileStates.Idle && MissileState != MissileStates.Drop) //guidance
 			{
@@ -897,7 +887,7 @@ namespace BahaTurret
 
 					finalMaxTorque = Mathf.Clamp((TimeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
 
-					if(GuidanceMode == GuidanceModes.AAMLead)
+                    if (GuidanceMode == GuidanceModes.AAMLead)
 					{
 						AAMGuidance();
 					}
@@ -921,9 +911,7 @@ namespace BahaTurret
 					{
 						CruiseGuidance();
 					}
-
-
-				}
+                }
 				else
 				{
 					CheckMiss();
@@ -1376,8 +1364,7 @@ namespace BahaTurret
 				aamTarget = transform.position + (20*vessel.srf_velocity.normalized);
 			}
 
-
-			if(Time.time-TimeFired > dropTime+0.25f)
+            if (TimeIndex > dropTime+0.25f)
 			{
 				DoAero(aamTarget);
 			}
@@ -1412,8 +1399,7 @@ namespace BahaTurret
 			}
 
 			Vector3 agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, agmDescentRatio);
-
-			DoAero(agmTarget);
+            DoAero(agmTarget);
 		}
 
 		void DoAero(Vector3 targetPosition)
@@ -1430,7 +1416,7 @@ namespace BahaTurret
 				Vector3 dToTarget = TargetPosition - transform.position;
 				Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
 				agmTarget = transform.position + direction;
-			}
+            }
 
 			DoAero(agmTarget);
 		}

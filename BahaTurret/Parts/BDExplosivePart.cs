@@ -5,20 +5,17 @@ namespace BahaTurret
 {
 	public class BDExplosivePart : PartModule
 	{
-		
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Blast Radius" ),
-            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All),
-            UI_FloatRange(minValue = 5, maxValue = 200,stepIncrement = 1)]
-            
-		public float blastRadius = 50;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Blast Power"),
-            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All),
-            UI_FloatRange(minValue = 5, maxValue = 200, stepIncrement = 1)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius"),
+            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
+        public float blastRadius = 50;
 
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Power"),
+        UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
         public float blastPower = 25;
 
-		[KSPField]
+        [KSPField]
 		public float blastHeat = -1;
 
 		[KSPAction("Detonate")]
@@ -66,9 +63,7 @@ namespace BahaTurret
 
             if (part.Resources["HighExplosive"].amount == previousMass) return;
            
-	        var explosiveMass = part.Resources["HighExplosive"].amount;
-            //=LOG10(m+1)*(10+(m^1.6/(14*m+1)))
-            //blastPower = (float) Math.Round(Math.Log10(1 + explosiveMass) * (10 + Math.Pow(explosiveMass, 1.6)/(14 * explosiveMass + +1)), 0);
+	        var explosiveMass = part.Resources["HighExplosive"].amount;   
 
 	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
             blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
@@ -84,7 +79,7 @@ namespace BahaTurret
 			{
 				hasDetonated = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
-				Vector3 position = transform.position+part.rb.velocity*Time.fixedDeltaTime;
+			    Vector3 position = part.vessel.CoM;
 				ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(), "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 			}
 		}

@@ -176,7 +176,7 @@ namespace BahaTurret
 
 		    var vesselsAffected =
 		        BDATargetManager.LoadedVessels.Where(
-		            v => v != null && v.loaded && !v.packed && (v.transform.position - position).magnitude < maxDistance*4);
+		            v => v != null && v.loaded && !v.packed && (v.CoM - position).magnitude < maxDistance*4);
 
 		    var partsAffected =
 		        vesselsAffected.SelectMany(v => v.parts).Where(p => p!=null && p && (p.transform.position - position).magnitude < maxDistance);

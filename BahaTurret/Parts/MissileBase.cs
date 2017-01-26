@@ -36,6 +36,10 @@ namespace BahaTurret
             UI_FloatRange(minValue = 0f, maxValue = 180f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float maxOffBoresight = 50;
 
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float DetonationDistance = 0;
+
         [KSPField]
         public bool guidanceActive = true;
 
@@ -94,7 +98,7 @@ namespace BahaTurret
 
         public Vector3 TargetAcceleration { get; set; } = Vector3.zero;
 
-        public float TimeIndex { get; set; } = 0;
+        public float TimeIndex => Time.time - TimeFired;
 
         public TargetingModes TargetingMode { get; set; }
 
@@ -107,6 +111,16 @@ namespace BahaTurret
         public Vessel SourceVessel { get; set; } = null;
 
         public bool HasExploded { get; set; } = false;
+
+
+        public float DetonationRadius
+        {
+            get
+            {
+                return DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
+            }
+
+        } 
 
         public float TimeFired = -1;
 
@@ -183,14 +197,6 @@ namespace BahaTurret
 				info.MissileBaseModule = this;
         }
 
-        public override void OnFixedUpdate()
-        {
-            if (HasFired && !HasExploded && part != null)
-            {
-                TimeIndex = Time.time - TimeFired;
-            }
-        }
-
         protected void UpdateGPSTarget()
         {
             if (TargetAcquired)
@@ -201,7 +207,6 @@ namespace BahaTurret
             }
             else
             {
-
                 guidanceActive = false;
             }
         }
@@ -583,13 +588,6 @@ namespace BahaTurret
                 TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
             }
         }
-        void OnDisable()
-        {
-            if (TargetingMode == TargetingModes.AntiRad)
-            {
-                RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
-            }
-        }
 
         protected void DrawDebugLine(Vector3 start, Vector3 end)
         {
@@ -611,32 +609,16 @@ namespace BahaTurret
             }
         }
         
-        private Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
-        private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
 
-        public static bool targetingUpdated { get; set; }
-
-        protected void CheckDetonationDistance(float detonationRadius)
+        protected void CheckDetonationDistance()
         {
-            //Guard clauses
-            
+            //Guard clauses     
             if (!TargetAcquired) return;
-            if (!targetingUpdated) return;
 
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
-
-            var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
-            var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
-                                           previousMissileVelocity;
-
-            var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
-                                        0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
-            var missileTargetPosition = vessel.CoM +
-                                        (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
-                                        0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationRadius) return;
             float distance;
-            if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
+            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationRadius)
             {
                 Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
                 Detonate();

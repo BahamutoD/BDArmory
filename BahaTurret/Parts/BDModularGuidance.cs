@@ -21,8 +21,6 @@ namespace BahaTurret
 
         public Vessel LegacyTargetVessel;
 
-        private float detonationRadius;
-
         private List<Part> vesselParts = new List<Part>();
 
         #region KSP FIELDS
@@ -56,8 +54,6 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float StagesNumber = 1;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float DetonationDistance = 0;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerDamping = 5;
@@ -71,7 +67,6 @@ namespace BahaTurret
         public TransformAxisVectors UpTransformAxis { get; set; }
 
         public float Mass {
-            //get { return this.vesselParts.Sum(p => p.mass); }
             get { return (float) vessel.totalMass; }
         }
 
@@ -118,8 +113,7 @@ namespace BahaTurret
         {
             if (HasFired && !HasExploded)
             {
-               
-                CheckDetonationDistance(detonationRadius);
+                CheckDetonationDistance();
 
                 UpdateGuidance();
 
@@ -134,32 +128,6 @@ namespace BahaTurret
             }
         }
 
-        //Moving to Missilebase
-        //private void CheckDetonationDistance()
-        //{
-        //    //Guard clauses     
-        //    if (!TargetAcquired) return;
-
-        //    if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * detonationRadius) return;
-        //    if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * detonationRadius) return;
-
-        //    var effectiveTargetAcceleration = TargetVelocity - previousTargetVelocity;
-        //    var effectiveMissileAcceleration = (float)vessel.srfSpeed * vessel.srf_velocity.normalized -
-        //                                   previousMissileVelocity;
-
-        //    var futureTargetPosition = TargetPosition + (TargetVelocity * Time.fixedDeltaTime) +
-        //                                0.5f * effectiveTargetAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
-        //    var missileTargetPosition = vessel.CoM +
-        //                                (float)vessel.srfSpeed * vessel.srf_velocity.normalized * Time.fixedDeltaTime +
-        //                                0.5f * effectiveMissileAcceleration * Time.fixedDeltaTime * Time.fixedDeltaTime;
-        //    float distance;
-        //    if ((distance = Vector3.Distance(futureTargetPosition, missileTargetPosition)) <= detonationRadius)
-        //    {
-        //        Debug.Log("BDModularGuidance::CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
-        //        Detonate();
-        //    }
-        //}
-
         private void CheckNextStage()
         {
             if (ShouldExecuteNextStage())
@@ -173,7 +141,7 @@ namespace BahaTurret
         {
             if (!_missileIgnited)
             {
-                if (Time.time - TimeFired > dropTime)
+                if (TimeIndex > dropTime)
                 {
                     MissileIgnition();
                 }
@@ -289,6 +257,7 @@ namespace BahaTurret
 
         public override void OnStart(StartState state)
         {
+            base.OnStart(state);
             Events["HideUI"].active = false;
             Events["ShowUI"].active = true;
 
@@ -317,7 +286,7 @@ namespace BahaTurret
                 Events["SwitchTargetingMode"].guiActiveEditor = false;
                 Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
-                detonationRadius = DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
+               
             }
             if (string.IsNullOrEmpty(GetShortName()))
             {
@@ -446,7 +415,6 @@ namespace BahaTurret
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-                targetingUpdated = true;
             }
            
         }        
@@ -561,10 +529,10 @@ namespace BahaTurret
 
                     TargetMf = null;
 
-                    if (sqrDist < Mathf.Pow(detonationRadius * 0.5f, 2)) AutoDestruction();
+                    if (sqrDist < Mathf.Pow(DetonationRadius * 0.5f, 2)) AutoDestruction();
 
                     isTimed = true;
-                    detonationTime = Time.time - TimeFired + 1.5f;
+                    detonationTime = TimeIndex + 1.5f;
                     return;
                 }
             }
@@ -574,26 +542,26 @@ namespace BahaTurret
         {
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
+                Vector3 aamTarget = new Vector3();
                 if (_guidanceIndex == 1)
                 {
-                    TargetPosition = AAMGuidance();
+                    aamTarget = AAMGuidance();
                     CheckMiss();
                 }
                 else if (_guidanceIndex == 2)
                 {
-                    TargetPosition = AGMGuidance();
+                    aamTarget = AGMGuidance();
                 }
                 else if (_guidanceIndex == 3)
                 {
-                    TargetPosition = CruiseGuidance();
+                    aamTarget = CruiseGuidance();
                 }
-                targetingUpdated = false;
 
                 //Updating aero surfaces
-                if (Time.time - TimeFired > dropTime + 0.5f)
+                if (TimeIndex > dropTime + 0.5f)
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, GetTransform(UpTransformAxis));
-                    var targetDirection = _velocityTransform.InverseTransformPoint(TargetPosition).normalized;
+                    var targetDirection = _velocityTransform.InverseTransformPoint(aamTarget).normalized;
                     targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 
                     var localAngVel = vessel.angularVelocity;
@@ -719,6 +687,13 @@ namespace BahaTurret
             SetAntiRadTargeting();
         }
 
+        void OnDisable()
+        {
+            if (TargetingMode == TargetingModes.AntiRad)
+            {
+                RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
+            }
+        }
 
         public Vector3 StartDirection { get; set; }
 
@@ -800,15 +775,21 @@ namespace BahaTurret
         private void AutoDestruction()
         {
             foreach (var vesselPart in vesselParts)
-            { 
-                vesselPart.temperature = part.maxTemp + 100;
+            {
+                if (vesselPart != null)
+                {
+                    vesselPart.temperature = part.maxTemp + 100; 
+                }
             }
         }
 
         public override void Detonate()
         {
-            if (HasFired)
+            if (!HasExploded && HasFired)
             {
+                if (SourceVessel == null) SourceVessel = vessel;
+
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.Detonate());
                 AutoDestruction();
                 HasExploded = true;
             }

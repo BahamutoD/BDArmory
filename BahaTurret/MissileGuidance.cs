@@ -175,7 +175,13 @@ namespace BahaTurret
             timeToImpact = targetDistance / (targetVelocity - currVel).magnitude;
 
 
-	        if (targetDistance < 1000)
+	        if (targetDistance < 3000)
+	        {
+
+	            return targetPosition + (targetVelocity * timeToImpact);
+	        }
+
+	        if (targetDistance < 750)
 	        {
 	            var iterations = 0;
 	            var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
@@ -198,12 +204,9 @@ namespace BahaTurret
 	                   (Vector3) effectiveTargetAcceleration*0.5f*Mathf.Pow(timeToImpact, 2);
 
 	        }
-	        else
-	        {
-	            return targetPosition + (targetVelocity*timeToImpact);
-	        }
 
-         
+            return targetPosition;
+
         }
 
 

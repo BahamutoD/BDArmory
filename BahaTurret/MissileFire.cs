@@ -1578,33 +1578,19 @@ namespace BahaTurret
         IEnumerator MissileAwayRoutine(MissileBase ml)
         {
             missilesAway++;
-            float missileThrustTime = 100;
+            float missileThrustTime = 300;
 
             var launcher = ml as MissileLauncher;
             if (launcher != null)
             {
                 missileThrustTime = launcher.dropTime + launcher.cruiseTime + launcher.boostTime;
             }
-            else
-            {
-                //TODO BDModularGuidance: Calculate Thrust Time or new field
-            }
+
             float timeStart = Time.time;
             float timeLimit = Mathf.Max(missileThrustTime + 4, 10);
             while (ml)
             {
-                if (launcher != null)
-                {
-                    if (launcher.guidanceActive && Time.time - timeStart < timeLimit)
-                    {
-                        yield return null;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                else if (Time.time - timeStart < timeLimit)
+                if (ml.guidanceActive && Time.time - timeStart < timeLimit)
                 {
                     yield return null;
                 }
