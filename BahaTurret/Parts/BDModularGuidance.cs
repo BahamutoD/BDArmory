@@ -234,7 +234,7 @@ namespace BahaTurret
             if (ret)
             {
                 //If the next stage is greater than the number defined of stages the missile is done
-                if (_nextStage > 128*(StagesNumber + 1))
+                if (_nextStage > Math.Pow(2, 2*(StagesNumber + 1)))
                 {
                     MissileState = MissileStates.PostThrust;
                     return false;
@@ -622,7 +622,8 @@ namespace BahaTurret
         ///     And a missile is not an active vessel. I had to use a different way handle stages. And action groups works perfect!
         /// </summary>
         public void ExecuteNextStage()
-        { 
+        {
+            Debug.LogFormat("[BDArmory]: BDModularGuidance - executing next stage {0}",_nextStage);
             vessel.ActionGroups.ToggleGroup((KSPActionGroup) _nextStage);
 
             _nextStage *= 2;
