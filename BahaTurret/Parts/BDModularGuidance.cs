@@ -198,8 +198,6 @@ namespace BahaTurret
 
         private void MissileIgnition()
         {
-            this.vesselParts.Clear();
-            this.vesselParts = vessel.parts;
             EnableResourceFlow(vesselParts);
             var velocityObject = new GameObject("velObject");
             velocityObject.transform.position = vessel.transform.position;
@@ -234,7 +232,7 @@ namespace BahaTurret
             if (ret)
             {
                 //If the next stage is greater than the number defined of stages the missile is done
-                if (_nextStage > Math.Pow(2, 2*(StagesNumber + 1)))
+                if (_nextStage > Math.Pow(2, 2 * StagesNumber + 1))
                 {
                     MissileState = MissileStates.PostThrust;
                     return false;
@@ -775,12 +773,9 @@ namespace BahaTurret
 
         private void AutoDestruction()
         {
-            foreach (var vesselPart in vesselParts)
+            foreach (var vesselPart in this.vessel.Parts)
             {
-                if (vesselPart != null)
-                {
-                    vesselPart.temperature = part.maxTemp + 100; 
-                }
+                vesselPart.temperature = vesselPart.maxTemp * 2;
             }
         }
 
