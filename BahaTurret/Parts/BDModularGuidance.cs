@@ -9,7 +9,7 @@ namespace BahaTurret
 {
     public class BDModularGuidance : MissileBase
     {
-
+        
         private bool _missileIgnited;
         private int _nextStage = (int) KSPActionGroup.Custom01;
 
@@ -232,12 +232,11 @@ namespace BahaTurret
             if (ret)
             {
                 //If the next stage is greater than the number defined of stages the missile is done
-                if (_nextStage > Math.Pow(2, 2 * StagesNumber + 1))
+                if (_nextStage >= Math.Pow(2, StagesNumber + 7))
                 {
                     MissileState = MissileStates.PostThrust;
                     return false;
                 }
-
             }
             return ret;
         }
@@ -537,7 +536,7 @@ namespace BahaTurret
         }
 
         public void GuidanceSteer(FlightCtrlState s)
-        {
+        {           
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
                 Vector3 aamTarget = new Vector3();
@@ -621,15 +620,15 @@ namespace BahaTurret
         /// </summary>
         public void ExecuteNextStage()
         {
-            Debug.LogFormat("[BDArmory]: BDModularGuidance - executing next stage {0}",_nextStage);
-            vessel.ActionGroups.ToggleGroup((KSPActionGroup) _nextStage);
+            Debug.LogFormat("[BDArmory]: BDModularGuidance - executing next stage {0}", _nextStage);
+            vessel.ActionGroups.ToggleGroup((KSPActionGroup)_nextStage);
 
             _nextStage *= 2;
 
             vessel.OnFlyByWire += GuidanceSteer;
         }
 
-        
+
 
         #region KSP ACTIONS
         [KSPAction("Fire Missile")]
