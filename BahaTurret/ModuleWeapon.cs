@@ -501,6 +501,7 @@ namespace BahaTurret
             foreach (var emitter in part.FindModelComponents<KSPParticleEmitter>())
             {
                 emitter.emit = false;
+                EffectBehaviour.RemoveParticleEmitter(emitter);
             }
 
             if (roundsPerMinute >= 1500)

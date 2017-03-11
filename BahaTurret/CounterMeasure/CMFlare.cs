@@ -45,11 +45,13 @@ namespace BahaTurret
                     {
                         BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
                         gaplessEmitters.Add(gpe);
+                        EffectBehaviour.AddParticleEmitter(gpe.pEmitter);
                         gpe.emit = true;
                     }
                     else
                     {
                         pEmitters.Add(pe);
+                        EffectBehaviour.AddParticleEmitter(pe);
                         pe.emit = true;
                     }
                 }
@@ -57,11 +59,13 @@ namespace BahaTurret
 
             foreach (var emitter in gaplessEmitters)
             {
+                EffectBehaviour.AddParticleEmitter(emitter.pEmitter);
                 emitter.emit = true;
             }
 
             foreach (var emitter in pEmitters)
             {
+                EffectBehaviour.AddParticleEmitter(emitter);
                 emitter.emit = true;
             }
 
@@ -139,6 +143,7 @@ namespace BahaTurret
                         if (FlightGlobals.ActiveVessel && FlightGlobals.ActiveVessel.atmDensity <= 0)
                         {
                             pe.emit = false;
+                            EffectBehaviour.RemoveParticleEmitter(pe.pEmitter);
                         }
                     }
                     catch (NullReferenceException)
@@ -176,10 +181,12 @@ namespace BahaTurret
                 foreach (var pe in pEmitters)
                 {
                     pe.emit = false;
+                    EffectBehaviour.RemoveParticleEmitter(pe);
                 }
                 foreach (var gpe in gaplessEmitters)
                 {
                     gpe.emit = false;
+                    EffectBehaviour.RemoveParticleEmitter(gpe.pEmitter);
                 }
                 foreach (var lgt in lights)
                 {
