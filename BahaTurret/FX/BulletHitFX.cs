@@ -48,6 +48,7 @@ namespace BahaTurret
                 foreach (KSPParticleEmitter pe in pEmitters)
                 {
                     pe.emit = false;
+                    EffectBehaviour.RemoveParticleEmitter(pe);
                 }
             }
 
@@ -67,7 +68,9 @@ namespace BahaTurret
             newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;
             foreach (KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
             {
+                EffectBehaviour.AddParticleEmitter(pe);
                 pe.emit = true;
+              
                 if (pe.gameObject.name == "sparks")
                 {
                     pe.force = (4.49f*FlightGlobals.getGeeForceAtPosition(position));
