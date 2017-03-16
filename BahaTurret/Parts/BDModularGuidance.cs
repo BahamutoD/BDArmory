@@ -557,7 +557,7 @@ namespace BahaTurret
                 //Updating aero surfaces
                 if (TimeIndex > dropTime + 0.5f)
                 {
-                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, GetTransform(UpTransformAxis));
+                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vessel.transform.forward);
                     var targetDirection = _velocityTransform.InverseTransformPoint(aamTarget).normalized;
                     targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 

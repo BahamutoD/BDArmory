@@ -175,7 +175,7 @@ namespace BahaTurret
             timeToImpact = targetDistance / (targetVelocity - currVel).magnitude;
 
 
-	        if (targetDistance < 3000)
+	        if (targetDistance < 2000)
 	        {
 
 	            return targetPosition + (targetVelocity * timeToImpact);

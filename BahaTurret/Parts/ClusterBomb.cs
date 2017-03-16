@@ -71,7 +71,7 @@ namespace BahaTurret
 
         public override void OnFixedUpdate()
         {
-            if (missileLauncher != null && missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
+            if (missileLauncher != null && missileLauncher.HasFired && missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
             {
                 DeploySubmunitions();
             }
