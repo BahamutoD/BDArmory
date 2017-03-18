@@ -175,13 +175,13 @@ namespace BahaTurret
             timeToImpact = targetDistance / (targetVelocity - currVel).magnitude;
 
 
-	        if (targetDistance < 2000)
+	        if (targetDistance < 1500)
 	        {
 
 	            return targetPosition + (targetVelocity * timeToImpact);
 	        }
 
-	        if (targetDistance < 750)
+	        if (targetDistance < 500)
 	        {
 	            var iterations = 0;
 	            var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
@@ -224,7 +224,7 @@ namespace BahaTurret
 		    Vector3 simMissileVel = 500 * (targetPosition - missile.transform.position).normalized;
 
             var launcher = missile as MissileLauncher;
-		    float optSpeed = 500; //TODO: Add parameter
+		    float optSpeed = 400; //TODO: Add parameter
 		    if (launcher != null)
 		    {
 		        optSpeed = launcher.optimumAirspeed;
@@ -248,7 +248,7 @@ namespace BahaTurret
 			float leadTime = 0;
 			float targetDistance = Vector3.Distance(targetPosition, missile.transform.position);
 
-            float optSpeed = 500; //TODO: Add parameter
+            float optSpeed = 400; //TODO: Add parameter
             var launcher = missile as MissileLauncher;
             if (launcher != null)
             {

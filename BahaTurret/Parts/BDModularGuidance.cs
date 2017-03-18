@@ -208,6 +208,8 @@ namespace BahaTurret
 
             ExecuteNextStage();
 
+            MissileState = MissileStates.Cruise;
+
             _missileIgnited = true;
             RadarWarningReceiver.WarnMissileLaunch(MissileReferenceTransform.position, GetForwardTransform());
         }
@@ -283,7 +285,8 @@ namespace BahaTurret
                 Events["SwitchTargetingMode"].guiActiveEditor = false;
                 Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
-               
+                DisablingExplosives();
+
             }
             if (string.IsNullOrEmpty(GetShortName()))
             {
@@ -303,12 +306,24 @@ namespace BahaTurret
                       
             this.activeRadarRange = ActiveRadarRange;
 
+           
+
 
             //TODO: BDModularGuidance should be configurable?
             lockedSensorFOV = 5;
             maxStaticLaunchRange = ActiveRadarRange*1.25f;
             minStaticLaunchRange = 500;
             radarLOAL = true;
+        }
+
+        private void DisablingExplosives()
+        {
+            vessel.FindPartModulesImplementing<BDExplosivePart>().Where( exp => exp != null && exp ).Select(exp => exp.Armed = false);
+        }
+
+        private void ArmingExplosive()
+        {
+            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = true);
         }
 
         private void UpdateTargetingMode(TargetingModes newTargetingMode)
@@ -431,7 +446,7 @@ namespace BahaTurret
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
-                    Debug.Log("BDModularGuidance:AAMGuidance not tracking");
+                    Debug.LogFormat("[BDArmory]: Missile with Name={0} has exceeded the max off boresight, checking missed target ");
                     aamTarget = TargetPosition;
                 }
                 DrawDebugLine(vessel.CoM, aamTarget);
@@ -508,6 +523,7 @@ namespace BahaTurret
 
         private void CheckMiss()
         {
+            if (!TargetAcquired) return;
           
             double sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude;
             if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
@@ -544,6 +560,7 @@ namespace BahaTurret
                 {
                     aamTarget = AAMGuidance();
                     CheckMiss();
+
                 }
                 else if (_guidanceIndex == 2)
                 {
@@ -674,6 +691,7 @@ namespace BahaTurret
                 MissileState = MissileStates.Drop;
                 Misc.RefreshAssociatedWindows(part);
 
+                ArmingExplosive();
                 HasFired = true;
             }
         }

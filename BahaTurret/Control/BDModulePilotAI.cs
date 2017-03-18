@@ -1760,13 +1760,7 @@ namespace BahaTurret
 				}
 
 				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
-			    var launcher = missile as MissileLauncher;
-			    float maxOffBoresight = 45;
-                if (launcher != null)
-			    {
-			         maxOffBoresight = launcher.maxOffBoresight;
-			    }
-               
+
 				//if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
 
 				float fTime = 2f;
@@ -1774,7 +1768,7 @@ namespace BahaTurret
 				Vector3 myFuturePos = vesselTransform.position + (vessel.srf_velocity * fTime);
 				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
 
-               if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < maxOffBoresight * boresightFactor)
+               if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < missile.maxOffBoresight * boresightFactor)
                {
                         launchAuthorized = true;
                }
@@ -2096,7 +2090,7 @@ namespace BahaTurret
 			{
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					GUI.Label(new Rect(200, Screen.height - 200, 400, 400), debugString);	
+					GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.vessel.name+":"+ debugString);	
 				}
 
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
