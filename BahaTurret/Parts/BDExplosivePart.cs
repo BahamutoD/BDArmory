@@ -23,6 +23,8 @@ namespace BahaTurret
 		{
 			Detonate ();
 		}
+
+	    public bool Armed { get; set; } = true;
 	
         private double previousMass = -1;
 		/*
@@ -75,7 +77,7 @@ namespace BahaTurret
 		
 		public void Detonate()
 		{
-			if(!hasDetonated)
+			if(!hasDetonated && Armed && this.part.vessel.speed > 10)
 			{
 				hasDetonated = true;
 				if(part!=null) part.temperature = part.maxTemp + 100;
