@@ -3124,7 +3124,8 @@ namespace BahaTurret
                         if (ml.GuidanceMode == MissileBase.GuidanceModes.AGM
                            || ml.GuidanceMode == MissileBase.GuidanceModes.BeamRiding
                            || ml.GuidanceMode == MissileBase.GuidanceModes.STS
-                           || ml.GuidanceMode == MissileBase.GuidanceModes.Cruise)
+                           || ml.GuidanceMode == MissileBase.GuidanceModes.Cruise
+                           || ml.GuidanceMode == MissileBase.GuidanceModes.AGMBallistic)
                         {
                             if (!BDArmorySettings.ALLOW_LEGACY_TARGETING && ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
                             {
