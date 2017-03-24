@@ -160,54 +160,41 @@ namespace BahaTurret
 	        Vector3 previousMissileVelocity, out float timeToImpact)
 	    {
 	        var targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
-            var effectiveTargetAcceleration = targetAcceleration;
 	        var effectiveMissileAcceleration = missileVessel.acceleration;
 
 	        if (previousTargetVelocity != Vector3.zero && previousMissileVelocity != Vector3.zero)
 	        {
-	            effectiveTargetAcceleration = targetVelocity - previousTargetVelocity;
-	            effectiveMissileAcceleration = (float) missileVessel.srfSpeed*missileVessel.srf_velocity.normalized -
-	                                           previousMissileVelocity;
-	        }
+                effectiveMissileAcceleration = missileVessel.srf_velocity - previousMissileVelocity;
+            }
 
-            Vector3 currVel = ((float)missileVessel.srfSpeed * missileVessel.srf_velocity.normalized);
+	        var iterations = 0;
+	      
 
-            timeToImpact = targetDistance / (targetVelocity - currVel).magnitude;
+	        var missileFinalPosition = missileVessel.CoM;
+	        var finalMissileVelocity = missileVessel.srf_velocity;
 
-
-	        if (targetDistance < 1500)
+            while (Vector3.Distance(missileFinalPosition, missileVessel.CoM) < targetDistance && iterations * Time.fixedDeltaTime < 30)
 	        {
-
-	            return targetPosition + (targetVelocity * timeToImpact);
+	            missileFinalPosition += finalMissileVelocity * Time.fixedDeltaTime;
+	            iterations++;
+                finalMissileVelocity += effectiveMissileAcceleration;
 	        }
 
-	        if (targetDistance < 500)
-	        {
-	            var iterations = 0;
-	            var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
-	            var relativeVelocity = (float) missileVessel.srfSpeed*missileVessel.srf_velocity.normalized -
-	                                   targetVelocity;
-	            var missileFinalPosition = missileVessel.CoM;
+            Debug.Log("[BDArmory] Modular Missile AAM Iterations = " + iterations);
+            timeToImpact = iterations * Time.fixedDeltaTime;
 
-	            while (Vector3.Distance(missileFinalPosition, missileVessel.CoM) < targetDistance && iterations < 500)
-	            {
-	                missileFinalPosition += relativeVelocity*Time.fixedDeltaTime +
-	                                        0.5f*relativeAcceleration*Time.fixedDeltaTime*Time.fixedDeltaTime;
-	                iterations++;
-	            }
+	        var leadtime = Mathf.Clamp(timeToImpact, 0, 8);
 
-	            if (iterations < 500)
-	            {
-	                timeToImpact = iterations*Time.fixedDeltaTime;
-	            }
-	            return targetPosition + (targetVelocity*timeToImpact) +
-	                   (Vector3) effectiveTargetAcceleration*0.5f*Mathf.Pow(timeToImpact, 2);
 
-	        }
-
-            return targetPosition;
-
-        }
+            if (timeToImpact < 1)
+            {
+                return targetPosition + (targetVelocity * leadtime) +
+                      targetAcceleration * 0.5f * Mathf.Pow(leadtime, 2);
+            }
+           
+	         return targetPosition + (targetVelocity * leadtime);
+	     	        
+	    }
 
 
 	    public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
