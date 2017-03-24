@@ -466,7 +466,7 @@ namespace BahaTurret
                 if (TargetAcquired)
                 {
                     //lose lock if seeker reaches gimbal limit
-                    float targetViewAngle = Vector3.Angle(GetForwardTransform(), TargetPosition - vessel.CoM);
+                    float targetViewAngle = Vector3.Angle(vessel.transform.forward, TargetPosition - vessel.CoM);
 
                     if (targetViewAngle > maxOffBoresight)
                     {
@@ -521,11 +521,11 @@ namespace BahaTurret
             return cruiseTarget;
         }
 
-        private void CheckMiss()
+        private void CheckMiss(Vector3 targetPosition)
         {
             if (!TargetAcquired) return;
           
-            double sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude;
+            double sqrDist = ((targetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude;
             if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
             {
                 checkMiss = true;
@@ -534,7 +534,7 @@ namespace BahaTurret
             //kill guidance if missileBase has missed
             if (!HasMissed && checkMiss)
             {
-                if (Vector3.Dot(TargetPosition - vessel.CoM, GetForwardTransform()) < 0 )
+                if (Vector3.Angle(targetPosition - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
                     Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
                     HasMissed = true;
@@ -559,7 +559,7 @@ namespace BahaTurret
                 if (_guidanceIndex == 1)
                 {
                     newTargetPosition = AAMGuidance();
-                    CheckMiss();
+                    CheckMiss(newTargetPosition);
 
                 }
                 else if (_guidanceIndex == 2)
