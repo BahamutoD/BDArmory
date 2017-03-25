@@ -134,70 +134,98 @@ namespace BahaTurret
             leadTime = (float) (1/((targetVelocity - currVel).magnitude/targetDistance));
             timeToImpact = leadTime;
             leadTime = Mathf.Clamp(leadTime, 0f, 8f);
-            Vector3 mTargetPosition = targetPosition + (targetVelocity*leadTime);
-
-            if (targetDistance < 1600)
-            {
-                //mTargetPosition += (Vector3)targetAcceleration * 0.03f * Mathf.Pow(leadTime,2);
-            }
-
-
-            if (targetDistance > 500)
-            {
-                Vector3 upDirection = -FlightGlobals.getGeeForceAtPosition(targetPosition).normalized;
-                float targetAltitude = FlightGlobals.getAltitudeAtPos(targetPosition);
-                targetPosition += Mathf.Clamp((float) (targetAltitude - missileVessel.altitude)/6, -20, 1500)*
-                                  upDirection;
-            }
-
-            Vector3 finalTarget = mTargetPosition;
-
-            return finalTarget;
+ 
+            return targetPosition + (targetVelocity * leadTime);
         }
 
-	    public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity,
-	        Vector3 previousTargetVelocity, Vector3 targetAcceleration, Vessel missileVessel,
-	        Vector3 previousMissileVelocity, out float timeToImpact)
-	    {
-	        var targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
-	        var effectiveMissileAcceleration = missileVessel.acceleration;
+        public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity,
+            Vector3 previousTargetVelocity, Vector3 targetAcceleration, Vessel missileVessel,
+            Vector3 previousMissileVelocity, out float timeToImpact)
+        {
 
-	        if (previousTargetVelocity != Vector3.zero && previousMissileVelocity != Vector3.zero)
-	        {
-                effectiveMissileAcceleration = missileVessel.srf_velocity - previousMissileVelocity;
-            }
-
-	        var iterations = 0;
-	      
-
-	        var missileFinalPosition = missileVessel.CoM;
-	        var finalMissileVelocity = missileVessel.srf_velocity;
-
-            while (Vector3.Distance(missileFinalPosition, missileVessel.CoM) < targetDistance && iterations * Time.fixedDeltaTime < 30)
-	        {
-	            missileFinalPosition += finalMissileVelocity * Time.fixedDeltaTime;
-	            iterations++;
-                finalMissileVelocity += effectiveMissileAcceleration;
-	        }
-
-            Debug.Log("[BDArmory] Modular Missile AAM Iterations = " + iterations);
-            timeToImpact = iterations * Time.fixedDeltaTime;
-
-	        var leadtime = Mathf.Clamp(timeToImpact, 0, 8);
-
-
-            if (timeToImpact < 1)
+            var targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
+            var effectiveTargetAcceleration = targetAcceleration;
+            var effectiveMissileAcceleration = missileVessel.acceleration;
+            float leadTime = 0;
+            if (previousTargetVelocity != Vector3.zero && previousMissileVelocity != Vector3.zero)
             {
-                return targetPosition + (targetVelocity * leadtime) +
-                      targetAcceleration * 0.5f * Mathf.Pow(leadtime, 2);
+                effectiveTargetAcceleration = targetVelocity - previousTargetVelocity;
+                effectiveMissileAcceleration = (float) missileVessel.srfSpeed * missileVessel.srf_velocity.normalized -
+                                               previousMissileVelocity;
             }
-           
-	         return targetPosition + (targetVelocity * leadtime);
-	     	        
-	    }
 
+            //Basic lead time calculation
+            Vector3 currVel = ((float) missileVessel.srfSpeed * missileVessel.srf_velocity.normalized);
+            timeToImpact = (float)(1 / ((targetVelocity - currVel).magnitude / targetDistance));
+            leadTime = Mathf.Clamp(timeToImpact, 0f, 8f);
 
-	    public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
+            if (timeToImpact < 2)
+            {
+                float accuTimeToImpact = 0;
+                if (CalculateAccurateTimeToImpact(targetDistance, targetVelocity, missileVessel,
+                    effectiveMissileAcceleration, effectiveTargetAcceleration, out accuTimeToImpact))
+                {
+                    timeToImpact = accuTimeToImpact;
+                    return targetPosition + (targetVelocity * accuTimeToImpact) +
+                           effectiveTargetAcceleration * 0.5f * Mathf.Pow(accuTimeToImpact, 2);
+                }
+              
+                return targetPosition + (targetVelocity * leadTime);
+                
+            }
+            if (timeToImpact < 20)
+            {
+                return targetPosition + (targetVelocity * leadTime);
+            }
+
+            return targetPosition;         
+        }
+
+        /// <summary>
+        /// Calculate a very accurate time to impact, use the out timeToimpact property if the method returned true
+        /// </summary>
+        /// <param name="targetVelocity"></param>
+        /// <param name="missileVessel"></param>
+        /// <param name="effectiveMissileAcceleration"></param>
+        /// <param name="effectiveTargetAcceleration"></param>
+        /// <param name="targetDistance"></param>
+        /// <param name="timeToImpact"></param>
+        /// <returns> true if it was possible to reach the target, false otherwise</returns>
+        private static bool CalculateAccurateTimeToImpact(float targetDistance, Vector3 targetVelocity, Vessel missileVessel,
+            Vector3d effectiveMissileAcceleration, Vector3 effectiveTargetAcceleration, out float timeToImpact)
+        {
+            var iterations = 0;
+            var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
+            var relativeVelocity = (float) missileVessel.srfSpeed * missileVessel.srf_velocity.normalized -
+                                   targetVelocity;
+            var missileFinalPosition = missileVessel.CoM;
+            var previousDistance = 0f;
+            float currentDistance;
+            do
+            {
+
+                missileFinalPosition += relativeVelocity * Time.fixedDeltaTime;
+                relativeVelocity += relativeAcceleration;
+                currentDistance = Vector3.Distance(missileFinalPosition, missileVessel.CoM);
+
+                if (currentDistance <= previousDistance)
+                {
+                    Debug.Log("[BDArmory]: Accurate time to impact failed");
+
+                    timeToImpact = 0;
+                    return false;
+                }
+
+                previousDistance = currentDistance;
+                iterations++;
+
+            } while (currentDistance < targetDistance);
+
+            timeToImpact = Time.fixedDeltaTime * iterations;
+            return true;
+        }
+
+        public static Vector3 GetAirToAirFireSolution(MissileBase missile, Vessel targetVessel)
 		{
 			if(!targetVessel)
 			{

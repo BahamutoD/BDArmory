@@ -3497,7 +3497,7 @@ namespace BahaTurret
             float distance = Vector3.Distance(transform.position + vessel.srf_velocity,
                 target.position + target.velocity); //take velocity into account (test)
 
-            Debug.Log("[BDArmory]: " + vessel.vesselName + " SmartPickWeapon: dist=" + distance + ", turretRange=" + turretRange + ", targetMissile=" + target.isMissile);
+            //Debug.Log("[BDArmory]: " + vessel.vesselName + " SmartPickWeapon: dist=" + distance + ", turretRange=" + turretRange + ", targetMissile=" + target.isMissile);
 
             if (distance < turretRange || (target.isMissile && distance < turretRange * 1.5f))
             {

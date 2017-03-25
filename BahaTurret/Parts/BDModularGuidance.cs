@@ -523,32 +523,23 @@ namespace BahaTurret
 
         private void CheckMiss(Vector3 targetPosition)
         {
-            if (!TargetAcquired) return;
-          
-            double sqrDist = ((targetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude;
-            if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
-            {
-                checkMiss = true;
-            }
+            if (HasMissed) return;
+            // if I'm to close to my vessel avoid explosion
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            // if I'm getting closer to  my target avoid explosion
+            if (Vector3.Distance(vessel.CoM, targetPosition) > 
+                Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
 
-            //kill guidance if missileBase has missed
-            if (!HasMissed && checkMiss)
-            {
-                if (Vector3.Angle(targetPosition - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
-                {
-                    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-                    HasMissed = true;
-                    guidanceActive = false;
+            if (MissileState != MissileStates.PostThrust) return;
+            if (Vector3.Dot(targetPosition - vessel.CoM, vessel.transform.forward) > 0) return;
 
-                    TargetMf = null;
 
-                    if (sqrDist < Mathf.Pow(DetonationRadius * 0.5f, 2)) AutoDestruction();
-
-                    isTimed = true;
-                    detonationTime = TimeIndex + 1.5f;
-                    return;
-                }
-            }
+            Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+            HasMissed = true;
+            guidanceActive = false;
+            TargetMf = null;
+            isTimed = true;
+            detonationTime = TimeIndex + 1.5f;
         }
 
         public void GuidanceSteer(FlightCtrlState s)
