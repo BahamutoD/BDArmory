@@ -268,7 +268,7 @@ namespace BahaTurret
                     Part hitPart = null; //determine when bullet collides with a target
                     try
                     {
-                        hitPart = Part.FromGO(hit.rigidbody.gameObject);
+                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
                     }
                     catch (NullReferenceException)
                     {

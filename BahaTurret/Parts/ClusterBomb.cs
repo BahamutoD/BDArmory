@@ -201,7 +201,7 @@ namespace BahaTurret
                     Part hitPart = null;
                     try
                     {
-                        hitPart = Part.FromGO(hit.rigidbody.gameObject);
+                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
                     }
                     catch (NullReferenceException)
                     {
