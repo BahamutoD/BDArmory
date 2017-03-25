@@ -400,7 +400,7 @@ namespace BahaTurret
                         }
                     }
                     else if ((!weaponManager ||
-                              (weaponManager.selectedWeaponString != GetShortName() && !weaponManager.guardMode)))
+                              (weaponManager.selectedWeaponString == GetShortName() && !weaponManager.guardMode)))
                     {
                         if (BDInputUtils.GetKeyDown(BDInputSettingsFields.WEAP_FIRE_KEY) &&
                             (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING))
