@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="Armor\ArmorPenetration.cs" />
     <Compile Include="Armor\BDArmor.cs" />
+    <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\CFEnable.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
