@@ -3124,7 +3124,8 @@ namespace BahaTurret
                         if (ml.GuidanceMode == MissileBase.GuidanceModes.AGM
                            || ml.GuidanceMode == MissileBase.GuidanceModes.BeamRiding
                            || ml.GuidanceMode == MissileBase.GuidanceModes.STS
-                           || ml.GuidanceMode == MissileBase.GuidanceModes.Cruise)
+                           || ml.GuidanceMode == MissileBase.GuidanceModes.Cruise
+                           || ml.GuidanceMode == MissileBase.GuidanceModes.AGMBallistic)
                         {
                             if (!BDArmorySettings.ALLOW_LEGACY_TARGETING && ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
                             {
@@ -3496,7 +3497,7 @@ namespace BahaTurret
             float distance = Vector3.Distance(transform.position + vessel.srf_velocity,
                 target.position + target.velocity); //take velocity into account (test)
 
-            Debug.Log("[BDArmory]: " + vessel.vesselName + " SmartPickWeapon: dist=" + distance + ", turretRange=" + turretRange + ", targetMissile=" + target.isMissile);
+            //Debug.Log("[BDArmory]: " + vessel.vesselName + " SmartPickWeapon: dist=" + distance + ", turretRange=" + turretRange + ", targetMissile=" + target.isMissile);
 
             if (distance < turretRange || (target.isMissile && distance < turretRange * 1.5f))
             {

@@ -80,7 +80,6 @@ namespace BahaTurret
 
         //settings gui
         public bool settingsGuiEnabled = false;
-        public string physicsRangeGui;
         public string fireKeyGui;
 
         //editor alignment
@@ -306,6 +305,8 @@ namespace BahaTurret
             WindowRectGps = new Rect(0, 0, WindowRectToolbar.width - 10, 0);
             SetupSettingsSize();
             BDAWindowSettingsField.Load();
+            CheckIfWindowsSettingsAreWithinScreen();
+
             WindowRectGps.width = WindowRectToolbar.width - 10;
 
             //settings
@@ -376,16 +377,13 @@ namespace BahaTurret
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                ApplyPhysRange();
                 SaveVolumeSettings();
 
                 GameEvents.onHideUI.Add(HideGameUI);
                 GameEvents.onShowUI.Add(ShowGameUI);
                 GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
                 GameEvents.OnGameSettingsApplied.Add(SaveVolumeSettings);
-                GameEvents.onVesselCreate.Add(ApplyNewVesselRanges);
-
-
+               
                 /*
                 foreach(var cam in FlightCamera.fetch.cameras)
                 {
@@ -398,6 +396,27 @@ namespace BahaTurret
 
             if (BulletInfo.bullets == null)
                 BulletInfo.Load();
+        }
+
+        private void CheckIfWindowsSettingsAreWithinScreen()
+        {
+            if (BDArmorySettings.WindowRectToolbar.x > Screen.width - toolWindowWidth - 40 ||
+                BDArmorySettings.WindowRectToolbar.y > Screen.height - toolWindowHeight )
+            {
+                WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
+            }
+
+            if (BDArmorySettings.WindowRectSettings.x > Screen.width - 420 - 40 ||
+               BDArmorySettings.WindowRectSettings.y > Screen.height - 480)
+            {
+                WindowRectSettings = new Rect(settingsLeft, settingsTop, 420, 480);
+            }
+
+            if (BDArmorySettings.WindowRectRwr.x > Screen.width - 276 - 40 ||
+                BDArmorySettings.WindowRectRwr.y > Screen.height - 296)
+            {
+                WindowRectRwr = new Rect(40, Screen.height - 296, 276, 296);
+            }
         }
 
         void Update()
@@ -467,7 +486,6 @@ namespace BahaTurret
             settingsGuiEnabled = !settingsGuiEnabled;
             if (settingsGuiEnabled)
             {
-                physicsRangeGui = PHYSICS_RANGE.ToString();
                 LoadConfig();
             }
             else
@@ -1382,21 +1400,7 @@ namespace BahaTurret
             BDARMORY_WEAPONS_VOLUME = weaponVol;
             line++;
             line++;
-
-            physicsRangeGui = GUI.TextField(SRightRect(line), physicsRangeGui);
-            GUI.Label(SLeftRect(line), "Physics Load Distance", leftLabel);
-            line++;
-            GUI.Label(SLeftRect(line), "Warning: Risky if set high", centerLabel);
-            if (GUI.Button(SRightRect(line), "Apply Phys Distance"))
-            {
-                float physRangeSetting = Single.Parse(physicsRangeGui);
-                PHYSICS_RANGE = (physRangeSetting >= 2500 ? Mathf.Clamp(physRangeSetting, 2500, 100000) : 0);
-                physicsRangeGui = PHYSICS_RANGE.ToString();
-                ApplyPhysRange();
-            }
-            line++;
-            line++;
-
+ 
             //competition mode
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -1560,92 +1564,6 @@ namespace BahaTurret
         }
 
         #endregion
-
-        public void ApplyPhysRange()
-        {
-            if (PHYSICS_RANGE <= 2500) PHYSICS_RANGE = 0;
-            if (!HighLogic.LoadedSceneIsFlight) return;
-
-            try
-            {
-                Debug.Log("[BDArmory]:Applying Physics Distance:"+ PHYSICS_RANGE.ToString());
-
-                if (PHYSICS_RANGE > 0)
-                {
-                    float pack = PHYSICS_RANGE;
-                    float unload = PHYSICS_RANGE * 0.9f;
-                    float load = unload * 0.9f;
-                    float unpack = load * 0.9f;
-
-                    VesselRanges defaultRanges = PhysicsGlobals.Instance.VesselRangesDefault;
-                    VesselRanges.Situation combatSituation = new VesselRanges.Situation(load, unload, pack, unpack);
-
-                    VesselRanges.Situation combatFlyingSituation = ClampedSituation(combatSituation, defaultRanges.flying);
-                    VesselRanges.Situation combatLandedSituation = ClampedSituationLanded(combatSituation, defaultRanges.landed);
-                    VesselRanges.Situation combatSplashedSituation = ClampedSituation(combatSituation, defaultRanges.splashed);
-                    VesselRanges.Situation combatOrbitSituation = ClampedSituation(combatSituation, defaultRanges.orbit);
-                    VesselRanges.Situation combatSubOrbitSituation = ClampedSituation(combatSituation, defaultRanges.subOrbital);
-                    VesselRanges.Situation combatPrelaunchSituation = ClampedSituation(combatSituation, defaultRanges.prelaunch);
-
-                    combatVesselRanges.flying = combatFlyingSituation;
-                    combatVesselRanges.landed = combatLandedSituation;
-                    combatVesselRanges.splashed = combatSplashedSituation;
-                    combatVesselRanges.orbit = combatOrbitSituation;
-                    combatVesselRanges.subOrbital = combatSubOrbitSituation;
-                    combatVesselRanges.prelaunch = combatPrelaunchSituation;
-
-                    foreach (Vessel v in FlightGlobals.Vessels)
-                    {
-                        v.vesselRanges = new VesselRanges(combatVesselRanges);
-                    }
-
-                    FloatingOrigin.fetch.threshold = Mathf.Pow(PHYSICS_RANGE + 3500, 2);
-                }
-                else
-                {
-                    foreach (Vessel v in FlightGlobals.Vessels)
-                    {
-                        v.vesselRanges = PhysicsGlobals.Instance.VesselRangesDefault;
-                    }
-
-                    FloatingOrigin.fetch.threshold = Mathf.Pow(6000, 2);
-                }
-
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[BDArmory]:Failed to Load Physics Distance -"+e.ToString());
-            }
-                       
-        }
-
-        private VesselRanges.Situation ClampedSituation(VesselRanges.Situation input, VesselRanges.Situation minSituation)
-        {
-            float load = Mathf.Clamp(input.load, minSituation.load, 81000);
-            float unload = Mathf.Clamp(input.unload, minSituation.unload, 90000);
-            float pack = Mathf.Clamp(input.pack, minSituation.pack, 100000);
-            float unpack = Mathf.Clamp(input.unpack, minSituation.unpack, 72900);
-
-            VesselRanges.Situation output = new VesselRanges.Situation(load, unload, pack, unpack);
-            return output;
-        }
-
-        private VesselRanges.Situation ClampedSituationLanded(VesselRanges.Situation input, VesselRanges.Situation minSituation)
-        {
-            float maxLanded = 11000;
-            float load = Mathf.Clamp(input.load, minSituation.load, maxLanded*.9f*.9f);
-            float unload = Mathf.Clamp(input.unload, minSituation.unload, maxLanded*.9f);
-            float pack = Mathf.Clamp(input.pack, minSituation.pack, maxLanded);
-            float unpack = Mathf.Clamp(input.unpack, minSituation.unpack, maxLanded*.9f*.9f*.9f);
-
-            VesselRanges.Situation output = new VesselRanges.Situation(load, unload, pack, unpack);
-            return output;
-        }
-
-        public void ApplyNewVesselRanges(Vessel v)
-        {
-            v.vesselRanges = new VesselRanges(combatVesselRanges);
-        }
 
         void HideGameUI()
         {

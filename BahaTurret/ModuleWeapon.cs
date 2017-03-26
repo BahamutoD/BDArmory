@@ -1625,7 +1625,7 @@ namespace BahaTurret
                             Vessel hitVessel = null;
                             try
                             {
-                                hitVessel = Part.FromGO(hit.rigidbody.gameObject).vessel;
+                                hitVessel = hit.collider.gameObject.GetComponentInParent<Part>().vessel;
                             }
                             catch (NullReferenceException)
                             {

@@ -95,10 +95,10 @@ namespace BahaTurret
                     GuidanceMode = GuidanceModes.Cruise;
                     GuidanceLabel = "Cruise";
                     break;
-                //case 4: 
-                //    GuidanceMode = GuidanceModes.AGMBallistic;
-                //    GuidanceLabel = "Ballistic";
-                //    break;
+                case 4:
+                    GuidanceMode = GuidanceModes.AGMBallistic;
+                    GuidanceLabel = "Ballistic";
+                    break;
             }
 
             if (Fields["CruiseAltitude"] != null)
@@ -311,7 +311,7 @@ namespace BahaTurret
 
             //TODO: BDModularGuidance should be configurable?
             lockedSensorFOV = 5;
-            maxStaticLaunchRange = ActiveRadarRange*1.25f;
+            maxStaticLaunchRange = Math.Max(maxStaticLaunchRange,ActiveRadarRange*1.25f);
             minStaticLaunchRange = 500;
             radarLOAL = true;
         }
@@ -466,7 +466,7 @@ namespace BahaTurret
                 if (TargetAcquired)
                 {
                     //lose lock if seeker reaches gimbal limit
-                    float targetViewAngle = Vector3.Angle(GetForwardTransform(), TargetPosition - vessel.CoM);
+                    float targetViewAngle = Vector3.Angle(vessel.transform.forward, TargetPosition - vessel.CoM);
 
                     if (targetViewAngle > maxOffBoresight)
                     {
@@ -521,61 +521,56 @@ namespace BahaTurret
             return cruiseTarget;
         }
 
-        private void CheckMiss()
+        private void CheckMiss(Vector3 targetPosition)
         {
-            if (!TargetAcquired) return;
-          
-            double sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude;
-            if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
-            {
-                checkMiss = true;
-            }
+            if (HasMissed) return;
+            // if I'm to close to my vessel avoid explosion
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            // if I'm getting closer to  my target avoid explosion
+            if (Vector3.Distance(vessel.CoM, targetPosition) > 
+                Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
 
-            //kill guidance if missileBase has missed
-            if (!HasMissed && checkMiss)
-            {
-                if (Vector3.Dot(TargetPosition - vessel.CoM, GetForwardTransform()) < 0 )
-                {
-                    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-                    HasMissed = true;
-                    guidanceActive = false;
+            if (MissileState != MissileStates.PostThrust) return;
+            if (Vector3.Dot(targetPosition - vessel.CoM, vessel.transform.forward) > 0) return;
 
-                    TargetMf = null;
 
-                    if (sqrDist < Mathf.Pow(DetonationRadius * 0.5f, 2)) AutoDestruction();
-
-                    isTimed = true;
-                    detonationTime = TimeIndex + 1.5f;
-                    return;
-                }
-            }
+            Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+            HasMissed = true;
+            guidanceActive = false;
+            TargetMf = null;
+            isTimed = true;
+            detonationTime = TimeIndex + 1.5f;
         }
 
         public void GuidanceSteer(FlightCtrlState s)
         {           
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
-                Vector3 aamTarget = new Vector3();
+                Vector3 newTargetPosition = new Vector3();
                 if (_guidanceIndex == 1)
                 {
-                    aamTarget = AAMGuidance();
-                    CheckMiss();
+                    newTargetPosition = AAMGuidance();
+                    CheckMiss(newTargetPosition);
 
                 }
                 else if (_guidanceIndex == 2)
                 {
-                    aamTarget = AGMGuidance();
+                    newTargetPosition = AGMGuidance();
                 }
                 else if (_guidanceIndex == 3)
                 {
-                    aamTarget = CruiseGuidance();
+                    newTargetPosition = CruiseGuidance();
+                }
+                else if (_guidanceIndex == 4)
+                {
+                    newTargetPosition = BallisticGuidance();
                 }
 
                 //Updating aero surfaces
                 if (TimeIndex > dropTime + 0.5f)
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vessel.transform.forward);
-                    var targetDirection = _velocityTransform.InverseTransformPoint(aamTarget).normalized;
+                    var targetDirection = _velocityTransform.InverseTransformPoint(newTargetPosition).normalized;
                     targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 
                     var localAngVel = vessel.angularVelocity;
@@ -589,6 +584,20 @@ namespace BahaTurret
                 s.mainThrottle = 1;
             }
            
+        }
+
+        private Vector3 BallisticGuidance()
+        {
+            Vector3 agmTarget;
+            bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
+            if (!validSolution || Vector3.Angle(TargetPosition - this.vessel.CoM, agmTarget - this.vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
+            {
+                Vector3 dToTarget = TargetPosition - this.vessel.CoM;
+                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(this.vessel.transform.position))) * dToTarget;
+                agmTarget = this.vessel.CoM + direction;
+            }
+
+            return agmTarget;
         }
 
         private void UpdateMenus(bool visible)
@@ -717,7 +726,7 @@ namespace BahaTurret
         public void SwitchGuidanceMode()
         {
             _guidanceIndex++;
-            if (_guidanceIndex > 3)
+            if (_guidanceIndex > 4)
             {
                 _guidanceIndex = 1;
             }

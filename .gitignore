@@ -79,3 +79,10 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+/.vs
+/.vs
+/.vs/slnx.sqlite
+/.vs/ProjectSettings.json
+/.vs/BDArmory_JRODRIGV/v15/Browse.VC.db
+/.vs/BDArmory_JRODRIGV/v15
+/.vs/slnx.sqlite

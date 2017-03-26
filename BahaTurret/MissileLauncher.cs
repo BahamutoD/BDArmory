@@ -588,7 +588,6 @@ namespace BahaTurret
 				part.Unpack();
 				vessel.situation = Vessel.Situations.FLYING;
 				part.rb.isKinematic = false;
-				BDArmorySettings.Instance.ApplyNewVesselRanges(vessel);
 				part.bodyLiftMultiplier = 0;
 				part.dragModel = Part.DragModel.NONE;
 
