@@ -305,6 +305,8 @@ namespace BahaTurret
             WindowRectGps = new Rect(0, 0, WindowRectToolbar.width - 10, 0);
             SetupSettingsSize();
             BDAWindowSettingsField.Load();
+            CheckIfWindowsSettingsAreWithinScreen();
+
             WindowRectGps.width = WindowRectToolbar.width - 10;
 
             //settings
@@ -394,6 +396,27 @@ namespace BahaTurret
 
             if (BulletInfo.bullets == null)
                 BulletInfo.Load();
+        }
+
+        private void CheckIfWindowsSettingsAreWithinScreen()
+        {
+            if (BDArmorySettings.WindowRectToolbar.x > Screen.width - toolWindowWidth - 40 ||
+                BDArmorySettings.WindowRectToolbar.y > Screen.height - toolWindowHeight )
+            {
+                WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
+            }
+
+            if (BDArmorySettings.WindowRectSettings.x > Screen.width - 420 - 40 ||
+               BDArmorySettings.WindowRectSettings.y > Screen.height - 480)
+            {
+                WindowRectSettings = new Rect(settingsLeft, settingsTop, 420, 480);
+            }
+
+            if (BDArmorySettings.WindowRectRwr.x > Screen.width - 276 - 40 ||
+                BDArmorySettings.WindowRectRwr.y > Screen.height - 296)
+            {
+                WindowRectRwr = new Rect(40, Screen.height - 296, 276, 296);
+            }
         }
 
         void Update()
