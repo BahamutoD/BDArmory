@@ -813,14 +813,16 @@ namespace BahaTurret
                 if (FlightGlobals.getStaticPressure(transform.position) == 0 && pe.useWorldSpace)
                 {
                     pe.emit = false;
-                    EffectBehaviour.RemoveParticleEmitter(pe);
                 }
                 else if (pe.useWorldSpace)
                 {
                     BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
                     gpe.rb = rb;
-                    EffectBehaviour.AddParticleEmitter(gpe.pEmitter);
                     gpe.emit = true;
+                }
+                else
+                {
+                    EffectBehaviour.AddParticleEmitter(pe);
                 }
             }
 
@@ -916,7 +918,6 @@ namespace BahaTurret
                         if (pEmitter.maxSize == 0)
                         {
                             pEmitter.emit = false;
-                            EffectBehaviour.RemoveParticleEmitter(pEmitter);
                         }
                     }
                 }

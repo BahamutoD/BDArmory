@@ -44,7 +44,7 @@ namespace BahaTurret
         {
             pEmitter = gameObject.GetComponent<KSPParticleEmitter>();
             pEmitter.emit = false;
-            EffectBehaviour.RemoveParticleEmitter(pEmitter);
+            EffectBehaviour.AddParticleEmitter(pEmitter);
         }
 
         void OnEnable()

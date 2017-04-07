@@ -27,6 +27,7 @@ namespace BahaTurret
             if (!pe)
             {
                 pe = gameObject.GetComponentInChildren<KSPParticleEmitter>();
+                EffectBehaviour.AddParticleEmitter(pe);
             }
 
             body = FlightGlobals.currentMainBody;

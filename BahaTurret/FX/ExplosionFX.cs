@@ -22,7 +22,9 @@ namespace BahaTurret
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
             foreach (KSPParticleEmitter pe in pEmitters)
             {
-                EffectBehaviour.AddParticleEmitter(pe);
+               
+               EffectBehaviour.AddParticleEmitter(pe);
+                
                 pe.emit = true;
                
 
@@ -53,7 +55,6 @@ namespace BahaTurret
                 foreach (KSPParticleEmitter pe in pEmitters)
                 {
                     pe.emit = false;
-                    EffectBehaviour.RemoveParticleEmitter(pe);
                 }
             }
 
@@ -92,7 +93,6 @@ namespace BahaTurret
             }
             foreach (KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
             {
-                EffectBehaviour.AddParticleEmitter(pe);
                 pe.emit = true;
                 
             }
