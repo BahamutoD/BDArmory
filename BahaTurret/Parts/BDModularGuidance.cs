@@ -811,7 +811,7 @@ namespace BahaTurret
             {
                 if (SourceVessel == null) SourceVessel = vessel;
 
-                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.Detonate());
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
                 AutoDestruction();
                 HasExploded = true;
             }

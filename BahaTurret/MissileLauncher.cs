@@ -478,7 +478,7 @@ namespace BahaTurret
 
             if (!HasExploded && HasFired && Time.time - TimeFired > 1)
 			{
-				Detonate();
+				DetonateIfPossible();
 			}
 		}
         */
@@ -726,7 +726,7 @@ namespace BahaTurret
                 //Timed detonation
                 if (isTimed && TimeIndex > detonationTime)
 				{
-					//part.temperature = part.maxTemp+100; //This is already done in Detonate()
+					//part.temperature = part.maxTemp+100; //This is already done in DetonateIfPossible()
                     Detonate();
 				}
 			}
