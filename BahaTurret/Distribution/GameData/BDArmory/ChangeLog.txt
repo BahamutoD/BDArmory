@@ -1,3 +1,11 @@
+v0.2.1.0
+= Fixes =
+- Problem with display of trajectories/smoke of missiles #74.
+- Warhead and Procedural High Explosive cannot be detonated via Action Group #162.
+- AI Pilot is unable to use Rapiers in Air Breathing mode if landed #102.
+- Fixing modular missile detonation when switching.
+- Fixing max static launch range for modular missiles.
+
 v0.2.0.0
 = New features=
 - Modular Missile Guidance:
