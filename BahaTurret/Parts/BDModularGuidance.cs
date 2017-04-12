@@ -113,12 +113,9 @@ namespace BahaTurret
         {
             if (HasFired && !HasExploded)
             {
-                CheckDetonationDistance();
-
                 UpdateGuidance();
-
+                CheckDetonationDistance();
                 CheckDelayedFired();
-
                 CheckNextStage();            
 
                 if (isTimed && TimeIndex > detonationTime)
