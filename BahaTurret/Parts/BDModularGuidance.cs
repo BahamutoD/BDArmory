@@ -306,13 +306,8 @@ namespace BahaTurret
                       
             this.activeRadarRange = ActiveRadarRange;
 
-           
-
-
             //TODO: BDModularGuidance should be configurable?
-            lockedSensorFOV = 5;
-            maxStaticLaunchRange = Math.Max(maxStaticLaunchRange,ActiveRadarRange*1.25f);
-            minStaticLaunchRange = 500;
+            lockedSensorFOV = 5;         
             radarLOAL = true;
         }
 
