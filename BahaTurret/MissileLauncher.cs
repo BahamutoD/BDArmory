@@ -306,8 +306,8 @@ namespace BahaTurret
 
 			foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
 			{
-				emitter.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(emitter);
+			    EffectBehaviour.AddParticleEmitter(emitter);
+                emitter.emit = false;
             }
 
 			if(HighLogic.LoadedSceneIsFlight)
@@ -327,7 +327,6 @@ namespace BahaTurret
 						foreach(var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
 						{
 							emitter.emit = false;
-                            EffectBehaviour.RemoveParticleEmitter(emitter);
                         }
 						exhaustPrefab.transform.parent = t;
 						exhaustPrefab.transform.localPosition = Vector3.zero;
@@ -344,7 +343,6 @@ namespace BahaTurret
 						foreach(var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
 						{
 							emitter.emit = false;
-                            EffectBehaviour.RemoveParticleEmitter(emitter);
                         }
 						exhaustPrefab.transform.parent = t;
 						exhaustPrefab.transform.localPosition = Vector3.zero;
@@ -377,9 +375,11 @@ namespace BahaTurret
 								{
 									boostEmitters.Add(be);
 								}
+							    EffectBehaviour.AddParticleEmitter(be);
 							}
-						}
-					}
+                           ;
+						}    
+                    }
 				}
 
 				foreach(var emitter in part.partTransform.FindChild("model").GetComponentsInChildren<KSPParticleEmitter>())
@@ -405,7 +405,8 @@ namespace BahaTurret
 						{
 							boostEmitters.Add(emitter);
 						}
-					}
+					    EffectBehaviour.AddParticleEmitter(emitter);
+                    }
 				}
 					
 				cmTimer = Time.time;
@@ -416,6 +417,7 @@ namespace BahaTurret
 				
 				foreach(var pe in pEmitters)	
 				{
+
 					if(hasRCS)
 					{
 						if(pe.gameObject.name == "rcsUp") upRCS = pe;
@@ -429,7 +431,8 @@ namespace BahaTurret
 					{
 						pe.sizeGrow = 99999;
 					}
-				}
+				  
+                }
 
 				if(rotationTransformName!=string.Empty)
 				{
@@ -442,7 +445,8 @@ namespace BahaTurret
 					KillRCS();
 				}
 				SetupAudio();
-			}
+			 
+            }
 
 			if(GuidanceMode != GuidanceModes.Cruise)
 			{
@@ -464,7 +468,8 @@ namespace BahaTurret
 			{
 				deployedDrag = simpleDrag;	
 			}
-		}
+		   
+        }
 		
 		/*
         void OnCollisionEnter(Collision col)
@@ -473,7 +478,7 @@ namespace BahaTurret
 
             if (!HasExploded && HasFired && Time.time - TimeFired > 1)
 			{
-				Detonate();
+				DetonateIfPossible();
 			}
 		}
         */
@@ -721,7 +726,7 @@ namespace BahaTurret
                 //Timed detonation
                 if (isTimed && TimeIndex > detonationTime)
 				{
-					//part.temperature = part.maxTemp+100; //This is already done in Detonate()
+					//part.temperature = part.maxTemp+100; //This is already done in DetonateIfPossible()
                     Detonate();
 				}
 			}
@@ -1001,7 +1006,6 @@ namespace BahaTurret
 				{
 					if(vessel.atmDensity > 0)
 					{
-                        EffectBehaviour.AddParticleEmitter(gpe.pEmitter);
 						gpe.emit = true;
                       
                         //gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
@@ -1010,7 +1014,6 @@ namespace BahaTurret
 					else
 					{
 						gpe.emit = false;
-                        EffectBehaviour.RemoveParticleEmitter(gpe.pEmitter);
                     }	
 				}
 
@@ -1056,14 +1059,11 @@ namespace BahaTurret
 			}
 			foreach(var emitter in boostEmitters)
 			{
-			    EffectBehaviour.AddParticleEmitter(emitter);
-
                 emitter.emit = true;
             }
 
 			if(hasRCS)
 			{
-                EffectBehaviour.AddParticleEmitter(forwardRCS);
                 forwardRCS.emit = true;
 			}
 
@@ -1081,7 +1081,6 @@ namespace BahaTurret
 			{
 				if(!emitter) continue;
 				emitter.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(emitter);
 
             }
 
@@ -1089,7 +1088,6 @@ namespace BahaTurret
 			{
 				if(!emitter) continue;
 				emitter.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(emitter.pEmitter);
             }
 
 			if(decoupleBoosters)
@@ -1139,7 +1137,6 @@ namespace BahaTurret
 				{
 					if(vessel.atmDensity > 0)
 					{
-                        EffectBehaviour.AddParticleEmitter(gpe.pEmitter);
                         gpe.emit = true;
 						//gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
 						gpe.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
@@ -1147,7 +1144,6 @@ namespace BahaTurret
 					else
 					{
 						gpe.emit = false;
-                        EffectBehaviour.RemoveParticleEmitter(gpe.pEmitter);
                     }	
 				}
 
@@ -1196,7 +1192,6 @@ namespace BahaTurret
 			if(hasRCS)
 			{
 				forwardRCS.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(forwardRCS);
                 audioSource.Stop();
 			}
 		}
@@ -1254,14 +1249,12 @@ namespace BahaTurret
 			{
 				if(!pe) continue;
 				pe.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(pe);
             }
 
 			foreach(var gpe in gaplessEmitters)
 			{
 				if(!gpe) continue;
 				gpe.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(gpe.pEmitter);
             }
 		}
 
@@ -1684,7 +1677,6 @@ namespace BahaTurret
 					if(Time.time-rcsFiredTimes[i] > rcsAudioMinInterval)
 					{
 						sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/popThrust"));
-                        EffectBehaviour.AddParticleEmitter(rcsTransforms[i]);
                         rcsTransforms[i].emit = true;
 						rcsFiredTimes[i] = Time.time;
 					}
@@ -1693,14 +1685,12 @@ namespace BahaTurret
 				{
 
 					rcsTransforms[i].emit = false;
-                    EffectBehaviour.RemoveParticleEmitter(rcsTransforms[i]);
                 }
 
 				//turn off emit
 				if(Time.time-rcsFiredTimes[i] > rcsAudioMinInterval*0.75f)
 				{
 					rcsTransforms[i].emit = false;
-                    EffectBehaviour.RemoveParticleEmitter(rcsTransforms[i]);
                 }
 			}
 

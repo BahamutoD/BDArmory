@@ -12,6 +12,7 @@ namespace BahaTurret
         void Awake()
         {
             pEmitter = gameObject.GetComponent<KSPParticleEmitter>();
+            EffectBehaviour.AddParticleEmitter(pEmitter);
             gpe = gameObject.GetComponent<BDAGaplessParticleEmitter>();
         }
 

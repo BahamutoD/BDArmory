@@ -113,12 +113,9 @@ namespace BahaTurret
         {
             if (HasFired && !HasExploded)
             {
-                CheckDetonationDistance();
-
                 UpdateGuidance();
-
+                CheckDetonationDistance();
                 CheckDelayedFired();
-
                 CheckNextStage();            
 
                 if (isTimed && TimeIndex > detonationTime)
@@ -306,13 +303,8 @@ namespace BahaTurret
                       
             this.activeRadarRange = ActiveRadarRange;
 
-           
-
-
             //TODO: BDModularGuidance should be configurable?
-            lockedSensorFOV = 5;
-            maxStaticLaunchRange = Math.Max(maxStaticLaunchRange,ActiveRadarRange*1.25f);
-            minStaticLaunchRange = 500;
+            lockedSensorFOV = 5;         
             radarLOAL = true;
         }
 
@@ -811,7 +803,7 @@ namespace BahaTurret
             {
                 if (SourceVessel == null) SourceVessel = vessel;
 
-                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.Detonate());
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
                 AutoDestruction();
                 HasExploded = true;
             }

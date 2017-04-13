@@ -119,6 +119,7 @@ namespace BahaTurret
             {
                 foreach (var pe in effectsTransform.gameObject.GetComponentsInChildren<KSPParticleEmitter>())
                 {
+                    EffectBehaviour.AddParticleEmitter(pe);
                     pe.Emit();
                 }
             }
@@ -242,6 +243,7 @@ namespace BahaTurret
             float longestLife = 0;
             foreach (var emitter in smokeCMObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
+                EffectBehaviour.AddParticleEmitter(emitter);
                 emitter.Emit();
                 if (emitter.maxEnergy > longestLife) longestLife = emitter.maxEnergy;
             }
