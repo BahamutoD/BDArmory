@@ -54,6 +54,8 @@ namespace BahaTurret
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stages Number"), UI_FloatRange(minValue = 1f, maxValue = 5f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float StagesNumber = 1;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Stage to Trigger On Proximity"), UI_FloatRange(minValue = 0f, maxValue = 6f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float StageToTriggerOnProximity = 0;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"), UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .05f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerDamping = 5;
@@ -803,8 +805,18 @@ namespace BahaTurret
             {
                 if (SourceVessel == null) SourceVessel = vessel;
 
-                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
-                AutoDestruction();
+                if (StageToTriggerOnProximity != 0)
+                {
+                    vessel.ActionGroups.ToggleGroup(
+                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));
+                }
+                else
+                {
+                    vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
+                    AutoDestruction();
+                }
+                
+               
                 HasExploded = true;
             }
         }
