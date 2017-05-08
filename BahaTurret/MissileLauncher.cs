@@ -303,8 +303,10 @@ namespace BahaTurret
             }
 
 			ParseModes();
+            // extension for feature_engagementenvelope
+            InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
 
-			foreach(var emitter in part.FindModelComponents<KSPParticleEmitter>())
+            foreach (var emitter in part.FindModelComponents<KSPParticleEmitter>())
 			{
 			    EffectBehaviour.AddParticleEmitter(emitter);
                 emitter.emit = false;

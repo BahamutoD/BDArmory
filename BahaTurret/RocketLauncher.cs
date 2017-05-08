@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace BahaTurret
 {
-    public class RocketLauncher : PartModule, IBDWeapon
+    public class RocketLauncher : ABDWeapon, IBDWeapon
     {
         public bool hasRocket = true;
 
@@ -244,6 +244,9 @@ namespace BahaTurret
 
         public override void OnStart(PartModule.StartState state)
         {
+            // extension for feature_engagementenvelope
+            InitializeEngagementRange(0, maxTargetingRange);
+
             if (HighLogic.LoadedSceneIsFlight)
             {
                 part.force_activate();

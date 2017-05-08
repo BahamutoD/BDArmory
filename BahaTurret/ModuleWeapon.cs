@@ -7,7 +7,7 @@ using KSP.UI.Screens;
 
 namespace BahaTurret
 {
-    public class ModuleWeapon : PartModule, IBDWeapon
+    public class ModuleWeapon : ABDWeapon, IBDWeapon
     {
         #region Declarations
 
@@ -490,6 +490,8 @@ namespace BahaTurret
 
             ParseWeaponType();
             ParseBulletDragType();
+            // extension for feature_engagementenvelope
+            InitializeEngagementRange(0, maxEffectiveDistance);
 
             bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000; //1000 to convert from tonnes to kilograms
 
