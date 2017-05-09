@@ -3954,11 +3954,7 @@ namespace BahaTurret
                         MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.srf_velocity, guardTarget.transform.position);
                         if (vessel.srfSpeed > ml.minLaunchSpeed && distanceToTarget < dlz.maxLaunchRange && distanceToTarget > dlz.minLaunchRange)
                         {
-                            //float rangeDiff = Mathf.Abs(distanceToTarget - dlz.rangeTr);
-                            //if ((rangeDiff < (dlz.rangeTr * 2)) || (dlz.rangeTr == 0))
-                            //{ //not fully understood...
-                            return true;
-                            //}
+                                return true;
                         }
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {

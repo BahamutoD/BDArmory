@@ -101,6 +101,7 @@ namespace BahaTurret
         public float TimeIndex => Time.time - TimeFired;
 
         public TargetingModes TargetingMode { get; set; }
+        public TargetingModes TargetingModeTerminal { get; set; }
 
         public float TimeToImpact { get; set; }
 
