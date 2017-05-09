@@ -1820,29 +1820,45 @@ namespace BahaTurret
 			}
 		}
 
-		// RMB info in editor
-		public override string GetInfo()
-		{
-			var output = new StringBuilder();
-			output.Append(Environment.NewLine);
-			output.Append(String.Format("Weapon Type: {0}", "Missile"));
-			output.Append(Environment.NewLine);
-			output.Append(String.Format("Guidance Mode: {0}", homingType.ToString().ToUpper()));
-			output.Append(Environment.NewLine);
-			output.Append(String.Format("Targetting Mode: {0}", targetingType.ToString().ToUpper()));
-			output.Append(Environment.NewLine);
 
-            if (ActiveRadar) {
-				output.Append(String.Format("Active Radar Range: {0}", activeRadarRange));
-				output.Append(Environment.NewLine);
-			}
+        // RMB info in editor
+        public override string GetInfo()
+        {
+            var output = new StringBuilder();
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Weapon Type: {0}", missileType));
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Guidance Mode: {0}", homingType.ToString().ToUpper()));
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Targetting Mode: {0}", targetingType.ToString().ToUpper()));
+            output.Append(Environment.NewLine);
 
-			output.Append(String.Format("Min/Max Range: {0}/{1} meters", minStaticLaunchRange, maxStaticLaunchRange));
-			output.Append(Environment.NewLine);
-			return output.ToString();
+            if (targetingType.ToLower() == "radar")
+            {
+                output.Append(String.Format("Active Radar Range: {0}", activeRadarRange));
+                output.Append(Environment.NewLine);
+            }
 
-		}
-		
-	}
+            if (targetingType.ToLower() == "gps")
+            {
+                output.Append(String.Format("Terminal Maneuvering: {0}", terminalManeuvering));
+                output.Append(Environment.NewLine);
+                if (terminalGuidanceType != "")
+                {
+                    output.Append(String.Format("Terminal guidance: {0}, distance: {1} meters", terminalGuidanceType, terminalGuidanceDistance));
+                    output.Append(Environment.NewLine);
+                }
+            }
+
+
+            output.Append(String.Format("Min/Max Range: {0}/{1} meters", minStaticLaunchRange, maxStaticLaunchRange));
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Blast radius/power/heat: {0}/{1}/{2}", blastRadius, blastPower, blastHeat));
+            output.Append(Environment.NewLine);
+            return output.ToString();
+
+        }
+
+    }
 }
 
