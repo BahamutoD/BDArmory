@@ -2747,15 +2747,21 @@ namespace BahaTurret
                weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile)
             {
                 MissileBase firstMl = null;
+
                 foreach (var ml in vessel.FindPartModulesImplementing<MissileBase>())
                 {
-                    if (ml is MissileLauncher)
+                    var launcher = ml as MissileLauncher;
+                    if (launcher != null)
                     {
-                        if (ml.part.name != weaponArray[weaponIndex].GetPart().name) continue;
+                        if (launcher.part.name != weaponArray[weaponIndex].GetPart()?.name) continue;
                     }
-                    else if (ml is BDModularGuidance)
-                    { //We have set of parts not only a part
-                        if (ml.GetShortName() != weaponArray[weaponIndex].GetShortName()) continue;
+                    else
+                    {
+                        var guidance = ml as BDModularGuidance;
+                        if (guidance != null)
+                        { //We have set of parts not only a part
+                            if (guidance.GetShortName() != weaponArray[weaponIndex]?.GetShortName()) continue;
+                        }
                     }
                     if (firstMl == null) firstMl = ml;
 
