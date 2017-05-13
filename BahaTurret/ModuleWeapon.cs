@@ -501,7 +501,7 @@ namespace BahaTurret
             foreach (var emitter in part.FindModelComponents<KSPParticleEmitter>())
             {
                 emitter.emit = false;
-                EffectBehaviour.RemoveParticleEmitter(emitter);
+                EffectBehaviour.AddParticleEmitter(emitter);
             }
 
             if (roundsPerMinute >= 1500)
@@ -525,6 +525,7 @@ namespace BahaTurret
             foreach (Transform mtf in part.FindModelTransforms("muzzleTransform"))
             {
                 KSPParticleEmitter kpe = mtf.GetComponent<KSPParticleEmitter>();
+                EffectBehaviour.AddParticleEmitter(kpe);
                 muzzleFlashEmitters.Add(kpe);
                 kpe.emit = false;
             }
@@ -561,6 +562,10 @@ namespace BahaTurret
                         BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
                         gpe.part = part;
                         gaplessEmitters.Add(gpe);
+                    }
+                    else
+                    {
+                        EffectBehaviour.AddParticleEmitter(pe);
                     }
                 }
 

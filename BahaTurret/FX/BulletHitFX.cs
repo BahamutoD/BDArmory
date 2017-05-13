@@ -18,6 +18,10 @@ namespace BahaTurret
         {
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
+            foreach (KSPParticleEmitter pe in pEmitters)
+            {
+                EffectBehaviour.AddParticleEmitter(pe);
+            }
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.minDistance = 1;
             audioSource.maxDistance = 50;
@@ -48,7 +52,6 @@ namespace BahaTurret
                 foreach (KSPParticleEmitter pe in pEmitters)
                 {
                     pe.emit = false;
-                    EffectBehaviour.RemoveParticleEmitter(pe);
                 }
             }
 
@@ -68,7 +71,6 @@ namespace BahaTurret
             newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;
             foreach (KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
             {
-                EffectBehaviour.AddParticleEmitter(pe);
                 pe.emit = true;
               
                 if (pe.gameObject.name == "sparks")

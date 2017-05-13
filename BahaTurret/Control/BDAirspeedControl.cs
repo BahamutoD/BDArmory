@@ -121,12 +121,15 @@ namespace BahaTurret
                     continue;
                 }
 
-                MultiModeEngine mme = engine.part.FindModuleImplementing<MultiModeEngine>();
-                if (mme)
+                var mme = engine.part.FindModuleImplementing<MultiModeEngine>();
+                if (IsAfterBurnerEngine(mme))
                 {
                     multiModeEngines.Add(mme);
                     mme.autoSwitch = false;
                 }
+
+               
+
                 if (!mme || mme.mode == engine.engineID)
                 {
                     float engineThrust = engine.maxThrust;
@@ -177,6 +180,19 @@ namespace BahaTurret
 
 
             return accel;
+        }
+
+        private static bool IsAfterBurnerEngine(MultiModeEngine engine)
+        {
+            if (engine == null)
+            {
+                return false;
+            }
+            if (!engine)
+            {
+                return false;
+            }      
+            return engine.primaryEngineID == "Dry" && engine.secondaryEngineID == "Wet";
         }
 
         float GravAccel()
