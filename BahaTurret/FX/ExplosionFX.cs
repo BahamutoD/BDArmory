@@ -16,14 +16,17 @@ namespace BahaTurret
 
         public float range;
 
-
         void Start()
         {
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
             foreach (KSPParticleEmitter pe in pEmitters)
             {
+               
+               EffectBehaviour.AddParticleEmitter(pe);
+                
                 pe.emit = true;
+               
 
                 //if(pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
 
@@ -44,7 +47,6 @@ namespace BahaTurret
             audioSource.PlayOneShot(exSound);
         }
 
-
         void FixedUpdate()
         {
             lightFX.intensity -= 12*Time.fixedDeltaTime;
@@ -61,7 +63,6 @@ namespace BahaTurret
                 GameObject.Destroy(gameObject);
             }
         }
-
 
         public static void CreateExplosion(Vector3 position, float radius, float power, float heat, Vessel sourceVessel,
             Vector3 direction, string explModelPath, string soundPath)
@@ -93,6 +94,7 @@ namespace BahaTurret
             foreach (KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 pe.emit = true;
+                
             }
 
             DoExplosionDamage(position, power, heat, radius, sourceVessel);
@@ -179,7 +181,7 @@ namespace BahaTurret
 
 		    var vesselsAffected =
 		        BDATargetManager.LoadedVessels.Where(
-		            v => v != null && v.loaded && !v.packed && (v.transform.position - position).magnitude < maxDistance*4);
+		            v => v != null && v.loaded && !v.packed && (v.CoM - position).magnitude < maxDistance*4);
 
 		    var partsAffected =
 		        vesselsAffected.SelectMany(v => v.parts).Where(p => p!=null && p && (p.transform.position - position).magnitude < maxDistance);

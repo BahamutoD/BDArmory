@@ -1,11 +1,12 @@
 using System;
+using System.Text;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace BahaTurret
 {
-    public class RocketLauncher : PartModule, IBDWeapon
+    public class RocketLauncher : ABDWeapon, IBDWeapon
     {
         public bool hasRocket = true;
 
@@ -14,7 +15,6 @@ namespace BahaTurret
         [KSPField(isPersistant = false)] public string rocketType;
 
         [KSPField(isPersistant = false)] public string rocketModelPath;
-
 
         [KSPField(isPersistant = false)] public float rocketMass;
 
@@ -31,7 +31,6 @@ namespace BahaTurret
         [KSPField(isPersistant = false)] public bool descendingOrder = true;
 
         [KSPField(isPersistant = false)] public string explModelPath = "BDArmory/Models/explosion/explosion";
-
 
         [KSPField(isPersistant = false)] public string explSoundPath = "BDArmory/Sounds/explode1";
 
@@ -246,6 +245,9 @@ namespace BahaTurret
 
         public override void OnStart(PartModule.StartState state)
         {
+            // extension for feature_engagementenvelope
+            InitializeEngagementRange(0, maxTargetingRange);
+
             if (HighLogic.LoadedSceneIsFlight)
             {
                 part.force_activate();
@@ -402,7 +404,7 @@ namespace BahaTurret
                         }
                     }
                     else if ((!weaponManager ||
-                              (weaponManager.selectedWeaponString != GetShortName() && !weaponManager.guardMode)))
+                              (weaponManager.selectedWeaponString == GetShortName() && !weaponManager.guardMode)))
                     {
                         if (BDInputUtils.GetKeyDown(BDInputSettingsFields.WEAP_FIRE_KEY) &&
                             (vessel.isActiveVessel || BDArmorySettings.REMOTE_SHOOTING))
@@ -760,6 +762,25 @@ namespace BahaTurret
                 else rockets[i].localScale = Vector3.zero;
             }
         }
+
+        // RMB info in editor
+        public override string GetInfo()
+        {
+            var output = new StringBuilder();
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Weapon Type: {0}", "Rocket Launcher"));
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Rocket Type: {0}", rocketType));
+            output.Append(Environment.NewLine);
+            output.Append(String.Format("Max Range: {0} meters", maxTargetingRange));
+            output.Append(Environment.NewLine);
+
+            output.Append(String.Format("Blast radius/force/heat: {0}/{1}/{2}", blastRadius, blastForce, blastHeat));
+            output.Append(Environment.NewLine);
+
+            return output.ToString();
+
+        }
     }
 
 
@@ -821,6 +842,10 @@ namespace BahaTurret
                     BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
                     gpe.rb = rb;
                     gpe.emit = true;
+                }
+                else
+                {
+                    EffectBehaviour.AddParticleEmitter(pe);
                 }
             }
 
@@ -932,7 +957,7 @@ namespace BahaTurret
                     Part hitPart = null;
                     try
                     {
-                        hitPart = Part.FromGO(hit.rigidbody.gameObject);
+                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
                     }
                     catch (NullReferenceException)
                     {

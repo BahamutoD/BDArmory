@@ -1,3 +1,48 @@
+v0.2.1.0
+= Fixes =
+- Problem with display of trajectories/smoke of missiles #74.
+- Warhead and Procedural High Explosive cannot be detonated via Action Group #162.
+- AI Pilot is unable to use Rapiers in Air Breathing mode if landed #102.
+- Fixing modular missile detonation when switching.
+- Fixing max static launch range for modular missiles.
+
+v0.2.0.0
+= New features=
+- Modular Missile Guidance:
+	A full rewrite of this part has been done. Now you can build your own missiles, define all its parameters,
+	even its name. And it will be used by the AI as if it was a stock BDArmory missile!
+
+	If you want to know more about this new feature, you can download a custom part pack for procedural missiles:
+	https://github.com/jrodrigv/BDModularMissileParts
+	And read this wiki
+	https://github.com/jrodrigv/BDModularMissileParts/wiki/1.-Building-your-first-Modular-Missile
+
+- Proximity Fuse for Missiles: 
+	A new field called "detonation distance override" has been added to missiles.
+	0 by default means that it will detonate within is normal explosive radius (eg: 20 meters for AIM-120)
+
+- Small High Explosive Warhead can now be rescaled with TweakScale. Git issue #106
+
+
+= Changes =
+- BDALoadedVesselSwitcher has been integrated into BDArmory, it will not be a separate mod anymore.
+	Please delete it before installing this version.
+- Physics range field and logic has been removed:
+	BDArmory now integrates a new mod called PhysicsRangeExtender. https://github.com/jrodrigv/PhysicsRangeExtender
+	Now the physics range has been extended to almost 200 km. 
+	However, be careful with landed vessels. Even if the vessel still loaded it could be possible that the terrain beneath it's not there anymore.
+	
+
+= Fixes =
+- Game crashes when adjusting the Rotary Bomb Rack. Git Issue #76.
+- Missile vs Missile Accuracy. Git Issue #82
+- Bomb aiming reticle not working. Git Issue #92.
+- Cluster bomb explode on load. Git Issue #151
+
+
+= Known issues =
+- Problem with display of trajectories/smoke of missiles. Git Issue #74
+
 v0.11.1.6
 - Fix shaders not working on Linux and Mac OS X. Git Issue #73.
 - Fix bomb aimer not working. Git Issue #75.

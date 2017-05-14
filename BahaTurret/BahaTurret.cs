@@ -1136,8 +1136,8 @@ namespace BahaTurret
 						}
 						try
 						{
-							Part p = Part.FromGO(hit.rigidbody.gameObject);
-							if(p.vessel!=this.vessel)
+							Part p = hit.collider.gameObject.GetComponentInParent<Part>();
+                            if (p.vessel!=this.vessel)
 							{
 								float distance = hit.distance;
 								p.temperature += laserDamage/(float)(Math.PI*Math.Pow(tanAngle*distance,2))*TimeWarp.fixedDeltaTime; //distance modifier: 1/(PI*Pow(Dist*tan(angle),
@@ -1178,8 +1178,8 @@ namespace BahaTurret
 				{
 					pointingAtPosition = hit.point;
 					try{
-						Part p = Part.FromGO(hit.rigidbody.gameObject);
-						hitPart = p;
+						Part p = hit.collider.gameObject.GetComponentInParent<Part>();
+                        hitPart = p;
 						if(p.vessel == this.vessel)
 						{
 							inTurretRange = false;
@@ -1229,7 +1229,7 @@ namespace BahaTurret
 							Vessel hitVessel = null;
 							try
 							{
-								hitVessel = Part.FromGO(hit.rigidbody.gameObject).vessel;	
+								hitVessel = hit.collider.gameObject.GetComponentInParent<Part>().vessel;	
 							}
 							catch(NullReferenceException){}
 							

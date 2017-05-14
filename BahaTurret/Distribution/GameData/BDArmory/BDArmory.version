@@ -1,7 +1,7 @@
 ﻿{
     "NAME":"BDArmory",
     "URL":"https://github.com/PapaJoesSoup/BDArmory/raw/master/BahaTurret/Distribution/GameData/BDArmory/BDArmory.version",
-    "DOWNLOAD":"https://github.com/PapaJoesSoup/BDArmory/releases",
+    "DOWNLOAD":"https://github.com/PapaJoesSoup/BDArmory/releases/tag/v0.2.1.0",
     "GITHUB":
     {
         "USERNAME":"PapaJoesSoup",
@@ -11,15 +11,15 @@
     "VERSION":
     {
         "MAJOR":0,
-        "MINOR":11,
+        "MINOR":2,
         "PATCH":1,
-        "BUILD":6
+        "BUILD":0
     },
     "KSP_VERSION":
     {
         "MAJOR":1,
         "MINOR":2,
-        "PATCH":1
+        "PATCH":2
     },
     "KSP_VERSION_MIN":
     {
@@ -31,6 +31,6 @@
     {
         "MAJOR":1,
         "MINOR":2,
-        "PATCH":1
+        "PATCH":2
     }
 }

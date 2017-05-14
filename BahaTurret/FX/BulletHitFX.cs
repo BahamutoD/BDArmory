@@ -18,6 +18,10 @@ namespace BahaTurret
         {
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
+            foreach (KSPParticleEmitter pe in pEmitters)
+            {
+                EffectBehaviour.AddParticleEmitter(pe);
+            }
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.minDistance = 1;
             audioSource.maxDistance = 50;
@@ -68,6 +72,7 @@ namespace BahaTurret
             foreach (KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 pe.emit = true;
+              
                 if (pe.gameObject.name == "sparks")
                 {
                     pe.force = (4.49f*FlightGlobals.getGeeForceAtPosition(position));

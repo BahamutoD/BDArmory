@@ -49,14 +49,15 @@ namespace BahaTurret
                     }
                     else
                     {
-                        pEmitters.Add(pe);
+                        EffectBehaviour.AddParticleEmitter(pe);
+                        pEmitters.Add(pe);                     
                         pe.emit = true;
                     }
                 }
             }
 
             foreach (var emitter in gaplessEmitters)
-            {
+            { 
                 emitter.emit = true;
             }
 

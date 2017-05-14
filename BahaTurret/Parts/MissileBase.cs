@@ -4,15 +4,24 @@ using UnityEngine;
 
 namespace BahaTurret
 {
-    public abstract class MissileBase : PartModule, IBDWeapon
+    public abstract class MissileBase : ABDWeapon, IBDWeapon
     {
-        protected WeaponClasses weaponClass;
-
-        [KSPField]
-        public string missileType = "missile";
+       protected WeaponClasses weaponClass;
+        public WeaponClasses GetWeaponClass()
+        {
+            return weaponClass;
+        }
 
         [KSPField(isPersistant = true)]
         public string shortName = string.Empty;
+
+        public string GetShortName()
+        {
+            return shortName;
+        }
+
+        [KSPField]
+        public string missileType = "missile";
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Static Launch Range"), UI_FloatRange(minValue = 5000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float maxStaticLaunchRange = 5000;
@@ -23,8 +32,13 @@ namespace BahaTurret
         [KSPField]
         public float minLaunchSpeed = 0;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Off Boresight"), UI_FloatRange(minValue = 0f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float maxOffBoresight = 50;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Off Boresight"), 
+            UI_FloatRange(minValue = 0f, maxValue = 360f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float maxOffBoresight = 360;
+
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float DetonationDistance = 0;
 
         [KSPField]
         public bool guidanceActive = true;
@@ -45,15 +59,15 @@ namespace BahaTurret
         public bool radarLOAL = false;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Drop Time"),
-            UI_FloatRange(minValue = 0f, maxValue = 2f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
-        public float dropTime = 0.4f;
+            UI_FloatRange(minValue = 0f, maxValue = 5f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+        public float dropTime = 0.5f;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "In Cargo Bay: "),
-        UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
+            UI_Toggle(disabledText = "False", enabledText = "True", affectSymCounterparts = UI_Scene.All)]
         public bool inCargoBay = false;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Detonation Time"),
-    UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+            UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float detonationTime = 2;
 
         [KSPField]
@@ -82,12 +96,12 @@ namespace BahaTurret
 
         public Vector3 TargetVelocity { get; set; } = Vector3.zero;
 
-
         public Vector3 TargetAcceleration { get; set; } = Vector3.zero;
 
-        public float TimeIndex { get; set; } = 0;
+        public float TimeIndex => Time.time - TimeFired;
 
         public TargetingModes TargetingMode { get; set; }
+        public TargetingModes TargetingModeTerminal { get; set; }
 
         public float TimeToImpact { get; set; }
 
@@ -98,6 +112,16 @@ namespace BahaTurret
         public Vessel SourceVessel { get; set; } = null;
 
         public bool HasExploded { get; set; } = false;
+
+
+        public float DetonationRadius
+        {
+            get
+            {
+                return DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
+            }
+
+        } 
 
         public float TimeFired = -1;
 
@@ -139,17 +163,7 @@ namespace BahaTurret
 
         private LineRenderer LR;
         protected string debugString = "";
-
-        public WeaponClasses GetWeaponClass()
-        {
-            return weaponClass;
-        }
-
-        public string GetShortName()
-        {
-            return shortName;
-        }
-
+        
         public string GetSubLabel()
         {
             if (Enum.GetName(typeof(TargetingModes), TargetingMode) == "None")
@@ -166,11 +180,9 @@ namespace BahaTurret
 
         public abstract void FireMissile();
 
-
         public abstract void Jettison();
 
         public abstract float GetBlastRadius();
-
 
         protected abstract void PartDie(Part p);
 
@@ -186,14 +198,6 @@ namespace BahaTurret
 				info.MissileBaseModule = this;
         }
 
-        public override void OnFixedUpdate()
-        {
-            if (HasFired && !HasExploded && part != null)
-            {
-                TimeIndex = Time.time - TimeFired;
-            }
-        }
-
         protected void UpdateGPSTarget()
         {
             if (TargetAcquired)
@@ -204,7 +208,6 @@ namespace BahaTurret
             }
             else
             {
-
                 guidanceActive = false;
             }
         }
@@ -267,6 +270,7 @@ namespace BahaTurret
                 }
             }
         }
+
         protected void UpdateLaserTarget()
         {
             if (TargetAcquired)
@@ -545,7 +549,7 @@ namespace BahaTurret
         {
             if (TargetingMode == TargetingModes.AntiRad && TargetAcquired && v == vessel)
             {
-                if ((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(50, 2)
+                if ((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(maxStaticLaunchRange / 4, 2) //drastically increase update range for anti-radiation missile to track moving targets!
                     && Vector3.Angle(source - transform.position, GetForwardTransform()) < maxOffBoresight)
                 {
                     TargetAcquired = true;
@@ -585,13 +589,6 @@ namespace BahaTurret
                 TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
             }
         }
-        void OnDisable()
-        {
-            if (TargetingMode == TargetingModes.AntiRad)
-            {
-                RadarWarningReceiver.OnRadarPing -= ReceiveRadarPing;
-            }
-        }
 
         protected void DrawDebugLine(Vector3 start, Vector3 end)
         {
@@ -610,6 +607,22 @@ namespace BahaTurret
                 LR.SetVertexCount(2);
                 LR.SetPosition(0, start);
                 LR.SetPosition(1, end);
+            }
+        }
+        
+
+        protected void CheckDetonationDistance()
+        {
+            //Guard clauses     
+            if (!TargetAcquired) return;
+
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationRadius) return;
+            float distance;
+            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationRadius)
+            {
+                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
+                Detonate();
             }
         }
     }

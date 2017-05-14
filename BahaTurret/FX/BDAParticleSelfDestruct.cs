@@ -12,6 +12,7 @@ namespace BahaTurret
         void Awake()
         {
             pEmitter = gameObject.GetComponent<KSPParticleEmitter>();
+            EffectBehaviour.AddParticleEmitter(pEmitter);
             gpe = gameObject.GetComponent<BDAGaplessParticleEmitter>();
         }
 
@@ -30,9 +31,11 @@ namespace BahaTurret
         IEnumerator SelfDestructRoutine()
         {
             pEmitter.emit = false;
+            EffectBehaviour.RemoveParticleEmitter(pEmitter);
             if (gpe)
             {
                 gpe.emit = false;
+                EffectBehaviour.RemoveParticleEmitter(gpe.pEmitter);
             }
             yield return new WaitForSeconds(pEmitter.maxEnergy);
             Destroy(gameObject);
