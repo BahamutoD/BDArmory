@@ -2954,17 +2954,34 @@ namespace BahaTurret
                         {
                             Part p = hits[h].collider.GetComponentInParent<Part>();
 
-                            if ((p != null && p != ml.part) || p == null) return false;
+                            if ((p != null && p != ml.part) || p == null)
+                            {
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log("[BDArmory]: RAYCAST HIT, clearance is FALSE! part=" + p?.name + ", collider=" + p?.collider.ToString());
+                                return false;
+                            }
                         }
                     }
 
                     return true;
                 }
+
+
                 //forward check for no-drop missiles
-                if (Physics.Raycast(new Ray(ml.MissileReferenceTransform.position, ml.GetForwardTransform()), 50, 557057))
+                RaycastHit[] hitparts = Physics.RaycastAll(new Ray(ml.MissileReferenceTransform.position, ml.GetForwardTransform()), 50, 557057);
+                for (int h = 0; h < hitparts.Length; h++)
                 {
-                    return false;
+                    Part p = hitparts[h].collider.GetComponentInParent<Part>();
+                    if ((p != null && p != ml.part) || p == null)
+                    {
+
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.Log("[BDArmory]: RAYCAST HIT, clearance is FALSE! part=" + p?.name + ", collider=" + p?.collider.ToString());
+                        return false;
+                    }
                 }
+
+
             }
 
             return true;
