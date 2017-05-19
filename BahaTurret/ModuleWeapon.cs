@@ -7,7 +7,7 @@ using KSP.UI.Screens;
 
 namespace BahaTurret
 {
-    public class ModuleWeapon : ABDWeapon, IBDWeapon
+    public class ModuleWeapon : EngageableWeapon, IBDWeapon
     {
         #region Declarations
 

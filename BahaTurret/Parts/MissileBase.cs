@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
-    public abstract class MissileBase : ABDWeapon, IBDWeapon
+    public abstract class MissileBase : EngageableWeapon, IBDWeapon
     {
        protected WeaponClasses weaponClass;
         public WeaponClasses GetWeaponClass()
