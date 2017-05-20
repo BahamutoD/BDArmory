@@ -4585,7 +4585,7 @@ namespace BahaTurret
             {
                 signedAnglePitch -= Mathf.Sign(signedAnglePitch) * 180;
             }
-            bool withinPitchRange = (signedAnglePitch > turret.minPitch && signedAnglePitch < turret.maxPitch);
+            bool withinPitchRange = (signedAnglePitch >= turret.minPitch && signedAnglePitch <= turret.maxPitch + tolerance);
 
             if (angleYaw < (turret.yawRange / 2) + tolerance && withinPitchRange)
             {

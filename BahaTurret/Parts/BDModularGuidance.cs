@@ -304,6 +304,7 @@ namespace BahaTurret
             WeaponName = GetShortName();
 
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
+            this.ToggleEngageOptions();
             this.activeRadarRange = ActiveRadarRange;
 
             //TODO: BDModularGuidance should be configurable?
