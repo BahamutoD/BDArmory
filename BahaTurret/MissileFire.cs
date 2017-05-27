@@ -3947,11 +3947,9 @@ namespace BahaTurret
                 var scanRadius = CurrentMissile.lockedSensorFOV * 2;
                 var maxOffBoresight = CurrentMissile.maxOffBoresight * 0.85f;
 
-                bool radarSlaved = false;
                 if (vesselRadarData && vesselRadarData.locked)
                 {
                     heatTarget = vesselRadarData.lockedTargetData.targetData;
-                    radarSlaved = true;
                 }
 
                 Vector3 direction =
