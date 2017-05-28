@@ -18,30 +18,27 @@ namespace BahaTurret
 
 		}
 
-		void BDAWeaponsCategory()
-		{
-			const string filterCategory129 = "#autoLOC_453547";//Filter by Function
-		    const string filterCategory122 = "Filter by Function";
+	    void BDAWeaponsCategory()
+	    {
+	        const string customCategoryName = "BDAWeapons";
+	        const string customDisplayCategoryName = "BDA Weapons";
 
-            const string customCategoryName = "BDA Weapons";
+	        availableParts.Clear();
+	        availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
 
-			availableParts.Clear();
-			availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
+	        Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
 
-			Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
+	        RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
 
-			RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
+	        PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == "Filter by function");
 
-			PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == filterCategory122 || f.button.categoryName == filterCategory129);
-			PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, icon, p => availableParts.Contains(p));
+	        PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
+	            p => availableParts.Contains(p));
 
-			KSP.UI.UIRadioButton button = filter.button.activeButton;
-			//button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
-			//button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED, false);
-		}
+	    }
 
 
 
-	}
+    }
 }
 

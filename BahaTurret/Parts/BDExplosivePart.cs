@@ -18,14 +18,21 @@ namespace BahaTurret
         [KSPField]
 		public float blastHeat = -1;
 
+        [KSPAction("Arm")]
+        public void ArmAG(KSPActionParam param)
+        {
+            Armed = true;
+        }
+
 		[KSPAction("Detonate")]
 		public void DetonateAG(KSPActionParam param)
 		{
 		    Detonate();
 		}
 
+        
 
-	    [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Detonate", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Detonate", active = true)]
 	    public void DetonateEvent()
 	    {
             Detonate();
