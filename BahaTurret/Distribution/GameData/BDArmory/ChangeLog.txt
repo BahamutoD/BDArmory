@@ -1,3 +1,11 @@
+v0.2.1.1
+= Fixes =
+- Recompiled and fixed for KSP 1.3.0
+
+= New features=
+- Modular Missile Guidance: 
+	- New option to detonate an stage on proximity.
+
 v0.2.1.0
 = Fixes =
 - Problem with display of trajectories/smoke of missiles #74.

@@ -15,7 +15,7 @@ namespace BahaTurret
 
         private PartModule _targetDecoupler;
 
-        private Vessel _targetVessel;
+        private Vessel _targetVessel = null;
 
         private Transform _velocityTransform;
 
