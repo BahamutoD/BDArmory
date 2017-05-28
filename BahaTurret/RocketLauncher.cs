@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace BahaTurret
 {
-    public class RocketLauncher : ABDWeapon, IBDWeapon
+    public class RocketLauncher : EngageableWeapon, IBDWeapon
     {
         public bool hasRocket = true;
 
