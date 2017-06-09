@@ -1,7 +1,7 @@
-﻿using System;
+﻿using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.CounterMeasure
 {
     [RequireComponent(typeof(Vessel))]
     public class VesselChaffInfo : MonoBehaviour

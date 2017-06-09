@@ -1,6 +1,6 @@
-﻿using System;
+﻿using BDArmory.Misc;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public struct GPSTargetInfo
     {

@@ -1,10 +1,13 @@
-using UnityEngine;
 using System;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.UI;
+using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Radar
 {
     public class ModuleRadar : PartModule
     {

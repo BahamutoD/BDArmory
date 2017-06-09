@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public class ModuleMovingPart : PartModule
     {

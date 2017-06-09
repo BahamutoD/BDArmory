@@ -2,11 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Smooth.Slinq.Test;
+using BDArmory.Control;
+using BDArmory.CounterMeasure;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.Radar;
+using BDArmory.UI;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class MissileFire : PartModule
     {
@@ -1063,7 +1067,7 @@ namespace BahaTurret
 
         bool CheckMouseIsOnGui()
         {
-            return Misc.CheckMouseIsOnGui();
+            return Misc.Misc.CheckMouseIsOnGui();
         }
 
         #endregion
@@ -4578,7 +4582,7 @@ namespace BahaTurret
 
             float angleYaw = Vector3.Angle(turretTransform.forward, directionYaw);
             //float anglePitch = Vector3.Angle(-turret.transform.forward, directionPitch);
-            float signedAnglePitch = Misc.SignedAngle(turretTransform.forward, directionPitch, turretTransform.up);
+            float signedAnglePitch = Misc.Misc.SignedAngle(turretTransform.forward, directionPitch, turretTransform.up);
             if (Mathf.Abs(signedAnglePitch) > 90)
             {
                 signedAnglePitch -= Mathf.Sign(signedAnglePitch) * 180;

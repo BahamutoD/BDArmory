@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.Collections;
 using UnityEngine;
-using System.Collections;
 
-namespace BahaTurret
+namespace BDArmory.FX
 {
     public class BDAParticleSelfDestruct : MonoBehaviour
     {

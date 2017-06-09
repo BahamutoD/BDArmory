@@ -1,10 +1,13 @@
 using System;
-using System.Text;
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using BDArmory.FX;
+using BDArmory.Misc;
+using BDArmory.UI;
+using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class RocketLauncher : EngageableWeapon, IBDWeapon
     {
@@ -294,7 +297,7 @@ namespace BahaTurret
 
                 if (!string.IsNullOrEmpty(deployAnimationName))
                 {
-                    deployAnimState = Misc.SetUpSingleAnimation(deployAnimationName, part);
+                    deployAnimState = Misc.Misc.SetUpSingleAnimation(deployAnimationName, part);
                     hasDeployAnimation = true;
 
                     readyToFire = false;

@@ -1,8 +1,9 @@
 using System;
 using BDArmory.Core.Extension;
+using BDArmory.FX;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
 	public class BDExplosivePart : PartModule
 	{

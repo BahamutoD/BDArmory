@@ -1,9 +1,6 @@
-﻿using System;
-using System.Reflection;
-using UnityEngine;
+﻿using System.Reflection;
 
-
-namespace BahaTurret
+namespace BDArmory.UI
 {
     public class BDInputSettingsFields
     {

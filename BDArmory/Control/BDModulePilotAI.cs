@@ -1,7 +1,10 @@
 using System;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Control
 {
 	public class BDModulePilotAI : PartModule
 	{
@@ -1060,7 +1063,7 @@ namespace BahaTurret
 			//v/q
 			float dynamicAdjustment = Mathf.Clamp(16*(float)(vessel.srfSpeed/vessel.dynamicPressurekPa), 0, 1.2f);
 
-			float rollError = Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
+			float rollError = Misc.Misc.SignedAngle(currentRoll, rollTarget, vesselTransform.right);
 			float steerRoll = (steerMult * 0.0015f * rollError);
 			float rollDamping = (.10f * steerDamping * -localAngVel.y);
 			steerRoll -= rollDamping;

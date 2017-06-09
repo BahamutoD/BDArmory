@@ -1,6 +1,11 @@
 using System;
+using BDArmory.CounterMeasure;
+using BDArmory.Misc;
+using BDArmory.Radar;
+using BDArmory.UI;
 using UnityEngine;
-namespace BahaTurret
+
+namespace BDArmory
 {
 	public struct TargetSignatureData : IEquatable<TargetSignatureData>
 	{

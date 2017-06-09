@@ -1,6 +1,6 @@
-﻿using System;
+﻿using BDArmory.UI;
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public static class BDATooltips
     {

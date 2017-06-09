@@ -1,8 +1,11 @@
 using System;
-using UnityEngine;
 using System.Collections.Generic;
+using BDArmory.FX;
+using BDArmory.Misc;
+using BDArmory.UI;
+using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.CounterMeasure
 {
     public class CMFlare : MonoBehaviour
     {

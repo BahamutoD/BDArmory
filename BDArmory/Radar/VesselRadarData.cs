@@ -1,8 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Radar
 {
     public class VesselRadarData : MonoBehaviour
     {
@@ -908,7 +911,7 @@ namespace BahaTurret
             {
                 Vector3 localUp = vessel.ReferenceTransform.InverseTransformDirection(referenceTransform.up);
                 localUp = Vector3.ProjectOnPlane(localUp, Vector3.up).normalized;
-                float rollAngle = -Misc.SignedAngle(-Vector3.forward, localUp, Vector3.right);
+                float rollAngle = -Misc.Misc.SignedAngle(-Vector3.forward, localUp, Vector3.right);
                 GUIUtility.RotateAroundPivot(rollAngle, radarRect.center);
                 GUI.DrawTexture(radarRect, rollIndicatorTexture, ScaleMode.StretchToFill, true);
                 GUI.matrix = Matrix4x4.identity;

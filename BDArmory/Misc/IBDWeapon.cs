@@ -1,7 +1,4 @@
-using System;
-using UnityEngine;
-
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public interface IBDWeapon
     {

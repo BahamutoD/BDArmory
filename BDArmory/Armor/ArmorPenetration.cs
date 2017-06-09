@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Armor
 {
     public static class ArmorPenetration
     {

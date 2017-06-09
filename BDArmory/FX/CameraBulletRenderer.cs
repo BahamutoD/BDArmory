@@ -1,6 +1,6 @@
-using System;
 using UnityEngine;
-namespace BahaTurret
+
+namespace BDArmory.FX
 {
 	public class CameraBulletRenderer : MonoBehaviour
 	{

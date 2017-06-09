@@ -1,7 +1,8 @@
-using System;
+using BDArmory.Misc;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class ModuleTurret : PartModule
     {

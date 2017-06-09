@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Misc;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Control
 {
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class BDACompetitionMode : MonoBehaviour

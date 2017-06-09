@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Radar;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class MissileTurret : PartModule
     {
@@ -244,7 +244,7 @@ namespace BahaTurret
             if (!string.IsNullOrEmpty(deployAnimationName))
             {
                 hasDeployAnimation = true;
-                deployAnimState = Misc.SetUpSingleAnimation(deployAnimationName, part);
+                deployAnimState = Misc.Misc.SetUpSingleAnimation(deployAnimationName, part);
                 if (state == StartState.Editor)
                 {
                     Events["EditorToggleAnimation"].guiActiveEditor = true;

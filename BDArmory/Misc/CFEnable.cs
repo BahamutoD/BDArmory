@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using KSP;
+
 
 
 //Class by NathanKell
 //http://forum.kerbalspaceprogram.com/threads/76499-0-23-5-CrossFeedEnabler-v1-4-13-14
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public class CFEnable : PartModule
     {

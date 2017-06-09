@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public class BDRotaryRail : PartModule
     {

@@ -1,7 +1,6 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public struct ViewScanResults
     {

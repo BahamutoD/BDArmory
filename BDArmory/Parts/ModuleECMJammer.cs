@@ -1,7 +1,6 @@
-﻿using System;
-using UnityEngine;
+﻿using BDArmory.CounterMeasure;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public class ModuleECMJammer : PartModule
     {

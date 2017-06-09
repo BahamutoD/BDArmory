@@ -1,10 +1,15 @@
 using System;
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using BDArmory.Armor;
+using BDArmory.Control;
+using BDArmory.CounterMeasure;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.Radar;
+using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.EveryScene, false)]
     public class BDArmorySettings : MonoBehaviour
@@ -521,7 +526,7 @@ namespace BahaTurret
 
 
             drawCursor = false;
-            if (!MapView.MapIsEnabled && !Misc.CheckMouseIsOnGui() && !PauseMenu.isOpen)
+            if (!MapView.MapIsEnabled && !Misc.Misc.CheckMouseIsOnGui() && !PauseMenu.isOpen)
             {
                 if (ActiveWeaponManager.selectedWeapon != null && ActiveWeaponManager.weaponIndex > 0 &&
                     !ActiveWeaponManager.guardMode)
@@ -1197,7 +1202,7 @@ namespace BahaTurret
             if (ActiveWeaponManager.designatedGPSCoords != Vector3d.zero)
             {
                 GUI.Label(new Rect(0, gpsEntryCount*gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight),
-                    Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), HighLogic.Skin.box);
+                    Misc.Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), HighLogic.Skin.box);
                 if (
                     GUI.Button(
                         new Rect(listRect.width - gpsEntryHeight, gpsEntryCount*gpsEntryHeight, gpsEntryHeight,
@@ -1222,7 +1227,7 @@ namespace BahaTurret
                 {
                     GUI.color = XKCDColors.LightOrange;
                 }
-                string label = Misc.FormattedGeoPosShort(coordinate.gpsCoordinates, false);
+                string label = Misc.Misc.FormattedGeoPosShort(coordinate.gpsCoordinates, false);
                 float nameWidth = 100;
                 if (editingGPSName && index == editingGPSNameIndex)
                 {

@@ -1,6 +1,6 @@
-using System;
 using UnityEngine;
-namespace BahaTurret
+
+namespace BDArmory.Parts
 {
 	public class TGPCamRotator : MonoBehaviour 
 	{

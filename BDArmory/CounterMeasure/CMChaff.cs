@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
+using BDArmory.Misc;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.CounterMeasure
 {
     public class CMChaff : MonoBehaviour
     {

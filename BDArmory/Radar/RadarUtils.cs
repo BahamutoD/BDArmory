@@ -1,8 +1,11 @@
-using System;
-using System.Collections.Generic;
-using BahaTurret.Shaders;
+using BDArmory.CounterMeasure;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.Shaders;
+using BDArmory.UI;
 using UnityEngine;
-namespace BahaTurret
+
+namespace BDArmory.Radar
 {
 	public static class RadarUtils
 	{

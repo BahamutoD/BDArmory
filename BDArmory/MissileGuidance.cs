@@ -1,9 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Threading;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class MissileGuidance
     {

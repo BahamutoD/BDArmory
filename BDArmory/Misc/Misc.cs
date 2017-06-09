@@ -1,9 +1,12 @@
 using System;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Reflection;
+using BDArmory.Parts;
+using BDArmory.Radar;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public static class Misc
     {

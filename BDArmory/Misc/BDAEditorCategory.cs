@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using UnityEngine;
 using KSP.UI.Screens;
+using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	public class BDAEditorCategory : MonoBehaviour

@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.UI
 {
 	public class BDInputUtils
 	{

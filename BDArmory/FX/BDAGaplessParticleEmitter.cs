@@ -1,7 +1,7 @@
-using System;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.FX
 {
     public class BDAGaplessParticleEmitter : MonoBehaviour
     {

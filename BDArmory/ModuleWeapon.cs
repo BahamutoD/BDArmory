@@ -1,12 +1,16 @@
 ﻿using System;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using BDArmory.Armor;
 using BDArmory.Core.Extension;
-using UnityEngine;
+using BDArmory.FX;
+using BDArmory.Misc;
+using BDArmory.UI;
 using KSP.UI.Screens;
+using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class ModuleWeapon : EngageableWeapon, IBDWeapon
     {
@@ -464,7 +468,7 @@ namespace BahaTurret
 
         IEnumerator FireHoldRoutine(KSPActionGroup group)
         {
-            KeyBinding key = Misc.AGEnumToKeybinding(group);
+            KeyBinding key = Misc.Misc.AGEnumToKeybinding(group);
             if (key == null)
             {
                 yield break;
@@ -574,8 +578,8 @@ namespace BahaTurret
 
 
                 //setup projectile colors
-                projectileColorC = Misc.ParseColor255(projectileColor);
-                startColorC = Misc.ParseColor255(startColor);
+                projectileColorC = Misc.Misc.ParseColor255(projectileColor);
+                startColorC = Misc.Misc.ParseColor255(startColor);
 
                 //init and zero points
                 targetPosition = Vector3.zero;
@@ -617,14 +621,14 @@ namespace BahaTurret
             //setup animations
             if (hasDeployAnim)
             {
-                deployState = Misc.SetUpSingleAnimation(deployAnimName, this.part);
+                deployState = Misc.Misc.SetUpSingleAnimation(deployAnimName, this.part);
                 deployState.normalizedTime = 0;
                 deployState.speed = 0;
                 deployState.enabled = true;
             }
             if (hasFireAnimation)
             {
-                fireState = Misc.SetUpSingleAnimation(fireAnimName, this.part);
+                fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, this.part);
                 fireState.enabled = false;
             }
             bulletInfo = BulletInfo.bullets[bulletType];
@@ -899,7 +903,7 @@ namespace BahaTurret
             }
 
             float timeGap = (60 / roundsPerMinute) * TimeWarp.CurrentRate;
-            if (Time.time - timeFired > timeGap && !isOverheated && !pointingAtSelf && !Misc.CheckMouseIsOnGui() &&
+            if (Time.time - timeFired > timeGap && !isOverheated && !pointingAtSelf && !Misc.Misc.CheckMouseIsOnGui() &&
                 WMgrAuthorized())
             {
                 bool effectsShot = false;
@@ -1123,7 +1127,7 @@ namespace BahaTurret
             if (BDArmorySettings.PHYSICS_RANGE == 0) maxDistance = 2500;
 
             float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
-            if (!pointingAtSelf && !Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated &&
+            if (!pointingAtSelf && !Misc.Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated &&
                 (part.RequestResource(ammoName, chargeAmount) >= chargeAmount || BDArmorySettings.INFINITE_AMMO))
             {
                 if (!audioSource.isPlaying)
@@ -1229,7 +1233,7 @@ namespace BahaTurret
             {
                 Transform tf = fireTransforms[i];
                 laserRenderers[i] = tf.gameObject.AddComponent<LineRenderer>();
-                Color laserColor = Misc.ParseColor255(projectileColor);
+                Color laserColor = Misc.Misc.ParseColor255(projectileColor);
                 laserColor.a = laserColor.a / 2;
                 laserRenderers[i].material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
                 laserRenderers[i].material.SetColor("_TintColor", laserColor);

@@ -1,8 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-namespace BahaTurret
+using BDArmory.CounterMeasure;
+using BDArmory.Parts;
+using BDArmory.Radar;
+
+namespace BDArmory.Misc
 {
 	public static class BDAExtensions
 	{

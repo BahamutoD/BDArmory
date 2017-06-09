@@ -1,9 +1,8 @@
-using System;
-using System.Collections.Generic;
-using BahaTurret.Shaders;
+using BDArmory.Shaders;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
 	public class TGPCameraEffects : MonoBehaviour 
 	{

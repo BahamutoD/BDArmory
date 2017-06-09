@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using BDArmory.FX;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Armor
 {
     public class BDArmor
     {

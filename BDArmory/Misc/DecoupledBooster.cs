@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public class DecoupledBooster : MonoBehaviour
     {

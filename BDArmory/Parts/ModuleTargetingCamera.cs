@@ -1,7 +1,11 @@
-using System;
 using System.Collections;
+using BDArmory.CounterMeasure;
+using BDArmory.Misc;
+using BDArmory.Radar;
+using BDArmory.UI;
 using UnityEngine;
-namespace BahaTurret
+
+namespace BDArmory.Parts
 {
 	public class ModuleTargetingCamera : PartModule
 	{
@@ -345,7 +349,7 @@ namespace BahaTurret
 			delayedEnabling = true;
 
 			Vector3d savedGTP = bodyRelativeGTP;
-			Debug.Log("[BDArmory]: saved gtp: " + Misc.FormattedGeoPos(savedGTP, true));
+			Debug.Log("[BDArmory]: saved gtp: " + Misc.Misc.FormattedGeoPos(savedGTP, true));
 			Debug.Log("[BDArmory]: groundStabilized: " + groundStabilized);
 
 			while(TargetingCamera.Instance == null)
@@ -830,7 +834,7 @@ namespace BahaTurret
 
 				//geo data
 				Rect geoRect = new Rect(imageRect.x, (camImageSize * 0.94f), camImageSize, 14);
-				string geoLabel = Misc.FormattedGeoPos(bodyRelativeGTP,false);
+				string geoLabel = Misc.Misc.FormattedGeoPos(bodyRelativeGTP,false);
 				GUI.Label(geoRect, geoLabel, dataStyle);
 
 				//target data
@@ -997,7 +1001,7 @@ namespace BahaTurret
 			//horizon indicator
 			float horizY = imageRect.y+imageRect.height-indicatorSize-indicatorBorder;
 			Vector3 hForward = Vector3.ProjectOnPlane(vesForward, upDirection);
-			float hAngle = -Misc.SignedAngle(hForward, vesForward, upDirection);
+			float hAngle = -Misc.Misc.SignedAngle(hForward, vesForward, upDirection);
 			horizY -= (hAngle/90) * (indicatorSize/2);
 			Rect horizonRect = new Rect(indicatorBorder + imageRect.x, horizY, indicatorSize, indicatorSize);
 			GUI.DrawTexture(horizonRect, BDArmorySettings.Instance.horizonIndicatorTexture, ScaleMode.StretchToFill, true);
@@ -1007,13 +1011,13 @@ namespace BahaTurret
 			GUI.DrawTexture(rollRect, rollReferenceTexture, ScaleMode.StretchToFill, true);
 			Vector3 localUp = vessel.ReferenceTransform.InverseTransformDirection(upDirection);
 			localUp = Vector3.ProjectOnPlane(localUp, Vector3.up).normalized;
-			float rollAngle = -Misc.SignedAngle(-Vector3.forward, localUp, Vector3.right);
+			float rollAngle = -Misc.Misc.SignedAngle(-Vector3.forward, localUp, Vector3.right);
 			GUIUtility.RotateAroundPivot(rollAngle, rollRect.center);
 			GUI.DrawTexture(rollRect, rollIndicatorTexture, ScaleMode.StretchToFill, true);
 			GUI.matrix = Matrix4x4.identity;
 
 			//target direction indicator
-			float angleToTarget = Misc.SignedAngle(hForward, Vector3.ProjectOnPlane(targetPointPosition-transform.position, upDirection), Vector3.Cross(upDirection, hForward));
+			float angleToTarget = Misc.Misc.SignedAngle(hForward, Vector3.ProjectOnPlane(targetPointPosition-transform.position, upDirection), Vector3.Cross(upDirection, hForward));
 			GUIUtility.RotateAroundPivot(angleToTarget, rollRect.center);
 			GUI.DrawTexture(rollRect, BDArmorySettings.Instance.targetDirectionTexture, ScaleMode.StretchToFill, true);
 			GUI.matrix = Matrix4x4.identity;
@@ -1423,7 +1427,7 @@ namespace BahaTurret
 				zoomFovs[i] = float.Parse(fovStrings[i]);
 			}*/
 
-			zoomFovs = Misc.ParseToFloatArray(zoomFOVs);
+			zoomFovs = Misc.Misc.ParseToFloatArray(zoomFOVs);
 		}
 
 		void OnDestroy()

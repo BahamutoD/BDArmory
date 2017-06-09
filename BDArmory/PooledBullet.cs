@@ -1,12 +1,16 @@
 using System;
 using System.Collections;
-using BahaTurret.Shaders;
+using BDArmory.Armor;
 using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Interface;
+using BDArmory.FX;
+using BDArmory.Parts;
+using BDArmory.Shaders;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     public class PooledBullet : MonoBehaviour
     {
@@ -30,7 +34,7 @@ namespace BahaTurret
         public BulletDragTypes dragType;
 
         public Vessel sourceVessel;
-        public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
+        public Color lightColor = Misc.Misc.ParseColor255("255, 235, 145, 255");
         public Color projectileColor;
 
         public string bulletTexturePath;

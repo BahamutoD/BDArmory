@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class LoadedVesselSwitcher : MonoBehaviour
@@ -59,7 +60,7 @@ namespace BahaTurret
 
             _ready = true;
             BDArmorySettings.Instance.hasVS = true;
-            _guiCheckIndex = Misc.RegisterGUIRect(new Rect());
+            _guiCheckIndex = Misc.Misc.RegisterGUIRect(new Rect());
         }
 
 
@@ -137,11 +138,11 @@ namespace BahaTurret
                     _windowRect.height = _windowHeight;
                     _windowRect = GUI.Window(10293444, _windowRect, ListWindow, "BDA Vessel Switcher",
                         HighLogic.Skin.window);
-                    Misc.UpdateGUIRect(_windowRect, _guiCheckIndex);
+                    Misc.Misc.UpdateGUIRect(_windowRect, _guiCheckIndex);
                 }
                 else
                 {
-                    Misc.UpdateGUIRect(new Rect(), _guiCheckIndex);
+                    Misc.Misc.UpdateGUIRect(new Rect(), _guiCheckIndex);
                 }
 
                 if (_teamSwitchDirty)

@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.CounterMeasure;
+using BDArmory.Misc;
+using BDArmory.Radar;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public abstract class MissileBase : EngageableWeapon, IBDWeapon
     {

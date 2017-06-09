@@ -1,8 +1,7 @@
-using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace BahaTurret
+namespace BDArmory.UI
 {
 	public static class BDGUIUtils
 	{
@@ -130,7 +129,7 @@ namespace BahaTurret
 
 		public static void UseMouseEventInRect(Rect rect)
 		{
-			if(Misc.MouseIsInRect(rect) && Event.current.isMouse && (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp))
+			if(Misc.Misc.MouseIsInRect(rect) && Event.current.isMouse && (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp))
 			{
 				Event.current.Use();
 			}

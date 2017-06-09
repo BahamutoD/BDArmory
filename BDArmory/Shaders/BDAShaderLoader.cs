@@ -2,7 +2,7 @@ using System.Collections;
 using System.IO;
 using UnityEngine;
 
-namespace BahaTurret.Shaders
+namespace BDArmory.Shaders
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, false)]
     public class BDAShaderLoader : MonoBehaviour

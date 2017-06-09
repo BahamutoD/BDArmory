@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BahaTurret
+﻿namespace BDArmory.Misc
 {
     public class RippleOption
     {

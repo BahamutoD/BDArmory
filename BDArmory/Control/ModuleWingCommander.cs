@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Control
 {
     public class ModuleWingCommander : PartModule
     {

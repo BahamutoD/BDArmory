@@ -1,4 +1,4 @@
-namespace BahaTurret
+namespace BDArmory.Misc
 {
     public interface IEngageService
     {

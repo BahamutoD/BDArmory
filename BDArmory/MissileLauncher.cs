@@ -1,11 +1,16 @@
 using System;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using BDArmory.Core.Extension;
+using BDArmory.FX;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.Radar;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {	
 	public class MissileLauncher : MissileBase
     {
@@ -472,7 +477,7 @@ namespace BahaTurret
 			
 			if(deployAnimationName != "")
 			{
-				deployStates = Misc.SetUpAnimation(deployAnimationName, part);
+				deployStates = Misc.Misc.SetUpAnimation(deployAnimationName, part);
 			}
 			else
 			{

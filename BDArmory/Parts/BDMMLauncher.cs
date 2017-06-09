@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-
-namespace BahaTurret
+namespace BDArmory.Parts
 {
 	public class BDMMLauncher : PartModule
 	{

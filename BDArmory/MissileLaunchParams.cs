@@ -1,7 +1,7 @@
-﻿using System;
+﻿using BDArmory.Parts;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory
 {
 	public struct MissileLaunchParams
 	{

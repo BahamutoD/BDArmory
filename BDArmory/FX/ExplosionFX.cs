@@ -1,10 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using BDArmory.Core.Extension;
+using BDArmory.Misc;
+using BDArmory.Parts;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.FX
 {
     public class ExplosionFX : MonoBehaviour
     {
@@ -37,7 +39,7 @@ namespace BahaTurret
                 }
             }
             lightFX = gameObject.AddComponent<Light>();
-            lightFX.color = Misc.ParseColor255("255,238,184,255");
+            lightFX.color = Misc.Misc.ParseColor255("255,238,184,255");
             lightFX.intensity = 8;
             lightFX.range = range*3f;
             lightFX.shadows = LightShadows.None;

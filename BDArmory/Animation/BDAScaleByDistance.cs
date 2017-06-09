@@ -1,8 +1,6 @@
-using System;
 using UnityEngine;
 
-
-namespace BahaTurret
+namespace BDArmory.Animation
 {
     public class BDAScaleByDistance : PartModule
     {

@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using UnityEngine;
-namespace BahaTurret
+
+namespace BDArmory.CounterMeasure
 {
 	public class CMSmoke : MonoBehaviour
 	{

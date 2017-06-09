@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Misc;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Radar
 {
     public class RadarWarningReceiver : PartModule
     {

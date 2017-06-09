@@ -1,8 +1,9 @@
-using System;
 using System.Collections;
+using BDArmory.Misc;
+using BDArmory.UI;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.CounterMeasure
 {
     public class CMDropper : PartModule
     {

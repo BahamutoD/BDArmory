@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Misc
 {
 	public static class VectorUtils
 	{

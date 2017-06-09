@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using BDArmory.Core.Extension;
+using BDArmory.Misc;
+using BDArmory.Radar;
+using BDArmory.UI;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public class BDModularGuidance : MissileBase
     {
@@ -110,7 +112,7 @@ namespace BahaTurret
                 Fields["CruiseAltitude"].guiActiveEditor = _guidanceIndex == 3;
             }
 
-            Misc.RefreshAssociatedWindows(part);
+            Misc.Misc.RefreshAssociatedWindows(part);
         }
         public override void OnFixedUpdate()
         {
@@ -338,7 +340,7 @@ namespace BahaTurret
             this.TargetingMode = newTargetingMode;
             this._targetingLabel = newTargetingMode.ToString();
 
-            Misc.RefreshAssociatedWindows(part);
+            Misc.Misc.RefreshAssociatedWindows(part);
         }
 
         private void OnDestroy()
@@ -657,7 +659,7 @@ namespace BahaTurret
                 TimeFired = Time.time;
 
                 MissileState = MissileStates.Drop;
-                Misc.RefreshAssociatedWindows(part);
+                Misc.Misc.RefreshAssociatedWindows(part);
 
                 ArmingExplosive();
                 HasFired = true;

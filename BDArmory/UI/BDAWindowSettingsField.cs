@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.UI
 {
     [AttributeUsage(AttributeTargets.Field)]
     public class BDAWindowSettingsField : Attribute

@@ -2,7 +2,7 @@ using System;
 using BDArmory.Core.Extension;
 using UnityEngine;
 
-namespace BahaTurret
+namespace BDArmory.Parts
 {
     public class SeismicChargeFX : MonoBehaviour
     {
