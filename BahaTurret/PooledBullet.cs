@@ -54,6 +54,7 @@ namespace BahaTurret
         public float radius = 30;
         public float blastPower = 8;
         public float blastHeat = -1;
+        public float bulletDmgMult = 1;
 
         public string explModelPath;
         public string explSoundPath;
@@ -348,7 +349,9 @@ namespace BahaTurret
                             //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
                         {
                             float heatDamage = (mass/(hitPart.crashTolerance*hitPart.mass))*impactVelocity*
-                                               impactVelocity*BDArmorySettings.DMG_MULTIPLIER;
+                                               impactVelocity*BDArmorySettings.DMG_MULTIPLIER*
+                                               bulletDmgMult
+                                               ;
                             //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance and mass
                             if (!penetrated)
                             {
