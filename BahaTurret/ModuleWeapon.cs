@@ -232,6 +232,8 @@ namespace BahaTurret
         [KSPField]
         public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
         [KSPField]
+        public float bulletDmgMult = 1; //Used for heat damage modifier for non-explosive bullets
+        [KSPField]
         public float bulletVelocity = 860; //velocity in meters/second
 
         [KSPField]
@@ -1014,6 +1016,7 @@ namespace BahaTurret
                         firedBullet.transform.position = fireTransform.position;
 
                         pBullet.mass = bulletMass;
+                        pBullet.bulletDmgMult = bulletDmgMult;
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
                         pBullet.flightTimeElapsed = 0;
                         pBullet.maxDistance = Mathf.Max(maxTargetingRange, maxEffectiveDistance); //limit distance to weapons maxeffective distance
