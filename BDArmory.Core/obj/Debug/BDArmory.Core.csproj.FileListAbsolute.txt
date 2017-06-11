@@ -1,0 +1,16 @@
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\BDArmory.Core.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\BDArmory.Core.pdb
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\Assembly-CSharp.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\UnityEngine.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\UnityEngine.UI.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\Assembly-CSharp-firstpass.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\TrackIRUnity.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\System.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\System.Xml.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\KSPAssets.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\Mono.Cecil.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\TDx.TDxInput.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\Mono.Security.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\UnityEngine.xml
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\obj\Debug\BDArmory.Core.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\obj\Debug\BDArmory.Core.pdb

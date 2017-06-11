@@ -1,5 +1,6 @@
 ﻿
 using BDArmory.Core.Interface;
+using BDArmory.Core.Services;
 using UnityEngine;
 
 namespace BDArmory.Core
@@ -9,7 +10,7 @@ namespace BDArmory.Core
     {
         private void Awake()
         {
-            Dependencies.Register<IDamageService, TemperatureDamageService>();
+            Dependencies.Register<DamageService, TemperatureDamageService>();
         }
     }
 }

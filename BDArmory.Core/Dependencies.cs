@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Management.Instrumentation;
+using Smooth.Slinq.Test;
 
 namespace BDArmory.Core
 {
@@ -10,7 +13,20 @@ namespace BDArmory.Core
         {
             if (!Systems.ContainsKey(typeof(T)))
             {
+
                  Systems.Add(typeof(T), Activator.CreateInstance<TN>());
+            }
+        }
+
+        public static void Register<T>(object obj)
+        {
+            if (obj is null)
+            {
+                throw new NullReferenceException("Registering null constant");
+            }
+            if (!Systems.ContainsKey(typeof(T)))
+            {
+                Systems.Add(typeof(T), obj);
             }
         }
 
@@ -28,5 +44,9 @@ namespace BDArmory.Core
             return instance as T;
         }
 
+        public static bool Exist<T>() where T : class
+        {
+            return Systems.ContainsKey(typeof(T));
+        }
     }
 }

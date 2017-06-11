@@ -376,7 +376,7 @@ namespace BDArmory
 
                             if (hitPart.vessel != sourceVessel)
                             {
-                                Dependencies.Get<IDamageService>().AddDamageToPart(hitPart, heatDamage);
+                                hitPart.AddDamage(heatDamage);
                             }
 
                             float overKillHeatDamage = (float) (hitPart.temperature - hitPart.maxTemp);

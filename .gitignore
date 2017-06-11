@@ -87,3 +87,5 @@ Icon
 /.vs/BDArmory_JRODRIGV/v15
 /.vs/slnx.sqlite
 /BahaTurret/bin/Release
+/BDArmory/bin/Debug
+/BDArmory.Multiplayer/obj
