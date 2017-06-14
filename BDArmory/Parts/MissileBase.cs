@@ -619,9 +619,11 @@ namespace BDArmory.Parts
         {
             //Guard clauses     
             if (!TargetAcquired) return;
-
+            
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationRadius) return;
+            if (DetonationDistance == 0) return; //skip check of user set to zero, rely on OnCollisionEnter
+            
             float distance;
             if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationRadius)
             {

@@ -1,0 +1,15 @@
+SM changelog for Ammo overhaul and bullet sweep detail
+
+Added bulletType =  to all applicable turrets Browning AN/M2 bahaOMillennium bahaM230ChainGun bahaHiddenVulcan bahaM102Howitzer bahaM1Abrams BDAcGKmk2 GoalKeeperBDAcMk1 bahaGoalKeeper bahaGau-8 bahaTurret50cal
+
+Merge existing BDA ammunition resource definitions  with  UA master list 
+
+Merge existing BDA Bullet and shell sweep definitions  with  UA master list 
+
+Created large list of all current ammunition across all weapons mods 
+
+Defined bullet and shell sweep for most popular ammunition types  , obtained max dat for large caliber marine shells
+
+Created universal ammo box, a cfg and texture only addition
+
+Assigned values to universalAmmunition supply 
