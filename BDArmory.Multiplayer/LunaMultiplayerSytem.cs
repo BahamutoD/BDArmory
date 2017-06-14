@@ -25,7 +25,7 @@ namespace BDArmory.Multiplayer
 
             try
             {
-                SystemsContainer.Get<ModApiSystem>().RegisterUpdateModHandler(ModName, HandlerFunction);
+                SystemsContainer.Get<ModApiSystem>().RegisterFixedUpdateModHandler(ModName, HandlerFunction);
                 Dependencies.Register<IMultiplayerSystem>(this);
                 SuscribeToCoreEvents();
 
@@ -40,7 +40,8 @@ namespace BDArmory.Multiplayer
 
         public void HandlerFunction(byte[] messageData)
         {
-            ScreenMessages.PostScreenMessage("Damage message received!", 2f, ScreenMessageStyle.UPPER_CENTER);
+            Debug.Log("[BDArmory]: Message received"+ messageData.Length);
+
         }
 
         private void SuscribeToCoreEvents()
@@ -57,7 +58,7 @@ namespace BDArmory.Multiplayer
         public void SendMessage(EventArgs message)
         {
             Debug.Log("[BDArmory]: Sending message");
-            SystemsContainer.Get<ModApiSystem>().SendModMessage(ModName, BinaryUtils.ObjectToByteArray(message), false);
+            SystemsContainer.Get<ModApiSystem>().SendModMessage(ModName, BinaryUtils.ObjectToByteArray(message), true);
         }
 
         void OnDestroy()

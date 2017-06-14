@@ -34,11 +34,10 @@
       <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="LunaClient">
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\GameData\LunaMultiPlayer\Plugins\LunaClient.dll</HintPath>
+      <HintPath>LMPDependencies\LunaClient.dll</HintPath>
     </Reference>
-    <Reference Include="LunaCommon, Version=1.0.0.29894, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\GameData\LunaMultiPlayer\Plugins\LunaCommon.dll</HintPath>
+    <Reference Include="LunaCommon">
+      <HintPath>LMPDependencies\LunaCommon.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
