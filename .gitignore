@@ -1,10 +1,8 @@
 #######################################
 BDArmory Ignore
 #######################################
-BahaTurret/BDArmory.csproj
 BahaTurret/BDArmory.csproj.user
 
-BahaTurret/Distribution/GameData/BDArmory/Plugins/BahaTurret.dll
 BahaTurret/.vs
 BahaTurret/obj
 BahaTurret/bin/Debug/
@@ -23,19 +21,15 @@ Unity Ignore
 #######################################
 
 TrackIRUnity.dll
-Assembly-*
 Mono*
 TDx*
-UnityEngine.dll
 *.pdb
 *.jar
 *.bat
 *.zip
-KSPAssets.dll
 KSPCore.dll
 KSPUtil.dll
 SaveUpgradePipeline.Core.dll
-UnityEngine.UI.dll
 UnityEngine.xml
 Vectrosity.dll
 
