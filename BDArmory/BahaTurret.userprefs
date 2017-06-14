@@ -1,0 +1,34 @@
+﻿<Properties StartupItem="BahaTurret.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="MissileFire.cs">
+    <Files>
+      <File FileName="MissileFire.cs" Line="914" Column="8" />
+      <File FileName="ModuleWeapon.cs" Line="1" Column="1" />
+      <File FileName="BDModulePilotAI.cs" Line="1" Column="1" />
+      <File FileName="RadarUtils.cs" Line="1" Column="1" />
+      <File FileName="ModuleTargetingCamera.cs" Line="1" Column="1" />
+      <File FileName="ModuleRadar.cs" Line="1" Column="1" />
+      <File FileName="BDGUIUtils.cs" Line="1" Column="1" />
+      <File FileName="BDRotaryRail.cs" Line="1" Column="1" />
+      <File FileName="VesselRadarData.cs" Line="1" Column="1" />
+      <File FileName="TargetingCamera.cs" Line="1" Column="1" />
+      <File FileName="BDArmorySettings.cs" Line="1" Column="1" />
+      <File FileName="BDAPersistantSettingsField.cs" Line="1" Column="1" />
+      <File FileName="BDInputSettingsFields.cs" Line="1" Column="1" />
+      <File FileName="PooledBullet.cs" Line="1" Column="1" />
+      <File FileName="VectorUtils.cs" Line="1" Column="1" />
+      <File FileName="BDAEditorCategory.cs" Line="1" Column="1" />
+      <File FileName="MissileLauncher.cs" Line="1" Column="1" />
+      <File FileName="BDAShaderLoader.cs" Line="1" Column="1" />
+      <File FileName="TGPCameraEffects.cs" Line="1" Column="1" />
+      <File FileName="BDATargetManager.cs" Line="1" Column="1" />
+      <File FileName="RocketLauncher.cs" Line="1" Column="1" />
+      <File FileName="ExplosionFX.cs" Line="1" Column="1" />
+      <File FileName="BulletHitFX.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

@@ -1,0 +1,15 @@
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\BahaTurret.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\BahaTurret.pdb
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\Assembly-CSharp.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\KSPAssets.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\UnityEngine.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\UnityEngine.UI.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\Assembly-CSharp-firstpass.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\TrackIRUnity.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\System.Xml.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\Mono.Cecil.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\TDx.TDxInput.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\Mono.Security.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\bin\Debug\UnityEngine.xml
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\obj\Debug\BahaTurret.dll
+C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BahaTurret\obj\Debug\BahaTurret.pdb
