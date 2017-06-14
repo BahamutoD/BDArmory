@@ -1,11 +1,14 @@
 #######################################
 BDArmory Ignore
 #######################################
-BahaTurret/BDArmory.csproj.user
+BDArmory/BDArmory.csproj.user
 
 BahaTurret/.vs
 BahaTurret/obj
 BahaTurret/bin/Debug/
+BDArmory/.vs
+BDArmory/obj
+BDArmory/bin/Debug/
 
 BahaTurret/.vs/config
 BahaTurret/LocalDev/7za_dir.txt
@@ -15,6 +18,20 @@ BahaTurret/LocalDev/ksp_production_dir.txt
 BahaTurret/LocalDev/mono_exe.txt
 BahaTurret/LocalDev/pdb2mdb_exe.txt
 BahaTurret/BahaTurret.userprefs
+
+BDArmory/.vs
+BDArmory/obj
+BDArmory/bin/Debug/
+
+BDArmory/.vs/config
+BDArmory/LocalDev/7za_dir.txt
+BDArmory/LocalDev/dist_dir.txt
+BDArmory/LocalDev/ksp_dir.txt
+BDArmory/LocalDev/ksp_production_dir.txt
+BDArmory/LocalDev/mono_exe.txt
+BDArmory/LocalDev/pdb2mdb_exe.txt
+BDArmory/BahaTurret.userprefs
+
 
 #######################################
 Unity Ignore
@@ -82,4 +99,5 @@ Icon
 /.vs/slnx.sqlite
 /BahaTurret/bin/Release
 /BDArmory/bin/Debug
+/BDArmory.Core/obj
 /BDArmory.Multiplayer/obj
