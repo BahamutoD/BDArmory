@@ -1071,6 +1071,8 @@ namespace BahaTurret
                     return "MISSILE";
                 case 5:
                     return "DETECTION";
+                case 6:
+                    return "SONAR";
             }
             return "UNKNOWN";
             //{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5}

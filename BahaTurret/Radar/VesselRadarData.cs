@@ -497,7 +497,6 @@ namespace BahaTurret
             }
         }
 
-
         void IncreaseRange()
         {
             int origIndex = rangeIndex;
@@ -617,7 +616,6 @@ namespace BahaTurret
                 radar.DisableRadar();
             }
         }
-
 
         public void SlaveTurrets()
         {
@@ -1325,7 +1323,9 @@ namespace BahaTurret
             RadarDisplayData rData = new RadarDisplayData();
             rData.vessel = contactData.vessel;
 
-            if (rData.vessel == vessel)
+            if (rData.vessel == vessel ||
+                (rData.vessel.FindPartModulesImplementing<ModuleStealth>() != null || ModuleStealth.stealthEnabled) 
+                )
             {
                 return;
             }
