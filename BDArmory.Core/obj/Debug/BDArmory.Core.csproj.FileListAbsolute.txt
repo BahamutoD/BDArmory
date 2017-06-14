@@ -14,3 +14,12 @@ C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\Mono.Secur
 C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\bin\Debug\UnityEngine.xml
 C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\obj\Debug\BDArmory.Core.dll
 C:\Users\jesus\Source\Repos\BDArmory_JRODRIGV\BDArmory.Core\obj\Debug\BDArmory.Core.pdb
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\bin\Debug\BDArmory.Core.dll
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\bin\Debug\BDArmory.Core.pdb
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\bin\Debug\Assembly-CSharp.dll
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\bin\Debug\KSPAssets.dll
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\bin\Debug\UnityEngine.dll
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\bin\Debug\UnityEngine.UI.dll
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\obj\Debug\BDArmory.Core.dll
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\obj\Debug\BDArmory.Core.pdb
+D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory.Core\obj\Debug\BDArmory.Core.csprojResolveAssemblyReference.cache

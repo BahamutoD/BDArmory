@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.Control
@@ -74,16 +75,19 @@ namespace BDArmory.Control
                 new Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>>();
             pilots.Add(BDArmorySettings.BDATeams.A, new List<BDModulePilotAI>());
             pilots.Add(BDArmorySettings.BDATeams.B, new List<BDModulePilotAI>());
-            foreach (var v in BDATargetManager.LoadedVessels)
+            List<Vessel>.Enumerator loadedVessels = BDATargetManager.LoadedVessels.GetEnumerator();
+            while (loadedVessels.MoveNext())
             {
-                if (!v || !v.loaded) continue;
+                if (loadedVessels.Current == null) continue;
+                if (!loadedVessels.Current.loaded) continue;
                 BDModulePilotAI pilot = null;
-                foreach (var p in v.FindPartModulesImplementing<BDModulePilotAI>())
+                List<BDModulePilotAI>.Enumerator ePilots = loadedVessels.Current.FindPartModulesImplementing<BDModulePilotAI>().ToList().GetEnumerator();
+                while (ePilots.MoveNext())
                 {
-                    pilot = p;
+                    pilot = ePilots.Current;
                     break;
                 }
-
+                ePilots.Dispose();
                 if (!pilot || !pilot.weaponManager) continue;
 
                 pilots[BDATargetManager.BoolToTeam(pilot.weaponManager.team)].Add(pilot);
@@ -94,7 +98,8 @@ namespace BDArmory.Control
                     pilot.weaponManager.ToggleGuardMode();
                 }
             }
-
+            loadedVessels.Dispose();
+            
             //clear target database so pilots don't attack yet
             BDATargetManager.ClearDatabase();
 
@@ -159,51 +164,58 @@ namespace BDArmory.Control
                 }
                 else
                 {
-                    foreach (var t in pilots.Keys)
+                    Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>>.KeyCollection.Enumerator keys = pilots.Keys.GetEnumerator();
+                    while (keys.MoveNext())
                     {
-                        foreach (var p in pilots[t])
+                        List<BDModulePilotAI>.Enumerator ePilots = pilots[keys.Current].GetEnumerator();
+                        while (ePilots.MoveNext())
                         {
-                            if (p.currentCommand == BDModulePilotAI.PilotCommands.Follow &&
-                                Vector3.Distance(p.vessel.CoM, p.commandLeader.vessel.CoM) > 1000f)
-                            {
-                                competitionStatus = "Competition: Waiting for teams to get in position.";
-                                waiting = true;
-                            }
+                            if (ePilots.Current == null) continue;
+                            if (ePilots.Current.currentCommand != BDModulePilotAI.PilotCommands.Follow ||
+                                !(Vector3.Distance(ePilots.Current.vessel.CoM, ePilots.Current.commandLeader.vessel.CoM) >
+                                  1000f)) continue;
+                            competitionStatus = "Competition: Waiting for teams to get in position.";
+                            waiting = true;
                         }
+                        ePilots.Dispose();
                     }
+                    keys.Dispose();
                 }
 
                 yield return null;
             }
 
             //start the match
-            foreach (var t in pilots.Keys)
+            Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>>.KeyCollection.Enumerator pKeys = pilots.Keys.GetEnumerator();
+            while (pKeys.MoveNext())
             {
-                foreach (var p in pilots[t])
+                List<BDModulePilotAI>.Enumerator pPilots = pilots[pKeys.Current].GetEnumerator();
+                while (pPilots.MoveNext())
                 {
-                    if (!p) continue;
+                    if (pPilots.Current == null) continue;
 
                     //enable guard mode
-                    if (!p.weaponManager.guardMode)
+                    if (!pPilots.Current.weaponManager.guardMode)
                     {
-                        p.weaponManager.ToggleGuardMode();
+                      pPilots.Current.weaponManager.ToggleGuardMode();
                     }
 
                     //report all vessels
-                    if (BDATargetManager.BoolToTeam(p.weaponManager.team) == BDArmorySettings.BDATeams.B)
+                    if (BDATargetManager.BoolToTeam(pPilots.Current.weaponManager.team) == BDArmorySettings.BDATeams.B)
                     {
-                        BDATargetManager.ReportVessel(p.vessel, aLeader.weaponManager);
+                        BDATargetManager.ReportVessel(pPilots.Current.vessel, aLeader.weaponManager);
                     }
                     else
                     {
-                        BDATargetManager.ReportVessel(p.vessel, bLeader.weaponManager);
+                        BDATargetManager.ReportVessel(pPilots.Current.vessel, bLeader.weaponManager);
                     }
 
                     //release command
-                    p.ReleaseCommand();
-                    p.defaultOrbitCoords = centerGPS;
+                    pPilots.Current.ReleaseCommand();
+                    pPilots.Current.defaultOrbitCoords = centerGPS;
                 }
             }
+            pKeys.Dispose();
             competitionStatus = "Competition starting!  Good luck!";
             yield return new WaitForSeconds(2);
             competitionStarting = false;

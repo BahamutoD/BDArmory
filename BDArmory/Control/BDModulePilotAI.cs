@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.UI;
@@ -231,9 +232,10 @@ namespace BDArmory.Control
 				MissileFire.OnToggleTeam += OnToggleTeam;
 				vesselTransform = vessel.ReferenceTransform;
 
-				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
+			    List<MissileFire>.Enumerator wms = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (wms.MoveNext())
 				{
-					weaponManager = wm;
+					weaponManager = wms.Current;
 					break;
 				}
 
@@ -645,28 +647,26 @@ namespace BDArmory.Control
 				}
 				else if(command != PilotCommands.Follow && !isLeadingFormation) //check collisions with other flying vessels
 				{
-					foreach(var v in BDATargetManager.LoadedVessels)
-					{
-						if(v && v!=vessel && !v.Landed && Vector3.Dot(v.transform.position-vesselTransform.position, vesselTransform.up) > 0)
-						{
-							if(PredictCollisionWithVessel(v, 2.5f, 0.5f, out badDirection))
-							{
-								avoid = true;
-								break;
-							}
-						}
-					}
+				    List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
+                    while (vs.MoveNext())
+                    {
+                        if (vs.Current == null) continue;
+                        if (vs.Current == vessel || vs.Current.Landed ||
+                            !(Vector3.Dot(vs.Current.transform.position - vesselTransform.position,
+                                  vesselTransform.up) > 0)) continue;
+                        if (!PredictCollisionWithVessel(vs.Current, 2.5f, 0.5f, out badDirection)) continue;
+                        avoid = true;
+                        break;
+                    }
 				}
 
-				if(avoid)
-				{
-					collisionDetectionTimer += Time.fixedDeltaTime;
-					Vector3 axis = -Vector3.Cross(vesselTransform.up, badDirection);
-					collisionAvoidDirection = Quaternion.AngleAxis(25, axis) * badDirection;        //don't need to change the angle that much to avoid, and it should prevent stupid suicidal manuevers as well
+			    if (!avoid) return false;
+			    collisionDetectionTimer += Time.fixedDeltaTime;
+			    Vector3 axis = -Vector3.Cross(vesselTransform.up, badDirection);
+			    collisionAvoidDirection = Quaternion.AngleAxis(25, axis) * badDirection;        //don't need to change the angle that much to avoid, and it should prevent stupid suicidal manuevers as well
 
-					FlyAvoidCollision(s);
-					return true;
-				}
+			    FlyAvoidCollision(s);
+			    return true;
 			}
 			else
 			{
@@ -1798,22 +1798,20 @@ namespace BDArmory.Control
 			}
 			else
 			{
-				foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
-				{
-					if(mf.currentTarget!=null)
-					{
-						targetVessel = mf.currentTarget.Vessel;
-					}
-					else
-					{
-						targetVessel = null;
-					}
+			    List<MissileFire>.Enumerator mfs = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mfs.MoveNext())
+                {
+                    if (mfs.Current == null) continue;
+					targetVessel = mfs.Current.currentTarget!=null 
+                        ? mfs.Current.currentTarget.Vessel 
+                        : null;
 
-					weaponManager = mf;
-					mf.pilotAI = this;
+					weaponManager = mfs.Current;
+                    mfs.Current.pilotAI = this;
 
 					return;
 				}
+                mfs.Dispose();
 			}
 		}
 
@@ -1827,31 +1825,16 @@ namespace BDArmory.Control
 			Ray ray = new Ray(vesselTransform.position + (50*vesselTransform.up), direction);
 			float distance = Mathf.Clamp((float)vessel.srfSpeed * 4f, 125f, 2500);
 			RaycastHit hit;
-			if(Physics.SphereCast(ray, 10, out hit, distance, layerMask))
-			{
-				Rigidbody otherRb = hit.collider.attachedRigidbody;
-				if(otherRb)
-				{
-					if(Vector3.Dot(otherRb.velocity, vessel.srf_velocity) < 0)
-					{
-						badDirection = hit.point - ray.origin;
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-				}
-				else
-				{
-					badDirection = hit.point - ray.origin;
-					return true;
-				}
-			}
-			else
-			{
-				return false;
-			}
+		    if (!Physics.SphereCast(ray, 10, out hit, distance, layerMask)) return false;
+		    Rigidbody otherRb = hit.collider.attachedRigidbody;
+		    if(otherRb)
+		    {
+		        if (!(Vector3.Dot(otherRb.velocity, vessel.srf_velocity) < 0)) return false;
+		        badDirection = hit.point - ray.origin;
+		        return true;
+		    }
+		    badDirection = hit.point - ray.origin;
+		    return true;
 		}
 
 		void UpdateCommand(FlightCtrlState s)
@@ -2005,67 +1988,53 @@ namespace BDArmory.Control
 
 		public void ReleaseCommand()
 		{
-			if(vessel && command != PilotCommands.Free)
-			{
-				if(command == PilotCommands.Follow)
-				{
-					if(commandLeader)
-					{
-						foreach(var pilot in commandLeader.vessel.FindPartModulesImplementing<BDModulePilotAI>())
-						{
-							pilot.isLeadingFormation = false;
-						}
-					}
-				}
+		    if (!vessel || command == PilotCommands.Free) return;
+		    if(command == PilotCommands.Follow)
+		    {
+		        if(commandLeader)
+		        {
+		            List<BDModulePilotAI>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<BDModulePilotAI>().GetEnumerator();
+                    while (pilots.MoveNext())
+                    {
+                        if (pilots.Current == null) continue;
+                        pilots.Current.isLeadingFormation = false;
+		            }
+                    pilots.Dispose();
+		        }
+		    }
+		    Debug.Log(vessel.vesselName + " was released from command.");
+		    command = PilotCommands.Free;
 
-				Debug.Log(vessel.vesselName + " was released from command.");
-				command = PilotCommands.Free;
-
-				defaultOrbitCoords = VectorUtils.WorldPositionToGeoCoords(vesselTransform.position, vessel.mainBody);
-			}
+		    defaultOrbitCoords = VectorUtils.WorldPositionToGeoCoords(vesselTransform.position, vessel.mainBody);
 		}
 
 		public void CommandFollow(ModuleWingCommander leader, int followerIndex)
 		{
-			if(!pilotEnabled)
-			{
-				return;
-			}
+		    if (!pilotEnabled) return;
+		    if (leader == vessel || followerIndex < 0) return;
 
-			if(leader == vessel || followerIndex < 0)
-			{
-				return;
-			}
-
-			Debug.Log(vessel.vesselName + " was commanded to follow.");
-			command = PilotCommands.Follow;
-			commandLeader = leader;
-			commandFollowIndex = followerIndex;
-
-			foreach(var pilot in commandLeader.vessel.FindPartModulesImplementing<BDModulePilotAI>())
-			{
-				pilot.isLeadingFormation = true;
-			}
+		    Debug.Log(vessel.vesselName + " was commanded to follow.");
+		    command = PilotCommands.Follow;
+		    commandLeader = leader;
+		    commandFollowIndex = followerIndex;
+		    List<BDModulePilotAI>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<BDModulePilotAI>().GetEnumerator();
+		    while (pilots.MoveNext())
+		    {
+		        if (pilots.Current == null) continue;
+		        pilots.Current.isLeadingFormation = true;
+		    }
+            pilots.Dispose();
 		}
 
 		public void CommandAG(KSPActionGroup ag)
 		{
-			if(!pilotEnabled)
-			{
-				return;
-			}
-
-
+			if(!pilotEnabled) return;
 			vessel.ActionGroups.ToggleGroup(ag);
 		}
 
 		public void CommandFlyTo(Vector3 gpsCoords)
 		{
-			if(!pilotEnabled)
-			{
-				return;
-			}
-
+			if(!pilotEnabled) return;
 
 			Debug.Log(vessel.vesselName + " was commanded to fly to.");
 			defaultOrbitCoords = gpsCoords;
@@ -2075,11 +2044,7 @@ namespace BDArmory.Control
 
 		public void CommandAttack(Vector3 gpsCoords)
 		{
-			if(!pilotEnabled)
-			{
-				return;
-			}
-
+		    if (!pilotEnabled) return;
 
 			Debug.Log(vessel.vesselName + " was commanded to attack.");
 			defaultOrbitCoords = gpsCoords;
@@ -2089,28 +2054,20 @@ namespace BDArmory.Control
 
 		void OnGUI()
 		{
-			if(pilotEnabled && vessel.isActiveVessel)	
-			{
-				if(BDArmorySettings.DRAW_DEBUG_LABELS)
-				{
-					GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.vessel.name+":"+ debugString);	
-				}
+		    if (!pilotEnabled || !vessel.isActiveVessel) return;
+		    if(BDArmorySettings.DRAW_DEBUG_LABELS)
+		    {
+		        GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.vessel.name+":"+ debugString);	
+		    }
 
-				if(BDArmorySettings.DRAW_DEBUG_LINES)
-				{
-					if(command == PilotCommands.Follow)
-					{
-						BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, commandPosition, 2, Color.red);
-					}
+		    if (!BDArmorySettings.DRAW_DEBUG_LINES) return;
+		    if(command == PilotCommands.Follow)
+		    {
+		        BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, commandPosition, 2, Color.red);
+		    }
 
-
-					BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + rollTarget, 2, Color.blue);
-					BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right) + angVelRollTarget, 2, Color.green);
-				}
-
-
-			}
+		    BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + rollTarget, 2, Color.blue);
+		    BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right) + angVelRollTarget, 2, Color.green);
 		}
-
 	}
 }

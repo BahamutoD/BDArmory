@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using BDArmory.FX;
 using UnityEngine;
 
@@ -61,18 +64,21 @@ namespace BDArmory.Armor
         public void CreateExplosion(Part part)
         {
             float explodeScale = 0;
-            foreach (var current in part.Resources)
+            IEnumerator<PartResource> resources = part.Resources.GetEnumerator();
+            while (resources.MoveNext())
             {
-                switch (current.resourceName)
+              if (resources.Current == null) continue;
+                switch (resources.Current.resourceName)
                 {
                     case "LiquidFuel":
-                        explodeScale += (float) current.amount;
+                        explodeScale += (float)resources.Current.amount;
                         break;
                     case "Oxidizer":
-                        explodeScale += (float) current.amount;
+                        explodeScale += (float)resources.Current.amount;
                         break;
                 }
             }
+            resources.Dispose();
             explodeScale /= 100;
             part.explode();
             ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale*blastRadius, explodeScale*blastPower*2,
@@ -83,13 +89,13 @@ namespace BDArmory.Armor
         {
             if (!hitPart)
                 return null;
-            var nodes = hitPart.partInfo.partConfig.GetNodes("BDARMOR");
-            foreach (ConfigNode configNode in nodes)
+            List<ConfigNode>.Enumerator nodes = hitPart.partInfo.partConfig.GetNodes("BDARMOR").ToList().GetEnumerator();
+            while (nodes.MoveNext())
             {
-                var current = configNode;
+                if (nodes.Current == null) continue;
                 Transform transform;
-                if (current.HasValue("ArmorRootTransform"))
-                    transform = hitPart.FindModelTransform(current.GetValue("ArmorRootTransform"));
+                if (nodes.Current.HasValue("ArmorRootTransform"))
+                    transform = hitPart.FindModelTransform(nodes.Current.GetValue("ArmorRootTransform"));
                 else
                     transform = hitPart.partTransform;
                 if (!transform)
@@ -99,9 +105,10 @@ namespace BDArmory.Armor
                 }
                 if (collider.transform == transform || collider.transform.IsChildOf(transform))
                 {
-                    return new BDArmor(configNode);
+                    return new BDArmor(nodes.Current);
                 }
             }
+            nodes.Dispose();
             return null;
         }
 
