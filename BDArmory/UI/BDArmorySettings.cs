@@ -17,17 +17,17 @@ namespace BDArmory.UI
         public static string settingsConfigURL = "GameData/BDArmory/settings.cfg";
         
         //=======configurable settings
-        [BDAPersistantSettingsField] public static bool INSTAKILL = false;
+        [BDAPersistantSettingsField] public static bool INSTAKILL;
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
         [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
         [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;
-        [BDAPersistantSettingsField] public static bool INFINITE_AMMO = false;
-        [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LINES = false;
-        [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LABELS = false;
+        [BDAPersistantSettingsField] public static bool INFINITE_AMMO;
+        [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LINES;
+        [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LABELS;
         [BDAPersistantSettingsField] public static bool DRAW_AIMERS = true;
         [BDAPersistantSettingsField] public static bool AIM_ASSIST = true;
-        [BDAPersistantSettingsField] public static bool REMOTE_SHOOTING = false;
+        [BDAPersistantSettingsField] public static bool REMOTE_SHOOTING;
         [BDAPersistantSettingsField] public static bool BOMB_CLEARANCE_CHECK = true;
         [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100;
         [BDAPersistantSettingsField] public static float FLARE_CHANCE_FACTOR = 25;
@@ -47,7 +47,7 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
         [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
-        [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
+        [BDAPersistantSettingsField] public static bool PEACE_MODE;
 
         //=======Window position settings Git Issue #13
         [BDAWindowSettingsField] public static Rect WindowRectToolbar;
@@ -56,7 +56,7 @@ namespace BDArmory.UI
         [BDAWindowSettingsField] public static Rect WindowRectRwr;
 
         //reflection field lists
-        FieldInfo[] iFs = null;
+        FieldInfo[] iFs;
 
         FieldInfo[] inputFields
         {
@@ -84,21 +84,21 @@ namespace BDArmory.UI
         public static bool GAME_UI_ENABLED = true;
 
         //settings gui
-        public bool settingsGuiEnabled = false;
+        public bool settingsGuiEnabled;
         public string fireKeyGui;
 
         //editor alignment
-        public static bool showWeaponAlignment = false;
+        public static bool showWeaponAlignment;
 
         //toolbar gui
         public static bool hasAddedButton = false;
-        public static bool toolbarGuiEnabled = false;
+        public static bool toolbarGuiEnabled;
         float toolWindowWidth = 300;
         float toolWindowHeight = 100;
-        bool showWeaponList = false;
-        bool showGuardMenu = false;
-        bool showModules = false;
-        int numberOfModules = 0;
+        bool showWeaponList;
+        bool showGuardMenu;
+        bool showModules;
+        int numberOfModules;
 
         //gps window
         public bool showingGPSWindow
@@ -106,17 +106,17 @@ namespace BDArmory.UI
             get { return showGPSWindow; }
         }
 
-        bool showGPSWindow = false;
-        float gpsEntryCount = 0;
+        bool showGPSWindow;
+        float gpsEntryCount;
         float gpsEntryHeight = 24;
         float gpsBorder = 5;
-        bool editingGPSName = false;
-        int editingGPSNameIndex = 0;
-        bool hasEnteredGPSName = false;
+        bool editingGPSName;
+        int editingGPSNameIndex;
+        bool hasEnteredGPSName;
         string newGPSName = String.Empty;
 
-        public MissileFire ActiveWeaponManager = null;
-        public bool missileWarning = false;
+        public MissileFire ActiveWeaponManager;
+        public bool missileWarning;
         public float missileWarningTime = 0;
 
         //load range stuff
@@ -156,7 +156,7 @@ namespace BDArmory.UI
         #region Textures
         public static string textureDir = "BDArmory/Textures/";
 
-        bool drawCursor = false;
+        bool drawCursor;
         Texture2D cursorTexture = GameDatabase.Instance.GetTexture(textureDir + "aimer", false);
 
         private Texture2D dti;
@@ -398,20 +398,20 @@ namespace BDArmory.UI
 
         private void CheckIfWindowsSettingsAreWithinScreen()
         {
-            if (BDArmorySettings.WindowRectToolbar.x > Screen.width - toolWindowWidth - 40 ||
-                BDArmorySettings.WindowRectToolbar.y > Screen.height - toolWindowHeight )
+            if (WindowRectToolbar.x > Screen.width - toolWindowWidth - 40 ||
+                WindowRectToolbar.y > Screen.height - toolWindowHeight )
             {
                 WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
             }
 
-            if (BDArmorySettings.WindowRectSettings.x > Screen.width - 420 - 40 ||
-               BDArmorySettings.WindowRectSettings.y > Screen.height - 480)
+            if (WindowRectSettings.x > Screen.width - 420 - 40 ||
+               WindowRectSettings.y > Screen.height - 480)
             {
                 WindowRectSettings = new Rect(settingsLeft, settingsTop, 420, 480);
             }
 
-            if (BDArmorySettings.WindowRectRwr.x > Screen.width - 276 - 40 ||
-                BDArmorySettings.WindowRectRwr.y > Screen.height - 296)
+            if (WindowRectRwr.x > Screen.width - 276 - 40 ||
+                WindowRectRwr.y > Screen.height - 296)
             {
                 WindowRectRwr = new Rect(40, Screen.height - 296, 276, 296);
             }
@@ -535,17 +535,19 @@ namespace BDArmory.UI
         {
             if (!v.isActiveVessel) return;
             GetWeaponManager();
-            BDArmorySettings.Instance.UpdateCursorState();
+            Instance.UpdateCursorState();
         }
 
         void GetWeaponManager()
         {
-            foreach (MissileFire mf in FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>())
+            List<MissileFire>.Enumerator mf = FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+            while (mf.MoveNext())
             {
-                ActiveWeaponManager = mf;
+                if (mf.Current == null) continue;
+                ActiveWeaponManager = mf.Current;
                 return;
             }
-
+            mf.Dispose();
             ActiveWeaponManager = null;
             return;
         }
@@ -620,13 +622,13 @@ namespace BDArmory.UI
                     {
                         //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
                         BDGUIUtils.UseMouseEventInRect(WindowRectGps);
-                        foreach (
-                            GPSTargetInfo coordinate in
-                            BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
+                        List<GPSTargetInfo>.Enumerator coord = 
+                            BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)].GetEnumerator();
+                        while (coord.MoveNext())
                         {
-                            BDGUIUtils.DrawTextureOnWorldPos(coordinate.worldPos,
-                                BDArmorySettings.Instance.greenDotTexture, new Vector2(8, 8), 0);
+                            BDGUIUtils.DrawTextureOnWorldPos(coord.Current.worldPos, Instance.greenDotTexture, new Vector2(8, 8), 0);
                         }
+                        coord.Dispose();
                     }
                 }
             }
@@ -643,15 +645,15 @@ namespace BDArmory.UI
 
 
         public bool hasVS = false;
-        public bool showVSGUI = false;
+        public bool showVSGUI;
 
 
-        float rippleHeight = 0;
-        float weaponsHeight = 0;
-        float guardHeight = 0;
-        float modulesHeight = 0;
-        float gpsHeight = 0;
-        bool toolMinimized = false;
+        float rippleHeight;
+        float weaponsHeight;
+        float guardHeight;
+        float modulesHeight;
+        float gpsHeight;
+        bool toolMinimized;
 
         void ToolbarGUI(int windowID)
         {
@@ -939,7 +941,7 @@ namespace BDArmory.UI
                     float guardRange = ActiveWeaponManager.guardRange;
                     float maxVisRange = ALLOW_LEGACY_TARGETING
                         ? Mathf.Clamp(PHYSICS_RANGE, 2500, 100000)
-                        : BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
+                        : MAX_GUARD_VISUAL_RANGE;
                     guardRange =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
@@ -1031,13 +1033,15 @@ namespace BDArmory.UI
                     }
 
                     //TGP
-                    foreach (ModuleTargetingCamera mtc in ActiveWeaponManager.targetingPods)
+                    List<ModuleTargetingCamera>.Enumerator mtc = ActiveWeaponManager.targetingPods.GetEnumerator();
+                    while (mtc.MoveNext())
                     {
+                        if (mtc.Current == null) continue;
                         numberOfModules++;
-                        bool isEnabled = (mtc.cameraEnabled);
-                        bool isActive = (mtc == ModuleTargetingCamera.activeCam);
+                        bool isEnabled = (mtc.Current.cameraEnabled);
+                        bool isActive = (mtc.Current == ModuleTargetingCamera.activeCam);
                         GUIStyle moduleStyle = isEnabled ? centerLabelOrange : centerLabel; // = mtc 
-                        string label = mtc.part.partInfo.title;
+                        string label = mtc.Current.part.partInfo.title;
                         if (isActive)
                         {
                             moduleStyle = centerLabelRed;
@@ -1048,45 +1052,52 @@ namespace BDArmory.UI
                         {
                             if (isActive)
                             {
-                                mtc.ToggleCamera();
+                                mtc.Current.ToggleCamera();
                             }
                             else
                             {
-                                mtc.EnableCamera();
+                                mtc.Current.EnableCamera();
                             }
                         }
                         moduleLines++;
                     }
+                    mtc.Dispose();
 
                     //RADAR
-                    foreach (ModuleRadar mr in ActiveWeaponManager.radars)
+                    List<ModuleRadar>.Enumerator mr = ActiveWeaponManager.radars.GetEnumerator();
+                    while (mr.MoveNext())
                     {
+                        if (mr.Current == null) continue;
                         numberOfModules++;
-                        GUIStyle moduleStyle = mr.radarEnabled ? centerLabelBlue : centerLabel;
-                        string label = mr.radarName;
+                        GUIStyle moduleStyle = mr.Current.radarEnabled ? centerLabelBlue : centerLabel;
+                        string label = mr.Current.radarName;
                         if (GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight),
                             label, moduleStyle))
                         {
-                            mr.Toggle();
+                            mr.Current.Toggle();
                         }
                         moduleLines++;
                     }
+                    mr.Dispose();
 
                     //JAMMERS
-                    foreach (ModuleECMJammer jammer in ActiveWeaponManager.jammers)
+                    List<ModuleECMJammer>.Enumerator jammer = ActiveWeaponManager.jammers.GetEnumerator();
+                    while (jammer.MoveNext())
                     {
-                        if (jammer.alwaysOn) continue;
+                        if (jammer.Current == null) continue;
+                        if (jammer.Current.alwaysOn) continue;
 
                         numberOfModules++;
-                        GUIStyle moduleStyle = jammer.jammerEnabled ? centerLabelBlue : centerLabel;
-                        string label = jammer.part.partInfo.title;
+                        GUIStyle moduleStyle = jammer.Current.jammerEnabled ? centerLabelBlue : centerLabel;
+                        string label = jammer.Current.part.partInfo.title;
                         if (GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight),
                             label, moduleStyle))
                         {
-                            jammer.Toggle();
+                            jammer.Current.Toggle();
                         }
                         moduleLines++;
                     }
+                    jammer.Dispose();
 
                     //GPS coordinator
                     GUIStyle gpsModuleStyle = showGPSWindow ? centerLabelBlue : centerLabel;
@@ -1179,14 +1190,15 @@ namespace BDArmory.UI
             int indexToRemove = -1;
             int index = 0;
             BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
-            foreach (GPSTargetInfo coordinate in BDATargetManager.GPSTargets[myTeam])
+            List<GPSTargetInfo>.Enumerator coordinate = BDATargetManager.GPSTargets[myTeam].GetEnumerator();
+            while (coordinate.MoveNext())
             {
                 Color origWColor = GUI.color;
-                if (coordinate.EqualsTarget(ActiveWeaponManager.designatedGPSInfo))
+                if (coordinate.Current.EqualsTarget(ActiveWeaponManager.designatedGPSInfo))
                 {
                     GUI.color = XKCDColors.LightOrange;
                 }
-                string label = Misc.Misc.FormattedGeoPosShort(coordinate.gpsCoordinates, false);
+                string label = Misc.Misc.FormattedGeoPosShort(coordinate.Current.gpsCoordinates, false);
                 float nameWidth = 100;
                 if (editingGPSName && index == editingGPSNameIndex)
                 {
@@ -1215,12 +1227,12 @@ namespace BDArmory.UI
                 }
                 else
                 {
-                    if (GUI.Button(new Rect(0, gpsEntryCount*gpsEntryHeight, nameWidth, gpsEntryHeight), coordinate.name,
+                    if (GUI.Button(new Rect(0, gpsEntryCount*gpsEntryHeight, nameWidth, gpsEntryHeight), coordinate.Current.name,
                         HighLogic.Skin.button))
                     {
                         editingGPSName = true;
                         editingGPSNameIndex = index;
-                        newGPSName = coordinate.name;
+                        newGPSName = coordinate.Current.name;
                     }
                 }
                 if (
@@ -1228,7 +1240,7 @@ namespace BDArmory.UI
                         new Rect(nameWidth, gpsEntryCount*gpsEntryHeight, listRect.width - gpsEntryHeight - nameWidth,
                             gpsEntryHeight), label, HighLogic.Skin.button))
                 {
-                    ActiveWeaponManager.designatedGPSInfo = coordinate;
+                    ActiveWeaponManager.designatedGPSInfo = coordinate.Current;
                     editingGPSName = false;
                 }
                 if (
@@ -1242,6 +1254,8 @@ namespace BDArmory.UI
                 index++;
                 GUI.color = origWColor;
             }
+            coordinate.Dispose();
+
             if (hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargets[myTeam].Count)
             {
                 hasEnteredGPSName = false;
@@ -1294,7 +1308,7 @@ namespace BDArmory.UI
         float settingsLineHeight;
         float settingsMargin;
 
-        bool editKeys = false;
+        bool editKeys;
 
         void SetupSettingsSize()
         {
@@ -1558,7 +1572,7 @@ namespace BDArmory.UI
         
         void OnVesselGoOffRails(Vessel v)
         {
-            if (v.Landed && BDArmorySettings.DRAW_DEBUG_LABELS)
+            if (v.Landed && DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.srf_velocity + ", packed: " + v.packed);
                 //v.SetWorldVelocity(Vector3d.zero);	

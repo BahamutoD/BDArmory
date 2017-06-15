@@ -9,8 +9,8 @@ namespace BDArmory
 	public class TargetInfo : MonoBehaviour
 	{
 		public BDArmorySettings.BDATeams team;
-		public bool isMissile = false;
-		public MissileBase MissileBaseModule = null;
+		public bool isMissile;
+		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
         List<MissileFire> friendliesEngaging;
         public float detectedTime;

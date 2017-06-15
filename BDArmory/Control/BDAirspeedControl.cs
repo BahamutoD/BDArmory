@@ -19,7 +19,7 @@ namespace BDArmory.Control
         public Vessel vessel;
 
 
-        bool controlEnabled = false;
+        bool controlEnabled;
 
         //[KSPField(guiActive = true, guiName = "Thrust")]
         public float debugThrust;
@@ -199,7 +199,7 @@ namespace BDArmory.Control
         }
 
 
-        float possibleAccel = 0;
+        float possibleAccel;
 
         public float GetPossibleAccel()
         {

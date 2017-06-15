@@ -6,7 +6,7 @@ namespace BDArmory.Parts
 {
     public class BDAdjustableRail : PartModule
     {
-        [KSPField(isPersistant = true)] public float railHeight = 0;
+        [KSPField(isPersistant = true)] public float railHeight;
 
 
         [KSPField(isPersistant = true)] public float railLength = 1;
@@ -19,7 +19,7 @@ namespace BDArmory.Parts
 
         Dictionary<string, Vector3> originalStackNodePosition;
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             railLengthTransform = part.FindModelTransform("Rail");
             railHeightTransform = part.FindModelTransform("RailSleeve");

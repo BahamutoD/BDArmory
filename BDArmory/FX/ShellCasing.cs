@@ -18,11 +18,11 @@ namespace BDArmory.FX
             startTime = Time.time;
             velocity = initialV;
             velocity += transform.rotation*
-                        new Vector3(UnityEngine.Random.Range(-.1f, .1f), UnityEngine.Random.Range(-.1f, .1f),
-                            UnityEngine.Random.Range(6f, 8f));
+                        new Vector3(Random.Range(-.1f, .1f), Random.Range(-.1f, .1f),
+                            Random.Range(6f, 8f));
             angularVelocity =
-                new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-10f, 10f),
-                    UnityEngine.Random.Range(-10f, 10f))*10;
+                new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f),
+                    Random.Range(-10f, 10f))*10;
 
             atmDensity =
                 (float)
@@ -55,7 +55,7 @@ namespace BDArmory.FX
                 {
                     velocity = Vector3.Reflect(velocity, hit.normal);
                     velocity *= 0.55f;
-                    velocity = Quaternion.AngleAxis(UnityEngine.Random.Range(0f, 90f), UnityEngine.Random.onUnitSphere)*
+                    velocity = Quaternion.AngleAxis(Random.Range(0f, 90f), Random.onUnitSphere)*
                                velocity;
                 }
             }

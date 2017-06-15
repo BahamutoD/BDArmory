@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using System.Text;
 using BDArmory.Misc;
 using BDArmory.Parts;
@@ -56,7 +55,7 @@ namespace BDArmory.Radar
         Transform rotationTransform;
 
         [KSPField(isPersistant = true)]
-        public bool radarEnabled = false;
+        public bool radarEnabled;
 
         [KSPField]
         public float minSignalThreshold = 90;
@@ -81,7 +80,7 @@ namespace BDArmory.Radar
         {
             get { return currLocks; }
         }
-        private int currLocks = 0;
+        private int currLocks;
         private List<VesselRadarData> linkedToVessels;
  
         //public string rangeIncrements = "5000,10000,20000";
@@ -109,7 +108,7 @@ namespace BDArmory.Radar
         }
 
         public List<TargetSignatureData> lockedTargets;
-        int lockedTargetIndex = 0;
+        int lockedTargetIndex;
 
         public int currentLockIndex
         {
@@ -117,26 +116,26 @@ namespace BDArmory.Radar
         }
 
         //GUI
-        bool drawGUI = false;
+        bool drawGUI;
         public float signalPersistTime;
 
         //scanning
         [KSPField] public bool showDirectionWhileScan = false;
-        [KSPField(isPersistant = true)] public float currentAngle = 0;
-        float currentAngleLock = 0;
+        [KSPField(isPersistant = true)] public float currentAngle;
+        float currentAngleLock;
         public Transform referenceTransform;
         float radialScanDirection = 1;
         float lockScanDirection = 1;
 
-        public bool boresightScan = false;
+        public bool boresightScan;
 
         public List<ModuleRadar> availableRadarLinks;
 
         //locking
         [KSPField] public float lockAttemptFOV = 2;
-        public float lockScanAngle = 0;
+        public float lockScanAngle;
 
-        public bool slaveTurrets = false;
+        public bool slaveTurrets;
 
         public MissileLauncher lastMissile;
 
@@ -289,7 +288,7 @@ namespace BDArmory.Radar
             }
         }
 
-        bool startupComplete = false;
+        bool startupComplete;
 
         public override void OnStart(StartState state)
         {
@@ -678,7 +677,7 @@ namespace BDArmory.Radar
             }
         }
 
-        int snapshotTicker = 0;
+        int snapshotTicker;
 
         void UpdateLock(int index)
         {
@@ -1013,23 +1012,23 @@ namespace BDArmory.Radar
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Radar Type: {0}", this.radarName));
+            output.Append($"Radar Type: {radarName}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Range: {0} meters", this.maxRange));
+            output.Append($"Range: {maxRange} meters");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("RWR Threat Type: {0}", getRWRType(rwrThreatType)));
+            output.Append($"RWR Threat Type: {getRWRType(rwrThreatType)}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Can Scan: {0}", canScan));
+            output.Append($"Can Scan: {canScan}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Track-While-Scan: {0}", canTrackWhileScan));
+            output.Append($"Track-While-Scan: {canTrackWhileScan}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Can Lock: {0}", canLock));
+            output.Append($"Can Lock: {canLock}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Can Receive Data: {0}", canRecieveRadarData));
+            output.Append($"Can Receive Data: {canRecieveRadarData}");
             output.Append(Environment.NewLine);
             if (canLock)
             {
-                output.Append(String.Format("Simultaneous Locks: {0}", maxLocks));
+                output.Append($"Simultaneous Locks: {maxLocks}");
                 output.Append(Environment.NewLine);
             }
 

@@ -6,7 +6,7 @@ namespace BDArmory.Parts
 	public class TargetingCamera : MonoBehaviour
 	{
 		public static TargetingCamera Instance;
-		public static bool ReadyForUse = false;
+		public static bool ReadyForUse;
 		public RenderTexture targetCamRenderTexture;
 		TGPCameraEffects camEffects;
 		Light nvLight;
@@ -34,7 +34,7 @@ namespace BDArmory.Parts
 		Camera[] cameras;
 		public static Transform cameraTransform;
 
-		bool cameraEnabled = false;
+		bool cameraEnabled;
 
 		float currentFOV = 60;
 

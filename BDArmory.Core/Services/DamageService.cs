@@ -1,5 +1,4 @@
 ﻿using BDArmory.Core.Events;
-using BDArmory.Core.Services;
 
 namespace BDArmory.Core.Services
 {

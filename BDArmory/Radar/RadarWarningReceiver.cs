@@ -31,7 +31,7 @@ namespace BDArmory.Radar
 
         public MissileFire weaponManager;
 
-        [KSPField(isPersistant = true)] public bool rwrEnabled = false;
+        [KSPField(isPersistant = true)] public bool rwrEnabled;
 
         public static Texture2D rwrDiamondTexture =
             GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrDiamond", false);
@@ -76,7 +76,7 @@ namespace BDArmory.Radar
         GUIStyle rwrIconLabelStyle;
 
         AudioSource audioSource;
-        public static bool WindowRectRWRInitialized = false;
+        public static bool WindowRectRWRInitialized;
 
         public override void OnAwake()
         {
@@ -198,7 +198,7 @@ namespace BDArmory.Radar
 
                 if (weaponManager && weaponManager.guardMode)
                 {
-                    weaponManager.FireAllCountermeasures(UnityEngine.Random.Range(2, 4));
+                    weaponManager.FireAllCountermeasures(Random.Range(2, 4));
                     weaponManager.incomingThreatPosition = source;
                 }
             }

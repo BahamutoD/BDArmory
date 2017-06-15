@@ -15,7 +15,7 @@ namespace BDArmory.FX
         float startTime;
         public AudioClip exSound;
         public AudioSource audioSource;
-        float maxTime = 0;
+        float maxTime;
 
         public float range;
 
@@ -30,9 +30,6 @@ namespace BDArmory.FX
                EffectBehaviour.AddParticleEmitter(pe.Current);
                 
                 pe.Current.emit = true;
-               
-
-                //if(pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
 
                 if (pe.Current.maxEnergy > maxTime)
                 {
@@ -69,7 +66,7 @@ namespace BDArmory.FX
 
             if (Time.time - startTime > maxTime)
             {
-                GameObject.Destroy(gameObject);
+                Destroy(gameObject);
             }
         }
 
@@ -84,7 +81,7 @@ namespace BDArmory.FX
 
 
             Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
-            GameObject newExplosion = (GameObject) GameObject.Instantiate(go, position, rotation);
+            GameObject newExplosion = (GameObject) Instantiate(go, position, rotation);
             newExplosion.SetActive(true);
             ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
             eFx.exSound = soundClip;

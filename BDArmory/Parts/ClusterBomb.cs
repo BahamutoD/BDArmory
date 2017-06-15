@@ -15,7 +15,7 @@ namespace BDArmory.Parts
         List<GameObject> fairings;
         MissileLauncher missileLauncher;
 
-        bool deployed = false;
+        bool deployed;
 
         [KSPField(isPersistant = false)] public string subExplModelPath = "BDArmory/Models/explosion/explosion";
 
@@ -35,7 +35,7 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = false)] public bool swapCollidersOnDeploy = true;
 
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             submunitions = new List<GameObject>();
             List<Transform>.Enumerator sub = part.FindModelTransforms("submunition").ToList().GetEnumerator();
@@ -164,7 +164,7 @@ namespace BDArmory.Parts
 
     public class Submunition : MonoBehaviour
     {
-        public bool deployed = false;
+        public bool deployed;
         public float blastRadius;
         public float blastForce;
         public float blastHeat;
@@ -253,13 +253,13 @@ namespace BDArmory.Parts
         {
             ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, FlightGlobals.getUpAxis(),
                 subExplModelPath, subExplSoundPath);
-            GameObject.Destroy(gameObject); //destroy bullet on collision
+            Destroy(gameObject); //destroy bullet on collision
         }
     }
 
     public class ClusterBombFairing : MonoBehaviour
     {
-        public bool deployed = false;
+        public bool deployed;
 
         public Vessel sourceVessel;
         Vector3 currPosition;
@@ -298,15 +298,15 @@ namespace BDArmory.Parts
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, dist, 557057))
                 {
-                    GameObject.Destroy(gameObject);
+                    Destroy(gameObject);
                 }
                 else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
                 {
-                    GameObject.Destroy(gameObject);
+                    Destroy(gameObject);
                 }
                 else if (Time.time - startTime > 20)
                 {
-                    GameObject.Destroy(gameObject);
+                    Destroy(gameObject);
                 }
             }
         }

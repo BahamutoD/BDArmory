@@ -6,11 +6,11 @@ namespace BDArmory.Misc
         // Weapon usage settings
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Range Min"),
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 100f, scene = UI_Scene.Editor)]
-        public float engageRangeMin = 0;
+        public float engageRangeMin;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Range Max"),
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 100f, scene = UI_Scene.Editor)]
-        public float engageRangeMax = 0;
+        public float engageRangeMax;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Air"),
          UI_Toggle(disabledText = "false", enabledText = "true")]
@@ -53,12 +53,12 @@ namespace BDArmory.Misc
         protected void InitializeEngagementRange(float min, float max)
         {
 
-            UI_FloatRange rangeMin = (UI_FloatRange)this.Fields["engageRangeMin"].uiControlEditor;
+            UI_FloatRange rangeMin = (UI_FloatRange)Fields["engageRangeMin"].uiControlEditor;
             rangeMin.minValue = min;
             rangeMin.maxValue = max;
             rangeMin.onFieldChanged = OnRangeUpdated;
 
-            UI_FloatRange rangeMax = (UI_FloatRange)this.Fields["engageRangeMax"].uiControlEditor;
+            UI_FloatRange rangeMax = (UI_FloatRange)Fields["engageRangeMax"].uiControlEditor;
             rangeMax.minValue = min;
             rangeMax.maxValue = max;
             rangeMax.onFieldChanged = OnRangeUpdated;

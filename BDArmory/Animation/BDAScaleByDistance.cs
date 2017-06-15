@@ -16,7 +16,7 @@ namespace BDArmory.Animation
         public Transform distanceTransform;
 
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             ParseScale();
             transformToScale = part.FindModelTransform(transformToScaleName);

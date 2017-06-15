@@ -28,10 +28,10 @@ namespace BDArmory.Control
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)] public float lag =
             10;
 
-        [KSPField(isPersistant = true)] public bool commandSelf = false;
+        [KSPField(isPersistant = true)] public bool commandSelf;
 
         List<GPSTargetInfo> commandedPositions;
-        bool drawMouseDiamond = false;
+        bool drawMouseDiamond;
 
         ScreenMessage screenMessage;
 
@@ -54,6 +54,7 @@ namespace BDArmory.Control
                 if (ps.Current == null) continue;
                 wingmen.Add(ps.Current);
             }
+            ps.Dispose();
         }
 
 
@@ -205,6 +206,7 @@ namespace BDArmory.Control
                 if (pilots.Current == null) continue;
                 savedWingmen += pilots.Current.vessel.id + ",";
             }
+            pilots.Dispose();
         }
 
         void LoadWingmen()
@@ -237,9 +239,9 @@ namespace BDArmory.Control
         }
 
 
-        public bool showGUI = false;
+        public bool showGUI;
         public Rect guiWindowRect;
-        bool rectInit = false;
+        bool rectInit;
         float buttonStartY = 30;
         float buttonHeight = 24;
         float buttonGap = 3;
@@ -483,7 +485,7 @@ namespace BDArmory.Control
             showAGWindow = !showAGWindow;
         }
 
-        public bool showAGWindow = false;
+        public bool showAGWindow;
         float agWindowHeight = 10;
         public Rect agWindowRect;
 
@@ -542,8 +544,8 @@ namespace BDArmory.Control
         }
 
 
-        bool waitingForFlytoPos = false;
-        bool waitingForAttackPos = false;
+        bool waitingForFlytoPos;
+        bool waitingForAttackPos;
 
         IEnumerator CommandPosition(BDModulePilotAI wingman, BDModulePilotAI.PilotCommands command)
         {

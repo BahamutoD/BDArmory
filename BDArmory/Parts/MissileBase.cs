@@ -109,9 +109,9 @@ namespace BDArmory.Parts
 
         public float TimeToImpact { get; set; }
 
-        public bool TargetAcquired { get; set; } = false;
+        public bool TargetAcquired { get; set; }
 
-        public bool ActiveRadar { get; set; } = false;
+        public bool ActiveRadar { get; set; }
 
         public Vessel SourceVessel { get; set; } = null;
 
@@ -138,7 +138,7 @@ namespace BDArmory.Parts
         protected ModuleTargetingCamera targetingPod;
 
         //laser stuff
-        public ModuleTargetingCamera lockedCamera = null;
+        public ModuleTargetingCamera lockedCamera;
         protected Vector3 lastLaserPoint;
         protected Vector3 laserStartPosition;
         protected Vector3 startDirection;
@@ -154,16 +154,16 @@ namespace BDArmory.Parts
         public VesselRadarData vrd;
         public TargetSignatureData radarTarget;
         private int snapshotTicker;
-        private int locksCount = 0;
+        private int locksCount;
         private TargetSignatureData[] scannedTargets;
-        private float _radarFailTimer = 0;
+        private float _radarFailTimer;
         private float maxRadarFailTime = 1;
-        private float lastRWRPing = 0;
-        private bool radarLOALSearching = false;
+        private float lastRWRPing;
+        private bool radarLOALSearching;
 
         public MissileFire TargetMf = null;
 
-        protected bool checkMiss = false;
+        protected bool checkMiss;
 
         private LineRenderer LR;
         protected string debugString = "";

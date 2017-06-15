@@ -16,12 +16,12 @@ namespace BDArmory.Control
 
 
 		[KSPField(isPersistant = true)]
-		public bool pilotEnabled = false;
+		public bool pilotEnabled;
 
-		bool belowMinAltitude = false;
-		bool extending = false;
+		bool belowMinAltitude;
+		bool extending;
 
-		bool requestedExtend = false;
+		bool requestedExtend;
 		Vector3 requestedExtendTpos;
 
 		public bool IsExtending
@@ -29,7 +29,7 @@ namespace BDArmory.Control
 			get { return extending || requestedExtend; }
 		}
 
-		public bool isLeadingFormation = false;
+		public bool isLeadingFormation;
 
 		public void RequestExtend(Vector3 tPosition)
 		{
@@ -113,40 +113,40 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max AoA"),
 			UI_FloatRange(minValue = 0f, maxValue = 85f, stepIncrement = 2.5f, scene = UI_Scene.All)]
 		public float maxAllowedAoA = 35;
-		float maxAllowedCosAoA = 0;
-		float lastAllowedAoA = 0;
+		float maxAllowedCosAoA;
+		float lastAllowedAoA;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Standby Mode"),
 			UI_Toggle(enabledText = "On", disabledText = "Off")]
 		public bool standbyMode = false;
 
 		//manueuverability and g loading data
-		float maxDynPresGRecorded = 0;
+		float maxDynPresGRecorded;
 
-		float maxPosG = 0;
-		float cosAoAAtMaxPosG = 0;
+		float maxPosG;
+		float cosAoAAtMaxPosG;
 
-		float maxNegG = 0;
-		float cosAoAAtMaxNegG = 0;
+		float maxNegG;
+		float cosAoAAtMaxNegG;
 
 		float[] gLoadMovingAvgArray = new float[32];
 		float[] cosAoAMovingAvgArray = new float[32];
-		int movingAvgIndex = 0;
+		int movingAvgIndex;
 
-		float gLoadMovingAvg = 0;
-		float cosAoAMovingAvg = 0;
+		float gLoadMovingAvg;
+		float cosAoAMovingAvg;
 
-		float gaoASlopePerDynPres = 0;        //used to limit control input at very high dynamic pressures to avoid structural failure
-		float gOffsetPerDynPres = 0;
+		float gaoASlopePerDynPres;        //used to limit control input at very high dynamic pressures to avoid structural failure
+		float gOffsetPerDynPres;
 
 		float posPitchDynPresLimitIntegrator = 1;
 		float negPitchDynPresLimitIntegrator = -1;
 
-		float lastCosAoA = 0;
-		float lastPitchInput = 0;
+		float lastCosAoA;
+		float lastPitchInput;
 
 		//Controller Integral
-		float pitchIntegral = 0;
+		float pitchIntegral;
 
 		//instantaneous turn radius and possible acceleration from lift
 		//properties can be used so that other AI modules can read this for future maneuverability comparisons between craft
@@ -165,8 +165,8 @@ namespace BDArmory.Control
 		}
 
 
-		float turningTimer = 0;
-		float evasiveTimer = 0;
+		float turningTimer;
+		float evasiveTimer;
 		Vector3 lastTargetPosition;
 
 		string debugString = string.Empty;
@@ -180,15 +180,15 @@ namespace BDArmory.Control
 		BDAirspeedControl speedController;
 		bool useAB = true;
 		bool useBrakes = true;
-		bool regainEnergy = false;
+		bool regainEnergy;
 
 		//collision detection
-		int collisionDetectionTicker = 0;
-		float collisionDetectionTimer = 0;
+		int collisionDetectionTicker;
+		float collisionDetectionTimer;
 		Vector3 collisionAvoidDirection;
 
 		//wing command
-		int commandFollowIndex = 0;
+		int commandFollowIndex;
 		PilotCommands command;
 		public PilotCommands currentCommand
 		{
@@ -198,7 +198,7 @@ namespace BDArmory.Control
 			}
 		}
 		public ModuleWingCommander commandLeader;
-		bool useRollHint = false;
+		bool useRollHint;
 		Vector3d commandGeoPos;
 		public Vector3d commandPosition
 		{
@@ -238,7 +238,7 @@ namespace BDArmory.Control
 					weaponManager = wms.Current;
 					break;
 				}
-
+                wms.Dispose();
 				if(pilotEnabled)
 				{
 					ActivatePilot();
@@ -658,6 +658,7 @@ namespace BDArmory.Control
                         avoid = true;
                         break;
                     }
+                    vs.Dispose();
 				}
 
 			    if (!avoid) return false;
@@ -730,7 +731,7 @@ namespace BDArmory.Control
 							finalMaxSteer = GetSteerLimiterForSpeedAndPower();
 						}
 
-						if(missile.TargetingMode == MissileLauncher.TargetingModes.Heat && !weaponManager.heatTarget.exists)
+						if(missile.TargetingMode == MissileBase.TargetingModes.Heat && !weaponManager.heatTarget.exists)
 						{
 							debugString += "\nAttempting heat lock";
 							target += v.srf_velocity.normalized * 10;
@@ -901,7 +902,7 @@ namespace BDArmory.Control
 
 		//test
 		Vector3 prevTargetDir;
-		bool useVelRollTarget = false;
+		bool useVelRollTarget;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)
 		{
 			if(!belowMinAltitude)
@@ -1989,7 +1990,7 @@ namespace BDArmory.Control
 		    if (!pilotEnabled || !vessel.isActiveVessel) return;
 		    if(BDArmorySettings.DRAW_DEBUG_LABELS)
 		    {
-		        GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.vessel.name+":"+ debugString);	
+		        GUI.Label(new Rect(200, Screen.height - 200, 400, 400), vessel.name+":"+ debugString);	
 		    }
 
 		    if (!BDArmorySettings.DRAW_DEBUG_LINES) return;

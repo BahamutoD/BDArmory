@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using BDArmory.FX;
 using BDArmory.Misc;
@@ -29,7 +28,7 @@ namespace BDArmory.CounterMeasure
         public Vector3 velocity;
 
         public float thermal; //heat value
-        float minThermal = 0;
+        float minThermal;
 
         float lifeTime = 6;
 

@@ -15,7 +15,7 @@ namespace BDArmory
 
         ModuleTurret turret;
 
-        [KSPField(guiActive = true, guiName = "Turret Enabled")] public bool turretEnabled = false;
+        [KSPField(guiActive = true, guiName = "Turret Enabled")] public bool turretEnabled;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Auto-Return"),
          UI_Toggle(scene = UI_Scene.Editor)] public bool autoReturn = true;
@@ -26,23 +26,23 @@ namespace BDArmory
 
         Coroutine returnRoutine;
 
-        int missileCount = 0;
+        int missileCount;
         MissileLauncher[] missileChildren;
         Transform[] missileTransforms;
         Transform[] missileReferenceTransforms;
 
         Dictionary<string, Vector3> comOffsets;
 
-        public bool slaved = false;
+        public bool slaved;
 
         public Vector3 slavedTargetPosition;
 
-        bool pausingAfterShot = false;
-        float timeFired = 0;
+        bool pausingAfterShot;
+        float timeFired;
         [KSPField] public float firePauseTime = 0.25f;
 
         ModuleRadar attachedRadar;
-        bool hasAttachedRadar = false;
+        bool hasAttachedRadar;
         [KSPField] public bool disableRadarYaw = false;
         [KSPField] public bool disableRadarPitch = false;
 
@@ -51,9 +51,9 @@ namespace BDArmory
         //animation
         [KSPField] public string deployAnimationName;
         AnimationState deployAnimState;
-        bool hasDeployAnimation = false;
+        bool hasDeployAnimation;
         [KSPField] public float deployAnimationSpeed = 1;
-        bool editorDeployed = false;
+        bool editorDeployed;
         Coroutine deployAnimRoutine;
 
         //special
@@ -410,7 +410,7 @@ namespace BDArmory
                 {
                     if (missileReferenceTransforms[i])
                     {
-                        GameObject.Destroy(missileReferenceTransforms[i].gameObject);
+                        Destroy(missileReferenceTransforms[i].gameObject);
                     }
                 }
             }

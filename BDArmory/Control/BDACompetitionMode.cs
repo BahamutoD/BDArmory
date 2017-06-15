@@ -45,9 +45,9 @@ namespace BDArmory.Control
         }
 
         //Competition mode
-        public bool competitionStarting = false;
+        public bool competitionStarting;
         string competitionStatus = "";
-        Coroutine competitionRoutine = null;
+        Coroutine competitionRoutine;
 
         public void StartCompetitionMode(float distance)
         {

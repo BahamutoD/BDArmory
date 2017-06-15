@@ -1,5 +1,4 @@
-﻿using BDArmory.Core.Interface;
-using BDArmory.Core.Services;
+﻿using BDArmory.Core.Services;
 
 namespace BDArmory.Core.Extension
 {

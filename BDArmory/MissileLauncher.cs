@@ -47,8 +47,8 @@ namespace BDArmory
 		[KSPField]
 		public float torqueRampUp = 30f;
 		Vector3 aeroTorque = Vector3.zero;
-		float controlAuthority = 0;
-		float finalMaxTorque = 0;
+		float controlAuthority;
+		float finalMaxTorque;
 		[KSPField]
 		public float aeroSteerDamping = 0;
 
@@ -130,7 +130,7 @@ namespace BDArmory
         [KSPField]
         public float terminalGuidanceDistance = 0.0f;
 
-        private bool terminalGuidanceActive = false;
+        private bool terminalGuidanceActive;
 
         [KSPField]
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
@@ -184,16 +184,16 @@ namespace BDArmory
 		[KSPField]
 		public float agmDescentRatio = 1.45f;
 		
-		float currentThrust = 0;
+		float currentThrust;
 		
 		public bool deployed;
 		//public float deployedTime;
 		
 		AnimationState[] deployStates;
 		
-		bool hasPlayedFlyby = false;
+		bool hasPlayedFlyby;
 	
-		float debugTurnRate = 0;
+		float debugTurnRate;
 
 		List<GameObject> boosters;
 		[KSPField]
@@ -515,7 +515,7 @@ namespace BDArmory
 		{
             Debug.Log("[BDArmory]: Something Collided");
 
-          if (!HasExploded && HasFired && Time.time - TimeFired > 1 && this.part.vessel.speed > 10)
+          if (!HasExploded && HasFired && Time.time - TimeFired > 1 && part.vessel.speed > 10)
             {
                 //DetonateIfPossible();
                 Detonate();                
@@ -578,7 +578,7 @@ namespace BDArmory
 
 	    public override float GetBlastRadius()
 	    {
-	        return this.blastRadius;
+	        return blastRadius;
 	    }
 
 	    public override void FireMissile()
@@ -1682,7 +1682,7 @@ namespace BDArmory
 
 	    public override Vector3 GetForwardTransform()
 	    {
-	        return this.MissileReferenceTransform.forward;
+	        return MissileReferenceTransform.forward;
 	    }
 
 	    protected override void PartDie(Part p)
@@ -1908,34 +1908,35 @@ namespace BDArmory
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Weapon Type: {0}", missileType));
+            output.Append($"Weapon Type: {missileType}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Guidance Mode: {0}", homingType.ToString().ToUpper()));
+            output.Append($"Guidance Mode: {homingType.ToString().ToUpper()}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Targetting Mode: {0}", targetingType.ToString().ToUpper()));
+            output.Append($"Targetting Mode: {targetingType.ToString().ToUpper()}");
             output.Append(Environment.NewLine);
 
             if (targetingType.ToLower() == "radar")
             {
-                output.Append(String.Format("Active Radar Range: {0}", activeRadarRange));
+                output.Append($"Active Radar Range: {activeRadarRange}");
                 output.Append(Environment.NewLine);
             }
 
             if (targetingType.ToLower() == "gps")
             {
-                output.Append(String.Format("Terminal Maneuvering: {0}", terminalManeuvering));
+                output.Append($"Terminal Maneuvering: {terminalManeuvering}");
                 output.Append(Environment.NewLine);
                 if (terminalGuidanceType != "")
                 {
-                    output.Append(String.Format("Terminal guidance: {0}, distance: {1} meters", terminalGuidanceType, terminalGuidanceDistance));
+                    output.Append(
+                        $"Terminal guidance: {terminalGuidanceType}, distance: {terminalGuidanceDistance} meters");
                     output.Append(Environment.NewLine);
                 }
             }
 
 
-            output.Append(String.Format("Min/Max Range: {0}/{1} meters", minStaticLaunchRange, maxStaticLaunchRange));
+            output.Append($"Min/Max Range: {minStaticLaunchRange}/{maxStaticLaunchRange} meters");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Blast radius/power/heat: {0}/{1}/{2}", blastRadius, blastPower, blastHeat));
+            output.Append($"Blast radius/power/heat: {blastRadius}/{blastPower}/{blastHeat}");
             output.Append(Environment.NewLine);
             return output.ToString();
 

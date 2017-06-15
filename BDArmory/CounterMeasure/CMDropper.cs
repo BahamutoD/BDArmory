@@ -63,7 +63,7 @@ namespace BDArmory.CounterMeasure
             }
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -188,15 +188,15 @@ namespace BDArmory.CounterMeasure
             PartResource cmResource = GetCMResource();
             if (cmResource == null || !(cmResource.amount >= 1)) return;
             cmResource.amount--;
-            audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
             audioSource.PlayOneShot(cmSound);
 
             GameObject cm = flarePool.GetPooledObject();
             cm.transform.position = transform.position;
             CMFlare cmf = cm.GetComponent<CMFlare>();
             cmf.startVelocity = part.rb.velocity + (ejectVelocity*transform.up) +
-                                (UnityEngine.Random.Range(-3f, 3f)*transform.forward) +
-                                (UnityEngine.Random.Range(-3f, 3f)*transform.right);
+                                (Random.Range(-3f, 3f)*transform.forward) +
+                                (Random.Range(-3f, 3f)*transform.right);
             cmf.sourceVessel = vessel;
 
             cm.SetActive(true);
@@ -209,7 +209,7 @@ namespace BDArmory.CounterMeasure
             PartResource cmResource = GetCMResource();
             if (cmResource == null || !(cmResource.amount >= 1)) return;
             cmResource.amount--;
-            audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
             audioSource.PlayOneShot(cmSound);
 
             if (!vci)
@@ -231,7 +231,7 @@ namespace BDArmory.CounterMeasure
             if (smokeResource.amount >= 1)
             {
                 smokeResource.amount--;
-                audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+                audioSource.pitch = Random.Range(0.9f, 1.1f);
                 audioSource.PlayOneShot(cmSound);
 
                 StartCoroutine(SmokeRoutine());

@@ -176,7 +176,7 @@ namespace BDArmory
 		{
 			for(int i = 0; i < tsdArray.Length; i++)
 			{
-				tsdArray[i] = TargetSignatureData.noTarget;
+				tsdArray[i] = noTarget;
 			}
 		}
 

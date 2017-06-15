@@ -37,7 +37,7 @@ namespace BDArmory.FX
             audioSource.spatialBlend = 1;
             audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
 
-            int random = UnityEngine.Random.Range(1, 3);
+            int random = Random.Range(1, 3);
 
             if (ricochet)
             {
@@ -77,7 +77,7 @@ namespace BDArmory.FX
         {
             GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
             GameObject newExplosion =
-                (GameObject) GameObject.Instantiate(go, position, Quaternion.LookRotation(normalDirection));
+                (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));
             newExplosion.SetActive(true);
             newExplosion.AddComponent<BulletHitFX>();
             newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;

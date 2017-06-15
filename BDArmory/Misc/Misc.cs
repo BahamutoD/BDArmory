@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using BDArmory.Parts;
@@ -7,6 +6,7 @@ using BDArmory.Radar;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BDArmory.Misc
 {
@@ -19,7 +19,7 @@ namespace BDArmory.Misc
             string[] strings = color.Split(","[0]);
             for (int i = 0; i < 4; i++)
             {
-                outputColor[i] = System.Single.Parse(strings[i])/255;
+                outputColor[i] = Single.Parse(strings[i])/255;
             }
 
             return outputColor;
@@ -141,7 +141,7 @@ namespace BDArmory.Misc
         //refreshes part action window
         public static void RefreshAssociatedWindows(Part part)
         {
-            IEnumerator<UIPartActionWindow> window = GameObject.FindObjectsOfType(typeof(UIPartActionWindow)).Cast<UIPartActionWindow>().GetEnumerator();
+            IEnumerator<UIPartActionWindow> window = Object.FindObjectsOfType(typeof(UIPartActionWindow)).Cast<UIPartActionWindow>().GetEnumerator();
             while (window.MoveNext())
             {
                 if (window.Current == null) continue;

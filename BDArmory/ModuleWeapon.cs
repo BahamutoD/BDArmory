@@ -27,7 +27,7 @@ namespace BDArmory
         Coroutine startupRoutine;
         Coroutine shutdownRoutine;
 
-        bool finalFire = false;
+        bool finalFire;
 
         public int rippleIndex = 0;
 
@@ -63,9 +63,9 @@ namespace BDArmory
         
         public WeaponTypes eWeaponType;
                 
-        public float heat = 0;
-        public bool isOverheated = false;       
-        private bool wasFiring = false;
+        public float heat;
+        public bool isOverheated;       
+        private bool wasFiring;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
         AudioClip reloadCompleteAudioClip;
@@ -78,19 +78,19 @@ namespace BDArmory
 
         //AI
         public bool aiControlled = false;
-        public bool autoFire = false;
+        public bool autoFire;
         public float autoFireLength = 0;
         public float autoFireTimer = 0;
 
         //used by AI to lead moving targets
-        private float targetDistance = 0;
+        private float targetDistance;
         private Vector3 targetPosition;
         private Vector3 targetVelocity;
         private Vector3 targetAcceleration;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
         public Vessel legacyTargetVessel;
-        bool targetAcquired = false;
+        bool targetAcquired;
 
         public bool recentlyFiring //used by guard to know if it should evaid this
         {
@@ -101,7 +101,7 @@ namespace BDArmory
         //private int numberOfGuns = 0;
 
         //UI gauges(next to staging icon)
-        private ProtoStageIconInfo heatGauge = null;
+        private ProtoStageIconInfo heatGauge;
        
         //AI will fire gun if target is within this Cos(angle) of barrel
         public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
@@ -110,7 +110,7 @@ namespace BDArmory
         Vector3 pointingAtPosition;
         Vector3 bulletPrediction;
         Vector3 fixedLeadOffset = Vector3.zero;
-        float targetLeadDistance = 0;
+        float targetLeadDistance;
         
         //gapless particles
         List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
@@ -121,7 +121,7 @@ namespace BDArmory
         //module references
         [KSPField] public int turretID = 0;
         public ModuleTurret turret;
-        MissileFire mf = null;
+        MissileFire mf;
 
         public MissileFire weaponManager
         {
@@ -142,10 +142,10 @@ namespace BDArmory
 
         LineRenderer[] laserRenderers;
 
-        bool pointingAtSelf = false; //true if weapon is pointing at own vessel
-        bool userFiring = false;
+        bool pointingAtSelf; //true if weapon is pointing at own vessel
+        bool userFiring;
         Vector3 laserPoint;
-        public bool slaved = false;
+        public bool slaved;
 
         public Transform turretBaseTransform
         {
@@ -225,7 +225,7 @@ namespace BDArmory
         private AnimationState fireState;
         [KSPField]
         public bool spinDownAnimation = false;
-        private bool spinningDown = false;
+        private bool spinningDown;
 
         //weapon specifications
         [KSPField]
@@ -317,7 +317,7 @@ namespace BDArmory
         public int tracerInterval = 0;
         [KSPField]
         public float tracerLuminance = 1.75f;
-        int tracerIntervalCounter = 0;
+        int tracerIntervalCounter;
         [KSPField]
         public string bulletTexturePath = "BDArmory/Textures/bullet";
 
@@ -370,7 +370,7 @@ namespace BDArmory
         public string reloadCompletePath = string.Empty;
 
 
-        private ProtoStageIconInfo reloadBar = null;
+        private ProtoStageIconInfo reloadBar;
         [KSPField]
         public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
@@ -392,10 +392,10 @@ namespace BDArmory
         //auto proximity tracking
         [KSPField]
         public float autoProxyTrackRange = 0;
-        bool atprAcquired = false;
-        int aptrTicker = 0;
+        bool atprAcquired;
+        int aptrTicker;
 
-        float timeFired = 0;
+        float timeFired;
         public float initialFireDelay = 0; //used to ripple fire multiple weapons of this type
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
@@ -460,7 +460,7 @@ namespace BDArmory
             }
         }
 
-        bool agHoldFiring = false;
+        bool agHoldFiring;
 
         [KSPAction("Fire (Toggle)")]
         public void AGFireToggle(KSPActionParam param)
@@ -638,14 +638,14 @@ namespace BDArmory
             //setup animations
             if (hasDeployAnim)
             {
-                deployState = Misc.Misc.SetUpSingleAnimation(deployAnimName, this.part);
+                deployState = Misc.Misc.SetUpSingleAnimation(deployAnimName, part);
                 deployState.normalizedTime = 0;
                 deployState.speed = 0;
                 deployState.enabled = true;
             }
             if (hasFireAnimation)
             {
-                fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, this.part);
+                fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, part);
                 fireState.enabled = false;
             }
             bulletInfo = BulletInfo.bullets[bulletType];
@@ -1058,7 +1058,7 @@ namespace BDArmory
                         pBullet.currentVelocity = part.rb.velocity + firedVelocity;
 
                         pBullet.initialSpeed = bulletVelocity;
-                        pBullet.sourceVessel = this.vessel;
+                        pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
                         pBullet.projectileColor = projectileColorC;
                         pBullet.startColor = startColorC;
@@ -1217,7 +1217,7 @@ namespace BDArmory
                         }
 
                         Part p = hit.collider.gameObject.GetComponentInParent<Part>();
-                        if (p && p.vessel && p.vessel != this.vessel)
+                        if (p && p.vessel && p.vessel != vessel)
                         {
                             float distance = hit.distance;
                             //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
@@ -2103,21 +2103,21 @@ namespace BDArmory
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Weapon Type: {0}", weaponType));
+            output.Append($"Weapon Type: {weaponType}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Rounds Per Minute: {0}", roundsPerMinute));
+            output.Append($"Rounds Per Minute: {roundsPerMinute}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Ammunition: {0}", ammoName));
+            output.Append($"Ammunition: {ammoName}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Bullet type: {0}", bulletType));
+            output.Append($"Bullet type: {bulletType}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Max Range: {0} meters", maxEffectiveDistance));
+            output.Append($"Max Range: {maxEffectiveDistance} meters");
             output.Append(Environment.NewLine);
             if (weaponType == "cannon")
             {
-                output.Append(String.Format("Shell power/heat/radius: {0}/{1}/{2}", cannonShellPower, cannonShellHeat, cannonShellRadius));
+                output.Append($"Shell power/heat/radius: {cannonShellPower}/{cannonShellHeat}/{cannonShellRadius}");
                 output.Append(Environment.NewLine);
-                output.Append(String.Format("Air detonation: {0}", airDetonation));
+                output.Append($"Air detonation: {airDetonation}");
                 output.Append(Environment.NewLine);
             }
 

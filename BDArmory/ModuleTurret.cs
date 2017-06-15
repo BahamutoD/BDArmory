@@ -50,9 +50,9 @@ namespace BDArmory
 
         AudioClip soundClip;
         AudioSource audioSource;
-        bool hasAudio = false;
-        float audioRotationRate = 0;
-        float targetAudioRotationRate = 0;
+        bool hasAudio;
+        float audioRotationRate;
+        float targetAudioRotationRate;
         Vector3 lastTurretDirection;
         float maxAudioRotRate;
 

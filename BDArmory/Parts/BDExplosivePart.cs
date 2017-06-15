@@ -44,7 +44,7 @@ namespace BDArmory.Parts
 	
         private double previousMass = -1;
 		
-		bool hasDetonated = false;
+		bool hasDetonated;
 		
 		public override void OnStart (StartState state)
 		{
@@ -84,7 +84,7 @@ namespace BDArmory.Parts
 		
 		public void DetonateIfPossible()
 		{
-			if(!hasDetonated && Armed && this.part.vessel.speed > 10)
+			if(!hasDetonated && Armed && part.vessel.speed > 10)
 			{   
 			   Detonate();
                hasDetonated = true;

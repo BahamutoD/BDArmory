@@ -4,7 +4,6 @@ using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Radar;
 using BDArmory.UI;
-using KSP.UI;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
@@ -170,7 +169,7 @@ namespace BDArmory.Parts
                 {
                     DisableRecursiveFlow(child.Current.children);
                 }
-                if (!this.vesselParts.Contains(child.Current)) this.vesselParts.Add(child.Current);
+                if (!vesselParts.Contains(child.Current)) vesselParts.Add(child.Current);
             }
             child.Dispose();
         }
@@ -204,7 +203,7 @@ namespace BDArmory.Parts
             if (_targetDecoupler != null)
             {
                 if (_targetDecoupler.part.children.Count == 0) return;
-                this.vesselParts.Clear();
+                vesselParts.Clear();
                 DisableRecursiveFlow(_targetDecoupler.part.children);
 
             }
@@ -319,8 +318,8 @@ namespace BDArmory.Parts
             WeaponName = GetShortName();
 
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
-            this.ToggleEngageOptions();
-            this.activeRadarRange = ActiveRadarRange;
+            ToggleEngageOptions();
+            activeRadarRange = ActiveRadarRange;
 
             //TODO: BDModularGuidance should be configurable?
             lockedSensorFOV = 5;         
@@ -349,8 +348,8 @@ namespace BDArmory.Parts
                 Fields["ActiveRadarRange"].guiActive = false;
                 Fields["ActiveRadarRange"].guiActiveEditor = false;
             }
-            this.TargetingMode = newTargetingMode;
-            this._targetingLabel = newTargetingMode.ToString();
+            TargetingMode = newTargetingMode;
+            _targetingLabel = newTargetingMode.ToString();
 
             Misc.Misc.RefreshAssociatedWindows(part);
         }
@@ -364,8 +363,8 @@ namespace BDArmory.Parts
         private void SetMissileTransform()
         {
             MissileReferenceTransform = part.transform;
-            this.ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
-            this.UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
+            ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
+            UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
         }      
 
         void UpdateGuidance()
@@ -563,11 +562,11 @@ namespace BDArmory.Parts
         {
             Vector3 agmTarget;
             bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
-            if (!validSolution || Vector3.Angle(TargetPosition - this.vessel.CoM, agmTarget - this.vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
+            if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
             {
-                Vector3 dToTarget = TargetPosition - this.vessel.CoM;
-                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(this.vessel.transform.position))) * dToTarget;
-                agmTarget = this.vessel.CoM + direction;
+                Vector3 dToTarget = TargetPosition - vessel.CoM;
+                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
+                agmTarget = vessel.CoM + direction;
             }
 
             return agmTarget;
@@ -773,7 +772,7 @@ namespace BDArmory.Parts
 
         private void AutoDestruction()
         {
-            List<Part>.Enumerator vesselPart = this.vessel.Parts.GetEnumerator();
+            List<Part>.Enumerator vesselPart = vessel.Parts.GetEnumerator();
             while (vesselPart.MoveNext())
             {
                 if (vesselPart.Current == null) continue;
@@ -812,19 +811,19 @@ namespace BDArmory.Parts
             switch (transformAxis)
             {
                 case TransformAxisVectors.UpPositive:
-                    return this.MissileReferenceTransform.up;
+                    return MissileReferenceTransform.up;
                 case TransformAxisVectors.UpNegative:
-                    return -this.MissileReferenceTransform.up;
+                    return -MissileReferenceTransform.up;
                 case TransformAxisVectors.ForwardPositive:
-                    return this.MissileReferenceTransform.forward;
+                    return MissileReferenceTransform.forward;
                 case TransformAxisVectors.ForwardNegative:
-                    return -this.MissileReferenceTransform.forward;
+                    return -MissileReferenceTransform.forward;
                 case TransformAxisVectors.RightNegative:
-                    return -this.MissileReferenceTransform.right;
+                    return -MissileReferenceTransform.right;
                 case TransformAxisVectors.RightPositive:
-                    return this.MissileReferenceTransform.right;
+                    return MissileReferenceTransform.right;
                 default:
-                    return this.MissileReferenceTransform.forward;
+                    return MissileReferenceTransform.forward;
             }
         }
 

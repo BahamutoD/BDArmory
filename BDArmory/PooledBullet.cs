@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using BDArmory.Armor;
-using BDArmory.Core;
 using BDArmory.Core.Extension;
-using BDArmory.Core.Interface;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
@@ -79,26 +77,26 @@ namespace BDArmory
 
 
         Vector3 sourceOriginalV;
-        bool hasBounced = false;
+        bool hasBounced;
 
         public float maxDistance;
 
         //bool isUnderwater = false;
 
         Light lightFlash;
-        bool wasInitiated = false;
+        bool wasInitiated;
 
         //physical properties
         public Vector3 currentVelocity;
         public float mass;
         public float ballisticCoefficient;
 
-        public float flightTimeElapsed = 0;
+        public float flightTimeElapsed;
 
-        bool collisionEnabled = false;
+        bool collisionEnabled;
 
         public static Shader bulletShader;
-        public static bool shaderInitialized = false;
+        public static bool shaderInitialized;
 
         void OnEnable()
         {

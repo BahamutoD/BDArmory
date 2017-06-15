@@ -56,7 +56,7 @@ namespace BDArmory.Misc
 		
 		
 		Vector3 sourceOriginalV;
-		bool hasBounced = false;
+		bool hasBounced;
 		
 		float maxDistance;
 
@@ -146,7 +146,7 @@ namespace BDArmory.Misc
 			
 			if(distanceFromStart > maxDistance)
 			{
-				GameObject.Destroy(gameObject);
+				Destroy(gameObject);
 				return;
 			}
 			
@@ -274,7 +274,7 @@ namespace BDArmory.Misc
 								ExplosionFX.CreateExplosion(hit.point, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 							}
 
-							GameObject.Destroy(gameObject); //destroy bullet on collision
+							Destroy(gameObject); //destroy bullet on collision
 						}
 					}
 				}
@@ -284,7 +284,7 @@ namespace BDArmory.Misc
 			{
 				//detonate
 				ExplosionFX.CreateExplosion(transform.position, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
-				GameObject.Destroy(gameObject); //destroy bullet on collision
+				Destroy(gameObject); //destroy bullet on collision
 			}
 
 

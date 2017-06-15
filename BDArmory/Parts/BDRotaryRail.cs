@@ -18,22 +18,22 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Rails")] public float
             numberOfRails = 8;
 
-        float railAngle = 0;
+        float railAngle;
 
         [KSPField] public float rotationDelay = 0.15f;
 
-        [KSPField(isPersistant = true)] public int railIndex = 0;
+        [KSPField(isPersistant = true)] public int railIndex;
 
 
         Dictionary<int, int> missileToRailIndex;
         Dictionary<int, int> railToMissileIndex;
 
-        [KSPField(isPersistant = true)] public float currentHeight = 0;
+        [KSPField(isPersistant = true)] public float currentHeight;
 
-        [KSPField(isPersistant = true)] public float currentLength = 0;
+        [KSPField(isPersistant = true)] public float currentLength;
 
 
-        public int missileCount = 0;
+        public int missileCount;
         MissileLauncher[] missileChildren;
         Transform[] missileTransforms;
         Transform[] missileReferenceTransforms;
@@ -52,16 +52,16 @@ namespace BDArmory.Parts
 
         [KSPField(isPersistant = true)] public float railCountIndex = 4;
 
-        bool rdyToFire = false;
+        bool rdyToFire;
 
         public bool readyToFire
         {
             get { return rdyToFire; }
         }
 
-        public MissileLauncher nextMissile = null;
+        public MissileLauncher nextMissile;
 
-        MissileLauncher rdyMissile = null;
+        MissileLauncher rdyMissile;
 
         public MissileLauncher readyMissile
         {
@@ -733,7 +733,7 @@ namespace BDArmory.Parts
                 {
                     if (missileReferenceTransforms[i])
                     {
-                        GameObject.Destroy(missileReferenceTransforms[i].gameObject);
+                        Destroy(missileReferenceTransforms[i].gameObject);
                     }
                 }
             }

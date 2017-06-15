@@ -27,7 +27,7 @@ namespace BDArmory
         private List<IBDWeapon> weaponTypesMissile = new List<IBDWeapon>(LIST_CAPACITY);
         private List<IBDWeapon> weaponTypesGround = new List<IBDWeapon>(LIST_CAPACITY);
 
-        [KSPField(guiActiveEditor = false, isPersistant = true, guiActive = false)] public int weaponIndex = 0;
+        [KSPField(guiActiveEditor = false, isPersistant = true, guiActive = false)] public int weaponIndex;
 
         //ScreenMessage armedMessage;
         ScreenMessage selectionMessage;
@@ -36,9 +36,9 @@ namespace BDArmory
         Transform cameraTransform;
 
         float startTime;
-        int missilesAway = 0;
+        int missilesAway;
 
-        public bool hasLoadedRippleData = false;
+        public bool hasLoadedRippleData;
         float rippleTimer;
 
         public TargetSignatureData heatTarget;
@@ -76,10 +76,10 @@ namespace BDArmory
             }
         }
 
-        float triggerTimer = 0;
-        int rippleGunCount = 0;
-        int _gunRippleIndex = 0;
-        public float gunRippleRpm = 0;
+        float triggerTimer;
+        int rippleGunCount;
+        int _gunRippleIndex;
+        public float gunRippleRpm;
 
         public int gunRippleIndex
         {
@@ -97,7 +97,7 @@ namespace BDArmory
         //ripple stuff
         string rippleData = string.Empty;
         Dictionary<string, RippleOption> rippleDictionary; //weapon name, ripple option
-        public bool canRipple = false;
+        public bool canRipple;
 
         //public float triggerHoldTime = 0.3f;
 
@@ -224,20 +224,20 @@ namespace BDArmory
             Debug.Log("[BDArmory]: Saved ripple data: " + rippleData);
         }
 
-        public bool hasSingleFired = false;
+        public bool hasSingleFired;
 
         //bomb aimer
-        Part bombPart = null;
+        Part bombPart;
         Vector3 bombAimerPosition = Vector3.zero;
         Texture2D bombAimerTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
-        bool showBombAimer = false;
+        bool showBombAimer;
         
         //targeting
         private List<Vessel> loadedVessels = new List<Vessel>();
         float targetListTimer;
         
         //rocket aimer handling
-        RocketLauncher currentRocket = null;
+        RocketLauncher currentRocket;
         
         //sounds
         AudioSource audioSource;
@@ -251,16 +251,16 @@ namespace BDArmory
         bool warningSounding;
 
         //missile warning
-        public bool missileIsIncoming = false;
+        public bool missileIsIncoming;
         public float incomingMissileDistance = float.MaxValue;
         public Vessel incomingMissileVessel;
 
         //guard mode vars
-        float targetScanTimer = 0;
-        Vessel guardTarget = null;
+        float targetScanTimer;
+        Vessel guardTarget;
         public TargetInfo currentTarget;
         TargetInfo overrideTarget; //used for setting target next guard scan for stuff like assisting teammates
-        float overrideTimer = 0;
+        float overrideTimer;
 
         public bool TargetOverride
         {
@@ -268,8 +268,8 @@ namespace BDArmory
         }
 
         //AIPilot
-        public BDModulePilotAI pilotAI = null;
-        public float timeBombReleased = 0;
+        public BDModulePilotAI pilotAI;
+        public float timeBombReleased;
 
         //targeting pods
         public ModuleTargetingCamera mainTGP = null;
@@ -286,7 +286,7 @@ namespace BDArmory
         public ModuleWingCommander wingCommander;
 
         //RWR
-        private RadarWarningReceiver radarWarn = null;
+        private RadarWarningReceiver radarWarn;
 
         public RadarWarningReceiver rwr
         {
@@ -309,7 +309,7 @@ namespace BDArmory
         //Guard view scanning
         float guardViewScanDirection = 1;
         float guardViewScanRate = 200;
-        float currentGuardViewAngle = 0;
+        float currentGuardViewAngle;
         private Transform vrt;
 
         public Transform viewReferenceTransform
@@ -352,20 +352,20 @@ namespace BDArmory
             }
         }
                 
-        public bool underFire = false;
-        Coroutine ufRoutine = null;
+        public bool underFire;
+        Coroutine ufRoutine;
 
         Vector3 debugGuardViewDirection;
-        bool focusingOnTarget = false;
-        float focusingOnTargetTimer = 0;
+        bool focusingOnTarget;
+        float focusingOnTargetTimer;
         public Vector3 incomingThreatPosition;
         public Vessel incomingThreatVessel;
 
-        bool guardFiringMissile = false;
-        bool disabledRocketAimers = false;
-        bool antiRadTargetAcquired = false;
+        bool guardFiringMissile;
+        bool disabledRocketAimers;
+        bool antiRadTargetAcquired;
         Vector3 antiRadiationTarget;
-        bool laserPointDetected = false;
+        bool laserPointDetected;
 
         ModuleTargetingCamera foundCam;
 
@@ -422,11 +422,11 @@ namespace BDArmory
         }
 
 
-        [KSPField(isPersistant = true)] public bool guardMode = false;
+        [KSPField(isPersistant = true)] public bool guardMode;
 
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Target Type: "),
-         UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")] public bool targetMissiles = false;
+         UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")] public bool targetMissiles;
 
         [KSPAction("Toggle Target Type")]
         public void AGToggleTargetType(KSPActionParam param)
@@ -478,7 +478,7 @@ namespace BDArmory
 		
 		
 		[KSPField(isPersistant = true)]
-		public bool team = false;
+		public bool team;
 
 
         [KSPAction("Toggle Team")]
@@ -516,7 +516,7 @@ namespace BDArmory
             UpdateTeamString();
         }
 
-        [KSPField(isPersistant = true)] public bool isArmed = false;
+        [KSPField(isPersistant = true)] public bool isArmed;
 
 
         [KSPAction("Arm/Disarm")]
@@ -536,7 +536,7 @@ namespace BDArmory
         [KSPField(isPersistant = false, guiActive = true, guiName = "Weapon")] public string selectedWeaponString =
             "None";
 
-        IBDWeapon sw = null;
+        IBDWeapon sw;
 
         public IBDWeapon selectedWeapon
         {
@@ -659,7 +659,7 @@ namespace BDArmory
             heatTarget = TargetSignatureData.noTarget;
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             UpdateMaxGuardRange();
 
@@ -1704,13 +1704,13 @@ namespace BDArmory
         #endregion
 
         #region CounterMeasure
-        public bool isChaffing = false;
-        public bool isFlaring = false;
-        public bool isECMJamming = false;
+        public bool isChaffing;
+        public bool isFlaring;
+        public bool isECMJamming;
 
-        bool isLegacyCMing = false;
+        bool isLegacyCMing;
 
-        int cmCounter = 0;
+        int cmCounter;
         int cmAmount = 5;
 
         public void FireAllCountermeasures(int count)
@@ -4039,11 +4039,11 @@ namespace BDArmory
                     TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
 
                     if (nearbyThreat?.weaponManager != null && nearbyFriendly?.weaponManager != null)
-                        if (nearbyThreat.weaponManager.team != this.team &&
-                            nearbyFriendly.weaponManager.team == this.team)
+                        if (nearbyThreat.weaponManager.team != team &&
+                            nearbyFriendly.weaponManager.team == team)
                         //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
                         {
-                            if (nearbyThreat == this.currentTarget && nearbyFriendly.weaponManager.currentTarget != null)
+                            if (nearbyThreat == currentTarget && nearbyFriendly.weaponManager.currentTarget != null)
                             //if being attacked by the current target, switch to the target that the nearby friendly was engaging instead
                             {
                                 SetOverrideTarget(nearbyFriendly.weaponManager.currentTarget);

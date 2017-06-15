@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.Shaders
@@ -63,27 +65,29 @@ namespace BDArmory.Shaders
             if (shaderBundle != null)
             {
                 Shader[] shaders = shaderBundle.LoadAllAssets<Shader>();
-
-                foreach (Shader shader in shaders)
+                List<Shader>.Enumerator shader = shaders.ToList().GetEnumerator();
+                while (shader.MoveNext())
                 {
-                    Debug.Log($"[BDArmory] Shader \"{shader.name}\" loaded. Shader supported? {shader.isSupported}");
+                    if (shader.Current == null) continue;
+                    Debug.Log($"[BDArmory] Shader \"{shader.Current.name}\" loaded. Shader supported? {shader.Current.isSupported}");
 
-                    switch (shader.name)
+                    switch (shader.Current.name)
                     {
                         case "BDArmory/Particles/Bullet":
-                            BulletShader = shader;
+                            BulletShader = shader.Current;
                             break;
                         case "Custom/Unlit Black":
-                            UnlitBlackShader = shader;
+                            UnlitBlackShader = shader.Current;
                             break;
                         case "Hidden/Grayscale Effect":
-                            GrayscaleEffectShader = shader;
+                            GrayscaleEffectShader = shader.Current;
                             break;
                         default:
-                            Debug.Log($"[BDArmory] Not expected shader : {shader.name}");
+                            Debug.Log($"[BDArmory] Not expected shader : {shader.Current.name}");
                             break;
                     }
                 }
+                shader.Dispose();
                 yield return null;
                 Debug.Log("[BDArmory] unloading bundle");
                 shaderBundle.Unload(false); // unload the raw asset bundle
