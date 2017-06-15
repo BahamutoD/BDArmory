@@ -117,25 +117,28 @@ namespace BDArmory.CounterMeasure
             float rcsrTotal = 0;
             float rcsrCount = 0;
 
-            foreach (var jammer in jammers)
+            List<ModuleECMJammer>.Enumerator jammer = jammers.GetEnumerator();
+            while (jammer.MoveNext())
             {
-                if (jammer.signalSpam)
+                if (jammer.Current == null) continue;
+                if (jammer.Current.signalSpam)
                 {
-                    totaljStrength += jSpamFactor*jammer.jammerStrength;
+                    totaljStrength += jSpamFactor* jammer.Current.jammerStrength;
                     jSpamFactor *= 0.75f;
                 }
-                if (jammer.lockBreaker)
+                if (jammer.Current.lockBreaker)
                 {
-                    totalLBstrength += lbreakFactor*jammer.lockBreakerStrength;
+                    totalLBstrength += lbreakFactor* jammer.Current.lockBreakerStrength;
                     lbreakFactor *= 0.65f;
                 }
-                if (jammer.rcsReduction)
+                if (jammer.Current.rcsReduction)
                 {
-                    rcsrTotalMass += jammer.part.mass;
-                    rcsrTotal += jammer.rcsReductionFactor;
+                    rcsrTotalMass += jammer.Current.part.mass;
+                    rcsrTotal += jammer.Current.rcsReductionFactor;
                     rcsrCount++;
                 }
             }
+            jammer.Dispose();
 
             lbs = totalLBstrength;
             jStrength = totaljStrength;
@@ -175,15 +178,16 @@ namespace BDArmory.CounterMeasure
             jammers.RemoveAll(j => j == null);
             jammers.RemoveAll(j => j.vessel != vessel);
 
-            foreach (var jam in vessel.FindPartModulesImplementing<ModuleECMJammer>())
+            List<ModuleECMJammer>.Enumerator jam = vessel.FindPartModulesImplementing<ModuleECMJammer>().GetEnumerator();
+            while (jam.MoveNext())
             {
-                if (jam.jammerEnabled)
+                if (jam.Current == null) continue;
+                if (jam.Current.jammerEnabled)
                 {
-                    AddJammer(jam);
+                    AddJammer(jam.Current);
                 }
             }
-
-
+            jam.Dispose();
             UpdateJammerStrength();
         }
 

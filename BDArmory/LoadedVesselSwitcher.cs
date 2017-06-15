@@ -103,30 +103,28 @@ namespace BDArmory
 
         private void UpdateList()
         {
-            if (_wmgrsA == null)
-                _wmgrsA = new List<MissileFire>();
+            if (_wmgrsA == null) _wmgrsA = new List<MissileFire>();
             _wmgrsA.Clear();
 
-            if (_wmgrsB == null)
-                _wmgrsB = new List<MissileFire>();
+            if (_wmgrsB == null) _wmgrsB = new List<MissileFire>();
             _wmgrsB.Clear();
 
-            foreach (var v in FlightGlobals.Vessels)
+            List<Vessel>.Enumerator v = FlightGlobals.Vessels.GetEnumerator();
+            while (v.MoveNext())
             {
-                if (!v) continue;
-
-                if (!v.loaded || v.packed)
-                    continue;
-
-                foreach (var wm in v.FindPartModulesImplementing<MissileFire>())
+                if (v.Current == null) continue;
+                if (!v.Current.loaded || v.Current.packed) continue;
+                List<MissileFire>.Enumerator wm = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (wm.MoveNext())
                 {
-                    if (!wm.team)
-                        _wmgrsA.Add(wm);
-                    else
-                        _wmgrsB.Add(wm);
+                    if (wm.Current == null) continue;
+                    if (!wm.Current.team) _wmgrsA.Add(wm.Current);
+                    else _wmgrsB.Add(wm.Current);
                     break;
                 }
+                wm.Dispose();
             }
+            v.Dispose();
         }
 
         private void OnGUI()
@@ -172,32 +170,34 @@ namespace BDArmory
             height += _buttonHeight;
             var vesselButtonWidth = _windowWidth - 2 * _margin;
             vesselButtonWidth -= 3 * _buttonHeight;
-            foreach (var wm in _wmgrsA)
+
+            List<MissileFire>.Enumerator wma = _wmgrsA.GetEnumerator();
+            while (wma.MoveNext())
             {
+                if (wma.Current == null) continue;
                 var lineY = height + vesselLineA * (_buttonHeight + _buttonGap);
                 var buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
-                var vButtonStyle = wm.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
+                var vButtonStyle = wma.Current.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
 
-                var status = UpdateVesselStatus(wm, vButtonStyle);
+                var status = UpdateVesselStatus(wma.Current, vButtonStyle);
 
-
-                if (GUI.Button(buttonRect, status + wm.vessel.GetName(), vButtonStyle))
-                    FlightGlobals.ForceSetActiveVessel(wm.vessel);
+                if (GUI.Button(buttonRect, status + wma.Current.vessel.GetName(), vButtonStyle))
+                    FlightGlobals.ForceSetActiveVessel(wma.Current.vessel);
 
                 //guard toggle
-                var guardStyle = wm.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
+                var guardStyle = wma.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
                 var guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
                 if (GUI.Button(guardButtonRect, "G", guardStyle))
-                    wm.ToggleGuardMode();
+                    wma.Current.ToggleGuardMode();
 
                 //AI toggle
-                if (wm.pilotAI)
+                if (wma.Current.pilotAI)
                 {
-                    var aiStyle = wm.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
+                    var aiStyle = wma.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
                     var aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
                         _buttonHeight);
                     if (GUI.Button(aiButtonRect, "P", aiStyle))
-                        wm.pilotAI.TogglePilot();
+                        wma.Current.pilotAI.TogglePilot();
                 }
 
                 //team toggle
@@ -205,43 +205,48 @@ namespace BDArmory
                     _buttonHeight, _buttonHeight);
                 if (GUI.Button(teamButtonRect, "T", HighLogic.Skin.button))
                 {
-                    _wmToSwitchTeam = wm;
+                    _wmToSwitchTeam = wma.Current;
                     _teamSwitchDirty = true;
                 }
                 vesselLineA++;
             }
+            wma.Dispose();
+
             height += vesselLineA * (_buttonHeight + _buttonGap);
             height += _margin;
             GUI.Label(new Rect(_margin, height, _windowWidth - 2 * _margin, _buttonHeight), "Team B:", HighLogic.Skin.label);
             height += _buttonHeight;
-            foreach (var wm in _wmgrsB)
+
+            List<MissileFire>.Enumerator wmb = _wmgrsB.GetEnumerator();
+            while (wmb.MoveNext())
             {
+                if (wmb.Current == null) continue;
                 var lineY = height + vesselLineB * (_buttonHeight + _buttonGap);
 
                 var buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
-                var vButtonStyle = wm.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
+                var vButtonStyle = wmb.Current.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
 
-                var status = UpdateVesselStatus(wm, vButtonStyle);
+                var status = UpdateVesselStatus(wmb.Current, vButtonStyle);
 
 
-                if (GUI.Button(buttonRect, status + wm.vessel.GetName(), vButtonStyle))
-                    FlightGlobals.ForceSetActiveVessel(wm.vessel);
+                if (GUI.Button(buttonRect, status + wmb.Current.vessel.GetName(), vButtonStyle))
+                    FlightGlobals.ForceSetActiveVessel(wmb.Current.vessel);
 
 
                 //guard toggle
-                var guardStyle = wm.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
+                var guardStyle = wmb.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
                 var guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
                 if (GUI.Button(guardButtonRect, "G", guardStyle))
-                    wm.ToggleGuardMode();
+                    wmb.Current.ToggleGuardMode();
 
                 //AI toggle
-                if (wm.pilotAI)
+                if (wmb.Current.pilotAI)
                 {
-                    var aiStyle = wm.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
+                    var aiStyle = wmb.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
                     var aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
                         _buttonHeight);
                     if (GUI.Button(aiButtonRect, "P", aiStyle))
-                        wm.pilotAI.TogglePilot();
+                        wmb.Current.pilotAI.TogglePilot();
                 }
 
                 //team toggle
@@ -249,7 +254,7 @@ namespace BDArmory
                     _buttonHeight, _buttonHeight);
                 if (GUI.Button(teamButtonRect, "T", HighLogic.Skin.button))
                 {
-                    _wmToSwitchTeam = wm;
+                    _wmToSwitchTeam = wmb.Current;
                     _teamSwitchDirty = true;
                 }
                 vesselLineB++;
@@ -280,29 +285,33 @@ namespace BDArmory
 
         private void SwitchToNextVessel()
         {
-            var switchNext = false;
-            foreach (var wm in _wmgrsA)
+            bool switchNext = false;
+
+            List<MissileFire>.Enumerator wma = _wmgrsA.GetEnumerator();
+            while (wma.MoveNext())
+            {
+                if (wma.Current == null) continue;
                 if (switchNext)
                 {
-                    FlightGlobals.ForceSetActiveVessel(wm.vessel);
+                    FlightGlobals.ForceSetActiveVessel(wma.Current.vessel);
                     return;
                 }
-                else if (wm.vessel.isActiveVessel)
-                {
-                    switchNext = true;
-                }
+                if (wma.Current.vessel.isActiveVessel) switchNext = true;
+            }
+            wma.Dispose();
 
-            foreach (var wm in _wmgrsB)
+            List<MissileFire>.Enumerator wmb = _wmgrsB.GetEnumerator();
+            while (wmb.MoveNext())
+            {
+                if (wmb.Current == null) continue;
                 if (switchNext)
                 {
-                    FlightGlobals.ForceSetActiveVessel(wm.vessel);
+                    FlightGlobals.ForceSetActiveVessel(wmb.Current.vessel);
                     return;
                 }
-                else if (wm.vessel.isActiveVessel)
-                {
-                    switchNext = true;
-                }
-
+                if (wmb.Current.vessel.isActiveVessel) switchNext = true;
+            }
+            wmb.Dispose();
 
             if (_wmgrsA.Count > 0 && _wmgrsA[0] && !_wmgrsA[0].vessel.isActiveVessel)
                 FlightGlobals.ForceSetActiveVessel(_wmgrsA[0].vessel);
