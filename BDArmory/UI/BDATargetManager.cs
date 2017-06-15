@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Radar;
@@ -222,7 +223,7 @@ namespace BDArmory.UI
 	    {
             ModuleTargetingCamera finalCam = null;
             float smallestAngle = 360;
-            foreach (var cam in ActiveLasers)
+            foreach (ModuleTargetingCamera cam in ActiveLasers)
             {
                 if (!cam)
                 {
@@ -281,7 +282,7 @@ namespace BDArmory.UI
             float minMass = 0.15f;  //otherwise the RAMs have trouble shooting down incoming missiles
             TargetSignatureData finalData = TargetSignatureData.noTarget;
 			float finalScore = 0;
-			foreach(var vessel in BDATargetManager.LoadedVessels)
+			foreach(Vessel vessel in BDATargetManager.LoadedVessels)
 			{
 				if(!vessel || !vessel.loaded)
 				{
@@ -311,7 +312,7 @@ namespace BDArmory.UI
 				if(angle < scanRadius)
 				{
 					float score = 0;
-					foreach(var part in vessel.Parts)
+					foreach(Part part in vessel.Parts)
 					{
 						if(!part) continue;
 						if(!allAspect)
@@ -341,7 +342,7 @@ namespace BDArmory.UI
 
 			heatScore = finalScore;//DEBUG
 			flareScore = 0; //DEBUG
-			foreach(var flare in BDArmorySettings.Flares)
+			foreach(CMFlare flare in BDArmorySettings.Flares)
 			{
 				if(!flare) continue;
 
@@ -377,7 +378,7 @@ namespace BDArmory.UI
 		{
 			debugString = string.Empty;
 			debugString+= ("Team A's targets:");
-			foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
 			{
 				if(targetInfo)
 				{
@@ -396,7 +397,7 @@ namespace BDArmory.UI
 				}
 			}
 			debugString+= ("\nTeam B's targets:");
-			foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
 			{
 				if(targetInfo)
 				{
@@ -417,17 +418,6 @@ namespace BDArmory.UI
 
 			debugString += "\n\nHeat score: "+heatScore;
 			debugString += "\nFlare score: "+flareScore;
-
-			/*
-			debugString += "\n\nLoaded vessels: ";
-			foreach(var v in LoadedVessels)
-			{
-				if(v)
-				{
-					debugString += "\n" + v.vesselName;
-				}
-			}
-			*/
 		}
 
 
@@ -459,7 +449,7 @@ namespace BDArmory.UI
 				ConfigNode gpsNode = null;
 				if(node.HasNode("BDAGPSTargets"))
 				{
-					foreach(var n in node.GetNodes("BDAGPSTargets"))
+					foreach(ConfigNode n in node.GetNodes("BDAGPSTargets"))
 					{
 						if(n.GetValue("SaveGame") == saveTitle)
 						{
@@ -504,7 +494,7 @@ namespace BDArmory.UI
 			{
 				ConfigNode node = fileNode.GetNode("BDARMORY");
 
-				foreach(var gpsNode in node.GetNodes("BDAGPSTargets"))
+				foreach(ConfigNode gpsNode in node.GetNodes("BDAGPSTargets"))
 				{
 					if(gpsNode.HasValue("SaveGame") && gpsNode.GetValue("SaveGame") == saveTitle)
 					{
@@ -536,7 +526,7 @@ namespace BDArmory.UI
 		{
 			string finalString = string.Empty;
 			string aString = string.Empty;
-			foreach(var gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
 			{
 				aString += gpsInfo.name;
 				aString += ",";
@@ -555,7 +545,7 @@ namespace BDArmory.UI
 			finalString += ":";
 
 			string bString = string.Empty;
-			foreach(var gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
 			{
 				bString += gpsInfo.name;
 				bString += ",";
@@ -680,7 +670,7 @@ namespace BDArmory.UI
 			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
 			if(!info)
 			{
-				foreach(var mf in v.FindPartModulesImplementing<MissileFire>())
+				foreach(MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
 				{
 					if(mf.team != reporter.team)
 					{
@@ -689,7 +679,7 @@ namespace BDArmory.UI
 					return;
 				}
 
-				foreach(var ml in v.FindPartModulesImplementing<MissileBase>())
+				foreach(MissileBase ml in v.FindPartModulesImplementing<MissileBase>())
 				{
 					if(ml.HasFired)
 					{
@@ -710,9 +700,9 @@ namespace BDArmory.UI
 
 		public static void ClearDatabase()
 		{
-			foreach(var t in TargetDatabase.Keys)
+			foreach(BDArmorySettings.BDATeams t in TargetDatabase.Keys)
 			{
-				foreach(var target in TargetDatabase[t])
+				foreach(TargetInfo target in TargetDatabase[t])
 				{
 					target.detectedTime = 0;
 				}
@@ -729,7 +719,7 @@ namespace BDArmory.UI
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target.numFriendliesEngaging >= 2) continue;
 				if(target && target.Vessel && !target.isLanded && !target.isMissile)
@@ -757,7 +747,7 @@ namespace BDArmory.UI
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
 
-            foreach (var target in TargetDatabase[team])
+            foreach (TargetInfo target in TargetDatabase[team])
             {
                 if (target && target.Vessel && !target.isLanded && !target.isMissile)
                 {
@@ -790,7 +780,7 @@ namespace BDArmory.UI
             BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
             TargetInfo finalTarget = null;
 
-            foreach (var target in TargetDatabase[team])
+            foreach (TargetInfo target in TargetDatabase[team])
             {
                 if (target && target.Vessel && target.weaponManager != mf)
                 {
@@ -809,7 +799,7 @@ namespace BDArmory.UI
         {
             BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
 
-            foreach (var target in TargetDatabase[team])
+            foreach (TargetInfo target in TargetDatabase[team])
             {
                 if (target && target.Vessel && target.weaponManager == mf)
                 {
@@ -825,7 +815,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
@@ -844,7 +834,7 @@ namespace BDArmory.UI
 			List<TargetInfo> finalTargets = new List<TargetInfo>();
 			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !excluding.Contains(target))
 				{
@@ -860,7 +850,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 			
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
@@ -879,7 +869,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
 				{
@@ -913,7 +903,7 @@ namespace BDArmory.UI
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile && target.isThreat)
 				{
@@ -932,7 +922,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
 			TargetInfo finalTarget = null;
 			
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
@@ -956,7 +946,7 @@ namespace BDArmory.UI
         public static bool CheckSafeToFireGuns(MissileFire weaponManager, Vector3 aimDirection, float safeDistance, float cosUnsafeAngle)
         {
             BDArmorySettings.BDATeams team = weaponManager.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
-            foreach (var friendlyTarget in TargetDatabase[team])
+            foreach (TargetInfo friendlyTarget in TargetDatabase[team])
             {
                 if (friendlyTarget && friendlyTarget.Vessel)
                 {

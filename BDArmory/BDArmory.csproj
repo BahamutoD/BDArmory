@@ -164,9 +164,6 @@
     <EmbeddedResource Include="Shaders\BulletShader.shader" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BahaTurret.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="LocalDev\7za_dir.txt" />
     <Content Include="LocalDev\dist_dir.txt" />
     <Content Include="LocalDev\ksp_dir.txt" />

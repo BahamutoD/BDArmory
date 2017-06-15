@@ -32,7 +32,7 @@ namespace BDArmory.Core
 
         public static T Get<T>() where T : class
         {
-            var type = typeof(T);
+            Type type = typeof(T);
             Systems.TryGetValue(type, out var instance);
 
             if (instance == null)

@@ -168,40 +168,40 @@ namespace BDArmory
             height += _margin + _titleHeight;
             GUI.Label(new Rect(_margin, height, _windowWidth - 2 * _margin, _buttonHeight), "Team A:", HighLogic.Skin.label);
             height += _buttonHeight;
-            var vesselButtonWidth = _windowWidth - 2 * _margin;
+            float vesselButtonWidth = _windowWidth - 2 * _margin;
             vesselButtonWidth -= 3 * _buttonHeight;
 
             List<MissileFire>.Enumerator wma = _wmgrsA.GetEnumerator();
             while (wma.MoveNext())
             {
                 if (wma.Current == null) continue;
-                var lineY = height + vesselLineA * (_buttonHeight + _buttonGap);
-                var buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
-                var vButtonStyle = wma.Current.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
+                float lineY = height + vesselLineA * (_buttonHeight + _buttonGap);
+                Rect buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
+                GUIStyle vButtonStyle = wma.Current.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
 
-                var status = UpdateVesselStatus(wma.Current, vButtonStyle);
+                string status = UpdateVesselStatus(wma.Current, vButtonStyle);
 
                 if (GUI.Button(buttonRect, status + wma.Current.vessel.GetName(), vButtonStyle))
                     FlightGlobals.ForceSetActiveVessel(wma.Current.vessel);
 
                 //guard toggle
-                var guardStyle = wma.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
-                var guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
+                GUIStyle guardStyle = wma.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
+                Rect guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
                 if (GUI.Button(guardButtonRect, "G", guardStyle))
                     wma.Current.ToggleGuardMode();
 
                 //AI toggle
                 if (wma.Current.pilotAI)
                 {
-                    var aiStyle = wma.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
-                    var aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
+                    GUIStyle aiStyle = wma.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
+                    Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
                         _buttonHeight);
                     if (GUI.Button(aiButtonRect, "P", aiStyle))
                         wma.Current.pilotAI.TogglePilot();
                 }
 
                 //team toggle
-                var teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight + _buttonHeight, lineY,
+                Rect teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight + _buttonHeight, lineY,
                     _buttonHeight, _buttonHeight);
                 if (GUI.Button(teamButtonRect, "T", HighLogic.Skin.button))
                 {
@@ -221,12 +221,12 @@ namespace BDArmory
             while (wmb.MoveNext())
             {
                 if (wmb.Current == null) continue;
-                var lineY = height + vesselLineB * (_buttonHeight + _buttonGap);
+                float lineY = height + vesselLineB * (_buttonHeight + _buttonGap);
 
-                var buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
-                var vButtonStyle = wmb.Current.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
+                Rect buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
+                GUIStyle vButtonStyle = wmb.Current.vessel.isActiveVessel ? HighLogic.Skin.box : HighLogic.Skin.button;
 
-                var status = UpdateVesselStatus(wmb.Current, vButtonStyle);
+                string status = UpdateVesselStatus(wmb.Current, vButtonStyle);
 
 
                 if (GUI.Button(buttonRect, status + wmb.Current.vessel.GetName(), vButtonStyle))
@@ -234,23 +234,23 @@ namespace BDArmory
 
 
                 //guard toggle
-                var guardStyle = wmb.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
-                var guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
+                GUIStyle guardStyle = wmb.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
+                Rect guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
                 if (GUI.Button(guardButtonRect, "G", guardStyle))
                     wmb.Current.ToggleGuardMode();
 
                 //AI toggle
                 if (wmb.Current.pilotAI)
                 {
-                    var aiStyle = wmb.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
-                    var aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
+                    GUIStyle aiStyle = wmb.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
+                    Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
                         _buttonHeight);
                     if (GUI.Button(aiButtonRect, "P", aiStyle))
                         wmb.Current.pilotAI.TogglePilot();
                 }
 
                 //team toggle
-                var teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight + _buttonHeight, lineY,
+                Rect teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight + _buttonHeight, lineY,
                     _buttonHeight, _buttonHeight);
                 if (GUI.Button(teamButtonRect, "T", HighLogic.Skin.button))
                 {
@@ -267,7 +267,7 @@ namespace BDArmory
 
         private string UpdateVesselStatus(MissileFire wm, GUIStyle vButtonStyle)
         {
-            var status = "";
+            string status = "";
             if (wm.vessel.LandedOrSplashed)
             {
                 if (wm.vessel.Landed)
@@ -322,7 +322,7 @@ namespace BDArmory
         private void SwitchToPreviousVessel()
         {
             if (_wmgrsB.Count > 0)
-                for (var i = _wmgrsB.Count - 1; i >= 0; i--)
+                for (int i = _wmgrsB.Count - 1; i >= 0; i--)
                     if (_wmgrsB[i].vessel.isActiveVessel)
                         if (i > 0)
                         {
@@ -341,7 +341,7 @@ namespace BDArmory
                         }
 
             if (_wmgrsA.Count > 0)
-                for (var i = _wmgrsA.Count - 1; i >= 0; i--)
+                for (int i = _wmgrsA.Count - 1; i >= 0; i--)
                     if (_wmgrsA[i].vessel.isActiveVessel)
                         if (i > 0)
                         {

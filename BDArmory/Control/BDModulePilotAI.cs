@@ -754,12 +754,6 @@ namespace BDArmory.Control
 
 						if(angleToTarget < 45f)
 						{
-							/*
-							target = GetSurfacePosition(target) + (vessel.upAxis * vessel.altitude);
-							Vector3 fixedTDir = Quaternion.FromToRotation(Vector3.ProjectOnPlane(vessel.srf_velocity, vessel.upAxis), target - vesselTransform.position) * (target - vesselTransform.position);
-							target = FlightPosition(vesselTransform.position + fixedTDir, Mathf.Max(defaultAltitude - 500f, minAltitude));
-							*/
-
 							target = target + (Mathf.Max(defaultAltitude - 500f, minAltitude) * upDirection);
 							Vector3 tDir = (target - vesselTransform.position).normalized;
 							tDir = (1000 * tDir) - (vessel.srf_velocity.normalized * 600);
@@ -984,9 +978,6 @@ namespace BDArmory.Control
 				targetDirectionYaw = vesselTransform.InverseTransformDirection(vessel.srf_velocity).normalized;
 				targetDirectionYaw = Vector3.RotateTowards(Vector3.up, targetDirectionYaw, 45 * Mathf.Deg2Rad, 0);
 
-
-				//postYawFactor = 0.25f;
-				//postPitchFactor = 0.8f;
 			}
 			else//(steerMode == SteerModes.Aiming)
 			{
@@ -994,34 +985,13 @@ namespace BDArmory.Control
 				targetDirection = Vector3.RotateTowards(Vector3.up, targetDirection, 25 * Mathf.Deg2Rad, 0);
 				targetDirectionYaw = targetDirection;
 
-				/*
-				if(command == PilotCommands.Follow)
-				{
-					postYawFactor = 0.45f;
-					postPitchFactor = 1f;
-				}
-				else
-				{
-					postYawFactor = 1f;
-					postPitchFactor = 1.2f;
-				}
-				*/
 			}
 
 			pitchError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirection, Vector3.right), Vector3.back);
 			yawError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirectionYaw, Vector3.forward), Vector3.right);
 
-
-
-
 			//test
 			debugString += "\n   finalMaxSteer: " + finalMaxSteer;
-
-
-
-
-
-
 
 			//roll
 			Vector3 currentRoll = -vesselTransform.forward;
@@ -1678,25 +1648,6 @@ namespace BDArmory.Control
 			if (vertFactor < -2)
 				vertFactor = -2;
 
-			/*if ((weaponManager.TargetOverride && vessel.srfSpeed > minSpeed * 3) || 
-                (!weaponManager.TargetOverride && (vessel.srfSpeed > minSpeed * 1.5f)) && 
-                Vector3.Dot(targetPosition-vesselTransform.position, upDirection) > -1000 && (
-                ((targetPosition - vesselTransform.position).magnitude > 1200 || targetVessel == null || vessel.srfSpeed > targetVessel.srfSpeed * 1.5f) || 
-                (Vector3.Dot(forwardDirection, upDirection) > 0.4f && Vector3.Dot(vesselTransform.forward, targetDirection) < 0)) &&
-                !weaponManager.underFire)      //go upwards in some way
-            {
-                vertFactor = (float)vessel.srfSpeed / (minSpeed * 1.5f);
-                --vertFactor;
-                vertFactor *= 0.8f;
-                vertFactor = Mathf.Clamp01(vertFactor);
-            }
-            else if(alt > minAltitude)
-            {
-                vertFactor = (alt - minAltitude) / (2 * turnRadius);
-                vertFactor = Mathf.Clamp01(vertFactor);
-                vertFactor = -vertFactor;
-            }*/
-
 			vertFactor += 0.15f * Mathf.Sin((float)vessel.missionTime * 0.25f);     //some randomness in there
 
 			Vector3 projectedDirection = Vector3.ProjectOnPlane(forwardDirection, upDirection);
@@ -1718,17 +1669,6 @@ namespace BDArmory.Control
 					distance = Math.Min(distance, Math.Abs((alt - minAlt) / vertFactor));
 
 				targetPosition += upDirection * Math.Min(distance, 1000) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
-				/*if (vertFactor < 0)
-                    targetPosition += upDirection * Math.Min((alt - minAltitude), (targetPosition - vesselTransform.position).magnitude) * 0.2f * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
-                else
-                {
-                    if(targetVessel)
-                        vertFactor *= (1f + Mathf.Clamp((float)(vessel.srfSpeed - targetVessel.srfSpeed), 0, float.PositiveInfinity) * 0.05f);
-                    if (Vector3.Dot(targetPosition - vesselTransform.position, upDirection) > 0)
-                        targetPosition += upDirection * Vector3.Dot(targetPosition - vesselTransform.position, upDirection) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
-                    else
-                        targetPosition += upDirection * (targetPosition - vesselTransform.position).magnitude * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
-                }*/
 			}
 
 
@@ -1952,14 +1892,6 @@ namespace BDArmory.Control
 			{
 				velocityTransform.rotation = commandLeader.vessel.ReferenceTransform.rotation;
 			}
-
-			/*
-			Vector3 lateralVelVector = Vector3.Project(vessel.srf_velocity, velocityTransform.right)/2;
-			Vector3.ClampMagnitude(lateralVelVector, 25);
-
-			Vector3 verticalVelVector = Vector3.Project(vessel.srf_velocity - commandLeader.vessel.srf_velocity, velocityTransform.forward) * 1;//0.75f; //MOVE THIS TO UpdateFollowCommand TO REGULATE VERTICAL POSITION AND SPEED
-			Vector3.ClampMagnitude(verticalVelVector, 25);
-			*/
 
 			Vector3d pos = velocityTransform.TransformPoint(GetLocalFormationPosition(commandFollowIndex));// - lateralVelVector - verticalVelVector;
 

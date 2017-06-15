@@ -97,7 +97,7 @@ namespace BDArmory.Radar
 			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
 
 			int dataIndex = 0;
-			foreach(var vessel in BDATargetManager.LoadedVessels)
+			foreach(Vessel vessel in BDATargetManager.LoadedVessels)
 			{
 				if(vessel == null) continue;
 				if(!vessel.loaded) continue;
@@ -164,7 +164,7 @@ namespace BDArmory.Radar
 			Vector3 upVector = referenceTransform.up;//VectorUtils.GetUpDirection(position);
 			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
 
-			foreach(var vessel in BDATargetManager.LoadedVessels)
+			foreach(Vessel vessel in BDATargetManager.LoadedVessels)
 			{
 				if(vessel == null) continue;
 				if(!vessel.loaded) continue;
@@ -217,7 +217,7 @@ namespace BDArmory.Radar
 		public static void UpdateRadarLock(Ray ray, float fov, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType, bool radarSnapshot)
 		{
 			int dataIndex = 0;
-			foreach(var vessel in BDATargetManager.LoadedVessels)
+			foreach(Vessel vessel in BDATargetManager.LoadedVessels)
 			{
 				if(vessel == null) continue;
 				if(!vessel.loaded) continue;
@@ -267,7 +267,7 @@ namespace BDArmory.Radar
 
 			if(lockedVessel == null)
 			{
-				foreach(var vessel in BDATargetManager.LoadedVessels)
+				foreach(Vessel vessel in BDATargetManager.LoadedVessels)
 				{
 					if(vessel == null) continue;
 					if(!vessel.loaded) continue;
@@ -360,7 +360,7 @@ namespace BDArmory.Radar
 
 
 
-			foreach(var vessel in BDATargetManager.LoadedVessels)
+			foreach(Vessel vessel in BDATargetManager.LoadedVessels)
 			{
 				if(vessel == null) continue;
 
@@ -429,7 +429,7 @@ namespace BDArmory.Radar
 								//check if its shooting guns at me
 								//if(!results.firingAtMe)       //more work, but we can't afford to be incorrect picking the closest threat
 								//{
-									foreach(var weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
+									foreach(ModuleWeapon weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
 									{
 										if(!weapon.recentlyFiring) continue;
 										if(Vector3.Dot(weapon.fireTransforms[0].forward, vesselDirection) > 0) continue;
@@ -491,20 +491,8 @@ namespace BDArmory.Radar
 			sig *= groundClutterFactor;
 			sig *= notchFactor;
 
-			var vci = vessel.GetComponent<VesselChaffInfo>();
+			VesselChaffInfo vci = vessel.GetComponent<VesselChaffInfo>();
 			if(vci) sig *= vci.GetChaffMultiplier();
-
-
-			/*
-			if(Mathf.Round(Time.time)%2 == 0)
-			{
-				Debug.Log ("================================");
-				Debug.Log ("targetAxV: "+targetClosureV.magnitude);
-				Debug.Log ("lookdownAngle: "+lookDownAngle);
-				Debug.Log ("notchFactor: "+notchFactor);
-				Debug.Log ("groundClutterFactor: "+groundClutterFactor);
-			}
-			*/
 
 			return sig;
 		}

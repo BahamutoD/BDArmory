@@ -43,20 +43,10 @@ namespace BDArmory
 
 		public TargetSignatureData(Vessel v, float _signalStrength)
 		{
-			/*
-			if(v.situation == Vessel.Situations.SUB_ORBITAL || v.situation == Vessel.Situations.ESCAPING || v.situation == Vessel.Situations.SUB_ORBITAL)
-			{
-				velocity = v.obt_velocity;
-				orbit = v.orbit;
-				orbital = true;
-			}
-			else
-			{
-			*/
-				orbital = false;
-				orbit = null;
-				velocity = v.srf_velocity;
-			//}
+			orbital = false;
+			orbit = null;
+			velocity = v.srf_velocity;
+
 			vessel = v;
 			geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
 			acceleration = v.acceleration;
@@ -73,7 +63,7 @@ namespace BDArmory
 			}
 			else
 			{
-				foreach(var mf in v.FindPartModulesImplementing<MissileFire>())
+				foreach(MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
 				{
 					team = BDATargetManager.BoolToTeam(mf.team);
 					break;

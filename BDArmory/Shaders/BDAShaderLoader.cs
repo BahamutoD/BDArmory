@@ -58,13 +58,13 @@ namespace BDArmory.Shaders
         {
             Debug.Log("[BDArmory] Loading bundle data");
 
-            var shaderBundle = AssetBundle.LoadFromFile(BundlePath);
+            AssetBundle shaderBundle = AssetBundle.LoadFromFile(BundlePath);
 
             if (shaderBundle != null)
             {
-                var shaders = shaderBundle.LoadAllAssets<Shader>();
+                Shader[] shaders = shaderBundle.LoadAllAssets<Shader>();
 
-                foreach (var shader in shaders)
+                foreach (Shader shader in shaders)
                 {
                     Debug.Log($"[BDArmory] Shader \"{shader.name}\" loaded. Shader supported? {shader.isSupported}");
 

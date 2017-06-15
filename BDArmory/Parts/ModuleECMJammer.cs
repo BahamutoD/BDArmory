@@ -1,4 +1,5 @@
-﻿using BDArmory.CounterMeasure;
+﻿using System.Collections.Generic;
+using BDArmory.CounterMeasure;
 
 namespace BDArmory.Parts
 {
@@ -65,16 +66,17 @@ namespace BDArmory.Parts
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            if (HighLogic.LoadedSceneIsFlight)
+            if (!HighLogic.LoadedSceneIsFlight) return;
+            part.force_activate();
+            List<MissileFire>.Enumerator wm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+            while (wm.MoveNext())
             {
-                part.force_activate();
-                foreach (var wm in vessel.FindPartModulesImplementing<MissileFire>())
-                {
-                    wm.jammers.Add(this);
-                }
-
-                GameEvents.onVesselCreate.Add(OnVesselCreate);
+                if (wm.Current == null) continue;
+                wm.Current.jammers.Add(this);
             }
+            wm.Dispose();
+
+            GameEvents.onVesselCreate.Add(OnVesselCreate);
         }
 
         void OnDestroy()

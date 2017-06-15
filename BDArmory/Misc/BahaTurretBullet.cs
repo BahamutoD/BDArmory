@@ -278,29 +278,6 @@ namespace BDArmory.Misc
 						}
 					}
 				}
-
-				/*
-				if(isUnderwater)
-				{
-					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
-					{
-						isUnderwater = false;
-					}
-					else
-					{
-						rigidbody.AddForce(-rigidbody.velocity * 0.15f);
-					}
-				}
-				else
-				{
-					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
-					{
-						isUnderwater = true;
-						//FXMonger.Splash(transform.position, 1);
-						//make a custom splash here
-					}
-				}
-				*/
 			}
 
 			if(airDetonation && distanceFromStart > detonationRange)
@@ -313,11 +290,6 @@ namespace BDArmory.Misc
 
 			prevPosition = currPosition;
 		}
-
-
-		
-	
-	
 		
 		void FadeColor()
 		{

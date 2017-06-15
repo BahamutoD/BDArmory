@@ -293,7 +293,7 @@ namespace BDArmory
 
         void SetupTweakables()
         {
-            var minPitchRange = (UI_FloatRange) Fields["minPitch"].uiControlEditor;
+            UI_FloatRange minPitchRange = (UI_FloatRange) Fields["minPitch"].uiControlEditor;
             if (minPitchLimit > 90)
             {
                 minPitchLimit = minPitch;
@@ -305,7 +305,7 @@ namespace BDArmory
             minPitchRange.minValue = minPitchLimit;
             minPitchRange.maxValue = 0;
 
-            var maxPitchRange = (UI_FloatRange) Fields["maxPitch"].uiControlEditor;
+            UI_FloatRange maxPitchRange = (UI_FloatRange) Fields["maxPitch"].uiControlEditor;
             if (maxPitchLimit > 90)
             {
                 maxPitchLimit = maxPitch;
@@ -317,7 +317,7 @@ namespace BDArmory
             maxPitchRange.maxValue = maxPitchLimit;
             maxPitchRange.minValue = 0;
 
-            var yawRangeEd = (UI_FloatRange) Fields["yawRange"].uiControlEditor;
+            UI_FloatRange yawRangeEd = (UI_FloatRange) Fields["yawRange"].uiControlEditor;
             if (yawRangeLimit > 360)
             {
                 yawRangeLimit = yawRange;
@@ -326,10 +326,6 @@ namespace BDArmory
             if (yawRangeLimit == 0)
             {
                 Fields["yawRange"].guiActiveEditor = false;
-                /*
-                onlyFireInRange = false;
-                Fields["onlyFireInRange"].guiActiveEditor = false;
-                */
             }
             else if (yawRangeLimit < 0)
             {

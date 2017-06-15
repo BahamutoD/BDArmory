@@ -145,7 +145,7 @@ namespace BDArmory.Parts
 				if(wpmr == null || wpmr.vessel!=vessel)
 				{
 					wpmr = null;
-					foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
+					foreach(MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
 					{
 						wpmr = mf;
 					}
@@ -255,7 +255,7 @@ namespace BDArmory.Parts
 
 		ModuleTargetingCamera FindNextActiveCamera()
 		{
-			foreach(var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach(ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				if(mtc.cameraEnabled)
 				{
@@ -316,7 +316,7 @@ namespace BDArmory.Parts
 					DelayedEnable();
 				}
 
-				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
+				foreach(MissileFire wm in vessel.FindPartModulesImplementing<MissileFire>())
 				{
 					wm.targetingPods.Add(this);
 				}
@@ -1067,7 +1067,7 @@ namespace BDArmory.Parts
 
 		void SlaveTurrets()
 		{
-			foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				mtc.slaveTurrets = false;
 			}
@@ -1082,7 +1082,7 @@ namespace BDArmory.Parts
 
 		void UnslaveTurrets()
 		{
-			foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				mtc.slaveTurrets = false;
 			}
@@ -1419,14 +1419,6 @@ namespace BDArmory.Parts
 
 		void ParseFovs()
 		{
-			/*
-			string[] fovStrings = zoomFOVs.Split(new char[]{','});
-			zoomFovs = new float[fovStrings.Length];
-			for(int i = 0; i < fovStrings.Length; i++)
-			{
-				zoomFovs[i] = float.Parse(fovStrings[i]);
-			}*/
-
 			zoomFovs = Misc.Misc.ParseToFloatArray(zoomFOVs);
 		}
 

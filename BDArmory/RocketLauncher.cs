@@ -273,7 +273,7 @@ namespace BDArmory
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
             {
-                foreach (var turr in part.FindModulesImplementing<ModuleTurret>())
+                foreach (ModuleTurret turr in part.FindModulesImplementing<ModuleTurret>())
                 {
                     if (turr.turretID == turretID)
                     {
@@ -507,15 +507,6 @@ namespace BDArmory
 
             currentTgtRange = targetDistance;
 
-            /*
-            float accelDistance = (thrust / rocketMass) * ((thrustTime * thrustTime) / 2);
-            float finalV = (thrust / rocketMass) * thrustTime;
-            float aveThrustV = finalV / 2;
-            float flightTime = targetDistance / finalV;//(accelDistance / aveThrustV) + ((targetDistance - accelDistance) / finalV);
-            float gravDrop = 0.5f * (float)FlightGlobals.getGeeForceAtPosition(part.transform.position).magnitude * flightTime * flightTime;
-            targetPosition += gravDrop * VectorUtils.GetUpDirection(part.transform.position);
-            */
-
             targetPosition += trajectoryOffset;
 
 
@@ -746,7 +737,7 @@ namespace BDArmory
 
         public PartResource GetRocketResource()
         {
-            foreach (var res in part.Resources)
+            foreach (PartResource res in part.Resources)
             {
                 if (res.resourceName == rocketType) return res;
             }
@@ -769,7 +760,7 @@ namespace BDArmory
         // RMB info in editor
         public override string GetInfo()
         {
-            var output = new StringBuilder();
+            StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
             output.Append(String.Format("Weapon Type: {0}", "Rocket Launcher"));
             output.Append(Environment.NewLine);
@@ -834,7 +825,7 @@ namespace BDArmory
             rb = gameObject.AddComponent<Rigidbody>();
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 
-            foreach (var pe in pEmitters)
+            foreach (KSPParticleEmitter pe in pEmitters)
             {
                 if (FlightGlobals.getStaticPressure(transform.position) == 0 && pe.useWorldSpace)
                 {
@@ -930,7 +921,7 @@ namespace BDArmory
             if (Time.time - startTime > thrustTime)
             {
                 //isThrusting = false;
-                foreach (var pEmitter in pEmitters)
+                foreach (KSPParticleEmitter pEmitter in pEmitters)
                 {
                     if (pEmitter.useWorldSpace)
                     {
@@ -1024,7 +1015,7 @@ namespace BDArmory
             ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, rb.velocity.normalized,
                 explModelPath, explSoundPath);
 
-            foreach (var emitter in pEmitters)
+            foreach (KSPParticleEmitter emitter in pEmitters)
             {
                 if (emitter.useWorldSpace)
                 {

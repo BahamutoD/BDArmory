@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Radar;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory
@@ -64,17 +65,17 @@ namespace BDArmory
         {
             get
             {
-                if (!wm || wm.vessel != vessel)
+                if (wm && wm.vessel == vessel) return wm;
+                wm = null;
+
+                List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mf.MoveNext())
                 {
-                    wm = null;
-
-                    foreach (var mf in vessel.FindPartModulesImplementing<MissileFire>())
-                    {
-                        wm = mf;
-                        break;
-                    }
+                    if (mf.Current == null) continue;
+                    wm = mf.Current;
+                    break;
                 }
-
+                mf.Dispose();
                 return wm;
             }
         }
@@ -253,14 +254,15 @@ namespace BDArmory
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                foreach (var tur in part.FindModulesImplementing<ModuleTurret>())
+                List<ModuleTurret>.Enumerator tur = part.FindModulesImplementing<ModuleTurret>().GetEnumerator();
+                while (tur.MoveNext())
                 {
-                    if (tur.turretID == turretID)
-                    {
-                        turret = tur;
-                        break;
-                    }
+                    if (tur.Current == null) continue;
+                    if (tur.Current.turretID != turretID) continue;
+                    turret = tur.Current;
+                    break;
                 }
+                tur.Dispose();
 
                 attachedRadar = part.FindModuleImplementing<ModuleRadar>();
                 if (attachedRadar) hasAttachedRadar = true;
@@ -417,15 +419,17 @@ namespace BDArmory
             List<Transform> mtfl = new List<Transform>();
             List<Transform> mrl = new List<Transform>();
 
-            foreach (var child in part.children)
+            List<Part>.Enumerator child = part.children.GetEnumerator();
+            while (child.MoveNext())
             {
-                if (child.parent != part) continue;
+                if (child.Current == null) continue;
+                if (child.Current.parent != part) continue;
 
-                MissileLauncher ml = child.FindModuleImplementing<MissileLauncher>();
+                MissileLauncher ml = child.Current.FindModuleImplementing<MissileLauncher>();
 
                 if (!ml) continue;
 
-                Transform mTf = child.FindModelTransform("missileTransform");
+                Transform mTf = child.Current.FindModelTransform("missileTransform");
                 //fix incorrect hierarchy
                 if (!mTf)
                 {
@@ -441,37 +445,39 @@ namespace BDArmory
                     mTf.localPosition = Vector3.zero;
                     mTf.localRotation = Quaternion.identity;
                     mTf.localScale = Vector3.one;
-                    for (int i = 0; i < tfchildren.Length; i++)
+                    List<Transform>.Enumerator t = tfchildren.ToList().GetEnumerator();
+                    while (t.MoveNext())
                     {
-                        Debug.Log("[BDArmory] : MissileTurret moving transform: " + tfchildren[i].gameObject.name);
-                        tfchildren[i].parent = mTf;
+                        if (t.Current == null) continue;
+                        Debug.Log("[BDArmory] : MissileTurret moving transform: " + t.Current.gameObject.name);
+                        t.Current.parent = mTf;
                     }
+                    t.Dispose();
                 }
 
-                if (ml && mTf)
+                if (!ml || !mTf) continue;
+                msl.Add(ml);
+                mtfl.Add(mTf);
+                Transform mRef = new GameObject().transform;
+                mRef.position = mTf.position;
+                mRef.rotation = mTf.rotation;
+                mRef.parent = finalTransform;
+                mrl.Add(mRef);
+
+                ml.MissileReferenceTransform = mTf;
+                ml.missileTurret = this;
+
+                ml.decoupleForward = true;
+                ml.dropTime = 0;
+
+                if (!comOffsets.ContainsKey(ml.part.name))
                 {
-                    msl.Add(ml);
-                    mtfl.Add(mTf);
-                    Transform mRef = new GameObject().transform;
-                    mRef.position = mTf.position;
-                    mRef.rotation = mTf.rotation;
-                    mRef.parent = finalTransform;
-                    mrl.Add(mRef);
-
-                    ml.MissileReferenceTransform = mTf;
-                    ml.missileTurret = this;
-
-                    ml.decoupleForward = true;
-                    ml.dropTime = 0;
-
-                    if (!comOffsets.ContainsKey(ml.part.name))
-                    {
-                        comOffsets.Add(ml.part.name, ml.part.CoMOffset);
-                    }
-
-                    missileCount++;
+                    comOffsets.Add(ml.part.name, ml.part.CoMOffset);
                 }
+
+                missileCount++;
             }
+            child.Dispose();
 
             missileChildren = msl.ToArray();
             missileTransforms = mtfl.ToArray();

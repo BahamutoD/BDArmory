@@ -6,12 +6,12 @@ namespace BDArmory.Armor
     {
         public static void DoPenetrationRay(BulletPenetrationData data, float positiveCoefficient = 0)
         {
-            var ray = data.rayIn;
-            var hit = data.hitResultIn;
-            var finalDirect = Vector3.Lerp(ray.direction, -hit.normal, positiveCoefficient);
-            var maxDis = hit.collider.bounds.size.magnitude;
-            var point = finalDirect*maxDis + hit.point;
-            var ray1 = new Ray(point, -finalDirect);
+            Ray ray = data.rayIn;
+            RaycastHit hit = data.hitResultIn;
+            Vector3 finalDirect = Vector3.Lerp(ray.direction, -hit.normal, positiveCoefficient);
+            float maxDis = hit.collider.bounds.size.magnitude;
+            Vector3 point = finalDirect*maxDis + hit.point;
+            Ray ray1 = new Ray(point, -finalDirect);
             RaycastHit hit1;
             if (hit.collider.Raycast(ray1, out hit1, maxDis))
             {

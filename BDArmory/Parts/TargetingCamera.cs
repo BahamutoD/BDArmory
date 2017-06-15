@@ -56,25 +56,6 @@ namespace BDArmory.Parts
 			GameEvents.onVesselChange.Add(VesselChange);
 		}
 
-		/*
-		void LateUpdate()
-		{
-			if(cameraEnabled)
-			{
-				if(cameras!=null && cameras[0]!=null)
-				{
-					Quaternion cRotation = cameras[0].transform.rotation;
-					cameras[2].transform.rotation = cRotation;
-					cameras[3].transform.rotation = cRotation;
-				}
-				else
-				{
-					cameraEnabled = false;
-				}
-			}
-		}
-		*/
-
 		public void UpdateCamRotation(Transform tf)
 		{
 			if(cameras!=null && cameras[0]!=null)
@@ -113,24 +94,8 @@ namespace BDArmory.Parts
 				return;
 			}
 
-			/*
-			if(!FlightGlobals.ready)
-			{
-				return;
-			}
-
-			if(!FlightCamera.fetch)
-			{
-				return;
-			}
-
-			if(!FlightCamera.fetch.mainCamera)
-			{
-				return;
-			}
-			 */
 			bool moduleFound = false;
-			foreach(var mtc in v.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach(ModuleTargetingCamera mtc in v.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				Debug.Log ("[BDArmory] : Vessel switched to vessel with targeting camera.  Refreshing camera state.");
 
@@ -177,20 +142,6 @@ namespace BDArmory.Parts
 			cameras[3].Render();
 			cameras[2].Render();
 
-			/*
-			if(ModuleWeapon.bulletPool)
-			{
-				for(int i = 0; i < ModuleWeapon.bulletPool.size; i++)
-				{
-					if(ModuleWeapon.bulletPool.GetPooledObject(i).activeInHierarchy)
-					{
-						PooledBullet pBullet = ModuleWeapon.bulletPool.GetPooledObject(i).GetComponent<PooledBullet>();
-						pBullet.UpdateWidth(cameras[1], 3);
-					}
-
-				}
-			}
-			*/
 			Color origAmbientColor = RenderSettings.ambientLight;
 			if(nvMode)
 			{
@@ -312,11 +263,6 @@ namespace BDArmory.Parts
 			farCam.targetTexture = targetCamRenderTexture;
 			cameras[1] = farCam;
 
-			/*
-			var cbr2 = cam2Obj.AddComponent<CameraBulletRenderer>();
-			cbr2.resizeFactor = 3f;
-			*/
-
 			//skybox camera
 			GameObject skyCamObj = new GameObject();
 			Camera skyCam = skyCamObj.AddComponent<Camera>();
@@ -359,7 +305,7 @@ namespace BDArmory.Parts
 
 		private Camera FindCamera(string cameraName)
 		{
-			foreach(var cam in Camera.allCameras)
+			foreach(Camera cam in Camera.allCameras)
 			{
 				if(cam.name == cameraName)
 				{

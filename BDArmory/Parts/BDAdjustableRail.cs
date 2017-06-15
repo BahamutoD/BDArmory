@@ -58,44 +58,36 @@ namespace BDArmory.Parts
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height ++", active = true)]
         public void IncreaseHeight()
         {
-            /*
-            UpdateStackNode(false);
-            foreach(Part sym in part.symmetryCounterparts)
-            {
-                sym.FindModuleImplementing<BDAdjustableRail>().UpdateStackNode(false);
-            }
-            */
             railHeight = Mathf.Clamp(railHeight - 0.02f, -.16f, 0);
             railHeightTransform.localPosition = new Vector3(0, railHeight, 0);
 
             UpdateStackNode(true);
 
-            foreach (Part sym in part.symmetryCounterparts)
+            List<Part>.Enumerator sym = part.symmetryCounterparts.GetEnumerator();
+            while (sym.MoveNext())
             {
-                sym.FindModuleImplementing<BDAdjustableRail>().UpdateHeight(railHeight);
+                if (sym.Current == null) continue;
+                sym.Current.FindModuleImplementing<BDAdjustableRail>().UpdateHeight(railHeight);
             }
+            sym.Dispose();
         }
 
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height --", active = true)]
         public void DecreaseHeight()
         {
-            /*
-            UpdateStackNode(false);
-            foreach(Part sym in part.symmetryCounterparts)
-            {
-                sym.FindModuleImplementing<BDAdjustableRail>().UpdateStackNode(false);
-            }
-            */
             railHeight = Mathf.Clamp(railHeight + 0.02f, -.16f, 0);
             railHeightTransform.localPosition = new Vector3(0, railHeight, 0);
 
             UpdateStackNode(true);
 
-            foreach (Part sym in part.symmetryCounterparts)
+            List<Part>.Enumerator sym = part.symmetryCounterparts.GetEnumerator();
+            while (sym.MoveNext())
             {
-                sym.FindModuleImplementing<BDAdjustableRail>().UpdateHeight(railHeight);
+                if (sym.Current == null) continue;
+                sym.Current.FindModuleImplementing<BDAdjustableRail>().UpdateHeight(railHeight);
             }
+            sym.Dispose();
         }
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length ++", active = true)]
@@ -103,10 +95,13 @@ namespace BDArmory.Parts
         {
             railLength = Mathf.Clamp(railLength + 0.2f, 0.4f, 2f);
             railLengthTransform.localScale = new Vector3(1, railLength, 1);
-            foreach (Part sym in part.symmetryCounterparts)
+            List<Part>.Enumerator sym = part.symmetryCounterparts.GetEnumerator();
+            while (sym.MoveNext())
             {
-                sym.FindModuleImplementing<BDAdjustableRail>().UpdateLength(railLength);
+                if (sym.Current == null) continue;
+                sym.Current.FindModuleImplementing<BDAdjustableRail>().UpdateLength(railLength);
             }
+            sym.Dispose();
         }
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length --", active = true)]
@@ -114,10 +109,13 @@ namespace BDArmory.Parts
         {
             railLength = Mathf.Clamp(railLength - 0.2f, 0.4f, 2f);
             railLengthTransform.localScale = new Vector3(1, railLength, 1);
-            foreach (Part sym in part.symmetryCounterparts)
+            List<Part>.Enumerator sym = part.symmetryCounterparts.GetEnumerator();
+            while (sym.MoveNext())
             {
-                sym.FindModuleImplementing<BDAdjustableRail>().UpdateLength(railLength);
+                if (sym.Current == null) continue;
+                sym.Current.FindModuleImplementing<BDAdjustableRail>().UpdateLength(railLength);
             }
+            sym.Dispose();
         }
 
         public void UpdateHeight(float height)
@@ -137,26 +135,27 @@ namespace BDArmory.Parts
         public void UpdateStackNode(bool updateChild)
         {
             Vector3 delta = Vector3.zero;
-            foreach (var stackNode in part.attachNodes)
+            List<AttachNode>.Enumerator stackNode = part.attachNodes.GetEnumerator();
+            while (stackNode.MoveNext())
             {
-                if (stackNode.nodeType == AttachNode.NodeType.Stack &&
-                    originalStackNodePosition.ContainsKey(stackNode.id))
-                {
-                    Vector3 prevPos = stackNode.position;
+                if (stackNode.Current?.nodeType != AttachNode.NodeType.Stack ||
+                    !originalStackNodePosition.ContainsKey(stackNode.Current.id)) continue;
+                Vector3 prevPos = stackNode.Current.position;
 
-                    stackNode.position.y = originalStackNodePosition[stackNode.id].y + railHeight;
-                    delta = stackNode.position - prevPos;
-                }
+                stackNode.Current.position.y = originalStackNodePosition[stackNode.Current.id].y + railHeight;
+                delta = stackNode.Current.position - prevPos;
             }
+            stackNode.Dispose();
 
-            if (updateChild)
+            if (!updateChild) return;
+            Vector3 worldDelta = part.transform.TransformVector(delta);
+            List<Part>.Enumerator p = part.children.GetEnumerator();
+            while (p.MoveNext())
             {
-                Vector3 worldDelta = part.transform.TransformVector(delta);
-                foreach (var p in part.children)
-                {
-                    p.transform.position += worldDelta;
-                }
+                if (p.Current == null) continue;
+                p.Current.transform.position += worldDelta;
             }
+            p.Dispose();
         }
     }
 }

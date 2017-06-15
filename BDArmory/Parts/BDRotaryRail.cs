@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.Parts
@@ -73,17 +74,16 @@ namespace BDArmory.Parts
         {
             get
             {
-                if (!wm || wm.vessel != vessel)
+                if (wm && wm.vessel == vessel) return wm;
+                wm = null;
+                List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mf.MoveNext())
                 {
-                    wm = null;
-
-                    foreach (var mf in vessel.FindPartModulesImplementing<MissileFire>())
-                    {
-                        wm = mf;
-                        break;
-                    }
+                    if (mf.Current == null) continue;
+                    wm = mf.Current;
+                    break;
                 }
-
+                mf.Dispose();
                 return wm;
             }
         }
@@ -121,16 +121,17 @@ namespace BDArmory.Parts
             UpdateChildrenHeight(currentHeight - prevHeight);
             UpdateModelState();
 
-            if (updateSym)
+            if (!updateSym) return;
+            List<Part>.Enumerator p = part.symmetryCounterparts.GetEnumerator();
+            while (p.MoveNext())
             {
-                foreach (Part p in part.symmetryCounterparts)
+                if (p.Current == null) continue;
+                if (p.Current != part)
                 {
-                    if (p != part)
-                    {
-                        p.FindModuleImplementing<BDRotaryRail>().IncreaseHeight(false);
-                    }
+                    p.Current.FindModuleImplementing<BDRotaryRail>().IncreaseHeight(false);
                 }
             }
+            p.Dispose();
         }
 
         public void DecreaseHeight(bool updateSym)
@@ -141,16 +142,17 @@ namespace BDArmory.Parts
             UpdateChildrenHeight(currentHeight - prevHeight);
             UpdateModelState();
 
-            if (updateSym)
+            if (!updateSym) return;
+            List<Part>.Enumerator p = part.symmetryCounterparts.GetEnumerator();
+            while (p.MoveNext())
             {
-                foreach (Part p in part.symmetryCounterparts)
+                if (p.Current == null) continue;
+                if (p.Current != part)
                 {
-                    if (p != part)
-                    {
-                        p.FindModuleImplementing<BDRotaryRail>().DecreaseHeight(false);
-                    }
+                    p.Current.FindModuleImplementing<BDRotaryRail>().DecreaseHeight(false);
                 }
             }
+            p.Dispose();
         }
 
 
@@ -177,16 +179,17 @@ namespace BDArmory.Parts
 
             UpdateChildrenLength(currentLength - prevLength);
 
-            if (updateSym)
+            if (!updateSym) return;
+            List<Part>.Enumerator p = part.symmetryCounterparts.GetEnumerator();
+            while (p.MoveNext())
             {
-                foreach (Part p in part.symmetryCounterparts)
+                if (p.Current == null) continue;
+                if (p.Current != part)
                 {
-                    if (p != part)
-                    {
-                        p.FindModuleImplementing<BDRotaryRail>().IncreaseLength(false);
-                    }
+                    p.Current.FindModuleImplementing<BDRotaryRail>().IncreaseLength(false);
                 }
             }
+            p.Dispose();
         }
 
         public void DecreaseLength(bool updateSym)
@@ -200,16 +203,17 @@ namespace BDArmory.Parts
 
             UpdateChildrenLength(currentLength - prevLength);
 
-            if (updateSym)
+            if (!updateSym) return;
+            List<Part>.Enumerator p = part.symmetryCounterparts.GetEnumerator();
+            while (p.MoveNext())
             {
-                foreach (Part p in part.symmetryCounterparts)
+                if (p.Current == null) continue;
+                if (p.Current != part)
                 {
-                    if (p != part)
-                    {
-                        p.FindModuleImplementing<BDRotaryRail>().DecreaseLength(false);
-                    }
+                    p.Current.FindModuleImplementing<BDRotaryRail>().DecreaseLength(false);
                 }
             }
+            p.Dispose();
         }
 
 
@@ -219,14 +223,12 @@ namespace BDArmory.Parts
             numberOfRails = railCounts[Mathf.RoundToInt(railCountIndex)];
             UpdateRails(Mathf.RoundToInt(numberOfRails));
 
-            if (updateSym)
+            if (!updateSym) return;
+            List<Part>.Enumerator p = part.symmetryCounterparts.GetEnumerator();
+            while (p.MoveNext())
             {
-                foreach (Part p in part.symmetryCounterparts)
-                {
-                    //p.FindModuleImplementing<BDRotaryRail>().IncreaseRails(false);
-                    p.FindModuleImplementing<BDRotaryRail>()
-                        .SetRailCount(Mathf.RoundToInt(numberOfRails), railCountIndex);
-                }
+                if (p.Current == null) continue;
+                p.Current.FindModuleImplementing<BDRotaryRail>().SetRailCount(Mathf.RoundToInt(numberOfRails), railCountIndex);
             }
         }
 
@@ -243,26 +245,27 @@ namespace BDArmory.Parts
             numberOfRails = railCounts[Mathf.RoundToInt(railCountIndex)];
             UpdateRails(Mathf.RoundToInt(numberOfRails));
 
-            if (updateSym)
+            if (!updateSym) return;
+            List<Part>.Enumerator p = part.symmetryCounterparts.GetEnumerator();
+            while (p.MoveNext())
             {
-                foreach (Part p in part.symmetryCounterparts)
-                {
-                    //p.FindModuleImplementing<BDRotaryRail>().DecreaseRails(false);
-                    p.FindModuleImplementing<BDRotaryRail>()
-                        .SetRailCount(Mathf.RoundToInt(numberOfRails), railCountIndex);
-                }
+                if (p.Current == null) continue;
+                p.Current.FindModuleImplementing<BDRotaryRail>().SetRailCount(Mathf.RoundToInt(numberOfRails), railCountIndex);
             }
         }
 
         public void MoveEndStackNode(float offset)
         {
-            foreach (var node in part.attachNodes)
+            List<AttachNode>.Enumerator node = part.attachNodes.GetEnumerator();
+            while (node.MoveNext())
             {
-                if (node.nodeType == AttachNode.NodeType.Stack && node.id.ToLower().Contains("move"))
+                if (node.Current == null) continue;
+                if (node.Current.nodeType == AttachNode.NodeType.Stack && node.Current.id.ToLower().Contains("move"))
                 {
-                    node.position += offset*Vector3.up;
+                    node.Current.position += offset*Vector3.up;
                 }
             }
+            node.Dispose();
         }
 
         IEnumerator DelayedMoveStackNode(float offset)
@@ -276,19 +279,24 @@ namespace BDArmory.Parts
             if (rails.Count == 0)
             {
                 rails.Add(part.FindModelTransform("railTransform"));
-                var extraRails = part.FindModelTransforms("newRail");
-                for (int i = 0; i < extraRails.Length; i++)
+                List<Transform>.Enumerator t = part.FindModelTransforms("newRail").ToList().GetEnumerator();
+                while (t.MoveNext())
                 {
-                    rails.Add(extraRails[i]);
+                    if (t.Current == null) continue;
+                    rails.Add(t.Current);
                 }
+                t.Dispose();
             }
 
             for (int i = 1; i < rails.Count; i++)
             {
-                foreach (var t in rails[i].GetComponentsInChildren<Transform>())
+                List<Transform>.Enumerator t = rails[i].GetComponentsInChildren<Transform>().ToList().GetEnumerator();
+                while (t.MoveNext())
                 {
-                    t.name = "deleted";
+                    if (t.Current == null) continue;
+                    t.Current.name = "deleted";
                 }
+                t.Dispose();
                 Destroy(rails[i].gameObject);
             }
 
@@ -311,21 +319,24 @@ namespace BDArmory.Parts
                 rails.Add(newRail.transform);
             }
 
-            foreach (var t in part.FindModelTransform("rotaryBombBay").GetComponentsInChildren<Transform>())
+            List<Transform>.Enumerator mt = part.FindModelTransform("rotaryBombBay").GetComponentsInChildren<Transform>().ToList().GetEnumerator();
+            while (mt.MoveNext())
             {
-                switch (t.name)
+                if (mt.Current == null) continue;
+                switch (mt.Current.name)
                 {
                     case "lengthTransform":
-                        lengthTransforms.Add(t);
+                        lengthTransforms.Add(mt.Current);
                         break;
                     case "heightTransform":
-                        heightTransforms.Add(t);
+                        heightTransforms.Add(mt.Current);
                         break;
                     case "rotationTransform":
-                        rotationTransforms.Add(t);
+                        rotationTransforms.Add(mt.Current);
                         break;
                 }
             }
+            mt.Dispose();
         }
 
         public override void OnStart(StartState state)
@@ -350,30 +361,12 @@ namespace BDArmory.Parts
             if (HighLogic.LoadedSceneIsEditor)
             {
                 StartCoroutine(DelayedMoveStackNode(currentLength));
-                //part.AddOnMouseEnter(OnPartEnter);
-                //part.AddOnMouseExit(OnPartExit);
                 part.OnEditorAttach += OnAttach;
-                //previousSymMethod = EditorLogic.fetch.symmetryMethod;
-
-                /*
-                foreach(var pSym in part.symmetryCounterparts)
-                {
-                    var otherRail = pSym.FindModuleImplementing<BDRotaryRail>();
-                    if(otherRail.numberOfRails != numberOfRails)
-                    {
-                        SetRailCount(Mathf.RoundToInt(otherRail.numberOfRails), otherRail.railCountIndex);
-                        break;
-                    }
-                }
-                */
             }
 
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                UpdateMissileChildren();
-
-                RotateToIndex(railIndex, true);
-            }
+            if (!HighLogic.LoadedSceneIsFlight) return;
+            UpdateMissileChildren();
+            RotateToIndex(railIndex, true);
         }
 
         void OnAttach()
@@ -384,15 +377,16 @@ namespace BDArmory.Parts
 
         void UpdateChildrenHeight(float offset)
         {
-            foreach (Part p in part.children)
+            List<Part>.Enumerator p = part.children.GetEnumerator();
+            while (p.MoveNext())
             {
-                //if(p.parent != part) continue;
-
-                Vector3 direction = p.transform.position - part.transform.position;
+                if (p.Current == null) continue;
+                Vector3 direction = p.Current.transform.position - part.transform.position;
                 direction = Vector3.ProjectOnPlane(direction, part.transform.up).normalized;
 
-                p.transform.position += direction*offset;
+                p.Current.transform.position += direction*offset;
             }
+            p.Dispose();
         }
 
         void UpdateChildrenLength(float offset)
@@ -408,12 +402,15 @@ namespace BDArmory.Parts
 
             if (!parentInFront)
             {
-                foreach (Part p in part.children)
+                List<Part>.Enumerator p = part.children.GetEnumerator();
+                while (p.MoveNext())
                 {
-                    if (p.FindModuleImplementing<MissileLauncher>() && p.parent == part) continue;
+                    if (p.Current == null) continue;
+                    if (p.Current.FindModuleImplementing<MissileLauncher>() && p.Current.parent == part) continue;
 
-                    p.transform.position += direction*offset;
+                    p.Current.transform.position += direction*offset;
                 }
+                p.Dispose();
             }
 
             if (parentInFront)
@@ -451,12 +448,10 @@ namespace BDArmory.Parts
             //rotate to this missile specifically
             for (int i = 0; i < missileChildren.Length; i++)
             {
-                if (missileChildren[i] == ml)
-                {
-                    RotateToIndex(missileToRailIndex[i], false);
-                    nextMissile = ml;
-                    return;
-                }
+                if (missileChildren[i] != ml) continue;
+                RotateToIndex(missileToRailIndex[i], false);
+                nextMissile = ml;
+                return;
             }
 
             //specific missile isnt here, but check if this type exists here
@@ -466,12 +461,10 @@ namespace BDArmory.Parts
             //look for missile type
             for (int i = 0; i < missileChildren.Length; i++)
             {
-                if (missileChildren[i].GetShortName() == ml.GetShortName())
-                {
-                    RotateToIndex(missileToRailIndex[i], false);
-                    nextMissile = missileChildren[i];
-                    return;
-                }
+                if (missileChildren[i].GetShortName() != ml.GetShortName()) continue;
+                RotateToIndex(missileToRailIndex[i], false);
+                nextMissile = missileChildren[i];
+                return;
             }
         }
 
@@ -543,20 +536,6 @@ namespace BDArmory.Parts
             rdyMissile = null;
             railIndex = index;
 
-            /*
-            MissileLauncher foundMissile = null;
-
-            foreach(var mIndex in missileToRailIndex.Keys)
-            {
-                if(missileToRailIndex[mIndex] == index)
-                {
-                    foundMissile = missileChildren[mIndex];
-                }
-            }
-            nextMissile = foundMissile;
-            */
-
-
             yield return new WaitForSeconds(rotationDelay);
 
             Quaternion targetRot = Quaternion.Euler(0, 0, (float) index*-railAngle);
@@ -569,7 +548,6 @@ namespace BDArmory.Parts
                 }
 
                 UpdateMissilePositions();
-                //yield break;
             }
             else
             {
@@ -763,16 +741,17 @@ namespace BDArmory.Parts
             List<MissileLauncher> msl = new List<MissileLauncher>();
             List<Transform> mtfl = new List<Transform>();
             List<Transform> mrl = new List<Transform>();
-
-            foreach (var child in part.children)
+            List<Part>.Enumerator child = part.children.GetEnumerator();
+            while (child.MoveNext())
             {
-                if (child.parent != part) continue;
+                if (child.Current == null) continue;
+                if (child.Current.parent != part) continue;
 
-                MissileLauncher ml = child.FindModuleImplementing<MissileLauncher>();
+                MissileLauncher ml = child.Current.FindModuleImplementing<MissileLauncher>();
 
                 if (!ml) continue;
 
-                Transform mTf = child.FindModelTransform("missileTransform");
+                Transform mTf = child.Current.FindModelTransform("missileTransform");
                 //fix incorrect hierarchy
                 if (!mTf)
                 {
@@ -788,39 +767,39 @@ namespace BDArmory.Parts
                     mTf.localPosition = Vector3.zero;
                     mTf.localRotation = Quaternion.identity;
                     mTf.localScale = Vector3.one;
-                    for (int i = 0; i < tfchildren.Length; i++)
+                    List<Transform>.Enumerator t = tfchildren.ToList().GetEnumerator();
+                    while (t.MoveNext())
                     {
+                        if (t.Current == null) continue;
                         //Debug.Log("MissileTurret moving transform: " + tfchildren[i].gameObject.name);
-                        tfchildren[i].parent = mTf;
+                        t.Current.parent = mTf;
                     }
+                    t.Dispose();
                 }
 
-                if (ml && mTf)
+                if (!mTf) continue;
+                msl.Add(ml);
+                mtfl.Add(mTf);
+                Transform mRef = new GameObject().transform;
+                mRef.position = mTf.position;
+                mRef.rotation = mTf.rotation;
+                mRef.parent = rotationTransforms[0];
+                mrl.Add(mRef);
+
+                ml.MissileReferenceTransform = mTf;
+                ml.rotaryRail = this;
+
+                ml.decoupleForward = false;
+                ml.decoupleSpeed = Mathf.Max(ml.decoupleSpeed, 4);
+                ml.dropTime = Mathf.Max(ml.dropTime, 0.2f);
+
+
+                if (!comOffsets.ContainsKey(ml.part))
                 {
-                    msl.Add(ml);
-                    mtfl.Add(mTf);
-                    Transform mRef = new GameObject().transform;
-                    mRef.position = mTf.position;
-                    mRef.rotation = mTf.rotation;
-                    mRef.parent = rotationTransforms[0];
-                    mrl.Add(mRef);
-
-                    ml.MissileReferenceTransform = mTf;
-                    ml.rotaryRail = this;
-
-                    ml.decoupleForward = false;
-                    ml.decoupleSpeed = Mathf.Max(ml.decoupleSpeed, 4);
-                    ml.dropTime = Mathf.Max(ml.dropTime, 0.2f);
-
-
-                    if (!comOffsets.ContainsKey(ml.part))
-                    {
-                        comOffsets.Add(ml.part, ml.part.CoMOffset);
-                    }
-
-                    //missileCount++;
+                    comOffsets.Add(ml.part, ml.part.CoMOffset);
                 }
             }
+            child.Dispose();
 
             missileChildren = msl.ToArray();
             missileCount = missileChildren.Length;
@@ -830,98 +809,9 @@ namespace BDArmory.Parts
             UpdateIndexDictionary();
         }
 
-        /*
-        //editor stuff
-        void OnPartEnter(Part p)
-        {
-            if(EditorLogic.SelectedPart && EditorLogic.SelectedPart!=part)
-            {
-                previousSymMethod = EditorLogic.fetch.symmetryMethod;
-                EditorLogic.fetch.symmetryMethod = SymmetryMethod.Radial;
-            }
-        }
-        void OnPartExit(Part p)
-        {
-            if(EditorLogic.SelectedPart && EditorLogic.SelectedPart != part)
-            {
-                EditorLogic.fetch.symmetryMethod = previousSymMethod;
-            }
-
-            if(EditorLogic.fetch.symmetryMethod == SymmetryMethod.Mirror)
-            {
-                EditorLogic.fetch.symmetryMode = Mathf.Min(EditorLogic.fetch.symmetryMode, 1);
-            }
-        }
-        SymmetryMethod previousSymMethod;
-        */
-
         //test
         void OnGUI()
         {
-            /*
-            if(HighLogic.LoadedSceneIsEditor)
-            {
-                string debugString = "Selected part: " + (EditorLogic.SelectedPart ? EditorLogic.SelectedPart.name : "None");
-
-                debugString += "\nsymmetryMode: " + EditorLogic.fetch.symmetryMode;
-
-                GUI.Label(new Rect(400, 400, 600, 600), debugString);
-            }
-
-            */
-            /*
-            if(HighLogic.LoadedSceneIsFlight)
-            {
-                if(readyMissile)
-                {
-                    BDGUIUtils.DrawLineBetweenWorldPositions(readyMissile.missileReferenceTransform.position, readyMissile.missileReferenceTransform.position + readyMissile.missileReferenceTransform.forward, 3, Color.blue);
-                    BDGUIUtils.DrawLineBetweenWorldPositions(readyMissile.missileReferenceTransform.position, readyMissile.missileReferenceTransform.position + readyMissile.missileReferenceTransform.up, 3, Color.green);
-
-                }
-
-                for(int i = 0; i < numberOfRails; i++)
-                {
-                    Vector3 railPos = part.transform.position + (Quaternion.AngleAxis((float)i*railAngle, part.transform.up) * part.transform.forward);
-                    Vector2 guiPos;
-                    if(BDGUIUtils.WorldToGUIPos(railPos, out guiPos))
-                    {
-                        GUI.Label(new Rect(guiPos.x, guiPos.y, 20, 20), "R:"+i.ToString());
-                    }
-                }
-
-                if(missileCount > 0)
-                {
-                    for(int i = 0; i < missileCount; i++)
-                    {
-                        MissileLauncher ml = missileChildren[i];
-                        Vector2 guiPos;
-                        if(BDGUIUtils.WorldToGUIPos(ml.transform.position, out guiPos))
-                        {
-                            GUI.Label(new Rect(guiPos.x, guiPos.y, 40, 20), "M:"+i.ToString());
-                        }
-                    }
-                }
-
-                string rail2MissileString = "Rail to missile\n";
-                if(railToMissileIndex != null)
-                {
-                    foreach(var r in railToMissileIndex.Keys)
-                    {
-                        rail2MissileString += "R: " + r + " M: " + railToMissileIndex[r].ToString() +"\n";
-                    }
-                }
-                GUI.Label(new Rect(200, 200, 200, 900), rail2MissileString);
-
-                string missile2railString = "Missile to rail\n";
-                if(missileToRailIndex != null)
-                {
-                    foreach(var m in missileToRailIndex.Keys)
-                    {
-                        missile2railString += "R: " + missileToRailIndex[m].ToString() + " M: " + m +"\n";
-                    }
-                }
-                GUI.Label(new Rect(500, 200, 200, 900), missile2railString);
-            }*/
         }
 
 
@@ -934,54 +824,16 @@ namespace BDArmory.Parts
 
             for (int i = 0; i < missileChildren.Length; i++)
             {
-                if (missileTransforms[i] && missileChildren[i] && !missileChildren[i].HasFired)
-                {
-                    missileTransforms[i].position = missileReferenceTransforms[i].position;
-                    missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
+                if (!missileTransforms[i] || !missileChildren[i] || missileChildren[i].HasFired) continue;
+                missileTransforms[i].position = missileReferenceTransforms[i].position;
+                missileTransforms[i].rotation = missileReferenceTransforms[i].rotation;
 
-                    Part missilePart = missileChildren[i].part;
-                    Vector3 newCoMOffset =
-                        missilePart.transform.InverseTransformPoint(
-                            missileTransforms[i].TransformPoint(comOffsets[missilePart]));
-                    missilePart.CoMOffset = newCoMOffset;
-                }
+                Part missilePart = missileChildren[i].part;
+                Vector3 newCoMOffset =
+                    missilePart.transform.InverseTransformPoint(
+                        missileTransforms[i].TransformPoint(comOffsets[missilePart]));
+                missilePart.CoMOffset = newCoMOffset;
             }
         }
-
-        /*
-        float dropRailLength = 1;
-        IEnumerator MissileRailRoutine(MissileLauncher ml)
-        {
-            yield return null;
-            Ray ray = new Ray(ml.transform.position, part.transform.forward);
-            Vector3 localOrigin = part.transform.InverseTransformPoint(ray.origin);
-            Vector3 localDirection = part.transform.InverseTransformDirection(ray.direction);
-            float dropSpeed = ml.decoupleSpeed;
-            while(ml && Vector3.SqrMagnitude(ml.transform.position - ray.origin) < dropRailLength * dropRailLength && ml.timeIndex < ml.dropTime)
-            {
-                
-                //float thrust = ml.timeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
-                //thrust = ml.timeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
-                //float accel = thrust / ml.part.mass;
-                //dropSpeed += accel * Time.fixedDeltaTime;
-                
-
-                ray.origin = part.transform.TransformPoint(localOrigin);
-                ray.direction = part.transform.TransformDirection(localDirection);
-
-                Vector3 projPos = Vector3.Project(ml.vessel.transform.position - ray.origin, ray.direction) + ray.origin;
-                Vector3 railVel = part.rb.GetPointVelocity(projPos);
-                //Vector3 projVel = Vector3.Project(ml.vessel.srf_velocity-railVel, ray.direction);
-
-                ml.vessel.SetPosition(projPos);
-                ml.vessel.SetWorldVelocity(railVel + (dropSpeed * ray.direction));
-
-                yield return new WaitForFixedUpdate();
-
-                ray.origin = part.transform.TransformPoint(localOrigin);
-                ray.direction = part.transform.TransformDirection(localDirection);
-            }
-        }
-    */
     }
 }

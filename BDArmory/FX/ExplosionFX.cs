@@ -131,7 +131,7 @@ namespace BDArmory.FX
 					Vessel missileSource = null;
 					if(sourceVessel != null)
 					{
-                        var ml = part.FindModuleImplementing<MissileBase>();
+                        MissileBase ml = part.FindModuleImplementing<MissileBase>();
 						if(ml)
 						{
 							missileSource = ml.SourceVessel;

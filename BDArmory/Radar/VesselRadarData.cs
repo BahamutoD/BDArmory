@@ -202,7 +202,7 @@ namespace BDArmory.Radar
             rangeIndex = rIncrements.Length - 1;
             UpdateLockedTargets();
 
-            foreach (var mf in vessel.FindPartModulesImplementing<MissileFire>())
+            foreach (MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
             {
                 mf.vesselRadarData = this;
             }
@@ -215,7 +215,7 @@ namespace BDArmory.Radar
 
             if (!weaponManager)
             {
-                foreach (var mf in vessel.FindPartModulesImplementing<MissileFire>())
+                foreach (MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
                 {
                     weaponManager = mf;
                     break;
@@ -246,17 +246,17 @@ namespace BDArmory.Radar
         {
             string linkedVesselID = "";
 
-            foreach (var v in externalVRDs)
+            foreach (VesselRadarData v in externalVRDs)
             {
                 linkedVesselID += v.vessel.id.ToString() + ",";
             }
 
-            foreach (var id in waitingForVessels)
+            foreach (string id in waitingForVessels)
             {
                 linkedVesselID += id + ",";
             }
 
-            foreach (var radar in availableRadars)
+            foreach (ModuleRadar radar in availableRadars)
             {
                 if (radar.vessel == vessel)
                 {
@@ -304,7 +304,7 @@ namespace BDArmory.Radar
         {
             canReceiveRadarData = false;
             noData = true;
-            foreach (var mr in availableRadars)
+            foreach (ModuleRadar mr in availableRadars)
             {
                 if (mr.vessel == vessel && mr.canRecieveRadarData)
                 {
@@ -322,7 +322,7 @@ namespace BDArmory.Radar
                 UnlinkAllExternalRadars();
             }
 
-            foreach (var mr in availableRadars)
+            foreach (ModuleRadar mr in availableRadars)
             {
                 if (mr.canScan)
                 {
@@ -361,7 +361,7 @@ namespace BDArmory.Radar
         {
             availableRadars.RemoveAll(r => r == null);
             List<ModuleRadar> radarsToRemove = new List<ModuleRadar>();
-            foreach (var radar in availableRadars)
+            foreach (ModuleRadar radar in availableRadars)
             {
                 if (!radar.radarEnabled || (radar.vessel != vessel && !externalRadars.Contains(radar)))
                 {
@@ -373,7 +373,7 @@ namespace BDArmory.Radar
                 }
             }
 
-            foreach (var radar in radarsToRemove)
+            foreach (ModuleRadar radar in radarsToRemove)
             {
                 RemoveRadar(radar);
             }
@@ -533,7 +533,7 @@ namespace BDArmory.Radar
             }
             else
             {
-                foreach (var radar in availableRadars)
+                foreach (ModuleRadar radar in availableRadars)
                 {
                     if (CheckRadarForLock(radar, radarTarget))
                     {
@@ -561,7 +561,7 @@ namespace BDArmory.Radar
 
         public void TryLockTarget(Vector3 worldPosition)
         {
-            foreach (var displayData in displayedTargets)
+            foreach (RadarDisplayData displayData in displayedTargets)
             {
                 if (Vector3.SqrMagnitude(worldPosition - displayData.targetData.predictedPosition) < 40*40)
                 {
@@ -576,7 +576,7 @@ namespace BDArmory.Radar
         {
             if (!v) return false;
 
-            foreach (var displayData in displayedTargets)
+            foreach (RadarDisplayData displayData in displayedTargets)
             {
                 if (v == displayData.vessel)
                 {
@@ -615,7 +615,7 @@ namespace BDArmory.Radar
             //rCount = 0;
             UnlinkAllExternalRadars();
 
-            foreach (var radar in vessel.FindPartModulesImplementing<ModuleRadar>())
+            foreach (ModuleRadar radar in vessel.FindPartModulesImplementing<ModuleRadar>())
             {
                 radar.DisableRadar();
             }
@@ -624,7 +624,7 @@ namespace BDArmory.Radar
 
         public void SlaveTurrets()
         {
-            foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+            foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
             {
                 mtc.slaveTurrets = false;
             }
@@ -634,7 +634,7 @@ namespace BDArmory.Radar
 
         public void UnslaveTurrets()
         {
-            foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+            foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
             {
                 mtc.slaveTurrets = false;
             }
@@ -651,15 +651,6 @@ namespace BDArmory.Radar
         {
             if (drawGUI)
             {
-                /*
-                if(BDArmorySettings.DRAW_DEBUG_LINES)
-                {
-                    BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.forward), 2, Color.blue);
-                    BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.right), 2, Color.red);
-                    BDGUIUtils.DrawLineBetweenWorldPositions(referenceTransform.position, referenceTransform.position + (5 * referenceTransform.up), 2, Color.green);
-                }
-                */
-
                 for (int i = 0; i < lockedTargetIndexes.Count; i++)
                 {
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -1052,7 +1043,7 @@ namespace BDArmory.Radar
             }
             numberOfAvailableLinks += 1.25f;
 
-            foreach (var v in availableExternalVRDs)
+            foreach (VesselRadarData v in availableExternalVRDs)
             {
                 if (v && v.vessel && v.vessel.loaded)
                 {
@@ -1095,7 +1086,7 @@ namespace BDArmory.Radar
 
             List<ModuleRadar> radarsToUnlink = new List<ModuleRadar>();
 
-            foreach (var mr in availableRadars)
+            foreach (ModuleRadar mr in availableRadars)
             {
                 if (mr.vesselRadarData == vrd)
                 {
@@ -1103,7 +1094,7 @@ namespace BDArmory.Radar
                 }
             }
 
-            foreach (var mr in radarsToUnlink)
+            foreach (ModuleRadar mr in radarsToUnlink)
             {
                 Debug.Log("[BDArmory]:  - Unlinking radar: " + mr.radarName);
                 UnlinkRadar(mr);
@@ -1121,7 +1112,7 @@ namespace BDArmory.Radar
                 mr.RemoveExternalVRD(this);
 
                 bool noMoreExternalRadar = true;
-                foreach (var rad in externalRadars)
+                foreach (ModuleRadar rad in externalRadars)
                 {
                     if (rad.vessel == mr.vessel)
                     {
@@ -1145,7 +1136,7 @@ namespace BDArmory.Radar
         {
             externalVRDs.RemoveAll(vrd => vrd == null);
             List<VesselRadarData> vrdsToRemove = new List<VesselRadarData>();
-            foreach (var vrd in externalVRDs)
+            foreach (VesselRadarData vrd in externalVRDs)
             {
                 if (vrd.rCount == 0)
                 {
@@ -1153,7 +1144,7 @@ namespace BDArmory.Radar
                 }
             }
 
-            foreach (var vrd in vrdsToRemove)
+            foreach (VesselRadarData vrd in vrdsToRemove)
             {
                 externalVRDs.Remove(vrd);
             }
@@ -1186,7 +1177,7 @@ namespace BDArmory.Radar
         {
             while (true)
             {
-                foreach (var v in BDATargetManager.LoadedVessels)
+                foreach (Vessel v in BDATargetManager.LoadedVessels)
                 {
                     if (!v || !v.loaded || v == vessel) continue;
                     if (v.id.ToString() == vesselID)
@@ -1219,7 +1210,7 @@ namespace BDArmory.Radar
         public void UnlinkAllExternalRadars()
         {
             externalRadars.RemoveAll(r => r == null);
-            foreach (var eRad in externalRadars)
+            foreach (ModuleRadar eRad in externalRadars)
             {
                 eRad.RemoveExternalVRD(this);
             }
@@ -1254,12 +1245,12 @@ namespace BDArmory.Radar
             }
 
             availableExternalVRDs = new List<VesselRadarData>();
-            foreach (var v in FlightGlobals.Vessels)
+            foreach (Vessel v in FlightGlobals.Vessels)
             {
                 if (v != null && v && v.loaded && vessel != null && v != vessel)
                 {
                     BDArmorySettings.BDATeams team = BDArmorySettings.BDATeams.None;
-                    foreach (var mf in v.FindPartModulesImplementing<MissileFire>())
+                    foreach (MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
                     {
                         team = BDATargetManager.BoolToTeam(mf.team);
                         break;
@@ -1285,7 +1276,7 @@ namespace BDArmory.Radar
             }
 
 
-            foreach (var mr in vrd.availableRadars)
+            foreach (ModuleRadar mr in vrd.availableRadars)
             {
                 LinkToRadar(mr);
             }
@@ -1309,18 +1300,7 @@ namespace BDArmory.Radar
             AddRadar(mr);
 
             mr.AddExternalVRD(this);
-            /*
-            linkedRadar = mr;
-            linkedVesselID = mr.vessel.id.ToString();
-            linked = true;
-            if(mr.locked)
-            {
-                locked = true;
-                lockedTarget = mr.lockedTarget;
-            }
-            */
-            //CloseLinkRadarWindow();
-        }
+       }
 
 
         public void AddRadarContact(ModuleRadar radar, TargetSignatureData contactData, bool _locked)
@@ -1388,14 +1368,6 @@ namespace BDArmory.Radar
             UpdateLockedTargets();
         }
 
-        /*
-        public void UnlockTargetAtPosition(Vector3 position)
-        {
-            displayedTargets.RemoveAll(t => Vector3.SqrMagnitude(t.targetData.position - position) < 10);
-            UpdateLockedTargets();
-        }
-        */
-
         public void RemoveVesselFromTargets(Vessel _vessel)
         {
             displayedTargets.RemoveAll(t => t.vessel == _vessel);
@@ -1404,7 +1376,7 @@ namespace BDArmory.Radar
 
         public void UnlockAllTargets()
         {
-            foreach (var radar in weaponManager.radars)
+            foreach (ModuleRadar radar in weaponManager.radars)
             {
                 radar.UnlockAllTargets();
             }

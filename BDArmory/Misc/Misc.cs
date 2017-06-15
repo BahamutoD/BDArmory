@@ -16,7 +16,7 @@ namespace BDArmory.Misc
         {
             Color outputColor = new Color(0, 0, 0, 1);
 
-            var strings = color.Split(","[0]);
+            string[] strings = color.Split(","[0]);
             for (int i = 0; i < 4; i++)
             {
                 outputColor[i] = System.Single.Parse(strings[i])/255;
@@ -27,12 +27,12 @@ namespace BDArmory.Misc
 
         public static AnimationState[] SetUpAnimation(string animationName, Part part) //Thanks Majiir!
         {
-            var states = new List<AnimationState>();
+            List<AnimationState> states = new List<AnimationState>();
             List<UnityEngine.Animation>.Enumerator animation = part.FindModelAnimators(animationName).ToList().GetEnumerator();
             while (animation.MoveNext())
             {
                 if (animation.Current == null) continue;
-                var animationState = animation.Current[animationName];
+                AnimationState animationState = animation.Current[animationName];
                 animationState.speed = 0;
                 animationState.enabled = true;
                 animationState.wrapMode = WrapMode.ClampForever;
@@ -49,7 +49,7 @@ namespace BDArmory.Misc
             while (animation.MoveNext())
             {
                 if (animation.Current == null) continue;
-                var animationState = animation.Current[animationName];
+                AnimationState animationState = animation.Current[animationName];
                 animationState.speed = 0;
                 animationState.enabled = true;
                 animationState.wrapMode = WrapMode.ClampForever;

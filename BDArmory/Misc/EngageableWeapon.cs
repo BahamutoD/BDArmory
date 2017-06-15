@@ -53,12 +53,12 @@ namespace BDArmory.Misc
         protected void InitializeEngagementRange(float min, float max)
         {
 
-            var rangeMin = (UI_FloatRange)this.Fields["engageRangeMin"].uiControlEditor;
+            UI_FloatRange rangeMin = (UI_FloatRange)this.Fields["engageRangeMin"].uiControlEditor;
             rangeMin.minValue = min;
             rangeMin.maxValue = max;
             rangeMin.onFieldChanged = OnRangeUpdated;
 
-            var rangeMax = (UI_FloatRange)this.Fields["engageRangeMax"].uiControlEditor;
+            UI_FloatRange rangeMax = (UI_FloatRange)this.Fields["engageRangeMax"].uiControlEditor;
             rangeMax.minValue = min;
             rangeMax.maxValue = max;
             rangeMax.onFieldChanged = OnRangeUpdated;

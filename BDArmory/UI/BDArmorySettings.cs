@@ -389,13 +389,6 @@ namespace BDArmory.UI
                 GameEvents.onVesselGoOffRails.Add(OnVesselGoOffRails);
                 GameEvents.OnGameSettingsApplied.Add(SaveVolumeSettings);
                
-                /*
-                foreach(var cam in FlightCamera.fetch.cameras)
-                {
-                    cam.gameObject.AddComponent<CameraBulletRenderer>();
-                }
-                */
-
                 GameEvents.onVesselChange.Add(VesselChange);
             }
 
@@ -432,32 +425,6 @@ namespace BDArmory.UI
                 {
                     missileWarning = false;
                 }
-
-                /*
-                if(Input.GetKeyDown(KeyCode.Keypad1))
-                {
-                    VesselRanges vr = FlightGlobals.ActiveVessel.vesselRanges;
-                    Debug.Log ("Flying: ");
-                    Debug.Log ("load: " + vr.flying.load);
-                    Debug.Log ("unload: " + vr.flying.unload);
-                    Debug.Log ("pack: " + vr.flying.pack);
-                    Debug.Log ("unpack" + vr.flying.unpack);
-
-                    Debug.Log ("Landed: ");
-                    Debug.Log ("load: " + vr.landed.load);
-                    Debug.Log ("unload: " + vr.landed.unload);
-                    Debug.Log ("pack: " + vr.landed.pack);
-                    Debug.Log ("unpack" + vr.landed.unpack);
-
-                    Debug.Log ("Splashed: ");
-                    Debug.Log ("load: " + vr.splashed.load);
-                    Debug.Log ("unload: " + vr.splashed.unload);
-                    Debug.Log ("pack: " + vr.splashed.pack);
-                    Debug.Log ("unpack" + vr.splashed.unpack);
-
-                }
-                */
-
 
                 if (Input.GetKeyDown(KeyCode.KeypadMultiply))
                 {
@@ -573,7 +540,7 @@ namespace BDArmory.UI
 
         void GetWeaponManager()
         {
-            foreach (var mf in FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>())
+            foreach (MissileFire mf in FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>())
             {
                 ActiveWeaponManager = mf;
                 return;
@@ -654,7 +621,7 @@ namespace BDArmory.UI
                         //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
                         BDGUIUtils.UseMouseEventInRect(WindowRectGps);
                         foreach (
-                            var coordinate in
+                            GPSTargetInfo coordinate in
                             BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)])
                         {
                             BDGUIUtils.DrawTextureOnWorldPos(coordinate.worldPos,
@@ -696,14 +663,6 @@ namespace BDArmory.UI
             float contentTop = 10;
             float entryHeight = 20;
 
-            //GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight*1.25f), , HighLogic.Skin.label);
-            /*
-            if(missileWarning) 
-            {
-                GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "Missile", leftLabelRed);
-                GUI.Label(new Rect(leftIndent, contentTop+(line*entryHeight), contentWidth, entryHeight), "Lock", rightLabelRed);
-            }
-            */
             line += 1.25f;
             line += 0.25f;
 
@@ -1072,7 +1031,7 @@ namespace BDArmory.UI
                     }
 
                     //TGP
-                    foreach (var mtc in ActiveWeaponManager.targetingPods)
+                    foreach (ModuleTargetingCamera mtc in ActiveWeaponManager.targetingPods)
                     {
                         numberOfModules++;
                         bool isEnabled = (mtc.cameraEnabled);
@@ -1100,7 +1059,7 @@ namespace BDArmory.UI
                     }
 
                     //RADAR
-                    foreach (var mr in ActiveWeaponManager.radars)
+                    foreach (ModuleRadar mr in ActiveWeaponManager.radars)
                     {
                         numberOfModules++;
                         GUIStyle moduleStyle = mr.radarEnabled ? centerLabelBlue : centerLabel;
@@ -1114,7 +1073,7 @@ namespace BDArmory.UI
                     }
 
                     //JAMMERS
-                    foreach (var jammer in ActiveWeaponManager.jammers)
+                    foreach (ModuleECMJammer jammer in ActiveWeaponManager.jammers)
                     {
                         if (jammer.alwaysOn) continue;
 
@@ -1220,7 +1179,7 @@ namespace BDArmory.UI
             int indexToRemove = -1;
             int index = 0;
             BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
-            foreach (var coordinate in BDATargetManager.GPSTargets[myTeam])
+            foreach (GPSTargetInfo coordinate in BDATargetManager.GPSTargets[myTeam])
             {
                 Color origWColor = GUI.color;
                 if (coordinate.EqualsTarget(ActiveWeaponManager.designatedGPSInfo))
