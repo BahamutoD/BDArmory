@@ -480,17 +480,18 @@ namespace BahaTurret
 		   
         }
 		
-		/*
+		
         void OnCollisionEnter(Collision col)
 		{
             Debug.Log("[BDArmory]: Something Collided");
 
-            if (!HasExploded && HasFired && Time.time - TimeFired > 1)
-			{
-				DetonateIfPossible();
-			}
+          if (!HasExploded && HasFired && Time.time - TimeFired > 1 && this.part.vessel.speed > 10)
+            {
+                //DetonateIfPossible();
+                Detonate();                
+            }
 		}
-        */
+        
         
 		void SetupAudio()
 		{

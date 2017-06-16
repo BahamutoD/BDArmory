@@ -66,7 +66,9 @@ namespace BahaTurret
 		
 		[KSPField(isPersistant = false)]
 		public float bulletMass = 5.40133e-5f;
-		[KSPField(isPersistant = false)]
+        [KSPField]
+        public float bulletDmgMult = 1; //Used for heat damage modifier for non-explosive bullets
+        [KSPField(isPersistant = false)]
 		public float bulletVelocity = 860;
 		[KSPField(isPersistant = false)]
 		public string ammoName = "50CalAmmo";
