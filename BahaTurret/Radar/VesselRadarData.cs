@@ -1324,7 +1324,7 @@ namespace BahaTurret
             rData.vessel = contactData.vessel;
 
             if (rData.vessel == vessel ||
-                (rData.vessel.FindPartModulesImplementing<ModuleStealth>() != null || ModuleStealth.stealthEnabled) 
+                (rData.vessel.FindPartModulesImplementing<ModuleStealth>() != null && ModuleStealth.stealthEnabled) 
                 )
             {
                 return;
