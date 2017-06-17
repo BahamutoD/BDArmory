@@ -18,10 +18,6 @@ namespace BahaTurret
 
 		}
 
-		void BDAWeaponsCategory()
-		{
-		    const string customCategoryName = "BDAWeapons";
-            const string customDisplayCategoryName = "BDA Weapons";
 	    void BDAWeaponsCategory()
 	    {
 	        const string customCategoryName = "BDAWeapons";
@@ -40,9 +36,6 @@ namespace BahaTurret
 	            p => availableParts.Contains(p));
 
 	    }
-
-
-
     }
 }
 

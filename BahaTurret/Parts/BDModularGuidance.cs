@@ -307,6 +307,12 @@ namespace BahaTurret
             this.ToggleEngageOptions();
             this.activeRadarRange = ActiveRadarRange;
 
+            if (this.DetonationDistance == -1)
+            {
+                 this.DetonationDistance = GetBlastRadius();
+            }
+           
+
             //TODO: BDModularGuidance should be configurable?
             lockedSensorFOV = 5;         
             radarLOAL = true;
@@ -339,6 +345,7 @@ namespace BahaTurret
 
             Misc.RefreshAssociatedWindows(part);
         }
+
 
         private void OnDestroy()
         {
@@ -483,7 +490,7 @@ namespace BahaTurret
         {
             if (HasMissed) return;
             // if I'm to close to my vessel avoid explosion
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
             if (Vector3.Distance(vessel.CoM, targetPosition) > 
                 Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
@@ -658,7 +665,11 @@ namespace BahaTurret
                 MissileState = MissileStates.Drop;
                 Misc.RefreshAssociatedWindows(part);
 
-                ArmingExplosive();
+                if (StageToTriggerOnProximity == 0)
+                {
+                     ArmingExplosive();
+                }
+               
                 HasFired = true;
             }
         }
@@ -771,8 +782,10 @@ namespace BahaTurret
 
                 if (StageToTriggerOnProximity != 0)
                 {
+                    ArmingExplosive();
+
                     vessel.ActionGroups.ToggleGroup(
-                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));
+                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));;
                 }
                 else
                 {
@@ -824,6 +837,16 @@ namespace BahaTurret
         {
             WeaponNameWindow.ShowGUI(this);
             UpdateMenus(true);
+        }
+
+        void OnCollisionEnter(Collision col)
+        {
+            Debug.Log("[BDArmory]: Something Collided");
+
+            if (TimeIndex> 1 && this.part.vessel.speed > 10)
+            {
+                Detonate();
+            }
         }
 
         #endregion
