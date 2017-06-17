@@ -164,11 +164,7 @@
     <EmbeddedResource Include="Shaders\BulletShader.shader" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="LocalDev\7za_dir.txt" />
-    <Content Include="LocalDev\dist_dir.txt" />
-    <Content Include="LocalDev\ksp_dir.txt" />
-    <Content Include="LocalDev\mono_exe.txt" />
-    <Content Include="LocalDev\pdb2mdb_exe.txt" />
+    <Folder Include="LocalDev\" />
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>@echo $(Targetname)
