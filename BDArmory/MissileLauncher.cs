@@ -507,17 +507,35 @@ namespace BDArmory
 			{
 				deployedDrag = simpleDrag;	
 			}
-		   
+
+		    if (this.DetonationDistance == -1)
+		    {
+		          SetInitialDetonationDistance();
+		    }
+		  
+
+		}
+
+        private void SetInitialDetonationDistance()
+        {
+
+            if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
+            {
+                DetonationDistance = blastRadius;
+            }
+            else
+            {
+                DetonationDistance = blastPower;
+            }
         }
-		
-		
+
+
         void OnCollisionEnter(Collision col)
 		{
             Debug.Log("[BDArmory]: Something Collided");
 
-          if (!HasExploded && HasFired && Time.time - TimeFired > 1 && part.vessel.speed > 10)
+          if (TimeIndex>1 && this.part.vessel.speed > 10)
             {
-                //DetonateIfPossible();
                 Detonate();                
             }
 		}

@@ -40,8 +40,8 @@ namespace BDArmory.Parts
             Detonate();
         }
 
-        public bool Armed { get; set; } = true;
-	
+	    public bool Armed { get; set; } = true;
+
         private double previousMass = -1;
 		
 		bool hasDetonated;
@@ -101,6 +101,6 @@ namespace BDArmory.Parts
 	        ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(),
 	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 	    }
-	}
+    }
 }
 

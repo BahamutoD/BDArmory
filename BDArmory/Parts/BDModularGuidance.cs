@@ -321,6 +321,12 @@ namespace BDArmory.Parts
             ToggleEngageOptions();
             activeRadarRange = ActiveRadarRange;
 
+            if (this.DetonationDistance == -1)
+            {
+                 this.DetonationDistance = GetBlastRadius();
+            }
+           
+
             //TODO: BDModularGuidance should be configurable?
             lockedSensorFOV = 5;         
             radarLOAL = true;
@@ -353,6 +359,7 @@ namespace BDArmory.Parts
 
             Misc.Misc.RefreshAssociatedWindows(part);
         }
+
 
         private void OnDestroy()
         {
@@ -497,7 +504,7 @@ namespace BDArmory.Parts
         {
             if (HasMissed) return;
             // if I'm to close to my vessel avoid explosion
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
             if (Vector3.Distance(vessel.CoM, targetPosition) > 
                 Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
@@ -675,7 +682,11 @@ namespace BDArmory.Parts
                 MissileState = MissileStates.Drop;
                 Misc.Misc.RefreshAssociatedWindows(part);
 
-                ArmingExplosive();
+                if (StageToTriggerOnProximity == 0)
+                {
+                     ArmingExplosive();
+                }
+               
                 HasFired = true;
             }
         }
@@ -786,16 +797,18 @@ namespace BDArmory.Parts
             if (HasExploded || !HasFired) return;
             if (SourceVessel == null) SourceVessel = vessel;
 
-            if (StageToTriggerOnProximity != 0)
-            {
-                vessel.ActionGroups.ToggleGroup(
-                    (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));
-            }
-            else
-            {
-                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
-                AutoDestruction();
-            }
+                if (StageToTriggerOnProximity != 0)
+                {
+                    ArmingExplosive();
+
+                    vessel.ActionGroups.ToggleGroup(
+                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));;
+                }
+                else
+                {
+                    vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
+                    AutoDestruction();
+                }
                 
                
             HasExploded = true;
@@ -840,6 +853,16 @@ namespace BDArmory.Parts
         {
             WeaponNameWindow.ShowGUI(this);
             UpdateMenus(true);
+        }
+
+        void OnCollisionEnter(Collision col)
+        {
+            Debug.Log("[BDArmory]: Something Collided");
+
+            if (TimeIndex> 1 && this.part.vessel.speed > 10)
+            {
+                Detonate();
+            }
         }
 
         #endregion
