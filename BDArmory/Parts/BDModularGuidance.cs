@@ -270,6 +270,39 @@ namespace BDArmory.Parts
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            SetupsFields();
+
+            if (string.IsNullOrEmpty(GetShortName()))
+            {
+                shortName = "Unnamed";
+            }
+            part.force_activate();
+            RefreshGuidanceMode();
+
+            UpdateTargetingMode((TargetingModes)Enum.Parse(typeof(TargetingModes), _targetingLabel));
+
+            _targetDecoupler = FindFirstDecoupler(part.parent, null);
+
+            DisableResourcesFlow();
+
+            weaponClass = WeaponClasses.Missile;
+            WeaponName = GetShortName();
+
+            activeRadarRange = ActiveRadarRange;
+
+            if (this.DetonationDistance == -1)
+            {
+                this.DetonationDistance = GetBlastRadius();
+            }
+
+
+            //TODO: BDModularGuidance should be configurable?
+            lockedSensorFOV = 5;
+            radarLOAL = true;
+        }
+
+        private void SetupsFields()
+        {
             Events["HideUI"].active = false;
             Events["ShowUI"].active = true;
 
@@ -301,35 +334,46 @@ namespace BDArmory.Parts
                 DisablingExplosives();
 
             }
-            if (string.IsNullOrEmpty(GetShortName()))
-            {
-                shortName = "Unnamed";
-            }
-            part.force_activate();
-            RefreshGuidanceMode();
 
-            UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes),_targetingLabel));
+            UI_FloatRange staticMin = (UI_FloatRange)Fields["minStaticLaunchRange"].uiControlEditor;
+            UI_FloatRange staticMax = (UI_FloatRange)Fields["maxStaticLaunchRange"].uiControlEditor;
+            staticMin.onFieldChanged += OnStaticRangeUpdated;
+            staticMax.onFieldChanged += OnStaticRangeUpdated;
 
-            _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
-            DisableResourcesFlow();
+            UI_FloatRange stageOnProximity = (UI_FloatRange)Fields["StageToTriggerOnProximity"].uiControlEditor;
+            stageOnProximity.onFieldChanged = OnStageOnProximity;
 
-            weaponClass = WeaponClasses.Missile;
-            WeaponName = GetShortName();
 
+            OnStageOnProximity(Fields["StageToTriggerOnProximity"], null);
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
+
             ToggleEngageOptions();
-            activeRadarRange = ActiveRadarRange;
+        }
 
-            if (this.DetonationDistance == -1)
+        private void OnStageOnProximity(BaseField baseField, object o)
+        {
+            UI_FloatRange detonationDistance = (UI_FloatRange)Fields["DetonationDistance"].uiControlEditor;
+
+            if (StageToTriggerOnProximity != 0)
             {
-                 this.DetonationDistance = GetBlastRadius();
-            }
-           
+                detonationDistance = (UI_FloatRange) Fields["DetonationDistance"].uiControlEditor;
 
-            //TODO: BDModularGuidance should be configurable?
-            lockedSensorFOV = 5;         
-            radarLOAL = true;
+                detonationDistance.maxValue = 2000;
+
+                detonationDistance.stepIncrement = 50;
+            }
+            else
+            {
+                detonationDistance.maxValue = 500;
+
+                detonationDistance.stepIncrement = 10;
+            }
+        }
+
+        private void OnStaticRangeUpdated(BaseField baseField, object o)
+        {
+            InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
         }
 
         private void DisablingExplosives()
