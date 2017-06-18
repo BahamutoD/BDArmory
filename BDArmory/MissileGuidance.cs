@@ -144,9 +144,9 @@ namespace BDArmory
             Vector3 previousMissileVelocity, out float timeToImpact)
         {
 
-            var targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
-            var effectiveTargetAcceleration = targetAcceleration;
-            var effectiveMissileAcceleration = missileVessel.acceleration;
+            float targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
+            Vector3 effectiveTargetAcceleration = targetAcceleration;
+            Vector3d effectiveMissileAcceleration = missileVessel.acceleration;
             float leadTime = 0;
             if (previousTargetVelocity != Vector3.zero && previousMissileVelocity != Vector3.zero)
             {
@@ -195,12 +195,12 @@ namespace BDArmory
         private static bool CalculateAccurateTimeToImpact(float targetDistance, Vector3 targetVelocity, Vessel missileVessel,
             Vector3d effectiveMissileAcceleration, Vector3 effectiveTargetAcceleration, out float timeToImpact)
         {
-            var iterations = 0;
-            var relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
-            var relativeVelocity = (float) missileVessel.srfSpeed * missileVessel.srf_velocity.normalized -
+            int iterations = 0;
+            Vector3d relativeAcceleration = effectiveMissileAcceleration - effectiveTargetAcceleration;
+            Vector3d relativeVelocity = (float) missileVessel.srfSpeed * missileVessel.srf_velocity.normalized -
                                    targetVelocity;
-            var missileFinalPosition = missileVessel.CoM;
-            var previousDistance = 0f;
+            Vector3 missileFinalPosition = missileVessel.CoM;
+            float previousDistance = 0f;
             float currentDistance;
             do
             {
@@ -239,7 +239,7 @@ namespace BDArmory
 
 		    Vector3 simMissileVel = 500 * (targetPosition - missile.transform.position).normalized;
 
-            var launcher = missile as MissileLauncher;
+            MissileLauncher launcher = missile as MissileLauncher;
 		    float optSpeed = 400; //TODO: Add parameter
 		    if (launcher != null)
 		    {
@@ -265,7 +265,7 @@ namespace BDArmory
 			float targetDistance = Vector3.Distance(targetPosition, missile.transform.position);
 
             float optSpeed = 400; //TODO: Add parameter
-            var launcher = missile as MissileLauncher;
+            MissileLauncher launcher = missile as MissileLauncher;
             if (launcher != null)
             {
                 optSpeed = launcher.optimumAirspeed;
@@ -290,13 +290,6 @@ namespace BDArmory
 
             Vector3 planarDirectionToTarget =
                 Vector3.ProjectOnPlane(targetPosition - missileVessel.transform.position, upDirection).normalized;
-
-            /*
-            if(missileVessel.srfSpeed < 1 && missileVessel.verticalSpeed < 1) //gain altitude if launching from stationary
-            {
-                return missileVessel.transform.position + (5 * missileVessel.transform.forward) + (40 * upDirection);	
-            }
-            */
 
             float error;
 
@@ -354,8 +347,8 @@ namespace BDArmory
         }
 
 
-        public static FloatCurve DefaultLiftCurve = null;
-        public static FloatCurve DefaultDragCurve = null;
+        public static FloatCurve DefaultLiftCurve;
+        public static FloatCurve DefaultDragCurve;
 
         public static Vector3 DoAeroForces(MissileLauncher ml, Vector3 targetPosition, float liftArea, float steerMult,
             Vector3 previousTorque, float maxTorque, float maxAoA)

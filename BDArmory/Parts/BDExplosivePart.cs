@@ -40,11 +40,11 @@ namespace BDArmory.Parts
             Detonate();
         }
 
-        public bool Armed { get; set; } = true;
-	
+	    public bool Armed { get; set; } = true;
+
         private double previousMass = -1;
 		
-		bool hasDetonated = false;
+		bool hasDetonated;
 		
 		public override void OnStart (StartState state)
 		{
@@ -74,7 +74,7 @@ namespace BDArmory.Parts
 
             if (part.Resources["HighExplosive"].amount == previousMass) return;
            
-	        var explosiveMass = part.Resources["HighExplosive"].amount;   
+	        double explosiveMass = part.Resources["HighExplosive"].amount;   
 
 	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
             blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
@@ -84,7 +84,7 @@ namespace BDArmory.Parts
 		
 		public void DetonateIfPossible()
 		{
-			if(!hasDetonated && Armed && this.part.vessel.speed > 10)
+			if(!hasDetonated && Armed && part.vessel.speed > 10)
 			{   
 			   Detonate();
                hasDetonated = true;
@@ -101,6 +101,6 @@ namespace BDArmory.Parts
 	        ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(),
 	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 	    }
-	}
+    }
 }
 

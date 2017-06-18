@@ -8,6 +8,7 @@ using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.UI;
 using KSP.UI.Screens;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory
@@ -26,7 +27,7 @@ namespace BDArmory
         Coroutine startupRoutine;
         Coroutine shutdownRoutine;
 
-        bool finalFire = false;
+        bool finalFire;
 
         public int rippleIndex = 0;
 
@@ -62,9 +63,9 @@ namespace BDArmory
         
         public WeaponTypes eWeaponType;
                 
-        public float heat = 0;
-        public bool isOverheated = false;       
-        private bool wasFiring = false;
+        public float heat;
+        public bool isOverheated;       
+        private bool wasFiring;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
         AudioClip reloadCompleteAudioClip;
@@ -77,19 +78,19 @@ namespace BDArmory
 
         //AI
         public bool aiControlled = false;
-        public bool autoFire = false;
+        public bool autoFire;
         public float autoFireLength = 0;
         public float autoFireTimer = 0;
 
         //used by AI to lead moving targets
-        private float targetDistance = 0;
+        private float targetDistance;
         private Vector3 targetPosition;
         private Vector3 targetVelocity;
         private Vector3 targetAcceleration;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
         public Vessel legacyTargetVessel;
-        bool targetAcquired = false;
+        bool targetAcquired;
 
         public bool recentlyFiring //used by guard to know if it should evaid this
         {
@@ -100,7 +101,7 @@ namespace BDArmory
         //private int numberOfGuns = 0;
 
         //UI gauges(next to staging icon)
-        private ProtoStageIconInfo heatGauge = null;
+        private ProtoStageIconInfo heatGauge;
        
         //AI will fire gun if target is within this Cos(angle) of barrel
         public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
@@ -109,7 +110,7 @@ namespace BDArmory
         Vector3 pointingAtPosition;
         Vector3 bulletPrediction;
         Vector3 fixedLeadOffset = Vector3.zero;
-        float targetLeadDistance = 0;
+        float targetLeadDistance;
         
         //gapless particles
         List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
@@ -120,30 +121,31 @@ namespace BDArmory
         //module references
         [KSPField] public int turretID = 0;
         public ModuleTurret turret;
-        MissileFire mf = null;
+        MissileFire mf;
 
         public MissileFire weaponManager
         {
             get
             {
-                if (!mf)
+                if (mf) return mf;
+                List<MissileFire>.Enumerator wm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (wm.MoveNext())
                 {
-                    foreach (var wm in vessel.FindPartModulesImplementing<MissileFire>())
-                    {
-                        mf = wm;
-                        break;
-                    }
+                    if (wm.Current == null) continue;
+                    mf = wm.Current;
+                    break;
                 }
+                wm.Dispose();
                 return mf;
             }
         }
 
         LineRenderer[] laserRenderers;
 
-        bool pointingAtSelf = false; //true if weapon is pointing at own vessel
-        bool userFiring = false;
+        bool pointingAtSelf; //true if weapon is pointing at own vessel
+        bool userFiring;
         Vector3 laserPoint;
-        public bool slaved = false;
+        public bool slaved;
 
         public Transform turretBaseTransform
         {
@@ -223,7 +225,7 @@ namespace BDArmory
         private AnimationState fireState;
         [KSPField]
         public bool spinDownAnimation = false;
-        private bool spinningDown = false;
+        private bool spinningDown;
 
         //weapon specifications
         [KSPField]
@@ -315,7 +317,7 @@ namespace BDArmory
         public int tracerInterval = 0;
         [KSPField]
         public float tracerLuminance = 1.75f;
-        int tracerIntervalCounter = 0;
+        int tracerIntervalCounter;
         [KSPField]
         public string bulletTexturePath = "BDArmory/Textures/bullet";
 
@@ -368,7 +370,7 @@ namespace BDArmory
         public string reloadCompletePath = string.Empty;
 
 
-        private ProtoStageIconInfo reloadBar = null;
+        private ProtoStageIconInfo reloadBar;
         [KSPField]
         public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
@@ -390,10 +392,10 @@ namespace BDArmory
         //auto proximity tracking
         [KSPField]
         public float autoProxyTrackRange = 0;
-        bool atprAcquired = false;
-        int aptrTicker = 0;
+        bool atprAcquired;
+        int aptrTicker;
 
-        float timeFired = 0;
+        float timeFired;
         public float initialFireDelay = 0; //used to ripple fire multiple weapons of this type
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
@@ -403,16 +405,20 @@ namespace BDArmory
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Toggle Barrage")]
         public void ToggleRipple()
         {
-            foreach (var craftPart in EditorLogic.fetch.ship.parts)
+            List<Part>.Enumerator craftPart = EditorLogic.fetch.ship.parts.GetEnumerator();
+            while (craftPart.MoveNext())
             {
-                if (craftPart.name == part.name)
+                if (craftPart.Current == null) continue;
+                if (craftPart.Current.name != part.name) continue;
+                List<ModuleWeapon>.Enumerator weapon = craftPart.Current.FindModulesImplementing<ModuleWeapon>().GetEnumerator();
+                while (weapon.MoveNext())
                 {
-                    foreach (var weapon in craftPart.FindModulesImplementing<ModuleWeapon>())
-                    {
-                        weapon.useRippleFire = !weapon.useRippleFire;
-                    }
+                    if (weapon.Current == null) continue;
+                    weapon.Current.useRippleFire = !weapon.Current.useRippleFire;
                 }
+                weapon.Dispose();
             }
+            craftPart.Dispose();
         }
 
         IEnumerator IncrementRippleIndex(float delay)
@@ -454,7 +460,7 @@ namespace BDArmory
             }
         }
 
-        bool agHoldFiring = false;
+        bool agHoldFiring;
 
         [KSPAction("Fire (Toggle)")]
         public void AGFireToggle(KSPActionParam param)
@@ -507,11 +513,14 @@ namespace BDArmory
                 shortName = part.partInfo.title;
             }
 
-            foreach (var emitter in part.FindModelComponents<KSPParticleEmitter>())
+            List<KSPParticleEmitter>.Enumerator emitter = part.FindModelComponents<KSPParticleEmitter>().ToList().GetEnumerator();
+            while (emitter.MoveNext())
             {
-                emitter.emit = false;
-                EffectBehaviour.AddParticleEmitter(emitter);
+                if (emitter.Current == null) continue;
+                emitter.Current.emit = false;
+                EffectBehaviour.AddParticleEmitter(emitter.Current);
             }
+            emitter.Dispose();
 
             if (roundsPerMinute >= 1500)
             {
@@ -521,7 +530,7 @@ namespace BDArmory
 
             if (airDetonation)
             {
-                var detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
+                UI_FloatRange detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
                 detRange.maxValue = maxAirDetonationRange;
             }
             else
@@ -531,13 +540,16 @@ namespace BDArmory
             }
 
             muzzleFlashEmitters = new List<KSPParticleEmitter>();
-            foreach (Transform mtf in part.FindModelTransforms("muzzleTransform"))
+            List<Transform>.Enumerator mtf = part.FindModelTransforms("muzzleTransform").ToList().GetEnumerator();
+            while (mtf.MoveNext())
             {
-                KSPParticleEmitter kpe = mtf.GetComponent<KSPParticleEmitter>();
+                if (mtf.Current == null) continue;
+                KSPParticleEmitter kpe = mtf.Current.GetComponent<KSPParticleEmitter>();
                 EffectBehaviour.AddParticleEmitter(kpe);
                 muzzleFlashEmitters.Add(kpe);
                 kpe.emit = false;
             }
+            mtf.Dispose();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -558,26 +570,28 @@ namespace BDArmory
                 shellEjectTransforms = part.FindModelTransforms(shellEjectTransformName);
 
                 //setup emitters
-                foreach (var pe in part.FindModelComponents<KSPParticleEmitter>())
+                List<KSPParticleEmitter>.Enumerator pe = part.FindModelComponents<KSPParticleEmitter>().ToList().GetEnumerator();
+                while (pe.MoveNext())
                 {
-                    pe.maxSize *= part.rescaleFactor;
-                    pe.minSize *= part.rescaleFactor;
-                    pe.shape3D *= part.rescaleFactor;
-                    pe.shape2D *= part.rescaleFactor;
-                    pe.shape1D *= part.rescaleFactor;
+                    if (pe.Current == null) continue;
+                    pe.Current.maxSize *= part.rescaleFactor;
+                    pe.Current.minSize *= part.rescaleFactor;
+                    pe.Current.shape3D *= part.rescaleFactor;
+                    pe.Current.shape2D *= part.rescaleFactor;
+                    pe.Current.shape1D *= part.rescaleFactor;
 
-                    if (pe.useWorldSpace && !oneShotWorldParticles)
+                    if (pe.Current.useWorldSpace && !oneShotWorldParticles)
                     {
-                        BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
+                        BDAGaplessParticleEmitter gpe = pe.Current.gameObject.AddComponent<BDAGaplessParticleEmitter>();
                         gpe.part = part;
                         gaplessEmitters.Add(gpe);
                     }
                     else
                     {
-                        EffectBehaviour.AddParticleEmitter(pe);
+                        EffectBehaviour.AddParticleEmitter(pe.Current);
                     }
                 }
-
+                pe.Dispose();
 
                 //setup projectile colors
                 projectileColorC = Misc.Misc.ParseColor255(projectileColor);
@@ -603,15 +617,16 @@ namespace BDArmory
             }
 
             //turret setup
-            foreach (var turr in part.FindModulesImplementing<ModuleTurret>())
+            List<ModuleTurret>.Enumerator turr = part.FindModulesImplementing<ModuleTurret>().GetEnumerator();
+            while (turr.MoveNext())
             {
-                if (turr.turretID == turretID)
-                {
-                    turret = turr;
-                    turret.SetReferenceTransform(fireTransforms[0]);
-                    break;
-                }
+                if (turr.Current == null) continue;
+                if (turr.Current.turretID != turretID) continue;
+                turret = turr.Current;
+                turret.SetReferenceTransform(fireTransforms[0]);
+                break;
             }
+            turr.Dispose();
 
             if (!turret)
             {
@@ -623,14 +638,14 @@ namespace BDArmory
             //setup animations
             if (hasDeployAnim)
             {
-                deployState = Misc.Misc.SetUpSingleAnimation(deployAnimName, this.part);
+                deployState = Misc.Misc.SetUpSingleAnimation(deployAnimName, part);
                 deployState.normalizedTime = 0;
                 deployState.speed = 0;
                 deployState.enabled = true;
             }
             if (hasFireAnimation)
             {
-                fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, this.part);
+                fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, part);
                 fireState.enabled = false;
             }
             bulletInfo = BulletInfo.bullets[bulletType];
@@ -973,43 +988,48 @@ namespace BDArmory
                             }
 
                             //muzzle flash
-
-                            foreach (var pEmitter in muzzleFlashEmitters)
+                            List<KSPParticleEmitter>.Enumerator pEmitter = muzzleFlashEmitters.GetEnumerator();
+                            while (pEmitter.MoveNext())
                             {
+                                if (pEmitter.Current == null) continue;
                                 //KSPParticleEmitter pEmitter = mtf.gameObject.GetComponent<KSPParticleEmitter>();
-                                if (!pEmitter.useWorldSpace || oneShotWorldParticles)
+                                if (pEmitter.Current.useWorldSpace && !oneShotWorldParticles) continue;
+                                if (pEmitter.Current.maxEnergy < 0.5f)
                                 {
-                                    if (pEmitter.maxEnergy < 0.5f)
-                                    {
-                                        float twoFrameTime = Mathf.Clamp(Time.deltaTime * 2f, 0.02f, 0.499f);
-                                        pEmitter.maxEnergy = twoFrameTime;
-                                        pEmitter.minEnergy = twoFrameTime / 3f;
-                                    }
-                                    pEmitter.Emit();
+                                    float twoFrameTime = Mathf.Clamp(Time.deltaTime * 2f, 0.02f, 0.499f);
+                                    pEmitter.Current.maxEnergy = twoFrameTime;
+                                    pEmitter.Current.minEnergy = twoFrameTime / 3f;
                                 }
+                                pEmitter.Current.Emit();
                             }
+                            pEmitter.Dispose();
 
-                            foreach (var gpe in gaplessEmitters)
+                            List<BDAGaplessParticleEmitter>.Enumerator gpe = gaplessEmitters.GetEnumerator();
+                            while (gpe.MoveNext())
                             {
-                                gpe.EmitParticles();
+                                if (gpe.Current == null) continue;
+                                gpe.Current.EmitParticles();
                             }
+                            gpe.Dispose();
 
                             //shell ejection
                             if (BDArmorySettings.EJECT_SHELLS)
                             {
-                                for (int e = 0; e < shellEjectTransforms.Length; e++)
+                                List<Transform>.Enumerator sTf = shellEjectTransforms.ToList().GetEnumerator();
+                                while (sTf.MoveNext())
                                 {
-                                    Transform sTf = shellEjectTransforms[e];
+                                    if (sTf.Current == null) continue;
                                     //GameObject ejectedShell = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"), sTf.position + (part.rb.velocity*Time.fixedDeltaTime), sTf.rotation);
                                     GameObject ejectedShell = shellPool.GetPooledObject();
-                                    ejectedShell.transform.position = sTf.position;
+                                    ejectedShell.transform.position = sTf.Current.position;
                                     //+(part.rb.velocity*TimeWarp.fixedDeltaTime);
-                                    ejectedShell.transform.rotation = sTf.rotation;
+                                    ejectedShell.transform.rotation = sTf.Current.rotation;
                                     ejectedShell.transform.localScale = Vector3.one * shellScale;
                                     ShellCasing shellComponent = ejectedShell.GetComponent<ShellCasing>();
                                     shellComponent.initialV = part.rb.velocity;
                                     ejectedShell.SetActive(true);
                                 }
+                                sTf.Dispose();
                             }
                             effectsShot = true;
                         }
@@ -1038,7 +1058,7 @@ namespace BDArmory
                         pBullet.currentVelocity = part.rb.velocity + firedVelocity;
 
                         pBullet.initialSpeed = bulletVelocity;
-                        pBullet.sourceVessel = this.vessel;
+                        pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
                         pBullet.projectileColor = projectileColorC;
                         pBullet.startColor = startColorC;
@@ -1197,7 +1217,7 @@ namespace BDArmory
                         }
 
                         Part p = hit.collider.gameObject.GetComponentInParent<Part>();
-                        if (p && p.vessel && p.vessel != this.vessel)
+                        if (p && p.vessel && p.vessel != vessel)
                         {
                             float distance = hit.distance;
                             //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
@@ -1696,15 +1716,6 @@ namespace BDArmory
                             }
                         }
                     }
-                    else
-                    {
-                        /*
-                        if(gameObject.GetComponent<LineRenderer>()!=null)
-                        {
-                            gameObject.GetComponent<LineRenderer>().enabled = false;	
-                        }
-                        */
-                    }
                 }
             }
         }
@@ -1912,28 +1923,28 @@ namespace BDArmory
                         aptrTicker = 0;
                         Vessel tgt = null;
                         float closestSqrDist = autoProxyTrackRange * autoProxyTrackRange;
-                        foreach (var v in BDATargetManager.LoadedVessels)
+                        List<Vessel>.Enumerator v = BDATargetManager.LoadedVessels.GetEnumerator();
+                        while (v.MoveNext())
                         {
-                            if (!v || !v.loaded) continue;
-                            if (!v.IsControllable) continue;
-                            if (v == vessel) continue;
-                            Vector3 targetVector = v.transform.position - part.transform.position;
+                            if (v.Current == null || !v.Current.loaded) continue;
+                            if (!v.Current.IsControllable) continue;
+                            if (v.Current == vessel) continue;
+                            Vector3 targetVector = v.Current.transform.position - part.transform.position;
                             if (Vector3.Dot(targetVector, fireTransforms[0].forward) < 0) continue;
-                            float sqrDist = (v.transform.position - part.transform.position).sqrMagnitude;
+                            float sqrDist = (v.Current.transform.position - part.transform.position).sqrMagnitude;
                             if (sqrDist > closestSqrDist) continue;
                             if (Vector3.Angle(targetVector, fireTransforms[0].forward) > 20) continue;
-                            tgt = v;
+                            tgt = v.Current;
                             closestSqrDist = sqrDist;
                         }
+                        v.Dispose();
 
-                        if (tgt != null)
-                        {
-                            targetAcquired = true;
-                            atprAcquired = true;
-                            targetPosition = tgt.CoM;
-                            targetVelocity = tgt.srf_velocity;
-                            targetAcceleration = tgt.acceleration;
-                        }
+                        if (tgt == null) return;
+                        targetAcquired = true;
+                        atprAcquired = true;
+                        targetPosition = tgt.CoM;
+                        targetVelocity = tgt.srf_velocity;
+                        targetAcceleration = tgt.acceleration;
                     }
                 }
             }
@@ -2090,23 +2101,23 @@ namespace BDArmory
         // RMB info in editor
         public override string GetInfo()
         {
-            var output = new StringBuilder();
+            StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Weapon Type: {0}", weaponType));
+            output.Append($"Weapon Type: {weaponType}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Rounds Per Minute: {0}", roundsPerMinute));
+            output.Append($"Rounds Per Minute: {roundsPerMinute}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Ammunition: {0}", ammoName));
+            output.Append($"Ammunition: {ammoName}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Bullet type: {0}", bulletType));
+            output.Append($"Bullet type: {bulletType}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Max Range: {0} meters", maxEffectiveDistance));
+            output.Append($"Max Range: {maxEffectiveDistance} meters");
             output.Append(Environment.NewLine);
             if (weaponType == "cannon")
             {
-                output.Append(String.Format("Shell power/heat/radius: {0}/{1}/{2}", cannonShellPower, cannonShellHeat, cannonShellRadius));
+                output.Append($"Shell power/heat/radius: {cannonShellPower}/{cannonShellHeat}/{cannonShellRadius}");
                 output.Append(Environment.NewLine);
-                output.Append(String.Format("Air detonation: {0}", airDetonation));
+                output.Append($"Air detonation: {airDetonation}");
                 output.Append(Environment.NewLine);
             }
 

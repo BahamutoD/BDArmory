@@ -5,11 +5,11 @@ namespace BDArmory.UI
 {
     public class BDKeyBinder : MonoBehaviour
     {
-        public static BDKeyBinder current = null;
-        public int id = 0;
-        public bool valid = false;
+        public static BDKeyBinder current;
+        public int id;
+        public bool valid;
         string inputString = string.Empty;
-        bool mouseUp = false;
+        bool mouseUp;
 
         public void StartRecording()
         {

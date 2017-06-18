@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.CounterMeasure
@@ -61,7 +63,7 @@ namespace BDArmory.CounterMeasure
             }
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -116,24 +118,27 @@ namespace BDArmory.CounterMeasure
 
         void FireParticleEffects()
         {
-            if (effectsTransform)
+            if (!effectsTransform) return;
+            IEnumerator<KSPParticleEmitter> pe = effectsTransform.gameObject.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>().GetEnumerator();
+            while (pe.MoveNext())
             {
-                foreach (var pe in effectsTransform.gameObject.GetComponentsInChildren<KSPParticleEmitter>())
-                {
-                    EffectBehaviour.AddParticleEmitter(pe);
-                    pe.Emit();
-                }
+                if (pe.Current == null) continue;
+                EffectBehaviour.AddParticleEmitter(pe.Current);
+                pe.Current.Emit();
             }
+            pe.Dispose();
         }
 
 
         PartResource GetCMResource()
         {
-            foreach (var res in part.Resources)
+            IEnumerator<PartResource> res = part.Resources.GetEnumerator();
+            while (res.MoveNext())
             {
-                if (res.resourceName == resourceName) return res;
+                if (res.Current == null) continue;
+                if (res.Current.resourceName == resourceName) return res.Current;
             }
-
+            res.Dispose();
             return null;
         }
 
@@ -183,15 +188,15 @@ namespace BDArmory.CounterMeasure
             PartResource cmResource = GetCMResource();
             if (cmResource == null || !(cmResource.amount >= 1)) return;
             cmResource.amount--;
-            audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
             audioSource.PlayOneShot(cmSound);
 
             GameObject cm = flarePool.GetPooledObject();
             cm.transform.position = transform.position;
             CMFlare cmf = cm.GetComponent<CMFlare>();
             cmf.startVelocity = part.rb.velocity + (ejectVelocity*transform.up) +
-                                (UnityEngine.Random.Range(-3f, 3f)*transform.forward) +
-                                (UnityEngine.Random.Range(-3f, 3f)*transform.right);
+                                (Random.Range(-3f, 3f)*transform.forward) +
+                                (Random.Range(-3f, 3f)*transform.right);
             cmf.sourceVessel = vessel;
 
             cm.SetActive(true);
@@ -204,7 +209,7 @@ namespace BDArmory.CounterMeasure
             PartResource cmResource = GetCMResource();
             if (cmResource == null || !(cmResource.amount >= 1)) return;
             cmResource.amount--;
-            audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
             audioSource.PlayOneShot(cmSound);
 
             if (!vci)
@@ -226,7 +231,7 @@ namespace BDArmory.CounterMeasure
             if (smokeResource.amount >= 1)
             {
                 smokeResource.amount--;
-                audioSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+                audioSource.pitch = Random.Range(0.9f, 1.1f);
                 audioSource.PlayOneShot(cmSound);
 
                 StartCoroutine(SmokeRoutine());
@@ -242,12 +247,16 @@ namespace BDArmory.CounterMeasure
             smokeCMObject.SetActive(true);
             smokeCMObject.transform.position = ejectTransform.position + (10*ejectTransform.forward);
             float longestLife = 0;
-            foreach (var emitter in smokeCMObject.GetComponentsInChildren<KSPParticleEmitter>())
+            IEnumerator<KSPParticleEmitter> emitter = smokeCMObject.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>().GetEnumerator();
+            while (emitter.MoveNext())
             {
-                EffectBehaviour.AddParticleEmitter(emitter);
-                emitter.Emit();
-                if (emitter.maxEnergy > longestLife) longestLife = emitter.maxEnergy;
+                if (emitter.Current == null) continue;
+                EffectBehaviour.AddParticleEmitter(emitter.Current);
+                emitter.Current.Emit();
+                if (emitter.Current.maxEnergy > longestLife) longestLife = emitter.Current.maxEnergy;
             }
+            emitter.Dispose();
+
             audioSource.PlayOneShot(smokePoofSound);
             yield return new WaitForSeconds(longestLife);
             smokeCMObject.SetActive(false);

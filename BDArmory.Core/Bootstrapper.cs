@@ -1,6 +1,4 @@
-﻿
-using BDArmory.Core.Interface;
-using BDArmory.Core.Services;
+﻿using BDArmory.Core.Services;
 using UnityEngine;
 
 namespace BDArmory.Core

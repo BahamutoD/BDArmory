@@ -31,7 +31,7 @@ namespace BDArmory.Radar
 
         public MissileFire weaponManager;
 
-        [KSPField(isPersistant = true)] public bool rwrEnabled = false;
+        [KSPField(isPersistant = true)] public bool rwrEnabled;
 
         public static Texture2D rwrDiamondTexture =
             GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrDiamond", false);
@@ -76,7 +76,7 @@ namespace BDArmory.Radar
         GUIStyle rwrIconLabelStyle;
 
         AudioSource audioSource;
-        public static bool WindowRectRWRInitialized = false;
+        public static bool WindowRectRWRInitialized;
 
         public override void OnAwake()
         {
@@ -120,19 +120,18 @@ namespace BDArmory.Radar
                     WindowRectRWRInitialized = true;
                 }
 
-                foreach (var mf in vessel.FindPartModulesImplementing<MissileFire>())
+                List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mf.MoveNext())
                 {
-                    mf.rwr = this;
+                    if (mf.Current == null) continue;
+                    mf.Current.rwr = this;
                     if (!weaponManager)
                     {
-                        weaponManager = mf;
+                        weaponManager = mf.Current;
                     }
                 }
-
-                if (rwrEnabled)
-                {
-                    EnableRWR();
-                }
+                mf.Dispose();
+                if (rwrEnabled) EnableRWR();
             }
         }
 
@@ -199,7 +198,7 @@ namespace BDArmory.Radar
 
                 if (weaponManager && weaponManager.guardMode)
                 {
-                    weaponManager.FireAllCountermeasures(UnityEngine.Random.Range(2, 4));
+                    weaponManager.FireAllCountermeasures(Random.Range(2, 4));
                     weaponManager.incomingThreatPosition = source;
                 }
             }
@@ -336,19 +335,19 @@ namespace BDArmory.Radar
                 }
             }
 
-            foreach (var lw in launchWarnings)
+            List<TargetSignatureData>.Enumerator lw = launchWarnings.GetEnumerator();
+            while (lw.MoveNext())
             {
-                Vector2 pingPosition = (Vector2) lw.position;
+                Vector2 pingPosition = (Vector2) lw.Current.position;
                 pingPosition = Vector2.MoveTowards(displayRect.center, pingPosition, displayRect.center.x - (pingSize/2));
 
                 Rect pingRect = new Rect(pingPosition.x - (pingSize/2), pingPosition.y - (pingSize/2), pingSize,
                     pingSize);
                 GUI.DrawTexture(pingRect, rwrMissileTexture, ScaleMode.StretchToFill, true);
             }
-
+            lw.Dispose();
             GUI.EndGroup();
         }
-
 
         public static void PingRWR(Vessel v, Vector3 source, RWRThreatTypes type, float persistTime)
         {
@@ -360,25 +359,22 @@ namespace BDArmory.Radar
 
         public static void PingRWR(Ray ray, float fov, RWRThreatTypes type, float persistTime)
         {
-            foreach (var vessel in FlightGlobals.Vessels)
+            List<Vessel>.Enumerator vessel = FlightGlobals.Vessels.GetEnumerator();
+            while (vessel.MoveNext())
             {
-                if (vessel.loaded)
+                if (vessel.Current == null || !vessel.Current.loaded) continue;
+                Vector3 dirToVessel = vessel.Current.transform.position - ray.origin;
+                if (Vector3.Angle(ray.direction, dirToVessel) < fov/2)
                 {
-                    Vector3 dirToVessel = vessel.transform.position - ray.origin;
-                    if (Vector3.Angle(ray.direction, dirToVessel) < fov/2)
-                    {
-                        PingRWR(vessel, ray.origin, type, persistTime);
-                    }
+                    PingRWR(vessel.Current, ray.origin, type, persistTime);
                 }
-            }
+             }
+            vessel.Dispose();
         }
 
         public static void WarnMissileLaunch(Vector3 source, Vector3 direction)
         {
-            if (OnMissileLaunch != null)
-            {
-                OnMissileLaunch(source, direction);
-            }
+            OnMissileLaunch?.Invoke(source, direction);
         }
     }
 }

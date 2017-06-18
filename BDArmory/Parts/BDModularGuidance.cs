@@ -141,50 +141,61 @@ namespace BDArmory.Parts
 
         private void CheckDelayedFired()
         {
-            if (!_missileIgnited)
+            if (_missileIgnited) return;
+            if (TimeIndex > dropTime)
             {
-                if (TimeIndex > dropTime)
-                {
-                    MissileIgnition();
-                }
+                MissileIgnition();
             }
         }
 
         private void DisableRecursiveFlow(List<Part> children)
         {
-            foreach (var child in children)
+            List<Part>.Enumerator child = children.GetEnumerator();
+            while (child.MoveNext())
             {
-                foreach (var resource in child.Resources)
+                if (child.Current == null) continue;
+                IEnumerator<PartResource> resource = child.Current.Resources.GetEnumerator();
+                while (resource.MoveNext())
                 {
-                    if (resource.flowState)
+                    if (resource.Current == null) continue;
+                    if (resource.Current.flowState)
                     {
-                        resource.flowState = false;
+                        resource.Current.flowState = false;
                     }
                 }
-                if (child.children.Count > 0)
+                resource.Dispose();
+
+                if (child.Current.children.Count > 0)
                 {
-                    DisableRecursiveFlow(child.children);
+                    DisableRecursiveFlow(child.Current.children);
                 }
-                 if(!this.vesselParts.Contains(child)) this.vesselParts.Add(child);
+                if (!vesselParts.Contains(child.Current)) vesselParts.Add(child.Current);
             }
+            child.Dispose();
         }
 
         private void EnableResourceFlow(List<Part> children)
         {
-            foreach (var child in children)
+            List<Part>.Enumerator child = children.GetEnumerator();
+            while (child.MoveNext())
             {
-                foreach (var resource in child.Resources)
+                if (child.Current == null) continue;
+                IEnumerator<PartResource> resource = child.Current.Resources.GetEnumerator();
+                while (resource.MoveNext())
                 {
-                    if (!resource.flowState)
+                    if (resource.Current == null) continue;
+                    if (!resource.Current.flowState)
                     {
-                        resource.flowState = true;
+                        resource.Current.flowState = true;
                     }
                 }
-                if (child.children.Count > 0)
+                resource.Dispose();
+                if (child.Current.children.Count > 0)
                 {
-                    EnableResourceFlow(child.children);
+                    EnableResourceFlow(child.Current.children);
                 }
             }
+            child.Dispose();
         }
 
         private void DisableResourcesFlow()
@@ -192,7 +203,7 @@ namespace BDArmory.Parts
             if (_targetDecoupler != null)
             {
                 if (_targetDecoupler.part.children.Count == 0) return;
-                this.vesselParts.Clear();
+                vesselParts.Clear();
                 DisableRecursiveFlow(_targetDecoupler.part.children);
 
             }
@@ -201,7 +212,7 @@ namespace BDArmory.Parts
         private void MissileIgnition()
         {
             EnableResourceFlow(vesselParts);
-            var velocityObject = new GameObject("velObject");
+            GameObject velocityObject = new GameObject("velObject");
             velocityObject.transform.position = vessel.transform.position;
             velocityObject.transform.parent = vessel.transform;
             _velocityTransform = velocityObject.transform;
@@ -219,46 +230,79 @@ namespace BDArmory.Parts
         private bool ShouldExecuteNextStage()
         {
             if (!_missileIgnited) return false;
-            var ret = true;
+            bool ret = true;
             //If the next stage is greater than the number defined of stages the missile is done
-          
-            foreach (
-                var engine in
-                    vessel.parts.Where(IsEngine).Select(x => x.FindModuleImplementing<ModuleEngines>()))
+            // Replaced Linq expression...
+            List<Part>.Enumerator parts = vessel.parts.GetEnumerator();
+            while (parts.MoveNext())
             {
-                if (engine.EngineIgnited && !engine.getFlameoutState)
+                if (parts.Current == null || !IsEngine(parts.Current)) continue;
+                IEnumerator<ModuleEngines> engine = parts.Current.FindModulesImplementing<ModuleEngines>().GetEnumerator();
+                while (engine.MoveNext())
                 {
+                    if (engine.Current == null || !engine.Current.EngineIgnited || engine.Current.getFlameoutState) continue;
                     ret = false;
                     break;
                 }
+                engine.Dispose();
             }
+            parts.Dispose();
 
-            if (ret)
-            {
-                //If the next stage is greater than the number defined of stages the missile is done
-                if (_nextStage >= Math.Pow(2, StagesNumber + 7))
-                {
-                    MissileState = MissileStates.PostThrust;
-                    return false;
-                }
-            }
-            return ret;
+            if (!ret) return ret;
+            //If the next stage is greater than the number defined of stages the missile is done
+            if (!(_nextStage >= Math.Pow(2, StagesNumber + 7))) return ret;
+            MissileState = MissileStates.PostThrust;
+            return false;
         }
 
         public bool IsEngine(Part p)
         {
-            for (var i = 0; i < p.Modules.Count; i++)
+            List<PartModule>.Enumerator m = p.Modules.GetEnumerator();
+            while (m.MoveNext())
             {
-                var m = p.Modules[i];
-                if (m is ModuleEngines)
-                    return true;
+                if (m.Current == null) continue;
+                if (m.Current is ModuleEngines) return true;
             }
+            m.Dispose();
             return false;
         }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            SetupsFields();
+
+            if (string.IsNullOrEmpty(GetShortName()))
+            {
+                shortName = "Unnamed";
+            }
+            part.force_activate();
+            RefreshGuidanceMode();
+
+            UpdateTargetingMode((TargetingModes)Enum.Parse(typeof(TargetingModes), _targetingLabel));
+
+            _targetDecoupler = FindFirstDecoupler(part.parent, null);
+
+            DisableResourcesFlow();
+
+            weaponClass = WeaponClasses.Missile;
+            WeaponName = GetShortName();
+
+            activeRadarRange = ActiveRadarRange;
+
+            if (this.DetonationDistance == -1)
+            {
+                this.DetonationDistance = GetBlastRadius();
+            }
+
+
+            //TODO: BDModularGuidance should be configurable?
+            lockedSensorFOV = 5;
+            radarLOAL = true;
+        }
+
+        private void SetupsFields()
+        {
             Events["HideUI"].active = false;
             Events["ShowUI"].active = true;
 
@@ -290,29 +334,46 @@ namespace BDArmory.Parts
                 DisablingExplosives();
 
             }
-            if (string.IsNullOrEmpty(GetShortName()))
-            {
-                shortName = "Unnamed";
-            }
-            part.force_activate();
-            RefreshGuidanceMode();
 
-            UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes),_targetingLabel));
+            UI_FloatRange staticMin = (UI_FloatRange)Fields["minStaticLaunchRange"].uiControlEditor;
+            UI_FloatRange staticMax = (UI_FloatRange)Fields["maxStaticLaunchRange"].uiControlEditor;
+            staticMin.onFieldChanged += OnStaticRangeUpdated;
+            staticMax.onFieldChanged += OnStaticRangeUpdated;
 
-            _targetDecoupler = FindFirstDecoupler(part.parent, null);
 
-            DisableResourcesFlow();
+            UI_FloatRange stageOnProximity = (UI_FloatRange)Fields["StageToTriggerOnProximity"].uiControlEditor;
+            stageOnProximity.onFieldChanged = OnStageOnProximity;
 
-            weaponClass = WeaponClasses.Missile;
-            WeaponName = GetShortName();
 
+            OnStageOnProximity(Fields["StageToTriggerOnProximity"], null);
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
-            this.ToggleEngageOptions();
-            this.activeRadarRange = ActiveRadarRange;
 
-            //TODO: BDModularGuidance should be configurable?
-            lockedSensorFOV = 5;         
-            radarLOAL = true;
+            ToggleEngageOptions();
+        }
+
+        private void OnStageOnProximity(BaseField baseField, object o)
+        {
+            UI_FloatRange detonationDistance = (UI_FloatRange)Fields["DetonationDistance"].uiControlEditor;
+
+            if (StageToTriggerOnProximity != 0)
+            {
+                detonationDistance = (UI_FloatRange) Fields["DetonationDistance"].uiControlEditor;
+
+                detonationDistance.maxValue = 2000;
+
+                detonationDistance.stepIncrement = 50;
+            }
+            else
+            {
+                detonationDistance.maxValue = 500;
+
+                detonationDistance.stepIncrement = 10;
+            }
+        }
+
+        private void OnStaticRangeUpdated(BaseField baseField, object o)
+        {
+            InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
         }
 
         private void DisablingExplosives()
@@ -337,11 +398,12 @@ namespace BDArmory.Parts
                 Fields["ActiveRadarRange"].guiActive = false;
                 Fields["ActiveRadarRange"].guiActiveEditor = false;
             }
-            this.TargetingMode = newTargetingMode;
-            this._targetingLabel = newTargetingMode.ToString();
+            TargetingMode = newTargetingMode;
+            _targetingLabel = newTargetingMode.ToString();
 
             Misc.Misc.RefreshAssociatedWindows(part);
         }
+
 
         private void OnDestroy()
         {
@@ -352,8 +414,8 @@ namespace BDArmory.Parts
         private void SetMissileTransform()
         {
             MissileReferenceTransform = part.transform;
-            this.ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
-            this.UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
+            ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
+            UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
         }      
 
         void UpdateGuidance()
@@ -486,7 +548,7 @@ namespace BDArmory.Parts
         {
             if (HasMissed) return;
             // if I'm to close to my vessel avoid explosion
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
             if (Vector3.Distance(vessel.CoM, targetPosition) > 
                 Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
@@ -531,12 +593,12 @@ namespace BDArmory.Parts
                 if (TimeIndex > dropTime + 0.5f)
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vessel.transform.forward);
-                    var targetDirection = _velocityTransform.InverseTransformPoint(newTargetPosition).normalized;
+                    Vector3 targetDirection = _velocityTransform.InverseTransformPoint(newTargetPosition).normalized;
                     targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 
-                    var localAngVel = vessel.angularVelocity;
-                    var steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
-                    var steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
+                    Vector3 localAngVel = vessel.angularVelocity;
+                    float steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
+                    float steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
 
                     s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
                     s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
@@ -551,11 +613,11 @@ namespace BDArmory.Parts
         {
             Vector3 agmTarget;
             bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
-            if (!validSolution || Vector3.Angle(TargetPosition - this.vessel.CoM, agmTarget - this.vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
+            if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
             {
-                Vector3 dToTarget = TargetPosition - this.vessel.CoM;
-                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(this.vessel.transform.position))) * dToTarget;
-                agmTarget = this.vessel.CoM + direction;
+                Vector3 dToTarget = TargetPosition - vessel.CoM;
+                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
+                agmTarget = vessel.CoM + direction;
             }
 
             return agmTarget;
@@ -638,11 +700,14 @@ namespace BDArmory.Parts
                 GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
-                foreach (var wpm in vessel.FindPartModulesImplementing<MissileFire>())
+                List<MissileFire>.Enumerator wpm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (wpm.MoveNext())
                 {
-                    Team = wpm.team;
+                    if (wpm.Current == null) continue;
+                    Team = wpm.Current.team;
                     break;
                 }
+                wpm.Dispose();
 
                 SourceVessel = vessel;
                 SetTargeting();
@@ -661,7 +726,11 @@ namespace BDArmory.Parts
                 MissileState = MissileStates.Drop;
                 Misc.Misc.RefreshAssociatedWindows(part);
 
-                ArmingExplosive();
+                if (StageToTriggerOnProximity == 0)
+                {
+                     ArmingExplosive();
+                }
+               
                 HasFired = true;
             }
         }
@@ -698,9 +767,9 @@ namespace BDArmory.Parts
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Targeting Mode", active = true)]
         public void SwitchTargetingMode()
         {
-            var targetingModes = Enum.GetNames(typeof(TargetingModes));
+            string[] targetingModes = Enum.GetNames(typeof(TargetingModes));
 
-            var currentIndex = targetingModes.IndexOf(TargetingMode.ToString());
+            int currentIndex = targetingModes.IndexOf(TargetingMode.ToString());
 
             if (currentIndex < targetingModes.Length - 1)
             {
@@ -719,7 +788,7 @@ namespace BDArmory.Parts
             if (_targetDecoupler == null || !_targetDecoupler || !(_targetDecoupler is IStageSeparator)) return;
 
 
-            var decouple = _targetDecoupler as ModuleDecouple;
+            ModuleDecouple decouple = _targetDecoupler as ModuleDecouple;
             if (decouple != null)
             {
                 decouple.ejectionForce *= 5; 
@@ -750,32 +819,34 @@ namespace BDArmory.Parts
 
         protected override void PartDie(Part p)
         {
-            if (p == part)
-            {
-                AutoDestruction();
-                BDATargetManager.FiredMissiles.Remove(this);
-                GameEvents.onPartDie.Remove(PartDie);
-            }
+            if (p != part) return;
+            AutoDestruction();
+            BDATargetManager.FiredMissiles.Remove(this);
+            GameEvents.onPartDie.Remove(PartDie);
         }
 
         private void AutoDestruction()
         {
-            foreach (var vesselPart in this.vessel.Parts)
+            List<Part>.Enumerator vesselPart = vessel.Parts.GetEnumerator();
+            while (vesselPart.MoveNext())
             {
-                vesselPart.SetDamage(vesselPart.maxTemp * 2);
+                if (vesselPart.Current == null) continue;
+                vesselPart.Current.SetDamage(vesselPart.Current.maxTemp * 2);
             }
+            vesselPart.Dispose();
         }
 
         public override void Detonate()
         {
-            if (!HasExploded && HasFired)
-            {
-                if (SourceVessel == null) SourceVessel = vessel;
+            if (HasExploded || !HasFired) return;
+            if (SourceVessel == null) SourceVessel = vessel;
 
                 if (StageToTriggerOnProximity != 0)
                 {
+                    ArmingExplosive();
+
                     vessel.ActionGroups.ToggleGroup(
-                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));
+                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));;
                 }
                 else
                 {
@@ -784,8 +855,7 @@ namespace BDArmory.Parts
                 }
                 
                
-                HasExploded = true;
-            }
+            HasExploded = true;
         }
 
         public override Vector3 GetForwardTransform()
@@ -798,19 +868,19 @@ namespace BDArmory.Parts
             switch (transformAxis)
             {
                 case TransformAxisVectors.UpPositive:
-                    return this.MissileReferenceTransform.up;
+                    return MissileReferenceTransform.up;
                 case TransformAxisVectors.UpNegative:
-                    return -this.MissileReferenceTransform.up;
+                    return -MissileReferenceTransform.up;
                 case TransformAxisVectors.ForwardPositive:
-                    return this.MissileReferenceTransform.forward;
+                    return MissileReferenceTransform.forward;
                 case TransformAxisVectors.ForwardNegative:
-                    return -this.MissileReferenceTransform.forward;
+                    return -MissileReferenceTransform.forward;
                 case TransformAxisVectors.RightNegative:
-                    return -this.MissileReferenceTransform.right;
+                    return -MissileReferenceTransform.right;
                 case TransformAxisVectors.RightPositive:
-                    return this.MissileReferenceTransform.right;
+                    return MissileReferenceTransform.right;
                 default:
-                    return this.MissileReferenceTransform.forward;
+                    return MissileReferenceTransform.forward;
             }
         }
 
@@ -827,6 +897,16 @@ namespace BDArmory.Parts
         {
             WeaponNameWindow.ShowGUI(this);
             UpdateMenus(true);
+        }
+
+        void OnCollisionEnter(Collision col)
+        {
+            Debug.Log("[BDArmory]: Something Collided");
+
+            if (TimeIndex> 1 && this.part.vessel.speed > 10)
+            {
+                Detonate();
+            }
         }
 
         #endregion
@@ -871,7 +951,7 @@ namespace BDArmory.Parts
                 instance.missile_module = null;
                 instance.UpdateGUIState();
             }
-            var editor = EditorLogic.fetch;
+            EditorLogic editor = EditorLogic.fetch;
             if (editor != null)
                 editor.Unlock("BD_MN_GUILock");
         }
@@ -888,7 +968,7 @@ namespace BDArmory.Parts
         private void UpdateGUIState()
         {
             enabled = missile_module != null;
-            var editor = EditorLogic.fetch;
+            EditorLogic editor = EditorLogic.fetch;
             if (!enabled && editor != null)
                 editor.Unlock("BD_MN_GUILock");
         }
@@ -899,7 +979,7 @@ namespace BDArmory.Parts
             {
                 yield return null;
             }
-            var editor = EditorLogic.fetch;
+            EditorLogic editor = EditorLogic.fetch;
             while (EditorLogic.fetch != null)
             {
                 if (editor.editorScreen == EditorScreen.Actions)
@@ -909,7 +989,7 @@ namespace BDArmory.Parts
                         HideGUI();
                         OnActionGroupEditorOpened.Fire();
                     }
-                    var age = EditorActionGroups.Instance;
+                    EditorActionGroups age = EditorActionGroups.Instance;
                     if (missile_module && !age.GetSelectedParts().Contains(missile_module.part))
                     {
                         HideGUI();
@@ -949,16 +1029,16 @@ namespace BDArmory.Parts
                 Styles.InitStyles();
             }
 
-            var editor = EditorLogic.fetch;
+            EditorLogic editor = EditorLogic.fetch;
             if (!HighLogic.LoadedSceneIsEditor || !editor)
             {
                 return;
             }
-            var cursorInGUI = false; // nicked the locking code from Ferram
+            bool cursorInGUI = false; // nicked the locking code from Ferram
             mousePos = Input.mousePosition; //Mouse location; based on Kerbal Engineer Redux code
             mousePos.y = Screen.height - mousePos.y;
 
-            var posMult = 0;
+            int posMult = 0;
             if (offsetGUIPos != -1)
             {
                 posMult = offsetGUIPos;
@@ -1102,7 +1182,7 @@ namespace BDArmory.Parts
         /// <returns></returns>
         internal static Texture2D CreateColorPixel(Color32 Background)
         {
-            var retTex = new Texture2D(1, 1);
+            Texture2D retTex = new Texture2D(1, 1);
             retTex.SetPixel(0, 0, Background);
             retTex.Apply();
             return retTex;

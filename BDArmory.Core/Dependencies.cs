@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Management.Instrumentation;
-using Smooth.Slinq.Test;
 
 namespace BDArmory.Core
 {
@@ -32,7 +29,7 @@ namespace BDArmory.Core
 
         public static T Get<T>() where T : class
         {
-            var type = typeof(T);
+            Type type = typeof(T);
             Systems.TryGetValue(type, out var instance);
 
             if (instance == null)

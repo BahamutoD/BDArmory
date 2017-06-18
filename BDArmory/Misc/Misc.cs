@@ -4,7 +4,9 @@ using System.Reflection;
 using BDArmory.Parts;
 using BDArmory.Radar;
 using BDArmory.UI;
+using UniLinq;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BDArmory.Misc
 {
@@ -14,10 +16,10 @@ namespace BDArmory.Misc
         {
             Color outputColor = new Color(0, 0, 0, 1);
 
-            var strings = color.Split(","[0]);
+            string[] strings = color.Split(","[0]);
             for (int i = 0; i < 4; i++)
             {
-                outputColor[i] = System.Single.Parse(strings[i])/255;
+                outputColor[i] = Single.Parse(strings[i])/255;
             }
 
             return outputColor;
@@ -25,33 +27,36 @@ namespace BDArmory.Misc
 
         public static AnimationState[] SetUpAnimation(string animationName, Part part) //Thanks Majiir!
         {
-            var states = new List<AnimationState>();
-            foreach (var animation in part.FindModelAnimators(animationName))
+            List<AnimationState> states = new List<AnimationState>();
+            List<UnityEngine.Animation>.Enumerator animation = part.FindModelAnimators(animationName).ToList().GetEnumerator();
+            while (animation.MoveNext())
             {
-                var animationState = animation[animationName];
+                if (animation.Current == null) continue;
+                AnimationState animationState = animation.Current[animationName];
                 animationState.speed = 0;
                 animationState.enabled = true;
                 animationState.wrapMode = WrapMode.ClampForever;
-                animation.Blend(animationName);
+                animation.Current.Blend(animationName);
                 states.Add(animationState);
             }
+            animation.Dispose();
             return states.ToArray();
         }
 
         public static AnimationState SetUpSingleAnimation(string animationName, Part part)
         {
-            var states = new List<AnimationState>();
-
-            foreach (var animation in part.FindModelAnimators(animationName))
+            List<UnityEngine.Animation>.Enumerator animation = part.FindModelAnimators(animationName).ToList().GetEnumerator();
+            while (animation.MoveNext())
             {
-                var animationState = animation[animationName];
+                if (animation.Current == null) continue;
+                AnimationState animationState = animation.Current[animationName];
                 animationState.speed = 0;
                 animationState.enabled = true;
                 animationState.wrapMode = WrapMode.ClampForever;
-                animation.Blend(animationName);
+                animation.Current.Blend(animationName);
                 return animationState;
             }
-
+            animation.Dispose();
             return null;
         }
 
@@ -136,13 +141,16 @@ namespace BDArmory.Misc
         //refreshes part action window
         public static void RefreshAssociatedWindows(Part part)
         {
-            foreach (UIPartActionWindow window in GameObject.FindObjectsOfType(typeof(UIPartActionWindow)))
+            IEnumerator<UIPartActionWindow> window = Object.FindObjectsOfType(typeof(UIPartActionWindow)).Cast<UIPartActionWindow>().GetEnumerator();
+            while (window.MoveNext())
             {
-                if (window.part == part)
+                if (window.Current == null) continue;
+                if (window.Current.part == part)
                 {
-                    window.displayDirty = true;
+                    window.Current.displayDirty = true;
                 }
             }
+            window.Dispose();
         }
 
         public static Vector3 ProjectOnPlane(Vector3 point, Vector3 planePoint, Vector3 planeNormal)

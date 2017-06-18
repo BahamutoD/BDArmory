@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Radar;
@@ -29,10 +30,10 @@ namespace BDArmory.UI
 
 		string debugString = string.Empty;
 
-		public static float heatScore = 0;
-		public static float flareScore = 0;
+		public static float heatScore;
+		public static float flareScore;
 
-		public static bool hasAddedButton = false;
+		public static bool hasAddedButton;
 
 		void Awake()
 		{
@@ -222,29 +223,23 @@ namespace BDArmory.UI
 	    {
             ModuleTargetingCamera finalCam = null;
             float smallestAngle = 360;
-            foreach (var cam in ActiveLasers)
+            List<ModuleTargetingCamera>.Enumerator cam = ActiveLasers.GetEnumerator();
+            while (cam.MoveNext())
             {
-                if (!cam)
-                {
-                    continue;
-                }
+                if (cam.Current == null) continue;
+                if (parentOnly && !(cam.Current.vessel == vessel || cam.Current.vessel == sourceVessel)) continue;
+                if (!cam.Current.cameraEnabled || !cam.Current.groundStabilized || !cam.Current.surfaceDetected ||
+                    cam.Current.gimbalLimitReached) continue;
 
-                if (parentOnly && !(cam.vessel == vessel || cam.vessel == sourceVessel))
-                {
-                    continue;
-                }
+                float angle = Vector3.Angle(missilePosition, cam.Current.groundTargetPosition - position);
+                if (!(angle < maxOffBoresight) || !(angle < smallestAngle) ||
+                    !CanSeePosition(cam.Current.groundTargetPosition, vessel.transform.position,
+                        missilePosition)) continue;
 
-
-                if (cam.cameraEnabled && cam.groundStabilized && cam.surfaceDetected && !cam.gimbalLimitReached)
-                {
-                    float angle = Vector3.Angle(missilePosition, cam.groundTargetPosition - position);
-                    if (angle < maxOffBoresight && angle < smallestAngle && CanSeePosition(cam.groundTargetPosition, vessel.transform.position, missilePosition))
-                    {
-                        smallestAngle = angle;
-                        finalCam = cam;
-                    }
-                }
+                smallestAngle = angle;
+                finalCam = cam.Current;
             }
+            cam.Dispose();
             return finalCam;
         }
 
@@ -281,7 +276,7 @@ namespace BDArmory.UI
             float minMass = 0.15f;  //otherwise the RAMs have trouble shooting down incoming missiles
             TargetSignatureData finalData = TargetSignatureData.noTarget;
 			float finalScore = 0;
-			foreach(var vessel in BDATargetManager.LoadedVessels)
+			foreach(Vessel vessel in LoadedVessels)
 			{
 				if(!vessel || !vessel.loaded)
 				{
@@ -294,7 +289,7 @@ namespace BDArmory.UI
                 TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
 				if(mf == null || 
 					!tInfo || 
-					!(mf && tInfo.isMissile && tInfo.team != BDATargetManager.BoolToTeam(mf.team) && (tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Boost || tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Cruise)))
+					!(mf && tInfo.isMissile && tInfo.team != BoolToTeam(mf.team) && (tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Boost || tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Cruise)))
 				{
 					if(vessel.GetTotalMass() < minMass)
 					{
@@ -311,7 +306,7 @@ namespace BDArmory.UI
 				if(angle < scanRadius)
 				{
 					float score = 0;
-					foreach(var part in vessel.Parts)
+					foreach(Part part in vessel.Parts)
 					{
 						if(!part) continue;
 						if(!allAspect)
@@ -341,7 +336,7 @@ namespace BDArmory.UI
 
 			heatScore = finalScore;//DEBUG
 			flareScore = 0; //DEBUG
-			foreach(var flare in BDArmorySettings.Flares)
+			foreach(CMFlare flare in BDArmorySettings.Flares)
 			{
 				if(!flare) continue;
 
@@ -377,7 +372,7 @@ namespace BDArmory.UI
 		{
 			debugString = string.Empty;
 			debugString+= ("Team A's targets:");
-			foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
 			{
 				if(targetInfo)
 				{
@@ -396,7 +391,7 @@ namespace BDArmory.UI
 				}
 			}
 			debugString+= ("\nTeam B's targets:");
-			foreach(var targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
 			{
 				if(targetInfo)
 				{
@@ -417,17 +412,6 @@ namespace BDArmory.UI
 
 			debugString += "\n\nHeat score: "+heatScore;
 			debugString += "\nFlare score: "+flareScore;
-
-			/*
-			debugString += "\n\nLoaded vessels: ";
-			foreach(var v in LoadedVessels)
-			{
-				if(v)
-				{
-					debugString += "\n" + v.vesselName;
-				}
-			}
-			*/
 		}
 
 
@@ -459,7 +443,7 @@ namespace BDArmory.UI
 				ConfigNode gpsNode = null;
 				if(node.HasNode("BDAGPSTargets"))
 				{
-					foreach(var n in node.GetNodes("BDAGPSTargets"))
+					foreach(ConfigNode n in node.GetNodes("BDAGPSTargets"))
 					{
 						if(n.GetValue("SaveGame") == saveTitle)
 						{
@@ -504,7 +488,7 @@ namespace BDArmory.UI
 			{
 				ConfigNode node = fileNode.GetNode("BDARMORY");
 
-				foreach(var gpsNode in node.GetNodes("BDAGPSTargets"))
+				foreach(ConfigNode gpsNode in node.GetNodes("BDAGPSTargets"))
 				{
 					if(gpsNode.HasValue("SaveGame") && gpsNode.GetValue("SaveGame") == saveTitle)
 					{
@@ -536,7 +520,7 @@ namespace BDArmory.UI
 		{
 			string finalString = string.Empty;
 			string aString = string.Empty;
-			foreach(var gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
 			{
 				aString += gpsInfo.name;
 				aString += ",";
@@ -555,7 +539,7 @@ namespace BDArmory.UI
 			finalString += ":";
 
 			string bString = string.Empty;
-			foreach(var gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
 			{
 				bString += gpsInfo.name;
 				bString += ",";
@@ -680,7 +664,7 @@ namespace BDArmory.UI
 			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
 			if(!info)
 			{
-				foreach(var mf in v.FindPartModulesImplementing<MissileFire>())
+				foreach(MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
 				{
 					if(mf.team != reporter.team)
 					{
@@ -689,7 +673,7 @@ namespace BDArmory.UI
 					return;
 				}
 
-				foreach(var ml in v.FindPartModulesImplementing<MissileBase>())
+				foreach(MissileBase ml in v.FindPartModulesImplementing<MissileBase>())
 				{
 					if(ml.HasFired)
 					{
@@ -710,9 +694,9 @@ namespace BDArmory.UI
 
 		public static void ClearDatabase()
 		{
-			foreach(var t in TargetDatabase.Keys)
+			foreach(BDArmorySettings.BDATeams t in TargetDatabase.Keys)
 			{
-				foreach(var target in TargetDatabase[t])
+				foreach(TargetInfo target in TargetDatabase[t])
 				{
 					target.detectedTime = 0;
 				}
@@ -729,7 +713,7 @@ namespace BDArmory.UI
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target.numFriendliesEngaging >= 2) continue;
 				if(target && target.Vessel && !target.isLanded && !target.isMissile)
@@ -757,30 +741,28 @@ namespace BDArmory.UI
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
 
-            foreach (var target in TargetDatabase[team])
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
             {
-                if (target && target.Vessel && !target.isLanded && !target.isMissile)
-                {
-                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+                if (target.Current == null || !target.Current.Vessel || target.Current.isLanded || target.Current.isMissile) continue;
+                Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
 
-                    float distance, dot;
-                    distance = targetRelPos.magnitude;
-                    dot = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);
+                float distance, dot;
+                distance = targetRelPos.magnitude;
+                dot = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);
 
-                    if (distance > maxDistance || cosAngleCheck > dot)
-                        continue;
+                if (distance > maxDistance || cosAngleCheck > dot)
+                    continue;
 
-                    float targetSuitability = dot;       //prefer targets ahead to those behind
-                    targetSuitability += 500 / (distance + 100);        //same suitability check as above
+                float targetSuitability = dot;       //prefer targets ahead to those behind
+                targetSuitability += 500 / (distance + 100);        //same suitability check as above
 
-                    if (finalTarget == null || targetSuitability > finalTargetSuitability)      //just pick the most suitable one
-                    {
-                        finalTarget = target;
-                        finalTargetSuitability = targetSuitability;
-                    }
-                }
+                if (finalTarget != null && !(targetSuitability > finalTargetSuitability)) continue;
+                //just pick the most suitable one
+                finalTarget = target.Current;
+                finalTargetSuitability = targetSuitability;
             }
-
+            target.Dispose();
             return finalTarget;
         }
         
@@ -790,17 +772,16 @@ namespace BDArmory.UI
             BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
             TargetInfo finalTarget = null;
 
-            foreach (var target in TargetDatabase[team])
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
             {
-                if (target && target.Vessel && target.weaponManager != mf)
+                if (target.Current == null || !target.Current.Vessel || target.Current.weaponManager == mf) continue;
+                if (finalTarget == null || (target.Current.IsCloser(finalTarget, mf)))
                 {
-                    if (finalTarget == null || (target.IsCloser(finalTarget, mf)))
-                    {
-                        finalTarget = target;
-                    }
+                    finalTarget = target.Current;
                 }
             }
-
+            target.Dispose();
             return finalTarget;
         }
 
@@ -809,14 +790,15 @@ namespace BDArmory.UI
         {
             BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
 
-            foreach (var target in TargetDatabase[team])
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
             {
-                if (target && target.Vessel && target.weaponManager == mf)
+                if (target.Current == null) continue;
+                if (target.Current.Vessel && target.Current.weaponManager == mf)
                 {
-                    return target;
+                    return target.Current;
                 }
             }
-
             return null;
         }
 
@@ -825,7 +807,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
@@ -844,7 +826,7 @@ namespace BDArmory.UI
 			List<TargetInfo> finalTargets = new List<TargetInfo>();
 			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !excluding.Contains(target))
 				{
@@ -860,7 +842,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 			
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
 				{
@@ -879,7 +861,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
 				{
@@ -913,7 +895,7 @@ namespace BDArmory.UI
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile && target.isThreat)
 				{
@@ -932,7 +914,7 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
 			TargetInfo finalTarget = null;
 			
-			foreach(var target in TargetDatabase[team])
+			foreach(TargetInfo target in TargetDatabase[team])
 			{
 				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
 				{
@@ -956,22 +938,19 @@ namespace BDArmory.UI
         public static bool CheckSafeToFireGuns(MissileFire weaponManager, Vector3 aimDirection, float safeDistance, float cosUnsafeAngle)
         {
             BDArmorySettings.BDATeams team = weaponManager.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
-            foreach (var friendlyTarget in TargetDatabase[team])
+            List<TargetInfo>.Enumerator friendlyTarget = TargetDatabase[team].GetEnumerator();
+            while (friendlyTarget.MoveNext())
             {
-                if (friendlyTarget && friendlyTarget.Vessel)
-                {
-                    float friendlyPosDot = Vector3.Dot(friendlyTarget.position - weaponManager.vessel.vesselTransform.position, aimDirection);
-                    if (friendlyPosDot > 0)  //only bother if the friendly is actually in front of us
-                    {
-                        float friendlyDistance = (friendlyTarget.position - weaponManager.vessel.vesselTransform.position).magnitude;
-                        float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
+                if (friendlyTarget.Current == null || !friendlyTarget.Current.Vessel) continue;
+                float friendlyPosDot = Vector3.Dot(friendlyTarget.Current.position - weaponManager.vessel.vesselTransform.position, aimDirection);
+                if (!(friendlyPosDot > 0)) continue;
+                float friendlyDistance = (friendlyTarget.Current.position - weaponManager.vessel.vesselTransform.position).magnitude;
+                float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
 
-                        if (friendlyDistance < safeDistance && cosUnsafeAngle < friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
-                            return false;
-                    }
-                }
+                if (friendlyDistance < safeDistance && cosUnsafeAngle < friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
+                    return false;
             }
-
+            friendlyTarget.Dispose();
             return true;
         }
 

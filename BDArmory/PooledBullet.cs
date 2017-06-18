@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using BDArmory.Armor;
-using BDArmory.Core;
 using BDArmory.Core.Extension;
-using BDArmory.Core.Interface;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
@@ -79,26 +77,26 @@ namespace BDArmory
 
 
         Vector3 sourceOriginalV;
-        bool hasBounced = false;
+        bool hasBounced;
 
         public float maxDistance;
 
         //bool isUnderwater = false;
 
         Light lightFlash;
-        bool wasInitiated = false;
+        bool wasInitiated;
 
         //physical properties
         public Vector3 currentVelocity;
         public float mass;
         public float ballisticCoefficient;
 
-        public float flightTimeElapsed = 0;
+        public float flightTimeElapsed;
 
-        bool collisionEnabled = false;
+        bool collisionEnabled;
 
         public static Shader bulletShader;
-        public static bool shaderInitialized = false;
+        public static bool shaderInitialized;
 
         void OnEnable()
         {
@@ -283,13 +281,13 @@ namespace BDArmory
                     catch (NullReferenceException)
                     {
                     }
-                    var armor = BDArmor.GetArmor(hit.collider, hitPart);
-                    var armorData = new ArmorPenetration.BulletPenetrationData(ray, hit);
+                    BDArmor armor = BDArmor.GetArmor(hit.collider, hitPart);
+                    ArmorPenetration.BulletPenetrationData armorData = new ArmorPenetration.BulletPenetrationData(ray, hit);
                     ArmorPenetration.DoPenetrationRay(armorData, bullet.positiveCoefficient);
-                    var penetration = bullet.penetration.Evaluate(distanceFromStart)/1000;
-                    var fulllyPenetrated = penetration*leftPenetration >
+                    float penetration = bullet.penetration.Evaluate(distanceFromStart)/1000;
+                    bool fulllyPenetrated = penetration*leftPenetration >
                                            ((armor == null) ? 1f : armor.EquivalentThickness)*armorData.armorThickness;
-                    var finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
+                    Vector3 finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
 
 
                     if (fulllyPenetrated)
@@ -493,7 +491,7 @@ namespace BDArmory
                                         armor.CreateExplosion(hitPart);
                                         break;
                                     case BDArmor.ExplodeMode.Dynamic:
-                                        var probability = CalculateExplosionProbability(hitPart);
+                                        float probability = CalculateExplosionProbability(hitPart);
                                         if (probability > 0.1f)
                                             armor.CreateExplosion(hitPart);
                                         break;
@@ -518,29 +516,6 @@ namespace BDArmory
                         }
                     }
                 }
-
-                /*
-				if(isUnderwater)
-				{
-					if(FlightGlobals.getAltitudeAtPos(transform.position) > 0)
-					{
-						isUnderwater = false;
-					}
-					else
-					{
-						rigidbody.AddForce(-rigidbody.velocity * 0.15f);
-					}
-				}
-				else
-				{
-					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
-					{
-						isUnderwater = true;
-						//FXMonger.Splash(transform.position, 1);
-						//make a custom splash here
-					}
-				}
-				*/
             }
 
             if (bulletType == PooledBulletTypes.Explosive && airDetonation && distanceFromStart > detonationRange)
@@ -616,7 +591,7 @@ namespace BDArmory
             float probability = 0;
             for (int i = 0; i < part.Resources.Count; i++)
             {
-                var current = part.Resources[i];
+                PartResource current = part.Resources[i];
                 switch (current.resourceName)
                 {
                     case "LiquidFuel":

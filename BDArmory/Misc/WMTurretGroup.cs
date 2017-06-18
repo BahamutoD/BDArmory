@@ -21,21 +21,27 @@ namespace BDArmory.Misc
 
         public void StartFiringOnTarget(Vessel targetVessel, float burstLength)
         {
-            foreach (var weapon in weapons)
+            List<ModuleWeapon>.Enumerator weapon = weapons.GetEnumerator();
+            while (weapon.MoveNext())
             {
-                weapon.legacyTargetVessel = targetVessel;
-                weapon.autoFireTimer = Time.time;
-                weapon.autoFireLength = burstLength;
+                if (weapon.Current == null) continue;
+                weapon.Current.legacyTargetVessel = targetVessel;
+                weapon.Current.autoFireTimer = Time.time;
+                weapon.Current.autoFireLength = burstLength;
             }
+            weapon.Dispose();
         }
 
         public void ForceStopFiring()
         {
-            foreach (var weapon in weapons)
+            List<ModuleWeapon>.Enumerator weapon = weapons.GetEnumerator();
+            while (weapon.MoveNext())
             {
-                weapon.autoFire = false;
-                weapon.legacyTargetVessel = null;
+                if (weapon.Current == null) continue;
+                weapon.Current.autoFire = false;
+                weapon.Current.legacyTargetVessel = null;
             }
+            weapon.Dispose();
         }
     }
 }

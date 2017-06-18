@@ -10,7 +10,7 @@ namespace BDArmory.Parts
         [KSPField] public string parentTransformName = string.Empty;
 
 
-        bool setupComplete = false;
+        bool setupComplete;
 
         Part[] children;
         Vector3[] localAnchors;

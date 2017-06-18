@@ -5,6 +5,7 @@ using System.Text;
 using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.UI;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory
@@ -43,7 +44,7 @@ namespace BDArmory
         float currentTgtRange = 8000;
         float predictedFlightTime = 1;
 
-        public bool drawAimer = false;
+        public bool drawAimer;
 
         Vector3 rocketPrediction = Vector3.zero;
         Texture2D aimerTexture;
@@ -56,14 +57,14 @@ namespace BDArmory
         [KSPField] public string deployAnimationName;
         [KSPField] public float deployAnimationSpeed = 1;
         AnimationState deployAnimState;
-        bool hasDeployAnimation = false;
-        public bool deployed = false;
+        bool hasDeployAnimation;
+        public bool deployed;
         Coroutine deployAnimRoutine;
 
         public bool readyToFire = true;
 
         public Vessel legacyGuardTarget = null;
-        public float lastAutoFiredTime = 0;
+        public float lastAutoFiredTime;
         public float autoRippleRate = 0;
         public float autoFireStartTime = 0;
         public float autoFireDuration = 0;
@@ -90,7 +91,7 @@ namespace BDArmory
             get { return turret ? turret.minPitch : 0; }
         }
 
-        double lastRocketsLeft = 0;
+        double lastRocketsLeft;
 
         //weapon interface
         public Part GetPart()
@@ -246,7 +247,7 @@ namespace BDArmory
         }
 
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxTargetingRange);
@@ -273,15 +274,16 @@ namespace BDArmory
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
             {
-                foreach (var turr in part.FindModulesImplementing<ModuleTurret>())
+                List<ModuleTurret>.Enumerator turr = part.FindModulesImplementing<ModuleTurret>().GetEnumerator();
+                while (turr.MoveNext())
                 {
-                    if (turr.turretID == turretID)
-                    {
-                        turret = turr;
-                        targetInTurretView = false;
-                        break;
-                    }
+                    if (turr.Current == null) continue;
+                    if (turr.Current.turretID != turretID) continue;
+                    turret = turr.Current;
+                    targetInTurretView = false;
+                    break;
                 }
+                turr.Dispose();
 
                 if (turret)
                 {
@@ -419,7 +421,7 @@ namespace BDArmory
             }
         }
 
-        bool mouseAiming = false;
+        bool mouseAiming;
 
         void Aim()
         {
@@ -506,15 +508,6 @@ namespace BDArmory
             }
 
             currentTgtRange = targetDistance;
-
-            /*
-            float accelDistance = (thrust / rocketMass) * ((thrustTime * thrustTime) / 2);
-            float finalV = (thrust / rocketMass) * thrustTime;
-            float aveThrustV = finalV / 2;
-            float flightTime = targetDistance / finalV;//(accelDistance / aveThrustV) + ((targetDistance - accelDistance) / finalV);
-            float gravDrop = 0.5f * (float)FlightGlobals.getGeeForceAtPosition(part.transform.position).magnitude * flightTime * flightTime;
-            targetPosition += gravDrop * VectorUtils.GetUpDirection(part.transform.position);
-            */
 
             targetPosition += trajectoryOffset;
 
@@ -746,11 +739,13 @@ namespace BDArmory
 
         public PartResource GetRocketResource()
         {
-            foreach (var res in part.Resources)
+            IEnumerator<PartResource> res = part.Resources.GetEnumerator();
+            while (res.MoveNext())
             {
-                if (res.resourceName == rocketType) return res;
+                if (res.Current == null) continue;
+                if (res.Current.resourceName == rocketType) return res.Current;
             }
-
+            res.Dispose();
             return null;
         }
 
@@ -769,16 +764,16 @@ namespace BDArmory
         // RMB info in editor
         public override string GetInfo()
         {
-            var output = new StringBuilder();
+            StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Weapon Type: {0}", "Rocket Launcher"));
+            output.Append("Weapon Type: Rocket Launcher");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Rocket Type: {0}", rocketType));
+            output.Append($"Rocket Type: {rocketType}");
             output.Append(Environment.NewLine);
-            output.Append(String.Format("Max Range: {0} meters", maxTargetingRange));
+            output.Append($"Max Range: {maxTargetingRange} meters");
             output.Append(Environment.NewLine);
 
-            output.Append(String.Format("Blast radius/force/heat: {0}/{1}/{2}", blastRadius, blastForce, blastHeat));
+            output.Append($"Blast radius/force/heat: {blastRadius}/{blastForce}/{blastHeat}");
             output.Append(Environment.NewLine);
 
             return output.ToString();
@@ -790,7 +785,7 @@ namespace BDArmory
     public class Rocket : MonoBehaviour
     {
         public Transform spawnTransform;
-        public Vessel targetVessel = null;
+        public Vessel targetVessel;
         public Vessel sourceVessel;
         public Vector3 startVelocity;
         public float mass;
@@ -825,7 +820,7 @@ namespace BDArmory
 
         KSPParticleEmitter[] pEmitters;
 
-        float randThrustSeed = 0;
+        float randThrustSeed;
 
         void Start()
         {
@@ -834,23 +829,26 @@ namespace BDArmory
             rb = gameObject.AddComponent<Rigidbody>();
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 
-            foreach (var pe in pEmitters)
+            List<KSPParticleEmitter>.Enumerator pe = pEmitters.ToList().GetEnumerator();
+            while (pe.MoveNext())
             {
-                if (FlightGlobals.getStaticPressure(transform.position) == 0 && pe.useWorldSpace)
+                if (pe.Current == null) continue;
+                if (FlightGlobals.getStaticPressure(transform.position) == 0 && pe.Current.useWorldSpace)
                 {
-                    pe.emit = false;
+                    pe.Current.emit = false;
                 }
-                else if (pe.useWorldSpace)
+                else if (pe.Current.useWorldSpace)
                 {
-                    BDAGaplessParticleEmitter gpe = pe.gameObject.AddComponent<BDAGaplessParticleEmitter>();
+                    BDAGaplessParticleEmitter gpe = pe.Current.gameObject.AddComponent<BDAGaplessParticleEmitter>();
                     gpe.rb = rb;
                     gpe.emit = true;
                 }
                 else
                 {
-                    EffectBehaviour.AddParticleEmitter(pe);
+                    EffectBehaviour.AddParticleEmitter(pe.Current);
                 }
             }
+            pe.Dispose();
 
             prevPosition = transform.position;
             currPosition = transform.position;
@@ -930,23 +928,26 @@ namespace BDArmory
             if (Time.time - startTime > thrustTime)
             {
                 //isThrusting = false;
-                foreach (var pEmitter in pEmitters)
+                List<KSPParticleEmitter>.Enumerator pEmitter = pEmitters.ToList().GetEnumerator();
+                while (pEmitter.MoveNext())
                 {
-                    if (pEmitter.useWorldSpace)
+                    if (pEmitter.Current == null) continue;
+                    if (pEmitter.Current.useWorldSpace)
                     {
-                        pEmitter.minSize = Mathf.MoveTowards(pEmitter.minSize, 0.1f, 0.05f);
-                        pEmitter.maxSize = Mathf.MoveTowards(pEmitter.maxSize, 0.2f, 0.05f);
+                        pEmitter.Current.minSize = Mathf.MoveTowards(pEmitter.Current.minSize, 0.1f, 0.05f);
+                        pEmitter.Current.maxSize = Mathf.MoveTowards(pEmitter.Current.maxSize, 0.2f, 0.05f);
                     }
                     else
                     {
-                        pEmitter.minSize = Mathf.MoveTowards(pEmitter.minSize, 0, 0.1f);
-                        pEmitter.maxSize = Mathf.MoveTowards(pEmitter.maxSize, 0, 0.1f);
-                        if (pEmitter.maxSize == 0)
+                        pEmitter.Current.minSize = Mathf.MoveTowards(pEmitter.Current.minSize, 0, 0.1f);
+                        pEmitter.Current.maxSize = Mathf.MoveTowards(pEmitter.Current.maxSize, 0, 0.1f);
+                        if (pEmitter.Current.maxSize == 0)
                         {
-                            pEmitter.emit = false;
+                            pEmitter.Current.emit = false;
                         }
                     }
                 }
+                pEmitter.Dispose();
             }
 
             if (Time.time - startTime > 0.1f + stayTime)
@@ -1024,16 +1025,16 @@ namespace BDArmory
             ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, rb.velocity.normalized,
                 explModelPath, explSoundPath);
 
-            foreach (var emitter in pEmitters)
+            List<KSPParticleEmitter>.Enumerator emitter = pEmitters.ToList().GetEnumerator();
+            while (emitter.MoveNext())
             {
-                if (emitter.useWorldSpace)
-                {
-                    emitter.gameObject.AddComponent<BDAParticleSelfDestruct>();
-                    emitter.transform.parent = null;
-                }
+                if (emitter.Current == null) continue;
+                if (!emitter.Current.useWorldSpace) continue;
+                emitter.Current.gameObject.AddComponent<BDAParticleSelfDestruct>();
+                emitter.Current.transform.parent = null;
             }
-
-            GameObject.Destroy(gameObject); //destroy rocket on collision
+            emitter.Dispose();
+            Destroy(gameObject); //destroy rocket on collision
         }
 
 
@@ -1057,7 +1058,7 @@ namespace BDArmory
 
         void UpdateVolume()
         {
-            if (this.audioSource)
+            if (audioSource)
             {
                 audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
             }

@@ -19,11 +19,11 @@ namespace BDArmory.Armor
         public static void Load()
         {
             bullets = new BulletInfos();
-            var nodes = GameDatabase.Instance.GetConfigs("BULLET");
+            UrlDir.UrlConfig[] nodes = GameDatabase.Instance.GetConfigs("BULLET");
             for (int i = 0; i < nodes.Length; i++)
             {
-                var node = nodes[i].config;
-                var penetrationCurve = new FloatCurve();
+                ConfigNode node = nodes[i].config;
+                FloatCurve penetrationCurve = new FloatCurve();
                 penetrationCurve.Load(node.GetNode("penetration"));
                 bullets.Add(new BulletInfo(node.GetValue("name"), float.Parse(node.GetValue("positiveCoefficient")),
                     penetrationCurve));
