@@ -7,7 +7,7 @@ BahaTurret/BDArmory.csproj.user
 BahaTurret/Distribution/GameData/BDArmory/Plugins/BahaTurret.dll
 BahaTurret/.vs
 BahaTurret/obj
-BahaTurret/bin/Debug/
+BahaTurret/bin/
 
 BahaTurret/.vs/config
 BahaTurret/LocalDev/7za_dir.txt
@@ -87,3 +87,4 @@ Icon
 /.vs/BDArmory_JRODRIGV/v15
 /.vs/slnx.sqlite
 /BahaTurret/bin/Release
+/BDArmory.Core/obj/Debug/BDArmory.Core.csproj.FileListAbsolute.txt

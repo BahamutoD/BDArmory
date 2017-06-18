@@ -15,7 +15,7 @@ namespace BahaTurret
 
         private PartModule _targetDecoupler;
 
-        private Vessel _targetVessel = null;
+        private Vessel _targetVessel = new Vessel();
 
         private Transform _velocityTransform;
 
@@ -302,8 +302,16 @@ namespace BahaTurret
 
             weaponClass = WeaponClasses.Missile;
             WeaponName = GetShortName();
-                      
+
+            InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
+            this.ToggleEngageOptions();
             this.activeRadarRange = ActiveRadarRange;
+
+            if (this.DetonationDistance == -1)
+            {
+                 this.DetonationDistance = GetBlastRadius();
+            }
+           
 
             //TODO: BDModularGuidance should be configurable?
             lockedSensorFOV = 5;         
@@ -338,6 +346,7 @@ namespace BahaTurret
             Misc.RefreshAssociatedWindows(part);
         }
 
+
         private void OnDestroy()
         {
             WeaponNameWindow.OnActionGroupEditorOpened.Remove(OnActionGroupEditorOpened);
@@ -350,44 +359,6 @@ namespace BahaTurret
             this.ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
             this.UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
         }      
-
-        /// <summary>
-        /// This method will obtain the expected transform forward that matches the expected BD missile transform
-        /// </summary>
-        //private TransformAxisVectors CalculateTransform(Vector3 referenceVector)
-        //{
-        //    var vectorAngles = new Dictionary<TransformAxisVectors, float>
-        //    {
-        //        {
-        //            TransformAxisVectors.ForwardPositive,
-        //            Vector3.Angle(MissileReferenceTransform.forward.normalized, referenceVector)
-        //        },
-        //        {
-        //            TransformAxisVectors.ForwardNegative,
-        //            Vector3.Angle(-MissileReferenceTransform.forward.normalized, referenceVector)
-        //        },
-        //        {
-        //            TransformAxisVectors.UpNegative,
-        //            Vector3.Angle(-MissileReferenceTransform.up.normalized, referenceVector)
-        //        },
-        //        {
-        //            TransformAxisVectors.UpPositive,
-        //            Vector3.Angle(MissileReferenceTransform.up.normalized, referenceVector)
-        //        },
-        //        {
-        //            TransformAxisVectors.RightPositive,
-        //            Vector3.Angle(MissileReferenceTransform.right.normalized, referenceVector)
-        //        },
-        //         {
-        //            TransformAxisVectors.RightNegative,
-        //            Vector3.Angle(-MissileReferenceTransform.right.normalized, referenceVector)
-        //         }
-
-        //    };
-        //    var result = vectorAngles.First(x => x.Value == vectorAngles.Min(y => y.Value)).Key;
-        //    return result;
-        //}
-
 
         void UpdateGuidance()
         {
@@ -440,7 +411,7 @@ namespace BahaTurret
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
-                    Debug.LogFormat("[BDArmory]: Missile with Name={0} has exceeded the max off boresight, checking missed target ");
+                    Debug.LogFormat("[BDArmory]: Missile with Name={0} has exceeded the max off boresight, checking missed target ",vessel.vesselName);
                     aamTarget = TargetPosition;
                 }
                 DrawDebugLine(vessel.CoM, aamTarget);
@@ -519,7 +490,7 @@ namespace BahaTurret
         {
             if (HasMissed) return;
             // if I'm to close to my vessel avoid explosion
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
             if (Vector3.Distance(vessel.CoM, targetPosition) > 
                 Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
@@ -694,7 +665,11 @@ namespace BahaTurret
                 MissileState = MissileStates.Drop;
                 Misc.RefreshAssociatedWindows(part);
 
-                ArmingExplosive();
+                if (StageToTriggerOnProximity == 0)
+                {
+                     ArmingExplosive();
+                }
+               
                 HasFired = true;
             }
         }
@@ -807,8 +782,10 @@ namespace BahaTurret
 
                 if (StageToTriggerOnProximity != 0)
                 {
+                    ArmingExplosive();
+
                     vessel.ActionGroups.ToggleGroup(
-                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));
+                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));;
                 }
                 else
                 {
@@ -860,6 +837,16 @@ namespace BahaTurret
         {
             WeaponNameWindow.ShowGUI(this);
             UpdateMenus(true);
+        }
+
+        void OnCollisionEnter(Collision col)
+        {
+            Debug.Log("[BDArmory]: Something Collided");
+
+            if (TimeIndex> 1 && this.part.vessel.speed > 10)
+            {
+                Detonate();
+            }
         }
 
         #endregion

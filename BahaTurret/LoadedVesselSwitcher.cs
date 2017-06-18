@@ -62,7 +62,6 @@ namespace BahaTurret
             _guiCheckIndex = Misc.RegisterGUIRect(new Rect());
         }
 
-
         private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySettings.BDATeams team)
         {
             if (_showGui)
@@ -98,7 +97,6 @@ namespace BahaTurret
             if (Input.GetKeyDown(KeyCode.PageUp))
                 SwitchToPreviousVessel();
         }
-
 
         private void UpdateList()
         {

@@ -36,9 +36,6 @@ namespace BahaTurret
 	            p => availableParts.Contains(p));
 
 	    }
-
-
-
     }
 }
 

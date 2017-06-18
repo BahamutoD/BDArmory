@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BahaTurret
 {
-    public abstract class MissileBase : PartModule, IBDWeapon
+    public abstract class MissileBase : EngageableWeapon, IBDWeapon
     {
        protected WeaponClasses weaponClass;
         public WeaponClasses GetWeaponClass()
@@ -38,7 +38,7 @@ namespace BahaTurret
 
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float DetonationDistance = 0;
+        public float DetonationDistance = -1;
 
         [KSPField]
         public bool guidanceActive = true;
@@ -101,6 +101,7 @@ namespace BahaTurret
         public float TimeIndex => Time.time - TimeFired;
 
         public TargetingModes TargetingMode { get; set; }
+        public TargetingModes TargetingModeTerminal { get; set; }
 
         public float TimeToImpact { get; set; }
 
@@ -111,16 +112,6 @@ namespace BahaTurret
         public Vessel SourceVessel { get; set; } = null;
 
         public bool HasExploded { get; set; } = false;
-
-
-        public float DetonationRadius
-        {
-            get
-            {
-                return DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
-            }
-
-        } 
 
         public float TimeFired = -1;
 
@@ -548,7 +539,7 @@ namespace BahaTurret
         {
             if (TargetingMode == TargetingModes.AntiRad && TargetAcquired && v == vessel)
             {
-                if ((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(50, 2)
+                if ((source - VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody)).sqrMagnitude < Mathf.Pow(maxStaticLaunchRange / 4, 2) //drastically increase update range for anti-radiation missile to track moving targets!
                     && Vector3.Angle(source - transform.position, GetForwardTransform()) < maxOffBoresight)
                 {
                     TargetAcquired = true;
@@ -614,11 +605,13 @@ namespace BahaTurret
         {
             //Guard clauses     
             if (!TargetAcquired) return;
-
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationRadius) return;
+            
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationDistance) return;
+            if (DetonationDistance == 0) return; //skip check of user set to zero, rely on OnCollisionEnter
+            
             float distance;
-            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationRadius)
+            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationDistance)
             {
                 Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
                 Detonate();
