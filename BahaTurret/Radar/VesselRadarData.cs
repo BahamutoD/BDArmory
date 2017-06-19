@@ -1320,16 +1320,18 @@ namespace BahaTurret
 
         public void AddRadarContact(ModuleRadar radar, TargetSignatureData contactData, bool _locked)
         {
+            bool addContact = true;
+
             RadarDisplayData rData = new RadarDisplayData();
             rData.vessel = contactData.vessel;
 
-            if (rData.vessel == vessel ||
-                (rData.vessel.FindPartModulesImplementing<ModuleStealth>() != null && ModuleStealth.stealthEnabled) 
-                )
-            {
-                return;
-            }
-
+            if (rData.vessel == vessel) return;
+                        
+            if (rData.vessel.altitude < 1) addContact = false;
+            if (rData.vessel.altitude < 1 && radar.rwrThreatType == 6) addContact = true;
+            
+            if (addContact == false) return;
+            
             rData.signalPersistTime = radar.signalPersistTime;
             rData.detectedByRadar = radar;
             rData.locked = _locked;

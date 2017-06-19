@@ -22,10 +22,11 @@ namespace BahaTurret
             AWACS = 2,
             MissileLaunch = 3,
             MissileLock = 4,
-            Detection = 5
+            Detection = 5,
+            Sonar = 6
         }
 
-        string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D"};
+        string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So"};
 
 
         public MissileFire weaponManager;
