@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using UniLinq;
 
 namespace BDArmory.UI
 {
@@ -20,14 +22,15 @@ namespace BDArmory.UI
             }
 
             ConfigNode settings = fileNode.GetNode("BDASettings");
-
-            foreach (FieldInfo field in typeof(BDArmorySettings).GetFields())
+            List<FieldInfo>.Enumerator field = typeof(BDArmorySettings).GetFields().ToList().GetEnumerator();
+            while (field.MoveNext())
             {
-                if (!field.IsDefined(typeof(BDAPersistantSettingsField), false)) continue;
+                if (field.Current == null) continue;
+                if (!field.Current.IsDefined(typeof(BDAPersistantSettingsField), false)) continue;
 
-                settings.SetValue(field.Name, field.GetValue(null).ToString(), true);
+                settings.SetValue(field.Current.Name, field.Current.GetValue(null).ToString(), true);
             }
-
+            field.Dispose();
             fileNode.Save(BDArmorySettings.settingsConfigURL);
         }
 
@@ -38,17 +41,20 @@ namespace BDArmory.UI
 
             ConfigNode settings = fileNode.GetNode("BDASettings");
 
-            foreach (FieldInfo field in typeof(BDArmorySettings).GetFields())
+            List<FieldInfo>.Enumerator field = typeof(BDArmorySettings).GetFields().ToList().GetEnumerator();
+            while (field.MoveNext())
             {
-                if (!field.IsDefined(typeof(BDAPersistantSettingsField), false)) continue;
+                if (field.Current == null) continue;
+                if (!field.Current.IsDefined(typeof(BDAPersistantSettingsField), false)) continue;
 
-                if (!settings.HasValue(field.Name)) continue;
-                object parsedValue = BDArmorySettings.ParseValue(field.FieldType, settings.GetValue(field.Name));
+                if (!settings.HasValue(field.Current.Name)) continue;
+                object parsedValue = BDArmorySettings.ParseValue(field.Current.FieldType, settings.GetValue(field.Current.Name));
                 if (parsedValue != null)
                 {
-                    field.SetValue(null, parsedValue);
+                    field.Current.SetValue(null, parsedValue);
                 }
             }
+            field.Dispose();
         }
     }
 }

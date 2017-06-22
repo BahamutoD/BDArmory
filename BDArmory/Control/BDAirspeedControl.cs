@@ -19,7 +19,7 @@ namespace BDArmory.Control
         public Vessel vessel;
 
 
-        bool controlEnabled = false;
+        bool controlEnabled;
 
         //[KSPField(guiActive = true, guiName = "Thrust")]
         public float debugThrust;
@@ -111,34 +111,30 @@ namespace BDArmory.Control
             float finalThrust = 0;
             multiModeEngines.Clear();
 
-            foreach (var engine in vessel.FindPartModulesImplementing<ModuleEngines>())
+            List<ModuleEngines>.Enumerator engines = vessel.FindPartModulesImplementing<ModuleEngines>().GetEnumerator();
+            while (engines.MoveNext())
             {
-                if (!engine.EngineIgnited)
-                {
-                    continue;
-                }
+                if (engines.Current == null) continue;
+                if (!engines.Current.EngineIgnited) continue;
 
-                var mme = engine.part.FindModuleImplementing<MultiModeEngine>();
+                MultiModeEngine mme = engines.Current.part.FindModuleImplementing<MultiModeEngine>();
                 if (IsAfterBurnerEngine(mme))
                 {
                     multiModeEngines.Add(mme);
                     mme.autoSwitch = false;
                 }
 
-               
-
-                if (!mme || mme.mode == engine.engineID)
+                if (mme && mme.mode != engines.Current.engineID) continue;
+                float engineThrust = engines.Current.maxThrust;
+                if (engines.Current.atmChangeFlow)
                 {
-                    float engineThrust = engine.maxThrust;
-                    if (engine.atmChangeFlow)
-                    {
-                        engineThrust *= engine.flowMultiplier;
-                    }
-                    maxThrust += engineThrust*(engine.thrustPercentage/100f);
-
-                    finalThrust += engine.finalThrust;
+                  engineThrust *= engines.Current.flowMultiplier;
                 }
+                maxThrust += engineThrust*(engines.Current.thrustPercentage/100f);
+
+                finalThrust += engines.Current.finalThrust;
             }
+            engines.Dispose();
 
             debugThrust = maxThrust;
 
@@ -157,25 +153,26 @@ namespace BDArmory.Control
             possibleAccel += accel;
 
             //use multimode afterburner for extra accel if lacking
-            foreach (var mme in multiModeEngines)
+            List<MultiModeEngine>.Enumerator mmes = multiModeEngines.GetEnumerator();
+            while (mmes.MoveNext())
             {
+                if (mmes.Current == null) continue;
                 if (allowAfterburner && (accel < requestAccel*0.2f || targetSpeed > 300))
                 {
-                    if (mme.runningPrimary)
+                    if (mmes.Current.runningPrimary)
                     {
-                        mme.Events["ModeEvent"].Invoke();
+                        mmes.Current.Events["ModeEvent"].Invoke();
                     }
                 }
                 else if (!allowAfterburner || accel > requestAccel*1.5f)
                 {
-                    if (!mme.runningPrimary)
+                    if (!mmes.Current.runningPrimary)
                     {
-                        mme.Events["ModeEvent"].Invoke();
+                        mmes.Current.Events["ModeEvent"].Invoke();
                     }
                 }
             }
-
-
+            mmes.Dispose();
             return accel;
         }
 
@@ -202,7 +199,7 @@ namespace BDArmory.Control
         }
 
 
-        float possibleAccel = 0;
+        float possibleAccel;
 
         public float GetPossibleAccel()
         {

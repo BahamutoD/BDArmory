@@ -22,13 +22,13 @@ namespace BDArmory.Parts
 
 		[KSPField]
 		public float gimbalLimit = 120;
-		public bool gimbalLimitReached = false;
+		public bool gimbalLimitReached;
 
 		[KSPField]
 		public bool rollCameraModel = false;
 
 		[KSPField(isPersistant = true)]
-		public bool cameraEnabled = false;
+		public bool cameraEnabled;
 
 		float fov
 		{
@@ -43,20 +43,20 @@ namespace BDArmory.Parts
 		float[] zoomFovs;// = new float[]{40,15,3,1f};
 
 		[KSPField(isPersistant = true)]
-		public int currentFovIndex = 0;
+		public int currentFovIndex;
 
 		[KSPField(isPersistant = true)]
-		public bool slaveTurrets = false;
+		public bool slaveTurrets;
 
 		[KSPField(isPersistant = true)]
-		public bool CoMLock = false;
+		public bool CoMLock;
 
-		public bool radarLock = false;
+		public bool radarLock;
 
 		float controlPanelHeight = 84;//80
 
 		[KSPField(isPersistant = true)]
-		public bool groundStabilized = false;
+		public bool groundStabilized;
 		/// <summary>
 		/// Point on surface that camera is focused and stabilized on.
 		/// </summary>
@@ -86,27 +86,27 @@ namespace BDArmory.Parts
 			}
 		}
 
-		bool resetting = false;
+		bool resetting;
 
 
-		public bool surfaceDetected = false;
+		public bool surfaceDetected;
 		/// <summary>
 		/// Point where camera is focused, regardless of whether surface is detected or not.
 		/// </summary>
 		public Vector3 targetPointPosition; 
 
 		[KSPField(isPersistant = true)]
-		public bool nvMode = false;
+		public bool nvMode;
 
 		//GUI
 		public static ModuleTargetingCamera activeCam;
-		public static bool camRectInitialized = false;
-		public static bool windowIsOpen = false;
+		public static bool camRectInitialized;
+		public static bool windowIsOpen;
 		public static Rect camWindowRect;
 		float camImageSize = 360;
-		bool resizing = false;
+		bool resizing;
 
-		bool slewedCamera = false;
+		bool slewedCamera;
 		float finalSlewSpeed;
 		Vector2 slewInput = Vector2.zero;
 		
@@ -145,7 +145,7 @@ namespace BDArmory.Parts
 				if(wpmr == null || wpmr.vessel!=vessel)
 				{
 					wpmr = null;
-					foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
+					foreach(MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
 					{
 						wpmr = mf;
 					}
@@ -229,10 +229,10 @@ namespace BDArmory.Parts
 				}
 
 				TargetingCamera.Instance.DisableCamera();
-				if(ModuleTargetingCamera.activeCam == this)
+				if(activeCam == this)
 				{
-					ModuleTargetingCamera.activeCam = FindNextActiveCamera();
-					if(!ModuleTargetingCamera.activeCam)
+					activeCam = FindNextActiveCamera();
+					if(!activeCam)
 					{
 						windowIsOpen = false;
 					}
@@ -255,7 +255,7 @@ namespace BDArmory.Parts
 
 		ModuleTargetingCamera FindNextActiveCamera()
 		{
-			foreach(var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach(ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				if(mtc.cameraEnabled)
 				{
@@ -316,7 +316,7 @@ namespace BDArmory.Parts
 					DelayedEnable();
 				}
 
-				foreach(var wm in vessel.FindPartModulesImplementing<MissileFire>())
+				foreach(MissileFire wm in vessel.FindPartModulesImplementing<MissileFire>())
 				{
 					wm.targetingPods.Add(this);
 				}
@@ -342,7 +342,7 @@ namespace BDArmory.Parts
 			StartCoroutine(DelayedEnableRoutine());
 		}
 
-		bool delayedEnabling = false;
+		bool delayedEnabling;
 		IEnumerator DelayedEnableRoutine()
 		{
 			if(delayedEnabling) yield break;
@@ -864,7 +864,7 @@ namespace BDArmory.Parts
 					if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
 					{
 						MissileBase currMissile = weaponManager.CurrentMissile;
-						if(currMissile.TargetingMode == MissileBase.TargetingModes.Gps || currMissile.TargetingMode == MissileLauncher.TargetingModes.Laser)
+						if(currMissile.TargetingMode == MissileBase.TargetingModes.Gps || currMissile.TargetingMode == MissileBase.TargetingModes.Laser)
 						{
 							MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(currMissile, Vector3.zero, groundTargetPosition);
 							float dlzWidth = 12 * (imageRect.width/360);
@@ -1067,7 +1067,7 @@ namespace BDArmory.Parts
 
 		void SlaveTurrets()
 		{
-			foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				mtc.slaveTurrets = false;
 			}
@@ -1082,7 +1082,7 @@ namespace BDArmory.Parts
 
 		void UnslaveTurrets()
 		{
-			foreach (var mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+			foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
 			{
 				mtc.slaveTurrets = false;
 			}
@@ -1374,8 +1374,8 @@ namespace BDArmory.Parts
 			stopPTPR = false;
 		}
 
-		bool stopPTPR = false;
-		bool slewingToPosition = false;
+		bool stopPTPR;
+		bool slewingToPosition;
 		public IEnumerator PointToPositionRoutine(Vector3 position)
 		{
 			yield return StopPTPRRoutine();
@@ -1419,14 +1419,6 @@ namespace BDArmory.Parts
 
 		void ParseFovs()
 		{
-			/*
-			string[] fovStrings = zoomFOVs.Split(new char[]{','});
-			zoomFovs = new float[fovStrings.Length];
-			for(int i = 0; i < fovStrings.Length; i++)
-			{
-				zoomFovs[i] = float.Parse(fovStrings[i]);
-			}*/
-
 			zoomFovs = Misc.Misc.ParseToFloatArray(zoomFOVs);
 		}
 

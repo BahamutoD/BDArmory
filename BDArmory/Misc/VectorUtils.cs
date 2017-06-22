@@ -97,7 +97,7 @@ namespace BDArmory.Misc
 
 		public static Vector3 GetNorthVector(Vector3 position, CelestialBody body)
 		{
-			Vector3 geoPosA = VectorUtils.WorldPositionToGeoCoords(position, body);
+			Vector3 geoPosA = WorldPositionToGeoCoords(position, body);
 			Vector3 geoPosB = new Vector3(geoPosA.x+1, geoPosA.y, geoPosA.z);
 			Vector3 north = GetWorldSurfacePostion(geoPosB, body)-GetWorldSurfacePostion(geoPosA, body);
 			return Vector3.ProjectOnPlane(north, body.GetSurfaceNVector(geoPosA.x, geoPosA.y)).normalized;

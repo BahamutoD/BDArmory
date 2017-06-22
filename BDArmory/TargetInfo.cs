@@ -9,8 +9,8 @@ namespace BDArmory
 	public class TargetInfo : MonoBehaviour
 	{
 		public BDArmorySettings.BDATeams team;
-		public bool isMissile = false;
-		public MissileBase MissileBaseModule = null;
+		public bool isMissile;
+		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
         List<MissileFire> friendliesEngaging;
         public float detectedTime;
@@ -95,7 +95,7 @@ namespace BDArmory
 			}
 
 			//destroy this if a target info is already attached to the vessel
-			foreach(var otherInfo in vessel.gameObject.GetComponents<TargetInfo>())
+			foreach(TargetInfo otherInfo in vessel.gameObject.GetComponents<TargetInfo>())
 			{
 				if(otherInfo != this)
 				{
@@ -107,7 +107,7 @@ namespace BDArmory
 			team = BDArmorySettings.BDATeams.None;
 
 			bool foundMf = false;
-			foreach(var mf in vessel.FindPartModulesImplementing<MissileFire>())
+			foreach(MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
 			{
 				foundMf = true;
 				team = BDATargetManager.BoolToTeam(mf.team);
@@ -116,7 +116,7 @@ namespace BDArmory
 			}
 			if(!foundMf)
 			{
-				foreach(var ml in vessel.FindPartModulesImplementing<MissileBase>())
+				foreach(MissileBase ml in vessel.FindPartModulesImplementing<MissileBase>())
 				{
 					isMissile = true;
 					MissileBaseModule = ml;
@@ -230,12 +230,6 @@ namespace BDArmory
 
 		public void Engage(MissileFire mf)
 		{
-			/*
-			if(!hasStarted)
-			{
-				Start();
-			}
-			*/
 			if(!friendliesEngaging.Contains(mf))
 			{
 				friendliesEngaging.Add(mf);

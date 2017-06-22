@@ -18,7 +18,7 @@ namespace BDArmory.FX
         Vector3 internalVelocity;
         Vector3 lastPos;
 
-        bool useInternalV = false;
+        bool useInternalV;
 
         Vector3 velocity
         {

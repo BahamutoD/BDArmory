@@ -22,12 +22,12 @@ namespace BDArmory.Parts
 			
 			
 			
-			foreach(var bdmm in vessel.FindPartModulesImplementing<BDModularGuidance>())
+			foreach(BDModularGuidance bdmm in vessel.FindPartModulesImplementing<BDModularGuidance>())
 			{
 				bdmm.HasFired = true;
 				//bdmm.target = target;
 			}
-			foreach(var bde in vessel.FindPartModulesImplementing<BDExplosivePart>())
+			foreach(BDExplosivePart bde in vessel.FindPartModulesImplementing<BDExplosivePart>())
 			{
 				//bde.target = target;
 			}

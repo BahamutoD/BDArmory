@@ -32,12 +32,10 @@ namespace BDArmory.Misc
 		    
             PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == "Filter by function");
 
-            PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
-		        p => availableParts.Contains(p));
+	        PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
+	            p => availableParts.Contains(p));
 
 		}
-
-
 
 	}
 }

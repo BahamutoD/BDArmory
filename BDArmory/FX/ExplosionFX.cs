@@ -15,7 +15,7 @@ namespace BDArmory.FX
         float startTime;
         public AudioClip exSound;
         public AudioSource audioSource;
-        float maxTime = 0;
+        float maxTime;
 
         public float range;
 
@@ -23,21 +23,21 @@ namespace BDArmory.FX
         {
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
-            foreach (KSPParticleEmitter pe in pEmitters)
+            List<KSPParticleEmitter>.Enumerator pe = pEmitters.ToList().GetEnumerator();
+            while (pe.MoveNext())
             {
-               
-               EffectBehaviour.AddParticleEmitter(pe);
+                if (pe.Current == null) continue;
+               EffectBehaviour.AddParticleEmitter(pe.Current);
                 
-                pe.emit = true;
-               
+                pe.Current.emit = true;
 
-                //if(pe.useWorldSpace) pe.force = (4.49f * FlightGlobals.getGeeForceAtPosition(transform.position));
-
-                if (pe.maxEnergy > maxTime)
+                if (pe.Current.maxEnergy > maxTime)
                 {
-                    maxTime = pe.maxEnergy;
+                    maxTime = pe.Current.maxEnergy;
                 }
             }
+            pe.Dispose();
+
             lightFX = gameObject.AddComponent<Light>();
             lightFX.color = Misc.Misc.ParseColor255("255,238,184,255");
             lightFX.intensity = 8;
@@ -55,15 +55,18 @@ namespace BDArmory.FX
             lightFX.intensity -= 12*Time.fixedDeltaTime;
             if (Time.time - startTime > 0.2f)
             {
-                foreach (KSPParticleEmitter pe in pEmitters)
+                List<KSPParticleEmitter>.Enumerator pe = pEmitters.ToList().GetEnumerator();
+                while (pe.MoveNext())
                 {
-                    pe.emit = false;
+                    if (pe.Current == null) continue;
+                    pe.Current.emit = false;
                 }
+                pe.Dispose();
             }
 
             if (Time.time - startTime > maxTime)
             {
-                GameObject.Destroy(gameObject);
+                Destroy(gameObject);
             }
         }
 
@@ -78,7 +81,7 @@ namespace BDArmory.FX
 
 
             Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
-            GameObject newExplosion = (GameObject) GameObject.Instantiate(go, position, rotation);
+            GameObject newExplosion = (GameObject) Instantiate(go, position, rotation);
             newExplosion.SetActive(true);
             ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
             eFx.exSound = soundClip;
@@ -94,11 +97,15 @@ namespace BDArmory.FX
                 eFx.audioSource.maxDistance = 3000;
                 eFx.audioSource.priority = 9999;
             }
-            foreach (KSPParticleEmitter pe in newExplosion.GetComponentsInChildren<KSPParticleEmitter>())
+            IEnumerator<KSPParticleEmitter> pe = newExplosion.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>()
+                .GetEnumerator();
+            while (pe.MoveNext())
             {
-                pe.emit = true;
+                if (pe.Current == null) continue;
+                pe.Current.emit = true;
                 
             }
+            pe.Dispose();
 
             DoExplosionDamage(position, power, heat, radius, sourceVessel);
         }
@@ -121,7 +128,7 @@ namespace BDArmory.FX
 					Vessel missileSource = null;
 					if(sourceVessel != null)
 					{
-                        var ml = part.FindModuleImplementing<MissileBase>();
+                        MissileBase ml = part.FindModuleImplementing<MissileBase>();
 						if(ml)
 						{
 							missileSource = ml.SourceVessel;
@@ -182,26 +189,57 @@ namespace BDArmory.FX
 			ignoreParts.Clear();
 			ignoreBuildings.Clear();
 
-		    var vesselsAffected =
-		        BDATargetManager.LoadedVessels.Where(
-		            v => v != null && v.loaded && !v.packed && (v.CoM - position).magnitude < maxDistance*4);
+            // Unity does not like linq.  changing to an enumeration to extract needed lists.
+            #region Old code (For reference.  remove when satisfied new code works as expected)
+            //var vesselsAffected =
+            //    BDATargetManager.LoadedVessels.Where(
+            //        v => v != null && v.loaded && !v.packed && (v.CoM - position).magnitude < maxDistance * 4);
 
-		    var partsAffected =
-		        vesselsAffected.SelectMany(v => v.parts).Where(p => p!=null && p && (p.transform.position - position).magnitude < maxDistance);
+            //var partsAffected =
+            //    vesselsAffected.SelectMany(v => v.parts).Where(p => p != null && p && (p.transform.position - position).magnitude < maxDistance);
 
-		    foreach (var part in partsAffected)
+            //foreach (var part in partsAffected)
+            //{
+            //    DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
+            //}
+
+            //foreach (var bldg in BDATargetManager.LoadedBuildings)
+            //{
+            //    if (bldg == null) continue;
+            //    if ((bldg.transform.position - position).magnitude < maxDistance * 1000)
+            //    {
+            //        DoExplosionRay(new Ray(position, bldg.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
+            //    }
+            //}
+            #endregion
+
+            // this replaces 2 passes through the vessels list and 2 passes through the parts lists with a single pass, and eliminates boxing and unboxing performed by linq and foreach loops.  Should be faster, with better gc
+            List<Vessel>.Enumerator v = BDATargetManager.LoadedVessels.GetEnumerator();
+		    while (v.MoveNext())
 		    {
-                DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
-            }
-		      
-			foreach(var bldg in BDATargetManager.LoadedBuildings)
+		        if (v.Current == null) continue;
+                if (!v.Current.loaded || v.Current.packed || (v.Current.CoM - position).magnitude >= maxDistance * 4) continue;
+		        List<Part>.Enumerator p = v.Current.parts.GetEnumerator();
+		        while (p.MoveNext())
+		        {
+		            if (p.Current == null) continue;
+		            if ((p.Current.transform.position - position).magnitude >= maxDistance) continue;
+		            DoExplosionRay(new Ray(position, p.Current.transform.TransformPoint(p.Current.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
+		        }
+                p.Dispose();
+		    }
+            v.Dispose();
+
+		    List<DestructibleBuilding>.Enumerator bldg = BDATargetManager.LoadedBuildings.GetEnumerator();
+			while(bldg.MoveNext())
 			{
-				if(bldg == null) continue;
-				if((bldg.transform.position - position).magnitude < maxDistance * 1000)
+				if(bldg.Current == null) continue;
+				if((bldg.Current.transform.position - position).magnitude < maxDistance * 1000)
 				{
-					DoExplosionRay(new Ray(position, bldg.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
+					DoExplosionRay(new Ray(position, bldg.Current.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
 				}
 			}
+            bldg.Dispose();
 		}
 	}
 }

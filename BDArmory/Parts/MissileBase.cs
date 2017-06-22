@@ -42,7 +42,7 @@ namespace BDArmory.Parts
 
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float DetonationDistance = 0;
+        public float DetonationDistance = -1;
 
         [KSPField]
         public bool guidanceActive = true;
@@ -109,23 +109,13 @@ namespace BDArmory.Parts
 
         public float TimeToImpact { get; set; }
 
-        public bool TargetAcquired { get; set; } = false;
+        public bool TargetAcquired { get; set; }
 
-        public bool ActiveRadar { get; set; } = false;
+        public bool ActiveRadar { get; set; }
 
         public Vessel SourceVessel { get; set; } = null;
 
         public bool HasExploded { get; set; } = false;
-
-
-        public float DetonationRadius
-        {
-            get
-            {
-                return DetonationDistance > 0 ? DetonationDistance : GetBlastRadius();
-            }
-
-        } 
 
         public float TimeFired = -1;
 
@@ -138,7 +128,7 @@ namespace BDArmory.Parts
         protected ModuleTargetingCamera targetingPod;
 
         //laser stuff
-        public ModuleTargetingCamera lockedCamera = null;
+        public ModuleTargetingCamera lockedCamera;
         protected Vector3 lastLaserPoint;
         protected Vector3 laserStartPosition;
         protected Vector3 startDirection;
@@ -154,16 +144,16 @@ namespace BDArmory.Parts
         public VesselRadarData vrd;
         public TargetSignatureData radarTarget;
         private int snapshotTicker;
-        private int locksCount = 0;
+        private int locksCount;
         private TargetSignatureData[] scannedTargets;
-        private float _radarFailTimer = 0;
+        private float _radarFailTimer;
         private float maxRadarFailTime = 1;
-        private float lastRWRPing = 0;
-        private bool radarLOALSearching = false;
+        private float lastRWRPing;
+        private bool radarLOALSearching;
 
         public MissileFire TargetMf = null;
 
-        protected bool checkMiss = false;
+        protected bool checkMiss;
 
         private LineRenderer LR;
         protected string debugString = "";
@@ -620,14 +610,14 @@ namespace BDArmory.Parts
             //Guard clauses     
             if (!TargetAcquired) return;
             
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationRadius) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationRadius) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance,100)) return;
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationDistance) return;
             if (DetonationDistance == 0) return; //skip check of user set to zero, rely on OnCollisionEnter
             
             float distance;
-            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationRadius)
+            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationDistance)
             {
-                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance);
+                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance + "DetonationDistance was "+ DetonationDistance);
                 Detonate();
             }
         }

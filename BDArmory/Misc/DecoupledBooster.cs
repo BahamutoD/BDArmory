@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.Misc
@@ -9,10 +11,13 @@ namespace BDArmory.Misc
 
         IEnumerator SelfDestructRoutine()
         {
-            foreach (var col in gameObject.GetComponentsInChildren<Collider>())
+            IEnumerator<Collider> col = gameObject.GetComponentsInChildren<Collider>().Cast<Collider>().GetEnumerator();
+            while (col.MoveNext() )
             {
-                col.enabled = false;
+                if (col.Current == null) continue;
+                col.Current.enabled = false;
             }
+            col.Dispose();
             yield return new WaitForSeconds(5);
             Destroy(gameObject);
         }

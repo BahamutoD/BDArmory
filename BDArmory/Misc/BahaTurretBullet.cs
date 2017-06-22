@@ -56,7 +56,7 @@ namespace BDArmory.Misc
 		
 		
 		Vector3 sourceOriginalV;
-		bool hasBounced = false;
+		bool hasBounced;
 		
 		float maxDistance;
 
@@ -146,7 +146,7 @@ namespace BDArmory.Misc
 			
 			if(distanceFromStart > maxDistance)
 			{
-				GameObject.Destroy(gameObject);
+				Destroy(gameObject);
 				return;
 			}
 			
@@ -274,50 +274,22 @@ namespace BDArmory.Misc
 								ExplosionFX.CreateExplosion(hit.point, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
 							}
 
-							GameObject.Destroy(gameObject); //destroy bullet on collision
+							Destroy(gameObject); //destroy bullet on collision
 						}
 					}
 				}
-
-				/*
-				if(isUnderwater)
-				{
-					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
-					{
-						isUnderwater = false;
-					}
-					else
-					{
-						rigidbody.AddForce(-rigidbody.velocity * 0.15f);
-					}
-				}
-				else
-				{
-					if(FlightGlobals.getAltitudeAtPos(transform.position) < 0)
-					{
-						isUnderwater = true;
-						//FXMonger.Splash(transform.position, 1);
-						//make a custom splash here
-					}
-				}
-				*/
 			}
 
 			if(airDetonation && distanceFromStart > detonationRange)
 			{
 				//detonate
 				ExplosionFX.CreateExplosion(transform.position, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
-				GameObject.Destroy(gameObject); //destroy bullet on collision
+				Destroy(gameObject); //destroy bullet on collision
 			}
 
 
 			prevPosition = currPosition;
 		}
-
-
-		
-	
-	
 		
 		void FadeColor()
 		{
