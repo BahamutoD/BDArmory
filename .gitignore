@@ -101,3 +101,10 @@ Icon
 /BDArmory/bin/Debug
 /BDArmory.Core/obj
 /BDArmory.Multiplayer/obj
+BahaTurret/BDArmory.sln.DotSettings.user
+BDArmory.Core/bin/Debug/UnityEngine.dll
+BDArmory.Core/bin/Debug/KSPAssets.dll
+BDArmory.Core/bin/Debug/BDArmory.Core.dll
+BDArmory.Core/bin/Debug/Assembly-CSharp.dll
+BDArmory.Core/bin/Debug/UnityEngine.UI.dll
+BahaTurret/BDArmory.csproj.user
