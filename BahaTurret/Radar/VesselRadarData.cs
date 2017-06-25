@@ -77,7 +77,7 @@ namespace BahaTurret
         float guiInputCooldown = 0.2f;
 
         //range increments
-        public float[] rIncrements = new float[] {5000, 10000, 20000};
+        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000};
         int rangeIndex = 0;
 
         //lock cursor
@@ -1326,9 +1326,10 @@ namespace BahaTurret
             rData.vessel = contactData.vessel;
 
             if (rData.vessel == vessel) return;
-                        
-            if (rData.vessel.altitude < 1) addContact = false;
-            if (rData.vessel.altitude < 1 && radar.rwrThreatType == 6) addContact = true;
+                                    
+            if (rData.vessel.altitude < -20 && radar.rwrThreatType != 6) addContact = false; // Normal Radar Should not detect Underwater vessels
+            if (!rData.vessel.LandedOrSplashed && radar.rwrThreatType == 6) addContact = false; //Sonar should not detect Aircraft, keeping splashed for boats
+            if (rData.vessel.altitude < 0 && radar.rwrThreatType == 6) addContact = true; //Sonar only detects underwater vessels
             
             if (addContact == false) return;
             
