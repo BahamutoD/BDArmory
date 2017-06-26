@@ -435,7 +435,7 @@ namespace BahaTurret
                 vesselReferenceTransform.localScale = Vector3.one;
                 vesselReferenceTransform.position = vessel.CoM;
 
-                if (vessel.Landed)
+                if (vessel.LandedOrSplashed)
                 {
                     vesselReferenceTransform.rotation =
                         Quaternion.LookRotation(VectorUtils.GetNorthVector(vessel.transform.position, vessel.mainBody),
@@ -741,7 +741,7 @@ namespace BahaTurret
             {
                 GUI.DrawTexture(radarRect, omniBgTexture, ScaleMode.StretchToFill, true);
 
-                if (vessel.Landed)
+                if (vessel.LandedOrSplashed)
                 {
                     GUI.Label(radarRect, "  N", radarTopStyle);
                 }
