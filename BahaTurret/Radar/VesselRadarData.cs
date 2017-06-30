@@ -1247,7 +1247,6 @@ namespace BahaTurret
                 //Debug.Log("tried refreshing links but weapon manager is null");
                 return;
             }
-
             availableExternalVRDs = new List<VesselRadarData>();
             foreach (var v in FlightGlobals.Vessels)
             {

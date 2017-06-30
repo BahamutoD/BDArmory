@@ -1442,13 +1442,14 @@ namespace BahaTurret
                     }
                     if (ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).magnitude < 20)
                     {
-
                         FireCurrentMissile(true);
-
                         StartCoroutine(MissileAwayRoutine(ml));
-
-
                     }
+                    else
+                    {
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Laser Target Error");
+                    }
+
                 }
 
 
