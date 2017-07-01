@@ -11,10 +11,6 @@ namespace BahaTurret
 
         #region  Variable Declarations
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Altitude"),
-          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.Editor)]
-        public float maxAltitude = 0f;
-
         [KSPField]
 		public string homingType = "AAM";
 
@@ -115,7 +111,11 @@ namespace BahaTurret
 		 UI_FloatRange(minValue = 30, maxValue = 2500f, stepIncrement = 5f, scene = UI_Scene.All)]
 		public float cruiseAltitude = 500;
 
-		[KSPField]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Altitude"),
+         UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]
+        public float maxAltitude = 0f;
+
+        [KSPField]
 		public string rotationTransformName = string.Empty;
 		Transform rotationTransform;
 
@@ -466,8 +466,14 @@ namespace BahaTurret
 				Fields["cruiseAltitude"].guiActive = false;
 				Fields["cruiseAltitude"].guiActiveEditor = false;
 			}
-			
-			if(part.partInfo.title.Contains("Bomb"))
+
+            if (GuidanceMode != GuidanceModes.AGM)
+            {
+                Fields["maxAltitude"].guiActive = false;
+                Fields["maxAltitude"].guiActiveEditor = false;
+            }
+
+            if (part.partInfo.title.Contains("Bomb"))
 			{
 				Fields["dropTime"].guiActive = false;
 				Fields["dropTime"].guiActiveEditor = false;
@@ -1588,8 +1594,10 @@ namespace BahaTurret
 				
 				if(TargetingMode == TargetingModes.Radar)
 				{
-					activeRadarRange = 20000;
-					TargetAcquired = true;
+                    //activeRadarRange = 40000;
+                    activeRadarRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
+
+                    TargetAcquired = true;
 					radarTarget = new TargetSignatureData(legacyTargetVessel, 500);
 					return;
 				}

@@ -39,6 +39,8 @@ namespace BahaTurret
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 5000;
+        [BDAPersistantSettingsField] public static float MAX_ACTIVE_RADAR_RANGE = 5000;
+        [BDAPersistantSettingsField] public static float MAX_ENGAGEMENT_RANGE = 5000;
         [BDAPersistantSettingsField] public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
         [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
