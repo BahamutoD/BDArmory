@@ -11,6 +11,10 @@ namespace BahaTurret
 
         #region  Variable Declarations
 
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Altitude"),
+          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.Editor)]
+        public float maxAltitude = 0f;
+
         [KSPField]
 		public string homingType = "AAM";
 
@@ -804,6 +808,10 @@ namespace BahaTurret
             {
                 checkMiss = true;
             }
+            if (maxAltitude != 0f)
+            {
+                if (vessel.altitude >= maxAltitude) checkMiss = true;                
+            }
 
             //kill guidance if missileBase has missed
             if (!HasMissed && checkMiss)
@@ -812,6 +820,8 @@ namespace BahaTurret
                 if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
                 {
                     Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+                    if (vessel.altitude >= maxAltitude) Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
+
                     HasMissed = true;
                     guidanceActive = false;
 
