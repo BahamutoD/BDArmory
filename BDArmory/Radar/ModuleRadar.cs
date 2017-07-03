@@ -6,6 +6,7 @@ using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.Radar
 {
@@ -193,7 +194,7 @@ namespace BDArmory.Radar
 
         void UpdateToggleGuiName()
         {
-            Events["Toggle"].guiName = radarEnabled ? "Disable Radar" : "Enable Radar";
+            Events["Toggle"].guiName = radarEnabled ? Localizer.Format("#autoLOC_bda_1000000") : Localizer.Format("#autoLOC_bda_1000001");		// #autoLOC_bda_1000000 = Disable Radar		// #autoLOC_bda_1000001 = Enable Radar
         }
 
         public void EnsureVesselRadarData()
@@ -783,11 +784,9 @@ namespace BDArmory.Radar
         {
             for (int i = 0; i < lockedTargets.Count; i++)
             {
-                if (target.vessel == lockedTargets[i].vessel)
-                {
-                    lockedTargetIndex = i;
-                    return;
-                }
+                if (target.vessel != lockedTargets[i].vessel) continue;
+                lockedTargetIndex = i;
+                return;
             }
         }
 
@@ -833,11 +832,9 @@ namespace BDArmory.Radar
         {
             for (int i = 0; i < lockedTargets.Count; i++)
             {
-                if (lockedTargets[i].vessel == v)
-                {
-                    UnlockTargetAt(i);
-                    return;
-                }
+                if (lockedTargets[i].vessel != v) continue;
+                UnlockTargetAt(i);
+                return;
             }
         }
 
@@ -936,13 +933,11 @@ namespace BDArmory.Radar
 
         void OnGUI()
         {
-            if (drawGUI)
+            if (!drawGUI) return;
+            if (boresightScan)
             {
-                if (boresightScan)
-                {
-                    BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500*transform.up),
-                        BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
-                }
+                BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500*transform.up),
+                    BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
             }
         }
 
@@ -992,18 +987,18 @@ namespace BDArmory.Radar
             switch (i)
             {
                 case 0:
-                    return "SAM";
+                    return Localizer.Format("#autoLOC_bda_1000002");		// #autoLOC_bda_1000002 = SAM
                 case 1:
-                    return "FIGHTER";
+                    return Localizer.Format("#autoLOC_bda_1000003");		// #autoLOC_bda_1000003 = FIGHTER
                 case 2:
-                    return "AWACS";
+                    return Localizer.Format("#autoLOC_bda_1000004");		// #autoLOC_bda_1000004 = AWACS
                 case 3:
                 case 4:
-                    return "MISSILE";
+                    return Localizer.Format("#autoLOC_bda_1000005");		// #autoLOC_bda_1000005 = MISSILE
                 case 5:
-                    return "DETECTION";
+                    return Localizer.Format("#autoLOC_bda_1000006");		// #autoLOC_bda_1000006 = DETECTION
             }
-            return "UNKNOWN";
+            return Localizer.Format("#autoLOC_bda_1000007");		// #autoLOC_bda_1000007 = UNKNOWN
             //{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5}
         }
 
@@ -1012,23 +1007,23 @@ namespace BDArmory.Radar
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append($"Radar Type: {radarName}");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000008"), radarName));		// #autoLOC_bda_1000008 = Radar Type: {0}
             output.Append(Environment.NewLine);
-            output.Append($"Range: {maxRange} meters");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000009"), maxRange));		// #autoLOC_bda_1000009 = Range: {0} meters
             output.Append(Environment.NewLine);
-            output.Append($"RWR Threat Type: {getRWRType(rwrThreatType)}");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000010"), getRWRType(rwrThreatType)));		// #autoLOC_bda_1000010 = RWR Threat Type: {0}
             output.Append(Environment.NewLine);
-            output.Append($"Can Scan: {canScan}");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000011"), canScan));		// #autoLOC_bda_1000011 = Can Scan: {0}
             output.Append(Environment.NewLine);
-            output.Append($"Track-While-Scan: {canTrackWhileScan}");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000012"), canTrackWhileScan));		// #autoLOC_bda_1000012 = Track-While-Scan: {0}
             output.Append(Environment.NewLine);
-            output.Append($"Can Lock: {canLock}");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000013"), canLock));		// #autoLOC_bda_1000013 = Can Lock: {0}
             output.Append(Environment.NewLine);
-            output.Append($"Can Receive Data: {canRecieveRadarData}");
+            output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000014"), canRecieveRadarData));		// #autoLOC_bda_1000014 = Can Receive Data: {0}
             output.Append(Environment.NewLine);
             if (canLock)
             {
-                output.Append($"Simultaneous Locks: {maxLocks}");
+                output.Append(string.Format(Localizer.Format("#autoLOC_bda_1000015"), maxLocks));		// #autoLOC_bda_1000015 = Simultaneous Locks: {0}
                 output.Append(Environment.NewLine);
             }
 
@@ -1048,7 +1043,7 @@ namespace BDArmory.Radar
             double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
             if (chargeAvailable < drainAmount*0.95f)
             {
-                ScreenMessages.PostScreenMessage("Radar Requires EC", 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#autoLOC_bda_1000016"), 2.0f, ScreenMessageStyle.UPPER_CENTER);		// #autoLOC_bda_1000016 = Radar Requires EC
                 DisableRadar();
             }
         }
