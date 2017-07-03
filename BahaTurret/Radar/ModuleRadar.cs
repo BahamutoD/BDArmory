@@ -650,7 +650,6 @@ namespace BahaTurret
                 return false;
             }
 
-
             Vector3 targetPlanarDirection = Vector3.ProjectOnPlane(position - referenceTransform.position,
                 referenceTransform.up);
             float angle = Vector3.Angle(targetPlanarDirection, referenceTransform.forward);
@@ -835,12 +834,12 @@ namespace BahaTurret
             lockedTargets.Clear();
             currLocks = 0;
             lockedTargetIndex = 0;
-
-
+            
             if (vesselRadarData)
             {
                 vesselRadarData.UnlockAllTargetsOfRadar(this);
             }
+            if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Radar Targets were Cleared");
         }
 
         public void SetActiveLock(TargetSignatureData target)

@@ -23,10 +23,11 @@ namespace BahaTurret
             MissileLaunch = 3,
             MissileLock = 4,
             Detection = 5,
-            Sonar = 6
+            Sonar = 6,
+            Torpedo = 7
         }
 
-        string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So"};
+        string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So","T"};
 
 
         public MissileFire weaponManager;
@@ -49,7 +50,7 @@ namespace BahaTurret
 
         const int dataCount = 10;
 
-        public float rwrDisplayRange = 8000;
+        public float rwrDisplayRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
 
         public TargetSignatureData[] pingsData;
         public Vector3[] pingWorldPositions;
@@ -213,7 +214,7 @@ namespace BahaTurret
 
             if (rwrEnabled && vessel && v == vessel)
             {
-                if (type == RWRThreatTypes.MissileLaunch)
+                if (type == RWRThreatTypes.MissileLaunch || type == RWRThreatTypes.Torpedo)
                 {
                     StartCoroutine(
                         LaunchWarningRoutine(new TargetSignatureData(Vector3.zero,
@@ -274,6 +275,13 @@ namespace BahaTurret
                         audioSource.clip = missileLaunchSound;
                         audioSource.Play();
                         break;
+
+                    case RWRThreatTypes.Torpedo:
+                        audioSource.Stop();
+                        audioSource.clip = missileLaunchSound;
+                        audioSource.Play();
+                        break;
+
                     case RWRThreatTypes.MissileLock:
                         if (audioSource.clip == missileLaunchSound && audioSource.isPlaying) break;
                         audioSource.Stop();

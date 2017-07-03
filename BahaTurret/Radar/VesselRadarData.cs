@@ -1542,7 +1542,7 @@ namespace BahaTurret
 
 						if(i == lTarInd && weaponManager && weaponManager.selectedWeapon != null)
 						{
-							if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+							if(weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.SLW)
 							{
 								MissileBase currMissile = weaponManager.CurrentMissile;
 								if(currMissile.TargetingMode == MissileBase.TargetingModes.Radar || currMissile.TargetingMode == MissileBase.TargetingModes.Heat)

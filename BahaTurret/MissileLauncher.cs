@@ -207,7 +207,6 @@ namespace BahaTurret
 		List<KSPParticleEmitter> boostEmitters;
 		List<BDAGaplessParticleEmitter> boostGaplessEmitters;
 		
-		//torpedo
 		[KSPField]
 		public bool torpedo = false;
 		[KSPField]
@@ -269,14 +268,18 @@ namespace BahaTurret
         void ParseWeaponClass()
 		{
 			missileType = missileType.ToLower();
-			if(missileType == "bomb")
-			{
-				weaponClass = WeaponClasses.Bomb;
-			}
-			else
-			{
-				weaponClass = WeaponClasses.Missile;
-			}
+            if (missileType == "bomb")
+            {
+                weaponClass = WeaponClasses.Bomb;
+            }
+            else if (missileType == "torpedo" || missileType == "depthcharge")
+            {
+                weaponClass = WeaponClasses.SLW;
+            }
+            else
+            {
+                weaponClass = WeaponClasses.Missile;
+            }
 		}
         
 		public override void OnStart(StartState state)
@@ -509,7 +512,6 @@ namespace BahaTurret
             }
         }
 
-
         void OnCollisionEnter(Collision col)
 		{
             Debug.Log("[BDArmory]: Something Collided");
@@ -518,8 +520,7 @@ namespace BahaTurret
             {
                 Detonate();                
             }
-		}
-        
+		}        
         
 		void SetupAudio()
 		{

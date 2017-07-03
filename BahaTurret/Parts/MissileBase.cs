@@ -20,6 +20,11 @@ namespace BahaTurret
             return shortName;
         }
 
+        public string GetMissileType()
+        {
+            return missileType;
+        }
+
         [KSPField]
         public string missileType = "missile";
 
