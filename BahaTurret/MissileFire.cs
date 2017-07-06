@@ -509,9 +509,11 @@ namespace BahaTurret
             }
 
             UpdateTeamString();
+            ResetGuardInterval();
+
         }
 
-        [KSPField(isPersistant = true)] public bool isArmed = false;
+    [KSPField(isPersistant = true)] public bool isArmed = false;
 
 
         [KSPAction("Arm/Disarm")]
@@ -856,6 +858,7 @@ namespace BahaTurret
                     (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
                      || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
                      || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb
+                     || selectedWeapon.GetWeaponClass() == WeaponClasses.SLW
                     ))
                 {
                     canRipple = true;

@@ -827,7 +827,7 @@ namespace BahaTurret
                 if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
                 {
                     Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-                    if (vessel.altitude >= maxAltitude) Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
+                    if (vessel.altitude >= maxAltitude && maxAltitude != 0f) Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
 
                     HasMissed = true;
                     guidanceActive = false;
