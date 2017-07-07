@@ -20,7 +20,7 @@ namespace BahaTurret
          UI_Toggle(disabledText = "false", enabledText = "true")]
         public bool engageMissile = true;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Ground"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Surface"),
          UI_Toggle(disabledText = "false", enabledText = "true")]
         public bool engageGround = true;
 
