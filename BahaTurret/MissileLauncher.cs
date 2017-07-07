@@ -338,7 +338,7 @@ namespace BahaTurret
 				{
 					foreach(var t in part.FindModelTransforms("exhaustTransform"))
 					{
-						GameObject exhaustPrefab = (GameObject)Instantiate(GameDatabase.Instance.GetModel(exhaustPrefabPath));
+						GameObject exhaustPrefab = Instantiate(GameDatabase.Instance.GetModel(exhaustPrefabPath));
 						exhaustPrefab.SetActive(true);
 						foreach(var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
 						{
@@ -353,16 +353,26 @@ namespace BahaTurret
 				if(!string.IsNullOrEmpty(boostExhaustPrefabPath) && !string.IsNullOrEmpty(boostExhaustTransformName))
 				{
 					foreach(var t in part.FindModelTransforms(boostExhaustTransformName))
-					{
-						GameObject exhaustPrefab = (GameObject)Instantiate(GameDatabase.Instance.GetModel(boostExhaustPrefabPath));
-						exhaustPrefab.SetActive(true);
-						foreach(var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
-						{
-							emitter.emit = false;
+					{                        
+                        try
+                        {
+                            GameObject exhaustPrefab;
+                            exhaustPrefab = Instantiate(GameDatabase.Instance.GetModel(boostExhaustPrefabPath));
+                            exhaustPrefab.SetActive(true);
+
+                            foreach (var emitter in exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>())
+                            {
+                                emitter.emit = false;
+                            }
+                            exhaustPrefab.transform.parent = t;
+                            exhaustPrefab.transform.localPosition = Vector3.zero;
+                            exhaustPrefab.transform.localRotation = Quaternion.identity;
                         }
-						exhaustPrefab.transform.parent = t;
-						exhaustPrefab.transform.localPosition = Vector3.zero;
-						exhaustPrefab.transform.localRotation = Quaternion.identity;
+                        catch (Exception e)
+                        {
+                            Debug.Log("[BDArmory]: exhaust prefab missing");
+                        }                        					
+	
 					}
 				}
 
@@ -583,8 +593,7 @@ namespace BahaTurret
 	    public override void FireMissile()
 		{
 			if(!HasFired)
-			{
-                HasFired = true;
+			{                
                 GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
@@ -655,7 +664,8 @@ namespace BahaTurret
 				MissileState = MissileStates.Drop;
 				part.crashTolerance = 9999;
 				StartCoroutine(MissileRoutine());
-			}
+                HasFired = true;
+            }
 		}
 
 		IEnumerator DecoupleRoutine()
