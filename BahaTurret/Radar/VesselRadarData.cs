@@ -1242,12 +1242,13 @@ namespace BahaTurret
 
         void RefreshAvailableLinks()
         {
-            if (!HighLogic.LoadedSceneIsFlight || !weaponManager)
-            {
-                //Debug.Log("tried refreshing links but weapon manager is null");
+            if (!HighLogic.LoadedSceneIsFlight || !weaponManager || (FlightGlobals.Vessels == null))
+            {                
                 return;
             }
+
             availableExternalVRDs = new List<VesselRadarData>();
+
             foreach (var v in FlightGlobals.Vessels)
             {
                 if (v != null && v && v.loaded && vessel != null && v != vessel)

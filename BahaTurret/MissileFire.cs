@@ -1953,7 +1953,6 @@ namespace BahaTurret
                 missile.FireMissile();
             }
 
-
             UpdateList();
         }
 
@@ -2213,7 +2212,6 @@ namespace BahaTurret
             }
 
             UpdateList();
-            //TODO: fire rockets and take care of extra things
         }
 
 

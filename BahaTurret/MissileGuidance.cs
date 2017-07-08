@@ -351,8 +351,7 @@ namespace BahaTurret
             }
             return finalTarget;
         }
-
-
+        
         public static FloatCurve DefaultLiftCurve = null;
         public static FloatCurve DefaultDragCurve = null;
 

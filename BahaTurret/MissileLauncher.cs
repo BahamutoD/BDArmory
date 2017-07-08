@@ -952,29 +952,33 @@ namespace BahaTurret
 					finalMaxTorque = Mathf.Clamp((TimeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
 
                     if (GuidanceMode == GuidanceModes.AAMLead)
-					{
-						AAMGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.AGM)
-					{
-						AGMGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.AGMBallistic)
-					{
-						AGMBallisticGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.BeamRiding)
-					{
-						BeamRideGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.RCS)
-					{
-						part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition-part.transform.position, part.transform.up), turnRateDPS*Time.fixedDeltaTime);
-					}
-					else if(GuidanceMode == GuidanceModes.Cruise)
-					{
-						CruiseGuidance();
-					}
+                    {
+                        AAMGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.AGM)
+                    {
+                        AGMGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.AGMBallistic)
+                    {
+                        AGMBallisticGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.BeamRiding)
+                    {
+                        BeamRideGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.RCS)
+                    {
+                        part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition - part.transform.position, part.transform.up), turnRateDPS * Time.fixedDeltaTime);
+                    }
+                    else if (GuidanceMode == GuidanceModes.Cruise)
+                    {
+                        CruiseGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.SLW)
+                    {
+                        SLWGuidance();
+                    }
                 }
 				else
 				{
@@ -1578,6 +1582,41 @@ namespace BahaTurret
             DoAero(agmTarget);
 		}
 
+        void SLWGuidance()
+        {
+            Vector3 SLWTarget;
+            if (TargetAcquired)
+            {
+                DrawDebugLine(transform.position + (part.rb.velocity * Time.fixedDeltaTime), TargetPosition);
+                float timeToImpact;
+                SLWTarget = MissileGuidance.GetAirToAirTarget(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact, optimumAirspeed);
+                TimeToImpact = timeToImpact;
+                if (Vector3.Angle(SLWTarget - transform.position, transform.forward) > maxOffBoresight * 0.75f)
+                {
+                    SLWTarget = TargetPosition;
+                }
+
+                //proxy detonation
+                if (proxyDetonate && ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(blastRadius * 0.5f, 2))
+                {
+                    part.temperature = part.maxTemp + 100;
+                }
+            }
+            else
+            {
+                SLWTarget = transform.position + (20 * vessel.srf_velocity.normalized);
+            }
+
+            if (TimeIndex > dropTime + 0.25f)
+            {
+                DoAero(SLWTarget);
+            }
+
+            if (SLWTarget.y > 0f) SLWTarget.y = getSWLWOffset;
+
+            CheckMiss();
+        }
+
 		void DoAero(Vector3 targetPosition)
 		{
 			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
@@ -1923,44 +1962,47 @@ namespace BahaTurret
 			part.rb.AddTorque(AoA * simpleStableTorque * dragMagnitude * torqueAxis);
 		}
 
-		void ParseModes()
-		{
-			homingType = homingType.ToLower();
-			switch(homingType)
-			{
-			case "aam":
-				GuidanceMode = GuidanceModes.AAMLead;
-				break;
-			case "aamlead":
-				GuidanceMode = GuidanceModes.AAMLead;
-				break;
-			case "aampure":
-				GuidanceMode = GuidanceModes.AAMPure;
-				break;
-			case "agm":
-				GuidanceMode = GuidanceModes.AGM;
-				break;
-			case "agmballistic":
-				GuidanceMode = GuidanceModes.AGMBallistic;
-				break;
-			case "cruise":
-				GuidanceMode = GuidanceModes.Cruise;
-				break;
-			case "sts":
-				GuidanceMode = GuidanceModes.STS;
-				break;
-			case "rcs":
-				GuidanceMode = GuidanceModes.RCS;
-				break;
-			case "beamriding":
-				GuidanceMode = GuidanceModes.BeamRiding;
-				break;
-			default:
-				GuidanceMode = GuidanceModes.None;
-				break;
-			}
+        void ParseModes()
+        {
+            homingType = homingType.ToLower();
+            switch (homingType)
+            {
+                case "aam":
+                    GuidanceMode = GuidanceModes.AAMLead;
+                    break;
+                case "aamlead":
+                    GuidanceMode = GuidanceModes.AAMLead;
+                    break;
+                case "aampure":
+                    GuidanceMode = GuidanceModes.AAMPure;
+                    break;
+                case "agm":
+                    GuidanceMode = GuidanceModes.AGM;
+                    break;
+                case "agmballistic":
+                    GuidanceMode = GuidanceModes.AGMBallistic;
+                    break;
+                case "cruise":
+                    GuidanceMode = GuidanceModes.Cruise;
+                    break;
+                case "sts":
+                    GuidanceMode = GuidanceModes.STS;
+                    break;
+                case "rcs":
+                    GuidanceMode = GuidanceModes.RCS;
+                    break;
+                case "beamriding":
+                    GuidanceMode = GuidanceModes.BeamRiding;
+                    break;
+                case "slw":
+                    GuidanceMode = GuidanceModes.SLW;
+                    break;
+                default:
+                    GuidanceMode = GuidanceModes.None;
+                    break;
+            }
 
-			targetingType = targetingType.ToLower();
+            targetingType = targetingType.ToLower();
 			switch(targetingType)
 			{
 			case "radar":

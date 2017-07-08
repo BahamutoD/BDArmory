@@ -51,8 +51,8 @@ namespace BahaTurret
 			signalStrength = _signalStrength;
 
 			targetInfo = v.gameObject.GetComponent<TargetInfo> ();
-
 			team = BDArmorySettings.BDATeams.None;
+
 			if(targetInfo)
 			{
 				team = targetInfo.team;
