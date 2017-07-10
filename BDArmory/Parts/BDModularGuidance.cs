@@ -314,6 +314,8 @@ namespace BDArmory.Parts
 
 
             //TODO: BDModularGuidance should be configurable?
+            EngageEnabled = false;
+            heatThreshold = 50;
             lockedSensorFOV = 5;
             radarLOAL = true;
         }
@@ -534,26 +536,13 @@ namespace BDArmory.Parts
 
             if (distance < 4500)
             {
-                cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, CruiseAltitude);
-                debugString += "\nTerminal Maneuvers";
+                cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+                debugString += "\nDescending On Target";
             }
             else
             {
-                float agmThreshDist = 2500;
-                if (distance < agmThreshDist)
-                {
-                    if (!MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, true, out cruiseTarget))
-                    {
-                        cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-                    }
-
-                    debugString += "\nDescending On Target";
-                }
-                else
-                {
-                    cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-                    debugString += "\nCruising";
-                }
+                cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
+                debugString += "\nCruising";
             }
 
             debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
@@ -567,8 +556,8 @@ namespace BDArmory.Parts
             // if I'm to close to my vessel avoid explosion
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
-            if (Vector3.Distance(vessel.CoM, targetPosition) > 
-                Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition)) return;
+            if (Vector3.Distance(vessel.CoM, targetPosition) >
+                Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
 
             if (MissileState != MissileStates.PostThrust) return;
             if (Vector3.Dot(targetPosition - vessel.CoM, vessel.transform.forward) > 0) return;
@@ -626,17 +615,35 @@ namespace BDArmory.Parts
            
         }
 
+        private float originalDistance = 0f;
         private Vector3 BallisticGuidance()
         {
-            Vector3 agmTarget;
-            bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
-            if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
+            float currentDistance = Vector3.Distance(TargetPosition, vessel.CoM);
+            if (currentDistance > originalDistance)
             {
-                Vector3 dToTarget = TargetPosition - vessel.CoM;
-                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
-                agmTarget = vessel.CoM + direction;
+                originalDistance = currentDistance;
             }
+            Vector3 agmTarget;
 
+
+            if (currentDistance > originalDistance / 2)
+            {
+                bool validSolution =
+                    MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
+                if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) >
+                    Mathf.Clamp(maxOffBoresight, 0, 65))
+                {
+                    Vector3 dToTarget = TargetPosition - vessel.CoM;
+                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f),
+                                            Vector3.Cross(dToTarget,
+                                                VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
+                    agmTarget = vessel.CoM + direction;
+                }
+            }
+            else
+            {
+                agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+            }
             return agmTarget;
         }
 
