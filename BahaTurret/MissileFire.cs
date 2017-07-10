@@ -424,7 +424,7 @@ namespace BahaTurret
         [KSPField(isPersistant = true)] public bool guardMode = false;
 
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Target Type: "),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Target Type: "),
          UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")] public bool targetMissiles = false;
 
         [KSPAction("Toggle Target Type")]
@@ -471,7 +471,7 @@ namespace BahaTurret
 		
 		
 		[KSPField(isPersistant = true)]
-		public bool team = false;
+        public bool team = false;
 
 
         [KSPAction("Toggle Team")]
@@ -513,7 +513,8 @@ namespace BahaTurret
 
         }
 
-    [KSPField(isPersistant = true)] public bool isArmed = false;
+        [KSPField(isPersistant = true)]
+        public bool isArmed = false;
 
 
         [KSPAction("Arm/Disarm")]

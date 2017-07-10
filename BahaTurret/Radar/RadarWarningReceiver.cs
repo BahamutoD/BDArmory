@@ -184,9 +184,7 @@ namespace BahaTurret
         {
             if(referenceTransform == null) return;
             if (part == null) return;
-            if (weaponManager == null) return;
-
-           
+            if (weaponManager == null) return;           
 
             float sqrDist = (part.transform.position - source).sqrMagnitude;
             if (sqrDist < Mathf.Pow(5000, 2) && sqrDist > Mathf.Pow(100, 2) &&
