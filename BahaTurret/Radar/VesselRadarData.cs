@@ -1328,9 +1328,11 @@ namespace BahaTurret
             if (rData.vessel == vessel) return;
                                     
             if (rData.vessel.altitude < -20 && radar.rwrThreatType != 6) addContact = false; // Normal Radar Should not detect Underwater vessels
-            if (!rData.vessel.LandedOrSplashed && radar.rwrThreatType == 6) addContact = false; //Sonar should not detect Aircraft, keeping splashed for boats
-            if (rData.vessel.altitude < 0 && radar.rwrThreatType == 6) addContact = true; //Sonar only detects underwater vessels
-            
+            if (!rData.vessel.LandedOrSplashed && radar.rwrThreatType == 6) addContact = false; //Sonar should not detect Aircraft
+            if (rData.vessel.altitude < 0 && radar.rwrThreatType == 6 && vessel.Splashed) addContact = true; //Sonar only detects underwater vessels // Sonar should only work when in the water
+            if (!vessel.Splashed && radar.rwrThreatType == 6) addContact = false; // Sonar should only work when in the water
+            if (rData.vessel.Landed && radar.rwrThreatType == 6) addContact = false; //Sonar should not detect land vessels
+
             if (addContact == false) return;
             
             rData.signalPersistTime = radar.signalPersistTime;
