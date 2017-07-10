@@ -14,21 +14,13 @@ namespace BDArmory
 		public Vector3 acceleration;
 		public bool exists;
 		public float timeAcquired;
-
-		public float signalStrength;
-
+        public float signalStrength;
 		public TargetInfo targetInfo;
-
 		public BDArmorySettings.BDATeams team;
-
 		public Vector2 pingPosition;
-
 		public VesselECMJInfo vesselJammer;
-
 		public ModuleRadar lockedByRadar;
-
 		public Vessel vessel;
-
 		bool orbital;
 		Orbit orbit;
 
@@ -39,8 +31,7 @@ namespace BDArmory
 				geoPos == other.geoPos &&
 				timeAcquired == other.timeAcquired;
 		}
-
-
+        
 		public TargetSignatureData(Vessel v, float _signalStrength)
 		{
 			orbital = false;
@@ -55,8 +46,8 @@ namespace BDArmory
 			signalStrength = _signalStrength;
 
 			targetInfo = v.gameObject.GetComponent<TargetInfo> ();
-
 			team = BDArmorySettings.BDATeams.None;
+
 			if(targetInfo)
 			{
 				team = targetInfo.team;

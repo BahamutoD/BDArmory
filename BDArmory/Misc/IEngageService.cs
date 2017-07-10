@@ -6,5 +6,6 @@ namespace BDArmory.Misc
         bool GetEngageAirTargets();
         bool GetEngageMissileTargets();
         bool GetEngageGroundTargets();
+        bool GetEngageSLWTargets();
     }
 }
