@@ -232,7 +232,7 @@ namespace BDArmory.Parts
 
             // Replaced Linq expression...
             List<Part>.Enumerator parts = vessel.parts.GetEnumerator();
-            Debug.LogFormat("[BDModularGuidance]: ShouldExecuteNextStage");
+         
             while (parts.MoveNext())
             {
                 if (parts.Current == null || !IsEngine(parts.Current)) continue;
@@ -248,7 +248,6 @@ namespace BDArmory.Parts
             {
                 MissileState = MissileStates.PostThrust;
                 return false;
-
             }
               
             return true;
@@ -276,7 +275,6 @@ namespace BDArmory.Parts
                 ModuleEngines eng = pm as ModuleEngines;
                 if (eng != null)
                 {
-                    Debug.LogFormat("[BDModularGuidance]: engine state EngineIgnited ={0},getFlameoutState ={1}, flameoutBar = {2}, status = {3}", eng.EngineIgnited, eng.getFlameoutState, eng.flameoutBar, eng.status);
                     return (eng.EngineIgnited && (!eng.getFlameoutState || eng.flameoutBar == 0 || eng.status == "Nominal"));
                 }
             }
