@@ -99,8 +99,9 @@ Icon
 /.vs/slnx.sqlite
 /BahaTurret/bin/Release
 /BDArmory.Core/obj/Debug/BDArmory.Core.csproj.FileListAbsolute.txt
+/BDArmory.Core/obj/Release/BDArmory.Core.csproj.FileListAbsolute.txt
 /BDArmory/bin/Debug
-/BDArmory.Core/obj
+BDArmory.Core/obj/
 /BDArmory.Multiplayer/obj
 BDArmory.Core/bin/Debug/Assembly-CSharp.dll
 BDArmory.Core/bin/Debug/BDArmory.Core.dll

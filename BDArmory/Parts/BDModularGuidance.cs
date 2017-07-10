@@ -14,17 +14,17 @@ namespace BDArmory.Parts
     {
         
         private bool _missileIgnited;
-        private int _nextStage = (int) KSPActionGroup.Custom01;
+        private int _nextStage = 1;
 
         private PartModule _targetDecoupler;
 
-        private Vessel _targetVessel = new Vessel();
+        private readonly Vessel _targetVessel = new Vessel();
 
         private Transform _velocityTransform;
 
         public Vessel LegacyTargetVessel;
 
-        private List<Part> vesselParts = new List<Part>();
+        private readonly List<Part> _vesselParts = new List<Part>();
 
         #region KSP FIELDS
 
@@ -46,7 +46,7 @@ namespace BDArmory.Parts
         private string _targetingLabel = TargetingModes.None.ToString();
 
         [KSPField(isPersistant = true)]
-        public int _guidanceIndex = 2;
+        public int GuidanceIndex = 2;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Active Radar Range"), UI_FloatRange(minValue = 6000f, maxValue = 50000f, stepIncrement = 1000f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float ActiveRadarRange = 6000;
@@ -71,9 +71,7 @@ namespace BDArmory.Parts
         public TransformAxisVectors ForwardTransformAxis { get; set; }
         public TransformAxisVectors UpTransformAxis { get; set; }
 
-        public float Mass {
-            get { return (float) vessel.totalMass; }
-        }
+        public float Mass => (float) vessel.totalMass;
 
         public enum TransformAxisVectors
         {
@@ -86,7 +84,7 @@ namespace BDArmory.Parts
         }
         private void RefreshGuidanceMode()
         {
-            switch (_guidanceIndex)
+            switch (GuidanceIndex)
             {
                 case 1:
                     GuidanceMode = GuidanceModes.AAMPure;
@@ -108,8 +106,8 @@ namespace BDArmory.Parts
 
             if (Fields["CruiseAltitude"] != null)
             {
-                Fields["CruiseAltitude"].guiActive = _guidanceIndex == 3;
-                Fields["CruiseAltitude"].guiActiveEditor = _guidanceIndex == 3;
+                Fields["CruiseAltitude"].guiActive = GuidanceIndex == 3;
+                Fields["CruiseAltitude"].guiActiveEditor = GuidanceIndex == 3;
             }
 
             Misc.Misc.RefreshAssociatedWindows(part);
@@ -169,7 +167,7 @@ namespace BDArmory.Parts
                 {
                     DisableRecursiveFlow(child.Current.children);
                 }
-                if (!vesselParts.Contains(child.Current)) vesselParts.Add(child.Current);
+                if (!_vesselParts.Contains(child.Current)) _vesselParts.Add(child.Current);
             }
             child.Dispose();
         }
@@ -203,7 +201,7 @@ namespace BDArmory.Parts
             if (_targetDecoupler != null)
             {
                 if (_targetDecoupler.part.children.Count == 0) return;
-                vesselParts.Clear();
+                _vesselParts.Clear();
                 DisableRecursiveFlow(_targetDecoupler.part.children);
 
             }
@@ -211,7 +209,7 @@ namespace BDArmory.Parts
 
         private void MissileIgnition()
         {
-            EnableResourceFlow(vesselParts);
+            EnableResourceFlow(_vesselParts);
             GameObject velocityObject = new GameObject("velObject");
             velocityObject.transform.position = vessel.transform.position;
             velocityObject.transform.parent = vessel.transform;
@@ -230,29 +228,29 @@ namespace BDArmory.Parts
         private bool ShouldExecuteNextStage()
         {
             if (!_missileIgnited) return false;
-            bool ret = true;
-            //If the next stage is greater than the number defined of stages the missile is done
+            if (TimeIndex < 1) return false;
+
             // Replaced Linq expression...
             List<Part>.Enumerator parts = vessel.parts.GetEnumerator();
+         
             while (parts.MoveNext())
             {
                 if (parts.Current == null || !IsEngine(parts.Current)) continue;
-                IEnumerator<ModuleEngines> engine = parts.Current.FindModulesImplementing<ModuleEngines>().GetEnumerator();
-                while (engine.MoveNext())
+                if (EngineIgnitedAndHasFuel(parts.Current))
                 {
-                    if (engine.Current == null || !engine.Current.EngineIgnited || engine.Current.getFlameoutState) continue;
-                    ret = false;
-                    break;
-                }
-                engine.Dispose();
+                    return false;
+                }  
             }
             parts.Dispose();
 
-            if (!ret) return ret;
             //If the next stage is greater than the number defined of stages the missile is done
-            if (!(_nextStage >= Math.Pow(2, StagesNumber + 7))) return ret;
-            MissileState = MissileStates.PostThrust;
-            return false;
+            if (_nextStage > StagesNumber)
+            {
+                MissileState = MissileStates.PostThrust;
+                return false;
+            }
+              
+            return true;
         }
 
         public bool IsEngine(Part p)
@@ -262,6 +260,23 @@ namespace BDArmory.Parts
             {
                 if (m.Current == null) continue;
                 if (m.Current is ModuleEngines) return true;
+            }
+            m.Dispose();
+            return false;
+        }
+
+        public static bool EngineIgnitedAndHasFuel(Part p)
+        {
+            List<PartModule>.Enumerator m = p.Modules.GetEnumerator();
+            
+            while (m.MoveNext())
+            {
+                PartModule pm = m.Current;
+                ModuleEngines eng = pm as ModuleEngines;
+                if (eng != null)
+                {
+                    return (eng.EngineIgnited && (!eng.getFlameoutState || eng.flameoutBar == 0 || eng.status == "Nominal"));
+                }
             }
             m.Dispose();
             return false;
@@ -297,6 +312,8 @@ namespace BDArmory.Parts
 
 
             //TODO: BDModularGuidance should be configurable?
+            EngageEnabled = false;
+            heatThreshold = 50;
             lockedSensorFOV = 5;
             radarLOAL = true;
         }
@@ -517,26 +534,13 @@ namespace BDArmory.Parts
 
             if (distance < 4500)
             {
-                cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, CruiseAltitude);
-                debugString += "\nTerminal Maneuvers";
+                cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+                debugString += "\nDescending On Target";
             }
             else
             {
-                float agmThreshDist = 2500;
-                if (distance < agmThreshDist)
-                {
-                    if (!MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, true, out cruiseTarget))
-                    {
-                        cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-                    }
-
-                    debugString += "\nDescending On Target";
-                }
-                else
-                {
-                    cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-                    debugString += "\nCruising";
-                }
+                cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
+                debugString += "\nCruising";
             }
 
             debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
@@ -550,7 +554,7 @@ namespace BDArmory.Parts
             // if I'm to close to my vessel avoid explosion
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
-            if (Vector3.Distance(vessel.CoM, targetPosition) > 
+            if (Vector3.Distance(vessel.CoM, targetPosition) >
                 Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
 
             if (MissileState != MissileStates.PostThrust) return;
@@ -570,21 +574,21 @@ namespace BDArmory.Parts
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
                 Vector3 newTargetPosition = new Vector3();
-                if (_guidanceIndex == 1)
+                if (GuidanceIndex == 1)
                 {
                     newTargetPosition = AAMGuidance();
                     CheckMiss(newTargetPosition);
 
                 }
-                else if (_guidanceIndex == 2)
+                else if (GuidanceIndex == 2)
                 {
                     newTargetPosition = AGMGuidance();
                 }
-                else if (_guidanceIndex == 3)
+                else if (GuidanceIndex == 3)
                 {
                     newTargetPosition = CruiseGuidance();
                 }
-                else if (_guidanceIndex == 4)
+                else if (GuidanceIndex == 4)
                 {
                     newTargetPosition = BallisticGuidance();
                 }
@@ -609,17 +613,35 @@ namespace BDArmory.Parts
            
         }
 
+        private float originalDistance = 0f;
         private Vector3 BallisticGuidance()
         {
-            Vector3 agmTarget;
-            bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
-            if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) > Mathf.Clamp(maxOffBoresight, 0, 65))
+            float currentDistance = Vector3.Distance(TargetPosition, vessel.CoM);
+            if (currentDistance > originalDistance)
             {
-                Vector3 dToTarget = TargetPosition - vessel.CoM;
-                Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
-                agmTarget = vessel.CoM + direction;
+                originalDistance = currentDistance;
             }
+            Vector3 agmTarget;
 
+
+            if (currentDistance > originalDistance / 2)
+            {
+                bool validSolution =
+                    MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
+                if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) >
+                    Mathf.Clamp(maxOffBoresight, 0, 65))
+                {
+                    Vector3 dToTarget = TargetPosition - vessel.CoM;
+                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f),
+                                            Vector3.Cross(dToTarget,
+                                                VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
+                    agmTarget = vessel.CoM + direction;
+                }
+            }
+            else
+            {
+                agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+            }
             return agmTarget;
         }
 
@@ -670,11 +692,14 @@ namespace BDArmory.Parts
         public void ExecuteNextStage()
         {
             Debug.LogFormat("[BDArmory]: BDModularGuidance - executing next stage {0}", _nextStage);
-            vessel.ActionGroups.ToggleGroup((KSPActionGroup)_nextStage);
+            vessel.ActionGroups.ToggleGroup(
+                (KSPActionGroup)Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)_nextStage));
 
-            _nextStage *= 2;
+            _nextStage++;
 
             vessel.OnFlyByWire += GuidanceSteer;
+
+            //todo: find a way to fly by wire vessel decoupled
         }
 
 
@@ -684,8 +709,6 @@ namespace BDArmory.Parts
         public void AgFire(KSPActionParam param)
         {
             FireMissile();
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
         }
 
         #endregion
@@ -697,6 +720,11 @@ namespace BDArmory.Parts
         {
             if (!HasFired)
             {
+                if (BDArmorySettings.Instance.ActiveWeaponManager != null)
+                {
+                     BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+                }                   
+
                 GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
@@ -711,19 +739,20 @@ namespace BDArmory.Parts
 
                 SourceVessel = vessel;
                 SetTargeting();
-
-               
-
                 Jettison();
-
                 AddTargetInfoToVessel();
 
                 vessel.vesselName = GetShortName();
-                vessel.vesselType = VesselType.Station;
+                vessel.vesselType = VesselType.Plane;
+
+                if (!vessel.ActionGroups[KSPActionGroup.SAS])
+                {
+                    vessel.ActionGroups.ToggleGroup(KSPActionGroup.SAS);
+                }
 
                 TimeFired = Time.time;
-
                 MissileState = MissileStates.Drop;
+
                 Misc.Misc.RefreshAssociatedWindows(part);
 
                 if (StageToTriggerOnProximity == 0)
@@ -755,10 +784,10 @@ namespace BDArmory.Parts
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Guidance Mode", active = true)]
         public void SwitchGuidanceMode()
         {
-            _guidanceIndex++;
-            if (_guidanceIndex > 4)
+            GuidanceIndex++;
+            if (GuidanceIndex > 4)
             {
-                _guidanceIndex = 1;
+                GuidanceIndex = 1;
             }
 
             RefreshGuidanceMode();
@@ -846,7 +875,7 @@ namespace BDArmory.Parts
                     ArmingExplosive();
 
                     vessel.ActionGroups.ToggleGroup(
-                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + ((int)StageToTriggerOnProximity)));;
+                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
                 }
                 else
                 {
@@ -912,7 +941,7 @@ namespace BDArmory.Parts
         #endregion
     }
 
-
+    #region UI
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class WeaponNameWindow : MonoBehaviour
     {
@@ -1188,4 +1217,6 @@ namespace BDArmory.Parts
             return retTex;
         }
     }
+
+    #endregion
 }
