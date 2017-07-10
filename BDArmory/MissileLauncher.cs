@@ -1020,7 +1020,7 @@ namespace BDArmory
             if ((TargetingModeTerminal != TargetingModes.None) && (distance < terminalGuidanceDistance) && !terminalGuidanceActive)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory][Terminal Guidance]: missile updating targeting mode: " + terminalGuidanceType);
+                    Debug.Log("[BDArmory][Terminal Guidance]: missile "+this.name+" updating targeting mode: " + terminalGuidanceType);
 
                 TargetingMode = TargetingModeTerminal;
                 terminalGuidanceActive = true;
@@ -1084,7 +1084,7 @@ namespace BDArmory
 
                             RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+                                Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0") + " - target: "+radarTarget.vessel.name);
                         }
                         else
                         {
