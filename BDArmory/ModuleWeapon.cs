@@ -196,7 +196,12 @@ namespace BDArmory
         public string GetSubLabel()
         {
             return string.Empty;
-        }  
+        }
+
+        public string GetMissileType()
+        {
+            return string.Empty;
+        } 
                 
         #endregion
 
@@ -499,7 +504,6 @@ namespace BDArmory
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-
 
             ParseWeaponType();
             ParseBulletDragType();

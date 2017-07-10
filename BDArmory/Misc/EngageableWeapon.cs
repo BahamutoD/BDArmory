@@ -20,10 +20,13 @@ namespace BDArmory.Misc
          UI_Toggle(disabledText = "false", enabledText = "true")]
         public bool engageMissile = true;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Ground"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Surface"),
          UI_Toggle(disabledText = "false", enabledText = "true")]
         public bool engageGround = true;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage SLW"),
+        UI_Toggle(disabledText = "false", enabledText = "true")]
+        public bool engageSLW = true;
 
         [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Disable Engage Options", active = true)]
         public void ToggleEngageOptions()
@@ -57,7 +60,6 @@ namespace BDArmory.Misc
             // ensure max >= min
             if (engageRangeMax < engageRangeMin)
                 engageRangeMax = engageRangeMin;
-
         }
 
         protected void InitializeEngagementRange(float min, float max)
@@ -80,8 +82,7 @@ namespace BDArmory.Misc
                 engageRangeMax = max;
             }
         }
-
-
+        
         //implementations from Interface
         public float GetEngagementRangeMin()
         {
@@ -106,6 +107,10 @@ namespace BDArmory.Misc
         public bool GetEngageGroundTargets()
         {
             return engageGround;
+        }
+        public bool GetEngageSLWTargets()
+        {
+            return engageSLW;
         }
 
     }

@@ -24,6 +24,11 @@ namespace BDArmory.Parts
             return shortName;
         }
 
+        public string GetMissileType()
+        {
+            return missileType;
+        }
+
         [KSPField]
         public string missileType = "missile";
 
@@ -43,6 +48,17 @@ namespace BDArmory.Parts
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float DetonationDistance = -1;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "SLW Offset"), UI_FloatRange(minValue = -1000f, maxValue = 0f, stepIncrement = 100f, affectSymCounterparts = UI_Scene.All)]
+        public float SLWOffset = 0;
+
+        public float getSWLWOffset
+        {
+            get
+            {
+                return SLWOffset;
+            }
+        }
 
         [KSPField]
         public bool guidanceActive = true;
@@ -86,7 +102,7 @@ namespace BDArmory.Parts
 
         public MissileStates MissileState { get; set; } = MissileStates.Idle;
 
-        public enum GuidanceModes { None, AAMLead, AAMPure, AGM, AGMBallistic, Cruise, STS, Bomb, RCS, BeamRiding }
+        public enum GuidanceModes { None, AAMLead, AAMPure, AGM, AGMBallistic, Cruise, STS, Bomb, RCS, BeamRiding, SLW}
 
         public GuidanceModes GuidanceMode;
 
@@ -143,19 +159,17 @@ namespace BDArmory.Parts
         //public ModuleRadar radar;
         public VesselRadarData vrd;
         public TargetSignatureData radarTarget;
-        private int snapshotTicker;
-        private int locksCount;
         private TargetSignatureData[] scannedTargets;
-        private float _radarFailTimer;
-        private float maxRadarFailTime = 1;
-        private float lastRWRPing;
-        private bool radarLOALSearching;
-
         public MissileFire TargetMf = null;
-
-        protected bool checkMiss;
-
         private LineRenderer LR;
+
+        private int snapshotTicker;
+        private int locksCount = 0;        
+        private float _radarFailTimer = 0;
+        private float maxRadarFailTime = 1;
+        private float lastRWRPing = 0;
+        private bool radarLOALSearching = false;
+        protected bool checkMiss = false;
         protected string debugString = "";
         
         public string GetSubLabel()
@@ -602,8 +616,7 @@ namespace BDArmory.Parts
                 LR.SetPosition(0, start);
                 LR.SetPosition(1, end);
             }
-        }
-        
+        }        
 
         protected void CheckDetonationDistance()
         {
