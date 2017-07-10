@@ -4,7 +4,9 @@ BDArmory
 Gun turrets and other weapon systems for KSP
 Original Author [BahamutoD](https://github.com/BahamutoD)
 
-Forum link:  http://forum.kerbalspaceprogram.com/threads/85209-BDArmory
+Original [Forum link](http://forum.kerbalspaceprogram.com/threads/85209-BDArmory)
+
+Current [Forum link](http://forum.kerbalspaceprogram.com/index.php?/topic/155014-13-bdarmory-continued-v0211-5282017-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/)
 
 Current Maintainers:
 - [PapaJoe](https://github.com/PapaJoesSoup)
@@ -13,4 +15,4 @@ Current Maintainers:
 - [gomker](https://github.com/gomker)
 - [TheDog](https://github.com/TheDogKSP)
 
-Current Forum [link](http://forum.kerbalspaceprogram.com/index.php?/topic/155014-13-bdarmory-continued-v0211-5282017-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/)
+
