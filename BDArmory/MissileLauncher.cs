@@ -1020,7 +1020,7 @@ namespace BDArmory
             if ((TargetingModeTerminal != TargetingModes.None) && (distance < terminalGuidanceDistance) && !terminalGuidanceActive)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory][Terminal Guidance]: missile updating targeting mode: " + terminalGuidanceType);
+                    Debug.Log("[BDArmory][Terminal Guidance]: missile "+this.name+" updating targeting mode: " + terminalGuidanceType);
 
                 TargetingMode = TargetingModeTerminal;
                 terminalGuidanceActive = true;
@@ -1068,8 +1068,15 @@ namespace BDArmory
                         {
                             if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - TargetPosition).sqrMagnitude < sqrThresh)
                             {
-                                lockedTarget = scannedTargets[i];
-                                ActiveRadar = true;
+                                //re-check engagement envelope, only lock appropriate targets
+                                if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
+                                    (scannedTargets[i].targetInfo.isFlying && engageAir) ||
+                                    ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
+                                    (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
+                                {
+                                     lockedTarget = scannedTargets[i];
+                                     ActiveRadar = true;
+                                }
                             }
                         }
 
@@ -1084,7 +1091,7 @@ namespace BDArmory
 
                             RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+                                Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0") + " - target: "+radarTarget.vessel.name);
                         }
                         else
                         {
