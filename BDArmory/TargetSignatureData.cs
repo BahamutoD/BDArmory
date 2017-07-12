@@ -46,6 +46,13 @@ namespace BDArmory
 			signalStrength = _signalStrength;
 
 			targetInfo = v.gameObject.GetComponent<TargetInfo> ();
+
+            // vessel never been picked up on radar before: create new targetinfo record
+            if (targetInfo is null)
+            {
+                targetInfo = v.gameObject.AddComponent<TargetInfo>();
+            }
+
 			team = BDArmorySettings.BDATeams.None;
 
 			if(targetInfo)
