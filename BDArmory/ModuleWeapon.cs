@@ -1814,7 +1814,8 @@ namespace BDArmory
                 {
                     heatGauge = InitHeatGauge();
                 }
-                heatGauge.SetValue(heat, maxHeat / 3, maxHeat);
+
+                heatGauge?.SetValue(heat, maxHeat / 3, maxHeat);    //null check
             }
             else if (heatGauge != null && heat < maxHeat / 4)
             {
@@ -1975,12 +1976,15 @@ namespace BDArmory
         {
             ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
 
-            v.SetMsgBgColor(XKCDColors.DarkRed);
-            v.SetMsgTextColor(XKCDColors.Orange);
-            v.SetMessage("Overheat");
-            v.SetProgressBarBgColor(XKCDColors.DarkRed);
-            v.SetProgressBarColor(XKCDColors.Orange);
-
+            // fix nullref if no stackicon exists
+            if (v != null)
+            {
+                v.SetMsgBgColor(XKCDColors.DarkRed);
+                v.SetMsgTextColor(XKCDColors.Orange);
+                v.SetMessage("Overheat");
+                v.SetProgressBarBgColor(XKCDColors.DarkRed);
+                v.SetProgressBarColor(XKCDColors.Orange);
+            }
             return v;
         }
 
