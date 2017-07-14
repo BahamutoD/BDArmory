@@ -3,8 +3,13 @@ namespace BDArmory.Misc
     public interface IBDWeapon
     {
         WeaponClasses GetWeaponClass();
+
         string GetShortName();
+
         string GetSubLabel();
+
+        string GetMissileType();
+
         Part GetPart();
 
         // extensions for feature_engagementenvelope
@@ -21,6 +26,7 @@ namespace BDArmory.Misc
         Bomb,
         Gun,
         Rocket,
-        DefenseLaser
+        DefenseLaser,
+        SLW
     }
 }

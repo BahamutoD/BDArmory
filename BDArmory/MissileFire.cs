@@ -26,6 +26,7 @@ namespace BDArmory
         private List<IBDWeapon> weaponTypesAir = new List<IBDWeapon>(LIST_CAPACITY);
         private List<IBDWeapon> weaponTypesMissile = new List<IBDWeapon>(LIST_CAPACITY);
         private List<IBDWeapon> weaponTypesGround = new List<IBDWeapon>(LIST_CAPACITY);
+        private List<IBDWeapon> weaponTypesSLW = new List<IBDWeapon>(LIST_CAPACITY);
 
         [KSPField(guiActiveEditor = false, isPersistant = true, guiActive = false)] public int weaponIndex;
 
@@ -336,7 +337,6 @@ namespace BDArmory
 
 		//current weapon ref
 		public MissileBase CurrentMissile;
-
         public ModuleWeapon currentGun
         {
             get
@@ -425,8 +425,8 @@ namespace BDArmory
         [KSPField(isPersistant = true)] public bool guardMode;
 
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Target Type: "),
-         UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")] public bool targetMissiles;
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Target Type: "),
+         UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")] public bool targetMissiles = false;
 
         [KSPAction("Toggle Target Type")]
         public void AGToggleTargetType(KSPActionParam param)
@@ -478,7 +478,7 @@ namespace BDArmory
 		
 		
 		[KSPField(isPersistant = true)]
-		public bool team;
+        public bool team = false;
 
 
         [KSPAction("Toggle Team")]
@@ -514,9 +514,12 @@ namespace BDArmory
                 OnToggleTeam?.Invoke(this, BDATargetManager.BoolToTeam(team));
             }
             UpdateTeamString();
+            ResetGuardInterval();
+
         }
 
-        [KSPField(isPersistant = true)] public bool isArmed;
+        [KSPField(isPersistant = true)]
+        public bool isArmed = false;
 
 
         [KSPAction("Arm/Disarm")]
@@ -801,6 +804,7 @@ namespace BDArmory
                 //targeting
                 if (weaponIndex > 0 &&
                     (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile ||
+                    selectedWeapon.GetWeaponClass() == WeaponClasses.SLW ||
                      selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb))
                 {
                     SearchForLaserPoint();
@@ -831,6 +835,7 @@ namespace BDArmory
                     (selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket
                      || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile
                      || selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb
+                     || selectedWeapon.GetWeaponClass() == WeaponClasses.SLW
                     ))
                 {
                     canRipple = true;
@@ -1419,7 +1424,14 @@ namespace BDArmory
                         FireCurrentMissile(true);
                         StartCoroutine(MissileAwayRoutine(ml));
                     }
+                    else
+                    {
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Laser Target Error");
+                    }
+
                 }
+
+
                 guardFiringMissile = false;
             }
         }
@@ -1897,8 +1909,7 @@ namespace BDArmory
                     selectedWeapon = ml;
                     return;
                 }
-
-                //Part partSym = FindSym(ml.part);
+                                
                 if (ml is MissileLauncher && ((MissileLauncher)ml).missileTurret)
                 {
                     ((MissileLauncher)ml).missileTurret.FireMissile(((MissileLauncher)ml));
@@ -1934,7 +1945,6 @@ namespace BDArmory
                 missile.FireMissile();
             }
 
-
             UpdateList();
         }
 
@@ -1951,7 +1961,8 @@ namespace BDArmory
             }
 
             if (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile ||
-                selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)
+                selectedWeapon.GetWeaponClass() == WeaponClasses.SLW ||
+                selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb )
             {
                 FireCurrentMissile(true);
             }
@@ -1970,7 +1981,6 @@ namespace BDArmory
             }
 
             UpdateList();
-            //TODO: fire rockets and take care of extra things
         }
 
 
@@ -2012,6 +2022,7 @@ namespace BDArmory
             weaponTypesAir.Clear();
             weaponTypesMissile.Clear();
             weaponTypesGround.Clear();
+            weaponTypesSLW.Clear();
 
             List<IBDWeapon>.Enumerator weapon = vessel.FindPartModulesImplementing<IBDWeapon>().GetEnumerator();
             while (weapon.MoveNext() )
@@ -2050,12 +2061,14 @@ namespace BDArmory
                     if (engageableWeapon.GetEngageAirTargets()) weaponTypesAir.Add(weapon.Current);
                     if (engageableWeapon.GetEngageMissileTargets()) weaponTypesMissile.Add(weapon.Current);
                     if (engageableWeapon.GetEngageGroundTargets()) weaponTypesGround.Add(weapon.Current);
+                    if (engageableWeapon.GetEngageSLWTargets()) weaponTypesSLW.Add(weapon.Current);
                 }
                 else
                 {
                     weaponTypesAir.Add(weapon.Current);
                     weaponTypesMissile.Add(weapon.Current);
                     weaponTypesGround.Add(weapon.Current);
+                    weaponTypesSLW.Add(weapon.Current);
                 }  
             }
             weapon.Dispose();
@@ -2105,21 +2118,19 @@ namespace BDArmory
 
             MissileBase aMl = GetAsymMissile();
             if (aMl)
-            {
-                //Debug.Log("setting asym missile: " + aMl.part.name);
+            {                
                 selectedWeapon = aMl;
                 CurrentMissile = aMl;
             }
 
             MissileBase rMl = GetRotaryReadyMissile();
             if (rMl)
-            {
-                //Debug.Log("setting rotary ready missile: " + rMl.part.name);
+            {             
                 selectedWeapon = rMl;
                 CurrentMissile = rMl;
             }
 
-            if (selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile))
+            if (selectedWeapon != null && (selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb || selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.SLW))
             {
                 //Debug.Log("[BDArmory]: =====selected weapon: " + selectedWeapon.GetPart().name);
                 if (!CurrentMissile || CurrentMissile.part.name != selectedWeapon.GetPart().name)
@@ -2613,7 +2624,8 @@ namespace BDArmory
         {
             if (weaponIndex == 0) return null;
             if (weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Bomb ||
-               weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile)
+                weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile ||
+                weaponArray[weaponIndex].GetWeaponClass() ==WeaponClasses.SLW)
             {
                 MissileBase firstMl = null;
                 List<MissileBase>.Enumerator ml = vessel.FindPartModulesImplementing<MissileBase>().GetEnumerator();
@@ -3098,7 +3110,7 @@ namespace BDArmory
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: " + vessel.vesselName + " is disengaging - no valid weapons");
+                    Debug.Log("[BDArmory]: " + vessel.vesselName + " is disengaging - no valid weapons - no valid targets");
                 }
                 CycleWeapon(0);
                 SetTarget(null);
@@ -3109,7 +3121,7 @@ namespace BDArmory
                 return;
             }
 
-            Debug.Log("[BDArmory]: Unhandled target case.");
+            Debug.Log("[BDArmory]: Unhandled target case");
         }
 
         // extension for feature_engagementenvelope: new smartpickweapon method
@@ -3123,9 +3135,9 @@ namespace BDArmory
             if (pilotAI && pilotAI.pilotEnabled && vessel.LandedOrSplashed) // This must be changed once pilots for ground/ships etc exist!
                 return false;
 
-
             // Part 2: check weapons against individual target types
             // ------
+
             float distance = Vector3.Distance(transform.position + vessel.srf_velocity, target.position + target.velocity);
             IBDWeapon targetWeapon = null;
             float targetWeaponRPM = 0;
@@ -3193,7 +3205,8 @@ namespace BDArmory
 
             }
 
-            else if (!target.isLanded)
+            //else if (!target.isLanded)
+            else if (target.isFlying)
             {
                 // iterate over weaponTypesAir and pick suitable one based on engagementRange (and dynamic launch zone for missiles)
                 // Prioritize by:
@@ -3330,16 +3343,55 @@ namespace BDArmory
                     // else:
                     if ((distance > gunRange) && (targetWeapon != null))
                         continue;
-                    else
+                    // For Ground Attack, favour higher blast strength
+                    float candidateImpact = ((ModuleWeapon)item.Current).cannonShellPower * ((ModuleWeapon)item.Current).cannonShellRadius + ((ModuleWeapon)item.Current).cannonShellHeat;
+
+                    if ((targetWeapon != null) && (targetWeaponImpact > candidateImpact))
+                        continue; //dont replace better guns
+
+                    targetWeapon = item.Current;
+                    targetWeaponImpact = candidateImpact;
+                }
+
+            }
+                //if we have a torpedo use it
+            else if (target.isSplashed)
+            { 
+                List<IBDWeapon>.Enumerator item = weaponTypesSLW.GetEnumerator();
+                while (item.MoveNext())
+                {
+                    if (item.Current == null) continue;
+                    if (CheckEngagementEnvelope(item.Current, distance))
                     {
-                        // For Ground Attack, favour higher blast strength
-                        float candidateImpact = ((ModuleWeapon)item.Current).cannonShellPower * ((ModuleWeapon)item.Current).cannonShellRadius + ((ModuleWeapon)item.Current).cannonShellHeat;
-
-                        if ((targetWeapon != null) && (targetWeaponImpact > candidateImpact))
-                            continue; //dont replace better guns
-
+                        if (item.Current.GetMissileType().ToLower() == "torpedo")
+                        {
+                            targetWeapon = item.Current;
+                            break;
+                        }
+                    }
+                }
+                item.Dispose();
+            }              
+            else if (target.isUnderwater)
+            {
+                // iterate over weaponTypesSLW (Ship Launched Weapons) and pick suitable one based on engagementRange
+                // Prioritize by:
+                // 1. Depth Charges
+                // 2. Torpedos
+                List<IBDWeapon>.Enumerator item = weaponTypesSLW.GetEnumerator();
+                while (item.MoveNext())
+                {
+                    if (item.Current == null) continue;
+                    if (CheckEngagementEnvelope(item.Current, distance))
+                    {
+                        if (item.Current.GetMissileType().ToLower() == "depthcharge")
+                        {
+                            targetWeapon = item.Current;
+                            break;
+                        }
+                        if (item.Current.GetMissileType().ToLower() != "torpedo") continue;
                         targetWeapon = item.Current;
-                        targetWeaponImpact = candidateImpact;
+                        break;
                     }
                 }
                 item.Dispose();
@@ -3395,6 +3447,7 @@ namespace BDArmory
             EngageableWeapon engageableWeapon = weaponCandidate as EngageableWeapon;
 
             if (engageableWeapon == null) return true;
+            if (!engageableWeapon.EngageEnabled) return true;
             if (distanceToTarget < engageableWeapon.GetEngagementRangeMin()) return false;
             if (distanceToTarget > engageableWeapon.GetEngagementRangeMax()) return false;
 
@@ -3477,16 +3530,16 @@ namespace BDArmory
                             return true;
                     break;
 
+                case WeaponClasses.SLW:
+                    return true;                    
+
                 default:
                     throw new ArgumentOutOfRangeException();
-            }
-
-            
+            }                  
 
             return false;
         }
-
-
+        
         void SetTarget(TargetInfo target)
         {
             if (target)
@@ -3573,7 +3626,6 @@ namespace BDArmory
                 if (!missile) return;
 
                 float maxOffBoresight = missile.maxOffBoresight;
-
 
                 if (missile.TargetingMode != MissileBase.TargetingModes.AntiRad) return;
 
@@ -3849,7 +3901,7 @@ namespace BDArmory
                     //firing
                     if (weaponIndex > 0)
                     {
-                        if (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+                        if (selectedWeapon.GetWeaponClass() == WeaponClasses.Missile || selectedWeapon.GetWeaponClass() == WeaponClasses.SLW)
                         {
                             bool launchAuthorized = true;
                             bool pilotAuthorized = true;
@@ -4140,7 +4192,7 @@ namespace BDArmory
             }
             else
             {
-                rangeEditor.maxValue = 2500;
+                rangeEditor.maxValue = 5000;
             }
         }
 
@@ -4475,7 +4527,7 @@ namespace BDArmory
 
         bool AltitudeTrigger()
         {
-            float maxAlt = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE * 0.75f, 2250, 5000);
+            float maxAlt = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE * 0.75f, 2250, 10000);
             double asl = vessel.mainBody.GetAltitude(vessel.CoM);
             double radarAlt = asl - vessel.terrainAltitude;
 

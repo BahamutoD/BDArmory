@@ -77,7 +77,7 @@ namespace BDArmory
 		public bool decoupleForward = false;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
-                  UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
+                  UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float decoupleSpeed = 0;
 
         [KSPField]
@@ -118,7 +118,11 @@ namespace BDArmory
 		 UI_FloatRange(minValue = 30, maxValue = 2500f, stepIncrement = 5f, scene = UI_Scene.All)]
 		public float cruiseAltitude = 500;
 
-		[KSPField]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Altitude"),
+         UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]
+        public float maxAltitude = 0f;
+
+        [KSPField]
 		public string rotationTransformName = string.Empty;
 		Transform rotationTransform;
 
@@ -210,7 +214,6 @@ namespace BDArmory
 		List<KSPParticleEmitter> boostEmitters;
 		List<BDAGaplessParticleEmitter> boostGaplessEmitters;
 		
-		//torpedo
 		[KSPField]
 		public bool torpedo = false;
 		[KSPField]
@@ -219,6 +222,8 @@ namespace BDArmory
         //ballistic options
         [KSPField]
         public bool indirect = false;
+
+        public GPSTargetInfo designatedGPSInfo;
 
         #endregion
 
@@ -272,14 +277,18 @@ namespace BDArmory
         void ParseWeaponClass()
 		{
 			missileType = missileType.ToLower();
-			if(missileType == "bomb")
-			{
-				weaponClass = WeaponClasses.Bomb;
-			}
-			else
-			{
-				weaponClass = WeaponClasses.Missile;
-			}
+            if (missileType == "bomb")
+            {
+                weaponClass = WeaponClasses.Bomb;
+            }
+            else if (missileType == "torpedo" || missileType == "depthcharge")
+            {
+                weaponClass = WeaponClasses.SLW;
+            }
+            else
+            {
+                weaponClass = WeaponClasses.Missile;
+            }
 		}
         
 		public override void OnStart(StartState state)
@@ -492,8 +501,14 @@ namespace BDArmory
 				Fields["cruiseAltitude"].guiActive = false;
 				Fields["cruiseAltitude"].guiActiveEditor = false;
 			}
-			
-			if(part.partInfo.title.Contains("Bomb"))
+
+            if (GuidanceMode != GuidanceModes.AGM)
+            {
+                Fields["maxAltitude"].guiActive = false;
+                Fields["maxAltitude"].guiActiveEditor = false;
+            }
+
+            if (part.partInfo.title.Contains("Bomb"))
 			{
 				Fields["dropTime"].guiActive = false;
 				Fields["dropTime"].guiActiveEditor = false;
@@ -529,7 +544,6 @@ namespace BDArmory
             }
         }
 
-
         void OnCollisionEnter(Collision col)
 		{
             Debug.Log("[BDArmory]: Something Collided");
@@ -538,8 +552,7 @@ namespace BDArmory
             {
                 Detonate();                
             }
-		}
-        
+		}        
         
 		void SetupAudio()
 		{
@@ -821,14 +834,20 @@ namespace BDArmory
             {
                 checkMiss = true;
             }
+            if (maxAltitude != 0f)
+            {
+                if (vessel.altitude >= maxAltitude) checkMiss = true;                
+            }
 
             //kill guidance if missileBase has missed
             if (!HasMissed && checkMiss)
             {
                 bool noProgress = MissileState == MissileStates.PostThrust && (Vector3.Dot(vessel.srf_velocity - TargetVelocity, TargetPosition - vessel.transform.position) < 0);
-                if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)
+                if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)                
                 {
-                    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+                    Debug.Log("[BDArmory]: Missile has missed!");
+                    if (vessel.altitude >= maxAltitude && maxAltitude != 0f) Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
+
                     HasMissed = true;
                     guidanceActive = false;
 
@@ -942,29 +961,33 @@ namespace BDArmory
 					finalMaxTorque = Mathf.Clamp((TimeIndex-dropTime)*torqueRampUp, 0, maxTorque); //ramp up torque
 
                     if (GuidanceMode == GuidanceModes.AAMLead)
-					{
-						AAMGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.AGM)
-					{
-						AGMGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.AGMBallistic)
-					{
-						AGMBallisticGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.BeamRiding)
-					{
-						BeamRideGuidance();
-					}
-					else if(GuidanceMode == GuidanceModes.RCS)
-					{
-						part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition-part.transform.position, part.transform.up), turnRateDPS*Time.fixedDeltaTime);
-					}
-					else if(GuidanceMode == GuidanceModes.Cruise)
-					{
-						CruiseGuidance();
-					}
+                    {
+                        AAMGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.AGM)
+                    {
+                        AGMGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.AGMBallistic)
+                    {
+                        AGMBallisticGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.BeamRiding)
+                    {
+                        BeamRideGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.RCS)
+                    {
+                        part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition - part.transform.position, part.transform.up), turnRateDPS * Time.fixedDeltaTime);
+                    }
+                    else if (GuidanceMode == GuidanceModes.Cruise)
+                    {
+                        CruiseGuidance();
+                    }
+                    else if (GuidanceMode == GuidanceModes.SLW)
+                    {
+                        SLWGuidance();
+                    }
                 }
 				else
 				{
@@ -997,7 +1020,7 @@ namespace BDArmory
             if ((TargetingModeTerminal != TargetingModes.None) && (distance < terminalGuidanceDistance) && !terminalGuidanceActive)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory] missile updating targeting mode for terminal guidance to mode: " + terminalGuidanceType);
+                    Debug.Log("[BDArmory][Terminal Guidance]: missile "+this.name+" updating targeting mode: " + terminalGuidanceType);
 
                 TargetingMode = TargetingModeTerminal;
                 terminalGuidanceActive = true;
@@ -1011,7 +1034,7 @@ namespace BDArmory
                         if (heatTarget.exists)
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory]: Heat target acquired! Position: " + heatTarget.position + ", heatscore: " + heatTarget.signalStrength);
+                                Debug.Log("[BDArmory][Terminal Guidance]: Heat target acquired! Position: " + heatTarget.position + ", heatscore: " + heatTarget.signalStrength);
                             TargetAcquired = true;
                             TargetPosition = heatTarget.position + (heatTarget.velocity * Time.fixedDeltaTime);
                             TargetVelocity = heatTarget.velocity;
@@ -1022,7 +1045,7 @@ namespace BDArmory
                         else
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory]: Missile heatseeker could not acquire a target lock.");
+                                Debug.Log("[BDArmory][Terminal Guidance]: Missile heatseeker could not acquire a target lock.");
                         }
                         break;
 
@@ -1045,8 +1068,15 @@ namespace BDArmory
                         {
                             if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - TargetPosition).sqrMagnitude < sqrThresh)
                             {
-                                lockedTarget = scannedTargets[i];
-                                ActiveRadar = true;
+                                //re-check engagement envelope, only lock appropriate targets
+                                if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
+                                    (scannedTargets[i].targetInfo.isFlying && engageAir) ||
+                                    ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
+                                    (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
+                                {
+                                     lockedTarget = scannedTargets[i];
+                                     ActiveRadar = true;
+                                }
                             }
                         }
 
@@ -1061,17 +1091,19 @@ namespace BDArmory
 
                             RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+                                Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0") + " - target: "+radarTarget.vessel.name);
                         }
                         else
                         {
                             TargetAcquired = true;
-                            TargetPosition = transform.position + (startDirection * 500);
+                            //TargetPosition = transform.position + (startDirection * 500);
+                            TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody); //putting back the GPS target if no radar target found
                             TargetVelocity = Vector3.zero;
                             TargetAcceleration = Vector3.zero;
-                            targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
+                            targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);                            
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory]: Missile radar could not acquire a target lock.");
+                                Debug.Log("[BDArmory][Terminal Guidance]: Missile radar could not acquire a target lock");                            
+                            
                         }
                         break;
 
@@ -1087,7 +1119,7 @@ namespace BDArmory
                         TargetAcquired = true;
                         SetAntiRadTargeting(); //should then already work automatically via OnReceiveRadarPing
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                            Debug.Log("[BDArmory]: Antiradiation mode set! Waiting for radar signals...");
+                            Debug.Log("[BDArmory][Terminal Guidance]: Antiradiation mode set! Waiting for radar signals...");
                         break;
 
                 }
@@ -1596,6 +1628,41 @@ namespace BDArmory
             DoAero(agmTarget);
 		}
 
+        void SLWGuidance()
+        {
+            Vector3 SLWTarget;
+            if (TargetAcquired)
+            {
+                DrawDebugLine(transform.position + (part.rb.velocity * Time.fixedDeltaTime), TargetPosition);
+                float timeToImpact;
+                SLWTarget = MissileGuidance.GetAirToAirTarget(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact, optimumAirspeed);
+                TimeToImpact = timeToImpact;
+                if (Vector3.Angle(SLWTarget - transform.position, transform.forward) > maxOffBoresight * 0.75f)
+                {
+                    SLWTarget = TargetPosition;
+                }
+
+                //proxy detonation
+                if (proxyDetonate && ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(blastRadius * 0.5f, 2))
+                {
+                    part.temperature = part.maxTemp + 100;
+                }
+            }
+            else
+            {
+                SLWTarget = transform.position + (20 * vessel.srf_velocity.normalized);
+            }
+
+            if (TimeIndex > dropTime + 0.25f)
+            {
+                DoAero(SLWTarget);
+            }
+
+            if (SLWTarget.y > 0f) SLWTarget.y = getSWLWOffset;
+
+            CheckMiss();
+        }
+
 		void DoAero(Vector3 targetPosition)
 		{
 			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
@@ -1623,8 +1690,10 @@ namespace BDArmory
 				
 				if(TargetingMode == TargetingModes.Radar)
 				{
-					activeRadarRange = 20000;
-					TargetAcquired = true;
+                    //activeRadarRange = 40000;
+                    activeRadarRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
+
+                    TargetAcquired = true;
 					radarTarget = new TargetSignatureData(legacyTargetVessel, 500);
 					return;
 				}
@@ -1834,44 +1903,47 @@ namespace BDArmory
 			part.rb.AddTorque(AoA * simpleStableTorque * dragMagnitude * torqueAxis);
 		}
 
-		void ParseModes()
-		{
-			homingType = homingType.ToLower();
-			switch(homingType)
-			{
-			case "aam":
-				GuidanceMode = GuidanceModes.AAMLead;
-				break;
-			case "aamlead":
-				GuidanceMode = GuidanceModes.AAMLead;
-				break;
-			case "aampure":
-				GuidanceMode = GuidanceModes.AAMPure;
-				break;
-			case "agm":
-				GuidanceMode = GuidanceModes.AGM;
-				break;
-			case "agmballistic":
-				GuidanceMode = GuidanceModes.AGMBallistic;
-				break;
-			case "cruise":
-				GuidanceMode = GuidanceModes.Cruise;
-				break;
-			case "sts":
-				GuidanceMode = GuidanceModes.STS;
-				break;
-			case "rcs":
-				GuidanceMode = GuidanceModes.RCS;
-				break;
-			case "beamriding":
-				GuidanceMode = GuidanceModes.BeamRiding;
-				break;
-			default:
-				GuidanceMode = GuidanceModes.None;
-				break;
-			}
+        void ParseModes()
+        {
+            homingType = homingType.ToLower();
+            switch (homingType)
+            {
+                case "aam":
+                    GuidanceMode = GuidanceModes.AAMLead;
+                    break;
+                case "aamlead":
+                    GuidanceMode = GuidanceModes.AAMLead;
+                    break;
+                case "aampure":
+                    GuidanceMode = GuidanceModes.AAMPure;
+                    break;
+                case "agm":
+                    GuidanceMode = GuidanceModes.AGM;
+                    break;
+                case "agmballistic":
+                    GuidanceMode = GuidanceModes.AGMBallistic;
+                    break;
+                case "cruise":
+                    GuidanceMode = GuidanceModes.Cruise;
+                    break;
+                case "sts":
+                    GuidanceMode = GuidanceModes.STS;
+                    break;
+                case "rcs":
+                    GuidanceMode = GuidanceModes.RCS;
+                    break;
+                case "beamriding":
+                    GuidanceMode = GuidanceModes.BeamRiding;
+                    break;
+                case "slw":
+                    GuidanceMode = GuidanceModes.SLW;
+                    break;
+                default:
+                    GuidanceMode = GuidanceModes.None;
+                    break;
+            }
 
-			targetingType = targetingType.ToLower();
+            targetingType = targetingType.ToLower();
 			switch(targetingType)
 			{
 			case "radar":
