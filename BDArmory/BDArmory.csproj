@@ -49,33 +49,23 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\Assembly-CSharp.dll</HintPath>
+      <HintPath>LocalDev\Refs\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\KSPAssets.dll</HintPath>
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
+      <HintPath>LocalDev\Refs\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\UnityEngine.dll</HintPath>
+      <HintPath>LocalDev\Refs\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dependencies\UnityEngine.UI.dll</HintPath>
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>LocalDev\Refs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -174,7 +164,7 @@
     <EmbeddedResource Include="Shaders\BulletShader.shader" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="LocalDev\" />
+    <Folder Include="LocalDev\Refs\" />
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>@echo $(Targetname)
@@ -230,5 +220,26 @@ xcopy /E /Y "$(ProjectDir)Distribution\GameData" "%25KSP_DIR%25\GameData"
     $(PostBuildEventDependsOn);
     PostBuildMacros;
   </PostBuildEventDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>@echo $(Targetname)
+SET ModName=BDArmory
+@echo ...
+@echo set lpath vars from LocalDev storage...
+set /p KSP_DIR=&lt;"$(ProjectDir)LocalDev\ksp_dir.txt"
+set /p PDB2MDB_EXE=&lt;"$(ProjectDir)LocalDev\pdb2mdb_exe.txt"
+set /p ZA_DIR=&lt;"$(ProjectDir)LocalDev\7za_dir.txt"
+set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
+
+@echo Copying KSP assemblies from "%25KSP_DIR%25\KSP_x64_Data\Managed" to "$(ProjectDir)LocalDev\Refs" folder...
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\Assembly-CSharp.dll" "$(ProjectDir)LocalDev\Refs"
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll" "$(ProjectDir)LocalDev\Refs"
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\KSPAssets.dll" "$(ProjectDir)LocalDev\Refs"
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.dll" "$(ProjectDir)LocalDev\Refs"
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.UI.dll" "$(ProjectDir)LocalDev\Refs"
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.dll" "$(ProjectDir)LocalDev\Refs"
+copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.UI.dll" "$(ProjectDir)LocalDev\Refs"
+
+@echo KSP API references copy complete!</PreBuildEvent>
   </PropertyGroup>
 </Project>

@@ -109,3 +109,8 @@ BDArmory.Core/bin/Debug/UnityEngine.dll
 BahaTurret/BDArmory.sln.DotSettings.user
 BahaTurret/BDArmory.csproj.user
 BDArmory.Core/bin/Debug/UnityEngine.UI.dll
+BDArmory/LocalDev/Refs/UnityEngine.UI.dll
+BDArmory/LocalDev/Refs/KSPAssets.dll
+BDArmory/LocalDev/Refs/Assembly-CSharp.dll
+BDArmory/LocalDev/Refs/Assembly-CSharp-firstpass.dll
+BDArmory/LocalDev/Refs/UnityEngine.dll
