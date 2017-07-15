@@ -43,6 +43,7 @@ BDArmory/bin/Debug
 BDArmory.Core/obj/
 BDArmory.Core/.vs
 BDArmory.Core/packages.config
+BDArmory/packages.config
 BDArmory.Multiplayer/obj
 BDArmory.Core/bin/Debug/Assembly-CSharp.dll
 BDArmory.Core/bin/Debug/BDArmory.Core.dll
