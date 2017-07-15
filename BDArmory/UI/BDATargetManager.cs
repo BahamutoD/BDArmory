@@ -234,7 +234,7 @@ namespace BDArmory.UI
                 float angle = Vector3.Angle(missilePosition, cam.Current.groundTargetPosition - position);
                 if (!(angle < maxOffBoresight) || !(angle < smallestAngle) ||
                     !CanSeePosition(cam.Current.groundTargetPosition, vessel.transform.position,
-                        missilePosition)) continue;
+                        (vessel.transform.position+missilePosition))) continue;
 
                 smallestAngle = angle;
                 finalCam = cam.Current;
@@ -250,7 +250,7 @@ namespace BDArmory.UI
                 return false;
             }
 
-            float dist = 10000;
+            float dist = BDArmorySettings.MAX_GUARD_VISUAL_RANGE; //replaced constant 10km with actual configured visual range
             Ray ray = new Ray(missilePosition, groundTargetPosition - missilePosition);
             ray.origin += 10 * ray.direction;
             RaycastHit rayHit;

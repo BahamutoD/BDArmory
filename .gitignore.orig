@@ -18,11 +18,8 @@ BahaTurret/LocalDev/ksp_production_dir.txt
 BahaTurret/LocalDev/mono_exe.txt
 BahaTurret/LocalDev/pdb2mdb_exe.txt
 BahaTurret/BahaTurret.userprefs
-BahaTurret/bin/Release
 
 BDArmory/.vs
-BDArmory.Core/.vs
-
 BDArmory/obj
 BDArmory/bin/Debug/
 
@@ -34,23 +31,6 @@ BDArmory/LocalDev/ksp_production_dir.txt
 BDArmory/LocalDev/mono_exe.txt
 BDArmory/LocalDev/pdb2mdb_exe.txt
 BDArmory/BahaTurret.userprefs
-BDArmory/Distribution/GameData/BDArmory/Plugins/
-BDArmory/packages
-
-BDArmory.Core/obj/Debug/BDArmory.Core.csproj.FileListAbsolute.txt
-BDArmory.Core/obj/Release/BDArmory.Core.csproj.FileListAbsolute.txt
-BDArmory/bin/Debug
-BDArmory.Core/obj/
-BDArmory.Core/.vs
-BDArmory.Core/packages.config
-BDArmory.Multiplayer/obj
-BDArmory.Core/bin/Debug/Assembly-CSharp.dll
-BDArmory.Core/bin/Debug/BDArmory.Core.dll
-BDArmory.Core/bin/Debug/KSPAssets.dll
-BDArmory.Core/bin/Debug/UnityEngine.dll
-BahaTurret/BDArmory.sln.DotSettings.user
-BahaTurret/BDArmory.csproj.user
-BDArmory.Core/bin/Debug/UnityEngine.UI.dll
 
 
 #######################################
@@ -119,10 +99,18 @@ Icon
 /.vs/slnx.sqlite
 /BahaTurret/bin/Release
 /BDArmory.Core/obj/Debug/BDArmory.Core.csproj.FileListAbsolute.txt
-/BDArmory.Core/obj/Release/BDArmory.Core.csproj.FileListAbsolute.txt
 /BDArmory/bin/Debug
-BDArmory.Core/obj/
+/BDArmory.Core/obj
 /BDArmory.Multiplayer/obj
+<<<<<<< HEAD
+BahaTurret/BDArmory.sln.DotSettings.user
+BDArmory.Core/bin/Debug/UnityEngine.dll
+BDArmory.Core/bin/Debug/KSPAssets.dll
+BDArmory.Core/bin/Debug/BDArmory.Core.dll
+BDArmory.Core/bin/Debug/Assembly-CSharp.dll
+BDArmory.Core/bin/Debug/UnityEngine.UI.dll
+BahaTurret/BDArmory.csproj.user
+=======
 BDArmory.Core/bin/Debug/Assembly-CSharp.dll
 BDArmory.Core/bin/Debug/BDArmory.Core.dll
 BDArmory.Core/bin/Debug/KSPAssets.dll
@@ -130,8 +118,4 @@ BDArmory.Core/bin/Debug/UnityEngine.dll
 BahaTurret/BDArmory.sln.DotSettings.user
 BahaTurret/BDArmory.csproj.user
 BDArmory.Core/bin/Debug/UnityEngine.UI.dll
-BDArmory/LocalDev/Refs/UnityEngine.UI.dll
-BDArmory/LocalDev/Refs/KSPAssets.dll
-BDArmory/LocalDev/Refs/Assembly-CSharp.dll
-BDArmory/LocalDev/Refs/Assembly-CSharp-firstpass.dll
-BDArmory/LocalDev/Refs/UnityEngine.dll
+>>>>>>> 311105e5c29cb0a842f90aa18021dbbdf54390a8
