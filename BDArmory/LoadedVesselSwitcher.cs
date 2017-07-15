@@ -180,7 +180,10 @@ namespace BDArmory
                 string status = UpdateVesselStatus(wma.Current, vButtonStyle);
 
                 if (GUI.Button(buttonRect, status + wma.Current.vessel.GetName(), vButtonStyle))
+                {
                     FlightGlobals.ForceSetActiveVessel(wma.Current.vessel);
+                    FlightInputHandler.ResumeVesselCtrlState(wma.Current.vessel);
+                }
 
                 //guard toggle
                 GUIStyle guardStyle = wma.Current.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button;
@@ -228,7 +231,10 @@ namespace BDArmory
 
 
                 if (GUI.Button(buttonRect, status + wmb.Current.vessel.GetName(), vButtonStyle))
+                {
                     FlightGlobals.ForceSetActiveVessel(wmb.Current.vessel);
+                    FlightInputHandler.ResumeVesselCtrlState(wmb.Current.vessel);
+                }
 
 
                 //guard toggle
@@ -292,6 +298,7 @@ namespace BDArmory
                 if (switchNext)
                 {
                     FlightGlobals.ForceSetActiveVessel(wma.Current.vessel);
+                    FlightInputHandler.ResumeVesselCtrlState(wma.Current.vessel);
                     return;
                 }
                 if (wma.Current.vessel.isActiveVessel) switchNext = true;
@@ -305,6 +312,7 @@ namespace BDArmory
                 if (switchNext)
                 {
                     FlightGlobals.ForceSetActiveVessel(wmb.Current.vessel);
+                    FlightInputHandler.ResumeVesselCtrlState(wmb.Current.vessel);
                     return;
                 }
                 if (wmb.Current.vessel.isActiveVessel) switchNext = true;
@@ -312,9 +320,15 @@ namespace BDArmory
             wmb.Dispose();
 
             if (_wmgrsA.Count > 0 && _wmgrsA[0] && !_wmgrsA[0].vessel.isActiveVessel)
+            {
                 FlightGlobals.ForceSetActiveVessel(_wmgrsA[0].vessel);
+                FlightInputHandler.ResumeVesselCtrlState(_wmgrsA[0].vessel);
+            }
             else if (_wmgrsB.Count > 0 && _wmgrsB[0] && !_wmgrsB[0].vessel.isActiveVessel)
+            {
                 FlightGlobals.ForceSetActiveVessel(_wmgrsB[0].vessel);
+                FlightInputHandler.ResumeVesselCtrlState(_wmgrsB[0].vessel);
+            }
         }
 
         private void SwitchToPreviousVessel()
@@ -325,16 +339,19 @@ namespace BDArmory
                         if (i > 0)
                         {
                             FlightGlobals.ForceSetActiveVessel(_wmgrsB[i - 1].vessel);
+                            FlightInputHandler.ResumeVesselCtrlState(_wmgrsB[i - 1].vessel);
                             return;
                         }
                         else if (_wmgrsA.Count > 0)
                         {
                             FlightGlobals.ForceSetActiveVessel(_wmgrsA[_wmgrsA.Count - 1].vessel);
+                            FlightInputHandler.ResumeVesselCtrlState(_wmgrsA[_wmgrsA.Count - 1].vessel);
                             return;
                         }
                         else if (_wmgrsB.Count > 0)
                         {
                             FlightGlobals.ForceSetActiveVessel(_wmgrsB[_wmgrsB.Count - 1].vessel);
+                            FlightInputHandler.ResumeVesselCtrlState(_wmgrsB[_wmgrsB.Count - 1].vessel);
                             return;
                         }
 
@@ -344,16 +361,19 @@ namespace BDArmory
                         if (i > 0)
                         {
                             FlightGlobals.ForceSetActiveVessel(_wmgrsA[i - 1].vessel);
+                            FlightInputHandler.ResumeVesselCtrlState(_wmgrsA[i - 1].vessel);
                             return;
                         }
                         else if (_wmgrsB.Count > 0)
                         {
                             FlightGlobals.ForceSetActiveVessel(_wmgrsB[_wmgrsB.Count - 1].vessel);
+                            FlightInputHandler.ResumeVesselCtrlState(_wmgrsB[_wmgrsB.Count - 1].vessel);
                             return;
                         }
                         else if (_wmgrsA.Count > 0)
                         {
                             FlightGlobals.ForceSetActiveVessel(_wmgrsA[_wmgrsA.Count - 1].vessel);
+                            FlightInputHandler.ResumeVesselCtrlState(_wmgrsA[_wmgrsA.Count - 1].vessel);
                             return;
                         }
         }
