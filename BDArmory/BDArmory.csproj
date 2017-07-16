@@ -244,10 +244,8 @@ copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll" "$(Pr
 copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\KSPAssets.dll" "$(ProjectDir)LocalDev\Refs"
 copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.dll" "$(ProjectDir)LocalDev\Refs"
 copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.UI.dll" "$(ProjectDir)LocalDev\Refs"
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.dll" "$(ProjectDir)LocalDev\Refs"
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.UI.dll" "$(ProjectDir)LocalDev\Refs"
 
-@echo KSP API references copy complete!</PreBuildEvent>
+@echo KSP API references copying complete!</PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
