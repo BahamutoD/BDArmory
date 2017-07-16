@@ -52,21 +52,21 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\Dependencies\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\KSPAssets.dll</HintPath>
+      <HintPath>..\Dependencies\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\UnityEngine.dll</HintPath>
+      <HintPath>..\Dependencies\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\Dependencies\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +79,7 @@
     <Compile Include="Misc\IEngageService.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
+    <Compile Include="Radar\EditorRcsWindow.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
     <Compile Include="Armor\BulletInfo.cs" />
     <Compile Include="MissileLauncher.cs" />
@@ -166,6 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="LocalDev\Refs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\rcsShader.shader" />
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>@echo $(Targetname)
