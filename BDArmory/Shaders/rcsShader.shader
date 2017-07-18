@@ -4,6 +4,7 @@ Shader "Custom/rcsShader" {
 
 	Properties{
 		_RCSCOLOR("RCSCOLOR", Color) = (1, 1, 1, 1)
+		_LIGHTDIR("LIGHTDIR", Vector) = (0, 0, 1)
 	}
 
 		SubShader{
@@ -23,7 +24,8 @@ Shader "Custom/rcsShader" {
 
 
 			// uniforms from properties
-			fixed4 _RCSCOLOR;
+			float4 _RCSCOLOR;
+			float3 _LIGHTDIR;
 
 			struct VertexData {
 				float4 position : POSITION;
@@ -53,8 +55,8 @@ Shader "Custom/rcsShader" {
 			float4 RCSFragmentShader(Interpolators i) : SV_TARGET{
 				float3 lightDir = _WorldSpaceLightPos0.xyz;
 				float3 lightColor = _RCSCOLOR.rgb;
-				float3 reflectionDir = reflect(-lightDir, i.normal);
-				return DotClamped(lightDir, reflectionDir);
+				float3 reflectionDir = reflect(-_LIGHTDIR, i.normal);
+				return DotClamped(_LIGHTDIR, reflectionDir);
 			}
 
 
