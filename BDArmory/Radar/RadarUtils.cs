@@ -15,7 +15,33 @@ namespace BDArmory.Radar
 		public static Shader radarShader;
 		public static int radarResolution = 32;
 
-		public static void SetupRadarCamera()
+
+
+        public static float GetVesselRadarSignature(Vessel v)
+        {
+            //1. baseSig = GetVesselRadarCrossSection
+            //2. modifiedSig = GetVesselModifiedSignature(baseSig)    //ECM-jammers with rcs reduction effect; other rcs reductions (stealth?)
+
+            return 0;
+        }
+
+        private static float GetVesselRadarCrossSection(Vessel v)
+        {
+            //read vesseltargetinfo, or render against radar cameras    
+
+            return 0;
+        }
+
+        private static float GetVesselModifiedSignature(Vessel v, float baseSig)
+        {
+            //read vessel ecminfo and multiply
+            //get vessel stealth modifier (NOT IMPLEMENTED YET)
+
+            return 0;
+        }
+
+
+        public static void SetupRadarCamera()
 		{
 			if(radarRT && radarTex2D && radarCam && radarShader)
 			{

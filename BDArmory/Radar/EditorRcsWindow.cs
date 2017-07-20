@@ -154,7 +154,7 @@ namespace BDArmory.Radar
             float rcsTotal = (rcsFrontal + rcsLateral + rcsVentral) / 3f;
             GUIStyle style = HighLogic.Skin.label;
             style.fontStyle = FontStyle.Bold;
-            GUI.Label(new Rect(10, 300, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00}", rcsTotal) + " m^2" , style);
+            GUI.Label(new Rect(10, 300, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} (without ECM/countermeasures)", rcsTotal) + " m^2" , style);
 
             GUI.DragWindow();
         }
