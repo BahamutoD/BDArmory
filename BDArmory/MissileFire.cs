@@ -1360,8 +1360,8 @@ namespace BDArmory
                 {
                     designatedGPSInfo = new GPSTargetInfo(VectorUtils.WorldPositionToGeoCoords(guardTarget.CoM, vessel.mainBody), guardTarget.vesselName.Substring(0, Mathf.Min(12, guardTarget.vesselName.Length)));
 
-                    FireCurrentMissile(true);
-                    StartCoroutine(MissileAwayRoutine(ml)); //NEW: try to prevent launching all missile complements at once...
+                    if (FireCurrentMissile(true))
+                        StartCoroutine(MissileAwayRoutine(ml)); //NEW: try to prevent launching all missile complements at once...
 
                 }
                 else if (ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
@@ -1882,10 +1882,10 @@ namespace BDArmory
 
         #region Fire
 
-        void FireCurrentMissile(bool checkClearance)
+        bool FireCurrentMissile(bool checkClearance)
         {
             MissileBase missile = CurrentMissile;
-            if (missile == null) return;
+            if (missile == null) return false;
 
             if (missile is MissileBase)
             {
@@ -1902,12 +1902,12 @@ namespace BDArmory
                         CurrentMissile = otherMissile.Current;
                         selectedWeapon = otherMissile.Current;
                         FireCurrentMissile(false);
-                        return;
+                        return true;
                     }
                     otherMissile.Dispose();
                     CurrentMissile = ml;
                     selectedWeapon = ml;
-                    return;
+                    return false;
                 }
                                 
                 if (ml is MissileLauncher && ((MissileLauncher)ml).missileTurret)
@@ -1946,6 +1946,7 @@ namespace BDArmory
             }
 
             UpdateList();
+            return true;
         }
 
         void FireMissile()
