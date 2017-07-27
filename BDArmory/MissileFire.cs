@@ -386,17 +386,15 @@ namespace BDArmory
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Visual Range"),
          UI_FloatRange(minValue = 100f, maxValue = 5000, stepIncrement = 100f, scene = UI_Scene.All)] public float
-            guardRange = 5000;
+            guardRange = 10000;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Guns Range"),
          UI_FloatRange(minValue = 0f, maxValue = 10000f, stepIncrement = 10f, scene = UI_Scene.All)] public float
-            gunRange = 2000f;
+            gunRange = 2500f;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Missiles/Target"),
-         UI_FloatRange(minValue = 1f, maxValue = 6f, stepIncrement = 1f, scene = UI_Scene.All)] public float
-            maxMissilesOnTarget = 1;
-
-
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Missiles/Target"), UI_FloatRange(minValue = 1f, maxValue = 6f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public float maxMissilesOnTarget = 1;
+        
         public void ToggleGuardMode()
         {
             guardMode = !guardMode;
@@ -422,11 +420,15 @@ namespace BDArmory
         }
 
 
-        [KSPField(isPersistant = true)] public bool guardMode;
+        //[KSPField(isPersistant = true)] public bool guardMode;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Gaurd Mode: "),
+            UI_Toggle(disabledText = "OFF", enabledText = "ON")]
+        public bool guardMode;
 
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Target Type: "),
-         UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")] public bool targetMissiles = false;
+        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Target Type: "), UI_Toggle(disabledText = "Vessels", enabledText = "Missiles")]
+        public bool targetMissiles = false;
 
         [KSPAction("Toggle Target Type")]
         public void AGToggleTargetType(KSPActionParam param)
