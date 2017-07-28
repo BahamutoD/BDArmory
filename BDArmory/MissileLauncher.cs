@@ -1748,7 +1748,7 @@ namespace BDArmory
 		        wpm.Dispose();
 		    }
 				
-		    if(part!=null) part.SetDamage(part.temperature + 100);
+		    if(part!=null) part.SetDamage(part.maxTemp + 100);
 		    Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 		    if(SourceVessel==null) SourceVessel = vessel;
 		    ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, SourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage
