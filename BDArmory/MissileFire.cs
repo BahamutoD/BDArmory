@@ -2371,7 +2371,8 @@ namespace BDArmory
 
             if (
                 !(selectedWeapon.GetWeaponClass() == WeaponClasses.Missile ||
-                  selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb)) return;
+                  selectedWeapon.GetWeaponClass() == WeaponClasses.Bomb ||
+                  selectedWeapon.GetWeaponClass() == WeaponClasses.SLW)) return;
 
             if (!CurrentMissile) return;
 
