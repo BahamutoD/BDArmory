@@ -51,6 +51,7 @@ v0.3.0.0
 			- Sonar will not function if vessel is in flight
 			- Sonar does not detect "Landed" vessels, only splashed
 			- Normal Radar does not detect underwater vessels, still detects "Splashed" i.e. Boats
+	* Engagment type "SLW" only targets underwater (submarines) and Splashed (Boats)
 
 
 v0.2.1.2
