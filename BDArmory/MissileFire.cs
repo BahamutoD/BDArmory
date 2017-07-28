@@ -2664,7 +2664,8 @@ namespace BDArmory
         {
             if (weaponIndex == 0) return null;
             if (weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Bomb ||
-                weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile)
+                weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.Missile ||
+                weaponArray[weaponIndex].GetWeaponClass() == WeaponClasses.SLW)
             {
                 //TODO BDModularGuidance: Implemente rotaryRail support
                 MissileLauncher missile = CurrentMissile as MissileLauncher;
