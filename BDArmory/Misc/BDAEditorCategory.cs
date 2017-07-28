@@ -68,7 +68,7 @@ namespace BDArmory.Misc
                                     "HEAT_HEATTHRESHOLD;" +
                                     "LASER_BEAMCORRECTIONFACTOR; LASER_BEAMCORRECTIONDAMPING"
                                     );
-            fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;TAGS;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;RADAR_TYPE;RADAR_RWRTYPE;RADAR_MAXRANGE;CAN_SCAN;CAN_LOCK;LOCK_MAXLOCKS;CAN_TWS;CAN_RECEIVE;" +
+            fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;TAGS;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;RADAR_TYPE;RADAR_RWRTYPE;CAN_SCAN;CAN_LOCK;LOCK_MAXLOCKS;CAN_TWS;CAN_RECEIVE;" +
                                   "OMNI;SCAN_ROTATIONSPEED;SCAN_DIRFOV;LOCK_MULTILOCKFOV;LOCK_ROTATIONANGLE;SIGNAL_THRESHOLD;SIGNAL_LOCK_THRESHOLD"
                                   );
             Debug.Log("Dumping weapons...");
@@ -110,7 +110,7 @@ namespace BDArmory.Misc
                 {
                     fileradars.WriteLine(
                         item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.tags + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
-                        radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.maxRange + ";" + radar.canScan + ";" + radar.canLock + ";" + radar.maxLocks + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" +
+                        radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.canScan + ";" + radar.canLock + ";" + radar.maxLocks + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" +
                         radar.omnidirectional + ";" +
                         radar.scanRotationSpeed + ";" +
                         radar.directionalFieldOfView + ";" +
