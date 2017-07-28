@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalizerProjectSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TagAutoLocPortion>#autoLOC</TagAutoLocPortion>
+  <TagProjectPortion>bda</TagProjectPortion>
+  <IDType>ProjectBased</IDType>
+  <NextProjectID>1000017</NextProjectID>
+  <BaseCfgFile>D:\KSP\Mods\PJS\Git\Source\BDArmory\BDArmory\Distribution\GameData\BDArmory\Localization\BDArmory.cfg</BaseCfgFile>
+  <LanguageCodes>en-us,es-es,ja,ru,zh-cn</LanguageCodes>
+  <UseMultiCfgFiles>false</UseMultiCfgFiles>
+  <MultiCfgFile>refactor_{LANGCODE}.cfg</MultiCfgFile>
+</LocalizerProjectSettings>
