@@ -1,0 +1,121 @@
+#######################################
+BDArmory Ignore
+#######################################
+BDArmory/BDArmory.csproj.user
+
+BahaTurret/.vs
+BahaTurret/obj
+BahaTurret/bin/Debug/
+BDArmory/.vs
+BDArmory/obj
+BDArmory/bin/Debug/
+
+BahaTurret/.vs/config
+BahaTurret/LocalDev/7za_dir.txt
+BahaTurret/LocalDev/dist_dir.txt
+BahaTurret/LocalDev/ksp_dir.txt
+BahaTurret/LocalDev/ksp_production_dir.txt
+BahaTurret/LocalDev/mono_exe.txt
+BahaTurret/LocalDev/pdb2mdb_exe.txt
+BahaTurret/BahaTurret.userprefs
+
+BDArmory/.vs
+BDArmory/obj
+BDArmory/bin/Debug/
+
+BDArmory/.vs/config
+BDArmory/LocalDev/7za_dir.txt
+BDArmory/LocalDev/dist_dir.txt
+BDArmory/LocalDev/ksp_dir.txt
+BDArmory/LocalDev/ksp_production_dir.txt
+BDArmory/LocalDev/mono_exe.txt
+BDArmory/LocalDev/pdb2mdb_exe.txt
+BDArmory/BahaTurret.userprefs
+
+
+#######################################
+Unity Ignore
+#######################################
+
+TrackIRUnity.dll
+Mono*
+TDx*
+*.pdb
+*.jar
+*.bat
+*.zip
+KSPCore.dll
+KSPUtil.dll
+SaveUpgradePipeline.Core.dll
+UnityEngine.xml
+Vectrosity.dll
+
+#######################################
+#######################################
+System*
+mscorlib.dll
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must ends with two \r.
+Icon
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+/.vs
+/.vs
+/.vs/slnx.sqlite
+/.vs/ProjectSettings.json
+/.vs/BDArmory_JRODRIGV/v15/Browse.VC.db
+/.vs/BDArmory_JRODRIGV/v15
+/.vs/slnx.sqlite
+/BahaTurret/bin/Release
+/BDArmory.Core/obj/Debug/BDArmory.Core.csproj.FileListAbsolute.txt
+/BDArmory/bin/Debug
+/BDArmory.Core/obj
+/BDArmory.Multiplayer/obj
+<<<<<<< HEAD
+BahaTurret/BDArmory.sln.DotSettings.user
+BDArmory.Core/bin/Debug/UnityEngine.dll
+BDArmory.Core/bin/Debug/KSPAssets.dll
+BDArmory.Core/bin/Debug/BDArmory.Core.dll
+BDArmory.Core/bin/Debug/Assembly-CSharp.dll
+BDArmory.Core/bin/Debug/UnityEngine.UI.dll
+BahaTurret/BDArmory.csproj.user
+=======
+BDArmory.Core/bin/Debug/Assembly-CSharp.dll
+BDArmory.Core/bin/Debug/BDArmory.Core.dll
+BDArmory.Core/bin/Debug/KSPAssets.dll
+BDArmory.Core/bin/Debug/UnityEngine.dll
+BahaTurret/BDArmory.sln.DotSettings.user
+BahaTurret/BDArmory.csproj.user
+BDArmory.Core/bin/Debug/UnityEngine.UI.dll
+>>>>>>> 311105e5c29cb0a842f90aa18021dbbdf54390a8
