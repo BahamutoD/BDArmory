@@ -495,7 +495,13 @@ namespace BDArmory.Radar
 
 		public static bool TerrainCheck(Vector3 start, Vector3 end)
 		{
-			return Physics.Linecast(start, end, 1<<15);
+		    if (!BDArmorySettings.IGNORE_TERRAIN_CHECK)
+		    {
+		        return Physics.Linecast(start, end, 1 << 15);
+		    }
+	
+		    return false;
+		    
 		}
 
 	    public static Vector2 WorldToRadar(Vector3 worldPosition, Transform referenceTransform, Rect radarRect, float maxDistance)
