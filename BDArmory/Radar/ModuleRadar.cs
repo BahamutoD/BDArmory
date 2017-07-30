@@ -45,7 +45,7 @@ namespace BDArmory.Radar
         public float boresightFOV = 10;				//relevant for boresight only
 
         [KSPField]
-        public float scanRotationSpeed = 120; 		//in degrees per second, relevant for omni only
+        public float scanRotationSpeed = 120; 		//in degrees per second, relevant for omni and directional
 
         [KSPField]
         public float lockRotationSpeed = 120;		//in degrees per second, relevant for omni only
@@ -315,22 +315,23 @@ namespace BDArmory.Radar
                     vesselRadarData.RemoveDataFromRadar(this);
                 }
 
-                if (linkedToVessels == null) return;
-                
-                List<VesselRadarData>.Enumerator vrd = linkedToVessels.GetEnumerator();
-                while (vrd.MoveNext())
+                if (linkedToVessels != null)
                 {
-                    if (vrd.Current == null) continue;
-                    if (unlinkOnDestroy)
+                    List<VesselRadarData>.Enumerator vrd = linkedToVessels.GetEnumerator();
+                    while (vrd.MoveNext())
                     {
-                        vrd.Current.UnlinkDisabledRadar(this);
+                        if (vrd.Current == null) continue;
+                        if (unlinkOnDestroy)
+                        {
+                            vrd.Current.UnlinkDisabledRadar(this);
+                        }
+                        else
+                        {
+                            vrd.Current.BeginWaitForUnloadedLinkedRadar(this, myVesselID);
+                        }
                     }
-                    else
-                    {
-                        vrd.Current.BeginWaitForUnloadedLinkedRadar(this, myVesselID);
-                    }
+                    vrd.Dispose();
                 }
-                vrd.Dispose();
             }
         }
       
@@ -342,7 +343,7 @@ namespace BDArmory.Radar
             if (HighLogic.LoadedSceneIsFlight)
             {
                 myVesselID = vessel.id.ToString();
-                RadarUtils.SetupRadarCamera();
+                RadarUtils.SetupResources();
 
                 if (string.IsNullOrEmpty(radarName))
                 {
@@ -387,8 +388,8 @@ namespace BDArmory.Radar
                     wm.Current.radars.Add(this);
                 }
                 wm.Dispose();
-                GameEvents.onVesselGoOnRails.Add(OnGoOnRails);
 
+                //GameEvents.onVesselGoOnRails.Add(OnGoOnRails);    //not needed
                 EnsureVesselRadarData();
                 StartCoroutine(StartUpRoutine());
             }
@@ -404,21 +405,32 @@ namespace BDArmory.Radar
 	                break;
 	            }
 	            tur.Dispose();
-	            if (!lockingTurret) return;
-	            lockingTurret.Fields["minPitch"].guiActiveEditor = false;
-	            lockingTurret.Fields["maxPitch"].guiActiveEditor = false;
-	            lockingTurret.Fields["yawRange"].guiActiveEditor = false;
+                if (lockingTurret)
+                {
+                    lockingTurret.Fields["minPitch"].guiActiveEditor = false;
+                    lockingTurret.Fields["maxPitch"].guiActiveEditor = false;
+                    lockingTurret.Fields["yawRange"].guiActiveEditor = false;
+                }
+            }
+
+            // check for not updated legacy part:
+            float fDetectMin, fDetectMax, fTrackMin, fTrackMax;
+            radarDetectionCurve.FindMinMaxValue(out fDetectMin, out fDetectMax);
+            radarLockTrackCurve.FindMinMaxValue(out fTrackMin, out fTrackMax);
+            if (fDetectMin == fDetectMax || fTrackMin == fTrackMax)
+            {
+                Debug.Log("[BDArmory]: WARNING: " + part.name + " is legacy part, missing new radarDetectionCurve and radarLockTrackCurve definitions! Please update for the part to be usable!");
             }
         }
 
-        
+        /*
         void OnGoOnRails(Vessel v)
         {
             if (v != vessel) return;
             unlinkOnDestroy = false;
             //myVesselID = vessel.id.ToString();
         }
-
+        */
         
         IEnumerator StartUpRoutine()
         {
@@ -448,7 +460,6 @@ namespace BDArmory.Radar
         }
 
         
-        // Update is called once per frame
         void Update()
         {
             if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled)
@@ -651,11 +662,14 @@ namespace BDArmory.Radar
             {
                 return false;
             }
-            Debug.Log("[BDArmory]: Trying to radar lock target");
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: Trying to radar lock target");
 
             if (currentLocks == maxLocks)
             {
-                Debug.Log("[BDArmory]: This radar (" + radarName + ") already has the maximum allowed targets locked.");
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: This radar (" + radarName + ") already has the maximum allowed targets locked.");
                 return false;
             }
 
@@ -684,14 +698,19 @@ namespace BDArmory.Radar
                     }
                     lockedTargets.Add(attemptedLocks[i]);
                     currLocks = lockedTargets.Count;
-                    Debug.Log("[BDArmory]: - Acquired lock on target.");
+
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        Debug.Log("[BDArmory]: - Acquired lock on target (" + radarName + ").");
+
                     vesselRadarData.AddRadarContact(this, lockedTarget, true);
                     vesselRadarData.UpdateLockedTargets();
                     return true;
                 }
             }
 
-            Debug.Log("[BDArmory]: - Failed to lock on target.");
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: - Failed to lock on target.");
+
             return false;
         }
 
@@ -816,7 +835,9 @@ namespace BDArmory.Radar
             {
                 vesselRadarData.UnlockAllTargetsOfRadar(this);
             }
-            if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Radar Targets were Cleared");
+
+            if (BDArmorySettings.DRAW_DEBUG_LINES)
+                Debug.Log("[BDArmory]: Radar Targets were Cleared (" + radarName + ").");
         }
 
         

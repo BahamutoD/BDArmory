@@ -3,20 +3,38 @@ using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using BDArmory.UI;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BDArmory.Radar
 {
 	public static class RadarUtils
 	{
-		public static RenderTexture radarRT;
-		public static Texture2D radarTex2D;
-		public static Camera radarCam;
-		public static Shader radarShader;
-		public static int radarResolution = 32;
+        private static bool rcsSetupCompleted = false;
+        private static int radarResolution = 128;
+
+        private static RenderTexture rcsRenderingFrontal;
+        private static RenderTexture rcsRenderingLateral;
+        private static RenderTexture rcsRenderingVentral;
+        private static Camera radarCam;
+
+        private static Texture2D drawTextureFrontal;
+        public static Texture2D GetTextureFrontal { get { return drawTextureFrontal; } }
+        private static Texture2D drawTextureLateral;
+        public static Texture2D GetTextureLateral { get { return drawTextureLateral; } }
+        private static Texture2D drawTextureVentral;
+        public static Texture2D GetTextureVentral { get { return drawTextureVentral; } }
+        public static float rcsFrontal;             // public so that editor analysis window has access to the details
+        public static float rcsLateral;             // dito
+        public static float rcsVentral;             // dito
+        public static float rcsTotal;               // dito
+
+        private const float RCS_NORMALIZATION_FACTOR = 16.0f;
 
 
-
+        /**
+         * Get a vessel radar siganture, including all modifiers (ECM, stealth, ...)
+         */
         public static float GetVesselRadarSignature(Vessel v)
         {
             //1. baseSig = GetVesselRadarCrossSection
@@ -25,6 +43,10 @@ namespace BDArmory.Radar
             return 0;
         }
 
+
+        /**
+         * Internal method: get a vessel base radar signature
+         */
         private static float GetVesselRadarCrossSection(Vessel v)
         {
             //read vesseltargetinfo, or render against radar cameras    
@@ -32,6 +54,10 @@ namespace BDArmory.Radar
             return 0;
         }
 
+
+        /**
+         * Internal method: get a vessels siganture modifiers (ecm, stealth, ...)
+         */
         private static float GetVesselModifiedSignature(Vessel v, float baseSig)
         {
             //read vessel ecminfo and multiply
@@ -41,37 +67,176 @@ namespace BDArmory.Radar
         }
 
 
-        public static void SetupRadarCamera()
+        /**
+         * Internal method: do the actual radar snapshot rendering from 3 sides
+         * and store it in a vesseltargetinfo attached to the vessel
+         * 
+         * Note: Transform t is passed separatedly (instead of using v.transform), as the method need to be called from the editor
+         *       and there we dont have a VESSEL, only a SHIPCONSTRUCT, so the editor passes the transform separately.
+         *       
+         * inEditorZoom: when true, we try to make the rendered vessel fill the rendertexture completely, for a better view.
+         *               This does skew the computed cross section, so it is only for a good visual in editor!
+         */
+        public static float RenderVesselRadarSnapshot(Vessel v, Transform t, bool inEditorZoom = false)
+        {
+            const float radarDistance = 1000f;
+            const float radarFOV = 2.0f;
+            float distanceToShip;
+
+
+            Bounds vesselbounds = CalcVesselBounds(v, t);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: Rendering radar snapshot of vessel");
+                Debug.Log("[BDArmory]: - SHIPBOUNDS: " + vesselbounds.ToString());
+                Debug.Log("[BDArmory]: - SHIPSIZE: " + vesselbounds.size + ", MAGNITUDE: " + vesselbounds.size.magnitude);
+            }
+
+
+            // pass1: frontal
+            radarCam.transform.position = vesselbounds.center + t.up * radarDistance;
+            radarCam.transform.LookAt(vesselbounds.center);
+
+                // setup camera FOV (once only needed)
+                distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
+                radarCam.nearClipPlane = distanceToShip - 200;
+                radarCam.farClipPlane = distanceToShip + 200;
+                if (inEditorZoom)
+                    radarCam.fieldOfView = Mathf.Atan(vesselbounds.size.magnitude / distanceToShip) * 180 / Mathf.PI;
+                else
+                    radarCam.fieldOfView = radarFOV;
+
+            radarCam.targetTexture = rcsRenderingFrontal;
+            RenderTexture.active = rcsRenderingFrontal;
+            Shader.SetGlobalVector("_LIGHTDIR", -t.up);
+            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
+            drawTextureFrontal.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
+            drawTextureFrontal.Apply();
+
+            // pass2: lateral
+            radarCam.transform.position = vesselbounds.center + t.right * radarDistance;
+            radarCam.transform.LookAt(vesselbounds.center);
+                //camera FOV already setup
+            radarCam.targetTexture = rcsRenderingLateral;
+            RenderTexture.active = rcsRenderingLateral;
+            Shader.SetGlobalVector("_LIGHTDIR", -t.right);
+            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
+            drawTextureLateral.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
+            drawTextureLateral.Apply();
+
+            // pass3: Ventral
+            radarCam.transform.position = vesselbounds.center + t.forward * radarDistance;
+            radarCam.transform.LookAt(vesselbounds.center);
+                //camera FOV already setup
+            radarCam.targetTexture = rcsRenderingVentral;
+            RenderTexture.active = rcsRenderingVentral;
+            Shader.SetGlobalVector("_LIGHTDIR", -t.forward);
+            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
+            drawTextureVentral.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
+            drawTextureVentral.Apply();
+
+            // Count pixel colors to determine radar returns (only for normal non-zoomed rendering!)
+            if (!inEditorZoom)
+            {
+                rcsFrontal = 0;
+                rcsLateral = 0;
+                rcsVentral = 0;
+                for (int x = 0; x < radarResolution; x++)
+                {
+                    for (int y = 0; y < radarResolution; y++)
+                    {
+                        rcsFrontal += drawTextureFrontal.GetPixel(x, y).maxColorComponent;
+                        rcsLateral += drawTextureLateral.GetPixel(x, y).maxColorComponent;
+                        rcsVentral += drawTextureVentral.GetPixel(x, y).maxColorComponent;
+                    }
+                }
+
+                // normalize rcs value, so that the structural 1x1 panel facing the radar exactly gives a return of 1 m^2:
+                rcsFrontal /= RCS_NORMALIZATION_FACTOR;
+                rcsLateral /= RCS_NORMALIZATION_FACTOR;
+                rcsVentral /= RCS_NORMALIZATION_FACTOR;
+                rcsTotal = (rcsFrontal + rcsLateral + rcsVentral) / 3f;
+            }
+
+            return rcsTotal;
+        }
+
+
+        /**
+         * Internal method: get a vessel's bounds
+         * Method implemention adapted from kronal vessel viewer
+         */
+        private static Bounds CalcVesselBounds(Vessel v, Transform t)
+        {
+            Bounds result = new Bounds(t.position, Vector3.zero);
+
+            List<Part>.Enumerator vp = v.Parts.GetEnumerator();
+            while (vp.MoveNext())
+            {
+                if (vp.Current.collider && !vp.Current.Modules.Contains("LaunchClamp"))
+                {
+                    result.Encapsulate(vp.Current.collider.bounds);
+                }
+            }
+            vp.Dispose();
+
+            return result;
+        }
+
+
+        /**
+         * Internal method: get a vessel's size (based on it's bounds)
+         * Method implemention adapted from kronal vessel viewer
+         */
+        private static Vector3 GetVesselSize(Vessel v, Transform t)
+        {
+            return CalcVesselBounds(v, t).size;
+        }
+
+
+
+        public static void SetupResources()
 		{
-			if(radarRT && radarTex2D && radarCam && radarShader)
-			{
-				return;
-			}
+            if (!rcsSetupCompleted)
+            {
+                //set up rendertargets and textures
+                rcsRenderingFrontal = new RenderTexture(radarResolution, radarResolution, 16);
+                rcsRenderingLateral = new RenderTexture(radarResolution, radarResolution, 16);
+                rcsRenderingVentral = new RenderTexture(radarResolution, radarResolution, 16);
+                drawTextureFrontal = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
+                drawTextureLateral = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
+                drawTextureVentral = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
 
-			//setup shader first
-			if(!radarShader)
-			{
-				radarShader = BDAShaderLoader.UnlitBlackShader;//.LoadManifestShader("BahaTurret.UnlitBlack.shader");
-			}
+                //set up camera
+                radarCam = (new GameObject("RadarCamera")).AddComponent<Camera>();
+                radarCam.enabled = false;
+                radarCam.clearFlags = CameraClearFlags.SolidColor;
+                radarCam.backgroundColor = Color.black;
+                radarCam.cullingMask = 1 << 0;   // only layer 0 active, see: http://wiki.kerbalspaceprogram.com/wiki/API:Layers
 
-			//then setup textures
-			radarRT = new RenderTexture(radarResolution,radarResolution,16);
-			radarTex2D = new Texture2D(radarResolution,radarResolution, TextureFormat.ARGB32, false);
+                rcsSetupCompleted = true;
+            }
+        }
 
-			//set up camera
-			radarCam = (new GameObject("RadarCamera")).AddComponent<Camera>();
-			radarCam.enabled = false;
-			radarCam.clearFlags = CameraClearFlags.SolidColor;
-			radarCam.backgroundColor = Color.white;
-			radarCam.SetReplacementShader(radarShader, string.Empty);
-			radarCam.cullingMask = 1<<0;
-			radarCam.targetTexture = radarRT;
-			//radarCam.nearClipPlane = 75;
-			//radarCam.farClipPlane = 40000;
-		}
+
+        public static void CleanupResources()
+        {
+            if (rcsSetupCompleted)
+            {
+                RenderTexture.Destroy(rcsRenderingFrontal);
+                RenderTexture.Destroy(rcsRenderingLateral);
+                RenderTexture.Destroy(rcsRenderingVentral);
+                Texture2D.Destroy(drawTextureFrontal);
+                Texture2D.Destroy(drawTextureLateral);
+                Texture2D.Destroy(drawTextureVentral);
+                GameObject.Destroy(radarCam);
+                rcsSetupCompleted = false;
+            }
+        }
+
 
 		public static float GetRadarSnapshot(Vessel v, Vector3 origin, float camFoV)
-		{
+		{/*
 			
 			TargetInfo ti = v.GetComponent<TargetInfo>();
 			if(ti && ti.isMissile)
@@ -109,6 +274,8 @@ namespace BDArmory.Radar
 
 
 			return pixels*4;
+            */
+            return 0;
 		}
 
 		public static void UpdateRadarLock(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, Vector3 position, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType, bool radarSnapshot)

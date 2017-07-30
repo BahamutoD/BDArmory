@@ -638,7 +638,7 @@ namespace BDArmory.UI
                 }
             }
 
-
+            /*
             if (DRAW_DEBUG_LABELS && HighLogic.LoadedSceneIsFlight)
             {
                 if (RadarUtils.radarRT)
@@ -646,6 +646,7 @@ namespace BDArmory.UI
                     GUI.DrawTexture(new Rect(20, 20, 128, 128), RadarUtils.radarRT, ScaleMode.StretchToFill, true);
                 }
             }
+            */
         }
 
 
