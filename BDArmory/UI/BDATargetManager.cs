@@ -412,7 +412,9 @@ namespace BDArmory.UI
 
 			debugString += "\n\nHeat score: "+heatScore;
 			debugString += "\nFlare score: "+flareScore;
-		}
+
+            debugString += "\nRadar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel);
+        }
 
 
 

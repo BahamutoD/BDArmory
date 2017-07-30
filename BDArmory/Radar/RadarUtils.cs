@@ -38,9 +38,12 @@ namespace BDArmory.Radar
         public static float GetVesselRadarSignature(Vessel v)
         {
             //1. baseSig = GetVesselRadarCrossSection
-            //2. modifiedSig = GetVesselModifiedSignature(baseSig)    //ECM-jammers with rcs reduction effect; other rcs reductions (stealth?)
+            float baseSig = GetVesselRadarCrossSection(v);
 
-            return 0;
+            //2. modifiedSig = GetVesselModifiedSignature(baseSig)    //ECM-jammers with rcs reduction effect; other rcs reductions (stealth)
+            float modifiedSig = GetVesselModifiedSignature(v, baseSig);
+
+            return modifiedSig;
         }
 
 
@@ -50,8 +53,21 @@ namespace BDArmory.Radar
         private static float GetVesselRadarCrossSection(Vessel v)
         {
             //read vesseltargetinfo, or render against radar cameras    
+            TargetInfo ti = v.GetComponent<TargetInfo>();
 
-            return 0;
+            if (ti == null)
+            {
+                // add targetinfo to vessel
+                ti = v.gameObject.AddComponent<TargetInfo>();
+            }
+
+            if (ti.radarBaseSignature == 0)
+            {
+                // perform radar rendering to obtain base cross section
+                ti.radarBaseSignature = RenderVesselRadarSnapshot(v, v.transform);
+            }
+
+            return ti.radarBaseSignature; ;
         }
 
 
@@ -60,10 +76,10 @@ namespace BDArmory.Radar
          */
         private static float GetVesselModifiedSignature(Vessel v, float baseSig)
         {
-            //read vessel ecminfo and multiply
-            //get vessel stealth modifier (NOT IMPLEMENTED YET)
+            //TODO: read vessel ecminfo and multiply
+            //TODO: get vessel stealth modifier (NOT IMPLEMENTED YET)
 
-            return 0;
+            return baseSig;
         }
 
 
@@ -83,6 +99,7 @@ namespace BDArmory.Radar
             const float radarFOV = 2.0f;
             float distanceToShip;
 
+            SetupResources();
 
             Bounds vesselbounds = CalcVesselBounds(v, t);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -207,14 +224,17 @@ namespace BDArmory.Radar
                 drawTextureLateral = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
                 drawTextureVentral = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
 
+                rcsSetupCompleted = true;
+            }
+
+            if (radarCam == null)
+            {
                 //set up camera
                 radarCam = (new GameObject("RadarCamera")).AddComponent<Camera>();
                 radarCam.enabled = false;
                 radarCam.clearFlags = CameraClearFlags.SolidColor;
                 radarCam.backgroundColor = Color.black;
                 radarCam.cullingMask = 1 << 0;   // only layer 0 active, see: http://wiki.kerbalspaceprogram.com/wiki/API:Layers
-
-                rcsSetupCompleted = true;
             }
         }
 

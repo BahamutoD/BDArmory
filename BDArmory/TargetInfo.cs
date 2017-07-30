@@ -17,6 +17,14 @@ namespace BDArmory
         Coroutine lifeRoutine;
         Coroutine massRoutine;
 
+
+        public float radarBaseSignature
+        {
+            get;        
+            set;
+        }
+
+
         public bool isLanded
 		{
 			get
