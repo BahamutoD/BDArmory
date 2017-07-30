@@ -414,7 +414,9 @@ namespace BDArmory.UI
             }
 
             if (WindowRectRwr.x > Screen.width - 276 - 40 ||
-                WindowRectRwr.y > Screen.height - 296)
+                WindowRectRwr.y > Screen.height - 296 ||
+                WindowRectRwr.height == 0 ||
+                WindowRectRwr.width == 0)
             {
                 WindowRectRwr = new Rect(40, Screen.height - 296, 276, 296);
             }
