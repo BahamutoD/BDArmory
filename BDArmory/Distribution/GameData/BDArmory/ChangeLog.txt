@@ -1,3 +1,59 @@
+v0.3.0.0
+
+* New DLL Changes - Full reinstall required!
+* BDArmory Core : modularization of systems and features to ease integration for other mod makers
+* Performance refactor and garbage collection improvements for better memory utilization
+
+* New Features
+
+	* Adding new weaponClass - SLW - Ship Launched Weapon - intended to target surface vessels (splashed) and submarines (splashed and underwater)
+
+	* weaponClass.SLW is set by missileType torpedo or depthcharge
+
+	* New "Sonar" Implementation - If RWRThreatTypes is Sonar will not detect flying vessels, only surface ships and submersibles
+
+	* MAX_ACTIVE_RADAR_RANGE & MAX_ENGAGEMENT_RANGE added to settings.cfg for more control over ranged combat
+
+	* Updated checks for Landed and Splashed to be more accurate and account for sumbersibles
+
+	* Renamed "Ground" engagement option to "Surface" to better reflect behavior
+
+	* MM Patches updated for engagement options and torpedo types
+
+	* Issue Reference #201 for Sonar, RWR Types, engagement Types, torpedo targeting
+
+	* Increased Radar Range #170
+
+	* Logic for Smart Targeting should correct #216 
+
+	* fixing issue with throttle mirroring when switching vessels
+
+	* adding gaurd mode back to editor, Solves #156
+	
+	* Ballistic Missile guidance improvements
+	
+	* Terminal Guidance will switch back to GPS target if no radar target is found
+	
+	
+* New Parts
+
+	* Courtesy of SpannerMonkey 
+		- BDA MK1 Sonar Pod
+		- Sting Ray  BDA LightWeight Torpedo
+		
+* Notes on Naval Combat Features
+
+	* Current implementation of "Sonar" reuses the current Radar code. Future state will have dedicated windows and naming convention
+	* Activating a "Sonar" pod still says "Activate Radar"
+	* A Sonar is defined by setting the rwrThreatType = 6
+		- Sonar rules
+			- Will only detect vessels that are underwater (> 20meters)
+			- Sonar will not function if vessel is in flight
+			- Sonar does not detect "Landed" vessels, only splashed
+			- Normal Radar does not detect underwater vessels, still detects "Splashed" i.e. Boats
+	* Engagment type "SLW" only targets underwater (submarines) and Splashed (Boats)
+
+
 v0.2.1.2
 = New features=
 - New Armor Parts
