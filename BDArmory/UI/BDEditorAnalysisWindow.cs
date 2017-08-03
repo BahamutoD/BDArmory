@@ -1,23 +1,15 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using BDArmory.CounterMeasure;
-using BDArmory.Misc;
-using BDArmory.Parts;
-using BDArmory.Radar;
-using KSP.UI.Screens;
 using UnityEngine;
-using BDArmory.UI;
-using BDArmory.Shaders;
-using System.Text;
-using System;
+using KSP.UI.Screens;
+using BDArmory.Radar;
 
-namespace BDArmory.Radar
+namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    class EditorRcsWindow : MonoBehaviour
+    class BDEditorAnalysisWindow : MonoBehaviour
     {
 
-        public static EditorRcsWindow Instance = null;
+        public static BDEditorAnalysisWindow Instance = null;
         private ApplicationLauncherButton toolbarButton = null;
 
         private bool showRcsWindow = false;

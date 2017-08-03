@@ -11,30 +11,30 @@ namespace BDArmory.Radar
 {
     public class ModuleRadar : PartModule
     {
-    	
-		#region KSPFields (Part Configuration)
 
-		#region General Configuration  	
+        #region KSPFields (Part Configuration)
+
+        #region General Configuration  	
         [KSPField]
         public string radarName;
 
         [KSPField]
-        public int turretID = 0;        
-        
+        public int turretID = 0;
+
         [KSPField]
         public string rotationTransformName = string.Empty;
-        Transform rotationTransform;        
+        Transform rotationTransform;
         #endregion
 
 
-		#region Radar Capabilities
+        #region Radar Capabilities
         [KSPField]
-        public int rwrThreatType = 0;				//IMPORTANT, configures which type of radar it will show up as on the RWR		
-		public RadarWarningReceiver.RWRThreatTypes rwrType = RadarWarningReceiver.RWRThreatTypes.SAM;		
-        
-		[KSPField] 
-		public double resourceDrain = 0.825;		//resource (EC/sec) usage of active radar
-		
+        public int rwrThreatType = 0;               //IMPORTANT, configures which type of radar it will show up as on the RWR		
+        public RadarWarningReceiver.RWRThreatTypes rwrType = RadarWarningReceiver.RWRThreatTypes.SAM;
+
+        [KSPField]
+        public double resourceDrain = 0.825;        //resource (EC/sec) usage of active radar
+
         [KSPField]
         public bool omnidirectional = true;			//false=boresight only
 
@@ -51,20 +51,20 @@ namespace BDArmory.Radar
         public float lockRotationSpeed = 120;		//in degrees per second, relevant for omni only
 
         [KSPField]
-        public float lockRotationAngle = 4;			//???
-		
-        [KSPField] 
-        public bool showDirectionWhileScan = false;	//??
-        
+        public float lockRotationAngle = 4;         //???
+
         [KSPField]
-        public float multiLockFOV = 30;				//??
-        
-        [KSPField] 
-        public float lockAttemptFOV = 2;			//??
-        
+        public bool showDirectionWhileScan = false; //??
+
         [KSPField]
-        public bool canScan = true;					//radar has detection capabilities
-		
+        public float multiLockFOV = 30;             //??
+
+        [KSPField]
+        public float lockAttemptFOV = 2;            //??
+
+        [KSPField]
+        public bool canScan = true;                 //radar has detection capabilities
+
         [KSPField]
         public bool canLock = true;					//radar has locking/tracking capabilities
 
@@ -72,11 +72,11 @@ namespace BDArmory.Radar
         public int maxLocks = 1;					//how many targets can be locked/tracked simultaneously
 
         [KSPField]
-        public bool canTrackWhileScan = false;		//when tracking/locking, can we still detect/scan?
-        
+        public bool canTrackWhileScan = false;      //when tracking/locking, can we still detect/scan?
+
         [KSPField]
-        public bool canRecieveRadarData = false;	//can radar data be received from friendly sources?		
-        
+        public bool canRecieveRadarData = false;    //can radar data be received from friendly sources?		
+
         [KSPField]
         public FloatCurve radarDetectionCurve;		//FloatCurve defining at what range which RCS size can be detected
 
@@ -86,23 +86,23 @@ namespace BDArmory.Radar
         [KSPField]
         public float radarGroundClutterFactor = 0.5f; //Factor defining how effective the radar is for look-down, compensating for ground clutter (0=ineffective, 1=fully effective)              
         #endregion
-		
-        
+
+
         #region Persisted State in flight
         [KSPField(isPersistant = true)]
         public string linkedVesselID;
-        
+
         [KSPField(isPersistant = true)]
         public bool radarEnabled;
 
-        [KSPField(isPersistant = true)] 
-        public int rangeIndex = 99;        
-        
-        [KSPField(isPersistant = true)] 
-        public float currentAngle;        
+        [KSPField(isPersistant = true)]
+        public int rangeIndex = 99;
+
+        [KSPField(isPersistant = true)]
+        public float currentAngle;
         #endregion
 
-		
+
         #region DEPRECATED! ->see Radar Capabilities section for new detectionCurve + trackingCurve
         [Obsolete]
         [KSPField]
@@ -110,14 +110,14 @@ namespace BDArmory.Radar
 
         [Obsolete]
         [KSPField]
-        public float minLockedSignalThreshold = 90;        
-		#endregion
+        public float minLockedSignalThreshold = 90;
+        #endregion
 
-      
-        #endregion	
 
-        
-		#region KSP Events & Actions
+        #endregion
+
+
+        #region KSP Events & Actions
         [KSPAction("Toggle Radar")]
         public void AGEnable(KSPActionParam param)
         {
@@ -143,13 +143,13 @@ namespace BDArmory.Radar
                 EnableRadar();
             }
         }
-		#endregion
-        
-        
-		#region Part members
+        #endregion
+
+
+        #region Part members
         //locks
         private int currLocks;
-		public bool locked
+        public bool locked
         {
             get { return currLocks > 0; }
         }
@@ -159,7 +159,7 @@ namespace BDArmory.Radar
         }
 
         private TargetSignatureData[] attemptedLocks;
-        private List<TargetSignatureData> lockedTargets;      
+        private List<TargetSignatureData> lockedTargets;
         public TargetSignatureData lockedTarget
         {
             get
@@ -171,14 +171,32 @@ namespace BDArmory.Radar
                 }
             }
         }
-        
+
         private int lockedTargetIndex;
         public int currentLockIndex
         {
             get { return lockedTargetIndex; }
         }
-        
-        
+
+        public float radarMinDistanceDetect
+        {
+            get { return radarDetectionCurve.minTime; }
+        }
+        public float radarMaxDistanceDetect
+        {
+            get { return radarDetectionCurve.maxTime; }
+        }
+        public float radarMinDistanceLockTrack
+        {
+            get { return radarLockTrackCurve.minTime; }
+        }
+        public float radarMaxDistanceLockTrack
+        {
+            get { return radarLockTrackCurve.maxTime; }
+        }
+
+
+
         //linked vessels
         private List<VesselRadarData> linkedToVessels;
         public List<ModuleRadar> availableRadarLinks;
@@ -414,12 +432,9 @@ namespace BDArmory.Radar
             }
 
             // check for not updated legacy part:
-            float fDetectMin, fDetectMax, fTrackMin, fTrackMax;
-            radarDetectionCurve.FindMinMaxValue(out fDetectMin, out fDetectMax);
-            radarLockTrackCurve.FindMinMaxValue(out fTrackMin, out fTrackMax);
-            if (fDetectMin == fDetectMax || fTrackMin == fTrackMax)
+            if ((canScan && (radarMinDistanceDetect == radarMaxDistanceDetect)) || (canLock && (radarMinDistanceLockTrack == radarMaxDistanceLockTrack)))
             {
-                Debug.Log("[BDArmory]: WARNING: " + part.name + " is legacy part, missing new radarDetectionCurve and radarLockTrackCurve definitions! Please update for the part to be usable!");
+                Debug.Log("[BDArmory]: WARNING: " + part.name + " has legacy definition, missing new radarDetectionCurve and radarLockTrackCurve definitions! Please update for the part to be usable!");
             }
         }
 
@@ -611,9 +626,7 @@ namespace BDArmory.Radar
         void Scan()
         {
             float angleDelta = scanRotationSpeed*Time.fixedDeltaTime;
-            //RadarUtils.ScanInDirection(weaponManager, currentAngle, referenceTransform, angleDelta, vessel.transform.position, minSignalThreshold, ref contacts, signalPersistTime, true, rwrType, true);
-            RadarUtils.UpdateRadarLock(weaponManager, currentAngle, referenceTransform, angleDelta,
-                vessel.transform.position, minSignalThreshold, this, true, rwrType, true);
+            RadarUtils.RadarUpdateScanLock(weaponManager, currentAngle, referenceTransform, angleDelta, referenceTransform.position, this, false, ref attemptedLocks);
 
             if (omnidirectional)
             {
@@ -664,12 +677,12 @@ namespace BDArmory.Radar
             }
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                Debug.Log("[BDArmory]: Trying to radar lock target");
+                Debug.Log("[BDArmory]: Trying to radar lock target with (" + radarName + ")");
 
             if (currentLocks == maxLocks)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory]: This radar (" + radarName + ") already has the maximum allowed targets locked.");
+                    Debug.Log("[BDArmory]: - Failed, this radar already has the maximum allowed targets locked.");
                 return false;
             }
 
@@ -681,9 +694,7 @@ namespace BDArmory.Radar
                 angle = -angle;
             }
             //TargetSignatureData.ResetTSDArray(ref attemptedLocks);
-            RadarUtils.UpdateRadarLock(weaponManager, angle, referenceTransform, lockAttemptFOV,
-                referenceTransform.position, minLockedSignalThreshold, ref attemptedLocks, signalPersistTime, true,
-                rwrType, true);
+            RadarUtils.RadarUpdateScanLock(weaponManager, angle, referenceTransform, lockAttemptFOV, referenceTransform.position, this, true, ref attemptedLocks, signalPersistTime);
 
             for (int i = 0; i < attemptedLocks.Length; i++)
             {
@@ -700,7 +711,7 @@ namespace BDArmory.Radar
                     currLocks = lockedTargets.Count;
 
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                        Debug.Log("[BDArmory]: - Acquired lock on target (" + radarName + ").");
+                        Debug.Log("[BDArmory]: - Acquired lock on target (" + attemptedLocks[i].vessel?.name + ")");
 
                     vesselRadarData.AddRadarContact(this, lockedTarget, true);
                     vesselRadarData.UpdateLockedTargets();
@@ -724,8 +735,7 @@ namespace BDArmory.Radar
             }
 
             currentAngle = Mathf.Lerp(currentAngle, 0, 0.08f);
-            RadarUtils.UpdateRadarLock(new Ray(transform.position, transform.up), boresightFOV, minLockedSignalThreshold,
-                ref attemptedLocks, Time.fixedDeltaTime, true, rwrType, true);
+            RadarUtils.RadarUpdateScanBoresight(new Ray(transform.position, transform.up), boresightFOV, ref attemptedLocks, Time.fixedDeltaTime, this);
 
             for (int i = 0; i < attemptedLocks.Length; i++)
             {
@@ -783,10 +793,9 @@ namespace BDArmory.Radar
                 return;
             }
 
-            RadarUtils.UpdateRadarLock(
+            RadarUtils.RadarUpdateLockTrack(
                 new Ray(referenceTransform.position, lockedTarget.predictedPosition - referenceTransform.position),
-                lockedTarget.predictedPosition, lockRotationAngle*2, minLockedSignalThreshold, this, true, radarSnapshot,
-                lockedSignalPersist, true, index, lockedTarget.vessel);
+                lockedTarget.predictedPosition, lockRotationAngle*2, this, lockedSignalPersist, true, index, lockedTarget.vessel);
 
             //if still failed or out of FOV, unlock.
             if (!lockedTarget.exists ||
@@ -799,6 +808,7 @@ namespace BDArmory.Radar
                 return;
             }
 
+            // TODO: MOVE LOCK BERAKING CODE INTO RADARUTILS!
             //unlock if over-jammed
             if (lockedTarget.vesselJammer &&
                 lockedTarget.vesselJammer.lockBreakStrength >
@@ -808,7 +818,6 @@ namespace BDArmory.Radar
                 UnlockTargetAt(index, true);
                 return;
             }
-
 
             //cycle scan direction
             if (index == lockedTargetIndex)
@@ -837,7 +846,7 @@ namespace BDArmory.Radar
             }
 
             if (BDArmorySettings.DRAW_DEBUG_LINES)
-                Debug.Log("[BDArmory]: Radar Targets were Cleared (" + radarName + ").");
+                Debug.Log("[BDArmory]: Radar Targets were cleared (" + radarName + ").");
         }
 
         
