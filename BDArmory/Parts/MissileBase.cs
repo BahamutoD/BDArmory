@@ -93,8 +93,12 @@ namespace BDArmory.Parts
         [KSPField]
         public float activeRadarRange = 6000;
 
+        [Obsolete("Use activeRadarLockTrackCurve!")]
         [KSPField]
         public float activeRadarMinThresh = 140;
+
+        [KSPField]
+        public FloatCurve activeRadarLockTrackCurve;    // floatcurve to define min/max range and lockable radar cross section
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
@@ -419,7 +423,9 @@ namespace BDArmory.Parts
                         {
                             snapshotTicker++;
                         }
-                        RadarUtils.UpdateRadarLock(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
+
+                        //RadarUtils.UpdateRadarLock(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
+                        RadarUtils.RadarUpdateMissileLock(ray, lockedSensorFOV, ref scannedTargets, 0.4f, this);
                         float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(40, 2);
 
                         if (radarLOAL && radarLOALSearching && !radarSnapshot)
@@ -497,7 +503,9 @@ namespace BDArmory.Parts
                 {
                     snapshotTicker++;
                 }
-                RadarUtils.UpdateRadarLock(ray, lockedSensorFOV * 3, activeRadarMinThresh * 2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
+
+                //RadarUtils.UpdateRadarLock(ray, lockedSensorFOV * 3, activeRadarMinThresh * 2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
+                RadarUtils.RadarUpdateMissileLock(ray, lockedSensorFOV * 3, ref scannedTargets, 0.4f, this);
                 float sqrThresh = Mathf.Pow(300, 2);
 
                 float smallestAngle = 360;

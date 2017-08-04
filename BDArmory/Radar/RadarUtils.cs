@@ -25,6 +25,7 @@ namespace BDArmory.Radar
         public static Texture2D GetTextureLateral { get { return drawTextureLateral; } }
         private static Texture2D drawTextureVentral;
         public static Texture2D GetTextureVentral { get { return drawTextureVentral; } }
+
         internal static float rcsFrontal;             // internal so that editor analysis window has access to the details
         internal static float rcsLateral;             // dito
         internal static float rcsVentral;             // dito
@@ -335,9 +336,10 @@ namespace BDArmory.Radar
         /// Uses detectionCurve for rcs evaluation.
         /// </summary>
         //was: public static void UpdateRadarLock(Ray ray, float fov, float minSignature, ref TargetSignatureData[] dataArray, float dataPersistTime, bool pingRWR, RadarWarningReceiver.RWRThreatTypes rwrType, bool radarSnapshot)
-        public static void RadarUpdateScanBoresight(Ray ray, float fov, ref TargetSignatureData[] dataArray, float dataPersistTime, ModuleRadar radar)
+        public static bool RadarUpdateScanBoresight(Ray ray, float fov, ref TargetSignatureData[] dataArray, float dataPersistTime, ModuleRadar radar)
         {
             int dataIndex = 0;
+            bool hasLocked = false;
 
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedvessels.MoveNext())
@@ -387,6 +389,7 @@ namespace BDArmory.Radar
                             {
                                 dataArray[dataIndex] = new TargetSignatureData(loadedvessels.Current, signature);
                                 dataIndex++;
+                                hasLocked = true;
                             }
                         }
                     }
@@ -399,6 +402,83 @@ namespace BDArmory.Radar
             }
             loadedvessels.Dispose();
 
+            return hasLocked;
+        }
+
+
+        /// <summary>
+        /// Special scanning method for missiles with active radar homing.
+        /// Called from MissileBase / MissileLauncher, which will then attempt to immediately lock onto the detected targets.
+        /// Uses the missiles locktrackCurve for rcs evaluation.
+        /// </summary>
+        //was: UpdateRadarLock(ray, maxOffBoresight, activeRadarMinThresh, ref scannedTargets, 0.4f, true, RadarWarningReceiver.RWRThreatTypes.MissileLock, true);
+        public static bool RadarUpdateMissileLock(Ray ray, float fov, ref TargetSignatureData[] dataArray, float dataPersistTime, MissileBase missile)
+        {
+            int dataIndex = 0;
+            bool hasLocked = false;
+
+            List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
+            while (loadedvessels.MoveNext())
+            {
+                // ignore null, unloaded
+                if (loadedvessels.Current == null ||
+                    !loadedvessels.Current.loaded)
+                    continue;
+
+                // ignore self, ignore behind ray
+                Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
+                if (((vectorToTarget).sqrMagnitude < RADAR_IGNORE_DISTANCE_SQR) ||
+                     (Vector3.Dot(vectorToTarget, ray.direction) < 0))
+                    continue;
+
+                // ignore when blocked by terrain
+                if (TerrainCheck(ray.origin, loadedvessels.Current.transform.position))
+                    continue;
+
+                if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov / 2f)
+                {
+                    // get vessel's radar signature
+                    float signature = GetVesselRadarSignature(loadedvessels.Current);
+                    // no ground clutter modifier for missiles
+
+                    // evaluate range
+                    float distance = (loadedvessels.Current.CoM - ray.origin).magnitude;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
+                    if (distance < missile.activeRadarRange)
+                    {
+                        //evaluate if we can detect such a signature at that range
+                        float minDetectSig = missile.activeRadarLockTrackCurve.Evaluate(distance);
+
+                        if (signature > minDetectSig)
+                        {
+                            // detected by radar
+                            // fill attempted locks array for locking later:
+                            while (dataIndex < dataArray.Length - 1)
+                            {
+                                if (!dataArray[dataIndex].exists || (dataArray[dataIndex].exists && (Time.time - dataArray[dataIndex].timeAcquired) > dataPersistTime))
+                                {
+                                    break;
+                                }
+                                dataIndex++;
+                            }
+
+                            if (dataIndex < dataArray.Length)
+                            {
+                                dataArray[dataIndex] = new TargetSignatureData(loadedvessels.Current, signature);
+                                dataIndex++;
+                                hasLocked = true;
+                            }
+                        }
+                    }
+
+                    //  our radar ping can be received at a higher range than we can detect, according to RWR range ping factor:
+                    if (distance < missile.activeRadarRange * RWR_PING_RANGE_FACTOR)
+                        RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.MissileLock, dataPersistTime);
+                }
+
+            }
+            loadedvessels.Dispose();
+
+            return hasLocked;
         }
 
 
@@ -764,7 +844,7 @@ namespace BDArmory.Radar
 
 
         /// <summary>
-        /// Helper method: map a position onto the radar display radially
+        /// Helper method: map a position onto the radar display (for non-onmi radars)
         /// </summary>
         public static Vector2 WorldToRadarRadial(Vector3 worldPosition, Transform referenceTransform, Rect radarRect, float maxDistance, float maxAngle)
 		{

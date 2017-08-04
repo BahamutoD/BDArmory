@@ -54,7 +54,7 @@ namespace BDArmory.Radar
         public float lockRotationAngle = 4;         //???
 
         [KSPField]
-        public bool showDirectionWhileScan = false; //??
+        public bool showDirectionWhileScan = false; //radar can show direction indicator of contacts (false: can show contacts as blocks only)
 
         [KSPField]
         public float multiLockFOV = 30;             //??

@@ -6,10 +6,10 @@ using BDArmory.Radar;
 namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    class BDEditorAnalysisWindow : MonoBehaviour
+    class BDAEditorAnalysisWindow : MonoBehaviour
     {
 
-        public static BDEditorAnalysisWindow Instance = null;
+        public static BDAEditorAnalysisWindow Instance = null;
         private ApplicationLauncherButton toolbarButton = null;
 
         private bool showRcsWindow = false;

@@ -79,7 +79,7 @@
     <Compile Include="Misc\IEngageService.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
-    <Compile Include="UI\BDEditorAnalysisWindow.cs" />
+    <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
     <Compile Include="Armor\BulletInfo.cs" />
     <Compile Include="MissileLauncher.cs" />

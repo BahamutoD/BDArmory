@@ -527,9 +527,17 @@ namespace BDArmory
 		    {
 		          SetInitialDetonationDistance();
 		    }
-		  
 
-		}
+            // fill activeRadarLockTrackCurve with default values if not set by part config:
+            if (activeRadarLockTrackCurve.minTime == activeRadarLockTrackCurve.maxTime)
+            {
+                const float MISSILE_DEFAULT_RCS = 10f;
+                activeRadarLockTrackCurve.Add(0f, 0f);
+                activeRadarLockTrackCurve.Add(activeRadarRange, MISSILE_DEFAULT_RCS);           // TODO: tune & balance constants!
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: OnStart missile "+shortName+": setting default locktrackcurve with maxrange/minrcs: "+activeRadarLockTrackCurve.maxTime+"/"+ MISSILE_DEFAULT_RCS);
+            }
+        }
 
         private void SetInitialDetonationDistance()
         {
@@ -1058,7 +1066,8 @@ namespace BDArmory
                         TargetSignatureData.ResetTSDArray(ref scannedTargets);
                         Ray ray = new Ray(transform.position, TargetPosition - GetForwardTransform());
 
-                        RadarUtils.UpdateRadarLock(ray, maxOffBoresight, activeRadarMinThresh, ref scannedTargets, 0.4f, true, RadarWarningReceiver.RWRThreatTypes.MissileLock, true);
+                        //RadarUtils.UpdateRadarLock(ray, maxOffBoresight, activeRadarMinThresh, ref scannedTargets, 0.4f, true, RadarWarningReceiver.RWRThreatTypes.MissileLock, true);
+                        RadarUtils.RadarUpdateMissileLock(ray, maxOffBoresight, ref scannedTargets, 0.4f, this);
                         float sqrThresh = Mathf.Pow(terminalGuidanceDistance * 1.5f, 2);
 
                         //float smallestAngle = maxOffBoresight;

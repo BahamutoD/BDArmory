@@ -234,8 +234,7 @@ namespace BDArmory.Radar
                 {
                     if (pingsData[i].exists &&
                         ((Vector2) pingsData[i].position -
-                         RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange)).sqrMagnitude <
-                        Mathf.Pow(20, 2))
+                         RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange)).sqrMagnitude < 100f)
                     {
                         break;
                     }
@@ -325,7 +324,7 @@ namespace BDArmory.Radar
             for (int i = 0; i < dataCount; i++)
             {
                 Vector2 pingPosition = (Vector2) pingsData[i].position;
-                pingPosition = Vector2.MoveTowards(displayRect.center, pingPosition, displayRect.center.x - (pingSize/2));
+                //pingPosition = Vector2.MoveTowards(displayRect.center, pingPosition, displayRect.center.x - (pingSize/2));  //WHAT THE heck ist that??
                 Rect pingRect = new Rect(pingPosition.x - (pingSize/2), pingPosition.y - (pingSize/2), pingSize,
                     pingSize);
                 if (pingsData[i].exists)
