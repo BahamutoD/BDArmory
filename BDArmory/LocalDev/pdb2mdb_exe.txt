@@ -1,1 +1,1 @@
-C:\Program Files (x86)\Mono\bin\pdb2mdb.bat
+D:\wip\ksp-mod-dev\pdb2mdb.cmd
