@@ -94,11 +94,10 @@ namespace BDArmory.Parts
         public float activeRadarRange = 6000;
 
         [Obsolete("Use activeRadarLockTrackCurve!")]
-        [KSPField]
-        public float activeRadarMinThresh = 140;
+        [KSPField] public float activeRadarMinThresh = 140;
 
         [KSPField]
-        public FloatCurve activeRadarLockTrackCurve;    // floatcurve to define min/max range and lockable radar cross section
+        public FloatCurve activeRadarLockTrackCurve = new FloatCurve();             // floatcurve to define min/max range and lockable radar cross section
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 

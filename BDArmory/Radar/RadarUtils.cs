@@ -58,7 +58,7 @@ namespace BDArmory.Radar
         private static float GetVesselRadarCrossSection(Vessel v)
         {
             //read vesseltargetinfo, or render against radar cameras    
-            TargetInfo ti = v.GetComponent<TargetInfo>();
+            TargetInfo ti = v.gameObject.GetComponent<TargetInfo>();
 
             if (ti == null)
             {
@@ -95,7 +95,7 @@ namespace BDArmory.Radar
             // if we ever introduce special stealth parts that increase low-observability, implement evaluation here!
 
             // 2) read vessel ecminfo for jammers with RCS reduction effect and multiply factor
-            VesselECMJInfo vesseljammer = v.GetComponent<VesselECMJInfo>();
+            VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
             if (vesseljammer)
             {
                 modifiedSig *= vesseljammer.rcsReductionFactor;
@@ -140,7 +140,7 @@ namespace BDArmory.Radar
             Bounds vesselbounds = CalcVesselBounds(v, t);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Rendering radar snapshot of vessel: " + v?.name is null ? "(null)" : v.name);
+                Debug.Log("[BDArmory]: Rendering radar snapshot of vessel");
                 Debug.Log("[BDArmory]: - bounds: " + vesselbounds.ToString());
                 Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
             }
@@ -366,7 +366,7 @@ namespace BDArmory.Radar
                     signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, loadedvessels.Current.CoM);
 
                     // evaluate range
-                    float distance = (loadedvessels.Current.CoM - ray.origin).magnitude;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
+                    float distance = (loadedvessels.Current.CoM - ray.origin).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
                     if (distance > radar.radarMinDistanceDetect && distance < radar.radarMaxDistanceDetect)
                     {
                         //evaluate if we can detect such a signature at that range
@@ -446,7 +446,7 @@ namespace BDArmory.Radar
                     if (distance < missile.activeRadarRange)
                     {
                         //evaluate if we can detect such a signature at that range
-                        float minDetectSig = missile.activeRadarLockTrackCurve.Evaluate(distance);
+                        float minDetectSig = missile.activeRadarLockTrackCurve.Evaluate(distance/1000f);
 
                         if (signature > minDetectSig)
                         {
@@ -525,7 +525,7 @@ namespace BDArmory.Radar
                     signature *= GetRadarGroundClutterModifier(radar, referenceTransform, position, loadedvessels.Current.CoM);
 
                     // evaluate range
-                    float distance = (loadedvessels.Current.CoM - position).magnitude;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
+                    float distance = (loadedvessels.Current.CoM - position).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
 
                     if (modeTryLock)    // LOCK/TRACK TARGET:
                     {
@@ -660,7 +660,7 @@ namespace BDArmory.Radar
                 signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, lockedVessel.CoM);
 
                 // evaluate range
-                float distance = (lockedVessel.CoM - ray.origin).magnitude;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
+                float distance = (lockedVessel.CoM - ray.origin).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
                 if (distance > radar.radarMinDistanceLockTrack && distance < radar.radarMaxDistanceLockTrack)
                 {
                     //evaluate if we can detect such a signature at that range

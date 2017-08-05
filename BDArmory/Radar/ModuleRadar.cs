@@ -78,10 +78,10 @@ namespace BDArmory.Radar
         public bool canRecieveRadarData = false;    //can radar data be received from friendly sources?		
 
         [KSPField]
-        public FloatCurve radarDetectionCurve;		//FloatCurve defining at what range which RCS size can be detected
+        public FloatCurve radarDetectionCurve = new FloatCurve();		//FloatCurve defining at what range which RCS size can be detected
 
         [KSPField]
-        public FloatCurve radarLockTrackCurve;		//FloatCurve defining at what range which RCS size can be locked/tracked        
+        public FloatCurve radarLockTrackCurve = new FloatCurve();		//FloatCurve defining at what range which RCS size can be locked/tracked        
 
         [KSPField]
         public float radarGroundClutterFactor = 0.5f; //Factor defining how effective the radar is for look-down, compensating for ground clutter (0=ineffective, 1=fully effective)              
@@ -148,6 +148,7 @@ namespace BDArmory.Radar
 
         #region Part members
         //locks
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "Current Locks")]
         private int currLocks;
         public bool locked
         {
@@ -182,6 +183,7 @@ namespace BDArmory.Radar
         {
             get { return radarDetectionCurve.minTime; }
         }
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = true, guiName = "Detection Range")]
         public float radarMaxDistanceDetect
         {
             get { return radarDetectionCurve.maxTime; }
@@ -190,6 +192,7 @@ namespace BDArmory.Radar
         {
             get { return radarLockTrackCurve.minTime; }
         }
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = true, guiName = "Locking Range")]
         public float radarMaxDistanceLockTrack
         {
             get { return radarLockTrackCurve.maxTime; }
@@ -432,7 +435,7 @@ namespace BDArmory.Radar
             }
 
             // check for not updated legacy part:
-            if ((canScan && (radarMinDistanceDetect == radarMaxDistanceDetect)) || (canLock && (radarMinDistanceLockTrack == radarMaxDistanceLockTrack)))
+            if ((canScan && (radarMinDistanceDetect == float.MaxValue)) || (canLock && (radarMinDistanceLockTrack == float.MaxValue)))
             {
                 Debug.Log("[BDArmory]: WARNING: " + part.name + " has legacy definition, missing new radarDetectionCurve and radarLockTrackCurve definitions! Please update for the part to be usable!");
             }
@@ -1071,7 +1074,7 @@ namespace BDArmory.Radar
                       vrd.vessel.vesselName);
         }
 
-        
+
         public string getRWRType(int i)
         {
             switch (i)
@@ -1100,23 +1103,55 @@ namespace BDArmory.Radar
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append($"Radar Type: {radarName}");
+            output.Append($"Radar Type: " + (omnidirectional ? "omnidirectional" : "boresight"));
+            output.Append(Environment.NewLine);
+            output.Append($"EC/sec: {resourceDrain}");
+            output.Append(Environment.NewLine);
+            if (omnidirectional)
+            {
+                output.Append($"Field of view: {directionalFieldOfView}°");
+            }
+            else
+            {
+                output.Append($"Field of view: {boresightFOV}°"); 
+            }
             output.Append(Environment.NewLine);
             output.Append($"RWR Threat Type: {getRWRType(rwrThreatType)}");
             output.Append(Environment.NewLine);
-            output.Append($"Can Scan: {canScan}");
+
             output.Append(Environment.NewLine);
-            output.Append($"Track-While-Scan: {canTrackWhileScan}");
+            output.Append($"Capabilities:");
             output.Append(Environment.NewLine);
-            output.Append($"Can Lock: {canLock}");
+            output.Append($"- Scanning: {canScan}");
             output.Append(Environment.NewLine);
-            output.Append($"Can Receive Data: {canRecieveRadarData}");
+            output.Append($"- Track-While-Scan: {canTrackWhileScan}");
+            output.Append(Environment.NewLine);
+            output.Append($"- Locking: {canLock}");
             output.Append(Environment.NewLine);
             if (canLock)
             {
-                output.Append($"Simultaneous Locks: {maxLocks}");
+                output.Append($"- Max Locks: {maxLocks}");
                 output.Append(Environment.NewLine);
             }
+            output.Append($"- Receive Data: {canRecieveRadarData}");
+            output.Append(Environment.NewLine);
+
+            output.Append(Environment.NewLine);
+            output.Append($"Performance:");
+            output.Append(Environment.NewLine);
+
+            if (canScan)
+                output.Append($"- Detection: {radarDetectionCurve.Evaluate(radarMaxDistanceDetect)} m^2 @ {radarMaxDistanceDetect} km");
+            else
+                output.Append($"- Detection: (none)");
+            output.Append(Environment.NewLine);
+            if (canLock)
+                output.Append($"- Lock/Track: {radarLockTrackCurve.Evaluate(radarMaxDistanceLockTrack)} m^2 @ {radarMaxDistanceLockTrack} km");
+            else
+                output.Append($"- Lock/Track: (none)");
+            output.Append(Environment.NewLine);
+            output.Append($"- Ground clutter factor: {radarGroundClutterFactor}");
+            output.Append(Environment.NewLine);
 
             return output.ToString();
         }

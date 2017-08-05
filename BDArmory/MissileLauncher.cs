@@ -529,9 +529,9 @@ namespace BDArmory
 		    }
 
             // fill activeRadarLockTrackCurve with default values if not set by part config:
-            if (activeRadarLockTrackCurve.minTime == activeRadarLockTrackCurve.maxTime)
+            if (TargetingMode == TargetingModes.Radar && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
             {
-                const float MISSILE_DEFAULT_RCS = 10f;
+                const float MISSILE_DEFAULT_RCS = 5f;
                 activeRadarLockTrackCurve.Add(0f, 0f);
                 activeRadarLockTrackCurve.Add(activeRadarRange, MISSILE_DEFAULT_RCS);           // TODO: tune & balance constants!
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)

@@ -150,42 +150,48 @@ namespace BDArmory
 			{
 				vessel = GetComponent<Vessel>();
 			}
+
 			if(!vessel)
 			{
-				Debug.Log ("[BDArmory]:TargetInfo was added to a non-vessel");
+				Debug.Log ("[BDArmory]: TargetInfo was added to a non-vessel");
 				Destroy (this);
 				return;
 			}
 
-			//destroy this if a target info is already attached to the vessel
-			foreach(TargetInfo otherInfo in vessel.gameObject.GetComponents<TargetInfo>())
-			{
-				if(otherInfo != this)
-				{
-					Destroy(this);
-					return;
-				}
-			}
+            //destroy this if a target info is already attached to the vessel
+            IEnumerator otherInfo = vessel.gameObject.GetComponents<TargetInfo>().GetEnumerator();
+            while (otherInfo.MoveNext())
+            {
+                if ((object)otherInfo.Current != this)
+                {
+                    Destroy(this);
+                    return;
+                }
+            }
 
 			team = BDArmorySettings.BDATeams.None;
-
 			bool foundMf = false;
-			foreach(MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
-			{
-				foundMf = true;
-				team = BDATargetManager.BoolToTeam(mf.team);
-				weaponManager = mf;
-				break;
-			}
+            List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+            while (mf.MoveNext())
+            {
+                foundMf = true;
+                team = BDATargetManager.BoolToTeam(mf.Current.team);
+                weaponManager = mf.Current;
+                break;
+            }
+            mf.Dispose();
+
 			if(!foundMf)
 			{
-				foreach(MissileBase ml in vessel.FindPartModulesImplementing<MissileBase>())
-				{
-					isMissile = true;
-					MissileBaseModule = ml;
-					team = BDATargetManager.BoolToTeam(ml.Team);
-					break;
-				}
+                List<MissileBase>.Enumerator ml = vessel.FindPartModulesImplementing<MissileBase>().GetEnumerator();
+                while (ml.MoveNext())
+                {
+                    isMissile = true;
+                    MissileBaseModule = ml.Current;
+                    team = BDATargetManager.BoolToTeam(ml.Current.Team);
+                    break;
+                }
+                ml.Dispose();
 			}
 				
 			if(team != BDArmorySettings.BDATeams.None)
@@ -199,11 +205,12 @@ namespace BDArmory
 			friendliesEngaging = new List<MissileFire>();
 
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
-			lifeRoutine = StartCoroutine(LifetimeRoutine());
-			//add delegate to peace enable event
-			BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
+            //add delegate to peace enable event
+            BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
 
-			if(!isMissile && team != BDArmorySettings.BDATeams.None)
+            //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: DISABLED; CHECK BEHAVIOUR AND SIDE EFFECTS!
+
+            if (!isMissile && team != BDArmorySettings.BDATeams.None)
 			{
 				massRoutine = StartCoroutine(MassRoutine());
 			}
@@ -211,11 +218,12 @@ namespace BDArmory
 
 		void OnPeaceEnabled()
 		{
-			if(lifeRoutine != null)
+			if (lifeRoutine != null)
 			{
 				StopCoroutine(lifeRoutine);
 			}
-			if(massRoutine != null)
+
+			if (massRoutine != null)
 			{
 				StopCoroutine(massRoutine);
 			}
