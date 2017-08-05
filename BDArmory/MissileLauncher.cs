@@ -225,7 +225,9 @@ namespace BDArmory
 
         public GPSTargetInfo designatedGPSInfo;
 
+        private Vector3 floatingorigin_previous;
         #endregion
+
 
         [KSPAction("Fire Missile")]
         public void AGFire(KSPActionParam param)
@@ -821,13 +823,22 @@ namespace BDArmory
 
 			if(TimeIndex > 1f && vessel.srfSpeed > part.crashTolerance)
 			{
+                Vector3 floatingorigin_current = FloatingOrigin.Offset;
+                bool floatingorigin_hasshifted = false;
+
+                if ((floatingorigin_previous != Vector3.zero) && (floatingorigin_current - floatingorigin_previous).sqrMagnitude > 100)
+                {
+                    floatingorigin_hasshifted = true;
+                }
+                floatingorigin_previous = floatingorigin_current;
+
 				RaycastHit lineHit;
-				if(Physics.Linecast(part.transform.position, previousPos, out lineHit, 557057))
+				if((!floatingorigin_hasshifted) && Physics.Linecast(part.transform.position, previousPos, out lineHit, 557057))
 				{
 					if(lineHit.collider.GetComponentInParent<Part>() != part)
 					{
 						Debug.Log("[BDArmory]:" + part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
-						part.SetDamage(part.maxTemp + 100);
+                        part.SetDamage(part.maxTemp + 100);
 					}
 				}
 			}
@@ -1677,19 +1688,50 @@ namespace BDArmory
 			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
 
-		void AGMBallisticGuidance()
+        private float originalDistance = 0f;
+        void AGMBallisticGuidance()
 		{
-			Vector3 agmTarget;
-			bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, !indirect, out agmTarget);
-			if(!validSolution || Vector3.Angle(TargetPosition - transform.position, agmTarget - transform.position) > Mathf.Clamp(maxOffBoresight, 0, 65))
-			{
-				Vector3 dToTarget = TargetPosition - transform.position;
-				Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
-				agmTarget = transform.position + direction;
-            }
+            //Vector3 agmTarget;
+            //bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, !indirect, out agmTarget);
+            //if(!validSolution || Vector3.Angle(TargetPosition - transform.position, agmTarget - transform.position) > Mathf.Clamp(maxOffBoresight, 0, 65))
+            //{
+            //	Vector3 dToTarget = TargetPosition - transform.position;
+            //	Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
+            //	agmTarget = transform.position + direction;
+            //         }
 
-			DoAero(agmTarget);
-		}
+            //DoAero(agmTarget);
+
+            // Using BallisticGuidance() code from BDMModularGuidance 
+            
+            float currentDistance = Vector3.Distance(TargetPosition, vessel.CoM);
+            if (currentDistance > originalDistance)
+            {
+                originalDistance = currentDistance;
+            }
+            Vector3 agmTarget;
+
+
+            if (currentDistance > originalDistance / 2)
+            {
+                bool validSolution =
+                    MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
+                if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) >
+                    Mathf.Clamp(maxOffBoresight, 0, 65))
+                {
+                    Vector3 dToTarget = TargetPosition - vessel.CoM;
+                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f),
+                                            Vector3.Cross(dToTarget,
+                                                VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
+                    agmTarget = vessel.CoM + direction;
+                }
+            }
+            else
+            {
+                agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+            }
+            DoAero(agmTarget);
+        }
 
 		void UpdateLegacyTarget()
 		{
