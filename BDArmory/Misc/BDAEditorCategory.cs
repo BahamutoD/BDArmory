@@ -59,8 +59,8 @@ namespace BDArmory.Misc
             var fileradars = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(radarName);
 
             // 2. write header
-            fileguns.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;TAGS;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;WEAPON_RPM;WEAPON_DEVIATION;WEAPON_MAXEFFECTIVEDISTANCE;WEAPON_TYPE;WEAPON_BULLETTYPE;WEAPON_AMMONAME;WEAPON_BULLETMASS;WEAPON_BULLET_VELOCITY;WEAPON_MAXHEAT;WEAPON_HEATPERSHOT;WEAPON_HEATLOSS;CANNON_SHELLPOWER;CANNON_SHELLHEAT;CANNON_SHELLRADIUS;CANNON_AIRDETONATION");
-            filemissiles.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;TAGS;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;" +
+            fileguns.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;WEAPON_RPM;WEAPON_DEVIATION;WEAPON_MAXEFFECTIVEDISTANCE;WEAPON_TYPE;WEAPON_BULLETTYPE;WEAPON_AMMONAME;WEAPON_BULLETMASS;WEAPON_BULLET_VELOCITY;WEAPON_MAXHEAT;WEAPON_HEATPERSHOT;WEAPON_HEATLOSS;CANNON_SHELLPOWER;CANNON_SHELLHEAT;CANNON_SHELLRADIUS;CANNON_AIRDETONATION");
+            filemissiles.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;" +
                                     "MISSILE_THRUST;MISSILE_BOOSTTIME;MISSILE_CRUISETHRUST;MISSILE_CRUISETIME;MISSILE_MAXTURNRATEDPS;MISSILE_BLASTPOWER;MISSILE_BLASTHEAT;MISSILE_BLASTRADIUS;MISSILE_GUIDANCEACTIVE;MISSILE_HOMINGTYPE;MISSILE_TARGETINGTYPE;MISSILE_MINLAUNCHSPEED;MISSILE_MINSTATICLAUNCHRANGE;MISSILE_MAXSTATICLAUNCHRANGE;MISSILE_OPTIMUMAIRSPEED;" +
                                     "CRUISE_TERMINALMANEUVERING; CRUISE_TERMINALGUIDANCETYPE; CRUISE_TERMINALGUIDANCEDISTANCE;" +
                                     "RADAR_ACTIVERADARRANGE;RADAR_RADARLOAL;" +
@@ -68,10 +68,11 @@ namespace BDArmory.Misc
                                     "HEAT_HEATTHRESHOLD;" +
                                     "LASER_BEAMCORRECTIONFACTOR; LASER_BEAMCORRECTIONDAMPING"
                                     );
-            fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;TAGS;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;RADAR_TYPE;RADAR_RWRTYPE;CAN_SCAN;CAN_LOCK;LOCK_MAXLOCKS;CAN_TWS;CAN_RECEIVE;" +
-                                  "OMNI;SCAN_ROTATIONSPEED;SCAN_DIRFOV;LOCK_MULTILOCKFOV;LOCK_ROTATIONANGLE;SIGNAL_THRESHOLD;SIGNAL_LOCK_THRESHOLD"
+            fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;radar_name;rwrThreatType;omnidirectional;directionalFieldOfView;boresightFOV;"+
+                                 "scanRotationSpeed;lockRotationSpeed;lockRotationAngle;showDirectionWhileScan;multiLockFOV;lockAttemptFOV;canScan;canLock;canTrackWhileScan;canRecieveRadarData;"+
+                                 "DEPRECATED_minSignalThreshold;DEPRECATED_minLockedSignalThreshold;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
                                   );
-            Debug.Log("Dumping weapons...");
+            Debug.Log("Dumping parts...");
 
             // 3. iterate weapons and write out fields
             foreach (var item in availableParts)
@@ -87,7 +88,7 @@ namespace BDArmory.Misc
                 if (weapon != null)
                 {
                     fileguns.WriteLine(
-                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.tags + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
+                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
                         weapon.roundsPerMinute + ";" + weapon.maxDeviation + ";" + weapon.maxEffectiveDistance + ";" + weapon.weaponType + ";" + weapon.bulletType + ";" + weapon.ammoName + ";" + weapon.bulletMass + ";" + weapon.bulletVelocity + ";" +
                         weapon.maxHeat + ";" + weapon.heatPerShot + ";" + weapon.heatLoss + ";" + weapon.cannonShellPower + ";" + weapon.cannonShellHeat + ";" + weapon.cannonShellRadius + ";" + weapon.airDetonation
                         );
@@ -96,7 +97,7 @@ namespace BDArmory.Misc
                 if (missile != null)
                 {
                     filemissiles.WriteLine(
-                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.tags + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
+                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
                                     missile.thrust + ";" + missile.boostTime + ";" + missile.cruiseThrust + ";" + missile.cruiseTime + ";" + missile.maxTurnRateDPS + ";" + missile.blastPower + ";" + missile.blastHeat + ";" + missile.blastRadius + ";" + missile.guidanceActive + ";" + missile.homingType + ";" + missile.targetingType + ";" + missile.minLaunchSpeed + ";" + missile.minStaticLaunchRange + ";" + missile.maxStaticLaunchRange + ";" + missile.optimumAirspeed + ";" +
                                     missile.terminalManeuvering + ";" + missile.terminalGuidanceType + ";" + missile.terminalGuidanceDistance + ";" +
                                     missile.activeRadarRange + ";" + missile.radarLOAL + ";" +
@@ -109,15 +110,13 @@ namespace BDArmory.Misc
                 if (radar != null)
                 {
                     fileradars.WriteLine(
-                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.tags + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
-                        radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.canScan + ";" + radar.canLock + ";" + radar.maxLocks + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" +
-                        radar.omnidirectional + ";" +
-                        radar.scanRotationSpeed + ";" +
-                        radar.directionalFieldOfView + ";" +
-                        radar.multiLockFOV + ";" +
-                        radar.lockRotationAngle + ";" +
-                        radar.minSignalThreshold + ";" +
-                        radar.minLockedSignalThreshold
+                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
+                        radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.omnidirectional + ";" + radar.directionalFieldOfView + ";" + radar.boresightFOV + ";" + radar.scanRotationSpeed + ";" + radar.lockRotationSpeed + ";" +
+                        radar.lockRotationAngle + ";" + radar.showDirectionWhileScan + ";" + radar.multiLockFOV + ";" + radar.lockAttemptFOV + ";" +
+                        radar.canScan + ";" + radar.canLock + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" +
+                        radar.minSignalThreshold + ";" + radar.minLockedSignalThreshold + ";" + radar.radarGroundClutterFactor + ";" + 
+                        radar.radarDetectionCurve.Evaluate(radar.radarMaxDistanceDetect) + "@" + radar.radarMaxDistanceDetect + ";" +
+                        radar.radarLockTrackCurve.Evaluate(radar.radarMaxDistanceLockTrack) + "@" + radar.radarMaxDistanceLockTrack
                         );
                 }
             }
@@ -126,6 +125,7 @@ namespace BDArmory.Misc
             fileguns.Close();
             filemissiles.Close();
             fileradars.Close();
+            Debug.Log("...dumping parts complete.");
         }
 
     }
