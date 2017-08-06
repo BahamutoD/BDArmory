@@ -70,7 +70,7 @@ namespace BDArmory.Misc
                                     );
             fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;radar_name;rwrThreatType;omnidirectional;directionalFieldOfView;boresightFOV;"+
                                  "scanRotationSpeed;lockRotationSpeed;lockRotationAngle;showDirectionWhileScan;multiLockFOV;lockAttemptFOV;canScan;canLock;canTrackWhileScan;canRecieveRadarData;"+
-                                 "DEPRECATED_minSignalThreshold;DEPRECATED_minLockedSignalThreshold;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
+                                 "DEPRECATED_minSignalThreshold;DEPRECATED_minLockedSignalThreshold;maxLocks;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
                                   );
             Debug.Log("Dumping parts...");
 
@@ -113,8 +113,8 @@ namespace BDArmory.Misc
                         item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
                         radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.omnidirectional + ";" + radar.directionalFieldOfView + ";" + radar.boresightFOV + ";" + radar.scanRotationSpeed + ";" + radar.lockRotationSpeed + ";" +
                         radar.lockRotationAngle + ";" + radar.showDirectionWhileScan + ";" + radar.multiLockFOV + ";" + radar.lockAttemptFOV + ";" +
-                        radar.canScan + ";" + radar.canLock + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" +
-                        radar.minSignalThreshold + ";" + radar.minLockedSignalThreshold + ";" + radar.radarGroundClutterFactor + ";" + 
+                        radar.canScan + ";" + radar.canLock + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" + 
+                        radar.minSignalThreshold + ";" + radar.minLockedSignalThreshold + ";" + radar.maxLocks + ";" + radar.radarGroundClutterFactor + ";" + 
                         radar.radarDetectionCurve.Evaluate(radar.radarMaxDistanceDetect) + "@" + radar.radarMaxDistanceDetect + ";" +
                         radar.radarLockTrackCurve.Evaluate(radar.radarMaxDistanceLockTrack) + "@" + radar.radarMaxDistanceLockTrack
                         );

@@ -1103,7 +1103,7 @@ namespace BDArmory.Radar
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append($"Radar Type: " + (omnidirectional ? "omnidirectional" : "boresight"));
+            output.Append($"Radar Type: " + ( (canRecieveRadarData && !canScan && !canLock) ? "datalink only" : omnidirectional ? "omnidirectional" : "boresight"));
             output.Append(Environment.NewLine);
             output.Append($"EC/sec: {resourceDrain}");
             output.Append(Environment.NewLine);
