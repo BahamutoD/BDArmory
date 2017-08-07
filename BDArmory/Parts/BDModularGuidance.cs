@@ -535,15 +535,18 @@ namespace BDArmory.Parts
             if (distance < 4500)
             {
                 cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-                debugString += "\nDescending On Target";
+                debugString.Append("Descending On Target");
+                debugString.Append(Environment.NewLine);
             }
             else
             {
                 cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-                debugString += "\nCruising";
+                debugString.Append("Cruising");
+                debugString.Append(Environment.NewLine);
             }
 
-            debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
+            debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
+            debugString.Append(Environment.NewLine);
 
             return cruiseTarget;
         }

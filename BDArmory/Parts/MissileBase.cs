@@ -5,6 +5,7 @@ using BDArmory.Misc;
 using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
+using System.Text;
 
 namespace BDArmory.Parts
 {
@@ -173,7 +174,7 @@ namespace BDArmory.Parts
         private float lastRWRPing = 0;
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
-        protected string debugString = "";
+        protected StringBuilder debugString = new StringBuilder();
         
         public string GetSubLabel()
         {

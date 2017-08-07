@@ -191,12 +191,5 @@ namespace BDArmory.CounterMeasure
             UpdateJammerStrength();
         }
 
-        void OnGUI()
-        {
-            if (BDArmorySettings.DRAW_DEBUG_LABELS && vessel.isActiveVessel)
-            {
-                GUI.Label(new Rect(300, 700, 200, 200), "Total jammer strength: " + jammerStrength);
-            }
-        }
     }
 }

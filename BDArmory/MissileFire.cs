@@ -1042,7 +1042,7 @@ namespace BDArmory
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    GUI.Label(new Rect(500, 600, 100, 100), "Missiles away: " + missilesAway);
+                    GUI.Label(new Rect(600, 900, 100, 100), "Missiles away: " + missilesAway);
                 }
             }
         }

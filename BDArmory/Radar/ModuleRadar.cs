@@ -1101,57 +1101,62 @@ namespace BDArmory.Radar
         // RMB info in editor
         public override string GetInfo()
         {
+            bool isLinkOnly = (canRecieveRadarData && !canScan && !canLock);
+
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append($"Radar Type: " + ( (canRecieveRadarData && !canScan && !canLock) ? "datalink only" : omnidirectional ? "omnidirectional" : "boresight"));
+            output.Append($"Radar Type: " + (isLinkOnly ? "datalink only" : omnidirectional ? "omnidirectional" : "boresight"));
             output.Append(Environment.NewLine);
             output.Append($"EC/sec: {resourceDrain}");
             output.Append(Environment.NewLine);
-            if (omnidirectional)
+            if (!isLinkOnly)
             {
-                output.Append($"Field of view: {directionalFieldOfView}°");
-            }
-            else
-            {
-                output.Append($"Field of view: {boresightFOV}°"); 
-            }
-            output.Append(Environment.NewLine);
-            output.Append($"RWR Threat Type: {getRWRType(rwrThreatType)}");
-            output.Append(Environment.NewLine);
+                if (omnidirectional)
+                {
+                    output.Append($"Field of view: {directionalFieldOfView}°");
+                }
+                else
+                {
+                    output.Append($"Field of view: {boresightFOV}°");
+                }
+                output.Append(Environment.NewLine);
+                output.Append($"RWR Threat Type: {getRWRType(rwrThreatType)}");
+                output.Append(Environment.NewLine);
 
-            output.Append(Environment.NewLine);
-            output.Append($"Capabilities:");
-            output.Append(Environment.NewLine);
-            output.Append($"- Scanning: {canScan}");
-            output.Append(Environment.NewLine);
-            output.Append($"- Track-While-Scan: {canTrackWhileScan}");
-            output.Append(Environment.NewLine);
-            output.Append($"- Locking: {canLock}");
-            output.Append(Environment.NewLine);
-            if (canLock)
-            {
-                output.Append($"- Max Locks: {maxLocks}");
+                output.Append(Environment.NewLine);
+                output.Append($"Capabilities:");
+                output.Append(Environment.NewLine);
+                output.Append($"- Scanning: {canScan}");
+                output.Append(Environment.NewLine);
+                output.Append($"- Track-While-Scan: {canTrackWhileScan}");
+                output.Append(Environment.NewLine);
+                output.Append($"- Locking: {canLock}");
+                output.Append(Environment.NewLine);
+                if (canLock)
+                {
+                    output.Append($"- Max Locks: {maxLocks}");
+                    output.Append(Environment.NewLine);
+                }
+                output.Append($"- Receive Data: {canRecieveRadarData}");
+                output.Append(Environment.NewLine);
+
+                output.Append(Environment.NewLine);
+                output.Append($"Performance:");
+                output.Append(Environment.NewLine);
+
+                if (canScan)
+                    output.Append($"- Detection: {radarDetectionCurve.Evaluate(radarMaxDistanceDetect)} m^2 @ {radarMaxDistanceDetect} km");
+                else
+                    output.Append($"- Detection: (none)");
+                output.Append(Environment.NewLine);
+                if (canLock)
+                    output.Append($"- Lock/Track: {radarLockTrackCurve.Evaluate(radarMaxDistanceLockTrack)} m^2 @ {radarMaxDistanceLockTrack} km");
+                else
+                    output.Append($"- Lock/Track: (none)");
+                output.Append(Environment.NewLine);
+                output.Append($"- Ground clutter factor: {radarGroundClutterFactor}");
                 output.Append(Environment.NewLine);
             }
-            output.Append($"- Receive Data: {canRecieveRadarData}");
-            output.Append(Environment.NewLine);
-
-            output.Append(Environment.NewLine);
-            output.Append($"Performance:");
-            output.Append(Environment.NewLine);
-
-            if (canScan)
-                output.Append($"- Detection: {radarDetectionCurve.Evaluate(radarMaxDistanceDetect)} m^2 @ {radarMaxDistanceDetect} km");
-            else
-                output.Append($"- Detection: (none)");
-            output.Append(Environment.NewLine);
-            if (canLock)
-                output.Append($"- Lock/Track: {radarLockTrackCurve.Evaluate(radarMaxDistanceLockTrack)} m^2 @ {radarMaxDistanceLockTrack} km");
-            else
-                output.Append($"- Lock/Track: (none)");
-            output.Append(Environment.NewLine);
-            output.Append($"- Ground clutter factor: {radarGroundClutterFactor}");
-            output.Append(Environment.NewLine);
 
             return output.ToString();
         }

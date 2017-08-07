@@ -747,7 +747,8 @@ namespace BDArmory
 		
 		public override void OnFixedUpdate()
 		{
-            debugString = "";
+            debugString.Length = 0;
+
 			if(HasFired && !HasExploded && part!=null)
 			{
                 CheckDetonationDistance();
@@ -934,7 +935,9 @@ namespace BDArmory
 				{
 					controlAuthority = Mathf.Clamp01(atmosMultiplier);
 				}
-				debugString += "\ncontrolAuthority: "+controlAuthority;
+
+				debugString.Append($"controlAuthority: {controlAuthority}");
+                debugString.Append(Environment.NewLine);
 
 				if(guidanceActive)// && timeIndex - dropTime > 0.5f)
 				{
@@ -1527,8 +1530,9 @@ namespace BDArmory
 			if(terminalManeuvering && distance < 4500)
 			{
 				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, cruiseAltitude);
-				debugString += "\nTerminal Maneuvers";
-			}
+                debugString.Append($"Terminal Maneuvers");
+                debugString.Append(Environment.NewLine);
+            }
 			else
 			{
 				float agmThreshDist = 2500;
@@ -1539,13 +1543,15 @@ namespace BDArmory
 						cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, agmDescentRatio);
 					}
 				
-					debugString += "\nDescending On Target";
-				}
+                    debugString.Append($"Descending On Target");
+                    debugString.Append(Environment.NewLine);
+                }
 				else
 				{
 					cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, cruiseAltitude);
-					debugString += "\nCruising";
-				}
+                    debugString.Append($"Cruising");
+                    debugString.Append(Environment.NewLine);
+                }
 			}
 					
 			//float clampedSpeed = Mathf.Clamp((float)vessel.srfSpeed, 1, 1000);
@@ -1582,7 +1588,8 @@ namespace BDArmory
 			DoAero(cruiseTarget);
 			CheckMiss();
 
-			debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
+			debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
+            debugString.Append(Environment.NewLine);
 		}
 
 		void AAMGuidance()
@@ -1911,7 +1918,7 @@ namespace BDArmory
 		{
 			if(HasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
 			{
-				GUI.Label(new Rect(200,300,200,200), debugString);	
+				GUI.Label(new Rect(200,300,200,200), debugString.ToString());	
 			}
 			if(HasFired && hasRCS)
 			{

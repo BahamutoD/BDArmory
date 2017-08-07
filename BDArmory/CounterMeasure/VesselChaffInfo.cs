@@ -43,12 +43,6 @@ namespace BDArmory.CounterMeasure
                 Mathf.Clamp(speedRegenMult*(float) vessel.srfSpeed, minRegen, maxRegen)*Time.fixedDeltaTime);
         }
 
-        void OnGUI()
-        {
-            if (BDArmorySettings.DRAW_DEBUG_LABELS && vessel.isActiveVessel)
-            {
-                GUI.Label(new Rect(600, 600, 200, 200), "Chaff multiplier: " + GetChaffMultiplier());
-            }
-        }
+
     }
 }

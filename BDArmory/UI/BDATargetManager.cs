@@ -6,6 +6,8 @@ using BDArmory.Parts;
 using BDArmory.Radar;
 using KSP.UI.Screens;
 using UnityEngine;
+using System.Text;
+using System;
 
 namespace BDArmory.UI
 {
@@ -28,9 +30,9 @@ namespace BDArmory.UI
 
 
 
-		string debugString = string.Empty;
+        StringBuilder debugString = new StringBuilder();
 
-		public static float heatScore;
+        public static float heatScore;
 		public static float flareScore;
 
 		public static bool hasAddedButton;
@@ -370,50 +372,68 @@ namespace BDArmory.UI
 
 		void UpdateDebugLabels()
 		{
-			debugString = string.Empty;
-			debugString+= ("Team A's targets:");
-			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+            debugString.Length = 0;
+
+			debugString.Append($"Team A's targets:");
+            debugString.Append(Environment.NewLine);
+            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
 			{
 				if(targetInfo)
 				{
 					if(!targetInfo.Vessel)
 					{
-						debugString+= ("\n - A target with no vessel reference.");
-					}
+                        debugString.Append($"- A target with no vessel reference.");
+                        debugString.Append(Environment.NewLine);
+                    }
 					else
 					{
-						debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
-					}
+                        debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
+                        debugString.Append(Environment.NewLine);
+                    }
 				}
 				else
 				{
-					debugString+= ("\n - A null target info.");
-				}
+                    debugString.Append($"- null target info.");
+                    debugString.Append(Environment.NewLine);
+                }
 			}
-			debugString+= ("\nTeam B's targets:");
-			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+
+            debugString.Append($"Team B's targets:");
+            debugString.Append(Environment.NewLine);
+            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
 			{
 				if(targetInfo)
 				{
 					if(!targetInfo.Vessel)
 					{
-						debugString+= ("\n - A target with no vessel reference.");
-					}
+                        debugString.Append($"- A target with no vessel reference.");
+                        debugString.Append(Environment.NewLine);
+                    }
 					else
 					{
-						debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
-					}
+                        debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
+                        debugString.Append(Environment.NewLine);
+                    }
 				}
 				else
 				{
-					debugString+= ("\n - A null target info.");
-				}
+                    debugString.Append($"- null target info.");
+                    debugString.Append(Environment.NewLine);
+                }
 			}
 
-			debugString += "\n\nHeat score: "+heatScore;
-			debugString += "\nFlare score: "+flareScore;
+            debugString.Append(Environment.NewLine);
+            debugString.Append($"Heat score: {heatScore} / Flare score: {flareScore}");
+            debugString.Append(Environment.NewLine);
 
-            debugString += "\nRadar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel);
+            debugString.Append($"Radar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel));
+            debugString.Append(Environment.NewLine);
+
+            debugString.Append($"Chaff multiplier: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselChaffInfo>()?.GetChaffMultiplier());
+            debugString.Append(Environment.NewLine);
+
+            debugString.Append($"ECM Jammer Strength: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselECMJInfo>()?.jammerStrength);
+            debugString.Append(Environment.NewLine);
         }
 
 
@@ -961,10 +981,8 @@ namespace BDArmory.UI
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS)	
 			{
-				GUI.Label(new Rect(600,100,600,600), debugString);	
+				GUI.Label(new Rect(600,100,600,600), debugString.ToString());	
 			}
-
-
 		}
 
 
