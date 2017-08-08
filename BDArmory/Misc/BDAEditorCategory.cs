@@ -4,6 +4,7 @@ using KSP.UI.Screens;
 using System;
 using BDArmory.Radar;
 using BDArmory.UI;
+using BDArmory.Parts;
 
 namespace BDArmory.Misc
 {
@@ -49,14 +50,17 @@ namespace BDArmory.Misc
             String gunName = "bda_weapons_list.csv";
             String missileName = "bda_missile_list.csv";
             String radarName = "bda_radar_list.csv";
+            String jammerName = "bda_jammer_list.csv";
             ModuleWeapon weapon = null;
             MissileLauncher missile = null;
             ModuleRadar radar = null;
+            ModuleECMJammer jammer = null;
 
             // 1. create the file
             var fileguns = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(gunName);
             var filemissiles = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(missileName);
             var fileradars = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(radarName);
+            var filejammers = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(jammerName);
 
             // 2. write header
             fileguns.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;WEAPON_RPM;WEAPON_DEVIATION;WEAPON_MAXEFFECTIVEDISTANCE;WEAPON_TYPE;WEAPON_BULLETTYPE;WEAPON_AMMONAME;WEAPON_BULLETMASS;WEAPON_BULLET_VELOCITY;WEAPON_MAXHEAT;WEAPON_HEATPERSHOT;WEAPON_HEATLOSS;CANNON_SHELLPOWER;CANNON_SHELLHEAT;CANNON_SHELLRADIUS;CANNON_AIRDETONATION");
@@ -72,6 +76,8 @@ namespace BDArmory.Misc
                                  "scanRotationSpeed;lockRotationSpeed;lockRotationAngle;showDirectionWhileScan;multiLockFOV;lockAttemptFOV;canScan;canLock;canTrackWhileScan;canRecieveRadarData;"+
                                  "DEPRECATED_minSignalThreshold;DEPRECATED_minLockedSignalThreshold;maxLocks;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
                                   );
+            filejammers.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;alwaysOn;rcsReduction;rcsReducationFactor;lockbreaker;lockbreak_strength;jammerStrength");
+
             Debug.Log("Dumping parts...");
 
             // 3. iterate weapons and write out fields
@@ -81,9 +87,11 @@ namespace BDArmory.Misc
                 weapon = null;
                 missile = null;
                 radar = null;
+                jammer = null;
                 weapon = item.partPrefab.GetComponent<ModuleWeapon>();
                 missile = item.partPrefab.GetComponent<MissileLauncher>();
                 radar = item.partPrefab.GetComponent<ModuleRadar>();
+                jammer = item.partPrefab.GetComponent<ModuleECMJammer>();
 
                 if (weapon != null)
                 {
@@ -119,12 +127,21 @@ namespace BDArmory.Misc
                         radar.radarLockTrackCurve.Evaluate(radar.radarMaxDistanceLockTrack) + "@" + radar.radarMaxDistanceLockTrack
                         );
                 }
+
+                if (jammer != null)
+                {
+                    filejammers.WriteLine(
+                        item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
+                        jammer.alwaysOn + ";" + jammer.rcsReduction + ";" + jammer.rcsReductionFactor + ";" + jammer.lockBreaker + ";" + jammer.lockBreakerStrength + ";" + jammer.jammerStrength
+                        );
+                }
             }
 
             // 4. close file
             fileguns.Close();
             filemissiles.Close();
             fileradars.Close();
+            filejammers.Close();
             Debug.Log("...dumping parts complete.");
         }
 

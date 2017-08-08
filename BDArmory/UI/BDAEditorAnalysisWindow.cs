@@ -2,6 +2,8 @@
 using UnityEngine;
 using KSP.UI.Screens;
 using BDArmory.Radar;
+using System.Collections.Generic;
+using BDArmory.Parts;
 
 namespace BDArmory.UI
 {
@@ -17,7 +19,7 @@ namespace BDArmory.UI
         private Rect windowRect = new Rect(300, 150, 650, 400);
 
         private bool takeSnapshot = false;
-
+        private float rcsReductionFactor;
 
         void Awake()
         {
@@ -117,6 +119,7 @@ namespace BDArmory.UI
             GUIStyle style = HighLogic.Skin.label;
             style.fontStyle = FontStyle.Bold;
             GUI.Label(new Rect(10, 300, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal) , style);
+            GUI.Label(new Rect(10, 315, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction factors)", RadarUtils.rcsTotal * rcsReductionFactor), style);
 
             GUI.DragWindow();
         }
@@ -133,6 +136,21 @@ namespace BDArmory.UI
             RadarUtils.RenderVesselRadarSnapshot(v, EditorLogic.RootPart.transform);  //first rendering for true RCS
             RadarUtils.RenderVesselRadarSnapshot(v, EditorLogic.RootPart.transform, true);  //second rendering for nice zoomed-in view
             takeSnapshot = false;
+
+            // get RCS reduction measures (stealth/low observability)
+            rcsReductionFactor = 1.0f;
+            List<Part>.Enumerator parts = EditorLogic.fetch.ship.Parts.GetEnumerator();
+            while (parts.MoveNext())
+            {
+                ModuleECMJammer rcsJammer = parts.Current.GetComponent<ModuleECMJammer>();
+                if (rcsJammer != null)
+                {
+                    if (rcsJammer.rcsReduction)
+                        rcsReductionFactor *= rcsJammer.rcsReductionFactor;
+                }
+            }
+            parts.Dispose();
+
         }
          
 
