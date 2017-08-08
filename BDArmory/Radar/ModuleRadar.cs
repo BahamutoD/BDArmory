@@ -1111,14 +1111,7 @@ namespace BDArmory.Radar
             output.Append(Environment.NewLine);
             if (!isLinkOnly)
             {
-                if (omnidirectional)
-                {
-                    output.Append($"Field of view: {directionalFieldOfView}°");
-                }
-                else
-                {
-                    output.Append($"Field of view: {boresightFOV}°");
-                }
+                output.Append($"Field of view: {directionalFieldOfView}°");
                 output.Append(Environment.NewLine);
                 output.Append($"RWR Threat Type: {getRWRType(rwrThreatType)}");
                 output.Append(Environment.NewLine);
