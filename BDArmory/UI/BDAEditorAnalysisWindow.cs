@@ -4,6 +4,7 @@ using KSP.UI.Screens;
 using BDArmory.Radar;
 using System.Collections.Generic;
 using BDArmory.Parts;
+using BDArmory.Misc;
 
 namespace BDArmory.UI
 {
@@ -16,10 +17,20 @@ namespace BDArmory.UI
 
         private bool showRcsWindow = false;
         private string windowTitle = "BDArmory Radar Cross Section Analysis";
-        private Rect windowRect = new Rect(300, 150, 650, 400);
+        private Rect windowRect = new Rect(300, 150, 650, 500);
 
         private bool takeSnapshot = false;
         private float rcsReductionFactor;
+
+        private List<ModuleRadar> radars;
+        private List<GUIContent> radarsGUI = new List<GUIContent>();
+        private GUIContent radarBoxText;
+        private BDGUIComboBox radarBox;
+        private int previous_index = -1;
+        private string text_detection;
+        private string text_locktrack;
+        private string text_sonar;
+
 
         void Awake()
         {
@@ -34,9 +45,26 @@ namespace BDArmory.UI
             GameEvents.onEditorShipModified.Add(OnEditorShipModifiedEvent);
         }
 
+        private void FillRadarList()
+        {
+            radars = BDAEditorCategory.getRadars();
+            foreach (var radar in radars)
+            {
+                GUIContent gui = new GUIContent();
+                gui.text = radar.radarName;
+                gui.tooltip = radar.radarName;
+                radarsGUI.Add(gui);
+            }
+
+            radarBoxText = new GUIContent();
+            radarBoxText.text = "Select Radar... **";
+        }
+
+
         private void OnEditorShipModifiedEvent(ShipConstruct data)
         {
             takeSnapshot = true;
+            previous_index = -1;
         }
 
         private void OnDestroy()
@@ -118,8 +146,71 @@ namespace BDArmory.UI
 
             GUIStyle style = HighLogic.Skin.label;
             style.fontStyle = FontStyle.Bold;
-            GUI.Label(new Rect(10, 300, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal) , style);
-            GUI.Label(new Rect(10, 315, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction factors)", RadarUtils.rcsTotal * rcsReductionFactor), style);
+            GUI.Label(new Rect(10, 300, 600, 20), "Base radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal) , style);
+            GUI.Label(new Rect(10, 320, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction/stealth)", RadarUtils.rcsTotal * rcsReductionFactor), style);
+
+            style.fontStyle = FontStyle.Normal;
+            GUI.Label(new Rect(10, 380, 600, 20), "** (Range evaluation not accounting for ECM/countermeasures or radar ground clutter factor)", style);
+            GUI.Label(new Rect(10, 410, 600, 20), text_detection, style);
+            GUI.Label(new Rect(10, 430, 600, 20), text_locktrack, style);
+            GUI.Label(new Rect(10, 450, 600, 20), text_sonar, style);
+
+            if (radars == null)
+            {
+                FillRadarList();
+                GUIStyle listStyle = new GUIStyle(HighLogic.Skin.button);
+                listStyle.fixedHeight = 18; //make list contents slightly smaller
+                radarBox = new BDGUIComboBox(new Rect(10, 350, 200, 20), radarBoxText, radarsGUI.ToArray(), 120, listStyle);
+            }
+            
+            int selected_index = radarBox.Show();
+
+            if (selected_index != previous_index)
+            {
+                text_sonar = "";
+
+                // selected radar changed - evaluate craft RCS against this radar
+                var selected_radar = radars[selected_index];
+                if (selected_radar.canScan)
+                {
+                    for (float distance = selected_radar.radarMaxDistanceDetect; distance >= 0;  distance--)
+                    {
+                        text_detection = $"Detection: undetectable by this radar.";
+                        if (selected_radar.radarDetectionCurve.Evaluate(distance) <= (RadarUtils.rcsTotal * rcsReductionFactor))
+                        {
+                            text_detection = $"Detection: detected at {distance} km and closer";
+                            break;
+                        }
+                    }
+
+                }
+                else
+                {
+                    text_detection = "Detection: This radar does not have detection capabilities.";
+                }
+
+                if (selected_radar.canLock)
+                {
+                    text_locktrack = $"Lock/Track: untrackable by this radar.";
+                    for (float distance = selected_radar.radarMaxDistanceLockTrack; distance >= 0; distance--)
+                    {
+                        if (selected_radar.radarLockTrackCurve.Evaluate(distance) <= (RadarUtils.rcsTotal * rcsReductionFactor))
+                        {
+                            text_locktrack = $"Lock/Track: tracked at {distance} km and closer";
+                            break;
+                        }
+                    }
+
+                }
+                else
+                {
+                    text_locktrack = "Lock/Track: This radar does not have locking/tracking capabilities.";
+                }
+
+                if (selected_radar.getRWRType(selected_radar.rwrThreatType) == "SONAR")
+                    text_sonar = "SONAR - will only be able to detect/track splashed or submerged vessels!";
+            }
+            previous_index = selected_index;
 
             GUI.DragWindow();
         }

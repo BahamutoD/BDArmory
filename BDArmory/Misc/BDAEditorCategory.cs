@@ -45,6 +45,22 @@ namespace BDArmory.Misc
                 dumpParts();
         }
 
+
+        public static List<ModuleRadar> getRadars()
+        {
+            List<ModuleRadar> results = new List<ModuleRadar>(10);
+
+            foreach (var item in availableParts)
+            {
+                var radar = item.partPrefab.GetComponent<ModuleRadar>();
+                if (radar != null)
+                    results.Add(radar);
+            }
+
+            return results;
+        }
+
+
         void dumpParts()
         {
             String gunName = "bda_weapons_list.csv";

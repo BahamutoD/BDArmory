@@ -104,6 +104,7 @@
     <Compile Include="Animation\BDAScaleByDistance.cs" />
     <Compile Include="Animation\BDALookConstraintUp.cs" />
     <Compile Include="Parts\SeismicChargeFX.cs" />
+    <Compile Include="UI\BDGUIComboBox.cs" />
     <Compile Include="UI\BDGUIUtils.cs" />
     <Compile Include="UI\BDInputUtils.cs" />
     <Compile Include="TargetInfo.cs" />
