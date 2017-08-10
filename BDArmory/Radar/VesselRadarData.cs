@@ -617,7 +617,7 @@ namespace BDArmory.Radar
             (
                 radar.canLock
                 && (!radar.locked || radar.currentLocks < radar.maxLocks)
-                && radarTarget.targetData.signalStrength > radar.minLockedSignalThreshold
+                && radarTarget.targetData.signalStrength > radar.radarLockTrackCurve.Evaluate((radarTarget.targetData.predictedPosition - radar.transform.position).magnitude / 1000f)
                 &&
                 (radar.omnidirectional ||
                  Vector3.Angle(radar.transform.up, radarTarget.targetData.predictedPosition - radar.transform.position) <
@@ -1622,6 +1622,7 @@ namespace BDArmory.Radar
                                    displayedTargets[i].signalPersistTime)*2) - 1;
 
                     //jamming
+                    // TODO: evaluation via radarutils!
                     bool jammed = false;
                     if (displayedTargets[i].targetData.vesselJammer &&
                         displayedTargets[i].targetData.vesselJammer.jammerStrength >

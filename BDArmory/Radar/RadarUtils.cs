@@ -884,7 +884,7 @@ namespace BDArmory.Radar
 			return radarPos;
 		}
 
-        
-	}
+
+    }
 }
 
