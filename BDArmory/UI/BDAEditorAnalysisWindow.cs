@@ -230,6 +230,7 @@ namespace BDArmory.UI
 
             // get RCS reduction measures (stealth/low observability)
             rcsReductionFactor = 1.0f;
+            int rcsCount = 0;
             List<Part>.Enumerator parts = EditorLogic.fetch.ship.Parts.GetEnumerator();
             while (parts.MoveNext())
             {
@@ -237,11 +238,16 @@ namespace BDArmory.UI
                 if (rcsJammer != null)
                 {
                     if (rcsJammer.rcsReduction)
+                    {
                         rcsReductionFactor *= rcsJammer.rcsReductionFactor;
+                        rcsCount++;
+                    }
                 }
             }
             parts.Dispose();
 
+            if (rcsCount > 0)
+                rcsReductionFactor = Mathf.Clamp((rcsReductionFactor * rcsCount), 0.15f, 1);    //same formula as in VesselECMJInfo must be used here!
         }
          
 

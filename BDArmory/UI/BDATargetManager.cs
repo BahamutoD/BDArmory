@@ -172,7 +172,7 @@ namespace BDArmory.UI
 
 		void Update()
 		{
-			if(BDArmorySettings.DRAW_DEBUG_LABELS)
+			if(BDArmorySettings.DRAW_DEBUG_LABELS && FlightGlobals.ready)
 			{
 				UpdateDebugLabels();
 			}
@@ -433,6 +433,9 @@ namespace BDArmory.UI
             debugString.Append(Environment.NewLine);
 
             debugString.Append($"ECM Jammer Strength: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselECMJInfo>()?.jammerStrength);
+            debugString.Append(Environment.NewLine);
+
+            debugString.Append($"ECM Lockbreak Strength: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselECMJInfo>()?.lockBreakStrength);
             debugString.Append(Environment.NewLine);
         }
 

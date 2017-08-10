@@ -24,6 +24,11 @@ namespace BDArmory
             set;
         }
 
+        public bool radarBaseSignatureNeedsUpdate
+        {
+            get;
+            set;
+        }
 
         public bool isLanded
 		{

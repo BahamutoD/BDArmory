@@ -113,8 +113,7 @@ namespace BDArmory.CounterMeasure
             float jSpamFactor = 1;
             float lbreakFactor = 1;
 
-            float rcsrTotalMass = 0;
-            float rcsrTotal = 0;
+            float rcsrTotal = 1;
             float rcsrCount = 0;
 
             List<ModuleECMJammer>.Enumerator jammer = jammers.GetEnumerator();
@@ -133,8 +132,7 @@ namespace BDArmory.CounterMeasure
                 }
                 if (jammer.Current.rcsReduction)
                 {
-                    rcsrTotalMass += jammer.Current.part.mass;
-                    rcsrTotal += jammer.Current.rcsReductionFactor;
+                    rcsrTotal *= jammer.Current.rcsReductionFactor;
                     rcsrCount++;
                 }
             }
@@ -145,9 +143,7 @@ namespace BDArmory.CounterMeasure
 
             if (rcsrCount > 0)
             {
-                float rcsrAve = rcsrTotal/rcsrCount;
-                float massFraction = rcsrTotalMass/vessel.GetTotalMass();
-                rcsr = Mathf.Clamp(1 - (rcsrAve*massFraction), 0.15f, 1);
+                rcsr = Mathf.Clamp((rcsrTotal*rcsrCount), 0.15f, 1);
             }
             else
             {

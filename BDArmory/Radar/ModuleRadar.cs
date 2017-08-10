@@ -811,16 +811,8 @@ namespace BDArmory.Radar
                 return;
             }
 
-            // TODO: MOVE LOCK BERAKING CODE INTO RADARUTILS!
             //unlock if over-jammed
-            if (lockedTarget.vesselJammer &&
-                lockedTarget.vesselJammer.lockBreakStrength >
-                lockedTarget.signalStrength*lockedTarget.vesselJammer.rcsReductionFactor)
-            {
-                //UnlockAllTargets();
-                UnlockTargetAt(index, true);
-                return;
-            }
+            // MOVED TO RADARUTILS!
 
             //cycle scan direction
             if (index == lockedTargetIndex)
