@@ -127,6 +127,7 @@ namespace BDArmory.Radar
         {
             float lbFactor = 1.0f;
             float baseSig = GetVesselRadarCrossSection(v);
+            float modifiedSig = GetVesselModifiedSignature(v, baseSig);
 
             // read vessel ecminfo for active lockbreaking jammers
             VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
@@ -134,13 +135,34 @@ namespace BDArmory.Radar
             if (vesseljammer)
             {
                 // lockbreaking strength relative to jammer's lockbreak strength in relation to vessel rcs signature:
-                // lockbreak_factor = 1 - (jammerLBStrength / modifiedSig / 100)
-                lbFactor = (1 - ((vesseljammer.lockBreakStrength / baseSig) / 100));
+                // lockbreak_factor = baseSig/modifiedSig x (1 – lopckBreakStrength/baseSig/100)
+                lbFactor = (baseSig / modifiedSig) * (1 - (vesseljammer.lockBreakStrength / baseSig / 100));
             }
 
             return lbFactor;
         }
 
+
+        /// <summary>
+        /// Get a vessel ecm jamming area (in m) where radar display garbling occurs
+        /// </summary>
+        public static float GetVesselECMJammingDistance(Vessel v)
+        {
+            float jammingDistance = 0f;
+            float baseSig = GetVesselRadarCrossSection(v);
+
+            // read vessel ecminfo for active lockbreaking jammers
+            VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
+
+            if (vesseljammer)
+            {
+                // garbling due to overly strong jamming signals relative to jammer's strength in relation to vessel rcs signature:
+                // jammingDistance =  (jammerstrength / baseSig / 100 + 1.0) x js
+                jammingDistance = ((vesseljammer.jammerStrength / baseSig / 100) + 1.0f) * vesseljammer.jammerStrength;
+            }
+
+            return jammingDistance;
+        }
 
         /// <summary>
         /// Internal method: do the actual radar snapshot rendering from 3 sides and store it in a vesseltargetinfo attached to the vessel
