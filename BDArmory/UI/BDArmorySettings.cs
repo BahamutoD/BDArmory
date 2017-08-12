@@ -19,9 +19,9 @@ namespace BDArmory.UI
         //=======configurable settings
         [BDAPersistantSettingsField] public static bool INSTAKILL;
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
-        [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;
+        [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;                 //TODO: remove all references to this so it can be deprecated!
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
-        [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;
+        [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;            //CAN BE CONFIGURED, BUT HAS NO ACTUAL EFFECT ANYWHERE. SUGGEST TO REMOVE.
         [BDAPersistantSettingsField] public static bool INFINITE_AMMO;
         [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LINES;
         [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LABELS;
@@ -30,33 +30,34 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static bool REMOTE_SHOOTING;
         [BDAPersistantSettingsField] public static bool BOMB_CLEARANCE_CHECK = true;
         [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100;
-        [BDAPersistantSettingsField] public static float FLARE_CHANCE_FACTOR = 25;
+        //[BDAPersistantSettingsField] public static float FLARE_CHANCE_FACTOR = 25;            //DEPRECATED, NOT USED ANYWHERE!
 
         public static bool SMART_GUARDS = true;
 
-        [BDAPersistantSettingsField] public static float MAX_BULLET_RANGE = 8000;
+        [BDAPersistantSettingsField] public static float MAX_BULLET_RANGE = 8000;               //TODO: remove all references to this so it can be deprecated! all ranges should be supplied in part config!
         [BDAPersistantSettingsField] public static float TRIGGER_HOLD_TIME = 0.3f;
-        [BDAPersistantSettingsField] public static bool ALLOW_LEGACY_TARGETING = true;
+        [BDAPersistantSettingsField] public static bool ALLOW_LEGACY_TARGETING = true;          //TODO: remove all references to this so it can be deprecated! legacy targeting should not be support anymore in future versions.
         [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024;
         [BDAPersistantSettingsField] public static bool BW_TARGET_CAM = true;
         [BDAPersistantSettingsField] public static float SMOKE_DEFLECTION_FACTOR = 10;
-        [BDAPersistantSettingsField] public static float FLARE_THERMAL = 1900;
+        [BDAPersistantSettingsField] public static float FLARE_THERMAL = 1900;                  //TODO: should this really be a magic number, or better be provided by flare part configs?
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000;
-        [BDAPersistantSettingsField] public static float MAX_ACTIVE_RADAR_RANGE = 40000;
-        [BDAPersistantSettingsField] public static float MAX_ENGAGEMENT_RANGE = 40000;
+        [BDAPersistantSettingsField] public static float MAX_ACTIVE_RADAR_RANGE = 40000;        //NOTE: used ONLY for display range of radar windows! Actual radar range provided by part configs!
+        [BDAPersistantSettingsField] public static float MAX_ENGAGEMENT_RANGE = 40000;          //NOTE: used ONLY for missile dlz parameters!
         [BDAPersistantSettingsField] public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
         [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
         [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
-        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;
+        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;                  //DEPRECATED, NOT USED ANYWHERE!
 
         //=======Window position settings Git Issue #13
         [BDAWindowSettingsField] public static Rect WindowRectToolbar;
         [BDAWindowSettingsField] public static Rect WindowRectGps;
         [BDAWindowSettingsField] public static Rect WindowRectSettings;
         [BDAWindowSettingsField] public static Rect WindowRectRwr;
+        [BDAWindowSettingsField] public static Rect WindowRectVesselSwitcher;
 
         //reflection field lists
         FieldInfo[] iFs;
@@ -109,6 +110,7 @@ namespace BDArmory.UI
             get { return showGPSWindow; }
         }
 
+        bool maySavethisInstance = false;
         bool showGPSWindow;
         float gpsEntryCount;
         float gpsEntryHeight = 24;
@@ -306,6 +308,8 @@ namespace BDArmory.UI
             Instance = this;
 
             //wmgr toolbar
+            if (HighLogic.LoadedSceneIsFlight)
+                maySavethisInstance = true;     //otherwise later we should NOT save the current window positions!
 
             // window position settings
             WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
@@ -401,7 +405,7 @@ namespace BDArmory.UI
 
         private void CheckIfWindowsSettingsAreWithinScreen()
         {
-            if (WindowRectToolbar.x > Screen.width - toolWindowWidth - 40 ||
+            if (WindowRectToolbar.x > Screen.width - toolWindowWidth ||
                 WindowRectToolbar.y > Screen.height - toolWindowHeight )
             {
                 WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
@@ -419,6 +423,14 @@ namespace BDArmory.UI
                 WindowRectRwr.width == 0)
             {
                 WindowRectRwr = new Rect(40, Screen.height - 296, 276, 296);
+            }
+
+            if (WindowRectVesselSwitcher.x > Screen.width - 250 ||
+                WindowRectVesselSwitcher.y > Screen.height - 250 ||
+                WindowRectVesselSwitcher.height == 0 ||
+                WindowRectVesselSwitcher.width == 0)
+            {
+                WindowRectVesselSwitcher = new Rect(10, Screen.height / 6f, 250, 10);
             }
         }
 
@@ -1573,7 +1585,10 @@ namespace BDArmory.UI
         
         internal void OnDestroy()
         {
-            if (HighLogic.LoadedSceneIsFlight) BDAWindowSettingsField.Save();
+            if (maySavethisInstance)
+            {
+                BDAWindowSettingsField.Save();
+            }
         }
         
         void OnVesselGoOffRails(Vessel v)

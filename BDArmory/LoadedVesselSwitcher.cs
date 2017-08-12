@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using BDArmory.UI;
 using UnityEngine;
@@ -22,7 +23,11 @@ namespace BDArmory
 
         //gui params
         private float _windowHeight; //auto adjusting
-        private Rect _windowRect;
+        private Rect _windowRect
+        {
+            get { return BDArmorySettings.WindowRectVesselSwitcher; }
+            set { BDArmorySettings.WindowRectVesselSwitcher = value; }
+        }
         private readonly float _windowWidth = 250;
 
         private List<MissileFire> _wmgrsA;
@@ -47,10 +52,10 @@ namespace BDArmory
             GameEvents.onVesselGoOnRails.Add(VesselEventUpdate);
             MissileFire.OnToggleTeam += MissileFireOnToggleTeam;
 
-            _windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10);
-
             _ready = false;
             StartCoroutine(WaitForBdaSettings());
+
+            //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySettings persisted field!
         }
 
         private IEnumerator WaitForBdaSettings()
@@ -131,7 +136,7 @@ namespace BDArmory
             {
                 if (_showGui && BDArmorySettings.GAME_UI_ENABLED)
                 {
-                    _windowRect.height = _windowHeight;
+                    SetNewHeight(_windowHeight);
                     _windowRect = GUI.Window(10293444, _windowRect, ListWindow, "BDA Vessel Switcher",
                         HighLogic.Skin.window);
                     Misc.Misc.UpdateGUIRect(_windowRect, _guiCheckIndex);
@@ -149,6 +154,11 @@ namespace BDArmory
                     _wmToSwitchTeam = null;
                 }
             }
+        }
+
+        private void SetNewHeight(float windowHeight)
+        {
+            BDArmorySettings.WindowRectVesselSwitcher.height = windowHeight;
         }
 
         private void ListWindow(int id)
