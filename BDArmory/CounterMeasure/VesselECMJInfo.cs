@@ -58,7 +58,7 @@ namespace BDArmory.CounterMeasure
             GameEvents.onPartDie.Remove(OnPartDie);
         }
 
-        void OnPartDie(Part p)
+        void OnPartDie(Part p = null)
         {
             if (gameObject.activeInHierarchy)
             {

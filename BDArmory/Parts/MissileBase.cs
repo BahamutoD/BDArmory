@@ -426,6 +426,7 @@ namespace BDArmory.Parts
 
                         //RadarUtils.UpdateRadarLock(ray, lockedSensorFOV, activeRadarMinThresh, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
                         RadarUtils.RadarUpdateMissileLock(ray, lockedSensorFOV, ref scannedTargets, 0.4f, this);
+
                         float sqrThresh = radarLOALSearching ? Mathf.Pow(500, 2) : Mathf.Pow(40, 2);
 
                         if (radarLOAL && radarLOALSearching && !radarSnapshot)
@@ -438,34 +439,41 @@ namespace BDArmory.Parts
                             {
                                 if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
                                 {
-                                    radarTarget = scannedTargets[i];
-                                    TargetAcquired = true;
-                                    radarLOALSearching = false;
-                                    TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
-                                    TargetVelocity = radarTarget.velocity;
-                                    TargetAcceleration = radarTarget.acceleration;
-                                    _radarFailTimer = 0;
-                                    if (!ActiveRadar && Time.time - TimeFired > 1)
+                                    //re-check engagement envelope, only lock appropriate targets
+                                    if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
+                                        (scannedTargets[i].targetInfo.isFlying && engageAir) ||
+                                        ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
+                                        (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
                                     {
-                                        if (locksCount == 0)
+                                        radarTarget = scannedTargets[i];
+                                        TargetAcquired = true;
+                                        radarLOALSearching = false;
+                                        TargetPosition = radarTarget.predictedPosition + (radarTarget.velocity * Time.fixedDeltaTime);
+                                        TargetVelocity = radarTarget.velocity;
+                                        TargetAcceleration = radarTarget.acceleration;
+                                        _radarFailTimer = 0;
+                                        if (!ActiveRadar && Time.time - TimeFired > 1)
                                         {
-                                            RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
-                                            Debug.Log("[BDArmory]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
-
-                                        }
-                                        else if (locksCount > 2)
-                                        {
-                                            guidanceActive = false;
-                                            checkMiss = true;
-                                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                            if (locksCount == 0)
                                             {
-                                                Debug.Log("[BDArmory]: Radar missileBase reached max re-lock attempts.");
+                                                RadarWarningReceiver.PingRWR(ray, lockedSensorFOV, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+                                                Debug.Log("[BDArmory]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0"));
+
                                             }
+                                            else if (locksCount > 2)
+                                            {
+                                                guidanceActive = false;
+                                                checkMiss = true;
+                                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                                {
+                                                    Debug.Log("[BDArmory]: Radar missileBase reached max re-lock attempts.");
+                                                }
+                                            }
+                                            locksCount++;
                                         }
-                                        locksCount++;
+                                        ActiveRadar = true;
+                                        return;
                                     }
-                                    ActiveRadar = true;
-                                    return;
                                 }
                             }
                         }
@@ -506,6 +514,7 @@ namespace BDArmory.Parts
 
                 //RadarUtils.UpdateRadarLock(ray, lockedSensorFOV * 3, activeRadarMinThresh * 2, ref scannedTargets, 0.4f, pingRWR, RadarWarningReceiver.RWRThreatTypes.MissileLock, radarSnapshot);
                 RadarUtils.RadarUpdateMissileLock(ray, lockedSensorFOV * 3, ref scannedTargets, 0.4f, this);
+
                 float sqrThresh = Mathf.Pow(300, 2);
 
                 float smallestAngle = 360;
@@ -515,16 +524,23 @@ namespace BDArmory.Parts
                 {
                     if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
                     {
-                        float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, GetForwardTransform());
-                        if (angle < smallestAngle)
+                        //re-check engagement envelope, only lock appropriate targets
+                        if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
+                            (scannedTargets[i].targetInfo.isFlying && engageAir) ||
+                            ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
+                            (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
                         {
-                            lockedTarget = scannedTargets[i];
-                            smallestAngle = angle;
+                            float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, GetForwardTransform());
+                            if (angle < smallestAngle)
+                            {
+                                lockedTarget = scannedTargets[i];
+                                smallestAngle = angle;
+                            }
+
+
+                            ActiveRadar = true;
+                            return;
                         }
-
-
-                        ActiveRadar = true;
-                        return;
                     }
                 }
 

@@ -201,10 +201,7 @@ namespace BDArmory
 				
 			if(team != BDArmorySettings.BDATeams.None)
 			{
-				if(!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(this))
-				{
-					BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(this);
-				}
+                BDATargetManager.AddTarget(this);
 			}
 
 			friendliesEngaging = new List<MissileFire>();
@@ -213,7 +210,7 @@ namespace BDArmory
             //add delegate to peace enable event
             BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
 
-            //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: DISABLED; CHECK BEHAVIOUR AND SIDE EFFECTS!
+            //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
 
             if (!isMissile && team != BDArmorySettings.BDATeams.None)
 			{
@@ -306,6 +303,9 @@ namespace BDArmory
 
 		public void Engage(MissileFire mf)
 		{
+            if (mf == null)
+                return;
+
 			if(!friendliesEngaging.Contains(mf))
 			{
 				friendliesEngaging.Add(mf);
@@ -314,7 +314,10 @@ namespace BDArmory
 
 		public void Disengage(MissileFire mf)
 		{
-			friendliesEngaging.Remove(mf);
+            if (mf == null)
+                return;
+
+            friendliesEngaging.Remove(mf);
 		}
 		
 		void AboutToBeDestroyed()

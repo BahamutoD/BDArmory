@@ -94,7 +94,7 @@ namespace BDArmory.UI
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                if (toolbarButton is null)
+                if (toolbarButton == null)
                 {
                     Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "icon_rcs", false);
                     toolbarButton = ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB, buttonTexture);

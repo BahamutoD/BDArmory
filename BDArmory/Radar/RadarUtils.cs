@@ -35,6 +35,7 @@ namespace BDArmory.Radar
         private const float RCS_MISSILES = 999f;
         private const float RWR_PING_RANGE_FACTOR = 2.0f;
         private const float RADAR_IGNORE_DISTANCE_SQR = 100f;
+        private const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.1f;
 
 
         /// <summary>
@@ -516,7 +517,7 @@ namespace BDArmory.Radar
 
                     //  our radar ping can be received at a higher range than we can detect, according to RWR range ping factor:
                     if (distance < missile.activeRadarRange * RWR_PING_RANGE_FACTOR)
-                        RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.MissileLock, dataPersistTime);
+                        RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.MissileLock, ACTIVE_MISSILE_PING_PERISTS_TIME);
                 }
 
             }
@@ -728,7 +729,7 @@ namespace BDArmory.Radar
 
                 //  our radar ping can be received at a higher range than we can detect, according to RWR range ping factor:
                 if (distance < radar.radarMaxDistanceLockTrack * RWR_PING_RANGE_FACTOR)
-                    RadarWarningReceiver.PingRWR(lockedVessel, ray.origin, radar.rwrType, radar.signalPersistTime);
+                    RadarWarningReceiver.PingRWR(lockedVessel, ray.origin, radar.rwrType, ACTIVE_MISSILE_PING_PERISTS_TIME);
 
                 return true;
             }
