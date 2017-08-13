@@ -584,7 +584,6 @@ namespace BDArmory.Parts
             if (!radarTarget.exists)
             {
                 legacyTargetVessel = null;
-                Debug.Log("[BDArmory]: Radar guidance finally failed.  No target locked.");
             }
         }
 

@@ -739,7 +739,7 @@ namespace BDArmory
             }
         }
 
-        void OnPartDie(Part p)
+        void OnPartDie(Part p = null)
         {
             if (p == part)
             {
