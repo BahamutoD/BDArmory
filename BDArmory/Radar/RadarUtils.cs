@@ -31,11 +31,11 @@ namespace BDArmory.Radar
         internal static float rcsVentral;             // dito
         internal static float rcsTotal;               // dito
 
-        private const float RCS_NORMALIZATION_FACTOR = 16.0f;
-        private const float RCS_MISSILES = 999f;
-        private const float RWR_PING_RANGE_FACTOR = 2.0f;
-        private const float RADAR_IGNORE_DISTANCE_SQR = 100f;
-        private const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.1f;
+        internal const float RCS_NORMALIZATION_FACTOR = 16.0f;
+        internal const float RCS_MISSILES = 999f;                    //default rcs value for missiles if not configured in the part config
+        internal const float RWR_PING_RANGE_FACTOR = 2.0f;
+        internal const float RADAR_IGNORE_DISTANCE_SQR = 100f;
+        internal const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.1f;
 
 
         /// <summary>
@@ -72,14 +72,29 @@ namespace BDArmory.Radar
                 // LEGACY special handling missile: should always be detected, hence signature is set to maximum
                 // TODO: create field "missile_rcs_signature" on MIssileBase and return it here, allowing for different missiles
                 //       to have different sizes for detection purpose.
-                return RCS_MISSILES;
+                List<MissileBase>.Enumerator missile = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
+                while (missile.MoveNext())
+                {
+                    if (missile.Current == null) continue;
+                    return missile.Current.missileRadarCrossSection;
+                }
+                missile.Dispose();
             }
 
             if (ti.radarBaseSignature == 0 || ti.radarBaseSignatureNeedsUpdate)
             {
-                // perform radar rendering to obtain base cross section
-                ti.radarBaseSignature = RenderVesselRadarSnapshot(v, v.transform);
-                ti.radarBaseSignatureNeedsUpdate = false;
+                // is it just some debris? then dont bother doing a real rcs rendering and just fake it with the parts mass
+                if (v.vesselType == VesselType.Debris && !v.IsControllable)
+                {
+                    ti.radarBaseSignature = v.GetTotalMass();
+                    ti.radarBaseSignatureNeedsUpdate = false;
+                }
+                else
+                {
+                    // perform radar rendering to obtain base cross section
+                    ti.radarBaseSignature = RenderVesselRadarSnapshot(v, v.transform);
+                    ti.radarBaseSignatureNeedsUpdate = false;
+                }
             }
 
             return ti.radarBaseSignature; ;
@@ -118,6 +133,27 @@ namespace BDArmory.Radar
             */
 
             return modifiedSig;
+        }
+
+
+        /// <summary>
+        /// Internal method: get vessel chaff factor
+        /// </summary>
+        private static float GetVesselChaffFactor(Vessel v)
+        {
+            float chaffFactor = 1.0f;
+
+            // read vessel ecminfo for active lockbreaking jammers
+            VesselChaffInfo vci = v.gameObject.GetComponent<VesselChaffInfo>();
+
+            if (vci)
+            {
+                // lockbreaking strength relative to jammer's lockbreak strength in relation to vessel rcs signature:
+                // lockbreak_factor = baseSig/modifiedSig x (1 – lopckBreakStrength/baseSig/100)
+                chaffFactor = vci.GetChaffMultiplier();
+            }
+
+            return chaffFactor;
         }
 
 
@@ -408,6 +444,7 @@ namespace BDArmory.Radar
                     float signature = GetVesselRadarSignature(loadedvessels.Current);
                     signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, loadedvessels.Current.CoM);
                     // no ecm lockbreak factor here
+                    // no chaff factor here
 
                     // evaluate range
                     float distance = (loadedvessels.Current.CoM - ray.origin).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
@@ -485,6 +522,7 @@ namespace BDArmory.Radar
                     float signature = GetVesselRadarSignature(loadedvessels.Current);
                     // no ground clutter modifier for missiles
                     signature *= GetVesselECMLockBreakFactor(loadedvessels.Current);    //multiply lockbreak factor from active ecm
+                    signature *= GetVesselChaffFactor(loadedvessels.Current);           //multiply chaff factor
 
                     // evaluate range
                     float distance = (loadedvessels.Current.CoM - ray.origin).magnitude;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
@@ -580,6 +618,7 @@ namespace BDArmory.Radar
                             //evaluate if we can lock/track such a signature at that range
                             float minLockSig = radar.radarLockTrackCurve.Evaluate(distance);
                             signature *= GetVesselECMLockBreakFactor(loadedvessels.Current);    //multiply lockbreak factor from active ecm
+                            signature *= GetVesselChaffFactor(loadedvessels.Current);           //multiply chaff factor
 
                             if (signature > minLockSig)
                             {
@@ -622,6 +661,7 @@ namespace BDArmory.Radar
                             //evaluate if we can detect or lock such a signature at that range
                             float minDetectSig = radar.radarDetectionCurve.Evaluate(distance);
                             //do not consider lockbreak factor from active ecm here!
+                            //do not consider chaff here
 
                             if (signature > minDetectSig)
                             {
@@ -706,6 +746,7 @@ namespace BDArmory.Radar
                 float signature = GetVesselRadarSignature(lockedVessel);
                 signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, lockedVessel.CoM);
                 signature *= GetVesselECMLockBreakFactor(lockedVessel);    //multiply lockbreak factor from active ecm
+                signature *= GetVesselChaffFactor(lockedVessel);           //multiply chaff factor
 
                 // evaluate range
                 float distance = (lockedVessel.CoM - ray.origin).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...

@@ -1093,10 +1093,7 @@ namespace BDArmory
                             if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - TargetPosition).sqrMagnitude < sqrThresh)
                             {
                                 //re-check engagement envelope, only lock appropriate targets
-                                if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
-                                    (scannedTargets[i].targetInfo.isFlying && engageAir) ||
-                                    ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
-                                    (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
+                                if (CheckTargetEngagementEnvelope(scannedTargets[i].targetInfo))
                                 {
                                      lockedTarget = scannedTargets[i];
                                      ActiveRadar = true;

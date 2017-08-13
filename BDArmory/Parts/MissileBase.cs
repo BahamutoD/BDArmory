@@ -100,6 +100,9 @@ namespace BDArmory.Parts
         [KSPField]
         public FloatCurve activeRadarLockTrackCurve = new FloatCurve();             // floatcurve to define min/max range and lockable radar cross section
 
+        [KSPField]
+        public float missileRadarCrossSection = RadarUtils.RCS_MISSILES;            // radar cross section of this missile for detection purposes
+
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
         public enum TargetingModes { None, Radar, Heat, Laser, Gps, AntiRad }
@@ -170,7 +173,7 @@ namespace BDArmory.Parts
         private int snapshotTicker;
         private int locksCount = 0;        
         private float _radarFailTimer = 0;
-        private float maxRadarFailTime = 1;
+        private float maxRadarFailTime = 60;
         private float lastRWRPing = 0;
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
@@ -336,8 +339,10 @@ namespace BDArmory.Parts
             TargetAcquired = false;
 
             float angleToTarget = Vector3.Angle(radarTarget.predictedPosition - transform.position, GetForwardTransform());
+
             if (radarTarget.exists)
             {
+                // locked-on before launch, passive radar guidance or waiting till in active radar range:
                 if (!ActiveRadar && ((radarTarget.predictedPosition - transform.position).sqrMagnitude > Mathf.Pow(activeRadarRange, 2) || angleToTarget > maxOffBoresight * 0.75f))
                 {
                     if (vrd)
@@ -351,7 +356,6 @@ namespace BDArmory.Parts
                                 t = possibleTargets[i];
                             }
                         }
-
 
                         if (t.exists)
                         {
@@ -398,11 +402,12 @@ namespace BDArmory.Parts
                 }
                 else
                 {
+                    // active radar with target locked:
                     vrd = null;
 
                     if (angleToTarget > maxOffBoresight)
                     {
-                        Debug.Log("[BDArmory]: Radar guidance failed.  Target is out of active seeker gimbal limits.");
+                        Debug.Log("[BDArmory]: Active Radar guidance failed.  Target is out of active seeker gimbal limits.");
                         radarTarget = TargetSignatureData.noTarget;
                         legacyTargetVessel = null;
                         return;
@@ -414,7 +419,7 @@ namespace BDArmory.Parts
                         Ray ray = new Ray(transform.position, radarTarget.predictedPosition - transform.position);
                         bool pingRWR = Time.time - lastRWRPing > 0.4f;
                         if (pingRWR) lastRWRPing = Time.time;
-                        bool radarSnapshot = (snapshotTicker > 20);
+                        bool radarSnapshot = (snapshotTicker > 10);
                         if (radarSnapshot)
                         {
                             snapshotTicker = 0;
@@ -440,10 +445,7 @@ namespace BDArmory.Parts
                                 if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
                                 {
                                     //re-check engagement envelope, only lock appropriate targets
-                                    if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
-                                        (scannedTargets[i].targetInfo.isFlying && engageAir) ||
-                                        ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
-                                        (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
+                                    if (CheckTargetEngagementEnvelope(scannedTargets[i].targetInfo))
                                     {
                                         radarTarget = scannedTargets[i];
                                         TargetAcquired = true;
@@ -490,6 +492,7 @@ namespace BDArmory.Parts
                         else
                         {
                             radarTarget = TargetSignatureData.noTarget;
+                            Debug.Log("[BDArmory]: Active Radar guidance failed.  No target locked.");
                         }
 
                     }
@@ -497,12 +500,14 @@ namespace BDArmory.Parts
             }
             else if (radarLOAL && radarLOALSearching)
             {
+                // not locked on before launch, trying lock-on after launch:
+
                 if (scannedTargets == null) scannedTargets = new TargetSignatureData[5];
                 TargetSignatureData.ResetTSDArray(ref scannedTargets);
                 Ray ray = new Ray(transform.position, GetForwardTransform());
                 bool pingRWR = Time.time - lastRWRPing > 0.4f;
                 if (pingRWR) lastRWRPing = Time.time;
-                bool radarSnapshot = (snapshotTicker > 6);
+                bool radarSnapshot = (snapshotTicker > 5);
                 if (radarSnapshot)
                 {
                     snapshotTicker = 0;
@@ -525,10 +530,7 @@ namespace BDArmory.Parts
                     if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - radarTarget.predictedPosition).sqrMagnitude < sqrThresh)
                     {
                         //re-check engagement envelope, only lock appropriate targets
-                        if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
-                            (scannedTargets[i].targetInfo.isFlying && engageAir) ||
-                            ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
-                            (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
+                        if (CheckTargetEngagementEnvelope(scannedTargets[i].targetInfo))
                         {
                             float angle = Vector3.Angle(scannedTargets[i].predictedPosition - transform.position, GetForwardTransform());
                             if (angle < smallestAngle)
@@ -575,6 +577,14 @@ namespace BDArmory.Parts
             {
                 legacyTargetVessel = null;
             }
+        }
+
+        protected bool CheckTargetEngagementEnvelope(TargetInfo ti)
+        {
+            return (ti.isMissile && engageMissile) ||
+                    (ti.isFlying && engageAir) ||
+                    ((ti.isLanded || ti.isSplashed) && engageGround) ||
+                    (ti.isUnderwater && engageSLW);
         }
 
         protected void ReceiveRadarPing(Vessel v, Vector3 source, RadarWarningReceiver.RWRThreatTypes type, float persistTime)
