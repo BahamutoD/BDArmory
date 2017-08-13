@@ -173,7 +173,7 @@ namespace BDArmory.Parts
         private int snapshotTicker;
         private int locksCount = 0;        
         private float _radarFailTimer = 0;
-        private float maxRadarFailTime = 60;
+        private float maxRadarFailTime = 20;
         private float lastRWRPing = 0;
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
@@ -468,7 +468,7 @@ namespace BDArmory.Parts
                                                 checkMiss = true;
                                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                                 {
-                                                    Debug.Log("[BDArmory]: Radar missileBase reached max re-lock attempts.");
+                                                    Debug.Log("[BDArmory]: Active Radar guidance failed. Radar missileBase reached max re-lock attempts.");
                                                 }
                                             }
                                             locksCount++;
@@ -488,6 +488,7 @@ namespace BDArmory.Parts
                             TargetVelocity = radarTarget.velocity;
                             TargetAcceleration = Vector3.zero;
                             ActiveRadar = false;
+                            Debug.Log("[BDArmory]: Active Radar guidance - switching to LOAL searching...");
                         }
                         else
                         {
@@ -569,13 +570,15 @@ namespace BDArmory.Parts
                     TargetVelocity = Vector3.zero;
                     TargetAcceleration = Vector3.zero;
                     radarLOALSearching = true;
-                    return;
+                    Debug.Log("[BDArmory]: Active Radar guidance - switching to LOAL searching...");
+                    return;                    
                 }
             }
 
             if (!radarTarget.exists)
             {
                 legacyTargetVessel = null;
+                Debug.Log("[BDArmory]: Radar guidance finally failed.  No target locked.");
             }
         }
 
