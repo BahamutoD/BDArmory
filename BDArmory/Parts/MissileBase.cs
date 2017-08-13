@@ -173,7 +173,7 @@ namespace BDArmory.Parts
         private int snapshotTicker;
         private int locksCount = 0;        
         private float _radarFailTimer = 0;
-        private float maxRadarFailTime = 20;
+        private float maxRadarFailTime = 5;
         private float lastRWRPing = 0;
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
@@ -488,7 +488,7 @@ namespace BDArmory.Parts
                             TargetVelocity = radarTarget.velocity;
                             TargetAcceleration = Vector3.zero;
                             ActiveRadar = false;
-                            Debug.Log("[BDArmory]: Active Radar guidance - switching to LOAL searching...");
+                            _radarFailTimer = 0;
                         }
                         else
                         {
@@ -570,7 +570,13 @@ namespace BDArmory.Parts
                     TargetVelocity = Vector3.zero;
                     TargetAcceleration = Vector3.zero;
                     radarLOALSearching = true;
-                    Debug.Log("[BDArmory]: Active Radar guidance - switching to LOAL searching...");
+                    _radarFailTimer += Time.fixedDeltaTime;
+                    if (_radarFailTimer > maxRadarFailTime)
+                    {
+                        Debug.Log("[BDArmory]: Active Radar guidance failed. LOAL could not lock a target.");
+                        radarTarget = TargetSignatureData.noTarget;
+                        legacyTargetVessel = null;
+                    }
                     return;                    
                 }
             }
