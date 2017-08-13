@@ -4,6 +4,7 @@ using BDArmory.Misc;
 using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace BDArmory
 {
@@ -61,11 +62,13 @@ namespace BDArmory
 			}
 			else
 			{
-				foreach(MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
-				{
-					team = BDATargetManager.BoolToTeam(mf.team);
+                List<MissileFire>.Enumerator mf = v.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mf.MoveNext())
+                {
+                    team = BDATargetManager.BoolToTeam(mf.Current.team);
 					break;
 				}
+                mf.Dispose();
 			}
 
 			vesselJammer = v.gameObject.GetComponent<VesselECMJInfo>();

@@ -217,10 +217,6 @@ namespace BDArmory.Radar
 
             SetupResources();
 
-            //move vessel up for clear rendering shot (only if outside editor and thus vessel is a real vessel)
-            if (v.id != Guid.Empty)
-                v.SetPosition(v.transform.position + presentationPosition);
-
             Bounds vesselbounds = CalcVesselBounds(v, t);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
@@ -228,6 +224,13 @@ namespace BDArmory.Radar
                 Debug.Log("[BDArmory]: - bounds: " + vesselbounds.ToString());
                 Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
             }
+
+            if (vesselbounds.size == Vector3.zero)
+                return 0f;
+
+            //move vessel up for clear rendering shot (only if outside editor and thus vessel is a real vessel)
+            if (v.id != Guid.Empty)
+                v.SetPosition(v.transform.position + presentationPosition);
 
             // pass1: frontal
             radarCam.transform.position = vesselbounds.center + t.up * radarDistance;
@@ -850,9 +853,9 @@ namespace BDArmory.Radar
 
 					if(Vector3.Dot(vesselDirection, lookDirection) < 0) continue;
 
-					float vesselDistance = (vessel.transform.position - position).magnitude;
+					float vesselDistance = (vessel.transform.position - position).sqrMagnitude;
 
-					if(vesselDistance < maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
+					if(vesselDistance < maxDistance*maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
 					{
 						//Debug.Log("Found vessel: " + vessel.vesselName);
 						if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
@@ -910,7 +913,7 @@ namespace BDArmory.Radar
 										if(!weapon.recentlyFiring) continue;
 										if(Vector3.Dot(weapon.fireTransforms[0].forward, vesselDirection) > 0) continue;
 
-										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.vessel.ReferenceTransform.position - position).magnitude < (results.threatPosition - position).magnitude))
+										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
 										{
 											results.firingAtMe = true;
 											results.threatPosition = weapon.vessel.transform.position;

@@ -1688,7 +1688,7 @@ namespace BDArmory
                             simulating = false;
                         }
 
-                        if ((simStartPos - simCurrPos).magnitude > maxTargetingRange)
+                        if ((simStartPos - simCurrPos).sqrMagnitude > maxTargetingRange*maxTargetingRange)
                         {
                             bulletPrediction = simStartPos + ((simCurrPos - simStartPos).normalized * maxTargetingRange);
                             simulating = false;
@@ -1873,7 +1873,7 @@ namespace BDArmory
                 //legacy or visual range guard targeting
                 if (aiControlled && weaponManager && legacyTargetVessel &&
                     (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
-                     (legacyTargetVessel.transform.position - transform.position).magnitude < weaponManager.guardRange))
+                     (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
                     targetVelocity = legacyTargetVessel.srf_velocity;

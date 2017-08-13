@@ -1626,8 +1626,9 @@ namespace BDArmory.Radar
                     //jamming
                     // NEW: evaluation via radarutils!
                     bool jammed = false;
-                    float distanceToTarget = (this.vessel.transform.position - displayedTargets[i].targetData.position).magnitude;
-                    if (displayedTargets[i].targetData.vesselJammer && RadarUtils.GetVesselECMJammingDistance(displayedTargets[i].targetData.vessel) > distanceToTarget)
+                    float distanceToTarget = (this.vessel.transform.position - displayedTargets[i].targetData.position).sqrMagnitude;
+                    float jamDistance = RadarUtils.GetVesselECMJammingDistance(displayedTargets[i].targetData.vessel);
+                    if (displayedTargets[i].targetData.vesselJammer && jamDistance*jamDistance > distanceToTarget)
                     {
                         jammed = true;
                     }

@@ -702,7 +702,7 @@ namespace BDArmory.UI
                 mf.Dispose();
 
                 List<MissileBase>.Enumerator ml = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
-                while (mf.MoveNext())
+                while (ml.MoveNext())
                 {
                     if (ml.Current == null) continue;
                     if (ml.Current.HasFired)

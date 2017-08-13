@@ -1101,12 +1101,12 @@ namespace BDArmory
                             if (tgp.Current == null) continue;
                             if (!tgp.Current.enabled || (tgp.Current.cameraEnabled && tgp.Current.groundStabilized &&
                                                          !((tgp.Current.groundTargetPosition -
-                                                            guardTarget.transform.position).magnitude > 20))) continue;
+                                                            guardTarget.transform.position).sqrMagnitude > 20*20))) continue;
                             tgp.Current.EnableCamera();
                             yield return StartCoroutine(tgp.Current.PointToPositionRoutine(guardTarget.CoM));
                             if (!tgp.Current) continue;
                             if (tgp.Current.groundStabilized && guardTarget &&
-                                (tgp.Current.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
+                                (tgp.Current.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < 20*20)
                             {
                                 tgp.Current.slaveTurrets = true;
                                 StartGuardTurretFiring();
@@ -1117,7 +1117,7 @@ namespace BDArmory
                         tgp.Dispose();
                     }
 
-                    if (!guardTarget || (guardTarget.transform.position - transform.position).magnitude > guardRange)
+                    if (!guardTarget || (guardTarget.transform.position - transform.position).sqrMagnitude > guardRange*guardRange)
                     {
                         SetTarget(null); //disengage, sensors unavailable.
                         yield break;
@@ -1141,7 +1141,7 @@ namespace BDArmory
                     if (vesselRadarData &&
                         (!vesselRadarData.locked ||
                          (vesselRadarData.lockedTargetData.targetData.predictedPosition - guardTarget.transform.position)
-                             .magnitude > 40))
+                             .sqrMagnitude > 40*40))
                     {
                         //vesselRadarData.TryLockTarget(guardTarget.transform.position);
                         vesselRadarData.TryLockTarget(guardTarget);
@@ -1155,7 +1155,7 @@ namespace BDArmory
                         }
                     }
 
-                    if (!guardTarget || (guardTarget.transform.position - transform.position).magnitude > guardRange)
+                    if (!guardTarget || (guardTarget.transform.position - transform.position).sqrMagnitude > guardRange*guardRange)
                     {
                         SetTarget(null); //disengage, sensors unavailable.
                         yield break;
@@ -1278,7 +1278,7 @@ namespace BDArmory
 
 
                     MissileLauncher mlauncher;
-                    while (ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).magnitude > 40))
+                    while (ml && Time.time - attemptStartTime < attemptDuration && (!heatTarget.exists || (heatTarget.predictedPosition - guardTarget.transform.position).sqrMagnitude > 40*40))
                     {
                         //TODO BDModularGuidance: add turret
                         //try using missile turret to lock target
@@ -1302,7 +1302,7 @@ namespace BDArmory
                     {
                         if (!vesselRadarData.locked ||
                             (vesselRadarData.lockedTargetData.targetData.predictedPosition -
-                             guardTarget.transform.position).magnitude > 40)
+                             guardTarget.transform.position).sqrMagnitude > 40*40)
                         {
                             //vesselRadarData.TryLockTarget(guardTarget.transform.position);
                             vesselRadarData.TryLockTarget(guardTarget);
@@ -1377,7 +1377,7 @@ namespace BDArmory
                     float attemptStartTime = Time.time;
                     float attemptDuration = targetScanInterval * 0.75f;
                     while (Time.time - attemptStartTime < attemptDuration &&
-                           (!antiRadTargetAcquired || (antiRadiationTarget - guardTarget.CoM).magnitude > 20))
+                           (!antiRadTargetAcquired || (antiRadiationTarget - guardTarget.CoM).sqrMagnitude > 20*20))
                     {
                         yield return new WaitForFixedUpdate();
                     }
@@ -1387,7 +1387,7 @@ namespace BDArmory
                         yield return new WaitForSeconds(1f);
                     }
 
-                    if (ml && antiRadTargetAcquired && (antiRadiationTarget - guardTarget.CoM).magnitude < 20)
+                    if (ml && antiRadTargetAcquired && (antiRadiationTarget - guardTarget.CoM).sqrMagnitude < 20*20)
                     {
                         FireCurrentMissile(true);
                         StartCoroutine(MissileAwayRoutine(ml));
@@ -1403,7 +1403,7 @@ namespace BDArmory
                             if (tgp.Current == null) continue;
                             tgp.Current.EnableCamera();
                             yield return StartCoroutine(tgp.Current.PointToPositionRoutine(guardTarget.CoM));
-                            if (tgp.Current.groundStabilized && (tgp.Current.groundTargetPosition - guardTarget.transform.position).magnitude < 20)
+                            if (tgp.Current.groundStabilized && (tgp.Current.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < 20*20)
                             {
                                 break;
                             }
@@ -1414,7 +1414,7 @@ namespace BDArmory
                     //search for a laser point that corresponds with target vessel
                     float attemptStartTime = Time.time;
                     float attemptDuration = targetScanInterval * 0.75f;
-                    while (Time.time - attemptStartTime < attemptDuration && (!laserPointDetected || (foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).magnitude > 20)))
+                    while (Time.time - attemptStartTime < attemptDuration && (!laserPointDetected || (foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).sqrMagnitude > 20*20)))
                     {
                         yield return new WaitForFixedUpdate();
                     }
@@ -1422,7 +1422,7 @@ namespace BDArmory
                     {
                         yield return new WaitForSeconds(1f);
                     }
-                    if (ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).magnitude < 20)
+                    if (ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).sqrMagnitude < 20*20)
                     {
                         FireCurrentMissile(true);
                         StartCoroutine(MissileAwayRoutine(ml));
@@ -3589,8 +3589,8 @@ namespace BDArmory
             {
                 if (v.Current == null) continue;
                 if (!v.Current.loaded) continue;
-                float distance = (transform.position - v.Current.transform.position).magnitude;
-                if (!(distance < guardRange) || !CanSeeTarget(v.Current)) continue;
+                float distance = (transform.position - v.Current.transform.position).sqrMagnitude;
+                if (!(distance < guardRange*guardRange) || !CanSeeTarget(v.Current)) continue;
                 float angle = Vector3.Angle(-transform.forward, v.Current.transform.position - transform.position);
                 if (!(angle < guardAngle / 2)) continue;
                 List<MissileBase>.Enumerator missile = v.Current.FindPartModulesImplementing<MissileBase>().GetEnumerator();
@@ -3714,7 +3714,7 @@ namespace BDArmory
             {
                 for (int i = 0; i < rwr.pingsData.Length; i++)
                 {
-                    if (rwr.pingsData[i].exists && (rwr.pingWorldPositions[i] - v.position).magnitude < 20)
+                    if (rwr.pingsData[i].exists && (rwr.pingWorldPositions[i] - v.position).sqrMagnitude < 20*20)
                     {
                         matchFound = true;
                         break;
@@ -3852,7 +3852,7 @@ namespace BDArmory
             {
                 //release target if out of range
                 if (BDArmorySettings.ALLOW_LEGACY_TARGETING &&
-                    (guardTarget.transform.position - transform.position).magnitude > guardRange)
+                    (guardTarget.transform.position - transform.position).sqrMagnitude > guardRange*guardRange)
                 {
                     SetTarget(null);
                 }
