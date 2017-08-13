@@ -186,6 +186,10 @@ namespace BDArmory.Radar
         public static float GetVesselECMJammingDistance(Vessel v)
         {
             float jammingDistance = 0f;
+
+            if (v == null)
+                return jammingDistance;
+
             float baseSig = GetVesselRadarCrossSection(v);
 
             // read vessel ecminfo for active lockbreaking jammers
@@ -212,10 +216,14 @@ namespace BDArmory.Radar
         {
             const float radarDistance = 1000f;
             const float radarFOV = 2.0f;
-            Vector3 presentationPosition = t.forward * radarDistance;
+            Vector3 presentationPosition = -t.forward * radarDistance;
             float distanceToShip;
 
             SetupResources();
+
+            //move vessel up for clear rendering shot (only if outside editor and thus vessel is a real vessel)
+            if (v.id != Guid.Empty)
+                v.SetPosition(v.transform.position + presentationPosition);
 
             Bounds vesselbounds = CalcVesselBounds(v, t);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -225,16 +233,20 @@ namespace BDArmory.Radar
                 Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
             }
 
-            if (vesselbounds.size == Vector3.zero)
-                return 0f;
+            if (vesselbounds.size.sqrMagnitude == 0f)
+            {
+                // SAVE US THE RENDERING, result will be zero anyway...
 
-            //move vessel up for clear rendering shot (only if outside editor and thus vessel is a real vessel)
-            if (v.id != Guid.Empty)
-                v.SetPosition(v.transform.position + presentationPosition);
+                // revert presentation (only if outside editor and thus vessel is a real vessel)
+                if (v.id != Guid.Empty)
+                    v.SetPosition(v.transform.position - presentationPosition);
+
+                return -1f;
+            }
 
             // pass1: frontal
             radarCam.transform.position = vesselbounds.center + t.up * radarDistance;
-            radarCam.transform.LookAt(vesselbounds.center);
+            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
             // setup camera FOV
             distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
             radarCam.nearClipPlane = distanceToShip - 200;
@@ -252,7 +264,7 @@ namespace BDArmory.Radar
 
             // pass2: lateral
             radarCam.transform.position = vesselbounds.center + t.right * radarDistance;
-            radarCam.transform.LookAt(vesselbounds.center);
+            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
             // setup camera FOV
             distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
             radarCam.nearClipPlane = distanceToShip - 200;
@@ -270,7 +282,7 @@ namespace BDArmory.Radar
 
             // pass3: Ventral
             radarCam.transform.position = vesselbounds.center + t.forward * radarDistance;
-            radarCam.transform.LookAt(vesselbounds.center);
+            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
             // setup camera FOV
             distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
             radarCam.nearClipPlane = distanceToShip - 200;
