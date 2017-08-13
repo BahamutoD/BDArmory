@@ -492,8 +492,12 @@ namespace BDArmory.Parts
                         }
                         else
                         {
-                            radarTarget = TargetSignatureData.noTarget;
                             Debug.Log("[BDArmory]: Active Radar guidance failed.  No target locked.");
+                            radarTarget = TargetSignatureData.noTarget;
+                            legacyTargetVessel = null;
+                            radarLOALSearching = false;
+                            TargetAcquired = false;
+                            ActiveRadar = false;
                         }
 
                     }
@@ -576,6 +580,9 @@ namespace BDArmory.Parts
                         Debug.Log("[BDArmory]: Active Radar guidance failed. LOAL could not lock a target.");
                         radarTarget = TargetSignatureData.noTarget;
                         legacyTargetVessel = null;
+                        radarLOALSearching = false;
+                        TargetAcquired = false;
+                        ActiveRadar = false;
                     }
                     return;                    
                 }
