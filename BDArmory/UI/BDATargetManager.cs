@@ -689,27 +689,32 @@ namespace BDArmory.UI
 			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
 			if(!info)
 			{
-				foreach(MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
-				{
-					if(mf.team != reporter.team)
+                List<MissileFire>.Enumerator mf = v.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mf.MoveNext())
+                {
+                    if (mf.Current == null) continue;
+                    if (mf.Current.team != reporter.team)
 					{
 						info = v.gameObject.AddComponent<TargetInfo>();
 					}
 					return;
 				}
+                mf.Dispose();
 
-				foreach(MissileBase ml in v.FindPartModulesImplementing<MissileBase>())
-				{
-					if(ml.HasFired)
+                List<MissileBase>.Enumerator ml = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
+                while (mf.MoveNext())
+                {
+                    if (ml.Current == null) continue;
+                    if (ml.Current.HasFired)
 					{
-						if(ml.Team != reporter.team)
+						if(ml.Current.Team != reporter.team)
 						{
 							info = v.gameObject.AddComponent<TargetInfo>();
 						}
 					}
-
 					return;
 				}
+                ml.Dispose();
 			}
 			else
 			{
@@ -748,18 +753,20 @@ namespace BDArmory.UI
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target.numFriendliesEngaging >= 2) continue;
-				if(target && target.Vessel && target.isFlying && !target.isMissile)
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current.numFriendliesEngaging >= 2) continue;
+				if(target.Current && target.Current.Vessel && target.Current.isFlying && !target.Current.isMissile && target.Current.isThreat)
 				{
-                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+                    Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
                     float targetSuitability = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);       //prefer targets ahead to those behind
                     targetSuitability += 500 / (targetRelPos.magnitude + 100);
 
-                    if (finalTarget == null || (target.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
+                    if (finalTarget == null || (target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
                         finalTargetSuitability = targetSuitability;
 					}
 				}
@@ -779,7 +786,7 @@ namespace BDArmory.UI
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
             {
-                if (target.Current == null || !target.Current.Vessel || target.Current.isLanded || target.Current.isMissile) continue;
+                if (target.Current == null || !target.Current.Vessel || target.Current.isLanded || target.Current.isMissile || !target.Current.isThreat) continue;
                 Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
 
                 float distance, dot;
@@ -834,6 +841,7 @@ namespace BDArmory.UI
                     return target.Current;
                 }
             }
+            target.Dispose();
             return null;
         }
 
@@ -842,18 +850,20 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && !target.Current.isMissile)
 				{
-					if(finalTarget == null || (target.IsCloser(finalTarget, mf)))
+					if(finalTarget == null || (target.Current.IsCloser(finalTarget, mf)))
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
 		public static List<TargetInfo> GetAllTargetsExcluding(List<TargetInfo> excluding, MissileFire mf)
@@ -861,34 +871,38 @@ namespace BDArmory.UI
 			List<TargetInfo> finalTargets = new List<TargetInfo>();
 			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !excluding.Contains(target))
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && !excluding.Contains(target.Current))
 				{
-					finalTargets.Add(target);
+					finalTargets.Add(target.Current);
 				}
 			}
-
-			return finalTargets;
+            target.Dispose();
+            return finalTargets;
 		}
 
 		public static TargetInfo GetLeastEngagedTarget(MissileFire mf)
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
-			
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && !target.Current.isMissile && target.Current.isThreat)
 				{
-					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
+					if(finalTarget == null || target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-		
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
 		public static TargetInfo GetMissileTarget(MissileFire mf, bool targetingMeOnly = false)
@@ -896,15 +910,17 @@ namespace BDArmory.UI
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && target.Current.isMissile && target.Current.isThreat && mf.CanSeeTarget(target.Current.Vessel) )
 				{
-					if(target.MissileBaseModule)
+					if(target.Current.MissileBaseModule)
 					{
 						if(targetingMeOnly)
 						{
-							if(Vector3.SqrMagnitude(target.MissileBaseModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
+							if(Vector3.SqrMagnitude(target.Current.MissileBaseModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
 							{
 								continue;
 							}
@@ -916,57 +932,61 @@ namespace BDArmory.UI
 					}
 
 
-					if(((finalTarget == null && target.numFriendliesEngaging < 2) || (finalTarget != null && target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
+					if(((finalTarget == null && target.Current.numFriendliesEngaging < 2) || (finalTarget != null && target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-			
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
 		public static TargetInfo GetUnengagedMissileTarget(MissileFire mf)
 		{
 			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile && target.isThreat)
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && target.Current.isMissile && target.Current.isThreat)
 				{
-					if(target.numFriendliesEngaging == 0)
+					if(target.Current.numFriendliesEngaging == 0)
 					{
-						return target;
+						return target.Current;
 					}
 				}
 			}
-			
-			return null;
+            target.Dispose();
+            return null;
 		}
 
 		public static TargetInfo GetClosestMissileTarget(MissileFire mf)
 		{
 			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
 			TargetInfo finalTarget = null;
-			
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && target.Current.isMissile)
 				{
 					bool isHostile = false;
-					if(target.isThreat)
+					if(target.Current.isThreat)
 					{
 						isHostile = true;
 					}
 
-					if(isHostile && (finalTarget == null || target.IsCloser(finalTarget, mf)))
+					if(isHostile && (finalTarget == null || target.Current.IsCloser(finalTarget, mf)))
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-			
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
         //checks to see if a friendly is too close to the gun trajectory to fire them

@@ -212,9 +212,14 @@ namespace BDArmory.Radar
         {
             const float radarDistance = 1000f;
             const float radarFOV = 2.0f;
+            Vector3 presentationPosition = t.forward * radarDistance;
             float distanceToShip;
 
             SetupResources();
+
+            //move vessel up for clear rendering shot (only if outside editor and thus vessel is a real vessel)
+            if (v.id != Guid.Empty)
+                v.SetPosition(v.transform.position + presentationPosition);
 
             Bounds vesselbounds = CalcVesselBounds(v, t);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -223,7 +228,6 @@ namespace BDArmory.Radar
                 Debug.Log("[BDArmory]: - bounds: " + vesselbounds.ToString());
                 Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
             }
-
 
             // pass1: frontal
             radarCam.transform.position = vesselbounds.center + t.up * radarDistance;
@@ -278,6 +282,10 @@ namespace BDArmory.Radar
             radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
             drawTextureVentral.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
             drawTextureVentral.Apply();
+
+            // revert presentation (only if outside editor and thus vessel is a real vessel)
+            if (v.id != Guid.Empty)
+                v.SetPosition(v.transform.position - presentationPosition);
 
             // Count pixel colors to determine radar returns (only for normal non-zoomed rendering!)
             if (!inEditorZoom)
@@ -420,13 +428,16 @@ namespace BDArmory.Radar
             int dataIndex = 0;
             bool hasLocked = false;
 
+            // guard clauses
+            if (!radar)
+                return false;
+
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedvessels.MoveNext())
             {
                 // ignore null, unloaded
-                if (loadedvessels.Current == null ||
-                    !loadedvessels.Current.loaded)
-                    continue;
+                if (loadedvessels.Current == null) continue;
+                if (!loadedvessels.Current.loaded) continue;
 
                 // ignore self, ignore behind ray
                 Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
@@ -498,13 +509,16 @@ namespace BDArmory.Radar
             int dataIndex = 0;
             bool hasLocked = false;
 
+            // guard clauses
+            if (!missile)
+                return false;
+
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedvessels.MoveNext())
             {
                 // ignore null, unloaded
-                if (loadedvessels.Current == null ||
-                    !loadedvessels.Current.loaded)
-                    continue;
+                if (loadedvessels.Current == null) continue;
+                if (!loadedvessels.Current.loaded) continue;
 
                 // ignore self, ignore behind ray
                 Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
@@ -583,14 +597,17 @@ namespace BDArmory.Radar
             int dataIndex = 0;
             bool hasLocked = false;
 
+            // guard clauses
+            if (!myWpnManager || !myWpnManager.vessel || !radar)
+                return false;
+
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedvessels.MoveNext())
             {
                 // ignore null, unloaded and self
-                if (loadedvessels.Current == null ||
-                    !loadedvessels.Current.loaded ||
-                    loadedvessels.Current == myWpnManager.vessel)
-                    continue;
+                if (loadedvessels.Current == null) continue;
+                if (!loadedvessels.Current.loaded) continue;
+                if (loadedvessels.Current == myWpnManager.vessel) continue;
 
                 // ignore too close ones
                 if ((loadedvessels.Current.transform.position - position).sqrMagnitude < RADAR_IGNORE_DISTANCE_SQR)
@@ -700,6 +717,10 @@ namespace BDArmory.Radar
         {
             float closestSqrDist = 1000f;
 
+            // guard clauses
+            if (!radar)
+                return false;
+
             // first: re-acquire lock if temporarily lost
             if (!lockedVessel)
             {
@@ -707,9 +728,8 @@ namespace BDArmory.Radar
                 while (loadedvessels.MoveNext())
                 {
                     // ignore null, unloaded
-                    if (loadedvessels.Current == null ||
-                        !loadedvessels.Current.loaded)
-                        continue;
+                    if (loadedvessels.Current == null) continue;
+                    if (!loadedvessels.Current.loaded) continue;
 
                     // ignore self, ignore behind ray
                     Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);

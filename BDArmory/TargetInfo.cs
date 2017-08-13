@@ -207,6 +207,8 @@ namespace BDArmory
 			friendliesEngaging = new List<MissileFire>();
 
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
+            GameEvents.onVesselWasModified.Add(VesselModified);
+
             //add delegate to peace enable event
             BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
 
@@ -214,9 +216,9 @@ namespace BDArmory
 
             if (!isMissile && team != BDArmorySettings.BDATeams.None)
 			{
-				massRoutine = StartCoroutine(MassRoutine());
-			}
-		}
+                //massRoutine = StartCoroutine(MassRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
+            }
+        }
 
 		void OnPeaceEnabled()
 		{
@@ -237,7 +239,9 @@ namespace BDArmory
 		{
 			//remove delegate from peace enable event
 			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
-		}
+            vessel.OnJustAboutToBeDestroyed -= AboutToBeDestroyed;
+            GameEvents.onVesselWasModified.Remove(VesselModified);
+        }
 	
 		IEnumerator LifetimeRoutine()
 		{
@@ -303,7 +307,7 @@ namespace BDArmory
 
 		public void Engage(MissileFire mf)
 		{
-            if (mf == null)
+            if (mf == null || friendliesEngaging == null)
                 return;
 
 			if(!friendliesEngaging.Contains(mf))
@@ -338,6 +342,14 @@ namespace BDArmory
 			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.A].Remove(this);
 			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.B].Remove(this);
 		}
+
+        public void VesselModified(Vessel v)
+        {
+            if (v && v == this.vessel)
+            {
+                radarBaseSignatureNeedsUpdate = true;
+            }
+        }
 	}
 }
 
