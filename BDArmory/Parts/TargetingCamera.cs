@@ -321,7 +321,8 @@ namespace BDArmory.Parts
 		void OnDestroy()
 		{
 			ReadyForUse = false;
-		}
+            GameEvents.onVesselChange.Remove(VesselChange);
+        }
 
 		public static bool IsTGPCamera(Camera c)
 		{

@@ -426,6 +426,7 @@ namespace BDArmory.Parts
         {
             WeaponNameWindow.OnActionGroupEditorOpened.Remove(OnActionGroupEditorOpened);
             WeaponNameWindow.OnActionGroupEditorClosed.Remove(OnActionGroupEditorClosed);
+            GameEvents.onPartDie.Remove(PartDie);
         }
 
         private void SetMissileTransform()

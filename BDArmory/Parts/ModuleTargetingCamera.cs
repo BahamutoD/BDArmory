@@ -1434,7 +1434,9 @@ namespace BDArmory.Parts
 						weaponManager.slavingTurrets = false;
 					}
 				}
-			}
+
+                GameEvents.onVesselCreate.Remove(Disconnect);
+            }
 		}
 
 		Vector2 TargetAzimuthElevationScreenPos(Rect screenRect, Vector3 targetPosition, float textureSize)

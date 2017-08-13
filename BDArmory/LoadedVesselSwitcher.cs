@@ -58,6 +58,17 @@ namespace BDArmory
             //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySettings persisted field!
         }
 
+        private void OnDestroy()
+        {
+                GameEvents.onVesselCreate.Remove(VesselEventUpdate);
+                GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
+                GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
+                GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
+                MissileFire.OnToggleTeam -= MissileFireOnToggleTeam;
+
+                _ready = false;
+        }
+
         private IEnumerator WaitForBdaSettings()
         {
             while (BDArmorySettings.Instance == null)

@@ -1589,11 +1589,17 @@ namespace BDArmory.UI
             {
                 BDAWindowSettingsField.Save();
             }
+
+            GameEvents.onHideUI.Remove(HideGameUI);
+            GameEvents.onShowUI.Remove(ShowGameUI);
+            GameEvents.onVesselGoOffRails.Remove(OnVesselGoOffRails);
+            GameEvents.OnGameSettingsApplied.Remove(SaveVolumeSettings);
+            GameEvents.onVesselChange.Remove(VesselChange);
         }
         
         void OnVesselGoOffRails(Vessel v)
         {
-            if (v.Landed && DRAW_DEBUG_LABELS)
+            if (DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.srf_velocity + ", packed: " + v.packed);
                 //v.SetWorldVelocity(Vector3d.zero);	

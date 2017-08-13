@@ -615,7 +615,8 @@ namespace BDArmory
 		void OnDestroy()
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
-		}
+            GameEvents.onPartDie.Remove(PartDie);
+        }
 
 	    public override float GetBlastRadius()
 	    {

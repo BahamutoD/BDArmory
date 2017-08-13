@@ -747,10 +747,11 @@ namespace BDArmory
                 {
                     GameEvents.onPartDie.Remove(OnPartDie);
                     GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
+                    GameEvents.onVesselCreate.Remove(OnVesselCreate);
                 }
                 catch(Exception e)
                 {
-                    if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Error OnPartDie" + e.Message);
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Error OnPartDie: " + e.Message);
                 }                
             }
             RefreshTargetingModules();

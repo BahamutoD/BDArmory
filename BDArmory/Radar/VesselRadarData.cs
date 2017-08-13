@@ -282,6 +282,8 @@ namespace BDArmory.Radar
             GameEvents.onVesselDestroy.Remove(OnVesselDestroyed);
             GameEvents.onVesselCreate.Remove(OnVesselDestroyed);
             MissileFire.OnToggleTeam -= OnToggleTeam;
+            GameEvents.onGameStateSave.Remove(OnGameStateSave);
+            GameEvents.onPartDestroyed.Remove(PartDestroyed);
 
             if (weaponManager)
             {
