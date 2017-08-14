@@ -445,7 +445,7 @@ namespace BDArmory.Parts
                         if (_targetVessel != null)
                         {
                             TargetPosition = _targetVessel.CurrentCoM;
-                            TargetVelocity = _targetVessel.srf_velocity;
+                            TargetVelocity = _targetVessel.Velocity();
                             TargetAcceleration = _targetVessel.acceleration;
                         }
                         break;
@@ -482,7 +482,7 @@ namespace BDArmory.Parts
                 float timeToImpact;
                 aamTarget = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, previousTargetVelocity, TargetAcceleration, vessel, previousMissileVelocity, out timeToImpact);
                 previousTargetVelocity = TargetVelocity;
-                previousMissileVelocity = vessel.srf_velocity;
+                previousMissileVelocity = vessel.Velocity();
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
@@ -493,7 +493,7 @@ namespace BDArmory.Parts
             }
             else
             {
-                aamTarget = vessel.CoM + (20 * vessel.srfSpeed * vessel.srf_velocity.normalized);
+                aamTarget = vessel.CoM + (20 * vessel.srfSpeed * vessel.Velocity().normalized);
             }
 
             return aamTarget;
@@ -555,7 +555,7 @@ namespace BDArmory.Parts
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
             if (Vector3.Distance(vessel.CoM, targetPosition) >
-                Vector3.Distance(vessel.CoM + (vessel.srf_velocity * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
+                Vector3.Distance(vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
 
             if (MissileState != MissileStates.PostThrust) return;
             if (Vector3.Dot(targetPosition - vessel.CoM, vessel.transform.forward) > 0) return;
@@ -596,7 +596,7 @@ namespace BDArmory.Parts
                 //Updating aero surfaces
                 if (TimeIndex > dropTime + 0.5f)
                 {
-                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.srf_velocity, -vessel.transform.forward);
+                    _velocityTransform.rotation = Quaternion.LookRotation(vessel.Velocity(), -vessel.transform.forward);
                     Vector3 targetDirection = _velocityTransform.InverseTransformPoint(newTargetPosition).normalized;
                     targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
 

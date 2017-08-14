@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Radar;
@@ -28,6 +29,8 @@ namespace BDArmory.Parts
         {
             return missileType;
         }
+
+       
 
         [KSPField]
         public string missileType = "missile";

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Core.Extension;
 using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
@@ -83,7 +84,7 @@ namespace BDArmory
 			get
 			{
 				if(!vessel) return Vector3.zero;
-				return vessel.srf_velocity;
+				return vessel.Velocity();
 			}
 		}
 

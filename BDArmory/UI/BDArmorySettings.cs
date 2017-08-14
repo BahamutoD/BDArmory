@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using BDArmory.Armor;
 using BDArmory.Control;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
@@ -1580,7 +1581,7 @@ namespace BDArmory.UI
         {
             if (v.Landed && DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.srf_velocity + ", packed: " + v.packed);
+                Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.Velocity() + ", packed: " + v.packed);
                 //v.SetWorldVelocity(Vector3d.zero);	
             }
         }
