@@ -76,7 +76,12 @@ namespace BDArmory.Radar
                 while (missile.MoveNext())
                 {
                     if (missile.Current == null) continue;
-                    return missile.Current.missileRadarCrossSection;
+
+                    // if radar is actively emitting, max signal strength:
+                    if (missile.Current.ActiveRadar)
+                        return RCS_MISSILES;
+                    else
+                        return missile.Current.missileRadarCrossSection;
                 }
                 missile.Dispose();
             }
@@ -137,9 +142,9 @@ namespace BDArmory.Radar
 
 
         /// <summary>
-        /// Internal method: get vessel chaff factor
+        /// Get vessel chaff factor
         /// </summary>
-        private static float GetVesselChaffFactor(Vessel v)
+        public static float GetVesselChaffFactor(Vessel v)
         {
             float chaffFactor = 1.0f;
 

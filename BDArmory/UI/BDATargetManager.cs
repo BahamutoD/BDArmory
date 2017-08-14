@@ -32,10 +32,10 @@ namespace BDArmory.UI
 
         StringBuilder debugString = new StringBuilder();
 
-        public static float heatScore;
-		public static float flareScore;
+        //public static float heatScore;        //TODO: remove!
+		public static float flareScore;         //TODO: remove!
 
-		public static bool hasAddedButton;
+        public static bool hasAddedButton;
 
 		void Awake()
 		{
@@ -271,13 +271,70 @@ namespace BDArmory.UI
             return true;
         }
 
+
+        /// <summary>
+        /// The the heat signature of a vessel (for Heat/IR targeting).
+        /// Returns the heat of the hottest part of the vessel
+        /// </summary>
+        /// <param name="v">Vessel</param>
+        /// <returns>Heat signature value</returns>
+        public static float GetVesselHeatSignature(Vessel v)
+        {
+            float heatScore = 0f;
+
+            List<Part>.Enumerator part = v.Parts.GetEnumerator();
+            while (part.MoveNext())
+            {
+                if (!part.Current) continue;               
+
+                float thisScore = (float)(part.Current.thermalInternalFluxPrevious + part.Current.skinTemperature);
+                heatScore = Mathf.Max(heatScore, thisScore);
+            }
+
+            return heatScore;
+        }
+
+
+        /// <summary>
+        /// Find a flare within acceptable thermal range that will "decoy" for the passed heatsignature
+        /// </summary>
+        public static TargetSignatureData GetFlareTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, float heatSignature)
+        {
+            TargetSignatureData flareTarget = TargetSignatureData.noTarget;
+
+            List<CMFlare>.Enumerator flare = BDArmorySettings.Flares.GetEnumerator();
+            while (flare.MoveNext())
+            {
+                if (!flare.Current) continue;
+
+                float angle = Vector3.Angle(flare.Current.transform.position - ray.origin, ray.direction);
+                if (angle < scanRadius)
+                {
+                    float score = flare.Current.thermal * Mathf.Clamp01(15 / angle);
+
+                    score *= Mathf.Pow(1400, 2) / Mathf.Clamp((flare.Current.transform.position - ray.origin).sqrMagnitude, 90000, 36000000);
+                    score *= Mathf.Clamp(Vector3.Angle(flare.Current.transform.position - ray.origin, -VectorUtils.GetUpDirection(ray.origin)) / 90, 0.5f, 1.5f);
+
+                    // check acceptable range:
+                    // flare cannot be too cool, but also not too bright
+                    if ((score > heatSignature*0.9) && (score < heatSignature * 1.25))
+                    {
+                        flareTarget = new TargetSignatureData(flare.Current, score);
+                    }
+                }
+            }
+
+            return flareTarget;
+        }
+
+
         //public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
         public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null, bool favorGroundTargets = false)
         {
-			float minScore = highpassThreshold;
-            float minMass = 0.15f;  //otherwise the RAMs have trouble shooting down incoming missiles
+            float minMass = 0.05f;  //otherwise the RAMs have trouble shooting down incoming missiles
             TargetSignatureData finalData = TargetSignatureData.noTarget;
 			float finalScore = 0;
+
 			foreach(Vessel vessel in LoadedVessels)
 			{
 				if(!vessel || !vessel.loaded)
@@ -304,24 +361,18 @@ namespace BDArmory.UI
 					continue;
 				}
 
-				float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
+                if (!allAspect)
+                {
+                   if (!Misc.Misc.CheckSightLineExactDistance(ray.origin, vessel.CoM + vessel.srf_velocity, Vector3.Distance(vessel.CoM, ray.origin), 5, 5)) continue;
+                }
+
+                float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
 				if(angle < scanRadius)
 				{
-					float score = 0;
-					foreach(Part part in vessel.Parts)
-					{
-						if(!part) continue;
-						if(!allAspect)
-						{
-							if(!Misc.Misc.CheckSightLineExactDistance(ray.origin, part.transform.position+vessel.srf_velocity, Vector3.Distance(part.transform.position,ray.origin), 5, 5)) continue;
-						}
-
-						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * (15/Mathf.Max(15,angle));
-						thisScore *= Mathf.Pow(1400,2)/Mathf.Clamp((vessel.CoM-ray.origin).sqrMagnitude, 90000, 36000000);
-						score = Mathf.Max (score, thisScore);
-					}
-
-					if(vessel.LandedOrSplashed && !favorGroundTargets)
+                    float score = GetVesselHeatSignature(vessel) * Mathf.Clamp01(15 / angle);
+                    score *= Mathf.Pow(1400, 2) / Mathf.Clamp((vessel.CoM - ray.origin).sqrMagnitude, 90000, 36000000);
+                    
+                    if (vessel.LandedOrSplashed && !favorGroundTargets)
 					{
 						score /= 4;
 					}
@@ -336,37 +387,20 @@ namespace BDArmory.UI
 				}
 			}
 
-			heatScore = finalScore;//DEBUG
-			flareScore = 0; //DEBUG
-			foreach(CMFlare flare in BDArmorySettings.Flares)
-			{
-				if(!flare) continue;
+            // see if there are flares decoying us:
+            TargetSignatureData flareData = GetFlareTarget(ray, scanRadius, highpassThreshold, allAspect, finalScore);
 
-				float angle = Vector3.Angle(flare.transform.position-ray.origin, ray.direction);
-				if(angle < scanRadius)
-				{
-					float score = flare.thermal * Mathf.Clamp01(15/angle);
-					score *= Mathf.Pow(1400,2)/Mathf.Clamp((flare.transform.position-ray.origin).sqrMagnitude, 90000, 36000000);
-
-					score *= Mathf.Clamp(Vector3.Angle(flare.transform.position-ray.origin, -VectorUtils.GetUpDirection(ray.origin))/90, 0.5f, 1.5f);
-
-					if(score > finalScore)
-					{
-						flareScore = score;//DEBUG
-						finalScore = score;
-						finalData = new TargetSignatureData(flare, score);
-					}
-				}
-			}
-
-
-
-			if(finalScore < minScore)
+			if(finalScore < highpassThreshold)
 			{
 				finalData = TargetSignatureData.noTarget;
 			}
 
-			return finalData;
+            // return matching flare
+            if (!flareData.Equals(TargetSignatureData.noTarget))
+                return flareData;
+            
+            //else return the target:
+            return finalData;
 		}
 
 
@@ -423,13 +457,13 @@ namespace BDArmory.UI
 			}
 
             debugString.Append(Environment.NewLine);
-            debugString.Append($"Heat score: {heatScore} / Flare score: {flareScore}");
+            debugString.Append($"Heat score: {GetVesselHeatSignature(FlightGlobals.ActiveVessel):#####} / Last Flare score: {flareScore:#####}");
             debugString.Append(Environment.NewLine);
 
             debugString.Append($"Radar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel));
             debugString.Append(Environment.NewLine);
 
-            debugString.Append($"Chaff multiplier: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselChaffInfo>()?.GetChaffMultiplier());
+            debugString.Append($"Chaff multiplier: " + RadarUtils.GetVesselChaffFactor(FlightGlobals.ActiveVessel));
             debugString.Append(Environment.NewLine);
 
             debugString.Append($"ECM Jammer Strength: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselECMJInfo>()?.jammerStrength);
