@@ -508,10 +508,10 @@ namespace BDArmory
                     wpnMgr.Current.team = team;
                 }
                 wpnMgr.Dispose();
-                if (vessel.GetComponent<TargetInfo>())
+                if (vessel.gameObject.GetComponent<TargetInfo>())
                 {
-                    vessel.GetComponent<TargetInfo>().RemoveFromDatabases();
-                    Destroy(vessel.GetComponent<TargetInfo>());
+                    vessel.gameObject.GetComponent<TargetInfo>().RemoveFromDatabases();
+                    Destroy(vessel.gameObject.GetComponent<TargetInfo>());
                 }
                 OnToggleTeam?.Invoke(this, BDATargetManager.BoolToTeam(team));
             }

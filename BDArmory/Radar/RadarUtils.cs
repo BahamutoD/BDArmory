@@ -131,7 +131,7 @@ namespace BDArmory.Radar
 
             /*
             // 3) CHAFF SHOULD AFFECT LOCKING ONLY, NOT DETECTION!
-            VesselChaffInfo vesselchaff = v.GetComponent<VesselChaffInfo>();
+            VesselChaffInfo vesselchaff = v.gameObject.GetComponent<VesselChaffInfo>();
             if (vesselchaff)
             {
                 modifiedSig *= vesselchaff.GetChaffMultiplier();
@@ -881,7 +881,7 @@ namespace BDArmory.Radar
 						BDATargetManager.ReportVessel(vessel, myWpnManager);
 
 						TargetInfo tInfo;
-						if((tInfo = vessel.GetComponent<TargetInfo>()))
+						if((tInfo = vessel.gameObject.GetComponent<TargetInfo>()))
 						{
 							if(tInfo.isMissile)
 							{

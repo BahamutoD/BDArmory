@@ -1209,7 +1209,7 @@ namespace BDArmory.Radar
                 {
                     if (v.Current == null || !v.Current.loaded || v.Current == vessel) continue;
                     if (v.Current.id.ToString() != vesselID) continue;
-                    VesselRadarData vrd = v.Current.GetComponent<VesselRadarData>();
+                    VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                     if (!vrd) continue;
                     waitingForVessels.Remove(vesselID);
                     StartCoroutine(LinkVRDWhenReady(vrd));
@@ -1288,7 +1288,7 @@ namespace BDArmory.Radar
                 mf.Dispose();
 
                 if (team != BDATargetManager.BoolToTeam(weaponManager.team)) continue;
-                VesselRadarData vrd = v.Current.GetComponent<VesselRadarData>();
+                VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                 if (vrd && vrd.radarCount > 0)
                 {
                     availableExternalVRDs.Add(vrd);

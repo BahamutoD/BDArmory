@@ -1042,7 +1042,7 @@ namespace BDArmory.Radar
                 {
                     if (v.Current == null || !v.Current.loaded || v.Current == vessel) continue;
                     if (v.Current.id.ToString() != vesselID) continue;
-                    VesselRadarData vrd = v.Current.GetComponent<VesselRadarData>();
+                    VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                     if (!vrd) continue;
                     StartCoroutine(RelinkVRDWhenReadyRoutine(vrd));
                     yield break;

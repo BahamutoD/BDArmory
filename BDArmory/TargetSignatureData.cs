@@ -161,8 +161,12 @@ namespace BDArmory
 
                 if (vessel != null)
                 {
-                    decoyFactor = (1 - RadarUtils.GetVesselChaffFactor(vessel)) * RadarUtils.GetVesselRadarSignature(vessel);   //effect the higher the bigger our rcs
-                    posDistortion = Vector3.Cross(UnityEngine.Random.insideUnitSphere, vessel.transform.up) * decoyFactor;      //cross product: if defletion direction directly forward or aft, effect is smaller than if deflection laterally
+                    decoyFactor = (1f - RadarUtils.GetVesselChaffFactor(vessel));
+                    if (decoyFactor > 0f)
+                    {
+                        decoyFactor *= UnityEngine.Random.Range(10f, 50f);
+                        posDistortion = Vector3.Cross(UnityEngine.Random.insideUnitSphere, vessel.transform.up) * decoyFactor;      //cross product: if deflection direction directly forward or aft, effect is smaller than if deflection laterally
+                    }
                 }
 
                 if (orbital)

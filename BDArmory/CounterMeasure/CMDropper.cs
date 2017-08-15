@@ -160,7 +160,7 @@ namespace BDArmory.CounterMeasure
                     cmType = CountermeasureTypes.Chaff;
                     cmSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/smokeEject");
                     resourceName = "CMChaff";
-                    vci = vessel.GetComponent<VesselChaffInfo>();
+                    vci = vessel.gameObject.GetComponent<VesselChaffInfo>();
                     if (!vci)
                     {
                         vci = vessel.gameObject.AddComponent<VesselChaffInfo>();

@@ -597,7 +597,7 @@ namespace BDArmory.Parts
         protected bool CheckTargetEngagementEnvelope(TargetInfo ti)
         {
             return (ti.isMissile && engageMissile) ||
-                    (ti.isFlying && engageAir) ||
+                    (!ti.isMissile && ti.isFlying && engageAir) ||
                     ((ti.isLanded || ti.isSplashed) && engageGround) ||
                     (ti.isUnderwater && engageSLW);
         }
