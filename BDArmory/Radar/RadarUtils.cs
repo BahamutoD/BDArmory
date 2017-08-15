@@ -36,6 +36,7 @@ namespace BDArmory.Radar
         internal const float RWR_PING_RANGE_FACTOR = 2.0f;
         internal const float RADAR_IGNORE_DISTANCE_SQR = 100f;
         internal const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.1f;
+        internal const float MISSILE_DEFAULT_LOCKABLE_RCS = 5f;
 
 
         /// <summary>
@@ -556,7 +557,7 @@ namespace BDArmory.Radar
                     float signature = GetVesselRadarSignature(loadedvessels.Current);
                     // no ground clutter modifier for missiles
                     signature *= GetVesselECMLockBreakFactor(loadedvessels.Current);    //multiply lockbreak factor from active ecm
-                    signature *= GetVesselChaffFactor(loadedvessels.Current);           //multiply chaff factor
+                    //do not multiply chaff factor here
 
                     // evaluate range
                     float distance = (loadedvessels.Current.CoM - ray.origin).magnitude;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
@@ -655,7 +656,7 @@ namespace BDArmory.Radar
                             //evaluate if we can lock/track such a signature at that range
                             float minLockSig = radar.radarLockTrackCurve.Evaluate(distance);
                             signature *= GetVesselECMLockBreakFactor(loadedvessels.Current);    //multiply lockbreak factor from active ecm
-                            signature *= GetVesselChaffFactor(loadedvessels.Current);           //multiply chaff factor
+                            //do not multiply chaff factor here
 
                             if (signature > minLockSig)
                             {
@@ -786,7 +787,7 @@ namespace BDArmory.Radar
                 float signature = GetVesselRadarSignature(lockedVessel);
                 signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, lockedVessel.CoM);
                 signature *= GetVesselECMLockBreakFactor(lockedVessel);    //multiply lockbreak factor from active ecm
-                signature *= GetVesselChaffFactor(lockedVessel);           //multiply chaff factor
+                //do not multiply chaff factor here
 
                 // evaluate range
                 float distance = (lockedVessel.CoM - ray.origin).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...

@@ -531,13 +531,12 @@ namespace BDArmory
 		    }
 
             // fill activeRadarLockTrackCurve with default values if not set by part config:
-            if (TargetingMode == TargetingModes.Radar && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
+            if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
             {
-                const float MISSILE_DEFAULT_RCS = 5f;
                 activeRadarLockTrackCurve.Add(0f, 0f);
-                activeRadarLockTrackCurve.Add(activeRadarRange, MISSILE_DEFAULT_RCS);           // TODO: tune & balance constants!
+                activeRadarLockTrackCurve.Add(activeRadarRange, RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);           // TODO: tune & balance constants!
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory]: OnStart missile "+shortName+": setting default locktrackcurve with maxrange/minrcs: "+activeRadarLockTrackCurve.maxTime+"/"+ MISSILE_DEFAULT_RCS);
+                    Debug.Log("[BDArmory]: OnStart missile "+shortName+": setting default locktrackcurve with maxrange/minrcs: "+activeRadarLockTrackCurve.maxTime+"/"+ RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
             }
         }
 
@@ -840,7 +839,7 @@ namespace BDArmory
 					if(lineHit.collider.GetComponentInParent<Part>() != part)
 					{
 						Debug.Log("[BDArmory]:" + part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
-                        part.SetDamage(part.maxTemp + 100);
+                        part.SetDamage(part.maxTemp*2);
 					}
 				}
 			}
@@ -880,7 +879,7 @@ namespace BDArmory
                         if (launcher.hasRCS) launcher.KillRCS();
                     }
 
-                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.SetDamage(part.maxTemp + 100);
+                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.SetDamage(part.maxTemp*2);
 
                     isTimed = true;
                     detonationTime = TimeIndex + 1.5f;
@@ -1105,7 +1104,7 @@ namespace BDArmory
                         {
                             radarTarget = lockedTarget;
                             TargetAcquired = true;
-                            TargetPosition = radarTarget.predictedPosition;
+                            TargetPosition = radarTarget.predictedPositionWithChaffFactor;
                             TargetVelocity = radarTarget.velocity;
                             TargetAcceleration = radarTarget.acceleration;
                             targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
@@ -1607,7 +1606,7 @@ namespace BDArmory
 				//proxy detonation
 				if(proxyDetonate && ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
 				{
-					part.SetDamage(part.maxTemp + 100);
+					part.SetDamage(part.maxTemp*2);
 				}
 			}
 			else
@@ -1773,19 +1772,6 @@ namespace BDArmory
 			}
 		}
 	
-		void RayDetonator()
-		{
-			Vector3 lineStart = transform.position;
-			Vector3 lineEnd = transform.position + part.rb.velocity;
-			RaycastHit rayHit;
-			if(Physics.Linecast(lineStart, lineEnd, out rayHit, 557057))
-			{
-				if(rayHit.collider.attachedRigidbody && rayHit.collider.attachedRigidbody != part.rb)
-				{
-					part.SetDamage(part.temperature + 100);
-				}
-			}
-		}
 
 		public override void Detonate()
 		{
@@ -1804,7 +1790,7 @@ namespace BDArmory
 		        wpm.Dispose();
 		    }
 				
-		    if(part!=null) part.SetDamage(part.maxTemp + 100);
+		    if(part!=null) part.SetDamage(part.maxTemp*2);
 		    Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 		    if(SourceVessel==null) SourceVessel = vessel;
 		    ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, SourceVessel, transform.forward, explModelPath, explSoundPath); //TODO: apply separate heat damage

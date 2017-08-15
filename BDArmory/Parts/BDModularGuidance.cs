@@ -316,6 +316,15 @@ namespace BDArmory.Parts
             heatThreshold = 50;
             lockedSensorFOV = 5;
             radarLOAL = true;
+
+            // fill activeRadarLockTrackCurve with default values if not set by part config:
+            if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
+            {
+                activeRadarLockTrackCurve.Add(0f, 0f);
+                activeRadarLockTrackCurve.Add(activeRadarRange, RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);           // TODO: tune & balance constants!
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: OnStart missile " + shortName + ": setting default locktrackcurve with maxrange/minrcs: " + activeRadarLockTrackCurve.maxTime + "/" + RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
+            }
         }
 
         private void SetupsFields()

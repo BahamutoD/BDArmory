@@ -312,7 +312,7 @@ namespace BDArmory
 
 			if(!friendliesEngaging.Contains(mf))
 			{
-				friendliesEngaging.Add(mf);
+				friendliesEngaging?.Add(mf);
 			}
 		}
 
@@ -321,7 +321,7 @@ namespace BDArmory
             if (mf == null)
                 return;
 
-            friendliesEngaging.Remove(mf);
+            friendliesEngaging?.Remove(mf);
 		}
 		
 		void AboutToBeDestroyed()

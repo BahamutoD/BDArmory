@@ -37,13 +37,15 @@ namespace BDArmory
 		{
 			orbital = false;
 			orbit = null;
-			velocity = v.srf_velocity;
 
-			vessel = v;
+            timeAcquired = Time.time;
+            vessel = v;
+            velocity = v.srf_velocity;
+			
 			geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
 			acceleration = v.acceleration;
 			exists = true;
-			timeAcquired = Time.time;
+			
 			signalStrength = _signalStrength;
 
 			targetInfo = v.gameObject.GetComponent<TargetInfo> ();
@@ -149,7 +151,32 @@ namespace BDArmory
 			}
 		}
 
-		public float altitude
+        public Vector3 predictedPositionWithChaffFactor
+        {
+            get
+            {
+                // get chaff factor of vessel and calculate decoy distortion caused by chaff echos
+                float decoyFactor = 0f;
+                Vector3 posDistortion = Vector3.zero;
+
+                if (vessel != null)
+                {
+                    decoyFactor = (1 - RadarUtils.GetVesselChaffFactor(vessel)) * RadarUtils.GetVesselRadarSignature(vessel);   //effect the higher the bigger our rcs
+                    posDistortion = Vector3.Cross(UnityEngine.Random.insideUnitSphere, vessel.transform.up) * decoyFactor;      //cross product: if defletion direction directly forward or aft, effect is smaller than if deflection laterally
+                }
+
+                if (orbital)
+                {
+                    return orbit.getPositionAtUT(Planetarium.GetUniversalTime()).xzy + posDistortion;
+                }
+                else
+                {
+                    return position + (velocity * age) + (0.5f * acceleration * age * age) + posDistortion;
+                }
+            }
+        }
+
+        public float altitude
 		{
 			get
 			{
@@ -161,7 +188,7 @@ namespace BDArmory
 		{
 			get
 			{
-				return Time.time-timeAcquired;
+                return (Time.time - timeAcquired);
 			}
 		}
 

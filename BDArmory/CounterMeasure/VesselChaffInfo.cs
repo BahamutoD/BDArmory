@@ -13,7 +13,7 @@ namespace BDArmory.CounterMeasure
         const float speedRegenMult = 0.6f;
         const float minRegen = 40;
         const float maxRegen = 500;
-        const float minMult = 0.03f;
+        const float minMult = 0.1f;
         float chaffScalar = 500;
 
         void Awake()
