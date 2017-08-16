@@ -25,10 +25,11 @@ namespace BDArmory.Radar
             MissileLock = 4,
             Detection = 5,
             Sonar = 6,
-            Torpedo = 7
+            Torpedo = 7,
+            TorpedoLock = 8
         }
 
-        string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So","T"};
+        string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So","T", "T"};
 
 
         public MissileFire weaponManager;
@@ -187,7 +188,7 @@ namespace BDArmory.Radar
             if (weaponManager == null) return;           
 
             float sqrDist = (part.transform.position - source).sqrMagnitude;
-            if (sqrDist < Mathf.Pow(5000, 2) && sqrDist > Mathf.Pow(100, 2) &&
+            if (sqrDist < Mathf.Pow(BDArmorySettings.MAX_ENGAGEMENT_RANGE, 2) && sqrDist > Mathf.Pow(100, 2) &&
                 Vector3.Angle(direction, part.transform.position - source) < 15)
             {
                 StartCoroutine(
@@ -212,6 +213,13 @@ namespace BDArmory.Radar
 
             if (rwrEnabled && vessel && v == vessel)
             {
+                //if we are airborne or on land, no SLW type weapons on the RWR!
+                if ((type == RWRThreatTypes.Torpedo || type == RWRThreatTypes.TorpedoLock) && (vessel.situation != Vessel.Situations.SPLASHED))
+                {
+                    // rwr stays silent...
+                    return;
+                }
+
                 if (type == RWRThreatTypes.MissileLaunch || type == RWRThreatTypes.Torpedo)
                 {
                     StartCoroutine(
@@ -226,6 +234,7 @@ namespace BDArmory.Radar
                     if (!BDArmorySettings.ALLOW_LEGACY_TARGETING && weaponManager && weaponManager.guardMode)
                     {
                         weaponManager.FireChaff();
+                        // TODO: if torpedo inbound, also fire accoustic decoys (not yet implemented...)
                     }
                 }
 
@@ -252,7 +261,7 @@ namespace BDArmory.Radar
 
                     pingsData[openIndex] = new TargetSignatureData(Vector3.zero,
                         RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero,
-                        true, (float) type);
+                        true, (float) type);    // HACK! Evil misuse of signalstrength for the treat type!
                     pingWorldPositions[openIndex] = source;
                     StartCoroutine(PingLifeRoutine(openIndex, persistTime));
 
@@ -327,16 +336,17 @@ namespace BDArmory.Radar
                 //pingPosition = Vector2.MoveTowards(displayRect.center, pingPosition, displayRect.center.x - (pingSize/2));
                 Rect pingRect = new Rect(pingPosition.x - (pingSize/2), pingPosition.y - (pingSize/2), pingSize,
                     pingSize);
+
                 if (pingsData[i].exists)
                 {
-                    if (pingsData[i].signalStrength == 4)
+                    if (pingsData[i].signalStrength == (float)RWRThreatTypes.MissileLock) //Hack! Evil misuse of field signalstrength...
                     {
                         GUI.DrawTexture(pingRect, rwrMissileTexture, ScaleMode.StretchToFill, true);
                     }
                     else
                     {
                         GUI.DrawTexture(pingRect, rwrDiamondTexture, ScaleMode.StretchToFill, true);
-                        GUI.Label(pingRect, iconLabels[Mathf.RoundToInt(pingsData[i].signalStrength)], rwrIconLabelStyle);
+                        GUI.Label(pingRect, iconLabels[Mathf.RoundToInt(pingsData[i].signalStrength)], rwrIconLabelStyle); //Hack! Evil misuse of field signalstrength...
                     }
                 }
             }

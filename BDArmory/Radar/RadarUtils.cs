@@ -42,22 +42,22 @@ namespace BDArmory.Radar
         /// <summary>
         /// Get a vessel radar siganture, including all modifiers (ECM, stealth, ...)
         /// </summary>
-        public static float GetVesselRadarSignature(Vessel v)
+        public static TargetInfo GetVesselRadarSignature(Vessel v)
         {
             //1. baseSig = GetVesselRadarCrossSection
-            float baseSig = GetVesselRadarCrossSection(v);
+            TargetInfo ti = GetVesselRadarCrossSection(v);
 
             //2. modifiedSig = GetVesselModifiedSignature(baseSig)    //ECM-jammers with rcs reduction effect; other rcs reductions (stealth)
-            float modifiedSig = GetVesselModifiedSignature(v, baseSig);
+            float modifiedSig = GetVesselModifiedSignature(v, ti);
 
-            return modifiedSig;
+            return ti;
         }
 
 
         /// <summary>
         /// Internal method: get a vessel base radar signature
         /// </summary>
-        private static float GetVesselRadarCrossSection(Vessel v)
+        private static TargetInfo GetVesselRadarCrossSection(Vessel v)
         {
             //read vesseltargetinfo, or render against radar cameras    
             TargetInfo ti = v.gameObject.GetComponent<TargetInfo>();
@@ -70,9 +70,8 @@ namespace BDArmory.Radar
 
             if (ti.isMissile)
             {
+                // missile handling: get signature from missile config, unless it is radaractive, then use old legacy special handling.
                 // LEGACY special handling missile: should always be detected, hence signature is set to maximum
-                // TODO: create field "missile_rcs_signature" on MIssileBase and return it here, allowing for different missiles
-                //       to have different sizes for detection purpose.
                 List<MissileBase>.Enumerator missile = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
                 while (missile.MoveNext())
                 {
@@ -80,9 +79,9 @@ namespace BDArmory.Radar
 
                     // if radar is actively emitting, max signal strength:
                     if (missile.Current.ActiveRadar)
-                        return RCS_MISSILES;
+                        ti.radarBaseSignature = RCS_MISSILES;
                     else
-                        return missile.Current.missileRadarCrossSection;
+                        ti.radarBaseSignature = missile.Current.missileRadarCrossSection;
                 }
                 missile.Dispose();
             }
@@ -93,52 +92,50 @@ namespace BDArmory.Radar
                 if (v.vesselType == VesselType.Debris && !v.IsControllable)
                 {
                     ti.radarBaseSignature = v.GetTotalMass();
-                    ti.radarBaseSignatureNeedsUpdate = false;
                 }
                 else
                 {
                     // perform radar rendering to obtain base cross section
                     ti.radarBaseSignature = RenderVesselRadarSnapshot(v, v.transform);
-                    ti.radarBaseSignatureNeedsUpdate = false;
+                    
                 }
             }
 
-            return ti.radarBaseSignature; ;
+            ti.radarBaseSignatureNeedsUpdate = false;
+            return ti;
         }
 
 
         /// <summary>
         /// Internal method: get a vessels siganture modifiers (ecm, stealth, ...)
         /// </summary>
-        private static float GetVesselModifiedSignature(Vessel v, float baseSig)
+        private static float GetVesselModifiedSignature(Vessel v, TargetInfo ti)
         {
-            float modifiedSig = baseSig;
+            ti.radarModifiedSignature = ti.radarBaseSignature;
+            ti.radarLockbreakFactor = 1;
 
-            // 1) read vessel ecminfo for jammers with RCS reduction effect and multiply factor
+            // 
+            // read vessel ecminfo for active jammers and calculate effects:
             VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
             if (vesseljammer)
             {
-                modifiedSig *= vesseljammer.rcsReductionFactor;
-            }
+                //1) read vessel ecminfo for jammers with RCS reduction effect and multiply factor
+                ti.radarModifiedSignature *= vesseljammer.rcsReductionFactor;
 
-            // 2) read vessel ecminfo for active jammers and increase detectability accordingly
-            if (vesseljammer)
-            {
-                // increase in detectability relative to jammerstrength and vessel rcs signature:
+                //2) increase in detectability relative to jammerstrength and vessel rcs signature:
                 // rcs_factor = jammerStrength / modifiedSig / 100 + 1.0f
-                modifiedSig *= (((vesseljammer.jammerStrength / modifiedSig) / 100) + 1.0f);
+                ti.radarModifiedSignature *= (((vesseljammer.jammerStrength / ti.radarModifiedSignature) / 100) + 1.0f);
+
+                //3) garbling due to overly strong jamming signals relative to jammer's strength in relation to vessel rcs signature:
+                // jammingDistance =  (jammerstrength / baseSig / 100 + 1.0) x js
+                ti.radarJammingDistance = ((vesseljammer.jammerStrength / ti.radarBaseSignature / 100) + 1.0f) * vesseljammer.jammerStrength;
+
+                //4) lockbreaking strength relative to jammer's lockbreak strength in relation to vessel rcs signature:
+                // lockbreak_factor = baseSig/modifiedSig x (1 – lopckBreakStrength/baseSig/100)                
+                ti.radarLockbreakFactor = (ti.radarBaseSignature / ti.radarModifiedSignature) * (1 - (vesseljammer.lockBreakStrength / ti.radarBaseSignature / 100));
             }
 
-            /*
-            // 3) CHAFF SHOULD AFFECT LOCKING ONLY, NOT DETECTION!
-            VesselChaffInfo vesselchaff = v.gameObject.GetComponent<VesselChaffInfo>();
-            if (vesselchaff)
-            {
-                modifiedSig *= vesselchaff.GetChaffMultiplier();
-            }
-            */
-
-            return modifiedSig;
+            return ti.radarModifiedSignature;
         }
 
 
@@ -164,29 +161,6 @@ namespace BDArmory.Radar
 
 
         /// <summary>
-        /// Internal method: get a vessel ecm lock breaking factor
-        /// </summary>
-        private static float GetVesselECMLockBreakFactor(Vessel v)
-        {
-            float lbFactor = 1.0f;
-            float baseSig = GetVesselRadarCrossSection(v);
-            float modifiedSig = GetVesselModifiedSignature(v, baseSig);
-
-            // read vessel ecminfo for active lockbreaking jammers
-            VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
-
-            if (vesseljammer)
-            {
-                // lockbreaking strength relative to jammer's lockbreak strength in relation to vessel rcs signature:
-                // lockbreak_factor = baseSig/modifiedSig x (1 – lopckBreakStrength/baseSig/100)
-                lbFactor = (baseSig / modifiedSig) * (1 - (vesseljammer.lockBreakStrength / baseSig / 100));
-            }
-
-            return lbFactor;
-        }
-
-
-        /// <summary>
         /// Get a vessel ecm jamming area (in m) where radar display garbling occurs
         /// </summary>
         public static float GetVesselECMJammingDistance(Vessel v)
@@ -196,20 +170,11 @@ namespace BDArmory.Radar
             if (v == null)
                 return jammingDistance;
 
-            float baseSig = GetVesselRadarCrossSection(v);
-
-            // read vessel ecminfo for active lockbreaking jammers
-            VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
-
-            if (vesseljammer)
-            {
-                // garbling due to overly strong jamming signals relative to jammer's strength in relation to vessel rcs signature:
-                // jammingDistance =  (jammerstrength / baseSig / 100 + 1.0) x js
-                jammingDistance = ((vesseljammer.jammerStrength / baseSig / 100) + 1.0f) * vesseljammer.jammerStrength;
-            }
+            jammingDistance = GetVesselRadarCrossSection(v).radarJammingDistance;
 
             return jammingDistance;
         }
+
 
         /// <summary>
         /// Internal method: do the actual radar snapshot rendering from 3 sides and store it in a vesseltargetinfo attached to the vessel
@@ -473,7 +438,8 @@ namespace BDArmory.Radar
                 if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov / 2f)
                 {
                     // get vessel's radar signature
-                    float signature = GetVesselRadarSignature(loadedvessels.Current);
+                    TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
+                    float signature = ti.radarModifiedSignature;
                     signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, loadedvessels.Current.CoM);
                     // no ecm lockbreak factor here
                     // no chaff factor here
@@ -554,9 +520,10 @@ namespace BDArmory.Radar
                 if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov / 2f)
                 {
                     // get vessel's radar signature
-                    float signature = GetVesselRadarSignature(loadedvessels.Current);
+                    TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
+                    float signature = ti.radarModifiedSignature;
                     // no ground clutter modifier for missiles
-                    signature *= GetVesselECMLockBreakFactor(loadedvessels.Current);    //multiply lockbreak factor from active ecm
+                    signature *= ti.radarLockbreakFactor;    //multiply lockbreak factor from active ecm
                     //do not multiply chaff factor here
 
                     // evaluate range
@@ -590,7 +557,13 @@ namespace BDArmory.Radar
 
                     //  our radar ping can be received at a higher range than we can detect, according to RWR range ping factor:
                     if (distance < missile.activeRadarRange * RWR_PING_RANGE_FACTOR)
-                        RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.MissileLock, ACTIVE_MISSILE_PING_PERISTS_TIME);
+                    {
+                        if (missile.GetWeaponClass() == WeaponClasses.SLW)
+                            RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.TorpedoLock, ACTIVE_MISSILE_PING_PERISTS_TIME);
+
+                        else
+                            RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.MissileLock, ACTIVE_MISSILE_PING_PERISTS_TIME);
+                    }
                 }
 
             }
@@ -642,7 +615,9 @@ namespace BDArmory.Radar
                 if (Vector3.Angle(vesselDirection, lookDirection) < fov / 2f)
                 {
                     // get vessel's radar signature
-                    float signature = GetVesselRadarSignature(loadedvessels.Current);
+                    TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
+                    float signature = ti.radarModifiedSignature;
+                    //do not multiply chaff factor here
                     signature *= GetRadarGroundClutterModifier(radar, referenceTransform, position, loadedvessels.Current.CoM);
 
                     // evaluate range
@@ -655,7 +630,7 @@ namespace BDArmory.Radar
                         {
                             //evaluate if we can lock/track such a signature at that range
                             float minLockSig = radar.radarLockTrackCurve.Evaluate(distance);
-                            signature *= GetVesselECMLockBreakFactor(loadedvessels.Current);    //multiply lockbreak factor from active ecm
+                            signature *= ti.radarLockbreakFactor;    //multiply lockbreak factor from active ecm
                             //do not multiply chaff factor here
 
                             if (signature > minLockSig)
@@ -784,9 +759,10 @@ namespace BDArmory.Radar
                 }
 
                 // get vessel's radar signature
-                float signature = GetVesselRadarSignature(lockedVessel);
+                TargetInfo ti = GetVesselRadarSignature(lockedVessel);
+                float signature = ti.radarModifiedSignature;
                 signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, lockedVessel.CoM);
-                signature *= GetVesselECMLockBreakFactor(lockedVessel);    //multiply lockbreak factor from active ecm
+                signature *= ti.radarLockbreakFactor;    //multiply lockbreak factor from active ecm
                 //do not multiply chaff factor here
 
                 // evaluate range

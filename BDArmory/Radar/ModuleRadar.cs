@@ -500,12 +500,6 @@ namespace BDArmory.Radar
 
             drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled &&
                        vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
-
-            //UpdateSlaveData();
-            if (radarEnabled)
-            {
-                DrainElectricity();
-            }
         }
 
         
@@ -520,6 +514,8 @@ namespace BDArmory.Radar
 
                 if (radarEnabled)
                 {
+                    DrainElectricity(); //physics behaviour, thus moved here from update
+
                     if (locked)
                     {
                         for (int i = 0; i < lockedTargets.Count; i++)

@@ -208,7 +208,7 @@ namespace BDArmory
 
         void FixedUpdate()
         {
-            float distanceFromStart = Vector3.Distance(transform.position, startPosition);
+            float distanceFromStartSqr = (transform.position - startPosition).sqrMagnitude;
             if (!gameObject.activeInHierarchy)
             {
                 return;
@@ -257,7 +257,7 @@ namespace BDArmory
 
             currPosition = gameObject.transform.position;
 
-            if (distanceFromStart > maxDistance)
+            if (distanceFromStartSqr > maxDistance*maxDistance)
             {
                 //GameObject.Destroy(gameObject);
                 KillBullet();
@@ -284,7 +284,7 @@ namespace BDArmory
                     BDArmor armor = BDArmor.GetArmor(hit.collider, hitPart);
                     ArmorPenetration.BulletPenetrationData armorData = new ArmorPenetration.BulletPenetrationData(ray, hit);
                     ArmorPenetration.DoPenetrationRay(armorData, bullet.positiveCoefficient);
-                    float penetration = bullet.penetration.Evaluate(distanceFromStart)/1000;
+                    float penetration = bullet.penetration.Evaluate(Mathf.Sqrt(distanceFromStartSqr))/1000;
                     bool fulllyPenetrated = penetration*leftPenetration >
                                            ((armor == null) ? 1f : armor.EquivalentThickness)*armorData.armorThickness;
                     Vector3 finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
@@ -518,7 +518,7 @@ namespace BDArmory
                 }
             }
 
-            if (bulletType == PooledBulletTypes.Explosive && airDetonation && distanceFromStart > detonationRange)
+            if (bulletType == PooledBulletTypes.Explosive && airDetonation && distanceFromStartSqr > detonationRange*detonationRange)
             {
                 //detonate
                 ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,

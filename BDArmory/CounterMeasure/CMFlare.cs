@@ -174,7 +174,6 @@ namespace BDArmory.CounterMeasure
             thermal = Mathf.MoveTowards(thermal, minThermal,
                 ((BDArmorySettings.FLARE_THERMAL - minThermal)/lifeTime)*Time.fixedDeltaTime);
 
-            BDATargetManager.flareScore = this.thermal;
 
             //floatingOrigin fix
             if (sourceVessel != null)

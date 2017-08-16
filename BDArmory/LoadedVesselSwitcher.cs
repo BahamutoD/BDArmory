@@ -20,6 +20,7 @@ namespace BDArmory
         private bool _showGui;
         private bool _teamSwitchDirty;
         private readonly float _titleHeight = 30;
+        private float updateTimer = 0;
 
         //gui params
         private float _windowHeight; //auto adjusting
@@ -97,13 +98,19 @@ namespace BDArmory
             {
                 if (BDArmorySettings.Instance.showVSGUI != _showGui)
                 {
+                    updateTimer -= Time.fixedDeltaTime;
                     _showGui = BDArmorySettings.Instance.showVSGUI;
-                    if (_showGui)
+                    if (_showGui && updateTimer < 0)
+                    {
                         UpdateList();
+                        updateTimer = 0.5f;    //next update in half a sec only
+                    }
                 }
 
                 if (_showGui)
+                {                    
                     Hotkeys();
+                }
             }
         }
 

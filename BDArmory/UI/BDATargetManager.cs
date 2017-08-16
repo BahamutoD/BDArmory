@@ -30,10 +30,11 @@ namespace BDArmory.UI
 
 
 
-        StringBuilder debugString = new StringBuilder();
+        private StringBuilder debugString = new StringBuilder();
+        private float updateTimer = 0;
 
         //public static float heatScore;        //TODO: remove!
-		public static float flareScore;         //TODO: remove!
+        //public static float flareScore;         //TODO: remove!
 
         public static bool hasAddedButton;
 
@@ -172,9 +173,14 @@ namespace BDArmory.UI
 
 		void Update()
 		{
-			if(BDArmorySettings.DRAW_DEBUG_LABELS && FlightGlobals.ready)
+            if (BDArmorySettings.DRAW_DEBUG_LABELS && FlightGlobals.ready)
 			{
-				UpdateDebugLabels();
+                updateTimer -= Time.fixedDeltaTime;
+                if (updateTimer < 0)
+                {
+                    UpdateDebugLabels();
+                    updateTimer = 0.5f;    //next update in half a sec only
+                }
 			}
 
 		}
@@ -457,10 +463,10 @@ namespace BDArmory.UI
 			}
 
             debugString.Append(Environment.NewLine);
-            debugString.Append($"Heat score: {GetVesselHeatSignature(FlightGlobals.ActiveVessel):#####} / Last Flare score: {flareScore:#####}");
+            debugString.Append($"Heat Signature: {GetVesselHeatSignature(FlightGlobals.ActiveVessel):#####}");
             debugString.Append(Environment.NewLine);
 
-            debugString.Append($"Radar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel));
+            debugString.Append($"Radar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel).radarModifiedSignature);
             debugString.Append(Environment.NewLine);
 
             debugString.Append($"Chaff multiplier: " + RadarUtils.GetVesselChaffFactor(FlightGlobals.ActiveVessel));

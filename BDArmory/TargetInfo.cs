@@ -30,6 +30,24 @@ namespace BDArmory
             set;
         }
 
+        public float radarModifiedSignature
+        {
+            get;
+            set;
+        }
+
+        public float radarLockbreakFactor
+        {
+            get;
+            set;
+        }
+
+        public float radarJammingDistance
+        {
+            get;
+            set;
+        }
+
         public bool isLanded
 		{
 			get
