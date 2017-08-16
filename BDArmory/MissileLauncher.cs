@@ -2042,7 +2042,7 @@ namespace BDArmory
         private string GetBrevityCode()
         {
             //torpedo: determine subtype
-            if (missileType == "torpedo")
+            if (missileType.ToLower() == "torpedo")
             {
                 if ((TargetingMode == TargetingModes.Radar) && (activeRadarRange > 0))
                     return "Active Sonar";
@@ -2060,7 +2060,7 @@ namespace BDArmory
                     return "Unguided";
             }
 
-            if (missileType == "bomb")
+            if (missileType.ToLower() == "bomb")
             {
                 if ((TargetingMode == TargetingModes.Laser) || (TargetingMode == TargetingModes.Gps))
                     return "JDAM";
@@ -2092,7 +2092,12 @@ namespace BDArmory
                 return "SALH";
 
             if (TargetingMode == TargetingModes.Gps)
-                return "GPS";
+            {
+                if (TargetingModeTerminal != TargetingModes.None)
+                    return "GPS/Terminal";
+                else
+                    return "GPS";
+            }
 
             // default:
             return "Unguided";
@@ -2122,12 +2127,15 @@ namespace BDArmory
 
             if (TargetingMode == TargetingModes.Radar)
             {
-                output.Append($"Active Radar Range: {activeRadarRange} m");
-                output.Append(Environment.NewLine);
-                output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
-                output.Append(Environment.NewLine);
-                output.Append($"- LOAL: {radarLOAL}");
-                output.Append(Environment.NewLine);
+                if (activeRadarRange > 0)
+                {
+                    output.Append($"Active Radar Range: {activeRadarRange} m");
+                    output.Append(Environment.NewLine);
+                    output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                    output.Append(Environment.NewLine);
+                    output.Append($"- LOAL: {radarLOAL}");
+                    output.Append(Environment.NewLine);
+                }
                 output.Append($"Max Offborsight: {maxOffBoresight}");
                 output.Append(Environment.NewLine);
                 output.Append($"Locked FOV: {lockedSensorFOV}");
