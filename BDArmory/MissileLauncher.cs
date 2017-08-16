@@ -2105,8 +2105,8 @@ namespace BDArmory
             ParseModes();
 
             StringBuilder output = new StringBuilder();
-            output.Append(Environment.NewLine);
             output.Append($"{missileType.ToUpper()} - {GetBrevityCode()}");
+            output.Append(Environment.NewLine);
             output.Append(Environment.NewLine);
             output.Append($"Targeting Type: {targetingType.ToString().ToLower()}");
             output.Append(Environment.NewLine);
@@ -2184,8 +2184,11 @@ namespace BDArmory
                 }
             }
 
-            output.Append($"Warhead radius/power/heat: {blastRadius} / {blastPower} / {blastHeat}");
+            output.Append($"Warhead radius/power/heat:");
             output.Append(Environment.NewLine);
+            output.Append($"{blastRadius} / {blastPower} / {blastHeat}");
+            output.Append(Environment.NewLine);
+
             return output.ToString();
 
         }

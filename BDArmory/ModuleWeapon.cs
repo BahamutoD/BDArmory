@@ -2133,7 +2133,10 @@ namespace BDArmory
                 output.Append(Environment.NewLine);
                 if (weaponType == "cannon")
                 {
-                    output.Append($"Shell radius/power/heat: {cannonShellRadius} / {cannonShellPower} / {cannonShellHeat}");
+                    output.Append($"Shell radius/power/heat:");
+                    output.Append(Environment.NewLine);
+                    output.Append($"{cannonShellRadius} / {cannonShellPower} / {cannonShellHeat}");
+                    output.Append(Environment.NewLine);
                     output.Append(Environment.NewLine);
                     output.Append($"Air detonation: {airDetonation}");
                     output.Append(Environment.NewLine);
