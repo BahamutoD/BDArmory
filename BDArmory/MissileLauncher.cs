@@ -2039,40 +2039,152 @@ namespace BDArmory
         }
 
 
+        private string GetBrevityCode()
+        {
+            //torpedo: determine subtype
+            if (missileType == "torpedo")
+            {
+                if ((TargetingMode == TargetingModes.Radar) && (activeRadarRange > 0))
+                    return "Active Sonar";
+
+                if ((TargetingMode == TargetingModes.Radar) && (activeRadarRange <= 0))
+                    return "Passive Sonar";
+
+                if ((TargetingMode == TargetingModes.Laser) || (TargetingMode == TargetingModes.Gps))
+                    return "Optical/wireguided";
+
+                if ((TargetingMode == TargetingModes.Heat))
+                    return "Heat guided";
+
+                if ((TargetingMode == TargetingModes.None))
+                    return "Unguided";
+            }
+
+            if (missileType == "bomb")
+            {
+                if ((TargetingMode == TargetingModes.Laser) || (TargetingMode == TargetingModes.Gps))
+                    return "JDAM";
+
+                if ((TargetingMode == TargetingModes.None))
+                    return "Unguided";
+            }
+
+            //else: missiles:
+
+            if (TargetingMode == TargetingModes.Radar)
+            {
+                //radar: determine subtype
+                if (activeRadarRange <= 0)
+                    return "SARH";
+                if (activeRadarRange > 0 && activeRadarRange < maxStaticLaunchRange)
+                    return "Mixed SARH/F&F";
+                if (activeRadarRange >= maxStaticLaunchRange)
+                    return "Fire&Forget";
+            }
+
+            if (TargetingMode == TargetingModes.AntiRad)
+                return "Fire&Forget";
+
+            if (TargetingMode == TargetingModes.Heat)
+                return "Fire&Forget";
+
+            if (TargetingMode == TargetingModes.Laser)
+                return "SALH";
+
+            if (TargetingMode == TargetingModes.Gps)
+                return "GPS";
+
+            // default:
+            return "Unguided";
+        }
+
+
         // RMB info in editor
         public override string GetInfo()
         {
+            ParseModes();
+
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append($"Weapon Type: {missileType}");
+            output.Append($"{missileType.ToUpper()} - {GetBrevityCode()}");
             output.Append(Environment.NewLine);
-            output.Append($"Guidance Mode: {homingType.ToString().ToUpper()}");
+            output.Append($"Targeting Type: {targetingType.ToString().ToLower()}");
             output.Append(Environment.NewLine);
-            output.Append($"Targetting Mode: {targetingType.ToString().ToUpper()}");
+            output.Append($"Guidance Mode: {homingType.ToString().ToLower()}");
+            output.Append(Environment.NewLine);
+            if (missileRadarCrossSection != RadarUtils.RCS_MISSILES)
+            {
+                output.Append($"Detectable cross section: {missileRadarCrossSection} m^2");
+                output.Append(Environment.NewLine);
+            }
+            output.Append($"Min/Max Range: {minStaticLaunchRange} / {maxStaticLaunchRange} m");
             output.Append(Environment.NewLine);
 
-            if (targetingType.ToLower() == "radar")
+            if (TargetingMode == TargetingModes.Radar)
             {
-                output.Append($"Active Radar Range: {activeRadarRange}");
+                output.Append($"Active Radar Range: {activeRadarRange} m");
+                output.Append(Environment.NewLine);
+                output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                output.Append(Environment.NewLine);
+                output.Append($"- LOAL: {radarLOAL}");
+                output.Append(Environment.NewLine);
+                output.Append($"Max Offborsight: {maxOffBoresight}");
+                output.Append(Environment.NewLine);
+                output.Append($"Locked FOV: {lockedSensorFOV}");
                 output.Append(Environment.NewLine);
             }
 
-            if (targetingType.ToLower() == "gps")
+            if (TargetingMode == TargetingModes.Heat)
+            {
+                output.Append($"All Aspect: {allAspect}");
+                output.Append(Environment.NewLine);
+                output.Append($"Min Heat threshold: {heatThreshold}");
+                output.Append(Environment.NewLine);
+                output.Append($"Max Offborsight: {maxOffBoresight}");
+                output.Append(Environment.NewLine);
+                output.Append($"Locked FOV: {lockedSensorFOV}");
+                output.Append(Environment.NewLine);
+            }
+
+            if (TargetingMode == TargetingModes.Gps)
             {
                 output.Append($"Terminal Maneuvering: {terminalManeuvering}");
                 output.Append(Environment.NewLine);
                 if (terminalGuidanceType != "")
                 {
-                    output.Append(
-                        $"Terminal guidance: {terminalGuidanceType}, distance: {terminalGuidanceDistance} meters");
+                    output.Append($"Terminal guidance: {terminalGuidanceType} @ distance: {terminalGuidanceDistance} m");
                     output.Append(Environment.NewLine);
+
+                    if (TargetingModeTerminal == TargetingModes.Radar)
+                    {
+                        output.Append($"Active Radar Range: {activeRadarRange} m");
+                        output.Append(Environment.NewLine);
+                        output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                        output.Append(Environment.NewLine);
+                        output.Append($"- LOAL: {radarLOAL}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Max Offborsight: {maxOffBoresight}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Locked FOV: {lockedSensorFOV}");
+                        output.Append(Environment.NewLine);
+                    }
+
+                    if (TargetingModeTerminal == TargetingModes.Heat)
+                    {
+                        output.Append($"All Aspect: {allAspect}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Min Heat threshold: {heatThreshold}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Max Offborsight: {maxOffBoresight}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Locked FOV: {lockedSensorFOV}");
+                        output.Append(Environment.NewLine);
+                    }
+
                 }
             }
 
-
-            output.Append($"Min/Max Range: {minStaticLaunchRange}/{maxStaticLaunchRange} meters");
-            output.Append(Environment.NewLine);
-            output.Append($"Blast radius/power/heat: {blastRadius}/{blastPower}/{blastHeat}");
+            output.Append($"Warhead radius/power/heat: {blastRadius} / {blastPower} / {blastHeat}");
             output.Append(Environment.NewLine);
             return output.ToString();
 
