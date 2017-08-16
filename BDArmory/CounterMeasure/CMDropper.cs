@@ -297,10 +297,8 @@ namespace BDArmory.CounterMeasure
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append($"Coutermeasure: {countermeasureType}");
+            output.Append($"Countermeasure: {countermeasureType}");
             output.Append(Environment.NewLine);
-            output.Append($"Resource count: {GetCMResource().amount}");
-            output.Append(Environment.NewLine);            
 
             return output.ToString();
 
