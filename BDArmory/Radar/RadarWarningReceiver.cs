@@ -213,8 +213,8 @@ namespace BDArmory.Radar
 
             if (rwrEnabled && vessel && v == vessel)
             {
-                //if we are airborne or on land, no SLW type weapons on the RWR!
-                if ((type == RWRThreatTypes.Torpedo || type == RWRThreatTypes.TorpedoLock) && (vessel.situation != Vessel.Situations.SPLASHED))
+                //if we are airborne or on land, no Sonar or SLW type weapons on the RWR!
+                if ((type == RWRThreatTypes.Torpedo || type == RWRThreatTypes.TorpedoLock || type == RWRThreatTypes.Sonar) && (vessel.situation != Vessel.Situations.SPLASHED))
                 {
                     // rwr stays silent...
                     return;
