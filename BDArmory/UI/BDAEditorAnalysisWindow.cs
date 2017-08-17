@@ -52,7 +52,8 @@ namespace BDArmory.UI
             {
                 GUIContent gui = new GUIContent();
                 gui.text = radar.radarName;
-                gui.tooltip = radar.radarName;
+                if (string.IsNullOrEmpty(gui.text)) gui.text = radar.part.partInfo.title;
+                gui.tooltip = gui.text;
                 radarsGUI.Add(gui);
             }
 

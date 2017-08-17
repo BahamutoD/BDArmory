@@ -766,6 +766,7 @@ namespace BDArmory.UI
         public static void AddTarget(TargetInfo target)
         {
             var team = target.team;
+            if (team == BDArmorySettings.BDATeams.None) return;
             if (!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(target))
             {
                 BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(target);
