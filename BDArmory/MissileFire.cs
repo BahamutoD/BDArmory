@@ -3445,11 +3445,6 @@ namespace BDArmory
         // extension for feature_engagementenvelope: check engagement parameters of the weapon if it can be used against the current target
         bool CheckEngagementEnvelope(IBDWeapon weaponCandidate, float distanceToTarget)
         {
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-            {
-                Debug.Log("[BDArmory] : " + vessel.vesselName + " - Checking engagement envelope of " + weaponCandidate.GetShortName());
-            }
-
             EngageableWeapon engageableWeapon = weaponCandidate as EngageableWeapon;
 
             if (engageableWeapon == null) return true;
