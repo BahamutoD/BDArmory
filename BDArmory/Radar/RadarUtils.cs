@@ -86,7 +86,7 @@ namespace BDArmory.Radar
                 missile.Dispose();
             }
 
-            if (ti.radarBaseSignature == 0 || ti.radarBaseSignatureNeedsUpdate)
+            if (ti.radarBaseSignature == -1 || ti.radarBaseSignatureNeedsUpdate)
             {
                 // is it just some debris? then dont bother doing a real rcs rendering and just fake it with the parts mass
                 if (v.vesselType == VesselType.Debris && !v.IsControllable)

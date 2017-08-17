@@ -18,35 +18,11 @@ namespace BDArmory
         Coroutine massRoutine;
 
 
-        public float radarBaseSignature
-        {
-            get;        
-            set;
-        }
-
-        public bool radarBaseSignatureNeedsUpdate
-        {
-            get;
-            set;
-        }
-
-        public float radarModifiedSignature
-        {
-            get;
-            set;
-        }
-
-        public float radarLockbreakFactor
-        {
-            get;
-            set;
-        }
-
-        public float radarJammingDistance
-        {
-            get;
-            set;
-        }
+        public float radarBaseSignature = -1;
+        public bool radarBaseSignatureNeedsUpdate = true;
+        public float radarModifiedSignature;
+        public float radarLockbreakFactor;
+        public float radarJammingDistance;
 
         public bool isLanded
 		{
