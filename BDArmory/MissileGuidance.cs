@@ -30,7 +30,7 @@ namespace BDArmory
 
             Vector3 finalTarget = targetPosition +
                                   (Mathf.Clamp(
-                                       (distanceToTarget - ((float) missileVessel.srfSpeed*descentRatio))*0.22f, 0, 5000)*
+                                       (distanceToTarget - ((float) missileVessel.srfSpeed*descentRatio))*0.22f, 0, (float)missileVessel.altitude)*
                                    upDirection);
 
 
@@ -418,7 +418,7 @@ namespace BDArmory
 
 
             //guidance
-            if (airSpeed > 1 || ml.vacuumSteerable)
+            if (airSpeed > 1 || (ml.vacuumSteerable && ml.Throttle > 0))
             {
                 Vector3 targetDirection;
                 float targetAngle;
@@ -441,7 +441,6 @@ namespace BDArmory
                     Vector3.forward);
 
                 rb.AddRelativeTorque(finalTorque);
-
                 return finalTorque;
             }
             else

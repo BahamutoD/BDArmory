@@ -136,6 +136,22 @@ namespace BDArmory.Parts
 
         public bool HasExploded { get; set; } = false;
 
+        protected Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
+        protected Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
+
+        public float Throttle
+        {
+            get
+            {
+                return _throttle;
+            }
+
+            set
+            {
+                _throttle = Mathf.Clamp01(value);
+            }
+        }
+
         public float TimeFired = -1;
 
         protected float lockFailTimer = -1;
@@ -174,7 +190,10 @@ namespace BDArmory.Parts
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
         protected string debugString = "";
+
+        private float _throttle = 1f;
         
+
         public string GetSubLabel()
         {
             if (Enum.GetName(typeof(TargetingModes), TargetingMode) == "None")

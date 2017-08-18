@@ -224,7 +224,7 @@ namespace BDArmory
         public bool indirect = false;
 
         [KSPField]
-        public bool vacuumSteerable = false;
+        public bool vacuumSteerable = true;
 
 
         public GPSTargetInfo designatedGPSInfo;
@@ -1158,10 +1158,12 @@ namespace BDArmory
         }
 
         void UpdateThrustForces()
-		{
-			if(currentThrust > 0)
+        {
+            if (MissileState == MissileStates.PostThrust) return;
+
+			if(currentThrust * Throttle > 0)
 			{
-				part.rb.AddRelativeForce(currentThrust * Vector3.forward);
+				part.rb.AddRelativeForce(currentThrust * Throttle * Vector3.forward);
 			}
 		}
 
@@ -1228,10 +1230,9 @@ namespace BDArmory
 				while(gpe.MoveNext())
 				{
 				    if (gpe.Current == null) continue;
-					if(vessel.atmDensity > 0)
+					if(!vessel.InVacuum() && Throttle > 0)
 					{
 						gpe.Current.emit = true;
-                      
                         //gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
                         gpe.Current.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
 					}
@@ -1360,22 +1361,30 @@ namespace BDArmory
 
 				//particleFx
 			    List<KSPParticleEmitter>.Enumerator emitter = pEmitters.GetEnumerator();
-				while(emitter.MoveNext())
-				{
-				    if (emitter.Current == null) continue;
-					if(!hasRCS)
-					{
-						emitter.Current.sizeGrow = Mathf.Lerp(emitter.Current.sizeGrow, 0, 20*Time.deltaTime);
-					}
-				}
-                emitter.Dispose();
+			    while (emitter.MoveNext())
+			    {
+			        if (emitter.Current == null) continue;
+			        if (!hasRCS)
+			        {
+			            emitter.Current.sizeGrow = Mathf.Lerp(emitter.Current.sizeGrow, 0, 20 * Time.deltaTime);
+			        }
+			        if ( Throttle == 0)
+			        {
+			            emitter.Current.emit = false;
+			        }
+			        else
+			        {
+			            emitter.Current.emit = true;
+                    }
+			    }
+			    emitter.Dispose();
 
 			    List<BDAGaplessParticleEmitter>.Enumerator gpe = gaplessEmitters.GetEnumerator();
 				while(gpe.MoveNext())
 				{
 				    if (gpe.Current == null) continue;
-					if(vessel.atmDensity > 0)
-					{
+				    if (Throttle > 0)
+                    {
 					    gpe.Current.emit = true;
                         //gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
 					    gpe.Current.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
@@ -1697,48 +1706,74 @@ namespace BDArmory
 			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
 
-        private float originalDistance = 0f;
+        private float originalDistance = float.MinValue;
+        private Vector3 startPoint;
+        private float ExpectedApoapsis = 0f;
+
         void AGMBallisticGuidance()
 		{
-            //Vector3 agmTarget;
-            //bool validSolution = MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, !indirect, out agmTarget);
-            //if(!validSolution || Vector3.Angle(TargetPosition - transform.position, agmTarget - transform.position) > Mathf.Clamp(maxOffBoresight, 0, 65))
-            //{
-            //	Vector3 dToTarget = TargetPosition - transform.position;
-            //	Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(transform.position))) * dToTarget;
-            //	agmTarget = transform.position + direction;
-            //         }
+            //set up
+		    if (originalDistance == float.MinValue)
+		    {
+		        startPoint = vessel.CoM;
+		        originalDistance = Vector3.Distance(TargetPosition, vessel.CoM);
 
-            //DoAero(agmTarget);
+                //calculating expected apogee bases on isosceles triangle
+		        var a = originalDistance;
+		        ExpectedApoapsis = (a / 2f) * Mathf.Tan(maxOffBoresight * 0.9f);
+		    }
+		    var surfaceDistanceTravelled = Vector3
+		        .Project((vessel.CoM - startPoint), (TargetPosition - startPoint).normalized)
+		        .magnitude;
 
-            // Using BallisticGuidance() code from BDMModularGuidance 
-            
-            float currentDistance = Vector3.Distance(TargetPosition, vessel.CoM);
-            if (currentDistance > originalDistance)
-            {
-                originalDistance = currentDistance;
-            }
-            Vector3 agmTarget;
-
-
-            if (currentDistance > originalDistance / 2)
-            {
-                bool validSolution =
-                    MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
-                if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) >
-                    Mathf.Clamp(maxOffBoresight, 0, 65))
-                {
-                    Vector3 dToTarget = TargetPosition - vessel.CoM;
-                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f),
-                                            Vector3.Cross(dToTarget,
-                                                VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
-                    agmTarget = vessel.CoM + direction;
+		    Vector3 agmTarget;
+            // Getting apoapsis
+            if (vessel.verticalSpeed > 0 && surfaceDistanceTravelled <= originalDistance * 0.5)
+		    {
+		        if (vessel.orbit.ApA < ExpectedApoapsis)
+		        {
+		            Throttle = 1;        		               
+		        }
+		        else
+		        {
+		            Throttle = vessel.InVacuum() ? 0 : 1;
                 }
+
+		        if (!vessel.InVacuum())
+		        {
+                    Vector3 dToTarget = TargetPosition - vessel.CoM;
+                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(vessel.CoM))) * dToTarget;
+                    agmTarget = vessel.CoM + direction;     
+                }
+                else
+		        {
+		            agmTarget = vessel.CoM + vessel.Velocity() * 10;
+                }	      	        
             }
-            else
-            {
-                agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-            }
+		    else
+		    {       
+		        // Checking if horizontal speed is enough
+		        var freeFallTime = Mathf.Sqrt((float) ((2f * (vessel.altitude - vessel.verticalSpeed)) / 9.80665f));
+		        var distanceWillTravel = freeFallTime * vessel.horizontalSrfSpeed;
+
+		        if (distanceWillTravel + surfaceDistanceTravelled > originalDistance)
+		        {
+		            Throttle = vessel.InVacuum() ? 0 : 1;
+		        }
+		        else
+		        {
+		            Throttle = 1;
+		        }
+
+		        if (!vessel.InVacuum())
+		        {
+		            agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+		        }
+		        else
+		        {
+		            agmTarget = vessel.CoM + vessel.Velocity() * 10;
+                }        
+            }	   
             DoAero(agmTarget);
         }
 

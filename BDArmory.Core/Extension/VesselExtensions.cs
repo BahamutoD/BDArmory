@@ -21,7 +21,7 @@ namespace BDArmory.Core.Extension
         {
             if (!v.InOrbit())
             {
-                return v.Velocity();
+                return v.srf_velocity;
             }
             else
             {
