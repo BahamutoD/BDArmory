@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 using BDArmory.Radar;
-using System.Collections.Generic;
 using BDArmory.Parts;
 using BDArmory.Misc;
 
@@ -22,8 +23,8 @@ namespace BDArmory.UI
         private bool takeSnapshot = false;
         private float rcsReductionFactor;
 
-        private List<ModuleRadar> radars;
-        private List<GUIContent> radarsGUI = new List<GUIContent>();
+        private ModuleRadar[] radars;
+        private GUIContent[] radarsGUI;
         private GUIContent radarBoxText;
         private BDGUIComboBox radarBox;
         private int previous_index = -1;
@@ -47,14 +48,22 @@ namespace BDArmory.UI
 
         private void FillRadarList()
         {
-            radars = BDAEditorCategory.getRadars();
-            foreach (var radar in radars)
+            radars = BDAEditorCategory.getRadars().ToArray();
+
+            // first pass, then sort
+            for (int i=0; i<radars.Length; i++)
             {
-                GUIContent gui = new GUIContent();
-                gui.text = radar.radarName;
-                if (string.IsNullOrEmpty(gui.text)) gui.text = radar.part.partInfo.title;
-                gui.tooltip = gui.text;
-                radarsGUI.Add(gui);
+                if (string.IsNullOrEmpty(radars[i].radarName)) radars[i].radarName = radars[i].part?.partInfo?.title;
+                GUIContent gui = new GUIContent(radars[i].radarName);
+            }
+            Array.Sort(radars, delegate (ModuleRadar r1, ModuleRadar r2) { return r1.radarName.CompareTo(r2.radarName); });
+
+            // second pass to copy
+            radarsGUI = new GUIContent[radars.Length];
+            for (int i = 0; i < radars.Length; i++)
+            {
+                GUIContent gui = new GUIContent(radars[i].radarName);
+                radarsGUI[i] = gui;
             }
 
             radarBoxText = new GUIContent();
@@ -161,7 +170,7 @@ namespace BDArmory.UI
                 FillRadarList();
                 GUIStyle listStyle = new GUIStyle(HighLogic.Skin.button);
                 listStyle.fixedHeight = 18; //make list contents slightly smaller
-                radarBox = new BDGUIComboBox(new Rect(10, 350, 200, 20), radarBoxText, radarsGUI.ToArray(), 120, listStyle);
+                radarBox = new BDGUIComboBox(new Rect(10, 350, 250, 20), radarBoxText, radarsGUI, 124, listStyle);
             }
             
             int selected_index = radarBox.Show();

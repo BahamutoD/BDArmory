@@ -48,12 +48,12 @@ namespace BDArmory.Misc
 
         public static List<ModuleRadar> getRadars()
         {
-            List<ModuleRadar> results = new List<ModuleRadar>(10);
+            List<ModuleRadar> results = new List<ModuleRadar>(150);
 
             foreach (var item in availableParts)
             {
                 var radar = item.partPrefab.GetComponent<ModuleRadar>();
-                if (radar != null)
+                if (radar != null && (radar.canScan || radar.canLock))
                     results.Add(radar);
             }
 
