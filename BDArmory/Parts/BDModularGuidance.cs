@@ -570,7 +570,8 @@ namespace BDArmory.Parts
         }
 
         public void GuidanceSteer(FlightCtrlState s)
-        {           
+        {
+            debugString = "";
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
                 Vector3 newTargetPosition = new Vector3();
@@ -608,41 +609,14 @@ namespace BDArmory.Parts
                     s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
                 }
 
-                s.mainThrottle = 1;
+                s.mainThrottle = Throttle;
             }
            
         }
 
-        private float originalDistance = 0f;
         private Vector3 BallisticGuidance()
         {
-            float currentDistance = Vector3.Distance(TargetPosition, vessel.CoM);
-            if (currentDistance > originalDistance)
-            {
-                originalDistance = currentDistance;
-            }
-            Vector3 agmTarget;
-
-
-            if (currentDistance > originalDistance / 2)
-            {
-                bool validSolution =
-                    MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, false, out agmTarget);
-                if (!validSolution || Vector3.Angle(TargetPosition - vessel.CoM, agmTarget - vessel.CoM) >
-                    Mathf.Clamp(maxOffBoresight, 0, 65))
-                {
-                    Vector3 dToTarget = TargetPosition - vessel.CoM;
-                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f),
-                                            Vector3.Cross(dToTarget,
-                                                VectorUtils.GetUpDirection(vessel.transform.position))) * dToTarget;
-                    agmTarget = vessel.CoM + direction;
-                }
-            }
-            else
-            {
-                agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-            }
-            return agmTarget;
+            return CalculateAGMBallisticGuidance(this, TargetPosition);
         }
 
         private void UpdateMenus(bool visible)
@@ -702,7 +676,10 @@ namespace BDArmory.Parts
             //todo: find a way to fly by wire vessel decoupled
         }
 
-
+        void OnGUI()
+        {
+            drawLabels();
+        }
 
         #region KSP ACTIONS
         [KSPAction("Fire Missile")]

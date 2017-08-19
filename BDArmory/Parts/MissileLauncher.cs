@@ -5,13 +5,12 @@ using System.Text;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
-using BDArmory.Parts;
 using BDArmory.Radar;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
 
-namespace BDArmory
+namespace BDArmory.Parts
 {	
 	public class MissileLauncher : MissileBase
     {
@@ -1706,75 +1705,10 @@ namespace BDArmory
 			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
 
-        private float originalDistance = float.MinValue;
-        private Vector3 startPoint;
-        private float ExpectedApoapsis = 0f;
 
         void AGMBallisticGuidance()
 		{
-            //set up
-		    if (originalDistance == float.MinValue)
-		    {
-		        startPoint = vessel.CoM;
-		        originalDistance = Vector3.Distance(TargetPosition, vessel.CoM);
-
-                //calculating expected apogee bases on isosceles triangle
-		        var a = originalDistance;
-		        ExpectedApoapsis = (a / 2f) * Mathf.Tan(maxOffBoresight * 0.9f);
-		    }
-		    var surfaceDistanceTravelled = Vector3
-		        .Project((vessel.CoM - startPoint), (TargetPosition - startPoint).normalized)
-		        .magnitude;
-
-		    Vector3 agmTarget;
-            // Getting apoapsis
-            if (vessel.verticalSpeed > 0 && surfaceDistanceTravelled <= originalDistance * 0.5)
-		    {
-		        if (vessel.orbit.ApA < ExpectedApoapsis)
-		        {
-		            Throttle = 1;        		               
-		        }
-		        else
-		        {
-		            Throttle = vessel.InVacuum() ? 0 : 1;
-                }
-
-		        if (!vessel.InVacuum())
-		        {
-                    Vector3 dToTarget = TargetPosition - vessel.CoM;
-                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(vessel.CoM))) * dToTarget;
-                    agmTarget = vessel.CoM + direction;     
-                }
-                else
-		        {
-		            agmTarget = vessel.CoM + vessel.Velocity() * 10;
-                }	      	        
-            }
-		    else
-		    {       
-		        // Checking if horizontal speed is enough
-		        var freeFallTime = Mathf.Sqrt((float) ((2f * (vessel.altitude - vessel.verticalSpeed)) / 9.80665f));
-		        var distanceWillTravel = freeFallTime * vessel.horizontalSrfSpeed;
-
-		        if (distanceWillTravel + surfaceDistanceTravelled > originalDistance)
-		        {
-		            Throttle = vessel.InVacuum() ? 0 : 1;
-		        }
-		        else
-		        {
-		            Throttle = 1;
-		        }
-
-		        if (!vessel.InVacuum())
-		        {
-		            agmTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-		        }
-		        else
-		        {
-		            agmTarget = vessel.CoM + vessel.Velocity() * 10;
-                }        
-            }	   
-            DoAero(agmTarget);
+            DoAero(CalculateAGMBallisticGuidance(this,TargetPosition));
         }
 
 		void UpdateLegacyTarget()
@@ -1953,14 +1887,7 @@ namespace BDArmory
 
 		void OnGUI()
 		{
-			if(HasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
-			{
-				GUI.Label(new Rect(200,300,200,200), debugString);	
-			}
-			if(HasFired && hasRCS)
-			{
-				BDGUIUtils.DrawLineBetweenWorldPositions(transform.position, TargetPosition, 2, Color.red);
-			}
+		    drawLabels();
 		}
 
 		void AntiSpin()

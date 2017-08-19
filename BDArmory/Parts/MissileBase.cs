@@ -656,5 +656,102 @@ namespace BDArmory.Parts
                 Detonate();
             }
         }
+
+
+        private  float _originalDistance = float.MinValue;
+        private  Vector3 _startPoint;
+        protected Vector3 CalculateAGMBallisticGuidance(MissileBase missile, Vector3 targetPosition)
+        {
+            //set up
+            if (_originalDistance == float.MinValue)
+            {
+                _startPoint = missile.vessel.CoM;
+                _originalDistance = Vector3.Distance(targetPosition, missile.vessel.CoM);
+
+                //calculating expected apogee bases on isosceles triangle
+               
+            }
+            var surfaceDistanceTravelled = Vector3
+                .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized)
+                .magnitude;
+
+            Vector3 agmTarget;
+            // Getting apoapsis
+            if (missile.vessel.verticalSpeed > 0 && surfaceDistanceTravelled <= _originalDistance * 0.5)
+            {
+                debugString += "\n Ascending";
+
+                var freeFallTime = CalculateFreeFallTime();
+                debugString += "\n Free fall time: "+ freeFallTime;
+                var distanceWillTravel = freeFallTime * missile.vessel.horizontalSrfSpeed;
+
+                if (distanceWillTravel + surfaceDistanceTravelled > _originalDistance)
+                {
+                    debugString += "\n Free fall achieved: ";
+                    if (missile is BDModularGuidance)
+                    {
+                        missile.Throttle = 0;
+                    }
+                    else
+                    {
+                        missile.Throttle = missile.vessel.InVacuum() ? 0 : 1;
+                    }
+                }
+                else
+                {
+                    debugString += "\n Free fall not achieved: ";
+                    missile.Throttle = 1;
+                }
+
+                debugString += "\n Throttle: " + missile.Throttle;
+                if (!missile.vessel.InVacuum())
+                {
+                    Vector3 dToTarget = targetPosition - missile.vessel.CoM;
+                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(missile.maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(missile.vessel.CoM))) * dToTarget;
+                    agmTarget = missile.vessel.CoM + direction;
+                }
+                else
+                {
+                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
+                }
+            }
+            else
+            {
+                debugString += "\n Descending";
+ 
+                // Terminal guidance
+                if (!missile.vessel.InVacuum())
+                {
+                    agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
+                    missile.Throttle = Mathf.Clamp01((float) (missile.vessel.atmDensity * 10f));
+                }
+                else
+                {
+                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
+                }
+            }
+            return agmTarget;
+        }
+
+        private double CalculateFreeFallTime()
+        {
+            double vi = -vessel.verticalSpeed;
+            double a = 9.80665f;
+            double d = vessel.altitude;
+
+            double time1 = (-vi + Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+            double time2 = (-vi - Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+
+            return Math.Max(time1, time2);
+        }
+
+        protected void drawLabels()
+        {
+            if (!vessel.isActiveVessel) return;
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.shortName + ":" + debugString);
+            }
+        }
     }
 }
