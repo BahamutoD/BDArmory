@@ -193,7 +193,7 @@ namespace BDArmory.Radar
             SetupResources();
 
             //move vessel up for clear rendering shot (only if outside editor and thus vessel is a real vessel)
-            if (v.id != Guid.Empty)
+            if (HighLogic.LoadedSceneIsFlight)
                 v.SetPosition(v.transform.position + presentationPosition);
 
             Bounds vesselbounds = CalcVesselBounds(v, t);
@@ -207,12 +207,16 @@ namespace BDArmory.Radar
             if (vesselbounds.size.sqrMagnitude == 0f)
             {
                 // SAVE US THE RENDERING, result will be zero anyway...
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                {
+                    Debug.Log("[BDArmory]: - rcs is zero.");
+                }
 
                 // revert presentation (only if outside editor and thus vessel is a real vessel)
-                if (v.id != Guid.Empty)
-                    v.SetPosition(v.transform.position - presentationPosition);
+                if (HighLogic.LoadedSceneIsFlight)
+                v.SetPosition(v.transform.position - presentationPosition);
 
-                return -1f;
+                return 0f;
             }
 
             // pass1: frontal
@@ -270,7 +274,7 @@ namespace BDArmory.Radar
             drawTextureVentral.Apply();
 
             // revert presentation (only if outside editor and thus vessel is a real vessel)
-            if (v.id != Guid.Empty)
+            if (HighLogic.LoadedSceneIsFlight)
                 v.SetPosition(v.transform.position - presentationPosition);
 
             // Count pixel colors to determine radar returns (only for normal non-zoomed rendering!)
