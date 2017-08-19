@@ -2131,7 +2131,10 @@ namespace BDArmory
                 {
                     output.Append($"Active Radar Range: {activeRadarRange} m");
                     output.Append(Environment.NewLine);
-                    output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                    if (activeRadarLockTrackCurve.maxTime > 0)
+                        output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                    else
+                        output.Append($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange/1000} km");
                     output.Append(Environment.NewLine);
                     output.Append($"- LOAL: {radarLOAL}");
                     output.Append(Environment.NewLine);
@@ -2167,7 +2170,10 @@ namespace BDArmory
                     {
                         output.Append($"Active Radar Range: {activeRadarRange} m");
                         output.Append(Environment.NewLine);
-                        output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                        if (activeRadarLockTrackCurve.maxTime > 0)
+                            output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                        else
+                            output.Append($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange / 1000} km");
                         output.Append(Environment.NewLine);
                         output.Append($"- LOAL: {radarLOAL}");
                         output.Append(Environment.NewLine);
