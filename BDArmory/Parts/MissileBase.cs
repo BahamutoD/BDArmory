@@ -688,14 +688,7 @@ namespace BDArmory.Parts
                 if (distanceWillTravel + surfaceDistanceTravelled > _originalDistance)
                 {
                     debugString += "\n Free fall achieved: ";
-                    if (missile is BDModularGuidance)
-                    {
-                        missile.Throttle = 0;
-                    }
-                    else
-                    {
-                        missile.Throttle = missile.vessel.InVacuum() ? 0 : 1;
-                    }
+                    missile.Throttle = 0;
                 }
                 else
                 {
