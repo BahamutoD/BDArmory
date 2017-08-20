@@ -27,6 +27,8 @@ namespace BDArmory.UI
             this.buttonContent = buttonContent;
             this.listContent = listContent;
             this.listStyle = listStyle;
+            this.listStyle.active.textColor = Color.black;
+            this.listStyle.hover.textColor = Color.black;
             this.comboxbox_height = combo_height;
         }
 
@@ -81,7 +83,7 @@ namespace BDArmory.UI
                 scrollViewVector = GUI.BeginScrollView(new Rect(rect.x, rect.y + rect.height, rect.width * 1.1f, comboxbox_height), scrollViewVector,
                                                         new Rect(rect.x, rect.y, rect.width, items_height + rect.height), false, false, HighLogic.Skin.horizontalScrollbar, HighLogic.Skin.verticalScrollbar);
 
-                GUI.Box(new Rect(rect.x, rect.y, rect.width, items_height + rect.height), "", HighLogic.Skin.box);
+                GUI.Box(new Rect(rect.x, rect.y, rect.width, items_height + rect.height), "", HighLogic.Skin.window);
 
                 int newSelectedItemIndex = GUI.SelectionGrid(listRect, selectedItemIndex, listContent, 1, listStyle);
                 if (newSelectedItemIndex != selectedItemIndex)
