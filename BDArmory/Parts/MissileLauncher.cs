@@ -1367,32 +1367,20 @@ namespace BDArmory.Parts
 			        {
 			            emitter.Current.sizeGrow = Mathf.Lerp(emitter.Current.sizeGrow, 0, 20 * Time.deltaTime);
 			        }
-			        if ( Throttle == 0)
-			        {
-			            
-			            emitter.Current.emit = false;
-			        }
-			        else
-			        {
-			            emitter.Current.emit = true;
-                    }
-			    }
+
+			        emitter.Current.maxSize = Mathf.Clamp01(Throttle/ Mathf.Clamp((float) vessel.atmDensity, 0.2f, 1f));
+			        emitter.Current.emit = true;
+                }
 			    emitter.Dispose();
 
 			    List<BDAGaplessParticleEmitter>.Enumerator gpe = gaplessEmitters.GetEnumerator();
 				while(gpe.MoveNext())
 				{
 				    if (gpe.Current == null) continue;
-				    if (Throttle > 0)
-                    {
-					    gpe.Current.emit = true;
+                        gpe.Current.pEmitter.maxSize = Mathf.Clamp01(Throttle / Mathf.Clamp((float)vessel.atmDensity, 0.2f, 1f));
+                        gpe.Current.emit = true;
                         //gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
 					    gpe.Current.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
-					}
-					else
-					{
-					    gpe.Current.emit = false;
-                    }	
 				}
                 gpe.Dispose();
 
