@@ -1357,9 +1357,9 @@ namespace BDArmory.Parts
 				{
 					audioSource.Stop();
 				}
-
-				//particleFx
-			    List<KSPParticleEmitter>.Enumerator emitter = pEmitters.GetEnumerator();
+			    audioSource.volume = Throttle;
+                //particleFx
+                List<KSPParticleEmitter>.Enumerator emitter = pEmitters.GetEnumerator();
 			    while (emitter.MoveNext())
 			    {
 			        if (emitter.Current == null) continue;
@@ -1369,6 +1369,7 @@ namespace BDArmory.Parts
 			        }
 			        if ( Throttle == 0)
 			        {
+			            
 			            emitter.Current.emit = false;
 			        }
 			        else
