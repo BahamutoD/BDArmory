@@ -689,39 +689,27 @@ namespace BDArmory.Parts
                 {
                     debugString += "\n Free fall achieved: ";
                     missile.Throttle = 0;
+                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
                 }
                 else
                 {
                     debugString += "\n Free fall not achieved: ";
                     missile.Throttle = 1;
-                }
 
-                debugString += "\n Throttle: " + missile.Throttle;
-                if (!missile.vessel.InVacuum())
-                {
                     Vector3 dToTarget = targetPosition - missile.vessel.CoM;
                     Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(missile.maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(missile.vessel.CoM))) * dToTarget;
                     agmTarget = missile.vessel.CoM + direction;
                 }
-                else
-                {
-                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
-                }
+
+                debugString += "\n Throttle: " + missile.Throttle;
             }
             else
             {
                 debugString += "\n Descending";
- 
-                // Terminal guidance
-                if (!missile.vessel.InVacuum())
-                {
-                    agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
-                    missile.Throttle = Mathf.Clamp01((float) (missile.vessel.atmDensity * 10f));
-                }
-                else
-                {
-                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
-                }
+
+                agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
+                missile.Throttle = Mathf.Clamp01((float) (missile.vessel.atmDensity * 10f));
+
             }
             return agmTarget;
         }
