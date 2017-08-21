@@ -45,6 +45,10 @@ namespace BDArmory.Radar
         public static AudioClip radarPingSound;
         public static AudioClip missileLockSound;
         public static AudioClip missileLaunchSound;
+        public static AudioClip sonarPing;
+        public static AudioClip torpedoPing;
+        private float torpedoPingPitch;
+        private bool torpedoPingAlternate;
 
         //float lastTimePinged = 0;
         const float minPingInterval = 0.12f;
@@ -86,6 +90,8 @@ namespace BDArmory.Radar
             radarPingSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrPing");
             missileLockSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwrMissileLock");
             missileLaunchSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/mLaunchWarning");
+            sonarPing = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwr_sonarping");
+            torpedoPing = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rwr_torpedoping");
         }
 
         public override void OnStart(StartState state)
@@ -226,7 +232,7 @@ namespace BDArmory.Radar
                         LaunchWarningRoutine(new TargetSignatureData(Vector3.zero,
                             RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange),
                             Vector3.zero, true, (float) type)));
-                    PlayWarningSound(type);
+                    PlayWarningSound(type, (source - vessel.transform.position).sqrMagnitude);
                     return;
                 }
                 else if (type == RWRThreatTypes.MissileLock)
@@ -260,17 +266,17 @@ namespace BDArmory.Radar
                         VectorUtils.GetUpDirection(transform.position));
 
                     pingsData[openIndex] = new TargetSignatureData(Vector3.zero,
-                        RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero,
+                        RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange/2), Vector3.zero,
                         true, (float) type);    // HACK! Evil misuse of signalstrength for the treat type!
                     pingWorldPositions[openIndex] = source;
                     StartCoroutine(PingLifeRoutine(openIndex, persistTime));
 
-                    PlayWarningSound(type);
+                    PlayWarningSound(type, (source - vessel.transform.position).sqrMagnitude);
                 }
             }
         }
 
-        void PlayWarningSound(RWRThreatTypes type)
+        void PlayWarningSound(RWRThreatTypes type, float sqrDistance = 0f)
         {
             if (vessel.isActiveVessel)
             {
@@ -282,10 +288,25 @@ namespace BDArmory.Radar
                         audioSource.Play();
                         break;
 
-                    case RWRThreatTypes.Torpedo:
-                        audioSource.Stop();
-                        audioSource.clip = missileLaunchSound;
+                    case RWRThreatTypes.Sonar:
+                        if (audioSource.isPlaying)
+                            break;
+                        audioSource.clip = sonarPing;
                         audioSource.Play();
+                        break;
+                    case RWRThreatTypes.Torpedo:
+                    case RWRThreatTypes.TorpedoLock:
+                        if (audioSource.isPlaying)
+                            break;
+                        torpedoPingAlternate = !torpedoPingAlternate;
+                        if (torpedoPingAlternate)
+                        {
+                            torpedoPingPitch = Mathf.Lerp(4.0f, 1.0f, sqrDistance / (2000 * 2000)); //within 2km increase ping pitch
+                            audioSource.Stop();
+                            audioSource.clip = torpedoPing;
+                            audioSource.pitch = torpedoPingPitch;
+                            audioSource.Play();
+                        }
                         break;
 
                     case RWRThreatTypes.MissileLock:
@@ -294,6 +315,7 @@ namespace BDArmory.Radar
                         audioSource.clip = (missileLockSound);
                         audioSource.Play();
                         break;
+
                     default:
                         if (!audioSource.isPlaying)
                         {

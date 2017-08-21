@@ -377,6 +377,10 @@ namespace BDArmory.Radar
                     ? 360/(scanRotationSpeed + 5)
                     : directionalFieldOfView/(scanRotationSpeed + 5);
 
+                rwrType = (RadarWarningReceiver.RWRThreatTypes)rwrThreatType;
+                if (rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)   //for sonar only short "bing"
+                    signalPersistTime = 0.1f;
+
                 if (rotationTransformName != string.Empty)
                 {
                     rotationTransform = part.FindModelTransform(rotationTransformName);
@@ -384,9 +388,7 @@ namespace BDArmory.Radar
 
                 attemptedLocks = new TargetSignatureData[3];
                 TargetSignatureData.ResetTSDArray(ref attemptedLocks);
-                lockedTargets = new List<TargetSignatureData>();
-                
-                rwrType = (RadarWarningReceiver.RWRThreatTypes) rwrThreatType;
+                lockedTargets = new List<TargetSignatureData>();               
                
                 referenceTransform = (new GameObject()).transform;
                 referenceTransform.parent = transform;
@@ -538,6 +540,7 @@ namespace BDArmory.Radar
                     }
                 }
             }
+
         }
 
         
