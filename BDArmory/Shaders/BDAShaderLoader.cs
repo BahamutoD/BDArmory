@@ -45,8 +45,22 @@ namespace BDArmory.Shaders
         {
             get
             {
-                return _bundlePath + Path.DirectorySeparatorChar +
-                        "bda_rcs_shader.ksp";
+                switch (Application.platform)
+                {
+                    case RuntimePlatform.OSXPlayer:
+                        return _bundlePath + Path.DirectorySeparatorChar +
+                                "bda_rcs_shader_macosx.ksp";
+                    case RuntimePlatform.WindowsPlayer:
+                        return _bundlePath + Path.DirectorySeparatorChar +
+                                "bda_rcs_shader.ksp";
+                    case RuntimePlatform.LinuxPlayer:
+                        return _bundlePath + Path.DirectorySeparatorChar +
+                                "bda_rcs_shader_linux.ksp";
+                    default:
+                        return _bundlePath + Path.DirectorySeparatorChar +
+                                "bda_rcs_shader.ksp";
+                }
+
             }
         }
 

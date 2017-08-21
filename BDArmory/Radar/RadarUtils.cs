@@ -35,7 +35,7 @@ namespace BDArmory.Radar
         internal const float RCS_MISSILES = 999f;                    //default rcs value for missiles if not configured in the part config
         internal const float RWR_PING_RANGE_FACTOR = 2.0f;
         internal const float RADAR_IGNORE_DISTANCE_SQR = 100f;
-        internal const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.1f;
+        internal const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.2f;
         internal const float MISSILE_DEFAULT_LOCKABLE_RCS = 5f;
 
 
@@ -201,7 +201,7 @@ namespace BDArmory.Radar
             {
                 Debug.Log("[BDArmory]: Rendering radar snapshot of vessel");
                 Debug.Log("[BDArmory]: - bounds: " + vesselbounds.ToString());
-                Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
+                //Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
             }
 
             if (vesselbounds.size.sqrMagnitude == 0f)
@@ -479,7 +479,7 @@ namespace BDArmory.Radar
 
                     //  our radar ping can be received at a higher range than we can detect, according to RWR range ping factor:
                     if (distance < radar.radarMaxDistanceDetect * RWR_PING_RANGE_FACTOR)
-                        RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, radar.rwrType, radar.signalPersistTime);
+                        RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, radar.rwrType, radar.signalPersistTimeForRwr);
                 }
 
             }
@@ -667,7 +667,7 @@ namespace BDArmory.Radar
 
                         //  our radar ping can be received at a higher range than we can lock/track, according to RWR range ping factor:
                         if (distance < radar.radarMaxDistanceLockTrack * RWR_PING_RANGE_FACTOR)
-                            RadarWarningReceiver.PingRWR(loadedvessels.Current, position, radar.rwrType, radar.signalPersistTime);
+                            RadarWarningReceiver.PingRWR(loadedvessels.Current, position, radar.rwrType, radar.signalPersistTimeForRwr);
 
                     }
                     else   // SCAN/DETECT TARGETS:
@@ -695,7 +695,7 @@ namespace BDArmory.Radar
 
                         //  our radar ping can be received at a higher range than we can detect, according to RWR range ping factor:
                         if (distance < radar.radarMaxDistanceDetect * RWR_PING_RANGE_FACTOR)
-                            RadarWarningReceiver.PingRWR(loadedvessels.Current, position, radar.rwrType, radar.signalPersistTime);
+                            RadarWarningReceiver.PingRWR(loadedvessels.Current, position, radar.rwrType, radar.signalPersistTimeForRwr);
                     }
                     
                 }

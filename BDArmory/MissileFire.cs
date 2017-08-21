@@ -3923,8 +3923,9 @@ namespace BDArmory
                                 launchAuthorized = false;
                             }
 
-                            Debug.Log("[BDArmory]:" + vessel.vesselName + " launchAuth=" + launchAuthorized + ", pilotAut=" +
-                                      pilotAuthorized + ", missilesAway/Max=" + missilesAway + "/" + maxMissilesOnTarget);
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                Debug.Log("[BDArmory]:" + vessel.vesselName + " launchAuth=" + launchAuthorized + ", pilotAut=" + pilotAuthorized + ", missilesAway/Max=" + missilesAway + "/" + maxMissilesOnTarget);
+
                             if (missilesAway < maxMissilesOnTarget)
                             {
                                 if (!guardFiringMissile && launchAuthorized &&
@@ -3933,7 +3934,7 @@ namespace BDArmory
                                     StartCoroutine(GuardMissileRoutine());
                                 }
                             }
-                            else
+                            else if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
                                 Debug.Log("[BDArmory]:" + vessel.vesselName + " waiting for missile to be ready...");
                             }

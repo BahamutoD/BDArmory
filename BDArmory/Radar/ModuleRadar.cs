@@ -208,6 +208,7 @@ namespace BDArmory.Radar
         //GUI
         private bool drawGUI;
         public float signalPersistTime;
+        public float signalPersistTimeForRwr;
 
         //scanning
         private float currentAngleLock;
@@ -378,8 +379,11 @@ namespace BDArmory.Radar
                     : directionalFieldOfView/(scanRotationSpeed + 5);
 
                 rwrType = (RadarWarningReceiver.RWRThreatTypes)rwrThreatType;
-                if (rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)   //for sonar only short "bing"
-                    signalPersistTime = 0.1f;
+                if (rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
+                    signalPersistTimeForRwr = RadarUtils.ACTIVE_MISSILE_PING_PERISTS_TIME;
+                else
+                    signalPersistTimeForRwr = signalPersistTime / 2;
+
 
                 if (rotationTransformName != string.Empty)
                 {
@@ -454,7 +458,8 @@ namespace BDArmory.Radar
         
         IEnumerator StartUpRoutine()
         {
-            Debug.Log("[BDArmory]: StartupRoutine: " + radarName + " enabled: " + radarEnabled);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: StartupRoutine: " + radarName + " enabled: " + radarEnabled);
             while (!FlightGlobals.ready || vessel.packed)
             {
                 yield return null;
@@ -839,7 +844,7 @@ namespace BDArmory.Radar
                 vesselRadarData.UnlockAllTargetsOfRadar(this);
             }
 
-            if (BDArmorySettings.DRAW_DEBUG_LINES)
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 Debug.Log("[BDArmory]: Radar Targets were cleared (" + radarName + ").");
         }
 

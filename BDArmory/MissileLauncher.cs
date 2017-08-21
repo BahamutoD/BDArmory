@@ -555,7 +555,8 @@ namespace BDArmory
 
         void OnCollisionEnter(Collision col)
 		{
-            Debug.Log("[BDArmory]: Something Collided");
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: Something Collided: " + col.ToString());
 
           if (TimeIndex>1 && this.part.vessel.speed > 10)
             {

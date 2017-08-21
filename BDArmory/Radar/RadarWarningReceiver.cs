@@ -48,7 +48,6 @@ namespace BDArmory.Radar
         public static AudioClip sonarPing;
         public static AudioClip torpedoPing;
         private float torpedoPingPitch;
-        private bool torpedoPingAlternate;
 
         //float lastTimePinged = 0;
         const float minPingInterval = 0.12f;
@@ -298,15 +297,11 @@ namespace BDArmory.Radar
                     case RWRThreatTypes.TorpedoLock:
                         if (audioSource.isPlaying)
                             break;
-                        torpedoPingAlternate = !torpedoPingAlternate;
-                        if (torpedoPingAlternate)
-                        {
-                            torpedoPingPitch = Mathf.Lerp(4.0f, 1.0f, sqrDistance / (2000 * 2000)); //within 2km increase ping pitch
-                            audioSource.Stop();
-                            audioSource.clip = torpedoPing;
-                            audioSource.pitch = torpedoPingPitch;
-                            audioSource.Play();
-                        }
+                        torpedoPingPitch = Mathf.Lerp(2.0f, 1.0f, sqrDistance / (2000 * 2000)); //within 2km increase ping pitch
+                        audioSource.Stop();
+                        audioSource.clip = torpedoPing;
+                        audioSource.pitch = torpedoPingPitch;
+                        audioSource.Play();
                         break;
 
                     case RWRThreatTypes.MissileLock:
