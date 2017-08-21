@@ -809,11 +809,6 @@ namespace BDArmory.Parts
             UpdateIndexDictionary();
         }
 
-        //test
-        void OnGUI()
-        {
-        }
-
 
         void UpdateMissilePositions()
         {

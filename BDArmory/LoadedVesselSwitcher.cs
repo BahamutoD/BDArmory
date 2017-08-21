@@ -56,6 +56,11 @@ namespace BDArmory
             _ready = false;
             StartCoroutine(WaitForBdaSettings());
 
+            // TEST
+            FloatingOrigin.fetch.threshold = 20000; //20km
+            FloatingOrigin.fetch.thresholdSqr = 20000*20000; //20km
+            Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
+
             //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySettings persisted field!
         }
 
@@ -68,6 +73,9 @@ namespace BDArmory
                 MissileFire.OnToggleTeam -= MissileFireOnToggleTeam;
 
                 _ready = false;
+
+            // TEST
+            Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
         }
 
         private IEnumerator WaitForBdaSettings()

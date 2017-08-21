@@ -779,14 +779,13 @@ namespace BDArmory
 
         public override void OnUpdate()
         {
-            base.OnUpdate();
 
             if (!HighLogic.LoadedSceneIsFlight)
             {
                 return;
             }
 
-
+            base.OnUpdate();
             if (!vessel.packed)
             {
                 if (weaponIndex >= weaponArray.Length)
@@ -870,6 +869,7 @@ namespace BDArmory
                     canRipple = false;
                 }
             }
+
         }            
 
         public override void OnFixedUpdate()
@@ -887,6 +887,7 @@ namespace BDArmory
             {
                 TargetAcquire();
             }
+
             BombAimer();
         }
 
@@ -1046,6 +1047,7 @@ namespace BDArmory
                     GUI.Label(new Rect(600, 900, 100, 100), "Missiles away: " + missilesAway);
                 }
             }
+
         }
 
         bool CheckMouseIsOnGui()

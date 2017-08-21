@@ -815,7 +815,8 @@ namespace BDArmory
                     Detonate();
 				}
 			}
-		}
+
+        }
 
 	    Vector3 previousPos;
 		void RaycastCollisions()

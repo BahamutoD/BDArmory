@@ -718,8 +718,6 @@ namespace BDArmory.Parts
 				}
 			}
 
-
-
 		}
 
 		void CamWindow(int windowID)

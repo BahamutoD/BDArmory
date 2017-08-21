@@ -674,6 +674,7 @@ namespace BDArmory.Radar
         void OnGUI()
         {
             if (!drawGUI) return;
+
             for (int i = 0; i < lockedTargetIndexes.Count; i++)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -734,6 +735,7 @@ namespace BDArmory.Radar
             {
                 GUI.Label(new Rect(800, 800, 800, 800), "radarCount: " + radarCount);
             }
+
         }
 
 

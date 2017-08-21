@@ -906,6 +906,7 @@ namespace BDArmory
             {
                 DrawAlignmentIndicator();
             }
+
         }
 
         #endregion

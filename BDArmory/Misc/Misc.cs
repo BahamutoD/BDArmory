@@ -62,10 +62,10 @@ namespace BDArmory.Misc
 
         public static bool CheckMouseIsOnGui()
         {
+
             if (!BDArmorySettings.GAME_UI_ENABLED) return false;
 
             if (!BDInputSettingsFields.WEAP_FIRE_KEY.inputString.Contains("mouse")) return false;
-
 
             Vector3 inverseMousePos = new Vector3(Input.mousePosition.x, Screen.height - Input.mousePosition.y, 0);
             Rect topGui = new Rect(0, 0, Screen.width, 65);
