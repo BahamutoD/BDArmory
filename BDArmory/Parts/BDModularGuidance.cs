@@ -354,9 +354,14 @@ namespace BDArmory.Parts
 
             UI_FloatRange staticMin = (UI_FloatRange)Fields["minStaticLaunchRange"].uiControlEditor;
             UI_FloatRange staticMax = (UI_FloatRange)Fields["maxStaticLaunchRange"].uiControlEditor;
+            UI_FloatRange radarMax = (UI_FloatRange)Fields["ActiveRadarRange"].uiControlEditor;
+
             staticMin.onFieldChanged += OnStaticRangeUpdated;
             staticMax.onFieldChanged += OnStaticRangeUpdated;
-
+            staticMax.maxValue = BDArmorySettings.MAX_ENGAGEMENT_RANGE;
+            staticMax.stepIncrement = BDArmorySettings.MAX_ENGAGEMENT_RANGE / 100;
+            radarMax.maxValue = BDArmorySettings.MAX_ENGAGEMENT_RANGE;
+            radarMax.stepIncrement = BDArmorySettings.MAX_ENGAGEMENT_RANGE / 100;
 
             UI_FloatRange stageOnProximity = (UI_FloatRange)Fields["StageToTriggerOnProximity"].uiControlEditor;
             stageOnProximity.onFieldChanged = OnStageOnProximity;

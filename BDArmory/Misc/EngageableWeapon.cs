@@ -71,11 +71,13 @@ namespace BDArmory.Misc
             UI_FloatRange rangeMin = (UI_FloatRange)Fields["engageRangeMin"].uiControlEditor;
             rangeMin.minValue = min;
             rangeMin.maxValue = max;
+            rangeMin.stepIncrement = (max - min) / 100f;
             rangeMin.onFieldChanged = OnRangeUpdated;
 
             UI_FloatRange rangeMax = (UI_FloatRange)Fields["engageRangeMax"].uiControlEditor;
             rangeMax.minValue = min;
             rangeMax.maxValue = max;
+            rangeMax.stepIncrement = (max - min) / 100f;
             rangeMax.onFieldChanged = OnRangeUpdated;
 
             if ((engageRangeMin == 0) && (engageRangeMax == 0))
