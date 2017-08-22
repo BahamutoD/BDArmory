@@ -895,7 +895,7 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && !target.Current.isMissile)
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !target.Current.isMissile)
 				{
 					if(finalTarget == null || (target.Current.IsCloser(finalTarget, mf)))
 					{
@@ -916,7 +916,7 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && !excluding.Contains(target.Current))
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !excluding.Contains(target.Current))
 				{
 					finalTargets.Add(target.Current);
 				}
@@ -934,7 +934,7 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && !target.Current.isMissile && target.Current.isThreat)
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !target.Current.isMissile && target.Current.isThreat)
 				{
 					if(finalTarget == null || target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
 					{
@@ -955,7 +955,7 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current && target.Current.Vessel && target.Current.isMissile && target.Current.isThreat && mf.CanSeeTarget(target.Current.Vessel) )
+                if (target.Current && target.Current.Vessel && target.Current.isMissile && target.Current.isThreat && mf.CanSeeTarget(target.Current) )
 				{
 					if(target.Current.MissileBaseModule)
 					{
@@ -991,7 +991,7 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && target.Current.isMissile && target.Current.isThreat)
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && target.Current.isMissile && target.Current.isThreat)
 				{
 					if(target.Current.numFriendliesEngaging == 0)
 					{
@@ -1012,7 +1012,7 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current.Vessel) && target.Current.isMissile)
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && target.Current.isMissile)
 				{
 					bool isHostile = false;
 					if(target.Current.isThreat)

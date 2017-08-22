@@ -807,10 +807,8 @@ namespace BDArmory.Radar
 
         /// <summary>
         /// Scans for targets in direction with field of view.
-        /// Returns the direction scanned for debug .
-        /// ONLY FOR LEGACY TARGETING, REMOVE IN FUTURE VERSION!
+        /// (Visual Target acquisition)
         /// </summary>
-        [Obsolete("ONLY FOR LEGACY TARGETING, REMOVE IN FUTURE VERSION")]
         public static Vector3 GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
 		{
 			fov *= 1.1f;
@@ -830,38 +828,37 @@ namespace BDArmory.Radar
 			}
 
 			Vector3 position = referenceTransform.position;
-			Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
+			//Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
 			Vector3 forwardVector = referenceTransform.forward;
 			Vector3 upVector = referenceTransform.up;
 			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
 
 
+            List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
+            while (loadedvessels.MoveNext())
+            {
+				if(loadedvessels.Current == null) continue;
 
-			foreach(Vessel vessel in BDATargetManager.LoadedVessels)
-			{
-				if(vessel == null) continue;
-
-				if(vessel.loaded)
+				if(loadedvessels.Current.loaded)
 				{
-					if(vessel == myWpnManager.vessel) continue; //ignore self
+					if(loadedvessels.Current == myWpnManager.vessel) continue; //ignore self
 
-					Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(vessel.transform.position-position, upVector);
-					Vector3 vesselDirection = vessel.transform.position - position;
+					Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(loadedvessels.Current.transform.position-position, upVector);
+					Vector3 vesselDirection = loadedvessels.Current.transform.position - position;
 
+					if(Vector3.Dot(vesselDirection, lookDirection) < 0) continue;   //ignore behind
 
-					if(Vector3.Dot(vesselDirection, lookDirection) < 0) continue;
-
-					float vesselDistance = (vessel.transform.position - position).sqrMagnitude;
-
-					if(vesselDistance < maxDistance*maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(vessel.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
+					float vesselDistance = (loadedvessels.Current.transform.position - position).sqrMagnitude;
+					if (vesselDistance < maxDistance*maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(loadedvessels.Current.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
 					{
 						//Debug.Log("Found vessel: " + vessel.vesselName);
-						if(TerrainCheck(referenceTransform.position, vessel.transform.position)) continue; //blocked by terrain
+						if (TerrainCheck(referenceTransform.position, loadedvessels.Current.transform.position))
+                                continue; //blocked by terrain
 
-						BDATargetManager.ReportVessel(vessel, myWpnManager);
+						BDATargetManager.ReportVessel(loadedvessels.Current, myWpnManager);
 
 						TargetInfo tInfo;
-						if((tInfo = vessel.gameObject.GetComponent<TargetInfo>()))
+						if((tInfo = loadedvessels.Current.gameObject.GetComponent<TargetInfo>()))
 						{
 							if(tInfo.isMissile)
 							{
@@ -903,31 +900,29 @@ namespace BDArmory.Radar
 							}
 							else
 							{
-								//check if its shooting guns at me
-								//if(!results.firingAtMe)       //more work, but we can't afford to be incorrect picking the closest threat
-								//{
-									foreach(ModuleWeapon weapon in vessel.FindPartModulesImplementing<ModuleWeapon>())
-									{
-										if(!weapon.recentlyFiring) continue;
-										if(Vector3.Dot(weapon.fireTransforms[0].forward, vesselDirection) > 0) continue;
+                                List<ModuleWeapon>.Enumerator weapon = loadedvessels.Current.FindPartModulesImplementing<ModuleWeapon>().GetEnumerator();
+                                while (weapon.MoveNext())
+                                {
+									if(!weapon.Current.recentlyFiring) continue;
+									if(Vector3.Dot(weapon.Current.fireTransforms[0].forward, vesselDirection) > 0) continue;
 
-										if(Vector3.Angle(weapon.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
-										{
-											results.firingAtMe = true;
-											results.threatPosition = weapon.vessel.transform.position;
-                                            results.threatVessel = weapon.vessel;
-                                            results.threatWeaponManager = weapon.weaponManager;
-                                            break;
-										}
+									if(Vector3.Angle(weapon.Current.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
+									{
+										results.firingAtMe = true;
+										results.threatPosition = weapon.Current.vessel.transform.position;
+                                        results.threatVessel = weapon.Current.vessel;
+                                        results.threatWeaponManager = weapon.Current.weaponManager;
+                                        break;
 									}
-								//}
+								}
 							}
 						}
 					}
 				}
 			}
 
-			return lookDirection;
+            loadedvessels.Dispose();
+            return lookDirection;
 		}
 
 
@@ -948,7 +943,7 @@ namespace BDArmory.Radar
 			float scale = maxDistance/(radarRect.height/2);
 			Vector3 localPosition = referenceTransform.InverseTransformPoint(worldPosition);
 			localPosition.y = 0;
-			Vector2 radarPos = new Vector2((radarRect.width/2)+(localPosition.x/scale), (radarRect.height/2)-(localPosition.z/scale));
+			Vector2 radarPos = new Vector2((radarRect.width/2)+(localPosition.x/scale), ((radarRect.height/2)-(localPosition.z/scale)));
 			return radarPos;
 		}
 

@@ -248,7 +248,7 @@ namespace BDArmory.Radar
                 {
                     if (pingsData[i].exists &&
                         ((Vector2) pingsData[i].position -
-                         RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange)).sqrMagnitude < 100f)
+                         RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange)).sqrMagnitude < 30f)
                     {
                         break;
                     }
@@ -265,7 +265,7 @@ namespace BDArmory.Radar
                         VectorUtils.GetUpDirection(transform.position));
 
                     pingsData[openIndex] = new TargetSignatureData(Vector3.zero,
-                        RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange/2), Vector3.zero,
+                        RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero,
                         true, (float) type);    // HACK! Evil misuse of signalstrength for the treat type!
                     pingWorldPositions[openIndex] = source;
                     StartCoroutine(PingLifeRoutine(openIndex, persistTime));

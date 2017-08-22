@@ -1698,7 +1698,7 @@ namespace BDArmory
 
         IEnumerator WarningSoundRoutine(float distance, MissileBase ml)//give distance parameter
         {
-            if (distance < 4000)
+            if (distance < this.guardRange)
             {
                 warningSounding = true;
                 BDArmorySettings.Instance.missileWarningTime = Time.time;
@@ -3568,14 +3568,48 @@ namespace BDArmory
 
         #endregion
 
+        public bool CanSeeTarget(TargetInfo target)
+        {
+            // fix cheating: we can see a target IF we either have a visual on it, OR it has been detected on radar/sonar
+            if (Time.time - target.detectedTime < targetScanInterval)
+                return true;
+
+            // can we get a visual sight of the target?
+            if ((target.Vessel.transform.position - transform.position).sqrMagnitude < guardRange*guardRange)
+            {
+                if (RadarUtils.TerrainCheck(target.Vessel.transform.position, transform.position))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// Override for legacy targeting only! Remove when removing legcy mode!
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public bool CanSeeTarget(Vessel target)
         {
-            if (RadarUtils.TerrainCheck(target.transform.position, transform.position))
+            // can we get a visual sight of the target?
+            if ((target.transform.position - transform.position).sqrMagnitude < guardRange * guardRange)
             {
-                return false;
+                if (RadarUtils.TerrainCheck(target.transform.position, transform.position))
+                {
+                    return false;
+                }
+
+                return true;
             }
-            return true;
+
+            return false;
         }
+
 
         void ScanAllTargets()
         {
@@ -4014,7 +4048,7 @@ namespace BDArmory
             float angleDelta = guardViewScanRate * Time.fixedDeltaTime;
             ViewScanResults results;
             debugGuardViewDirection = RadarUtils.GuardScanInDirection(this, finalScanDirectionAngle,
-                viewReferenceTransform, angleDelta, out results, BDArmorySettings.MAX_GUARD_VISUAL_RANGE);
+                viewReferenceTransform, angleDelta, out results, guardRange);
 
             currentGuardViewAngle += guardViewScanDirection * angleDelta;
             if (Mathf.Abs(currentGuardViewAngle) > finalMaxAngle)

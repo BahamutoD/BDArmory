@@ -56,12 +56,13 @@ namespace BDArmory
                 targetInfo = v.gameObject.AddComponent<TargetInfo>();
             }
 
-			team = BDArmorySettings.BDATeams.None;
+            team = BDArmorySettings.BDATeams.None;
 
 			if(targetInfo)
 			{
 				team = targetInfo.team;
-			}
+                targetInfo.detectedTime = Time.time;
+            }
 			else
 			{
                 List<MissileFire>.Enumerator mf = v.FindPartModulesImplementing<MissileFire>().GetEnumerator();
@@ -76,9 +77,8 @@ namespace BDArmory
 			vesselJammer = v.gameObject.GetComponent<VesselECMJInfo>();
 
 			pingPosition = Vector2.zero;
-
 			lockedByRadar = null;
-		}
+        }
 
 		public TargetSignatureData(CMFlare flare, float _signalStrength)
 		{
@@ -96,7 +96,7 @@ namespace BDArmory
 			orbit = null;
 			lockedByRadar = null;
 			vessel = null;
-		}
+        }
 
 		public TargetSignatureData(Vector3 _velocity, Vector3 _position, Vector3 _acceleration, bool _exists, float _signalStrength)
 		{
