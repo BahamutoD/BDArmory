@@ -99,6 +99,10 @@ namespace BDArmory.Parts
         [KSPField]
         public float activeRadarMinThresh = 140;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ballistic Overshoot factor"),
+         UI_FloatRange(minValue = 0.5f, maxValue = 1f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
+        public float BallisticOverShootFactor = 0.7f;
+
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
         public enum TargetingModes { None, Radar, Heat, Laser, Gps, AntiRad }
@@ -671,21 +675,34 @@ namespace BDArmory.Parts
                 //calculating expected apogee bases on isosceles triangle
                
             }
-            var surfaceDistanceTravelled = Vector3
-                .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized)
-                .magnitude;
+            if (TimeIndex < 1)
+            {
+                return missile.vessel.CoM + missile.vessel.Velocity() * 10;
+            }
+
+            var surfaceDistanceVector = Vector3
+                .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized);
+
+            var pendingDistance = Vector3.Distance(surfaceDistanceVector, targetPosition);
+
+
+            debugString += "\n pendingDistance: "+ pendingDistance;
+    
 
             Vector3 agmTarget;
             // Getting apoapsis
-            if (missile.vessel.verticalSpeed > 0 && surfaceDistanceTravelled <= _originalDistance * 0.5)
+            if (missile.vessel.verticalSpeed > 0 && pendingDistance > _originalDistance * 0.5)
             {
                 debugString += "\n Ascending";
 
                 var freeFallTime = CalculateFreeFallTime();
-                debugString += "\n Free fall time: "+ freeFallTime;
-                var distanceWillTravel = freeFallTime * missile.vessel.horizontalSrfSpeed;
+                debugString += "\n freeFallTime: " + freeFallTime;
 
-                if (distanceWillTravel + surfaceDistanceTravelled > _originalDistance)
+                var horizontalTime = pendingDistance / missile.vessel.horizontalSrfSpeed;
+
+
+                debugString += "\n horizontalTime: " + horizontalTime;
+                if (freeFallTime  >= horizontalTime)
                 {
                     debugString += "\n Free fall achieved: ";
                     missile.Throttle = 0;
@@ -695,20 +712,28 @@ namespace BDArmory.Parts
                 {
                     debugString += "\n Free fall not achieved: ";
                     missile.Throttle = 1;
-
                     Vector3 dToTarget = targetPosition - missile.vessel.CoM;
                     Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(missile.maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(missile.vessel.CoM))) * dToTarget;
                     agmTarget = missile.vessel.CoM + direction;
                 }
+
+               
 
                 debugString += "\n Throttle: " + missile.Throttle;
             }
             else
             {
                 debugString += "\n Descending";
-
                 agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
-                missile.Throttle = Mathf.Clamp01((float) (missile.vessel.atmDensity * 10f));
+
+                if (missile is BDModularGuidance)
+                {
+                    if (missile.vessel.InVacuum())
+                    {
+                        agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
+                    }
+                }
+                missile.Throttle = Mathf.Clamp((float) (missile.vessel.atmDensity * 10f), 0.01f, 1f);
 
             }
             return agmTarget;
@@ -717,11 +742,13 @@ namespace BDArmory.Parts
         private double CalculateFreeFallTime()
         {
             double vi = -vessel.verticalSpeed;
-            double a = 9.80665f;
+            double factor = 0.66;
+            double a = 9.80665f * factor;
             double d = vessel.altitude;
 
             double time1 = (-vi + Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
             double time2 = (-vi - Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+
 
             return Math.Max(time1, time2);
         }

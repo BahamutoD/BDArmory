@@ -512,6 +512,12 @@ namespace BDArmory.Parts
                 Fields["maxAltitude"].guiActive = false;
                 Fields["maxAltitude"].guiActiveEditor = false;
             }
+		    if (GuidanceMode != GuidanceModes.AGMBallistic)
+		    {
+		        Fields["BallisticOverShootFactor"].guiActive = false;
+		        Fields["BallisticOverShootFactor"].guiActiveEditor = false;
+		    }
+
 
             if (part.partInfo.title.Contains("Bomb"))
 			{
