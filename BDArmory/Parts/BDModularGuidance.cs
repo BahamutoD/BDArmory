@@ -106,8 +106,13 @@ namespace BDArmory.Parts
 
             if (Fields["CruiseAltitude"] != null)
             {
-                Fields["CruiseAltitude"].guiActive = GuidanceIndex == 3;
-                Fields["CruiseAltitude"].guiActiveEditor = GuidanceIndex == 3;
+                Fields["CruiseAltitude"].guiActive = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+            }
+            if (Fields["BallisticOverShootFactor"] != null)
+            {
+                Fields["BallisticOverShootFactor"].guiActive = GuidanceMode == GuidanceModes.AGMBallistic;
+                Fields["BallisticOverShootFactor"].guiActiveEditor = GuidanceMode == GuidanceModes.AGMBallistic;
             }
 
             Misc.Misc.RefreshAssociatedWindows(part);
@@ -312,7 +317,6 @@ namespace BDArmory.Parts
 
 
             //TODO: BDModularGuidance should be configurable?
-            EngageEnabled = false;
             heatThreshold = 50;
             lockedSensorFOV = 5;
             radarLOAL = true;
@@ -369,8 +373,6 @@ namespace BDArmory.Parts
 
             OnStageOnProximity(Fields["StageToTriggerOnProximity"], null);
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
-
-            ToggleEngageOptions();
         }
 
         private void OnStageOnProximity(BaseField baseField, object o)

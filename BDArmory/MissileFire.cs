@@ -3452,7 +3452,7 @@ namespace BDArmory
             EngageableWeapon engageableWeapon = weaponCandidate as EngageableWeapon;
 
             if (engageableWeapon == null) return true;
-            if (!engageableWeapon.EngageEnabled) return true;
+            if (!engageableWeapon.engageEnabled) return true;
             if (distanceToTarget < engageableWeapon.GetEngagementRangeMin()) return false;
             if (distanceToTarget > engageableWeapon.GetEngagementRangeMax()) return false;
 
