@@ -742,8 +742,7 @@ namespace BDArmory.Parts
         private double CalculateFreeFallTime()
         {
             double vi = -vessel.verticalSpeed;
-            double factor = 0.66;
-            double a = 9.80665f * factor;
+            double a = 9.80665f * BallisticOverShootFactor;
             double d = vessel.altitude;
 
             double time1 = (-vi + Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
