@@ -80,7 +80,7 @@ namespace BDArmory.Radar
         float guiInputCooldown = 0.2f;
 
         //range increments
-        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000};
+        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000,100000};
         int rangeIndex = 0;
 
         //lock cursor
@@ -199,7 +199,7 @@ namespace BDArmory.Radar
 
         void Start()
         {
-            rangeIndex = rIncrements.Length - 1;
+            rangeIndex = rIncrements.Length - 2;
             UpdateLockedTargets();
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())

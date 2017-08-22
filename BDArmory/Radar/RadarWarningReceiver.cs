@@ -297,7 +297,7 @@ namespace BDArmory.Radar
                     case RWRThreatTypes.TorpedoLock:
                         if (audioSource.isPlaying)
                             break;
-                        torpedoPingPitch = Mathf.Lerp(2.0f, 1.0f, sqrDistance / (2000 * 2000)); //within 2km increase ping pitch
+                        torpedoPingPitch = Mathf.Lerp(1.5f, 1.0f, sqrDistance / (2000 * 2000)); //within 2km increase ping pitch
                         audioSource.Stop();
                         audioSource.clip = torpedoPing;
                         audioSource.pitch = torpedoPingPitch;
