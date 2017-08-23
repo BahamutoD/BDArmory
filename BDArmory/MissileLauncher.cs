@@ -115,8 +115,8 @@ namespace BDArmory
 		public float rndAngVel = 0;
 		
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"),
-		 UI_FloatRange(minValue = 30, maxValue = 2500f, stepIncrement = 5f, scene = UI_Scene.All)]
-		public float cruiseAltitude = 500;
+		 UI_FloatRange(minValue = 100, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]
+		public float cruiseAltitude = 800;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Altitude"),
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]

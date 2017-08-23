@@ -90,6 +90,12 @@ namespace BDArmory.Parts
             UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float detonationTime = 2;
 
+        [KSPEvent(guiActive = true, guiName = "GPS Target", active = true)]
+        public void assignGPSTarget()
+        {
+            
+        }
+
         [KSPField]
         public float activeRadarRange = 6000;
 
@@ -156,7 +162,6 @@ namespace BDArmory.Parts
         public TargetSignatureData heatTarget;
 
         //radar stuff
-        //public ModuleRadar radar;
         public VesselRadarData vrd;
         public TargetSignatureData radarTarget;
         private TargetSignatureData[] scannedTargets;

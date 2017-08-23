@@ -12,6 +12,9 @@ namespace BDArmory
 {
     public class PooledBullet : MonoBehaviour
     {
+
+        #region Declarations
+
         public BulletInfo bullet;
         public float leftPenetration;
 
@@ -34,23 +37,17 @@ namespace BDArmory
         public Vessel sourceVessel;
         public Color lightColor = Misc.Misc.ParseColor255("255, 235, 145, 255");
         public Color projectileColor;
-
         public string bulletTexturePath;
-
         public bool fadeColor;
         public Color startColor;
         Color currentColor;
-
         public bool bulletDrop = true;
-
         public float tracerStartWidth = 1;
         public float tracerEndWidth = 1;
         public float tracerLength = 0;
         public float tracerDeltaFactor = 1.35f;
         public float tracerLuminance = 1;
-
         public float initialSpeed;
-
 
         public Vector3 prevPosition;
         public Vector3 currPosition;
@@ -60,7 +57,6 @@ namespace BDArmory
         public float blastPower = 8;
         public float blastHeat = -1;
         public float bulletDmgMult = 1;
-
         public string explModelPath;
         public string explSoundPath;
         //
@@ -68,36 +64,23 @@ namespace BDArmory
         Vector3 startPosition;
         public bool airDetonation = false;
         public float detonationRange = 3500;
-
         float randomWidthScale = 1;
-
         LineRenderer bulletTrail;
-        //	VectorLine bulletVectorLine;
-        //Material lineMat;
-
-
         Vector3 sourceOriginalV;
         bool hasBounced;
-
         public float maxDistance;
-
-        //bool isUnderwater = false;
-
         Light lightFlash;
         bool wasInitiated;
-
-        //physical properties
         public Vector3 currentVelocity;
         public float mass;
         public float ballisticCoefficient;
-
         public float flightTimeElapsed;
-
         bool collisionEnabled;
-
         public static Shader bulletShader;
         public static bool shaderInitialized;
 
+        #endregion
+        
         void OnEnable()
         {
             startPosition = transform.position;
@@ -205,7 +188,6 @@ namespace BDArmory
             }
         }
 
-
         void FixedUpdate()
         {
             float distanceFromStart = Vector3.Distance(transform.position, startPosition);
@@ -276,17 +258,23 @@ namespace BDArmory
                     Part hitPart = null; //determine when bullet collides with a target
                     try
                     {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();                        
                     }
                     catch (NullReferenceException)
                     {
+                        return;
                     }
-                    BDArmor armor = BDArmor.GetArmor(hit.collider, hitPart);
+
+                    if ((hitPart == null) || hitPart.FindModuleImplementing<BDArmor>() == null) return;
+
+                    //BDArmor armor = BDArmor.GetArmor(hit.collider, hitPart);
+                    bool armor = BDArmor.GetArmor(hit.collider, hitPart);
+
                     ArmorPenetration.BulletPenetrationData armorData = new ArmorPenetration.BulletPenetrationData(ray, hit);
                     ArmorPenetration.DoPenetrationRay(armorData, bullet.positiveCoefficient);
                     float penetration = bullet.penetration.Evaluate(distanceFromStart)/1000;
                     bool fulllyPenetrated = penetration*leftPenetration >
-                                           ((armor == null) ? 1f : armor.EquivalentThickness)*armorData.armorThickness;
+                                           ((armor) ? 1f : BDArmor.Instance.EquivalentThickness) * armorData.armorThickness;
                     Vector3 finalDirect = Vector3.Lerp(ray.direction, -hit.normal, bullet.positiveCoefficient);
 
 
@@ -481,21 +469,21 @@ namespace BDArmory
                             }
 
 
-                            if (armor != null &&
-                                (penetration*leftPenetration > armor.outerArmorThickness/1000*armor.EquivalentThickness ||
+                            if (armor &&
+                                (penetration * leftPenetration > BDArmor.Instance.outerArmorThickness/1000 * BDArmor.Instance.EquivalentThickness ||
                                  fulllyPenetrated))
                             {
-                                switch (armor.explodeMode)
+                                switch (BDArmor.Instance._explodeMode)
                                 {
-                                    case BDArmor.ExplodeMode.Always:
-                                        armor.CreateExplosion(hitPart);
+                                    case ArmorUtils.ExplodeMode.Always:
+                                        BDArmor.Instance.CreateExplosion(hitPart);
                                         break;
-                                    case BDArmor.ExplodeMode.Dynamic:
+                                    case ArmorUtils.ExplodeMode.Dynamic:
                                         float probability = CalculateExplosionProbability(hitPart);
                                         if (probability > 0.1f)
-                                            armor.CreateExplosion(hitPart);
+                                            BDArmor.Instance.CreateExplosion(hitPart);
                                         break;
-                                    case BDArmor.ExplodeMode.Never:
+                                    case ArmorUtils.ExplodeMode.Never:
                                         break;
                                 }
                             }
@@ -505,6 +493,7 @@ namespace BDArmory
                                 transform.position = armorData.hitResultOut.point;
                                 flightTimeElapsed -= Time.fixedDeltaTime;
                                 prevPosition = transform.position;
+                                KillBullet();
                                 FixedUpdate();
                                 return;
                             }
@@ -528,13 +517,11 @@ namespace BDArmory
                 return;
             }
 
-
             prevPosition = currPosition;
 
-            //move bullet
+            //move bullet            
             transform.position += currentVelocity*Time.fixedDeltaTime;
         }
-
 
         public void UpdateWidth(Camera c, float resizeFactor)
         {
@@ -552,12 +539,10 @@ namespace BDArmory
             bulletTrail.SetWidth(width1, width2);
         }
 
-
         void KillBullet()
         {
             gameObject.SetActive(false);
         }
-
 
         void FadeColor()
         {
