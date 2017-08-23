@@ -80,12 +80,12 @@ namespace BDArmory.UI
             if (isClickedComboButton)
             {
                 float items_height = listStyle.CalcHeight(listContent[0], 1.0f) * (listContent.Length + 5);
-                Rect listRect = new Rect(rect.x, rect.y + listStyle.CalcHeight(listContent[0], 1.0f), rect.width, items_height);
+                Rect listRect = new Rect(rect.x+5, rect.y + listStyle.CalcHeight(listContent[0], 1.0f), rect.width-20f, items_height);
 
-                scrollViewVector = GUI.BeginScrollView(new Rect(rect.x, rect.y + rect.height, rect.width * 1.1f, comboxbox_height), scrollViewVector,
-                                                        new Rect(rect.x, rect.y, rect.width, items_height + rect.height), false, false, HighLogic.Skin.horizontalScrollbar, HighLogic.Skin.verticalScrollbar);
+                scrollViewVector = GUI.BeginScrollView(new Rect(rect.x, rect.y + rect.height, rect.width + 10f, comboxbox_height), scrollViewVector,
+                                                        new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), false, false, HighLogic.Skin.horizontalScrollbar, HighLogic.Skin.verticalScrollbar);
 
-                GUI.Box(new Rect(rect.x, rect.y, rect.width, items_height + rect.height), "", HighLogic.Skin.window);
+                GUI.Box(new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), "", HighLogic.Skin.window);
 
                 int newSelectedItemIndex = GUI.SelectionGrid(listRect, selectedItemIndex, listContent, 2, listStyle);
                 if (newSelectedItemIndex != selectedItemIndex)
