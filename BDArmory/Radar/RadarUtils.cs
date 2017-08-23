@@ -392,7 +392,7 @@ namespace BDArmory.Radar
         /// <summary>
         /// Determine for a vesselposition relative to the radar position how much effect the ground clutter factor will have.
         /// </summary>
-        public static float GetRadarGroundClutterModifier(ModuleRadar radar, Transform referenceTransform, Vector3 position, Vector3 vesselposition)
+        public static float GetRadarGroundClutterModifier(ModuleRadar radar, Transform referenceTransform, Vector3 position, Vector3 vesselposition, TargetInfo ti)
         {
             Vector3 upVector = referenceTransform.up;
 
@@ -403,6 +403,11 @@ namespace BDArmory.Radar
             Mathf.Clamp(lookDownAngle, 0, 90);      // result range:   0 .. +90
 
             float groundClutterMutiplier = Mathf.Lerp(1, radar.radarGroundClutterFactor, (lookDownAngle / 90));
+
+            //additional ground clutter factor when target is landed/splashed:
+            if (ti.isLanded || ti.isSplashed)
+                groundClutterMutiplier *= radar.radarGroundClutterFactor;
+
             return groundClutterMutiplier;
         }
 
@@ -444,7 +449,7 @@ namespace BDArmory.Radar
                     // get vessel's radar signature
                     TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
                     float signature = ti.radarModifiedSignature;
-                    signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, loadedvessels.Current.CoM);
+                    signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, loadedvessels.Current.CoM, ti);
                     // no ecm lockbreak factor here
                     // no chaff factor here
 
@@ -622,7 +627,7 @@ namespace BDArmory.Radar
                     TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
                     float signature = ti.radarModifiedSignature;
                     //do not multiply chaff factor here
-                    signature *= GetRadarGroundClutterModifier(radar, referenceTransform, position, loadedvessels.Current.CoM);
+                    signature *= GetRadarGroundClutterModifier(radar, referenceTransform, position, loadedvessels.Current.CoM, ti);
 
                     // evaluate range
                     float distance = (loadedvessels.Current.CoM - position).magnitude / 1000f;                                      //TODO: Performance! better if we could switch to sqrMagnitude...
@@ -765,7 +770,7 @@ namespace BDArmory.Radar
                 // get vessel's radar signature
                 TargetInfo ti = GetVesselRadarSignature(lockedVessel);
                 float signature = ti.radarModifiedSignature;
-                signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, lockedVessel.CoM);
+                signature *= GetRadarGroundClutterModifier(radar, radar.referenceTransform, ray.origin, lockedVessel.CoM, ti);
                 signature *= ti.radarLockbreakFactor;    //multiply lockbreak factor from active ecm
                 //do not multiply chaff factor here
 

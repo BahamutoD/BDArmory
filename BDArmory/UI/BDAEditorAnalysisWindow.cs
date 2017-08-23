@@ -22,6 +22,7 @@ namespace BDArmory.UI
 
         private bool takeSnapshot = false;
         private float rcsReductionFactor;
+        private float rcsGCF = 1.0f;
 
         private ModuleRadar[] radars;
         private GUIContent[] radarsGUI;
@@ -31,7 +32,7 @@ namespace BDArmory.UI
         private string text_detection;
         private string text_locktrack;
         private string text_sonar;
-
+        private bool bLandedSplashed;
 
         void Awake()
         {
@@ -157,68 +158,81 @@ namespace BDArmory.UI
             GUIStyle style = HighLogic.Skin.label;
             style.fontStyle = FontStyle.Bold;
             GUI.Label(new Rect(10, 300, 600, 20), "Base radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal) , style);
-            GUI.Label(new Rect(10, 320, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction/stealth)", RadarUtils.rcsTotal * rcsReductionFactor), style);
+            GUI.Label(new Rect(10, 320, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction/stealth/ground clutter)", RadarUtils.rcsTotal * rcsReductionFactor * rcsGCF), style);
 
             style.fontStyle = FontStyle.Normal;
-            GUI.Label(new Rect(10, 380, 600, 20), "** (Range evaluation not accounting for ECM/countermeasures or radar ground clutter factor)", style);
+            GUI.Label(new Rect(10, 380, 600, 20), "** (Range evaluation not accounting for ECM/countermeasures)", style);
             GUI.Label(new Rect(10, 410, 600, 20), text_detection, style);
             GUI.Label(new Rect(10, 430, 600, 20), text_locktrack, style);
             GUI.Label(new Rect(10, 450, 600, 20), text_sonar, style);
+
+            bool bNewValue = GUI.Toggle(new Rect(490, 348, 150, 20), bLandedSplashed, "Splashed/Landed", HighLogic.Skin.toggle);
 
             if (radars == null)
             {
                 FillRadarList();
                 GUIStyle listStyle = new GUIStyle(HighLogic.Skin.button);
                 listStyle.fixedHeight = 18; //make list contents slightly smaller
-                radarBox = new BDGUIComboBox(new Rect(10, 350, 250, 20), radarBoxText, radarsGUI, 124, listStyle);
+                radarBox = new BDGUIComboBox(new Rect(10, 350, 600, 20), new Rect(10, 350, 250, 20), radarBoxText, radarsGUI, 124, listStyle);
             }
             
             int selected_index = radarBox.Show();
 
-            if (selected_index != previous_index)
+            if ((selected_index != previous_index) || (bNewValue != bLandedSplashed))
             {
                 text_sonar = "";
+                bLandedSplashed = bNewValue;
 
                 // selected radar changed - evaluate craft RCS against this radar
-                var selected_radar = radars[selected_index];
-                if (selected_radar.canScan)
+                if (selected_index != -1)
                 {
-                    for (float distance = selected_radar.radarMaxDistanceDetect; distance >= 0;  distance--)
+                    var selected_radar = radars[selected_index];
+
+                    // ground clutter factor from radar
+                    if (bLandedSplashed)
+                        rcsGCF = selected_radar.radarGroundClutterFactor;
+                    else
+                        rcsGCF = 1.0f;
+
+                    if (selected_radar.canScan)
                     {
-                        text_detection = $"Detection: undetectable by this radar.";
-                        if (selected_radar.radarDetectionCurve.Evaluate(distance) <= (RadarUtils.rcsTotal * rcsReductionFactor))
+                        for (float distance = selected_radar.radarMaxDistanceDetect; distance >= 0; distance--)
                         {
-                            text_detection = $"Detection: detected at {distance} km and closer";
-                            break;
+                            text_detection = $"Detection: undetectable by this radar.";
+                            if (selected_radar.radarDetectionCurve.Evaluate(distance) <= (RadarUtils.rcsTotal * rcsReductionFactor * rcsGCF))
+                            {
+                                text_detection = $"Detection: detected at {distance} km and closer";
+                                break;
+                            }
                         }
+
+                    }
+                    else
+                    {
+                        text_detection = "Detection: This radar does not have detection capabilities.";
                     }
 
-                }
-                else
-                {
-                    text_detection = "Detection: This radar does not have detection capabilities.";
-                }
-
-                if (selected_radar.canLock)
-                {
-                    text_locktrack = $"Lock/Track: untrackable by this radar.";
-                    for (float distance = selected_radar.radarMaxDistanceLockTrack; distance >= 0; distance--)
+                    if (selected_radar.canLock)
                     {
-                        if (selected_radar.radarLockTrackCurve.Evaluate(distance) <= (RadarUtils.rcsTotal * rcsReductionFactor))
+                        text_locktrack = $"Lock/Track: untrackable by this radar.";
+                        for (float distance = selected_radar.radarMaxDistanceLockTrack; distance >= 0; distance--)
                         {
-                            text_locktrack = $"Lock/Track: tracked at {distance} km and closer";
-                            break;
+                            if (selected_radar.radarLockTrackCurve.Evaluate(distance) <= (RadarUtils.rcsTotal * rcsReductionFactor * rcsGCF))
+                            {
+                                text_locktrack = $"Lock/Track: tracked at {distance} km and closer";
+                                break;
+                            }
                         }
+
+                    }
+                    else
+                    {
+                        text_locktrack = "Lock/Track: This radar does not have locking/tracking capabilities.";
                     }
 
+                    if (selected_radar.getRWRType(selected_radar.rwrThreatType) == "SONAR")
+                        text_sonar = "SONAR - will only be able to detect/track splashed or submerged vessels!";
                 }
-                else
-                {
-                    text_locktrack = "Lock/Track: This radar does not have locking/tracking capabilities.";
-                }
-
-                if (selected_radar.getRWRType(selected_radar.rwrThreatType) == "SONAR")
-                    text_sonar = "SONAR - will only be able to detect/track splashed or submerged vessels!";
             }
             previous_index = selected_index;
 

@@ -15,15 +15,17 @@ namespace BDArmory.UI
         private int selectedItemIndex = -1;
 
         private Rect rect;
+        private Rect buttonRect;
         private GUIContent buttonContent;
         private GUIContent[] listContent;
         private GUIStyle listStyle;
         private Vector2 scrollViewVector;
         private float comboxbox_height;
 
-        public BDGUIComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, float combo_height, GUIStyle listStyle)
+        public BDGUIComboBox(Rect rect, Rect buttonRect, GUIContent buttonContent, GUIContent[] listContent, float combo_height, GUIStyle listStyle)
         {
             this.rect = rect;
+            this.buttonRect = buttonRect;
             this.buttonContent = buttonContent;
             this.listContent = listContent;
             this.listStyle = listStyle;
@@ -59,7 +61,7 @@ namespace BDArmory.UI
             if (selectedItemIndex > -1)
                 buttonContent.text = listContent[selectedItemIndex].text;
 
-            if (GUI.Button(rect, buttonContent, HighLogic.Skin.button))
+            if (GUI.Button(buttonRect, buttonContent, HighLogic.Skin.button))
             {
                 if (useControlID == -1)
                 {
@@ -85,7 +87,7 @@ namespace BDArmory.UI
 
                 GUI.Box(new Rect(rect.x, rect.y, rect.width, items_height + rect.height), "", HighLogic.Skin.window);
 
-                int newSelectedItemIndex = GUI.SelectionGrid(listRect, selectedItemIndex, listContent, 1, listStyle);
+                int newSelectedItemIndex = GUI.SelectionGrid(listRect, selectedItemIndex, listContent, 2, listStyle);
                 if (newSelectedItemIndex != selectedItemIndex)
                 {
                     selectedItemIndex = newSelectedItemIndex;
