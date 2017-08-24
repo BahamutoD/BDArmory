@@ -323,7 +323,7 @@ namespace BDArmory.UI
 
                     // check acceptable range:
                     // flare cannot be too cool, but also not too bright
-                    if ((score > heatSignature*0.9) && (score < heatSignature * 1.25))
+                    if ((score > heatSignature*0.9) && (score < heatSignature * 1.15))
                     {
                         flareTarget = new TargetSignatureData(flare.Current, score);
                     }
