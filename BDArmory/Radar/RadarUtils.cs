@@ -440,12 +440,12 @@ namespace BDArmory.Radar
                      (Vector3.Dot(vectorToTarget, ray.direction) < 0))
                     continue;
 
-                // ignore when blocked by terrain
-                if (TerrainCheck(ray.origin, loadedvessels.Current.transform.position))
-                    continue;
-
                 if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov / 2f)
                 {
+                    // ignore when blocked by terrain
+                    if (TerrainCheck(ray.origin, loadedvessels.Current.transform.position))
+                        continue;
+
                     // get vessel's radar signature
                     TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
                     float signature = ti.radarModifiedSignature;
@@ -522,12 +522,12 @@ namespace BDArmory.Radar
                      (Vector3.Dot(vectorToTarget, ray.direction) < 0))
                     continue;
 
-                // ignore when blocked by terrain
-                if (TerrainCheck(ray.origin, loadedvessels.Current.transform.position))
-                    continue;
-
                 if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov / 2f)
                 {
+                    // ignore when blocked by terrain
+                    if (TerrainCheck(ray.origin, loadedvessels.Current.transform.position))
+                        continue;
+
                     // get vessel's radar signature
                     TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
                     float signature = ti.radarModifiedSignature;
@@ -616,13 +616,13 @@ namespace BDArmory.Radar
                 if ((loadedvessels.Current.transform.position - position).sqrMagnitude < RADAR_IGNORE_DISTANCE_SQR)
                     continue;
 
-                // ignore when blocked by terrain
-                if (TerrainCheck(referenceTransform.position, loadedvessels.Current.transform.position))
-                    continue;
-
                 Vector3 vesselDirection = Vector3.ProjectOnPlane(loadedvessels.Current.CoM - position, upVector);
                 if (Vector3.Angle(vesselDirection, lookDirection) < fov / 2f)
                 {
+                    // ignore when blocked by terrain
+                    if (TerrainCheck(referenceTransform.position, loadedvessels.Current.transform.position))
+                        continue;
+
                     // get vessel's radar signature
                     TargetInfo ti = GetVesselRadarSignature(loadedvessels.Current);
                     float signature = ti.radarModifiedSignature;
@@ -817,17 +817,19 @@ namespace BDArmory.Radar
         public static Vector3 GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
 		{
 			fov *= 1.1f;
-			results = new ViewScanResults();
-			results.foundMissile = false;
-			results.foundHeatMissile = false;
-			results.foundRadarMissile = false;
-			results.foundAGM = false;
-			results.firingAtMe = false;
-			results.missileThreatDistance = float.MaxValue;
-            results.threatVessel = null;
-            results.threatWeaponManager = null;
+            results = new ViewScanResults
+            {
+                foundMissile = false,
+                foundHeatMissile = false,
+                foundRadarMissile = false,
+                foundAGM = false,
+                firingAtMe = false,
+                missileThreatDistance = float.MaxValue,
+                threatVessel = null,
+                threatWeaponManager = null
+            };
 
-			if(!myWpnManager || !referenceTransform)
+            if (!myWpnManager || !referenceTransform)
 			{
 				return Vector3.zero;
 			}
