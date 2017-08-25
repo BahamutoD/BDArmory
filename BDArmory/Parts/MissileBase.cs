@@ -100,7 +100,7 @@ namespace BDArmory.Parts
         public float activeRadarMinThresh = 140;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ballistic Overshoot factor"),
-         UI_FloatRange(minValue = 0.5f, maxValue = 1f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
+         UI_FloatRange(minValue = 0.5f, maxValue = 1.5f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
         public float BallisticOverShootFactor = 0.7f;
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
@@ -675,19 +675,20 @@ namespace BDArmory.Parts
                 //calculating expected apogee bases on isosceles triangle
                
             }
-            if (TimeIndex < 1)
-            {
-                return missile.vessel.CoM + missile.vessel.Velocity() * 10;
-            }
+            debugString += "\n _originalDistance: " + _originalDistance;
+            debugString += "\n BallisticOverShootFactor: " + BallisticOverShootFactor;
 
             var surfaceDistanceVector = Vector3
                 .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized);
 
-            var pendingDistance = Vector3.Distance(surfaceDistanceVector, targetPosition);
+            var pendingDistance = _originalDistance - surfaceDistanceVector.magnitude;
 
+            debugString += "\n pendingDistance: " + pendingDistance;
 
-            debugString += "\n pendingDistance: "+ pendingDistance;
-    
+            if (TimeIndex < 1)
+            {
+                return missile.vessel.CoM + missile.vessel.Velocity() * 10;
+            }
 
             Vector3 agmTarget;
             // Getting apoapsis
@@ -738,6 +739,7 @@ namespace BDArmory.Parts
             }
             return agmTarget;
         }
+
 
         private double CalculateFreeFallTime()
         {
