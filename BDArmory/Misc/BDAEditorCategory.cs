@@ -35,10 +35,11 @@ namespace BDArmory.Misc
 
             RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
 
-            PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == "Filter by function");
+            PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName.ToLower() == "filter by function");
 
             PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
                 p => availableParts.Contains(p));
+
 
             // dump parts to .CSV list
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
