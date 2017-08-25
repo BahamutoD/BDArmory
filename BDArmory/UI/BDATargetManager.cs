@@ -362,19 +362,20 @@ namespace BDArmory.UI
 					}
 				}
 
-				if(RadarUtils.TerrainCheck(ray.origin, vessel.transform.position))
-				{
-					continue;
-				}
-
-                if (!allAspect)
-                {
-                   if (!Misc.Misc.CheckSightLineExactDistance(ray.origin, vessel.CoM + vessel.srf_velocity, Vector3.Distance(vessel.CoM, ray.origin), 5, 5)) continue;
-                }
 
                 float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
 				if(angle < scanRadius)
 				{
+                    if (RadarUtils.TerrainCheck(ray.origin, vessel.transform.position))
+                        continue;
+
+
+                    if (!allAspect)
+                    {
+                        if (!Misc.Misc.CheckSightLineExactDistance(ray.origin, vessel.CoM + vessel.srf_velocity, Vector3.Distance(vessel.CoM, ray.origin), 5, 5))
+                            continue;
+                    }
+
                     float score = GetVesselHeatSignature(vessel) * Mathf.Clamp01(15 / angle);
                     score *= Mathf.Pow(1400, 2) / Mathf.Clamp((vessel.CoM - ray.origin).sqrMagnitude, 90000, 36000000);
                     
