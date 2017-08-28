@@ -685,7 +685,10 @@ namespace BDArmory.Parts
 
         void OnGUI()
         {
-            drawLabels();
+            if (!HighLogic.LoadedSceneIsEditor)
+            {
+                drawLabels(); 
+            }
         }
 
         #region KSP ACTIONS
