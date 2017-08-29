@@ -82,6 +82,8 @@ namespace BDArmory.Radar
                         ti.radarBaseSignature = RCS_MISSILES;
                     else
                         ti.radarBaseSignature = missile.Current.missileRadarCrossSection;
+
+                    ti.radarBaseSignatureNeedsUpdate = false;
                 }
                 missile.Dispose();
             }
@@ -97,11 +99,12 @@ namespace BDArmory.Radar
                 {
                     // perform radar rendering to obtain base cross section
                     ti.radarBaseSignature = RenderVesselRadarSnapshot(v, v.transform);
-                    
+
                 }
+
+                ti.radarBaseSignatureNeedsUpdate = false;
             }
 
-            ti.radarBaseSignatureNeedsUpdate = false;
             return ti;
         }
 

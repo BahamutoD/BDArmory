@@ -25,6 +25,21 @@ namespace BDArmory.CounterMeasure
                 Destroy(this);
                 return;
             }
+
+            vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
+        }
+
+        void OnDestroy()
+        {
+            if (vessel)
+            {
+                vessel.OnJustAboutToBeDestroyed -= AboutToBeDestroyed;
+            }
+        }
+
+        void AboutToBeDestroyed()
+        {
+            Destroy(this);
         }
 
         public float GetChaffMultiplier()

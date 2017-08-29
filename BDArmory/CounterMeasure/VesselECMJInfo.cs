@@ -46,6 +46,7 @@ namespace BDArmory.CounterMeasure
             jammers = new List<ModuleECMJammer>();
             vessel = GetComponent<Vessel>();
 
+            vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
             GameEvents.onVesselCreate.Add(OnVesselCreate);
             GameEvents.onPartJointBreak.Add(OnPartJointBreak);
             GameEvents.onPartDie.Add(OnPartDie);
@@ -53,9 +54,15 @@ namespace BDArmory.CounterMeasure
 
         void OnDestroy()
         {
+            vessel.OnJustAboutToBeDestroyed -= AboutToBeDestroyed;
             GameEvents.onVesselCreate.Remove(OnVesselCreate);
             GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
             GameEvents.onPartDie.Remove(OnPartDie);
+        }
+
+        void AboutToBeDestroyed()
+        {
+            Destroy(this);
         }
 
         void OnPartDie(Part p = null)

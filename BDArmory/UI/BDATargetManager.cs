@@ -722,24 +722,25 @@ namespace BDArmory.UI
 			TargetDatabase[team].Remove(target);
 		}
 
-		public static void ReportVessel(Vessel v, MissileFire reporter)
-		{
-			if(!v) return;
-			if(!reporter) return;
+        public static void ReportVessel(Vessel v, MissileFire reporter)
+        {
+            if (!v) return;
+            if (!reporter) return;
 
-			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
-			if(!info)
-			{
+            TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
+            if (!info)
+            {
                 List<MissileFire>.Enumerator mf = v.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                 while (mf.MoveNext())
                 {
                     if (mf.Current == null) continue;
                     if (mf.Current.team != reporter.team)
-					{
-						info = v.gameObject.AddComponent<TargetInfo>();
-					}
-					return;
-				}
+                    {
+                        info = v.gameObject.AddComponent<TargetInfo>();
+                        break;
+                    }
+
+                }
                 mf.Dispose();
 
                 List<MissileBase>.Enumerator ml = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
@@ -747,22 +748,25 @@ namespace BDArmory.UI
                 {
                     if (ml.Current == null) continue;
                     if (ml.Current.HasFired)
-					{
-						if(ml.Current.Team != reporter.team)
-						{
-							info = v.gameObject.AddComponent<TargetInfo>();
-						}
-					}
-					return;
-				}
+                    {
+                        if (ml.Current.Team != reporter.team)
+                        {
+                            info = v.gameObject.AddComponent<TargetInfo>();
+                            break;
+                        }
+                    }
+
+                }
                 ml.Dispose();
-			}
-			else
-			{
+            }
+
+            // add target to database
+            if (info)
+            {
                 AddTarget(info);
-				info.detectedTime = Time.time;
-			}
-		}
+                info.detectedTime = Time.time;
+            }
+        }
 
         public static void AddTarget(TargetInfo target)
         {
