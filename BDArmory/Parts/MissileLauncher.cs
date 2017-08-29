@@ -1882,8 +1882,11 @@ namespace BDArmory.Parts
 
 		void OnGUI()
 		{
-		    drawLabels();
-		}
+		    if (!HighLogic.LoadedSceneIsEditor)
+		    {
+		        drawLabels();
+		    }
+        }
 
 		void AntiSpin()
 		{
