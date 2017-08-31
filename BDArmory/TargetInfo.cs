@@ -45,7 +45,7 @@ namespace BDArmory
             get
             {
                 if (!vessel) return false;
-                if (vessel.situation == Vessel.Situations.FLYING ) return true;
+                if (vessel.situation == Vessel.Situations.FLYING || vessel.InOrbit()) return true;
                 else
                     return false;
             }

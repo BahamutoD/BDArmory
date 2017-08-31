@@ -946,12 +946,11 @@ namespace BDArmory.Parts
 				if(guidanceActive)// && timeIndex - dropTime > 0.5f)
 				{
 					WarnTarget();
-					Vector3 targetPosition = Vector3.zero;
 
 					if(legacyTargetVessel && legacyTargetVessel.loaded)
 					{
 						Vector3 targetCoMPos = legacyTargetVessel.CoM;
-						targetPosition = targetCoMPos+legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
+						TargetPosition = targetCoMPos+legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
 					}
 
 					//increaseTurnRate after launch
@@ -1012,7 +1011,7 @@ namespace BDArmory.Parts
                     }
                     else if (GuidanceMode == GuidanceModes.RCS)
                     {
-                        part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(targetPosition - part.transform.position, part.transform.up), turnRateDPS * Time.fixedDeltaTime);
+                        part.transform.rotation = Quaternion.RotateTowards(part.transform.rotation, Quaternion.LookRotation(TargetPosition - part.transform.position, part.transform.up), turnRateDPS * Time.fixedDeltaTime);
                     }
                     else if (GuidanceMode == GuidanceModes.Cruise)
                     {
