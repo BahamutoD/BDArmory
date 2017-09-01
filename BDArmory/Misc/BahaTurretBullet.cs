@@ -82,7 +82,7 @@ namespace BDArmory.Misc
 			startTime = Time.time;
 			prevPosition = gameObject.transform.position;
 
-            sourceOriginalV = sourceVessel.srf_velocity;
+            sourceOriginalV = sourceVessel.Velocity();
 			
 			Light light = gameObject.AddComponent<Light>();
 			light.type = LightType.Point;
@@ -121,7 +121,7 @@ namespace BDArmory.Misc
 			
 			if(tracerLength == 0)
 			{
-				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.srf_velocity*TimeWarp.fixedDeltaTime));
+				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.Velocity()*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using BDArmory.Armor;
 using BDArmory.Control;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
@@ -50,7 +51,11 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
         [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
+        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;
+        [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK= false;
         [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;                  //DEPRECATED, NOT USED ANYWHERE!
+
+
 
         //=======Window position settings Git Issue #13
         [BDAWindowSettingsField] public static Rect WindowRectToolbar;
@@ -976,7 +981,7 @@ namespace BDArmory.UI
                     gRange =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
-                            gRange, 0, 10000);
+                            gRange, 0, BDArmorySettings.MAX_BULLET_RANGE);
                     gRange /= 100f;
                     gRange = Mathf.Round(gRange);
                     gRange *= 100f;
@@ -1601,7 +1606,7 @@ namespace BDArmory.UI
         {
             if (DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.srf_velocity + ", packed: " + v.packed);
+                Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.Velocity() + ", packed: " + v.packed);
                 //v.SetWorldVelocity(Vector3d.zero);	
             }
         }

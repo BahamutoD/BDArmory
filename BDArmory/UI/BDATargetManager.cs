@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
@@ -372,7 +373,7 @@ namespace BDArmory.UI
 
                     if (!allAspect)
                     {
-                        if (!Misc.Misc.CheckSightLineExactDistance(ray.origin, vessel.CoM + vessel.srf_velocity, Vector3.Distance(vessel.CoM, ray.origin), 5, 5))
+                        if (!Misc.Misc.CheckSightLineExactDistance(ray.origin, vessel.CoM + vessel.Velocity(), Vector3.Distance(vessel.CoM, ray.origin), 5, 5))
                             continue;
                     }
 

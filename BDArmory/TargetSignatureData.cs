@@ -1,4 +1,5 @@
 using System;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Radar;
@@ -40,9 +41,9 @@ namespace BDArmory
 
             timeAcquired = Time.time;
             vessel = v;
-            velocity = v.srf_velocity;
-			
-			geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
+            velocity = v.Velocity();
+
+            geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
 			acceleration = v.acceleration;
 			exists = true;
 			

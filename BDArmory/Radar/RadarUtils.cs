@@ -1,3 +1,4 @@
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
@@ -878,9 +879,9 @@ namespace BDArmory.Radar
 									results.foundMissile = true;
 									results.threatVessel = missileBase.vessel;
 									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missileBase.part.transform.position;
-									Vector3 relV = missileBase.vessel.srf_velocity - myWpnManager.vessel.srf_velocity;
+									Vector3 relV = missileBase.vessel.Velocity() - myWpnManager.vessel.Velocity();
 									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
-									if(missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.srf_velocity * Time.fixedDeltaTime))).sqrMagnitude < 3600)
+									if(missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.Velocity() * Time.fixedDeltaTime))).sqrMagnitude < 3600)
 									{
 										if(missileBase.TargetingMode == MissileBase.TargetingModes.Heat)
 										{
@@ -941,8 +942,14 @@ namespace BDArmory.Radar
         /// </summary>
 		public static bool TerrainCheck(Vector3 start, Vector3 end)
 		{
-			return Physics.Linecast(start, end, 1<<15); // only layer 15 active, see: http://wiki.kerbalspaceprogram.com/wiki/API:Layers
-        }
+		    if (!BDArmorySettings.IGNORE_TERRAIN_CHECK)
+		    {
+		        return Physics.Linecast(start, end, 1 << 15);
+		    }
+	
+		    return false;
+		    
+		}
 
 
         /// <summary>

@@ -1180,7 +1180,7 @@ namespace BDArmory
 
                     if (legacyTargetVessel != null && legacyTargetVessel.loaded)
                     {
-                        physStepFix = legacyTargetVessel.srf_velocity * Time.fixedDeltaTime;
+                        physStepFix = legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
                         targetDirection = (legacyTargetVessel.CoM + physStepFix) - tf.position;
 
 
@@ -1447,7 +1447,7 @@ namespace BDArmory
             {
                 if (legacyTargetVessel)
                 {
-                    targetPosition += legacyTargetVessel.srf_velocity * Time.fixedDeltaTime;
+                    targetPosition += legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
                 }
                 else if (!targetAcquired)
                 {
@@ -1504,9 +1504,9 @@ namespace BDArmory
                 if (targetAcquired)
                 {
                     float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        targetVelocity - vessel.srf_velocity, bulletVelocity);
+                        targetVelocity - vessel.Velocity(), bulletVelocity);
                     if (time2 > 0) time = time2;
-                    finalTarget += (targetVelocity - vessel.srf_velocity) * time;
+                    finalTarget += (targetVelocity - vessel.Velocity()) * time;
                     //target vessel relative velocity compensation
 
                     Vector3 acceleration = targetAcceleration;
@@ -1877,7 +1877,7 @@ namespace BDArmory
                      (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.srf_velocity;
+                    targetVelocity = legacyTargetVessel.Velocity();
                     targetAcceleration = legacyTargetVessel.acceleration;
                     targetPosition += targetVelocity * Time.fixedDeltaTime;
                     targetAcquired = true;
@@ -1901,7 +1901,7 @@ namespace BDArmory
                     targetPosition = targetData.predictedPosition + (3 * targetVelocity * Time.fixedDeltaTime);
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.vessel.srf_velocity;
+                        targetVelocity = targetData.vessel.Velocity();
                         targetPosition = targetData.vessel.CoM + (targetVelocity * Time.fixedDeltaTime);
                     }
                     targetAcceleration = targetData.acceleration;
@@ -1949,7 +1949,7 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.srf_velocity;
+                        targetVelocity = tgt.Velocity();
                         targetAcceleration = tgt.acceleration;
                     }
                 }
