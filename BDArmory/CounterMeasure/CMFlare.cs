@@ -172,7 +172,7 @@ namespace BDArmory.CounterMeasure
 
             //thermal decay
             thermal = Mathf.MoveTowards(thermal, minThermal,
-                ((BDArmorySettings.FLARE_THERMAL - minThermal)/lifeTime)*Time.fixedDeltaTime);
+                ((thermal - minThermal)/lifeTime)*Time.fixedDeltaTime);
 
 
             //floatingOrigin fix

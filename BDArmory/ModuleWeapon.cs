@@ -1683,7 +1683,7 @@ namespace BDArmory
                         simPrevPos = simCurrPos;
 
                         if (legacyTargetVessel != null && legacyTargetVessel.loaded && !legacyTargetVessel.Landed &&
-                            Vector3.Distance(simStartPos, simCurrPos) > targetLeadDistance)
+                            (simStartPos - simCurrPos).sqrMagnitude > targetLeadDistance*targetLeadDistance)
                         {
                             bulletPrediction = simStartPos + (simCurrPos - simStartPos).normalized * targetLeadDistance;
                             simulating = false;

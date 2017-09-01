@@ -547,9 +547,9 @@ namespace BDArmory.Parts
         private Vector3 CruiseGuidance()
         {
             Vector3 cruiseTarget = Vector3.zero;
-            float distance = Vector3.Distance(TargetPosition, vessel.CoM);
+            float distanceSqr = (TargetPosition - vessel.CoM).sqrMagnitude;
 
-            if (distance < 4500)
+            if (distanceSqr < 4500*4500)
             {
                 cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
                 debugString.Append("Descending On Target");
@@ -572,10 +572,10 @@ namespace BDArmory.Parts
         {
             if (HasMissed) return;
             // if I'm to close to my vessel avoid explosion
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < 4 * DetonationDistance) return;
+            if ((vessel.CoM - SourceVessel.CoM).sqrMagnitude < 4*DetonationDistance*4*DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
-            if (Vector3.Distance(vessel.CoM, targetPosition) >
-                Vector3.Distance(vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime), targetPosition + (TargetVelocity * Time.fixedDeltaTime))) return;
+            if ((vessel.CoM - targetPosition).sqrMagnitude >
+                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - targetPosition + (TargetVelocity * Time.fixedDeltaTime)).sqrMagnitude) return;
 
             if (MissileState != MissileStates.PostThrust) return;
             if (Vector3.Dot(targetPosition - vessel.CoM, vessel.transform.forward) > 0) return;
@@ -591,7 +591,7 @@ namespace BDArmory.Parts
 
         public void GuidanceSteer(FlightCtrlState s)
         {
-            debugString = "";
+            debugString.Length = 0;
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
                 Vector3 newTargetPosition = new Vector3();
@@ -698,7 +698,7 @@ namespace BDArmory.Parts
 
         void OnGUI()
         {
-            if (!HighLogic.LoadedSceneIsEditor)
+            if (HighLogic.LoadedSceneIsFlight)
             {
                 drawLabels(); 
             }

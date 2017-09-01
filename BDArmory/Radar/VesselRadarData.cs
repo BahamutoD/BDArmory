@@ -717,7 +717,7 @@ namespace BDArmory.Radar
             }
 
 
-            string windowTitle = "Radar";
+            const string windowTitle = "Radar";
             radarWindowRect = GUI.Window(524141, radarWindowRect, RadarWindow, windowTitle, HighLogic.Skin.window);
             BDGUIUtils.UseMouseEventInRect(radarWindowRect);
 
@@ -728,12 +728,6 @@ namespace BDArmory.Radar
                 LinkRadarWindow();
 
                 BDGUIUtils.UseMouseEventInRect(linkWindowRect);
-            }
-
-
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-            {
-                GUI.Label(new Rect(800, 800, 800, 800), "radarCount: " + radarCount);
             }
 
         }

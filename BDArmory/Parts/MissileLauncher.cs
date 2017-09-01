@@ -952,8 +952,6 @@ namespace BDArmory.Parts
 			        controlAuthority = 1;
 			    }
 
-				debugString += "\ncontrolAuthority: "+controlAuthority;
-
 				debugString.Append($"controlAuthority: {controlAuthority}");
                 debugString.Append(Environment.NewLine);
 
@@ -1062,9 +1060,9 @@ namespace BDArmory.Parts
         private void UpdateTerminalGuidance()
         {
             // check if guidance mode should be changed for terminal phase
-            float distance = Vector3.Distance(TargetPosition, transform.position);
+            float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-            if ((TargetingModeTerminal != TargetingModes.None) && (distance < terminalGuidanceDistance) && !terminalGuidanceActive)
+            if ((TargetingModeTerminal != TargetingModes.None) && (distanceSqr < terminalGuidanceDistance*terminalGuidanceDistance) && !terminalGuidanceActive)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory][Terminal Guidance]: missile "+this.name+" updating targeting mode: " + terminalGuidanceType);
@@ -1549,9 +1547,9 @@ namespace BDArmory.Parts
 		void CruiseGuidance()
 		{
 			Vector3 cruiseTarget = Vector3.zero;
-			float distance = Vector3.Distance(TargetPosition, transform.position);
+			float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-			if(terminalManeuvering && distance < 4500)
+			if(terminalManeuvering && distanceSqr < 4500*4500)
 			{
 				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, cruiseAltitude);
                 debugString.Append($"Terminal Maneuvers");
@@ -1559,8 +1557,8 @@ namespace BDArmory.Parts
             }
 			else
 			{
-				float agmThreshDist = 2500;
-				if(distance <agmThreshDist)
+                float agmThreshDistSqr = 2500 * 2500;
+				if(distanceSqr < agmThreshDistSqr)
 				{
 					if(!MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, true, out cruiseTarget))
 					{
@@ -1888,19 +1886,10 @@ namespace BDArmory.Parts
 
 		void OnGUI()
 		{
-		    if (!HighLogic.LoadedSceneIsEditor)
+		    if (HighLogic.LoadedSceneIsFlight)
 		    {
 		        drawLabels();
-		    }
-        
-			if(HasFired && BDArmorySettings.DRAW_DEBUG_LABELS)	
-			{
-				GUI.Label(new Rect(200,300,200,200), debugString.ToString());	
-			}
-			if(HasFired && hasRCS)
-			{
-				BDGUIUtils.DrawLineBetweenWorldPositions(transform.position, TargetPosition, 2, Color.red);
-			}
+		    }      
 		}
 
 		void AntiSpin()

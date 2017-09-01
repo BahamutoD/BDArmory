@@ -200,12 +200,12 @@ namespace BDArmory.Parts
         private float lastRWRPing = 0;
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
-        protected string debugString = "";
+        protected StringBuilder debugString = new StringBuilder();
 
         private float _throttle = 1f;
         
 
-        protected StringBuilder debugString = new StringBuilder();
+        
         
         public string GetSubLabel()
         {
@@ -707,14 +707,14 @@ namespace BDArmory.Parts
             //Guard clauses     
             if (!TargetAcquired) return;
             
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance,100)) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationDistance) return;
+            if ((vessel.CoM - SourceVessel.CoM).sqrMagnitude < Math.Min(4*DetonationDistance*DetonationDistance, 100*100)) return;
+            if ((vessel.CoM - TargetPosition).sqrMagnitude > 10 * DetonationDistance*DetonationDistance) return;
             if (DetonationDistance == 0) return; //skip check of user set to zero, rely on OnCollisionEnter
             
             float distance;
-            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationDistance)
+            if ((distance = (TargetPosition - vessel.CoM).sqrMagnitude) < DetonationDistance*DetonationDistance)
             {
-                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance + "DetonationDistance was "+ DetonationDistance);
+                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated DistanceSqr=" + distance + "DetonationDistance was "+ DetonationDistance);
                 Detonate();
             }
         }
@@ -733,15 +733,19 @@ namespace BDArmory.Parts
                 //calculating expected apogee bases on isosceles triangle
                
             }
-            debugString += "\n _originalDistance: " + _originalDistance;
-            debugString += "\n BallisticOverShootFactor: " + BallisticOverShootFactor;
+
+            debugString.Append($"_originalDistance: {_originalDistance}");
+            debugString.Append(Environment.NewLine);
+            debugString.Append($"BallisticOverShootFactor: {BallisticOverShootFactor}");
+            debugString.Append(Environment.NewLine);
 
             var surfaceDistanceVector = Vector3
                 .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized);
 
             var pendingDistance = _originalDistance - surfaceDistanceVector.magnitude;
 
-            debugString += "\n pendingDistance: " + pendingDistance;
+            debugString.Append($"pendingDistance: {pendingDistance}");
+            debugString.Append(Environment.NewLine);
 
             if (TimeIndex < 1)
             {
@@ -752,37 +756,44 @@ namespace BDArmory.Parts
             // Getting apoapsis
             if (missile.vessel.verticalSpeed > 0 && pendingDistance > _originalDistance * 0.5)
             {
-                debugString += "\n Ascending";
+                debugString.Append($"Ascending");
+                debugString.Append(Environment.NewLine);
 
                 var freeFallTime = CalculateFreeFallTime();
-                debugString += "\n freeFallTime: " + freeFallTime;
+                debugString.Append($"freeFallTime: {freeFallTime}");
+                debugString.Append(Environment.NewLine);
 
                 var horizontalTime = pendingDistance / missile.vessel.horizontalSrfSpeed;
+                debugString.Append($"horizontalTime: {horizontalTime}");
+                debugString.Append(Environment.NewLine);
 
-
-                debugString += "\n horizontalTime: " + horizontalTime;
                 if (freeFallTime  >= horizontalTime)
                 {
-                    debugString += "\n Free fall achieved: ";
+                    debugString.Append($"Free fall achieved:");
+                    debugString.Append(Environment.NewLine);
+
                     missile.Throttle = 0;
                     agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
                 }
                 else
                 {
-                    debugString += "\n Free fall not achieved: ";
+                    debugString.Append($"Free fall not achieved:");
+                    debugString.Append(Environment.NewLine);
+
                     missile.Throttle = 1;
                     Vector3 dToTarget = targetPosition - missile.vessel.CoM;
                     Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(missile.maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(missile.vessel.CoM))) * dToTarget;
                     agmTarget = missile.vessel.CoM + direction;
                 }
 
-               
 
-                debugString += "\n Throttle: " + missile.Throttle;
+                debugString.Append($"Throttle: {missile.Throttle}");
+                debugString.Append(Environment.NewLine);
             }
             else
             {
-                debugString += "\n Descending";
+                debugString.Append($"Descending");
+                debugString.Append(Environment.NewLine);
                 agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
 
                 if (missile is BDModularGuidance)
@@ -817,7 +828,7 @@ namespace BDArmory.Parts
             if (!vessel.isActiveVessel) return;
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.shortName + ":" + debugString);
+                GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.shortName + ":" + debugString.ToString());
             }
         }
     }

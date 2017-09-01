@@ -1449,7 +1449,7 @@ namespace BDArmory
             float bombStartTime = Time.time;
             float bombAttemptDuration = Mathf.Max(targetScanInterval, 12f);
             float radius = CurrentMissile.GetBlastRadius() * Mathf.Min((1 + (maxMissilesOnTarget / 2f)), 1.5f);
-            if (CurrentMissile.TargetingMode == MissileBase.TargetingModes.Gps && Vector3.Distance(designatedGPSInfo.worldPos, guardTarget.CoM) > CurrentMissile.GetBlastRadius())
+            if (CurrentMissile.TargetingMode == MissileBase.TargetingModes.Gps && (designatedGPSInfo.worldPos - guardTarget.CoM).sqrMagnitude > CurrentMissile.GetBlastRadius()*CurrentMissile.GetBlastRadius())
             {
                 //check database for target first
                 float twoxsqrRad = 4f * radius * radius;
@@ -1482,7 +1482,7 @@ namespace BDArmory
 
                         if (tgp)
                         {
-                            if (guardTarget && tgp.groundStabilized && Vector3.Distance(tgp.groundTargetPosition, guardTarget.transform.position) < CurrentMissile.GetBlastRadius())
+                            if (guardTarget && tgp.groundStabilized && (tgp.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < CurrentMissile.GetBlastRadius()*CurrentMissile.GetBlastRadius())
                             {
                                 radius = 500;
                                 designatedGPSInfo = new GPSTargetInfo(tgp.bodyRelativeGTP, "Guard Target");

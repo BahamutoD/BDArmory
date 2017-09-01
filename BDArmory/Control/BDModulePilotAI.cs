@@ -507,7 +507,7 @@ namespace BDArmory.Control
 								if(threat.exists && threat.signalStrength == 4)
 								{
 									missileThreatDetected = true;
-									float dist = Vector3.Distance(weaponManager.rwr.pingWorldPositions[i], vesselTransform.position);
+									float dist = (weaponManager.rwr.pingWorldPositions[i] - vesselTransform.position).sqrMagnitude;
 									if(dist < closestMissileThreat)
 									{
 										closestMissileThreat = dist;
@@ -584,9 +584,9 @@ namespace BDArmory.Control
 				else //extend if too close for agm attack
 				{
 					float extendDistance = Mathf.Clamp(weaponManager.guardRange - 1800, 2500, 4000);
-					float srfDist = Vector3.Distance(GetSurfacePosition(targetVessel.transform.position), GetSurfacePosition(vessel.transform.position));
+					float srfDist = (GetSurfacePosition(targetVessel.transform.position) - GetSurfacePosition(vessel.transform.position)).sqrMagnitude;
 
-					if(srfDist < extendDistance && Vector3.Angle(vesselTransform.up, targetVessel.transform.position - vessel.transform.position) > 45)
+					if(srfDist < extendDistance*extendDistance && Vector3.Angle(vesselTransform.up, targetVessel.transform.position - vessel.transform.position) > 45)
 					{
 						extending = true;
 						lastTargetPosition = targetVessel.transform.position;
@@ -784,8 +784,9 @@ namespace BDArmory.Control
 						Vector3 leadOffset = weapon.GetLeadOffset();
 
 						float targetAngVel = Vector3.Angle(v.transform.position - vessel.transform.position, v.transform.position + (vessel.Velocity()) - vessel.transform.position);
-						debugString += "\ntargetAngVel: " + targetAngVel;
-						float magnifier = Mathf.Clamp(targetAngVel, 1f, 2f);
+                        debugString.Append($"targetAngVel: {targetAngVel}");
+                        debugString.Append(Environment.NewLine);
+                        float magnifier = Mathf.Clamp(targetAngVel, 1f, 2f);
 						magnifier += ((magnifier-1f) * Mathf.Sin(Time.time *0.75f));
 						target -= magnifier * leadOffset;
 
@@ -1171,7 +1172,7 @@ namespace BDArmory.Control
 			vectorToTarget = GetLimitedClimbDirectionForSpeed(vectorToTarget);
 			targetPosition = vesselTransform.position + vectorToTarget;
 
-			if(command != PilotCommands.Free && Vector3.Distance(vessel.transform.position, flightCenter) < radius*1.5f)
+			if(command != PilotCommands.Free && (vessel.transform.position - flightCenter).sqrMagnitude < radius*radius*1.5f)
 			{
 				Debug.Log("[BDArmory]: AI Pilot reached command destination.");
 				command = PilotCommands.Free;
@@ -1303,8 +1304,10 @@ namespace BDArmory.Control
 					float mSqrDist = Vector3.SqrMagnitude(weaponManager.incomingMissileVessel.transform.position - vesselTransform.position);
 					if(mSqrDist < 810000) //900m
 					{
-						debugString += "\nMissile about to impact! pull away!";
-						AdjustThrottle(maxSpeed, false, false);
+                        debugString.Append($"Missile about to impact! pull away!");
+                        debugString.Append(Environment.NewLine);
+
+                        AdjustThrottle(maxSpeed, false, false);
 						Vector3 cross = Vector3.Cross(weaponManager.incomingMissileVessel.transform.position - vesselTransform.position, vessel.Velocity()).normalized;
 						if(Vector3.Dot(cross, -vesselTransform.forward) < 0)
 						{
@@ -2027,7 +2030,7 @@ namespace BDArmory.Control
 		    if (!pilotEnabled || !vessel.isActiveVessel) return;
 		    if(BDArmorySettings.DRAW_DEBUG_LABELS)
 		    {
-		        GUI.Label(new Rect(200, Screen.height - 200, 400, 400), vessel.name+":"+ debugString);	
+		        GUI.Label(new Rect(200, Screen.height - 200, 400, 400), vessel.name+":"+ debugString.ToString());	
 		    }
 
 		    if (!BDArmorySettings.DRAW_DEBUG_LINES) return;

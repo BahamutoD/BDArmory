@@ -200,7 +200,7 @@ namespace BDArmory.Parts
 
                 //floatingOrigin fix
                 if (sourceVessel != null &&
-                    Vector3.Distance(transform.position - sourceVessel.transform.position, relativePos) > 800)
+                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
                 {
                     transform.position = sourceVessel.transform.position + relativePos +
                                          (rb.velocity*Time.fixedDeltaTime);
@@ -284,7 +284,7 @@ namespace BDArmory.Parts
             {
                 //floatingOrigin fix
                 if (sourceVessel != null &&
-                    Vector3.Distance(transform.position - sourceVessel.transform.position, relativePos) > 800)
+                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
                 {
                     transform.position = sourceVessel.transform.position + relativePos +
                                          (rb.velocity*Time.fixedDeltaTime);

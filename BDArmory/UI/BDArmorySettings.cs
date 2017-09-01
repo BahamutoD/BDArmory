@@ -41,7 +41,7 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024;
         [BDAPersistantSettingsField] public static bool BW_TARGET_CAM = true;
         [BDAPersistantSettingsField] public static float SMOKE_DEFLECTION_FACTOR = 10;
-        [BDAPersistantSettingsField] public static float FLARE_THERMAL = 1900;                  //DEPRECATED, NOT USED ANYMORE!
+        //[BDAPersistantSettingsField] public static float FLARE_THERMAL = 1900;                  //DEPRECATED, NOT USED ANYMORE!
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000;
@@ -51,7 +51,6 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
         [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
-        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;
         [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK= false;
         [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;                  //DEPRECATED, NOT USED ANYWHERE!
 
@@ -655,15 +654,6 @@ namespace BDArmory.UI
                 }
             }
 
-            /*
-            if (DRAW_DEBUG_LABELS && HighLogic.LoadedSceneIsFlight)
-            {
-                if (RadarUtils.radarRT)
-                {
-                    GUI.DrawTexture(new Rect(20, 20, 128, 128), RadarUtils.radarRT, ScaleMode.StretchToFill, true);
-                }
-            }
-            */
         }
 
 

@@ -201,7 +201,7 @@ namespace BDArmory.Misc
             RaycastHit rayHit;
             if (Physics.Raycast(ray, out rayHit, dist, 557057))
             {
-                if (Vector3.Distance(target, rayHit.point) < threshold)
+                if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
                 {
                     return true;
                 }
@@ -223,7 +223,7 @@ namespace BDArmory.Misc
             RaycastHit rayHit;
             if (Physics.Raycast(ray, out rayHit, dist, 557057))
             {
-                if (Vector3.Distance(target, rayHit.point) < threshold)
+                if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
                 {
                     return true;
                 }
