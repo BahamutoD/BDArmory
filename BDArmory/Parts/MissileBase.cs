@@ -825,7 +825,7 @@ namespace BDArmory.Parts
 
         protected void drawLabels()
         {
-            if (!vessel.isActiveVessel) return;
+            if (vessel == null || !vessel.isActiveVessel) return;
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.shortName + ":" + debugString.ToString());
