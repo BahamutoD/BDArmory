@@ -73,20 +73,16 @@ namespace BDArmory.Radar
             {
                 // missile handling: get signature from missile config, unless it is radaractive, then use old legacy special handling.
                 // LEGACY special handling missile: should always be detected, hence signature is set to maximum
-                List<MissileBase>.Enumerator missile = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
-                while (missile.MoveNext())
+                MissileBase missile = ti.MissileBaseModule;
+                if (missile != null)
                 {
-                    if (missile.Current == null) continue;
-
-                    // if radar is actively emitting, max signal strength:
-                    if (missile.Current.ActiveRadar)
+                    if (missile.ActiveRadar)
                         ti.radarBaseSignature = RCS_MISSILES;
                     else
-                        ti.radarBaseSignature = missile.Current.missileRadarCrossSection;
+                        ti.radarBaseSignature = missile.missileRadarCrossSection;
 
                     ti.radarBaseSignatureNeedsUpdate = false;
                 }
-                missile.Dispose();
             }
 
             if (ti.radarBaseSignature == -1 || ti.radarBaseSignatureNeedsUpdate)
@@ -104,6 +100,7 @@ namespace BDArmory.Radar
                 }
 
                 ti.radarBaseSignatureNeedsUpdate = false;
+                ti.alreadyScheduledRCSUpdate = false;
             }
 
             return ti;
@@ -203,7 +200,10 @@ namespace BDArmory.Radar
             Bounds vesselbounds = CalcVesselBounds(v, t);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Rendering radar snapshot of vessel");
+                if (HighLogic.LoadedSceneIsFlight)
+                    Debug.Log($"[BDArmory]: Rendering radar snapshot of vessel {v.name}, type {v.vesselType}");
+                else
+                    Debug.Log("[BDArmory]: Rendering radar snapshot of vessel");
                 Debug.Log("[BDArmory]: - bounds: " + vesselbounds.ToString());
                 //Debug.Log("[BDArmory]: - size: " + vesselbounds.size + ", magnitude: " + vesselbounds.size.magnitude);
             }
@@ -218,7 +218,7 @@ namespace BDArmory.Radar
 
                 // revert presentation (only if outside editor and thus vessel is a real vessel)
                 if (HighLogic.LoadedSceneIsFlight)
-                v.SetPosition(v.transform.position - presentationPosition);
+                    v.SetPosition(v.transform.position - presentationPosition);
 
                 return 0f;
             }

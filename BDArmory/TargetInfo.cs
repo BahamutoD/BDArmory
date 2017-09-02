@@ -15,15 +15,14 @@ namespace BDArmory
 		public MissileFire weaponManager;
         List<MissileFire> friendliesEngaging;
         public float detectedTime;
-        Coroutine lifeRoutine;
-        Coroutine massRoutine;
-
 
         public float radarBaseSignature = -1;
         public bool radarBaseSignatureNeedsUpdate = true;
         public float radarModifiedSignature;
         public float radarLockbreakFactor;
         public float radarJammingDistance;
+        public bool alreadyScheduledRCSUpdate = false;
+
 
         public bool isLanded
 		{
@@ -201,8 +200,7 @@ namespace BDArmory
 
 			friendliesEngaging = new List<MissileFire>();
 
-			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;
-            GameEvents.onVesselWasModified.Add(VesselModified);
+			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;            
 
             //add delegate to peace enable event
             BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
@@ -211,23 +209,14 @@ namespace BDArmory
 
             if (!isMissile && team != BDArmorySettings.BDATeams.None)
 			{
+                GameEvents.onVesselPartCountChanged.Add(VesselModified);
                 //massRoutine = StartCoroutine(MassRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
             }
         }
 
 		void OnPeaceEnabled()
 		{
-			if (lifeRoutine != null)
-			{
-				StopCoroutine(lifeRoutine);
-			}
-
-			if (massRoutine != null)
-			{
-				StopCoroutine(massRoutine);
-			}
-
-			Destroy(this);
+			//Destroy(this);
 		}
 
 		void OnDestroy()
@@ -235,41 +224,15 @@ namespace BDArmory
 			//remove delegate from peace enable event
 			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
             vessel.OnJustAboutToBeDestroyed -= AboutToBeDestroyed;
-            GameEvents.onVesselWasModified.Remove(VesselModified);
+            GameEvents.onVesselPartCountChanged.Remove(VesselModified);
         }
-	
-		IEnumerator LifetimeRoutine()
-		{
-			detectedTime = Time.time;
-			while(Time.time - detectedTime < 60 && enabled)
-			{
-				yield return null;
-			}
-			if(massRoutine != null)
-			{
-				StopCoroutine(massRoutine);
-			}
-			Destroy(this);
-		}
 		
-		IEnumerator MassRoutine()
+		IEnumerator UpdateRCSDelayed()
 		{
-			float startMass = vessel.GetTotalMass();
-			while(enabled)
-			{
-				if(vessel.GetTotalMass() < startMass / 4)
-				{
-					if(lifeRoutine != null)
-					{
-						StopCoroutine(lifeRoutine);
-					}
-
-					RemoveFromDatabases();
-					yield break;
-				}
-				yield return new WaitForSeconds(1);
-			}
-		}
+            alreadyScheduledRCSUpdate = true;
+            yield return new WaitForSeconds(1.0f);
+            radarBaseSignatureNeedsUpdate = true;
+        }
 
 		void Update()
 		{
@@ -342,7 +305,8 @@ namespace BDArmory
         {
             if (v && v == this.vessel)
             {
-                radarBaseSignatureNeedsUpdate = true;
+                if (!alreadyScheduledRCSUpdate)
+                    StartCoroutine(UpdateRCSDelayed());
             }
         }
 	}
