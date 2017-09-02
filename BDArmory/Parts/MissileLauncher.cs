@@ -134,6 +134,8 @@ namespace BDArmory.Parts
         public float terminalGuidanceDistance = 0.0f;
 
         private bool terminalGuidanceActive;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Terminal Guidance: "), UI_Toggle(disabledText = "false", enabledText = "true")]
+        public bool terminalGuidanceShouldActivate = true;
 
         [KSPField]
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
@@ -539,8 +541,13 @@ namespace BDArmory.Parts
 		          SetInitialDetonationDistance();
 		    }
 
+            if (TargetingModeTerminal != TargetingModes.None)
+            {
+                Fields["terminalGuidanceShouldActivate"].guiName += terminalGuidanceType;
+            }
+
             // fill activeRadarLockTrackCurve with default values if not set by part config:
-            if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
+                if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
             {
                 activeRadarLockTrackCurve.Add(0f, 0f);
                 activeRadarLockTrackCurve.Add(activeRadarRange, RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);           // TODO: tune & balance constants!
@@ -1062,7 +1069,7 @@ namespace BDArmory.Parts
             // check if guidance mode should be changed for terminal phase
             float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-            if ((TargetingModeTerminal != TargetingModes.None) && (distanceSqr < terminalGuidanceDistance*terminalGuidanceDistance) && !terminalGuidanceActive)
+            if ((TargetingModeTerminal != TargetingModes.None) && (distanceSqr < terminalGuidanceDistance*terminalGuidanceDistance) && !terminalGuidanceActive && terminalGuidanceShouldActivate)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory][Terminal Guidance]: missile "+this.name+" updating targeting mode: " + terminalGuidanceType);
