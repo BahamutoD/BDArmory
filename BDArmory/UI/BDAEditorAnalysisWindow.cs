@@ -133,8 +133,9 @@ namespace BDArmory.UI
             if (showRcsWindow)
             {
                windowRect = GUI.Window(this.GetInstanceID(), windowRect, RcsWindow, windowTitle, HighLogic.Skin.window);
-               BDGUIUtils.UseMouseEventInRect(windowRect);
             }
+
+            PreventClickThrough();
         }
 
         void RcsWindow(int windowID)
@@ -273,7 +274,44 @@ namespace BDArmory.UI
             if (rcsCount > 0)
                 rcsReductionFactor = Mathf.Clamp((rcsReductionFactor * rcsCount), 0.15f, 1);    //same formula as in VesselECMJInfo must be used here!
         }
-         
+
+
+        /// <summary> 
+        /// Lock the model if our own window is shown and has cursor focus to prevent click-through. 
+        /// Code adapted from FAR Editor GUI
+        /// </summary>
+        private void PreventClickThrough()
+        {
+            bool cursorInGUI = false;
+            EditorLogic EdLogInstance = EditorLogic.fetch;
+            if (!EdLogInstance)
+            {
+                return;
+            }
+            if (showRcsWindow)
+            {
+                cursorInGUI = windowRect.Contains(GetMousePos());
+            }
+            if (cursorInGUI)
+            {
+                if (!CameraMouseLook.GetMouseLook())
+                    EdLogInstance.Lock(false, false, false, "BDARCSLOCK");
+                else
+                    EdLogInstance.Unlock("BDARCSLOCK");
+            }
+            else if (!cursorInGUI)
+            {
+                EdLogInstance.Unlock("BDARCSLOCK");
+            }
+        }
+
+        private Vector3 GetMousePos()
+        {
+            Vector3 mousePos = Input.mousePosition;
+            mousePos.y = Screen.height - mousePos.y;
+            return mousePos;
+        }
+
 
     } //EditorRCsWindow
 }
