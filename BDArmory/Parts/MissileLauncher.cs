@@ -520,14 +520,23 @@ namespace BDArmory.Parts
 		        Fields["BallisticOverShootFactor"].guiActiveEditor = false;
 		    }
 
-
             if (part.partInfo.title.Contains("Bomb"))
 			{
 				Fields["dropTime"].guiActive = false;
 				Fields["dropTime"].guiActiveEditor = false;
 			}
-			
-			if(deployAnimationName != "")
+
+            if (TargetingModeTerminal != TargetingModes.None)
+            {
+                Fields["terminalGuidanceShouldActivate"].guiName += terminalGuidanceType;
+            }
+            else
+            {
+                Fields["terminalGuidanceShouldActivate"].guiActive = false;
+                Fields["terminalGuidanceShouldActivate"].guiActiveEditor = false;
+            }
+
+            if (deployAnimationName != "")
 			{
 				deployStates = Misc.Misc.SetUpAnimation(deployAnimationName, part);
 			}
@@ -540,11 +549,6 @@ namespace BDArmory.Parts
 		    {
 		          SetInitialDetonationDistance();
 		    }
-
-            if (TargetingModeTerminal != TargetingModes.None)
-            {
-                Fields["terminalGuidanceShouldActivate"].guiName += terminalGuidanceType;
-            }
 
             // fill activeRadarLockTrackCurve with default values if not set by part config:
                 if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
