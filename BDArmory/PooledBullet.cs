@@ -254,12 +254,11 @@ namespace BDArmory
 
                     if ((hitPart == null) || hitPart.FindModuleImplementing<BDArmor>() == null)
                     {
-                        if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Armor Hit");
-                        armor = true;
+                        armor = BDArmor.GetArmor(hit.collider, hitPart);
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS && armor) Debug.Log("[BDArmory]: Armor Hit");
                     }
-                    
+
                     //BDArmor armor = BDArmor.GetArmor(hit.collider, hitPart);
-                    armor = BDArmor.GetArmor(hit.collider, hitPart);
 
                     ArmorPenetration.BulletPenetrationData armorData = new ArmorPenetration.BulletPenetrationData(ray, hit);
                     ArmorPenetration.DoPenetrationRay(armorData, bullet.positiveCoefficient);
@@ -284,7 +283,8 @@ namespace BDArmory
                     // Bullet Damage Start - ballistic
                     ///////////////////////////////////////////////////////////////////////
 
-                    if (bulletType != PooledBulletTypes.Explosive) //dont do bullet damage if it is explosive
+                    //dont do bullet damage if it is explosive
+                    if (bulletType != PooledBulletTypes.Explosive) 
                     {
                         float impactVelocity = currentVelocity.magnitude;
                         if (dragType == BulletDragTypes.AnalyticEstimate)
@@ -332,19 +332,20 @@ namespace BDArmory
                         
                         if (hitPart != null && !hitPart.partInfo.name.Contains("Strut")) //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
                         {
+                            //TODO: Review damage formula - is this the correct method of calculation?
                             float heatDamage = (mass/(hitPart.crashTolerance*hitPart.mass))*
-                                               (impactVelocity * 15f) *
-                                               BDArmorySettings.DMG_MULTIPLIER*
-                                               bulletDmgMult
+                                               (impactVelocity * 125f) * // was impactVelocity * ImpactVelocity
+                                               BDArmorySettings.DMG_MULTIPLIER * // global damage multiplier
+                                               bulletDmgMult // individual bullet modifier, default 1
                                                ;
                             //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance and mass
                             if (!penetrated)
                             {
-                                heatDamage = heatDamage/8;
+                                heatDamage = heatDamage/2; //TODO: Review Damage for penetrated
                             }
                             if (!fulllyPenetrated)
                             {
-                                heatDamage = heatDamage/3;
+                                heatDamage = heatDamage/3; //TODO: Review Damage for fully penetrated
                             }
 
                             //if (BDArmorySettings.INSTAKILL)
@@ -562,7 +563,7 @@ namespace BDArmory
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
             float chance = (((angleFromNormal - 5)/75)*(hitTolerance/150))*100/Mathf.Clamp01(impactVel/600);
             float random = UnityEngine.Random.Range(0f, 100f);
-            if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
+            //if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
             if (random < chance)
             {
                 return true;

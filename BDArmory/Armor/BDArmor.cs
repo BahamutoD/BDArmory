@@ -105,11 +105,12 @@ namespace BDArmory.Armor
             if (!hitPart) return false;
 
             if (hitPart.FindModelTransform("ArmorRootTransform"))
+
                 transform = hitPart.FindModelTransform("ArmorRootTransform");
 
             if (transform == null)
             {
-                Debug.LogError("[BDArmory]: Armor Transform not found!");
+                Debug.Log("[BDArmory]: Armor Transform not found!");
                 return false;
             }
 
