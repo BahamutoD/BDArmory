@@ -111,7 +111,7 @@ namespace BDArmory.FX
         }
 
         public static float ExplosionHeatMultiplier = 4200;
-        public static float ExplosionImpulseMultiplier = 1.5f;
+        public static float ExplosionImpulseMultiplier = 0.1f; //adjust as necessary to increase/decrease the force of HE weapons
 
 		public static void DoExplosionRay(Ray ray, float power, float heat, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs, Vessel sourceVessel = null)
 		{

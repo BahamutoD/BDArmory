@@ -365,7 +365,7 @@ namespace BDArmory
 
                             float overKillHeatDamage = (float) (hitPart.temperature - hitPart.maxTemp);
 
-                            if (overKillHeatDamage > 0)
+                            if ((overKillHeatDamage > 100 && hitPart.mass < 0.01) || overKillHeatDamage > 90000)    //only kicks in if damage overheat is excessive (insanely powerful weapon hits tank), or if the hit part is very very lightweight to prevent exploiting or using weak trash as throw-away armor.
                             //if the part is destroyed by overheating, we want to add the remaining heat to attached parts.  This prevents using tiny parts as armor
                             {
                                 overKillHeatDamage *= hitPart.crashTolerance; //reset to raw damage
