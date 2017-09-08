@@ -334,7 +334,7 @@ namespace BDArmory
                         {
                             //TODO: Review damage formula - is this the correct method of calculation?
                             float heatDamage = (mass/(hitPart.crashTolerance*hitPart.mass))*
-                                               (impactVelocity * 125f) * // was impactVelocity * ImpactVelocity
+                                               (impactVelocity * impactVelocity) * // was impactVelocity * ImpactVelocity
                                                BDArmorySettings.DMG_MULTIPLIER * // global damage multiplier
                                                bulletDmgMult // individual bullet modifier, default 1
                                                ;
