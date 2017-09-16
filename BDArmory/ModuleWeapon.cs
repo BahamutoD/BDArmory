@@ -656,7 +656,7 @@ namespace BDArmory
             }
             bulletInfo = BulletInfo.bullets[bulletType];
             if (bulletInfo == null)
-                Debug.Log("[BDArmory]: Failed To load bullet!");
+                Debug.Log("[BDArmory]: Failed To load bullet : " + bulletType);
             BDArmorySettings.OnVolumeChange += UpdateVolume;
         }
 
@@ -1046,8 +1046,10 @@ namespace BDArmory
                         PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
                         firedBullet.transform.position = fireTransform.position;
 
-                        pBullet.mass = bulletMass;
-                        pBullet.caliber = caliber;
+                        pBullet.mass = bulletInfo.bulletMass;
+                        pBullet.caliber = bulletInfo.caliber;
+                        pBullet.bulletVelocity = bulletInfo.bulletVelocity;
+
                         pBullet.bulletDmgMult = bulletDmgMult;
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
                         pBullet.flightTimeElapsed = 0;
@@ -2084,15 +2086,12 @@ namespace BDArmory
                     break;
             }
         }
-
-
+        
         void SetupBulletPool()
         {
             GameObject templateBullet = new GameObject("Bullet");
             templateBullet.SetActive(false);
             templateBullet.AddComponent<PooledBullet>();
-
-
             bulletPool = ObjectPool.CreateObjectPool(templateBullet, 100, true, true);
         }
 
@@ -2102,11 +2101,9 @@ namespace BDArmory
                 (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"));
             templateShell.SetActive(false);
             templateShell.AddComponent<ShellCasing>();
-
             shellPool = ObjectPool.CreateObjectPool(templateShell, 50, true, true);
         }
-
-
+        
         #endregion
 
         // RMB info in editor

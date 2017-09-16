@@ -13,10 +13,6 @@ namespace BDArmory.Armor
             UI_FloatRange(minValue = 10f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float EquivalentThickness = 0f;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "outerArmorThickness"),
-            UI_FloatRange(minValue = 10f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
-        public float outerArmorThickness = 100f;
-
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "blastRadius")]
         public float blastRadius = 1;
 
@@ -42,11 +38,6 @@ namespace BDArmory.Armor
             return EquivalentThickness;
         }
 
-        public float getOuterArmorThickness()
-        {
-            return outerArmorThickness;
-        }
-
         public override void OnStart(StartState state)
         {
             base.OnAwake();
@@ -56,7 +47,6 @@ namespace BDArmory.Armor
             if (UI.BDArmorySettings.ADVANCED_EDIT)
             {
                 Fields["EquivalentThickness"].guiActiveEditor = true;
-                Fields["outerArmorThickness"].guiActiveEditor = true;
             }
 
             switch (explodeMode)

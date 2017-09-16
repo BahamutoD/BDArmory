@@ -58,8 +58,7 @@ namespace BDArmory
         public float blastHeat = -1;
         public float bulletDmgMult = 1;
         public string explModelPath;
-        public string explSoundPath;
-        //
+        public string explSoundPath;        
 
         Vector3 startPosition;
         public bool airDetonation = false;
@@ -73,6 +72,7 @@ namespace BDArmory
         public Vector3 currentVelocity;
         public float mass;
         public float caliber;
+        public float bulletVelocity; //muzzle velocity
         public float ballisticCoefficient;
         public float flightTimeElapsed;
         bool collisionEnabled;
@@ -306,7 +306,10 @@ namespace BDArmory
                         }
 
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        {
                             Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage);
+                            Debug.Log("[BDArmory]:  mass: " + mass + " caliber: " + caliber + " velocity: " + bulletVelocity );
+                        }
 
                         if (hitPart.vessel != sourceVessel)
                         {
@@ -371,7 +374,6 @@ namespace BDArmory
                                 break;
                         }
                     }
-
 
                     bool fulllyPenetrated = penetration > thickness;//check whether bullet penetrates the plate
                     if (fulllyPenetrated)

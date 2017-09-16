@@ -399,7 +399,7 @@ namespace BDArmory.UI
                 GameEvents.onVesselChange.Add(VesselChange);
             }
 
-            if (BulletInfo.bullets == null)
+           // if (BulletInfo.bullets.Count == 0 || BulletInfo.bullets == null)
                 BulletInfo.Load();
         }
 
