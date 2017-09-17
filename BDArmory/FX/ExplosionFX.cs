@@ -149,12 +149,12 @@ namespace BDArmory.FX
                         }
                         float heatDamage = (BDArmorySettings.DMG_MULTIPLIER/100)*ExplosionHeatMultiplier*heat*
                                            distanceFactor/part.crashTolerance;
-                        if (heat < 40 && part.crashTolerance >= 80)//penalty for low-mid caliber HE rounds hitting armor panels
+                        if ((heat < 40 && part.crashTolerance >= 80) && PartExtensions.hasArmor(part))//penalty for low-mid caliber HE rounds hitting armor panels
                         {
                             heatDamage = heatDamage * heat / 40;//non linear scaling, the weaker the round the more penalty is applied (renders rapid fire low caliber HE borderline worthless against armor plates and structural parts)
                         }
                         part.AddDamage(heatDamage);
-                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 8);
+                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 16);
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
                         return;

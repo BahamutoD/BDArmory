@@ -36,16 +36,13 @@ namespace BDArmory.Core.Extension
                 {
                     PartResource currentr = p.Resources[i];
                     if (currentr.resourceName == "Armor")
-                    {
-                        if (currentr.amount != 0)
-                            return currentr.amount;
-                        else
-                            return 0.1;
+                    {                    
+                      return currentr.amount;                     
                     }
                 }
             }
                       
-            return 0.1;            
+            return 0;            
         }
     }
 }

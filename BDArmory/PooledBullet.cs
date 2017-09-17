@@ -320,7 +320,7 @@ namespace BDArmory
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         {
                             Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage);
-                            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + bulletVelocity );
+                            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude);
                         }
 
                         if (hitPart.vessel != sourceVessel)
