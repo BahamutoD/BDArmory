@@ -12,16 +12,21 @@ namespace BDArmory.Armor
         public float caliber { get; private set; }
         public float bulletMass { get; private set; }
         public float bulletVelocity { get; private set; }
+        public bool explosive { get; private set; }
+        public float apBulletDmg { get; private set; }
+
         public static BulletInfos bullets;
 
-        public BulletInfo(string name, float caliber, float bulletVelocity, float bulletMass, float positiveCoefficient, FloatCurve penetration)
+        public BulletInfo(string name, float caliber, float bulletVelocity, float bulletMass, bool explosive, float apBulletDmg, float positiveCoefficient, FloatCurve penetration)
         {
             this.name = name;
-            this.positiveCoefficient = positiveCoefficient;
-            this.penetration = penetration;
             this.caliber = caliber;
             this.bulletVelocity = bulletVelocity;
-            this.bulletMass = bulletMass;            
+            this.bulletMass = bulletMass;
+            this.explosive = explosive;
+            this.apBulletDmg = apBulletDmg;
+            this.positiveCoefficient = positiveCoefficient;
+            this.penetration = penetration;              
         }
 
         public static void Load()
@@ -42,6 +47,8 @@ namespace BDArmory.Armor
                         float.Parse(node.GetValue("caliber")),
                         float.Parse(node.GetValue("bulletVelocity")),
                         float.Parse(node.GetValue("bulletMass")),
+                        Convert.ToBoolean(node.GetValue("explosive")),
+                        float.Parse(node.GetValue("apBulletDmg")),
                         float.Parse(node.GetValue("positiveCoefficient")),
                         penetrationCurve)
                         );

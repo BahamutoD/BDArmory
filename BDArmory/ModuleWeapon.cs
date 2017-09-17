@@ -1046,10 +1046,12 @@ namespace BDArmory
                         PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
                         firedBullet.transform.position = fireTransform.position;
 
-                        pBullet.mass = bulletInfo.bulletMass;
                         pBullet.caliber = bulletInfo.caliber;
                         pBullet.bulletVelocity = bulletInfo.bulletVelocity;
-
+                        pBullet.mass = bulletInfo.bulletMass;
+                        pBullet.explosive = bulletInfo.explosive;
+                        pBullet.apBulletDmg = bulletInfo.apBulletDmg;                     
+                        
                         pBullet.bulletDmgMult = bulletDmgMult;
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
                         pBullet.flightTimeElapsed = 0;
@@ -1094,7 +1096,7 @@ namespace BDArmory
 
                         pBullet.bulletDrop = bulletDrop;
 
-                        if (eWeaponType == WeaponTypes.Cannon)
+                        if (eWeaponType == WeaponTypes.Cannon || bulletInfo.explosive)
                         {
                             pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
                             pBullet.explModelPath = explModelPath;

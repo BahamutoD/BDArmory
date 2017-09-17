@@ -182,7 +182,7 @@ namespace BDArmory
                     }
                     weapon.Dispose();
                 }
-                catch (IndexOutOfRangeException)
+                catch (Exception)
                 {
                     Debug.Log("[BDArmory]: Ripple data was invalid.");
                     rippleData = string.Empty;

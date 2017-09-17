@@ -44,9 +44,7 @@ namespace BDArmory.FX
             lightFX.range = range*3f;
             lightFX.shadows = LightShadows.None;
 
-
             audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-
             audioSource.PlayOneShot(exSound);
         }
 
@@ -135,7 +133,6 @@ namespace BDArmory.FX
 						}
 					}
 
-
                     if (!ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL &&
                         (!sourceVessel || sourceVessel != missileSource))
                     {
@@ -157,6 +154,7 @@ namespace BDArmory.FX
                             heatDamage = heatDamage * heat / 40;//non linear scaling, the weaker the round the more penalty is applied (renders rapid fire low caliber HE borderline worthless against armor plates and structural parts)
                         }
                         part.AddDamage(heatDamage);
+                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 8);
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
                         return;
@@ -184,7 +182,7 @@ namespace BDArmory.FX
 
 		public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel)
 		{
-			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: ======= Doing explosion sphere =========");
+			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:======= Doing explosion sphere =========");
 			ignoreParts.Clear();
 			ignoreBuildings.Clear();
 
