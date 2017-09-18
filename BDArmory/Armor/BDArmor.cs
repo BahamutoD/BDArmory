@@ -13,15 +13,6 @@ namespace BDArmory.Armor
             UI_FloatRange(minValue = 10f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float EquivalentThickness = 0f;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "blastRadius")]
-        public float blastRadius = 1;
-
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "blastPower")]
-        public float blastPower = 1;
-
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "blastHeat")]
-        public float blastHeat = 1;
-
         [KSPField]
         public string explModelPath = "BDArmory/Models/explosion/explosionLarge";
 
@@ -84,8 +75,8 @@ namespace BDArmory.Armor
             resources.Dispose();
             explodeScale /= 100;
             part.explode();
-            ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale * blastRadius, explodeScale * blastPower * 2,
-                explodeScale * blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath);
+           // ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale * blastRadius, explodeScale * blastPower * 2,
+           //    explodeScale * blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath);
         }
 
         public static bool GetArmor(Collider collider, Part hitPart)

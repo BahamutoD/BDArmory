@@ -16,8 +16,13 @@ namespace BDArmory.FX
         public AudioClip exSound;
         public AudioSource audioSource;
         float maxTime;
-
         public float range;
+
+        public static float ExplosionHeatMultiplier = 4200;
+        public static float ExplosionImpulseMultiplier = 1f; //adjust as necessary to increase/decrease the force of HE weapons
+
+        public static List<Part> ignoreParts = new List<Part>();
+        public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
 
         void Start()
         {
@@ -69,14 +74,13 @@ namespace BDArmory.FX
         }
 
         public static void CreateExplosion(Vector3 position, float radius, float power, float heat, Vessel sourceVessel,
-            Vector3 direction, string explModelPath, string soundPath)
+                                           Vector3 direction, string explModelPath, string soundPath, bool isMissile)
         {
             GameObject go;
             AudioClip soundClip;
 
             go = GameDatabase.Instance.GetModel(explModelPath);
             soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
-
 
             Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
             GameObject newExplosion = (GameObject) Instantiate(go, position, rotation);
@@ -105,82 +109,10 @@ namespace BDArmory.FX
             }
             pe.Dispose();
 
-            DoExplosionDamage(position, power, heat, radius, sourceVessel);
+            DoExplosionDamage(position, power, heat, radius, sourceVessel,isMissile);
         }
-
-        public static float ExplosionHeatMultiplier = 4200;
-        public static float ExplosionImpulseMultiplier = 0.1f; //adjust as necessary to increase/decrease the force of HE weapons
-
-		public static void DoExplosionRay(Ray ray, float power, float heat, float maxDistance, ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs, Vessel sourceVessel = null)
-		{
-			RaycastHit rayHit;
-			if(Physics.Raycast(ray, out rayHit, maxDistance, 557057))
-			{
-				float sqrDist = (rayHit.point - ray.origin).sqrMagnitude;
-				float sqrMaxDist = maxDistance * maxDistance;
-				float distanceFactor = Mathf.Clamp01((sqrMaxDist - sqrDist) / sqrMaxDist);
-				//parts
-				Part part = rayHit.collider.GetComponentInParent<Part>();
-				if(part)
-				{
-					Vessel missileSource = null;
-					if(sourceVessel != null)
-					{
-                        MissileBase ml = part.FindModuleImplementing<MissileBase>();
-						if(ml)
-						{
-							missileSource = ml.SourceVessel;
-						}
-					}
-
-                    if (!ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL &&
-                        (!sourceVessel || sourceVessel != missileSource))
-                    {
-                        ignoreParts.Add(part);
-                        Rigidbody rb = part.GetComponent<Rigidbody>();
-                        if (rb)
-                        {
-                            rb.AddForceAtPosition(ray.direction*power*distanceFactor*ExplosionImpulseMultiplier,
-                                rayHit.point, ForceMode.Impulse);
-                        }
-                        if (heat < 0)
-                        {
-                            heat = power;
-                        }
-                        float heatDamage = (BDArmorySettings.DMG_MULTIPLIER/100)*ExplosionHeatMultiplier*heat*
-                                           distanceFactor/part.crashTolerance;
-                        if ((heat < 40 && part.crashTolerance >= 80) && PartExtensions.hasArmor(part))//penalty for low-mid caliber HE rounds hitting armor panels
-                        {
-                            heatDamage = heatDamage * heat / 40;//non linear scaling, the weaker the round the more penalty is applied (renders rapid fire low caliber HE borderline worthless against armor plates and structural parts)
-                        }
-                        part.AddDamage(heatDamage);
-                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 16);
-                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                            Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
-                        return;
-                    }
-                }
-
-                //buildings
-                DestructibleBuilding building = rayHit.collider.GetComponentInParent<DestructibleBuilding>();
-                if (building && !ignoreBldgs.Contains(building))
-                {
-                    ignoreBldgs.Add(building);
-                    float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER/100)*ExplosionHeatMultiplier*0.00645f*
-                                             power*distanceFactor;
-                    if (damageToBuilding > building.impactMomentumThreshold/10) building.AddDamage(damageToBuilding);
-                    if (building.Damage > building.impactMomentumThreshold) building.Demolish();
-                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                        Debug.Log("[BDArmory]:== Explosion hit destructible building! Damage: " +
-                                  (damageToBuilding).ToString("0.00") + ", total Damage: " + building.Damage);
-                }
-            }
-        }
-
-        public static List<Part> ignoreParts = new List<Part>();
-        public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
-
-		public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel)
+        	
+		public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel, bool isMissile)
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:======= Doing explosion sphere =========");
 			ignoreParts.Clear();
@@ -221,7 +153,7 @@ namespace BDArmory.FX
 		        {
 		            if (p.Current == null) continue;
 		            if ((p.Current.transform.position - position).magnitude >= maxDistance) continue;
-		            DoExplosionRay(new Ray(position, p.Current.transform.TransformPoint(p.Current.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
+		            DoExplosionRay(new Ray(position, p.Current.transform.TransformPoint(p.Current.CoMOffset) - position), power, heat, maxDistance, isMissile, ref ignoreParts, ref ignoreBuildings, sourceVessel);
 		        }
                 p.Dispose();
 		    }
@@ -233,11 +165,97 @@ namespace BDArmory.FX
 				if(bldg.Current == null) continue;
 				if((bldg.Current.transform.position - position).magnitude < maxDistance * 1000)
 				{
-					DoExplosionRay(new Ray(position, bldg.Current.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
+					DoExplosionRay(new Ray(position, bldg.Current.transform.position - position), power, heat, maxDistance, isMissile, ref ignoreParts, ref ignoreBuildings);
 				}
 			}
             bldg.Dispose();
 		}
-	}
+
+        public static void DoExplosionRay(Ray ray, float power, float heat, float maxDistance,bool isMissile,
+                                          ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs,
+                                          Vessel sourceVessel = null)
+        {
+            RaycastHit rayHit;
+            if (Physics.Raycast(ray, out rayHit, maxDistance, 557057))
+            {
+                float sqrDist = (rayHit.point - ray.origin).sqrMagnitude;
+                float sqrMaxDist = maxDistance * maxDistance;
+                float distanceFactor = Mathf.Clamp01((sqrMaxDist - sqrDist) / sqrMaxDist);
+                
+                //parts
+                Part part = rayHit.collider.GetComponentInParent<Part>();
+                bool hasArmor_ = PartExtensions.hasArmor(part);
+                double armorMass_ = PartExtensions.armorMass(part);
+
+                if (part)
+                {
+                    Vessel missileSource = null;
+                    if (sourceVessel != null)
+                    {
+                        MissileBase ml = part.FindModuleImplementing<MissileBase>();
+                        if (ml)
+                        {
+                            missileSource = ml.SourceVessel;
+                        }
+                    }
+
+                    if (!ignoreParts.Contains(part) && part.physicalSignificance == Part.PhysicalSignificance.FULL &&
+                        (!sourceVessel || sourceVessel != missileSource))
+                    {
+                        ignoreParts.Add(part);
+                        Rigidbody rb = part.GetComponent<Rigidbody>();
+                        if (rb)
+                        {
+                            rb.AddForceAtPosition(ray.direction * power * distanceFactor * ExplosionImpulseMultiplier,
+                                rayHit.point, ForceMode.Impulse);
+                        }
+                        if (heat < 0)
+                        {
+                            heat = power;
+                        }
+                        float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) * ExplosionHeatMultiplier * heat *
+                                           distanceFactor / part.crashTolerance;
+                        if (!isMissile && (heat < 40 && part.crashTolerance >= 80) && hasArmor_)//penalty for low-mid caliber HE rounds hitting armor panels
+                        {
+                            heatDamage = heatDamage * heat / 100;//non linear scaling, the weaker the round the more penalty is applied (renders rapid fire low caliber HE borderline worthless against armor plates and structural parts)
+                        }
+                        else if(isMissile && hasArmor_)
+                        {
+                            //TODO: figure out how much to nerf armor for missile hit
+                            //heatDamage = heatDamage;  (float)armorMass_ / 16; 
+                        }
+
+                        float excessHeat = Mathf.Max(0, (float)(part.temperature + heatDamage - part.maxTemp));
+
+                        part.AddDamage(heatDamage);
+
+                        if (excessHeat > 0 && part.parent)
+                        {
+                            part.parent.AddDamage(excessHeat);
+                        }
+
+                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 16);
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
+                        return;
+                    }
+                }
+
+                //buildings
+                DestructibleBuilding building = rayHit.collider.GetComponentInParent<DestructibleBuilding>();
+                if (building && !ignoreBldgs.Contains(building))
+                {
+                    ignoreBldgs.Add(building);
+                    float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * ExplosionHeatMultiplier * 0.00645f *
+                                             power * distanceFactor;
+                    if (damageToBuilding > building.impactMomentumThreshold / 10) building.AddDamage(damageToBuilding);
+                    if (building.Damage > building.impactMomentumThreshold) building.Demolish();
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        Debug.Log("[BDArmory]:== Explosion hit destructible building! Damage: " +
+                                  (damageToBuilding).ToString("0.00") + ", total Damage: " + building.Damage);
+                }
+            }
+        }
+    }
 }
 

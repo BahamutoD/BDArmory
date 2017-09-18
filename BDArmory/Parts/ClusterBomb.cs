@@ -252,7 +252,7 @@ namespace BDArmory.Parts
         void Detonate(Vector3 pos)
         {
             ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, FlightGlobals.getUpAxis(),
-                subExplModelPath, subExplSoundPath);
+                subExplModelPath, subExplSoundPath,true);
             Destroy(gameObject); //destroy bullet on collision
         }
     }

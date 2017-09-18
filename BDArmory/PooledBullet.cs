@@ -81,7 +81,7 @@ namespace BDArmory
         public static Shader bulletShader;
         public static bool shaderInitialized;
         public bool hasArmor_ = false;
-        public double amrorMass_ = 0; 
+        public double armorMass = 0; 
 
         #endregion
         
@@ -248,7 +248,7 @@ namespace BDArmory
                     {
                         hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
                         hasArmor_ = PartExtensions.hasArmor(hitPart);
-                        amrorMass_ = PartExtensions.armorMass(hitPart);
+                        armorMass = PartExtensions.armorMass(hitPart);
                     }
                     catch (NullReferenceException)
                     {
@@ -267,7 +267,7 @@ namespace BDArmory
                         if (explosive) // moving explosive type to the bulletinfo config from the weapon type config
                         {
                             ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
-                                blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath);                            
+                                blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath,false);                            
                             KillBullet();
                             return;
                         }
@@ -302,7 +302,7 @@ namespace BDArmory
                     if (hitPart != null && !hitPart.partInfo.name.Contains("Strut")) //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
                     {
                         float heatDamage = (mass / (hitPart.crashTolerance * hitPart.mass)) *
-                                           (impactVelocity * impactVelocity / 10) * // was impactVelocity * ImpactVelocity
+                                           (impactVelocity * impactVelocity / 15) * // was impactVelocity * ImpactVelocity
                                            BDArmorySettings.DMG_MULTIPLIER;// global damage multiplier (100% used for balancing)
 
                         //bulletDmgMult;// individual bullet modifier, default 1
@@ -386,7 +386,7 @@ namespace BDArmory
                     }
 
                     if (hasArmor_)
-                        thickness = (float) amrorMass_ / anglemultiplier;
+                        thickness = (float) armorMass / anglemultiplier;
   
                     bool fulllyPenetrated = penetration > thickness;//check whether bullet penetrates the plate
 
@@ -408,7 +408,7 @@ namespace BDArmory
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]: Bullet Penetrated Armor");
 
-                        if(hasArmor_) hitPart.RequestResource("Armor", mass * 100);
+                        if(hasArmor_) hitPart.RequestResource("Armor", mass * 200);
 
                         FixedUpdate();
                         return;
@@ -419,7 +419,7 @@ namespace BDArmory
                         {
                             BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
                         }
-                        if (hasArmor_) hitPart.RequestResource("Armor", (mass * 100)/2);
+                        if (hasArmor_) hitPart.RequestResource("Armor", mass * 100);
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]: Bullet Stopped by Armor");
 
@@ -444,7 +444,7 @@ namespace BDArmory
             {
                 //detonate
                 ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
-                    currentVelocity.normalized, explModelPath, explSoundPath);
+                    currentVelocity.normalized, explModelPath, explSoundPath,false);
                 KillBullet();
                 return;
             }
