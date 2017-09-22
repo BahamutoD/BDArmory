@@ -32,6 +32,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Behaviour\MaxDamageSetup.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Dependencies.cs" />
     <Compile Include="Enum\DamageOperation.cs" />
