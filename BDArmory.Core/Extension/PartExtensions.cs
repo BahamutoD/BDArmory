@@ -45,10 +45,14 @@ namespace BDArmory.Core.Extension
         /// <returns></returns>
         public static double GetArmorMass(this Part p)
         {
+            if (p == null) return 0;
+
             using (var resourceEnumerator = p.Resources.GetEnumerator())
             {
                 while (resourceEnumerator.MoveNext())
                 {
+                    if(resourceEnumerator.Current == null) continue;
+                    
                     PartResource currentr = resourceEnumerator.Current;
                     if (currentr.resourceName == "Armor")
                     {

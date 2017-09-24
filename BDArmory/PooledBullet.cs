@@ -240,13 +240,19 @@ namespace BDArmory
                         return;
                     }
 
+                    ExplosiveDetonation(hitPart, hit, ray);
+
                     if (CheckGroundHit(hitPart, hit))
                     {
+                        ExplosiveDetonation(hitPart, hit, ray);
+                        KillBullet();
                         return;
                     }
 
                     if (CheckBuildingHit(hit))
                     {
+                        ExplosiveDetonation(hitPart, hit, ray);
+                        KillBullet();
                         return;
                     }
 
@@ -264,8 +270,7 @@ namespace BDArmory
                         AppyDamage(hitPart, anglemultiplier);
                     }
                     else
-                    { //no penetration
-
+                    {
                         ExplosiveDetonation(hitPart, hit, ray);
                         KillBullet();
                     }
@@ -449,7 +454,7 @@ namespace BDArmory
             // High Explosive Detonation
             ///////////////////////////////////////////////////////////////////////
 
-            if (hitPart?.vessel != sourceVessel)
+            if (hitPart == null || hitPart.vessel != sourceVessel)
             {
                 //if bullet hits and is HE, detonate and kill bullet, skip the rest as to not do resource intensive penetration calcs
                 //if (bulletType == PooledBulletTypes.Explosive)
@@ -473,7 +478,7 @@ namespace BDArmory
                 {
                     BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
                 }
-                KillBullet();
+               
                 return true;
             }
             return false;
@@ -501,7 +506,7 @@ namespace BDArmory
                     Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " +
                               (damageToBuilding).ToString("0.00") + ", total Damage: " + hitBuilding.Damage);
 
-                KillBullet();
+               
                 return true;
             }
             return false;
