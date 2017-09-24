@@ -478,9 +478,6 @@ namespace BDArmory.Parts
            
         }        
 
-        private  Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
-        private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
-
         private Vector3 AAMGuidance()
         {
             Vector3 aamTarget;

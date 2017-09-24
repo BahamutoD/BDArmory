@@ -1,4 +1,5 @@
 ﻿using BDArmory.Core.Services;
+using UnityEngine;
 
 namespace BDArmory.Core.Extension
 {
@@ -6,7 +7,16 @@ namespace BDArmory.Core.Extension
     {
         public static  void AddDamage(this Part p, double damage)
         {
-            Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
+            var armorMass = p.GetArmorMass();
+            if (armorMass > 0)
+            {
+                p.ReduceArmor(damage);
+                damage = Mathf.Max((float) (damage - armorMass) , 0f);
+            }
+            if (damage > 0)
+            {
+                Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
+            }
         }
 
         public static void SetDamage(this Part p, double damage)
@@ -18,6 +28,14 @@ namespace BDArmory.Core.Extension
         public static bool HasArmor(this Part p)
         {
             return p.GetArmorMass() > 0;
+        }
+
+        public static void ReduceArmor(this Part p, double massToReduce)
+        {
+            if (p.HasArmor())
+            {
+                p.RequestResource("Armor", massToReduce);
+            }
         }
 
         /// <summary>
