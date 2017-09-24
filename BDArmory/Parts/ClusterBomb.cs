@@ -214,14 +214,14 @@ namespace BDArmory.Parts
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, dist, 557057))
                 {
-                    Part hitPart = null;
-                    try
-                    {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                    }
-                    catch (NullReferenceException)
-                    {
-                    }
+                    //Part hitPart = null;
+                    //try
+                    //{
+                    //    hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                    //}
+                    //catch (NullReferenceException)
+                    //{
+                    //}
 
                     //if (hitPart != null)
                     //{
@@ -241,6 +241,7 @@ namespace BDArmory.Parts
                     //{
                     //    Detonate(hit.point);
                     //}
+
 
                     //Simplyfing cluster point. One hit, one explosion.No auto part destruction
 
