@@ -14,35 +14,39 @@ namespace BDArmory.Core.Extension
             Dependencies.Get<DamageService>().SetDamageToPart(p, damage);
         }
 
-        public static bool hasArmor(this Part p)
+    
+        public static bool HasArmor(this Part p)
         {
-            for (int i = 0; i < p.Resources.Count; i++) //"armor" resource containing parts, armor set to how much resource inside
-            {
-                PartResource currentr = p.Resources[i];
-                if (currentr.resourceName == "Armor" && currentr.amount != 0)
-                {
-                    return true;                
-                }
-             }
-
-            return false;
+            return p.GetArmorMass() > 0;
         }
 
-        public static double armorMass(this Part p)
+        /// <summary>
+        /// This method returns the amount of Armor resource
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static double GetArmorMass(this Part p)
         {
-            if (hasArmor(p))
+            using (var resourceEnumerator = p.Resources.GetEnumerator())
             {
-                for (int i = 0; i < p.Resources.Count; i++) //"armor" resource containing parts, armor set to how much resource inside
+                while (resourceEnumerator.MoveNext())
                 {
-                    PartResource currentr = p.Resources[i];
+                    PartResource currentr = resourceEnumerator.Current;
                     if (currentr.resourceName == "Armor")
-                    {                    
-                      return currentr.amount;                     
+                    {
+                        return currentr.amount;
                     }
                 }
             }
-                      
             return 0;            
+        }
+
+        /// <summary>
+        ///     Gets the dry mass of the part.
+        /// </summary>
+        public static double GetDryMass(this Part part)
+        {
+            return (part.physicalSignificance == Part.PhysicalSignificance.FULL) ? part.mass : 0d;
         }
     }
 }

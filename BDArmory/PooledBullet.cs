@@ -247,8 +247,8 @@ namespace BDArmory
                     try
                     {
                         hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                        hasArmor_ = PartExtensions.hasArmor(hitPart);
-                        armorMass = PartExtensions.armorMass(hitPart);
+                        hasArmor_ = hitPart.HasArmor();
+                        armorMass = hitPart.GetArmorMass();
                     }
                     catch (NullReferenceException)
                     {

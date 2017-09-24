@@ -184,8 +184,8 @@ namespace BDArmory.FX
                 
                 //parts
                 Part part = rayHit.collider.GetComponentInParent<Part>();
-                bool hasArmor_ = PartExtensions.hasArmor(part);
-                double armorMass_ = PartExtensions.armorMass(part);
+                bool hasArmor_ = part.HasArmor();
+                double armorMass_ = part.GetArmorMass();
 
                 if (part)
                 {
@@ -234,7 +234,7 @@ namespace BDArmory.FX
                             part.parent.AddDamage(excessHeat);
                         }
 
-                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 16);
+                        if (part.HasArmor()) part.RequestResource("Armor", heatDamage / 16);
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
                         return;
