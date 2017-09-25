@@ -240,8 +240,6 @@ namespace BDArmory
                         return;
                     }
 
-                    ExplosiveDetonation(hitPart, hit, ray);
-
                     if (CheckGroundHit(hitPart, hit))
                     {
                         ExplosiveDetonation(hitPart, hit, ray);
@@ -257,7 +255,6 @@ namespace BDArmory
                     }
 
                     //Standard Pipeline Damage, Armor and Explosives
-
                     float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
                     impactVelocity = currentVelocity.magnitude;
                     float anglemultiplier = (float)Math.Cos(3.14 * hitAngle / 180.0);
@@ -271,9 +268,11 @@ namespace BDArmory
                     }
                     else
                     {
+                        AppyDamage(hitPart, anglemultiplier);
                         ExplosiveDetonation(hitPart, hit, ray);
                         KillBullet();
                     }
+                   
                 }
             }
 
@@ -305,7 +304,7 @@ namespace BDArmory
             if (hitPart != null && !hitPart.partInfo.name.Contains("Strut"))
             {
                 float heatDamage = (mass / (hitPart.crashTolerance * hitPart.mass)) *
-                                   (impactVelocity * impactVelocity / 15) * // was impactVelocity * ImpactVelocity
+                                   (impactVelocity * impactVelocity / 15f) * // was impactVelocity * ImpactVelocity
                                    BDArmorySettings.DMG_MULTIPLIER;// global damage multiplier (100% used for balancing)
 
                 //bulletDmgMult;// individual bullet modifier, default 1
@@ -316,9 +315,9 @@ namespace BDArmory
                 {
                     heatDamage *= anglemultiplier;
                     //penalty for guns below 150mm hitting armor plate (lower caliber AP needs to rely on penetration)
-                    if (caliber <= 100)
+                    if (caliber <= 100f)
                     {
-                        heatDamage *= caliber / 100;
+                        heatDamage *= caliber / 100f;
                     }
 
                 }

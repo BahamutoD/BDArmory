@@ -226,16 +226,22 @@ namespace BDArmory.FX
                             //heatDamage = heatDamage;  (float)armorMass_ / 16; 
                         }
 
-                        float excessHeat = Mathf.Max(0, (float)(part.temperature + heatDamage - part.maxTemp));
-
-                        part.AddDamage(heatDamage / 16);
-
-                        if (excessHeat > 0 && part.parent)
+                        if (part.HasArmor())
                         {
-                            part.parent.AddDamage(excessHeat / 16);
+                            part.ReduceArmor(heatDamage / 16);
+                        }
+                        else
+                        {
+                             float excessHeat = Mathf.Max(0, (float)(part.temperature + heatDamage - part.maxTemp));
+
+                             part.AddDamage(heatDamage);
+
+                            if (excessHeat > 0 && part.parent)
+                            {
+                                part.parent.AddDamage(excessHeat);
+                            }
                         }
 
-                        
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
                         return;

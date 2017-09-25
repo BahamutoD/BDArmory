@@ -7,16 +7,7 @@ namespace BDArmory.Core.Extension
     {
         public static  void AddDamage(this Part p, double damage)
         {
-            var armorMass = p.GetArmorMass();
-            if (armorMass > 0)
-            {
-                p.ReduceArmor(damage);
-                damage = Mathf.Max((float) (damage - armorMass) , 0f);
-            }
-            if (damage > 0)
-            {
-                Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
-            }
+            Dependencies.Get<DamageService>().AddDamageToPart(p, damage);  
         }
 
         public static void SetDamage(this Part p, double damage)
@@ -35,6 +26,7 @@ namespace BDArmory.Core.Extension
             if (p.HasArmor())
             {
                 p.RequestResource("Armor", massToReduce);
+                p.SetDamage(p.maxTemp * (1f - p.GetArmorPercentage()));
             }
         }
 
@@ -61,6 +53,26 @@ namespace BDArmory.Core.Extension
                 }
             }
             return 0;            
+        }
+
+        public static float GetArmorPercentage(this Part p)
+        {
+            if (p == null) return 0;
+
+            using (var resourceEnumerator = p.Resources.GetEnumerator())
+            {
+                while (resourceEnumerator.MoveNext())
+                {
+                    if (resourceEnumerator.Current == null) continue;
+
+                    PartResource currentr = resourceEnumerator.Current;
+                    if (currentr.resourceName == "Armor")
+                    {
+                        return (float) (currentr.amount / currentr.maxAmount);
+                    }
+                }
+            }
+            return 0;
         }
 
         /// <summary>

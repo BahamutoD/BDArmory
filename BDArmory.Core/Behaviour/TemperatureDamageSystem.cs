@@ -16,7 +16,7 @@ namespace BDArmory.Core.Behaviour
         private static Dictionary<Part, float> _damagePartsDictionary = new Dictionary<Part, float>();
 
         //TODO: Add setting
-        private static float maxDamageMultiplier = 10000f;
+        private static float maxDamageMultiplier = 100f;
 
         public static Dictionary<Part, float> DamagePartsDictionary
         {
@@ -57,13 +57,13 @@ namespace BDArmory.Core.Behaviour
 
                     parts.Current.skinMaxTemp = 10 *
                                                 (float) Math.Pow(
-                                                    parts.Current.mass * maxDamageMultiplier *
+                                                    parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance,1,100) * maxDamageMultiplier *
                                                     1000, (1.0 / 3.0)) + 1000;
 
 
                     parts.Current.maxTemp = 10 *
                                             (float) Math.Pow(
-                                                parts.Current.mass * maxDamageMultiplier * 1000,
+                                                parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance, 1, 100) * maxDamageMultiplier * 1000,
                                                 (1.0 / 3.0)) + 1000;
                 } 
             }
