@@ -58,13 +58,23 @@ namespace BDArmory.Core.Behaviour
                     parts.Current.skinMaxTemp = 10 *
                                                 (float) Math.Pow(
                                                     parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance,1,100) * maxDamageMultiplier *
-                                                    1000, (1.0 / 3.0)) + 1000;
+                                                    1000, (1.0 / 5.0)) + 1000;
 
 
                     parts.Current.maxTemp = 10 *
                                             (float) Math.Pow(
                                                 parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance, 1, 100) * maxDamageMultiplier * 1000,
-                                                (1.0 / 3.0)) + 1000;
+                                                (1.0 / 5.0)) + 1000;
+
+                    // Part is flammable, max damage reduced
+                    if (parts.Current.Resources.Any(x => x.resourceName.Contains("Liquid") ||
+                                                         x.resourceName.Contains("Ox") ||
+                                                         x.resourceName.Contains("Ker")))
+                    {
+                        parts.Current.skinMaxTemp = Mathf.Clamp((float) (parts.Current.skinMaxTemp / 10f), 1000f, 4000f);
+                        parts.Current.maxTemp = Mathf.Clamp((float) (parts.Current.maxTemp / 10f), 1000f, 4000f);
+                    }
+
                 } 
             }
 
