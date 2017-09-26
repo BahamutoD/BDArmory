@@ -303,6 +303,7 @@ namespace BDArmory
             //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
             if (hitPart != null && !hitPart.partInfo.name.Contains("Strut"))
             {
+
                 float heatDamage = (mass / (hitPart.crashTolerance * hitPart.mass)) *
                                    (impactVelocity * impactVelocity / 15f) * // was impactVelocity * ImpactVelocity
                                    BDArmorySettings.DMG_MULTIPLIER;// global damage multiplier (100% used for balancing)
@@ -378,30 +379,17 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////                                 
             // Armor Penetration
             ///////////////////////////////////////////////////////////////////////
-            float penetration = 0; //penetration of 0 for legacy support
-            if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
-            {
-                penetration = 16 * impactVelocity * (float) Math.Sqrt(mass) / (float) Math.Sqrt(caliber);
-            }
+            float penetration = CalculatePenetration();
 
             //TODO: Extract bdarmory settings from this values
-            float thickness = 10; //regular KSP parts: 10mm armor
+            float thickness = CalculateThickness(hitPart, anglemultiplier);
 
-            //TODO: Extract part extension method from this
-            if (hitPart.crashTolerance >= 80) //structural parts: 30mm armor
-            {
-                thickness = 30 / anglemultiplier;
-            }
-
-            if (hitPart.HasArmor())
-            {
-                thickness = (float) hitPart.GetArmorMass() / anglemultiplier;
-            }
+          
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Armor penetration ="+penetration +"Thickness ="+thickness);       
+                Debug.Log("[BDArmory]: Armor penetration =" + penetration + "Thickness =" + thickness);
             }
-              
+
 
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
 
@@ -416,35 +404,67 @@ namespace BDArmory
                 //does not affect low impact parts so that rounds can go through entire tank easily
                 //transform.position = armorData.hitResultOut.point;
 
-                currentVelocity = currentVelocity * (float) Math.Sqrt(thickness / penetration);
+                currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
 
                 //updating impact velocity
                 impactVelocity = currentVelocity.magnitude;
                 CalculateDragAnalyticEstimate();
 
-               flightTimeElapsed -= Time.fixedDeltaTime;
+                flightTimeElapsed -= Time.fixedDeltaTime;
                 prevPosition = transform.position;
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost =" + mass * 200);
                 }
-                
-                hitPart.ReduceArmor(mass * 200);
-                
+
+                hitPart.ReduceArmor(mass * impactVelocity);
+
                 return true;
 
             }
             else
             {
-                hitPart.ReduceArmor(mass * 100);
+                hitPart.ReduceArmor(mass * impactVelocity * 0.5);
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + mass * 100);
                 }
-                  
+
                 return false;
             }
+        }
+
+        private float CalculatePenetration()
+        {
+            float penetration = 0; //penetration of 0 for legacy support
+            if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
+            {
+                penetration = (float)(16f * impactVelocity * Math.Sqrt(mass) / Math.Sqrt(caliber));
+            }
+
+            return penetration;
+        }
+
+        private static float CalculateThickness(Part hitPart, float anglemultiplier)
+        {
+            float thickness = 10; //regular KSP parts: 10mm armor
+
+            //TODO: Extract part extension method from this
+            if (hitPart.crashTolerance >= 80) //structural parts: 30mm armor
+            {
+                thickness = 30 / anglemultiplier;
+            }
+            if (hitPart.HasArmor())
+            {
+                thickness = (float) hitPart.GetArmorMass() / anglemultiplier;
+            }
+            else //add for thickness depending on the size of the part
+            {
+                thickness += (float)Math.Pow(hitPart.mass * 10, (1f / 3f));
+            }
+
+            return thickness;
         }
 
         private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)
