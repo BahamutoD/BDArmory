@@ -13,12 +13,12 @@ namespace BDArmory.Core.Behaviour
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class TemperatureDamageSystem : MonoBehaviour
     {
-        private static Dictionary<Part, float> _damagePartsDictionary = new Dictionary<Part, float>();
+        private static Dictionary<Part, double> _damagePartsDictionary = new Dictionary<Part, double>();
 
         //TODO: Add setting
         private static float maxDamageMultiplier = 100f;
 
-        public static Dictionary<Part, float> DamagePartsDictionary
+        public static Dictionary<Part, double> DamagePartsDictionary
         {
             get { return _damagePartsDictionary; }
             set { _damagePartsDictionary = value; }
@@ -26,9 +26,12 @@ namespace BDArmory.Core.Behaviour
 
         void Start()
         {
-            GameEvents.onVesselCreate.Add(SetMaxDamage);
-            GameEvents.onVesselLoaded.Add(SetMaxDamage);
-            GameEvents.onPartDestroyed.Add(RemovePartFromDictionary);
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                GameEvents.onVesselCreate.Add(SetMaxDamage);
+                GameEvents.onVesselLoaded.Add(SetMaxDamage);
+                GameEvents.onPartDestroyed.Add(RemovePartFromDictionary);
+            }
         }
 
         private void RemovePartFromDictionary(Part part)
@@ -43,7 +46,14 @@ namespace BDArmory.Core.Behaviour
         /// This method will set the max temperature for each part proportional to its dry mass
         /// </summary>
         /// <param name="vessel"></param>
-        private static void SetMaxDamage(Vessel vessel)
+        void SetMaxDamage(Vessel vessel)
+        {
+            UpdateMaxTemp(vessel);
+
+            Debug.Log("SetMaxDamage: Max part resist = " + _damagePartsDictionary.Keys.Max(x => x.maxTemp));
+        }
+
+        private static void UpdateMaxTemp(Vessel vessel)
         {
             using (List<Part>.Enumerator parts = vessel.parts.GetEnumerator())
             {
@@ -56,29 +66,27 @@ namespace BDArmory.Core.Behaviour
                     _damagePartsDictionary.Add(parts.Current, 0);
 
                     parts.Current.skinMaxTemp = 10 *
-                                                (float) Math.Pow(
-                                                    parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance,1,100) * maxDamageMultiplier *
-                                                    1000, (1.0 / 5.0)) + 1000;
+                                                (float)Math.Pow(
+                                                    parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance, 1, 100) * maxDamageMultiplier *
+                                                    1000, (1.0 / 3.0)) + 1000;
 
 
                     parts.Current.maxTemp = 10 *
-                                            (float) Math.Pow(
+                                            (float)Math.Pow(
                                                 parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance, 1, 100) * maxDamageMultiplier * 1000,
-                                                (1.0 / 5.0)) + 1000;
+                                                (1.0 / 3.0)) + 1000;
 
                     // Part is flammable, max damage reduced
-                    if (parts.Current.Resources.Any(x => x.resourceName.Contains("Liquid") ||
+                    if (parts.Current.Resources.Where(x => x.resourceName.Contains("Liquid") ||
                                                          x.resourceName.Contains("Ox") ||
-                                                         x.resourceName.Contains("Ker")))
+                                                         x.resourceName.Contains("Ker")).Any(y => y.amount > 0))
                     {
-                        parts.Current.skinMaxTemp = Mathf.Clamp((float) (parts.Current.skinMaxTemp / 10f), 1000f, 4000f);
-                        parts.Current.maxTemp = Mathf.Clamp((float) (parts.Current.maxTemp / 10f), 1000f, 4000f);
+                        parts.Current.skinMaxTemp = Mathf.Max((float)(parts.Current.skinMaxTemp / 10f), 2000f);
+                        parts.Current.maxTemp = Mathf.Max((float)(parts.Current.maxTemp / 10f), 2000f);
                     }
 
-                } 
+                }
             }
-
-            Debug.Log("SetMaxDamage: Max part resist = " + _damagePartsDictionary.Keys.Max( x => x.maxTemp));
         }
 
         void FixedUpdate()
@@ -98,7 +106,7 @@ namespace BDArmory.Core.Behaviour
                     if (dictionaryEnumerator.Current.Key == null) continue;
 
                     Part p = dictionaryEnumerator.Current.Key;
-                    float damage = dictionaryEnumerator.Current.Value;
+                    double damage = dictionaryEnumerator.Current.Value;
                     p.skinTemperature = damage;
                     p.temperature = damage;
                 }
@@ -107,9 +115,12 @@ namespace BDArmory.Core.Behaviour
 
         void OnDestroy()
         {
-            GameEvents.onVesselCreate.Remove(SetMaxDamage);
-            GameEvents.onVesselLoaded.Remove(SetMaxDamage);
-            GameEvents.onPartDestroyed.Remove(RemovePartFromDictionary);
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                GameEvents.onVesselCreate.Remove(SetMaxDamage);
+                GameEvents.onVesselLoaded.Remove(SetMaxDamage);
+                GameEvents.onPartDestroyed.Remove(RemovePartFromDictionary);
+            }
         }
 
         public static void SetDamageToPart(Part part, double damage)
@@ -119,9 +130,9 @@ namespace BDArmory.Core.Behaviour
 
               if (!_damagePartsDictionary.ContainsKey(part))
             {
-                SetMaxDamage(part.vessel);
+                UpdateMaxTemp(part.vessel);
             }
-            _damagePartsDictionary[part] = (float)damage;
+            _damagePartsDictionary[part] = damage;
         }
 
         public static void AddDamageToPart(Part part, double damage)
@@ -130,10 +141,10 @@ namespace BDArmory.Core.Behaviour
 
             if (!_damagePartsDictionary.ContainsKey(part))
             {
-                SetMaxDamage(part.vessel);
+                UpdateMaxTemp(part.vessel);
             }
 
-            _damagePartsDictionary[part] += (float)damage;
+            _damagePartsDictionary[part] += damage;
         }
     }
 }

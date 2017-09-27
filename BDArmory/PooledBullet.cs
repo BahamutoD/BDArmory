@@ -261,14 +261,15 @@ namespace BDArmory
 
                     CalculateDragAnalyticEstimate();
 
-                    if (CalculateArmorPenetration(hitPart, anglemultiplier, hit))
+                    var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
+                    if (penetrationFactor > 1)
                     { //fully penetrated
 
-                        AppyDamage(hitPart, anglemultiplier);
+                        AppyDamage(hitPart, 1);
                     }
                     else
                     {
-                        AppyDamage(hitPart, anglemultiplier);
+                        AppyDamage(hitPart, penetrationFactor * 0.1f);
                         ExplosiveDetonation(hitPart, hit, ray);
                         KillBullet();
                     }
@@ -297,37 +298,26 @@ namespace BDArmory
             transform.position += currentVelocity*Time.fixedDeltaTime;
         }
 
-        private void AppyDamage(Part hitPart, float anglemultiplier)
+        private void AppyDamage(Part hitPart, float multiplier)
         {
             //hitting a vessel Part
             //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
             if (hitPart != null && !hitPart.partInfo.name.Contains("Strut"))
             {
 
-                float heatDamage = (mass / (hitPart.crashTolerance * hitPart.mass)) *
-                                   (impactVelocity * impactVelocity / 15f) * // was impactVelocity * ImpactVelocity
-                                   BDArmorySettings.DMG_MULTIPLIER;// global damage multiplier (100% used for balancing)
+                //Basic kinetic formula. 
+                double heatDamage = (0.5f * mass * Math.Pow(impactVelocity, 2) * BDArmorySettings.DMG_MULTIPLIER  * 0.01f);
+ 
+                //Now, we know exactly how well the bullet was stopped by the armor. 
+                //This value will be below 1 when it is stopped by the armor. That means that we should not apply all the damage to the part that stopped by the bullet
 
-                //bulletDmgMult;// individual bullet modifier, default 1
-
-                //damage penalties for weapons using new penetration system (most does not apply to "legacy" parts or mods)
-                if (hitPart.HasArmor())
-                //armor gets damage penalty based on angle of impact
-                {
-                    heatDamage *= anglemultiplier;
-                    //penalty for guns below 150mm hitting armor plate (lower caliber AP needs to rely on penetration)
-                    if (caliber <= 100f)
-                    {
-                        heatDamage *= caliber / 100f;
-                    }
-
-                }
-
+                //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
+                heatDamage *= multiplier;
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage);
-                    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude);
+                    Debug.Log("[BDArmory]: Hit! damage applied: " + (int) heatDamage);
+                    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier);
                 }
 
                 if (hitPart.vessel != sourceVessel)
@@ -374,7 +364,7 @@ namespace BDArmory
             }
         }
 
-        private bool CalculateArmorPenetration( Part hitPart, float anglemultiplier, RaycastHit hit)
+        private float CalculateArmorPenetration( Part hitPart, float anglemultiplier, RaycastHit hit)
         {
             ///////////////////////////////////////////////////////////////////////                                 
             // Armor Penetration
@@ -384,7 +374,9 @@ namespace BDArmory
             //TODO: Extract bdarmory settings from this values
             float thickness = CalculateThickness(hitPart, anglemultiplier);
 
-          
+            var penetrationFactor = penetration / thickness;
+
+
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: Armor penetration =" + penetration + "Thickness =" + thickness);
@@ -415,24 +407,22 @@ namespace BDArmory
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost =" + mass * 200);
+                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost =" + mass * impactVelocity);
                 }
 
-                hitPart.ReduceArmor(mass * impactVelocity);
-
-                return true;
+                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * penetrationFactor);
 
             }
             else
             {
-                hitPart.ReduceArmor(mass * impactVelocity * 0.5);
+                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * penetrationFactor);
+                    
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + mass * 100);
+                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + mass * impactVelocity);
                 }
-
-                return false;
             }
+            return penetration / thickness;
         }
 
         private float CalculatePenetration()
@@ -453,18 +443,20 @@ namespace BDArmory
             //TODO: Extract part extension method from this
             if (hitPart.crashTolerance >= 80) //structural parts: 30mm armor
             {
-                thickness = 30 / anglemultiplier;
+                thickness = 30 ;
             }
+
             if (hitPart.HasArmor())
             {
-                thickness = (float) hitPart.GetArmorMass() / anglemultiplier;
+                thickness = (float) hitPart.GetArmorMass();
             }
             else //add for thickness depending on the size of the part
             {
-                thickness += (float)Math.Pow(hitPart.mass * 10, (1f / 3f));
+                thickness += (float)Math.Pow(hitPart.mass * 100, (1f / 3f));
+                thickness *= Mathf.Clamp01((1f - (float)(hitPart.temperature / hitPart.maxTemp)));
             }
 
-            return thickness;
+            return thickness / anglemultiplier;
         }
 
         private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)
