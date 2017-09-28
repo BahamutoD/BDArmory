@@ -653,16 +653,26 @@ namespace BDArmory.Parts
         {
             //Guard clauses     
             if (!TargetAcquired) return;
-            
+            //skip check of user set to zero, rely on OnCollisionEnter
+            if (DetonationDistance == 0) return;
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance,100)) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationDistance) return;
-            if (DetonationDistance == 0) return; //skip check of user set to zero, rely on OnCollisionEnter
-            
-            float distance;
-            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationDistance)
-            {
-                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance + "DetonationDistance was "+ DetonationDistance);
-                Detonate();
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 50 * DetonationDistance) return;
+          
+            Ray missileToTargetRay = new Ray(vessel.CoM, TargetPosition - vessel.CoM);
+            RaycastHit rayHit;
+            if (Physics.Raycast(missileToTargetRay, out rayHit, Vector3.Distance(TargetPosition, vessel.CoM), 557057))
+            {             
+                //parts
+                Part part = rayHit.collider.GetComponentInParent<Part>();
+
+                if (part != null && part && part.vessel != this.vessel)
+                {
+                    if (Vector3.Distance(vessel.CoM, part.transform.position) < DetonationDistance)
+                    {
+                        Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + rayHit.distance + "DetonationDistance was " + DetonationDistance);
+                        Detonate();
+                    } 
+                }
             }
         }
 

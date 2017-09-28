@@ -214,33 +214,38 @@ namespace BDArmory.Parts
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, dist, 557057))
                 {
-                    Part hitPart = null;
-                    try
-                    {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                    }
-                    catch (NullReferenceException)
-                    {
-                    }
+                    //Part hitPart = null;
+                    //try
+                    //{
+                    //    hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                    //}
+                    //catch (NullReferenceException)
+                    //{
+                    //}
 
-                    if (hitPart != null)
-                    {
-                        float destroyChance = (rb.mass/hitPart.crashTolerance)*
-                                              (rb.velocity - hit.rigidbody.velocity).magnitude*8000;
-                        if (BDArmorySettings.INSTAKILL)
-                        {
-                            destroyChance = 100;
-                        }
-                        Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
-                        if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
-                        {
-                            hitPart.SetDamage(hitPart.maxTemp + 100);
-                        }
-                    }
-                    if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
-                    {
-                        Detonate(hit.point);
-                    }
+                    //if (hitPart != null)
+                    //{
+                    //    float destroyChance = (rb.mass/hitPart.crashTolerance)*
+                    //                          (rb.velocity - hit.rigidbody.velocity).magnitude*8000;
+                    //    if (BDArmorySettings.INSTAKILL)
+                    //    {
+                    //        destroyChance = 100;
+                    //    }
+                    //    Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
+                    //    if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
+                    //    {
+                    //        hitPart.SetDamage(hitPart.maxTemp + 100);
+                    //    }
+                    //}
+                    //if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
+                    //{
+                    //    Detonate(hit.point);
+                    //}
+
+
+                    //Simplyfing cluster point. One hit, one explosion.No auto part destruction
+
+                    Detonate(hit.point);
                 }
                 else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
                 {

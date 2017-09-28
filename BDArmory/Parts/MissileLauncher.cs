@@ -1676,7 +1676,7 @@ namespace BDArmory.Parts
                 //proxy detonation
                 if (proxyDetonate && ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(blastRadius * 0.5f, 2))
                 {
-                    part.temperature = part.maxTemp + 100;
+                    part.SetDamage(part.maxTemp + 100);
                 }
             }
             else
@@ -1740,20 +1740,6 @@ namespace BDArmory.Parts
 			}
 		}
 	
-		void RayDetonator()
-		{
-			Vector3 lineStart = transform.position;
-			Vector3 lineEnd = transform.position + part.rb.velocity;
-			RaycastHit rayHit;
-			if(Physics.Linecast(lineStart, lineEnd, out rayHit, 557057))
-			{
-				if(rayHit.collider.attachedRigidbody && rayHit.collider.attachedRigidbody != part.rb)
-				{
-					part.SetDamage(part.temperature + 100);
-				}
-			}
-		}
-
 		public override void Detonate()
 		{
 		    if (HasExploded || !HasFired) return;

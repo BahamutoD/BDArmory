@@ -184,11 +184,12 @@ namespace BDArmory.FX
                 
                 //parts
                 Part part = rayHit.collider.GetComponentInParent<Part>();
-                bool hasArmor_ = PartExtensions.hasArmor(part);
-                double armorMass_ = PartExtensions.armorMass(part);
-
-                if (part)
+               
+                if (part != null && part)
                 {
+                    bool hasArmor_ = part.HasArmor();
+                    double armorMass_ = part.GetArmorMass();
+
                     Vessel missileSource = null;
                     if (sourceVessel != null)
                     {
@@ -225,16 +226,22 @@ namespace BDArmory.FX
                             //heatDamage = heatDamage;  (float)armorMass_ / 16; 
                         }
 
-                        float excessHeat = Mathf.Max(0, (float)(part.temperature + heatDamage - part.maxTemp));
-
-                        part.AddDamage(heatDamage);
-
-                        if (excessHeat > 0 && part.parent)
+                        if (part.HasArmor())
                         {
-                            part.parent.AddDamage(excessHeat);
+                            part.ReduceArmor(heatDamage / 16);
+                        }
+                        else
+                        {
+                             float excessHeat = Mathf.Max(0, (float)(part.temperature + heatDamage - part.maxTemp));
+
+                             part.AddDamage(heatDamage);
+
+                            if (excessHeat > 0 && part.parent)
+                            {
+                                part.parent.AddDamage(excessHeat);
+                            }
                         }
 
-                        if (PartExtensions.hasArmor(part)) part.RequestResource("Armor", heatDamage / 16);
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
                         return;
