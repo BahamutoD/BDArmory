@@ -185,6 +185,7 @@ namespace BDArmory
             {
                 return;
             }
+
             flightTimeElapsed += TimeWarp.fixedDeltaTime; //calculate flight time for drag purposes
 
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
@@ -206,6 +207,7 @@ namespace BDArmory
                 bulletTrail.SetPosition(0,
                     transform.position + ((currentVelocity - sourceOriginalV).normalized*tracerLength));
             }
+
             if (fadeColor)
             {
                 FadeColor();
@@ -265,11 +267,11 @@ namespace BDArmory
                     if (penetrationFactor > 1)
                     { //fully penetrated
 
-                        AppyDamage(hitPart, 1);
+                        AppyDamage(hitPart, 1,penetrationFactor);
                     }
                     else
                     {
-                        AppyDamage(hitPart, penetrationFactor * 0.1f);
+                        AppyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor);
                         ExplosiveDetonation(hitPart, hit, ray);
                         KillBullet();
                     }
@@ -296,12 +298,14 @@ namespace BDArmory
             prevPosition = currPosition;
             //move bullet            
             transform.position += currentVelocity*Time.fixedDeltaTime;
+
+            if (currentVelocity.magnitude <= 150) { KillBullet(); } //bullet should not go any further if moving too slowly
         }
 
-        private void AppyDamage(Part hitPart, float multiplier)
+        private void AppyDamage(Part hitPart, float multiplier, float penetrationfactor)
         {
             //hitting a vessel Part
-            //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
+            //No struts, they cause weird bugs :) -BahamutoD
             if (hitPart != null && !hitPart.partInfo.name.Contains("Strut"))
             {
 
@@ -317,7 +321,7 @@ namespace BDArmory
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log("[BDArmory]: Hit! damage applied: " + (int) heatDamage);
-                    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier);
+                    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
                 }
 
                 if (hitPart.vessel != sourceVessel)
@@ -376,12 +380,10 @@ namespace BDArmory
 
             var penetrationFactor = penetration / thickness;
 
-
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Armor penetration =" + penetration + "Thickness =" + thickness);
+                Debug.Log("[BDArmory]: Armor penetration =" + penetration + " | Thickness =" + thickness);
             }
-
 
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
 
@@ -461,7 +463,7 @@ namespace BDArmory
 
         private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)
         {
-///////////////////////////////////////////////////////////////////////                                 
+            ///////////////////////////////////////////////////////////////////////                                 
             // High Explosive Detonation
             ///////////////////////////////////////////////////////////////////////
 
