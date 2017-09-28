@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Radar;
@@ -28,6 +29,8 @@ namespace BDArmory.Parts
         {
             return missileType;
         }
+
+       
 
         [KSPField]
         public string missileType = "missile";
@@ -90,11 +93,21 @@ namespace BDArmory.Parts
             UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float detonationTime = 2;
 
+        [KSPEvent(guiActive = true, guiName = "GPS Target", active = true)]
+        public void assignGPSTarget()
+        {
+            
+        }
+
         [KSPField]
         public float activeRadarRange = 6000;
 
         [KSPField]
         public float activeRadarMinThresh = 140;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ballistic Overshoot factor"),
+         UI_FloatRange(minValue = 0.5f, maxValue = 1.5f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
+        public float BallisticOverShootFactor = 0.7f;
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
@@ -133,6 +146,22 @@ namespace BDArmory.Parts
 
         public bool HasExploded { get; set; } = false;
 
+        protected Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
+        protected Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
+
+        public float Throttle
+        {
+            get
+            {
+                return _throttle;
+            }
+
+            set
+            {
+                _throttle = Mathf.Clamp01(value);
+            }
+        }
+
         public float TimeFired = -1;
 
         protected float lockFailTimer = -1;
@@ -156,7 +185,6 @@ namespace BDArmory.Parts
         public TargetSignatureData heatTarget;
 
         //radar stuff
-        //public ModuleRadar radar;
         public VesselRadarData vrd;
         public TargetSignatureData radarTarget;
         private TargetSignatureData[] scannedTargets;
@@ -171,7 +199,10 @@ namespace BDArmory.Parts
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
         protected string debugString = "";
+
+        private float _throttle = 1f;
         
+
         public string GetSubLabel()
         {
             if (Enum.GetName(typeof(TargetingModes), TargetingMode) == "None")
@@ -622,16 +653,128 @@ namespace BDArmory.Parts
         {
             //Guard clauses     
             if (!TargetAcquired) return;
-            
+            //skip check of user set to zero, rely on OnCollisionEnter
+            if (DetonationDistance == 0) return;
             if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance,100)) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 10 * DetonationDistance) return;
-            if (DetonationDistance == 0) return; //skip check of user set to zero, rely on OnCollisionEnter
-            
-            float distance;
-            if ((distance = Vector3.Distance(TargetPosition, vessel.CoM)) < DetonationDistance)
+            if (Vector3.Distance(vessel.CoM, TargetPosition) > 50 * DetonationDistance) return;
+          
+            Ray missileToTargetRay = new Ray(vessel.CoM, TargetPosition - vessel.CoM);
+            RaycastHit rayHit;
+            if (Physics.Raycast(missileToTargetRay, out rayHit, Vector3.Distance(TargetPosition, vessel.CoM), 557057))
+            {             
+                //parts
+                Part part = rayHit.collider.GetComponentInParent<Part>();
+
+                if (part != null && part && part.vessel != this.vessel)
+                {
+                    if (Vector3.Distance(vessel.CoM, part.transform.position) < DetonationDistance)
+                    {
+                        Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + rayHit.distance + "DetonationDistance was " + DetonationDistance);
+                        Detonate();
+                    } 
+                }
+            }
+        }
+
+
+        private  float _originalDistance = float.MinValue;
+        private  Vector3 _startPoint;
+        protected Vector3 CalculateAGMBallisticGuidance(MissileBase missile, Vector3 targetPosition)
+        {
+            //set up
+            if (_originalDistance == float.MinValue)
             {
-                Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + distance + "DetonationDistance was "+ DetonationDistance);
-                Detonate();
+                _startPoint = missile.vessel.CoM;
+                _originalDistance = Vector3.Distance(targetPosition, missile.vessel.CoM);
+
+                //calculating expected apogee bases on isosceles triangle
+               
+            }
+            debugString += "\n _originalDistance: " + _originalDistance;
+            debugString += "\n BallisticOverShootFactor: " + BallisticOverShootFactor;
+
+            var surfaceDistanceVector = Vector3
+                .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized);
+
+            var pendingDistance = _originalDistance - surfaceDistanceVector.magnitude;
+
+            debugString += "\n pendingDistance: " + pendingDistance;
+
+            if (TimeIndex < 1)
+            {
+                return missile.vessel.CoM + missile.vessel.Velocity() * 10;
+            }
+
+            Vector3 agmTarget;
+            // Getting apoapsis
+            if (missile.vessel.verticalSpeed > 0 && pendingDistance > _originalDistance * 0.5)
+            {
+                debugString += "\n Ascending";
+
+                var freeFallTime = CalculateFreeFallTime();
+                debugString += "\n freeFallTime: " + freeFallTime;
+
+                var horizontalTime = pendingDistance / missile.vessel.horizontalSrfSpeed;
+
+
+                debugString += "\n horizontalTime: " + horizontalTime;
+                if (freeFallTime  >= horizontalTime)
+                {
+                    debugString += "\n Free fall achieved: ";
+                    missile.Throttle = 0;
+                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
+                }
+                else
+                {
+                    debugString += "\n Free fall not achieved: ";
+                    missile.Throttle = 1;
+                    Vector3 dToTarget = targetPosition - missile.vessel.CoM;
+                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(missile.maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(missile.vessel.CoM))) * dToTarget;
+                    agmTarget = missile.vessel.CoM + direction;
+                }
+
+               
+
+                debugString += "\n Throttle: " + missile.Throttle;
+            }
+            else
+            {
+                debugString += "\n Descending";
+                agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
+
+                if (missile is BDModularGuidance)
+                {
+                    if (missile.vessel.InVacuum())
+                    {
+                        agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
+                    }
+                }
+                missile.Throttle = Mathf.Clamp((float) (missile.vessel.atmDensity * 10f), 0.01f, 1f);
+
+            }
+            return agmTarget;
+        }
+
+
+        private double CalculateFreeFallTime()
+        {
+            double vi = -vessel.verticalSpeed;
+            double a = 9.80665f * BallisticOverShootFactor;
+            double d = vessel.altitude;
+
+            double time1 = (-vi + Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+            double time2 = (-vi - Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+
+
+            return Math.Max(time1, time2);
+        }
+
+        protected void drawLabels()
+        {
+            if (!vessel.isActiveVessel) return;
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.shortName + ":" + debugString);
             }
         }
     }

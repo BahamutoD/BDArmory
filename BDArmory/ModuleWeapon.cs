@@ -244,6 +244,8 @@ namespace BDArmory
         [KSPField]
         public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
         [KSPField]
+        public float caliber = 0; //caliber in mm, used for penetration calcs
+        [KSPField]
         public float bulletDmgMult = 1; //Used for heat damage modifier for non-explosive bullets
         [KSPField]
         public float bulletVelocity = 860; //velocity in meters/second
@@ -654,7 +656,7 @@ namespace BDArmory
             }
             bulletInfo = BulletInfo.bullets[bulletType];
             if (bulletInfo == null)
-                Debug.Log("[BDArmory]: Failed To load bullet!");
+                Debug.Log("[BDArmory]: Failed To load bullet : " + bulletType);
             BDArmorySettings.OnVolumeChange += UpdateVolume;
         }
 
@@ -1044,7 +1046,12 @@ namespace BDArmory
                         PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
                         firedBullet.transform.position = fireTransform.position;
 
-                        pBullet.mass = bulletMass;
+                        pBullet.caliber = bulletInfo.caliber;
+                        pBullet.bulletVelocity = bulletInfo.bulletVelocity;
+                        pBullet.mass = bulletInfo.bulletMass;
+                        pBullet.explosive = bulletInfo.explosive;
+                        pBullet.apBulletDmg = bulletInfo.apBulletDmg;                     
+                        
                         pBullet.bulletDmgMult = bulletDmgMult;
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
                         pBullet.flightTimeElapsed = 0;
@@ -1089,16 +1096,33 @@ namespace BDArmory
 
                         pBullet.bulletDrop = bulletDrop;
 
-                        if (eWeaponType == WeaponTypes.Cannon)
+                        if (eWeaponType == WeaponTypes.Cannon || bulletInfo.explosive)
                         {
-                            pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
-                            pBullet.explModelPath = explModelPath;
-                            pBullet.explSoundPath = explSoundPath;
-                            pBullet.blastPower = cannonShellPower;
-                            pBullet.blastHeat = cannonShellHeat;
-                            pBullet.radius = cannonShellRadius;
-                            pBullet.airDetonation = airDetonation;
-                            pBullet.detonationRange = detonationRange;
+                            if (bulletType == "def")
+                            {
+                                //legacy model, per weapon config
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.explModelPath = explModelPath;
+                                pBullet.explSoundPath = explSoundPath;
+                                pBullet.blastPower = cannonShellPower;
+                                pBullet.blastHeat = cannonShellHeat;
+                                pBullet.radius = cannonShellRadius;
+                                pBullet.airDetonation = airDetonation;
+                                pBullet.detonationRange = detonationRange;
+                            }
+                            else
+                            {
+                                //use values from bullets.cfg
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.explModelPath = explModelPath;
+                                pBullet.explSoundPath = explSoundPath;
+                                pBullet.blastPower = bulletInfo.blastPower;
+                                pBullet.blastHeat = bulletInfo.blastHeat;
+                                pBullet.radius = bulletInfo.blastRadius;
+                                pBullet.airDetonation = airDetonation;
+                                pBullet.detonationRange = detonationRange;
+                            }
+
                         }
                         else
                         {
@@ -1179,7 +1203,7 @@ namespace BDArmory
 
                     if (legacyTargetVessel != null && legacyTargetVessel.loaded)
                     {
-                        physStepFix = legacyTargetVessel.srf_velocity * Time.fixedDeltaTime;
+                        physStepFix = legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
                         targetDirection = (legacyTargetVessel.CoM + physStepFix) - tf.position;
 
 
@@ -1446,7 +1470,7 @@ namespace BDArmory
             {
                 if (legacyTargetVessel)
                 {
-                    targetPosition += legacyTargetVessel.srf_velocity * Time.fixedDeltaTime;
+                    targetPosition += legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
                 }
                 else if (!targetAcquired)
                 {
@@ -1503,9 +1527,9 @@ namespace BDArmory
                 if (targetAcquired)
                 {
                     float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        targetVelocity - vessel.srf_velocity, bulletVelocity);
+                        targetVelocity - vessel.Velocity(), bulletVelocity);
                     if (time2 > 0) time = time2;
-                    finalTarget += (targetVelocity - vessel.srf_velocity) * time;
+                    finalTarget += (targetVelocity - vessel.Velocity()) * time;
                     //target vessel relative velocity compensation
 
                     Vector3 acceleration = targetAcceleration;
@@ -1876,7 +1900,7 @@ namespace BDArmory
                      (legacyTargetVessel.transform.position - transform.position).magnitude < weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.srf_velocity;
+                    targetVelocity = legacyTargetVessel.Velocity();
                     targetAcceleration = legacyTargetVessel.acceleration;
                     targetPosition += targetVelocity * Time.fixedDeltaTime;
                     targetAcquired = true;
@@ -1900,7 +1924,7 @@ namespace BDArmory
                     targetPosition = targetData.predictedPosition + (3 * targetVelocity * Time.fixedDeltaTime);
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.vessel.srf_velocity;
+                        targetVelocity = targetData.vessel.Velocity();
                         targetPosition = targetData.vessel.CoM + (targetVelocity * Time.fixedDeltaTime);
                     }
                     targetAcceleration = targetData.acceleration;
@@ -1948,7 +1972,7 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.srf_velocity;
+                        targetVelocity = tgt.Velocity();
                         targetAcceleration = tgt.acceleration;
                     }
                 }
@@ -2081,15 +2105,12 @@ namespace BDArmory
                     break;
             }
         }
-
-
+        
         void SetupBulletPool()
         {
             GameObject templateBullet = new GameObject("Bullet");
             templateBullet.SetActive(false);
             templateBullet.AddComponent<PooledBullet>();
-
-
             bulletPool = ObjectPool.CreateObjectPool(templateBullet, 100, true, true);
         }
 
@@ -2099,11 +2120,9 @@ namespace BDArmory
                 (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"));
             templateShell.SetActive(false);
             templateShell.AddComponent<ShellCasing>();
-
             shellPool = ObjectPool.CreateObjectPool(templateShell, 50, true, true);
         }
-
-
+        
         #endregion
 
         // RMB info in editor

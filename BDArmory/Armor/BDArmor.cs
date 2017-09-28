@@ -1,63 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using BDArmory.FX;
 using UnityEngine;
 
 namespace BDArmory.Armor
 {
-    public class BDArmor
+    public class BDArmor : PartModule
     {
-        public float EquivalentThickness { get; private set; }
-        public ExplodeMode explodeMode { get; private set; }
-        public float blastRadius { get; private set; }
-        public float blastPower { get; private set; }
-        public float blastHeat { get; private set; }
-        public float outerArmorThickness { get; private set; }
-        public string explModelPath { get; private set; }
-        public string explSoundPath { get; private set; }
+        static BDArmor instance;
+        public static BDArmor Instance => instance;
 
-        public BDArmor(ConfigNode configNode)
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Thickness (mm)"),
+            UI_FloatRange(minValue = 10f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
+        public float EquivalentThickness = 0f;
+
+        [KSPField]
+        public string explModelPath = "BDArmory/Models/explosion/explosionLarge";
+
+        [KSPField]
+        public string explSoundPath = "BDArmory/Sounds/explode1";
+
+        [KSPField]
+        public string explodeMode = "Never";
+
+        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
+
+        public  float getEquivalentThickness()
         {
-            if (configNode.HasValue("EquivalentThickness"))
-                EquivalentThickness = float.Parse(configNode.GetValue("EquivalentThickness"));
-            else
-                EquivalentThickness = 1;
+            return EquivalentThickness;
+        }
 
-            if (configNode.HasValue("ExplodeMode"))
-                explodeMode = (ExplodeMode) Enum.Parse(typeof(ExplodeMode), configNode.GetValue("ExplodeMode"));
-            else
-                explodeMode = ExplodeMode.Never;
+        public override void OnStart(StartState state)
+        {
+            base.OnAwake();
+            part.force_activate();
+            instance = this;
 
-            if (configNode.HasValue("blastRadius"))
-                blastRadius = float.Parse(configNode.GetValue("blastRadius"));
-            else
-                blastRadius = 1;
+            if (UI.BDArmorySettings.ADVANCED_EDIT)
+            {
+                Fields["EquivalentThickness"].guiActiveEditor = true;
+            }
 
-            if (configNode.HasValue("blastPower"))
-                blastPower = float.Parse(configNode.GetValue("blastPower"));
-            else
-                blastPower = 1;
+            switch (explodeMode)
+            {
+                case "Always":
+                    _explodeMode = ArmorUtils.ExplodeMode.Always;
+                    break;
+                case "Dynamic":
+                    _explodeMode = ArmorUtils.ExplodeMode.Dynamic;
+                    break;
+                case "Never":
+                    _explodeMode = ArmorUtils.ExplodeMode.Never;
+                    break;
+            }
 
-            if (configNode.HasValue("blastHeat"))
-                blastHeat = float.Parse(configNode.GetValue("blastHeat"));
-            else
-                blastHeat = 1;
-
-            if (configNode.HasValue("outerArmorThickness"))
-                outerArmorThickness = float.Parse(configNode.GetValue("outerArmorThickness"));
-            else
-                outerArmorThickness = float.MaxValue;
-
-            if (configNode.HasValue("explModelPath"))
-                explModelPath = configNode.GetValue("explModelPath");
-            else
-                explModelPath = "BDArmory/Models/explosion/explosionLarge";
-
-            if (configNode.HasValue("explSoundPath"))
-                explSoundPath = configNode.GetValue("explSoundPath");
-            else
-                explSoundPath = "BDArmory/Sounds/explode1";
         }
 
         public void CreateExplosion(Part part)
@@ -66,7 +61,7 @@ namespace BDArmory.Armor
             IEnumerator<PartResource> resources = part.Resources.GetEnumerator();
             while (resources.MoveNext())
             {
-              if (resources.Current == null) continue;
+                if (resources.Current == null) continue;
                 switch (resources.Current.resourceName)
                 {
                     case "LiquidFuel":
@@ -80,42 +75,31 @@ namespace BDArmory.Armor
             resources.Dispose();
             explodeScale /= 100;
             part.explode();
-            ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale*blastRadius, explodeScale*blastPower*2,
-                explodeScale*blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath);
+           // ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale * blastRadius, explodeScale * blastPower * 2,
+           //    explodeScale * blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath);
         }
 
-        public static BDArmor GetArmor(Collider collider, Part hitPart)
+        public static bool GetArmor(Collider collider, Part hitPart)
         {
-            if (!hitPart)
-                return null;
-            List<ConfigNode>.Enumerator nodes = hitPart.partInfo.partConfig.GetNodes("BDARMOR").ToList().GetEnumerator();
-            while (nodes.MoveNext())
+            Transform transform = null;
+
+            if (!hitPart) return false;
+
+            if (hitPart.FindModelTransform("ArmorRootTransform"))
+
+                transform = hitPart.FindModelTransform("ArmorRootTransform");
+
+            if (transform == null)
             {
-                if (nodes.Current == null) continue;
-                Transform transform;
-                if (nodes.Current.HasValue("ArmorRootTransform"))
-                    transform = hitPart.FindModelTransform(nodes.Current.GetValue("ArmorRootTransform"));
-                else
-                    transform = hitPart.partTransform;
-                if (!transform)
-                {
-                    Debug.LogError("[BDArmory]: Armor Transform not found!");
-                    return null;
-                }
-                if (collider.transform == transform || collider.transform.IsChildOf(transform))
-                {
-                    return new BDArmor(nodes.Current);
-                }
+                Debug.Log("[BDArmory]: Armor Transform not found!");
+                return false;
             }
-            nodes.Dispose();
-            return null;
-        }
 
-        public enum ExplodeMode
-        {
-            Always,
-            Dynamic,
-            Never
+            if (collider.transform == transform || collider.transform.IsChildOf(transform))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

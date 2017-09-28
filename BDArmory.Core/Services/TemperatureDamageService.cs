@@ -1,4 +1,5 @@
-﻿using BDArmory.Core.Enum;
+﻿using BDArmory.Core.Behaviour;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Events;
 
 namespace BDArmory.Core.Services
@@ -7,7 +8,7 @@ namespace BDArmory.Core.Services
     {
         public override void SetDamageToPart(Part p, double damage)
         {
-            p.temperature = damage;
+            TemperatureDamageSystem.SetDamageToPart(p, damage);
             PublishEvent(new DamageEventArgs()
             {
                 VesselId = p.vessel.GetInstanceID(),
@@ -19,7 +20,7 @@ namespace BDArmory.Core.Services
 
         public override void AddDamageToPart(Part p, double damage)
         {
-            p.temperature += damage;
+            TemperatureDamageSystem.AddDamageToPart(p, damage);
             PublishEvent(new DamageEventArgs()
             {
                 VesselId = p.vessel.GetInstanceID(),

@@ -81,7 +81,7 @@ namespace BDArmory.Misc
 			startTime = Time.time;
 			prevPosition = gameObject.transform.position;
 
-            sourceOriginalV = sourceVessel.srf_velocity;
+            sourceOriginalV = sourceVessel.Velocity();
 			
 			Light light = gameObject.AddComponent<Light>();
 			light.type = LightType.Point;
@@ -120,7 +120,7 @@ namespace BDArmory.Misc
 			
 			if(tracerLength == 0)
 			{
-				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.srf_velocity*TimeWarp.fixedDeltaTime));
+				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.Velocity()*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{
@@ -271,7 +271,7 @@ namespace BDArmory.Misc
 
 							if(bulletType == BulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+								ExplosionFX.CreateExplosion(hit.point, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath,false);
 							}
 
 							Destroy(gameObject); //destroy bullet on collision
@@ -283,7 +283,7 @@ namespace BDArmory.Misc
 			if(airDetonation && distanceFromStart > detonationRange)
 			{
 				//detonate
-				ExplosionFX.CreateExplosion(transform.position, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+				ExplosionFX.CreateExplosion(transform.position, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath,false);
 				Destroy(gameObject); //destroy bullet on collision
 			}
 
