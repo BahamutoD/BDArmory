@@ -16,7 +16,7 @@ namespace BDArmory.Core.Behaviour
         private static Dictionary<Part, double> _damagePartsDictionary = new Dictionary<Part, double>();
 
         //TODO: Add setting
-        private static float maxDamageMultiplier = 100f;
+        private static float maxDamageFactor = 800f;
 
         public static Dictionary<Part, double> DamagePartsDictionary
         {
@@ -48,13 +48,20 @@ namespace BDArmory.Core.Behaviour
         /// <param name="vessel"></param>
         void SetMaxDamage(Vessel vessel)
         {
-            UpdateMaxTemp(vessel);
-
-            Debug.Log("SetMaxDamage: Max part resist = " + _damagePartsDictionary.Keys.Max(x => x.maxTemp));
+            using (var vesselEnu = FlightGlobals.Vessels.GetEnumerator())
+            {
+                while (vesselEnu.MoveNext())
+                {
+                    if(vesselEnu.Current == null) continue;
+                    UpdateMaxTemp(vesselEnu.Current); 
+                } 
+            }
         }
 
         private static void UpdateMaxTemp(Vessel vessel)
         {
+
+        
             using (List<Part>.Enumerator parts = vessel.parts.GetEnumerator())
             {
                 while (parts.MoveNext())
@@ -65,28 +72,24 @@ namespace BDArmory.Core.Behaviour
 
                     _damagePartsDictionary.Add(parts.Current, 0);
 
-                    parts.Current.skinMaxTemp = 10 *
-                                                (float)Math.Pow(
-                                                    parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance, 1, 100) * maxDamageMultiplier *
-                                                    1000, (1.0 / 3.0)) + 1000;
+                    parts.Current.maxTemp = Math.Max(maxDamageFactor * parts.Current.mass *
+                                            Mathf.Clamp(parts.Current.crashTolerance, 1, 100),2000d);
 
-
-                    parts.Current.maxTemp = 10 *
-                                            (float)Math.Pow(
-                                                parts.Current.mass * Mathf.Clamp(parts.Current.crashTolerance, 1, 100) * maxDamageMultiplier * 1000,
-                                                (1.0 / 3.0)) + 1000;
-
+                    parts.Current.skinMaxTemp = Math.Max(maxDamageFactor * parts.Current.mass *
+                                                         Mathf.Clamp(parts.Current.crashTolerance, 1, 100), 2000d);
                     // Part is flammable, max damage reduced
                     if (parts.Current.Resources.Where(x => x.resourceName.Contains("Liquid") ||
                                                          x.resourceName.Contains("Ox") ||
-                                                         x.resourceName.Contains("Ker")).Any(y => y.amount > 0))
+                                                         x.resourceName.Contains("Ker")).Any(y => y.amount > 0d))
                     {
-                        parts.Current.skinMaxTemp = Mathf.Max((float)(parts.Current.skinMaxTemp / 10f), 2000f);
-                        parts.Current.maxTemp = Mathf.Max((float)(parts.Current.maxTemp / 10f), 2000f);
+                        parts.Current.maxTemp = Math.Max(parts.Current.maxTemp / 10d, 2000d);
+                        parts.Current.skinMaxTemp = Math.Max(parts.Current.maxTemp / 10d, 2000d);
+
                     }
 
                 }
             }
+            Debug.Log("SetMaxDamage: Max part resist = " + _damagePartsDictionary.Keys.Max(x => x.maxTemp));
         }
 
         void FixedUpdate()
