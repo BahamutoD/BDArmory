@@ -18,7 +18,7 @@ namespace BDArmory.Core.Extension
     
         public static bool HasArmor(this Part p)
         {
-            return p.GetArmorMass() > 0;
+            return p.GetArmorMass() > 0d;
         }
 
         public static void ReduceArmor(this Part p, double massToReduce)
@@ -37,7 +37,7 @@ namespace BDArmory.Core.Extension
         /// <returns></returns>
         public static double GetArmorMass(this Part p)
         {
-            if (p == null) return 0;
+            if (p == null) return 0d;
 
             using (var resourceEnumerator = p.Resources.GetEnumerator())
             {
@@ -52,7 +52,7 @@ namespace BDArmory.Core.Extension
                     }
                 }
             }
-            return 0;            
+            return 0d;            
         }
 
         public static float GetArmorPercentage(this Part p)
