@@ -111,8 +111,8 @@ namespace BDArmory.FX
 
             DoExplosionDamage(position, power, heat, radius, sourceVessel,isMissile);
         }
-        	
-		public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel, bool isMissile)
+
+       	public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel, bool isMissile)
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:======= Doing explosion sphere =========");
 			ignoreParts.Clear();
