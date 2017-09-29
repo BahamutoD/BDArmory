@@ -199,8 +199,8 @@ namespace BDArmory
             {
                 bulletTrail.SetPosition(0,
                     transform.position +
-                    (currentVelocity*tracerDeltaFactor*TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate) -
-                    (FlightGlobals.ActiveVessel.Velocity() * TimeWarp.fixedDeltaTime));
+                    ((currentVelocity*tracerDeltaFactor*TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate) -
+                    (FlightGlobals.ActiveVessel.Velocity() * TimeWarp.fixedDeltaTime)) * 0.25);
             }
             else
             {
@@ -263,17 +263,18 @@ namespace BDArmory
 
                     CalculateDragAnalyticEstimate();
 
-                    var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
-                    if (penetrationFactor > 1)
-                    { //fully penetrated
-
+                    var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);                    
+                    
+                    if (penetrationFactor > 1 && !ExplosiveDetonation(hitPart, hit, ray)) //fully penetrated, not explosive, continue ballistic damage
+                    { 
                         AppyDamage(hitPart, 1,penetrationFactor);
+                        //ExplosiveDetonation(hitPart, hit, ray);
                     }
-                    else
+                    else if(!ExplosiveDetonation(hitPart, hit, ray))
                     {
                         AppyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor);
-                        ExplosiveDetonation(hitPart, hit, ray);
-                        KillBullet();
+                        //ExplosiveDetonation(hitPart, hit, ray);
+                        KillBullet(); // bullets that are stopped by armor should die                        
                     }
                    
                 }
@@ -282,7 +283,7 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////
             //Flak Explosion (air detonation/proximity fuse)
             ///////////////////////////////////////////////////////////////////////
-            //if (bulletType == PooledBulletTypes.Explosive && airDetonation && distanceFromStart > detonationRange)
+
             if (explosive && airDetonation && distanceFromStart > detonationRange)
             {
                 //detonate
@@ -295,11 +296,16 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////
             //Bullet Translation
             ///////////////////////////////////////////////////////////////////////
+            
             prevPosition = currPosition;
             //move bullet            
             transform.position += currentVelocity*Time.fixedDeltaTime;
 
-            if (currentVelocity.magnitude <= 150) { KillBullet(); } //bullet should not go any further if moving too slowly
+            if (currentVelocity.magnitude <= 150)//bullet should not go any further if moving too slowly after hit
+            {
+                KillBullet();
+                return;
+            }
         }
 
         private void AppyDamage(Part hitPart, float multiplier, float penetrationfactor)
@@ -469,14 +475,12 @@ namespace BDArmory
 
             if (hitPart == null || hitPart.vessel != sourceVessel)
             {
-                //if bullet hits and is HE, detonate and kill bullet, skip the rest as to not do resource intensive penetration calcs
-                //if (bulletType == PooledBulletTypes.Explosive)
-
-                // moving explosive type to the bulletinfo config from the weapon type config
+                //if bullet hits and is HE, detonate and kill bullet
                 if (explosive)
                 {
                     ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
                         blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath, false);
+                    KillBullet();
                     return true;
                 }
             }
@@ -562,7 +566,7 @@ namespace BDArmory
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
             float chance = (((angleFromNormal - 5)/75)*(hitTolerance/150))*100/Mathf.Clamp01(impactVel/600);
             float random = UnityEngine.Random.Range(0f, 100f);
-            //if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
             if (random < chance)
             {
                 return true;
