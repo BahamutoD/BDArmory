@@ -455,8 +455,8 @@ namespace BDArmory
                 thickness += (float)Math.Pow(hitPart.mass * 100, (1f / 3f));
                 thickness *= Mathf.Clamp01((1f - (float)(hitPart.temperature / hitPart.maxTemp)));
             }
-
-            return thickness / anglemultiplier;
+            //the minimum will be always 10 mm
+            return Mathf.Min(thickness,10) / anglemultiplier;
         }
 
         private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)
