@@ -10,7 +10,7 @@ namespace BDArmory.Armor
         public static BDArmor Instance => instance;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Thickness (mm)"),
-            UI_FloatRange(minValue = 10f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
+            UI_FloatRange(minValue = 30f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float EquivalentThickness = 0f;
 
         [KSPField]

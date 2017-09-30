@@ -1098,14 +1098,31 @@ namespace BDArmory
 
                         if (eWeaponType == WeaponTypes.Cannon || bulletInfo.explosive)
                         {
-                            pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
-                            pBullet.explModelPath = explModelPath;
-                            pBullet.explSoundPath = explSoundPath;
-                            pBullet.blastPower = cannonShellPower;
-                            pBullet.blastHeat = cannonShellHeat;
-                            pBullet.radius = cannonShellRadius;
-                            pBullet.airDetonation = airDetonation;
-                            pBullet.detonationRange = detonationRange;
+                            if (bulletType == "def")
+                            {
+                                //legacy model, per weapon config
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.explModelPath = explModelPath;
+                                pBullet.explSoundPath = explSoundPath;
+                                pBullet.blastPower = cannonShellPower;
+                                pBullet.blastHeat = cannonShellHeat;
+                                pBullet.radius = cannonShellRadius;
+                                pBullet.airDetonation = airDetonation;
+                                pBullet.detonationRange = detonationRange;
+                            }
+                            else
+                            {
+                                //use values from bullets.cfg
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.explModelPath = explModelPath;
+                                pBullet.explSoundPath = explSoundPath;
+                                pBullet.blastPower = bulletInfo.blastPower;
+                                pBullet.blastHeat = bulletInfo.blastHeat;
+                                pBullet.radius = bulletInfo.blastRadius;
+                                pBullet.airDetonation = airDetonation;
+                                pBullet.detonationRange = detonationRange;
+                            }
+
                         }
                         else
                         {
