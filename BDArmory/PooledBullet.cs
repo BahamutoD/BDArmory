@@ -316,7 +316,7 @@ namespace BDArmory
             {
 
                 //Basic kinetic formula. 
-                double heatDamage = (0.5f * mass * Math.Pow(impactVelocity, 2) * BDArmorySettings.DMG_MULTIPLIER  * 0.01f);
+                double heatDamage = (0.5f * mass * Math.Pow(impactVelocity, 2) * BDArmorySettings.DMG_MULTIPLIER  * 0.1f);
  
                 //Now, we know exactly how well the bullet was stopped by the armor. 
                 //This value will be below 1 when it is stopped by the armor. That means that we should not apply all the damage to the part that stopped by the bullet
@@ -332,7 +332,7 @@ namespace BDArmory
 
                 if (hitPart.vessel != sourceVessel)
                 {
-                    hitPart.AddDamage(heatDamage);
+                    hitPart.AddDamage((float) heatDamage);
                 }
             }
         }
@@ -419,12 +419,12 @@ namespace BDArmory
                     Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost =" + mass * impactVelocity);
                 }
 
-                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * penetrationFactor);
+                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
 
             }
             else
             {
-                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * penetrationFactor);
+                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
                     
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
@@ -461,11 +461,12 @@ namespace BDArmory
             }
             else //add for thickness depending on the size of the part
             {
-                thickness += (float)Math.Pow(hitPart.mass * 100, (1f / 3f));
+                thickness += (float)Math.Pow(hitPart.maxTemp, (1f / 3f)) - 12.6f;
                 thickness *= Mathf.Clamp01((1f - (float)(hitPart.temperature / hitPart.maxTemp)));
             }
-
-            return thickness / anglemultiplier;
+         
+            //the minimum will be always 10 mm
+            return Mathf.Max(thickness / anglemultiplier, 10) ;
         }
 
         private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)

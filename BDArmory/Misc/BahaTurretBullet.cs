@@ -207,7 +207,7 @@ namespace BDArmory.Misc
                             if (hitPart.vessel != sourceVessel)
                             {
                                 //make heat damage equal to the part's max temperture, and add 500 extra heat damage which should do minor collateral to teh surrounding parts
-                                hitPart.AddDamage(hitPart.maxTemp + 500);
+                                hitPart.Destroy();
                             }
                         }
                         else    //apply damage normally if no special case present

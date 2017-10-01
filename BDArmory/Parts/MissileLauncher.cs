@@ -839,8 +839,9 @@ namespace BDArmory.Parts
 					if(lineHit.collider.GetComponentInParent<Part>() != part)
 					{
 						Debug.Log("[BDArmory]:" + part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
-                        part.SetDamage(part.maxTemp + 100);
-					}
+                        part.Destroy();
+
+                    }
 				}
 			}
 
@@ -879,7 +880,7 @@ namespace BDArmory.Parts
                         if (launcher.hasRCS) launcher.KillRCS();
                     }
 
-                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.SetDamage(part.maxTemp + 100);
+                    if (sqrDist < Mathf.Pow(GetBlastRadius() * 0.5f, 2)) part.Destroy();
 
                     isTimed = true;
                     detonationTime = TimeIndex + 1.5f;
@@ -1613,8 +1614,8 @@ namespace BDArmory.Parts
 				//proxy detonation
 				if(proxyDetonate && ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
 				{
-					part.SetDamage(part.maxTemp + 100);
-				}
+					part.Destroy();
+                }
 			}
 			else
 			{
@@ -1676,7 +1677,7 @@ namespace BDArmory.Parts
                 //proxy detonation
                 if (proxyDetonate && ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(blastRadius * 0.5f, 2))
                 {
-                    part.SetDamage(part.maxTemp + 100);
+                    part.Destroy();
                 }
             }
             else
@@ -1757,8 +1758,8 @@ namespace BDArmory.Parts
 		        wpm.Dispose();
 		    }
 				
-		    if(part!=null) part.SetDamage(part.maxTemp + 100);
-		    Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
+		    if(part!=null) part.Destroy();
+            Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 		    if(SourceVessel==null) SourceVessel = vessel;
 		    ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, SourceVessel, transform.forward, explModelPath, explSoundPath, true); 
 
