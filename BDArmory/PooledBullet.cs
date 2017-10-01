@@ -288,7 +288,7 @@ namespace BDArmory
             {
                 //detonate
                 ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
-                    currentVelocity.normalized, explModelPath, explSoundPath,false);
+                    currentVelocity.normalized, explModelPath, explSoundPath,false,caliber);
                 KillBullet();
                 return;
             }
@@ -383,6 +383,7 @@ namespace BDArmory
 
             //TODO: Extract bdarmory settings from this values
             float thickness = CalculateThickness(hitPart, anglemultiplier);
+            if (thickness < 1) thickness = 1; //prevent divide by zero or other odd behavior
 
             var penetrationFactor = penetration / thickness;
 
@@ -430,7 +431,7 @@ namespace BDArmory
                     Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + mass * impactVelocity);
                 }
             }
-            return penetration / thickness;
+            return penetrationFactor;
         }
 
         private float CalculatePenetration()
@@ -479,7 +480,7 @@ namespace BDArmory
                 if (explosive)
                 {
                     ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
-                        blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath, false);
+                        blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath, false,caliber);
                     KillBullet();
                     return true;
                 }
