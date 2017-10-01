@@ -1252,7 +1252,7 @@ namespace BDArmory
                             p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
                                              TimeWarp.fixedDeltaTime);
 
-                            if (BDArmorySettings.INSTAKILL) p.AddDamage(p.maxTemp);
+                            if (BDArmorySettings.INSTAKILL) p.Destroy();
                         }
                     }
                     else

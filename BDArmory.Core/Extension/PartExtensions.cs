@@ -1,33 +1,46 @@
-﻿using BDArmory.Core.Services;
+﻿using System.Collections.Generic;
+using BDArmory.Core.Services;
+using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.Core.Extension
 {
     public static class PartExtensions
     {
-        public static  void AddDamage(this Part p, double damage)
+        public static  void AddDamage(this Part p, float damage)
         {
             Dependencies.Get<DamageService>().AddDamageToPart(p, damage);  
         }
 
-        public static void SetDamage(this Part p, double damage)
+        public static void Destroy(this Part p)
         {
-            Dependencies.Get<DamageService>().SetDamageToPart(p, damage);
+            Dependencies.Get<DamageService>().SetDamageToPart(p, float.MaxValue);
         }
 
-    
         public static bool HasArmor(this Part p)
         {
             return p.GetArmorMass() > 0d;
         }
 
+        public static float Damage(this Part p)
+        {
+            return Dependencies.Get<DamageService>().GetPartDamage(p);
+        }
+
+        public static float MaxDamage(this Part p)
+        {
+            return Dependencies.Get<DamageService>().GetMaxPartDamage(p);
+        }
+
         public static void ReduceArmor(this Part p, double massToReduce)
         {
-            if (p.HasArmor())
-            {
-                p.RequestResource("Armor", massToReduce);
-                p.SetDamage(p.maxTemp * (1f - p.GetArmorPercentage()));
-            }
+            if (!p.HasArmor()) return;
+
+            p.RequestResource("Armor", massToReduce);
+
+            var maxPartDamage = Dependencies.Get<DamageService>().GetMaxPartDamage(p);
+
+            Dependencies.Get<DamageService>().SetDamageToPart(p, maxPartDamage * (1f - p.GetArmorPercentage()));
         }
 
         /// <summary>
@@ -74,13 +87,20 @@ namespace BDArmory.Core.Extension
             }
             return 0;
         }
-
-        /// <summary>
-        ///     Gets the dry mass of the part.
-        /// </summary>
-        public static double GetDryMass(this Part part)
+        //Thanks FlowerChild
+        //refreshes part action window
+        public static void RefreshAssociatedWindows(this Part part)
         {
-            return (part.physicalSignificance == Part.PhysicalSignificance.FULL) ? part.mass : 0d;
+            IEnumerator<UIPartActionWindow> window = Object.FindObjectsOfType(typeof(UIPartActionWindow)).Cast<UIPartActionWindow>().GetEnumerator();
+            while (window.MoveNext())
+            {
+                if (window.Current == null) continue;
+                if (window.Current.part == part)
+                {
+                    window.Current.displayDirty = true;
+                }
+            }
+            window.Dispose();
         }
     }
 }

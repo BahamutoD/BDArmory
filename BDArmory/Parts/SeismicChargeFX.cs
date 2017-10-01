@@ -87,7 +87,7 @@ namespace BDArmory.Parts
 
             if (explodePart != null)
             {
-                explodePart.SetDamage(explodePart.maxTemp + 500);
+                explodePart.Destroy();
             }
             else
             {

@@ -844,7 +844,7 @@ namespace BDArmory.Parts
             while (vesselPart.MoveNext())
             {
                 if (vesselPart.Current == null) continue;
-                vesselPart.Current.SetDamage(vesselPart.Current.maxTemp * 2);
+                vesselPart.Current.Destroy();
             }
             vesselPart.Dispose();
         }

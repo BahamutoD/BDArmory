@@ -30,18 +30,18 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Behaviour\TemperatureDamageSystem.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Dependencies.cs" />
     <Compile Include="Enum\DamageOperation.cs" />
     <Compile Include="Extension\PartExtensions.cs" />
     <Compile Include="Events\DamageEventArgs.cs" />
     <Compile Include="Extension\VesselExtensions.cs" />
+    <Compile Include="Module\DamageTracker.cs" />
     <Compile Include="Services\DamageService.cs" />
     <Compile Include="Interface\INotificableService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\NotificableService.cs" />
-    <Compile Include="Services\TemperatureDamageService.cs" />
+    <Compile Include="Services\ModuleDamageService.cs" />
     <Compile Include="Utils\DebugUtils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -63,6 +63,8 @@
       <HintPath>..\BDArmory\LocalDev\Refs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Behaviour\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
