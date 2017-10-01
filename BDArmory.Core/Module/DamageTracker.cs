@@ -6,34 +6,43 @@ namespace BDArmory.Core.Module
 {
     public class DamageTracker : PartModule
     {
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Damage"),UI_ProgressBar(affectSymCounterparts = UI_Scene.None,controlEnabled = false,scene = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Damage"),UI_ProgressBar(affectSymCounterparts = UI_Scene.None,controlEnabled = false,scene = UI_Scene.All,maxValue = 100000,minValue = 0,requireFullControl = false)]
         public float Damage = 0f;
 
         //TODO: Add setting
         private readonly float maxDamageFactor = 800f;
 
         private MaterialColorUpdater damageRenderer;
-
+        private Gradient g = new Gradient();
+        
     
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
 
-            Debug.Log("[BDArmory]:DamageTracker started");
             damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);
 
             if (part != null)
             {
-                UI_ProgressBar damageField = (UI_ProgressBar) Fields["Damage"].uiControlEditor;
-                damageField.maxValue = (float) maxDamageFactor * part.mass * Mathf.Clamp(part.crashTolerance, 1, 100);
-                Debug.Log("[BDArmory]:DamageTracker started. MaxValue =" + damageField.maxValue);
-                damageField.minValue = 0f;
+                UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Damage"].uiControlFlight;
+                damageFieldFlight.maxValue = CalculateMaxDamage();
+                damageFieldFlight.minValue = 0f;
+
+                UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Damage"].uiControlEditor;
+
+                damageFieldEditor.maxValue = CalculateMaxDamage();
+                damageFieldEditor.minValue = 0f;
                 this.part.RefreshAssociatedWindows();
             }
             else
             {
                 Debug.Log("[BDArmory]:DamageTracker::OnStart part  is null");
             }
+        }
+
+        private float CalculateMaxDamage()
+        {
+            return maxDamageFactor * part.mass * Mathf.Clamp(part.crashTolerance, 1, 100);
         }
 
         public void DestroyPart()
@@ -58,8 +67,16 @@ namespace BDArmory.Core.Module
                     return;
             }
             
-            damageRenderer?.Update(PhysicsGlobals.GetBlackBodyRadiation(this.Damage, this.part), false);
+            damageRenderer?.Update(GetDamageColor());
         }
+
+        public  Color GetDamageColor()
+        {
+            Color color = PhysicsGlobals.BlackBodyRadiation.Evaluate(Mathf.Clamp01(part.Damage() / part.MaxDamage()));
+            color.a *= PhysicsGlobals.BlackBodyRadiationAlphaMult * part.blackBodyRadiationAlphaMult; ;
+            return color;
+        }
+
 
         void OnDestroy()
         {
@@ -75,7 +92,6 @@ namespace BDArmory.Core.Module
             {
                 this.DestroyPart();
             }
-            Debug.Log("[BDArmory]:DamageTracker SetDamage.damage"+ Damage + " MaxValue =" + this.GetMaxPartDamage());
         }
 
         public void AddDamage(float damage)
@@ -85,7 +101,6 @@ namespace BDArmory.Core.Module
             {
                 this.DestroyPart();
             }
-            Debug.Log("[BDArmory]:DamageTracker AddDamage" + Damage + " MaxValue =" + this.GetMaxPartDamage());
         }
     }
 }
