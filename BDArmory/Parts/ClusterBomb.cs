@@ -148,7 +148,7 @@ namespace BDArmory.Parts
             part.explosionPotential = 0;
             missileLauncher.HasFired = false;
 
-            part.SetDamage(part.maxTemp + 10);
+            part.Destroy();
         }
 
 

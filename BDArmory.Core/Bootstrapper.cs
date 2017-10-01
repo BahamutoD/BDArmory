@@ -8,7 +8,7 @@ namespace BDArmory.Core
     {
         private void Awake()
         {
-            Dependencies.Register<DamageService, TemperatureDamageService>();
+            Dependencies.Register<DamageService, ModuleDamageService>();
         }
     }
 }

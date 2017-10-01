@@ -232,9 +232,9 @@ namespace BDArmory.FX
                         }
                         else
                         {
-                             float excessHeat = Mathf.Max(0, (float)(part.temperature + heatDamage - part.maxTemp));
+                            float excessHeat = Mathf.Max(0, (float)(part.Damage() + heatDamage - part.MaxDamage()));
 
-                             part.AddDamage(heatDamage);
+                            part.AddDamage(heatDamage);
 
                             if (excessHeat > 0 && part.parent)
                             {
