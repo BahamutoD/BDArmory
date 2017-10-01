@@ -76,7 +76,6 @@ namespace BDArmory.Core.Module
                 this.DestroyPart();
             }
             Debug.Log("[BDArmory]:DamageTracker SetDamage.damage"+ Damage + " MaxValue =" + this.GetMaxPartDamage());
-            this.part.RefreshAssociatedWindows();
         }
 
         public void AddDamage(float damage)
@@ -87,7 +86,6 @@ namespace BDArmory.Core.Module
                 this.DestroyPart();
             }
             Debug.Log("[BDArmory]:DamageTracker AddDamage" + Damage + " MaxValue =" + this.GetMaxPartDamage());
-            this.part.RefreshAssociatedWindows();
         }
     }
 }
