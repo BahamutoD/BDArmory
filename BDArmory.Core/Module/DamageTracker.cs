@@ -29,7 +29,6 @@ namespace BDArmory.Core.Module
                 damageFieldFlight.minValue = 0f;
 
                 UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Damage"].uiControlEditor;
-
                 damageFieldEditor.maxValue = CalculateMaxDamage();
                 damageFieldEditor.minValue = 0f;
                 this.part.RefreshAssociatedWindows();
@@ -42,7 +41,7 @@ namespace BDArmory.Core.Module
 
         private float CalculateMaxDamage()
         {
-            return maxDamageFactor * part.mass * Mathf.Clamp(part.crashTolerance, 1, 100);
+            return maxDamageFactor * Mathf.Clamp(part.mass,0.001f,50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
         }
 
         public void DestroyPart()
