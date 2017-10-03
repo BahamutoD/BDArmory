@@ -565,11 +565,11 @@ namespace BDArmory.Parts
 
             if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
             {
-                DetonationDistance = blastRadius;
+                DetonationDistance = Mathf.Clamp(blastRadius, 0, blastRadius/2);
             }
             else
             {
-                DetonationDistance = blastPower;
+                DetonationDistance = Mathf.Clamp(blastPower, 0, blastRadius/2);
             }
         }
 
