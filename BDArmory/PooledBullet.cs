@@ -307,35 +307,36 @@ namespace BDArmory
             }
         }
 
-        private void AppyDamage(Part hitPart, float multiplier, float penetrationfactor)
+        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
-            if (hitPart != null && !hitPart.partInfo.name.Contains("Strut"))
-            {
+            if(hitPart == null) return;
+            if (hitPart.HasArmor()) return;
+            if (hitPart.partInfo.name.Contains("Strut")) return;
 
                 //Basic kinetic formula. 
                 double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
                                     BDArmorySettings.DMG_MULTIPLIER
                                     * 0.0065f);
  
-                //Now, we know exactly how well the bullet was stopped by the armor. 
-                //This value will be below 1 when it is stopped by the armor. That means that we should not apply all the damage to the part that stopped by the bullet
+            //Now, we know exactly how well the bullet was stopped by the armor. 
+            //This value will be below 1 when it is stopped by the armor. That means that we should not apply all the damage to the part that stopped by the bullet
 
-                //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
-                heatDamage *= multiplier;
+            //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
+            heatDamage *= multiplier;
 
-                if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                {
-                    Debug.Log("[BDArmory]: Hit! damage applied: " + (int) heatDamage);
-                    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
-                }
-
-                if (hitPart.vessel != sourceVessel)
-                {
-                    hitPart.AddDamage((float) heatDamage);
-                }
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: Hit! damage applied: " + (int) heatDamage);
+                Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
             }
+
+            if (hitPart.vessel != sourceVessel)
+            {
+                hitPart.AddDamage((float) heatDamage);
+            }
+            
         }
 
         private void CalculateDragNumericalIntegration()
