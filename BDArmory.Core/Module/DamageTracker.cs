@@ -1,5 +1,4 @@
-﻿using System;
-using BDArmory.Core.Extension;
+﻿using BDArmory.Core.Extension;
 using UnityEngine;
 
 namespace BDArmory.Core.Module
@@ -47,7 +46,7 @@ namespace BDArmory.Core.Module
 
         public void DestroyPart()
         {
-            this.part.temperature = this.part.maxTemp * 2;
+            part.temperature = part.maxTemp * 2;
         }
 
 
@@ -85,21 +84,21 @@ namespace BDArmory.Core.Module
 
         }
 
-        public void SetDamage(float damage)
+        public void SetDamage(float PartDamage)
         {
-            this.Damage = damage;
-            if (this.Damage > this.GetMaxPartDamage())
+            Damage = PartDamage;
+            if (Damage > GetMaxPartDamage())
             {
-                this.DestroyPart();
+                DestroyPart();
             }
         }
 
-        public void AddDamage(float damage)
+        public void AddDamage(float PartDamage)
         {
-            this.Damage += damage;
-            if (this.Damage > this.GetMaxPartDamage())
+            Damage += PartDamage;
+            if (Damage > GetMaxPartDamage())
             {
-                this.DestroyPart();
+                DestroyPart();
             }
         }
     }

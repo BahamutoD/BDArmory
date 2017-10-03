@@ -218,7 +218,7 @@ namespace BDArmory.FX
                         float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) * 
                                            ExplosionHeatMultiplier * 
                                            heat *
-                                           distanceFactor / part.crashTolerance;
+                                           (distanceFactor / part.crashTolerance);
                         float armorReduction = 0;
 
                         //////////////////////////////////////////////////////////
