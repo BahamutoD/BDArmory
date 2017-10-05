@@ -36,11 +36,13 @@ namespace BDArmory.Core.Extension
         {
             if (!p.HasArmor()) return;
 
-            p.RequestResource("Armor", massToReduce);
+            //p.RequestResource("Armor", massToReduce);
+
+            Dependencies.Get<DamageService>().ReduceArmorToPart(p, (float) massToReduce );
 
             var maxPartDamage = Dependencies.Get<DamageService>().GetMaxPartDamage(p);
 
-            Dependencies.Get<DamageService>().SetDamageToPart(p, maxPartDamage * (1f - p.GetArmorPercentage()));
+            //Dependencies.Get<DamageService>().SetDamageToPart(p, maxPartDamage * (1f - p.GetArmorPercentage()));
         }
 
         /// <summary>
@@ -50,42 +52,46 @@ namespace BDArmory.Core.Extension
         /// <returns></returns>
         public static double GetArmorMass(this Part p)
         {
+
             if (p == null) return 0d;
 
-            using (var resourceEnumerator = p.Resources.GetEnumerator())
-            {
-                while (resourceEnumerator.MoveNext())
-                {
-                    if(resourceEnumerator.Current == null) continue;
-                    
-                    PartResource currentr = resourceEnumerator.Current;
-                    if (currentr.resourceName == "Armor")
-                    {
-                        return currentr.amount;
-                    }
-                }
-            }
-            return 0d;            
+            //using (var resourceEnumerator = p.Resources.GetEnumerator())
+            //{
+            //    while (resourceEnumerator.MoveNext())
+            //    {
+            //        if(resourceEnumerator.Current == null) continue;
+
+            //        PartResource currentr = resourceEnumerator.Current;
+            //        if (currentr.resourceName == "Armor")
+            //        {
+            //            return currentr.amount;
+            //        }
+            //    }
+            //}
+
+            //return 0d;            
+            return Dependencies.Get<DamageService>().GetPartArmor(p);
         }
 
         public static float GetArmorPercentage(this Part p)
         {
             if (p == null) return 0;
 
-            using (var resourceEnumerator = p.Resources.GetEnumerator())
-            {
-                while (resourceEnumerator.MoveNext())
-                {
-                    if (resourceEnumerator.Current == null) continue;
+            //using (var resourceEnumerator = p.Resources.GetEnumerator())
+            //{
+            //    while (resourceEnumerator.MoveNext())
+            //    {
+            //        if (resourceEnumerator.Current == null) continue;
 
-                    PartResource currentr = resourceEnumerator.Current;
-                    if (currentr.resourceName == "Armor")
-                    {
-                        return (float) (currentr.amount / currentr.maxAmount);
-                    }
-                }
-            }
-            return 0;
+            //        PartResource currentr = resourceEnumerator.Current;
+            //        if (currentr.resourceName == "Armor")
+            //        {
+            //            return (float) (currentr.amount / currentr.maxAmount);
+            //        }
+            //    }
+            //}
+            //return 0;
+            return Dependencies.Get<DamageService>().GetPartArmor(p) / Dependencies.Get<DamageService>().GetMaxArmor(p);
         }
         //Thanks FlowerChild
         //refreshes part action window

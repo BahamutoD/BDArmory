@@ -18,7 +18,7 @@ namespace BDArmory.FX
         float maxTime;
         public float range;
 
-        public static float ExplosionHeatMultiplier = 4000;
+        public static float ExplosionHeatMultiplier = 4200;
         public static float ExplosionImpulseMultiplier = 1.125f; //adjust as necessary to increase/decrease the force of HE weapons
 
         public static List<Part> ignoreParts = new List<Part>();
