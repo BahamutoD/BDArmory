@@ -318,7 +318,7 @@ namespace BDArmory
             //Basic kinetic formula. 
             double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
                                     BDArmorySettings.DMG_MULTIPLIER
-                                    * 0.0085f);
+                                    * 0.1);
 
             //Now, we know exactly how well the bullet was stopped by the armor. 
             //This value will be below 1 when it is stopped by the armor.
@@ -329,7 +329,7 @@ namespace BDArmory
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Hit! damage applied: " + (int) heatDamage);
+                Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
                 Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
             }
 
@@ -402,6 +402,8 @@ namespace BDArmory
                 BulletHitFX.CreateBulletHit(hit.point, hit.normal, !fullyPenetrated);
             }
 
+            double massToReduce = 0;
+
             if (fullyPenetrated)
             {
                 //lower velocity on penetrating armor plate
@@ -416,23 +418,27 @@ namespace BDArmory
                 flightTimeElapsed -= Time.fixedDeltaTime;
                 prevPosition = transform.position;
 
+                //hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
+                massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+                massToReduce *= 0.25;
+
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost = " + mass * impactVelocity);
+                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost = " + massToReduce);
                 }
-
-                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
-
             }
             else
             {
-                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
-                    
+                //hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
+                massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+                massToReduce *= 0.125;
+
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + mass * impactVelocity);
+                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + massToReduce);
                 }
             }
+            hitPart.ReduceArmor(massToReduce);
             return penetrationFactor;
         }
 
