@@ -14,7 +14,7 @@ namespace BDArmory.Core.Module
         public float Armor = 15f;
 
         //TODO: Add setting
-        private readonly float maxDamageFactor = 800f;
+        private readonly float maxDamageFactor = 100f;
 
         private MaterialColorUpdater damageRenderer;
         private Gradient g = new Gradient();        
