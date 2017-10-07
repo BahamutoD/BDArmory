@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using BDArmory.Armor;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
@@ -231,73 +233,94 @@ namespace BDArmory
             {
                 float dist = initialSpeed*TimeWarp.fixedDeltaTime;
                 Ray ray = new Ray(prevPosition, currPosition - prevPosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, dist, 557057))
+                List<RaycastHit> hits = Physics.RaycastAll(ray, dist, 557057).ToList();
+
+                Debug.Log("[BDArmory]:hits=" + hits.Count);
+               
+                if (hits.Count > 0)
                 {
-                    Part hitPart = null;
+                    var orderedHits = hits.OrderBy(x => x.distance);
 
-                    try
+                    using (var hitsEnu = orderedHits.GetEnumerator())
                     {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                    }
-                    catch (NullReferenceException)
-                    {
-                        return;
-                    }
+                        while (hitsEnu.MoveNext())
+                        {
+                            RaycastHit hit = hitsEnu.Current;
+                            Part hitPart = null;
 
-                    if (CheckGroundHit(hitPart, hit))
-                    {
-                        ExplosiveDetonation(hitPart, hit, ray);
-                        KillBullet();
-                        return;
-                    }
+                            try
+                            {
+                                hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                            }
+                            catch (NullReferenceException)
+                            {
+                                Debug.Log("[BDArmory]:NullReferenceException");
+                                return;
+                            }
 
-                    if (CheckBuildingHit(hit))
-                    {
-                        ExplosiveDetonation(hitPart, hit, ray);
-                        KillBullet();
-                        return;
-                    }
+                            if (CheckGroundHit(hitPart, hit))
+                            {
+                                ExplosiveDetonation(hitPart, hit, ray);
+                                KillBullet();
+                                return;
+                            }
 
-                    //Standard Pipeline Damage, Armor and Explosives
-                    float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
-                    impactVelocity = currentVelocity.magnitude;
-                    float anglemultiplier = (float)Math.Cos(3.14 * hitAngle / 180.0);
+                            if (CheckBuildingHit(hit))
+                            {
+                                ExplosiveDetonation(hitPart, hit, ray);
+                                KillBullet();
+                                return;
+                            }
 
-                    CalculateDragAnalyticEstimate();
+                            //Standard Pipeline Damage, Armor and Explosives
+                            float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
+                            impactVelocity = currentVelocity.magnitude;
+                            float anglemultiplier = (float)Math.Cos(3.14 * hitAngle / 180.0);
 
-                    var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);                    
-                    
-                    if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
-                    {
-                        ApplyDamage(hitPart, 1,penetrationFactor,caliber);
-                        hasPenetrated = true;
-                                              
-                    }
-                    else 
-                    {
-                        ApplyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor,caliber);
-                        ExplosiveDetonation(hitPart, hit, ray); // explosive bullets that get stopped by armor will explode                        
-                        hasPenetrated = false;                        
-                        KillBullet();
-                    }
-                   
+                            CalculateDragAnalyticEstimate();
+
+                            var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
+
+                            if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
+                            {
+                                ApplyDamage(hitPart, 1, penetrationFactor, caliber);
+                                hasPenetrated = true;
+                                penTicker += 1;
+                            }
+                            else
+                            {
+                                ApplyDamage(hitPart, penetrationFactor * 0.1f, penetrationFactor, caliber);
+                                ExplosiveDetonation(hitPart, hit, ray); // explosive bullets that get stopped by armor will explode                        
+                                hasPenetrated = false;
+                                KillBullet();
+                            }
+
+                            ///////////////////////////////////////////////////////////////////////
+                            //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
+                            ///////////////////////////////////////////////////////////////////////
+
+                            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive))
+                            {
+                                //detonate
+                                ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
+                                    currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
+                                KillBullet();
+                                return;
+                            }
+
+                            //bullet should not go any further if moving too slowly after hit
+                            //smaller caliber rounds would be too deformed to do any further damage
+                            if (currentVelocity.magnitude <= 150 || (caliber < 30 && hasPenetrated))
+                            {
+                                KillBullet();
+                                return;
+                            }
+                        }
+                    } 
                 }
+                hits.Clear();
             }
-
-            ///////////////////////////////////////////////////////////////////////
-            //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
-            ///////////////////////////////////////////////////////////////////////
-
-            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >=2 && explosive))
-            {
-                //detonate
-                ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
-                    currentVelocity.normalized, explModelPath, explSoundPath,false,caliber);
-                KillBullet();
-                return;
-            }
-
+   
             ///////////////////////////////////////////////////////////////////////
             //Bullet Translation
             ///////////////////////////////////////////////////////////////////////
@@ -305,15 +328,6 @@ namespace BDArmory
             prevPosition = currPosition;
             //move bullet            
             transform.position += currentVelocity * Time.fixedDeltaTime;
-            if(hasPenetrated) penTicker += 1;
-
-            //bullet should not go any further if moving too slowly after hit
-            //smaller caliber rounds would be too deformed to do any further damage
-            if (currentVelocity.magnitude <= 150 || (caliber < 30 && hasPenetrated))
-            {
-                KillBullet();
-                return;
-            }
         }
 
         private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
