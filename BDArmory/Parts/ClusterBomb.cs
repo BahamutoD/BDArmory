@@ -38,7 +38,7 @@ namespace BDArmory.Parts
         public override void OnStart(StartState state)
         {
             submunitions = new List<GameObject>();
-            List<Transform>.Enumerator sub = part.FindModelTransforms("submunition").ToList().GetEnumerator();
+            IEnumerator<Transform> sub = part.FindModelTransforms("submunition").AsEnumerable().GetEnumerator();
             while (sub.MoveNext())
             {
                 if (sub.Current == null) continue;
@@ -58,7 +58,7 @@ namespace BDArmory.Parts
             sub.Dispose();
 
             fairings = new List<GameObject>();
-            List<Transform>.Enumerator fairing = part.FindModelTransforms("fairing").ToList().GetEnumerator();
+            IEnumerator<Transform> fairing = part.FindModelTransforms("fairing").AsEnumerable().GetEnumerator();
             while (fairing.MoveNext())
             {
                 if (fairing.Current == null) continue;
@@ -94,7 +94,7 @@ namespace BDArmory.Parts
             deployed = true;
             if (swapCollidersOnDeploy)
             {
-                List<Collider>.Enumerator col = part.GetComponentsInChildren<Collider>().ToList().GetEnumerator();
+                IEnumerator<Collider> col = part.GetComponentsInChildren<Collider>().AsEnumerable().GetEnumerator();
                 while (col.MoveNext())
                 {
                     if (col.Current == null) continue;

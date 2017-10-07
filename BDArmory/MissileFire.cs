@@ -168,7 +168,7 @@ namespace BDArmory
                 Debug.Log("[BDArmory]: Ripple data: " + rippleData);
                 try
                 {
-                    List<string>.Enumerator weapon = rippleData.Split(new char[] {';'}).ToList().GetEnumerator();
+                    IEnumerator<string> weapon = rippleData.Split(new char[] {';'}).AsEnumerable().GetEnumerator(); ;
                     while (weapon.MoveNext())
                     {
                         if (weapon.Current == string.Empty) continue;
@@ -2787,11 +2787,11 @@ namespace BDArmory
                         lr.SetPosition(3, transform.InverseTransformPoint(rays[1].origin));
                     }
 
-                    List<Ray>.Enumerator rt = rays.ToList().GetEnumerator();
+                    IEnumerator<Ray> rt = rays.AsEnumerable().GetEnumerator();
                     while (rt.MoveNext())
                     {
                         RaycastHit[] hits = Physics.RaycastAll(rt.Current, rayDistance, 557057);
-                        List<RaycastHit>.Enumerator t1 = hits.ToList().GetEnumerator();
+                        IEnumerator<RaycastHit> t1 = hits.AsEnumerable().GetEnumerator();
                         while (t1.MoveNext() )
                         {
                             Part p = t1.Current.collider.GetComponentInParent<Part>();
@@ -2809,7 +2809,7 @@ namespace BDArmory
 
                 //forward check for no-drop missiles
                 RaycastHit[] hitparts = Physics.RaycastAll(new Ray(ml.MissileReferenceTransform.position, ml.GetForwardTransform()), 50, 557057);
-                List<RaycastHit>.Enumerator t = hitparts.ToList().GetEnumerator();
+                IEnumerator<RaycastHit> t = hitparts.AsEnumerable().GetEnumerator();
                 while (t.MoveNext())
                 {
                     Part p = t.Current.collider.GetComponentInParent<Part>();
