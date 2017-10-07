@@ -81,6 +81,9 @@ namespace BDArmory
         public static Shader bulletShader;
         public static bool shaderInitialized;
         private float impactVelocity;
+
+        public bool hasPenetrated = false;
+        public int penTicker = 0;
         #endregion
 
         void OnEnable()
@@ -267,12 +270,15 @@ namespace BDArmory
                     
                     if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                     {
-                        ApplyDamage(hitPart, 1,penetrationFactor,caliber);                        
+                        ApplyDamage(hitPart, 1,penetrationFactor,caliber);
+                        hasPenetrated = true;
+                                              
                     }
                     else 
                     {
                         ApplyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor,caliber);
                         ExplosiveDetonation(hitPart, hit, ray); // explosive bullets that get stopped by armor will explode                        
+                        hasPenetrated = false;                        
                         KillBullet();
                     }
                    
@@ -280,10 +286,10 @@ namespace BDArmory
             }
 
             ///////////////////////////////////////////////////////////////////////
-            //Flak Explosion (air detonation/proximity fuse)
+            //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
             ///////////////////////////////////////////////////////////////////////
 
-            if (explosive && airDetonation && distanceFromStart > detonationRange)
+            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >=2 && explosive))
             {
                 //detonate
                 ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
@@ -299,6 +305,7 @@ namespace BDArmory
             prevPosition = currPosition;
             //move bullet            
             transform.position += currentVelocity*Time.fixedDeltaTime;
+            if(hasPenetrated) penTicker += 1;
 
             if (currentVelocity.magnitude <= 150)//bullet should not go any further if moving too slowly after hit
             {
@@ -544,6 +551,8 @@ namespace BDArmory
         void KillBullet()
         {
             gameObject.SetActive(false);
+            hasPenetrated = false;
+            penTicker = 0;
         }
 
         void FadeColor()
