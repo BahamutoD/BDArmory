@@ -212,7 +212,7 @@ namespace BDArmory.FX
                         if (heat < 0) heat = power;
 
                         //////////////////////////////////////////////////////////
-                        //Damage pipeline for missiles then bullets
+                        //Damage pipeline for missiles then explosive bullets
                         //////////////////////////////////////////////////////////
 
                         float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) * 
@@ -234,7 +234,7 @@ namespace BDArmory.FX
                         }
 
                         //////////////////////////////////////////////////////////
-                        //Bullets
+                        //Explosive Bullets
                         //////////////////////////////////////////////////////////
                         
                         if (!isMissile)
@@ -255,6 +255,8 @@ namespace BDArmory.FX
                         //   {
                         //      part.parent.AddDamage(excessHeat);
                         //   }
+
+
 
                         //////////////////////////////////////////////////////////
                         // Apply Damage

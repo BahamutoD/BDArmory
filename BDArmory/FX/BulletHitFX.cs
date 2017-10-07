@@ -14,11 +14,6 @@ namespace BDArmory.FX
         float startTime;
         public bool ricochet;
 
-        //static GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit"); 
-        //===TODO: static object wont load after scene reload
-        // JDK:  This issue is due to the fact tht recent changes in Unity will not allow dynamic assignment in the static constructor
-        // Declare the static var and then populate/Refresh it during awake or Start.
-
         void Start()
         {
             startTime = Time.time;
@@ -29,6 +24,7 @@ namespace BDArmory.FX
                 if (pe.Current == null) continue;
                 EffectBehaviour.AddParticleEmitter(pe.Current);
             }
+
             pe.Dispose();
 
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -49,7 +45,6 @@ namespace BDArmory.FX
                 string path = "BDArmory/Sounds/bulletHit" + random;
                 hitSound = GameDatabase.Instance.GetAudioClip(path);
             }
-
 
             audioSource.PlayOneShot(hitSound);
         }

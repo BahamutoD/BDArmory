@@ -103,18 +103,18 @@ namespace BDArmory.Core.Module
 
         }
 
-        public void SetDamage(float PartDamage)
+        public void SetDamage(float partdamage)
         {
-            Damage = PartDamage;
+            Damage = partdamage;
             if (Damage > GetMaxPartDamage())
             {
                 DestroyPart();
             }
         }
 
-        public void AddDamage(float PartDamage)
+        public void AddDamage(float partdamage)
         {
-            Damage += PartDamage;
+            Damage += partdamage;
             if (Damage > GetMaxPartDamage())
             {
                 DestroyPart();
