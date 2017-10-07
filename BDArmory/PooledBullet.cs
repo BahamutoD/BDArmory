@@ -267,11 +267,11 @@ namespace BDArmory
                     
                     if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                     {
-                        ApplyDamage(hitPart, 1,penetrationFactor);                        
+                        ApplyDamage(hitPart, 1,penetrationFactor,caliber);                        
                     }
                     else 
                     {
-                        ApplyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor);
+                        ApplyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor,caliber);
                         ExplosiveDetonation(hitPart, hit, ray); // explosive bullets that get stopped by armor will explode                        
                         KillBullet();
                     }
@@ -307,7 +307,7 @@ namespace BDArmory
             }
         }
 
-        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor)
+        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
@@ -335,7 +335,7 @@ namespace BDArmory
 
             if (hitPart.vessel != sourceVessel)
             {
-                hitPart.AddDamage((float) heatDamage);
+                hitPart.AddDamage((float) heatDamage,caliber);
             }
             
         }
