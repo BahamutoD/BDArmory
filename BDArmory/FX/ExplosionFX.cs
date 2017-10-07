@@ -28,7 +28,7 @@ namespace BDArmory.FX
         {
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
-            List<KSPParticleEmitter>.Enumerator pe = pEmitters.ToList().GetEnumerator();
+            IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
             while (pe.MoveNext())
             {
                 if (pe.Current == null) continue;
@@ -58,7 +58,7 @@ namespace BDArmory.FX
             lightFX.intensity -= 12*Time.fixedDeltaTime;
             if (Time.time - startTime > 0.2f)
             {
-                List<KSPParticleEmitter>.Enumerator pe = pEmitters.ToList().GetEnumerator();
+                IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
                 while (pe.MoveNext())
                 {
                     if (pe.Current == null) continue;

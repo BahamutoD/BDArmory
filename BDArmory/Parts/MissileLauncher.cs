@@ -353,15 +353,15 @@ namespace BDArmory.Parts
 
 				if(!string.IsNullOrEmpty(exhaustPrefabPath))
 				{
-                    List<Transform>.Enumerator t = part.FindModelTransforms("exhaustTransform").ToList().GetEnumerator();
+                    IEnumerator<Transform> t = part.FindModelTransforms("exhaustTransform").AsEnumerable().GetEnumerator();
 
                     while (t.MoveNext())
                     {
                         if (t.Current == null) continue;
 						GameObject exhaustPrefab = (GameObject)Instantiate(GameDatabase.Instance.GetModel(exhaustPrefabPath));
 						exhaustPrefab.SetActive(true);
-                        List<KSPParticleEmitter>.Enumerator emitter = exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>().ToList().GetEnumerator();
-						while(emitter.MoveNext())
+                        IEnumerator<KSPParticleEmitter> emitter = exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
+                        while (emitter.MoveNext())
 						{
 						    if (emitter.Current == null) continue;
 							emitter.Current.emit = false;
@@ -376,15 +376,15 @@ namespace BDArmory.Parts
 
 				if(!string.IsNullOrEmpty(boostExhaustPrefabPath) && !string.IsNullOrEmpty(boostExhaustTransformName))
 				{
-                    List<Transform>.Enumerator t = part.FindModelTransforms(boostExhaustTransformName).ToList().GetEnumerator();
+                    IEnumerator<Transform> t = part.FindModelTransforms(boostExhaustTransformName).AsEnumerable().GetEnumerator();
 
                     while (t.MoveNext())
                     {
                         if (t.Current == null) continue;
 						GameObject exhaustPrefab = (GameObject)Instantiate(GameDatabase.Instance.GetModel(boostExhaustPrefabPath));
 						exhaustPrefab.SetActive(true);
-                        List<KSPParticleEmitter>.Enumerator emitter = exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>().ToList().GetEnumerator();
-						while(emitter.MoveNext())
+                        IEnumerator<KSPParticleEmitter> emitter = exhaustPrefab.GetComponentsInChildren<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
+                        while (emitter.MoveNext())
 						{
 						    if (emitter.Current == null) continue;
 							emitter.Current.emit = false;
@@ -401,13 +401,13 @@ namespace BDArmory.Parts
 				boosters = new List<GameObject>();
 				if(!string.IsNullOrEmpty(boostTransformName))
 				{
-                    List<Transform>.Enumerator t = part.FindModelTransforms(boostTransformName).ToList().GetEnumerator();
+                    IEnumerator<Transform> t = part.FindModelTransforms(boostTransformName).AsEnumerable().GetEnumerator();
                     while (t.MoveNext())
                     {
                         if (t.Current == null) continue;
 						boosters.Add(t.Current.gameObject);
-                        List<KSPParticleEmitter>.Enumerator be = t.Current.GetComponentsInChildren<KSPParticleEmitter>().ToList().GetEnumerator();
-						while (be.MoveNext())
+                        IEnumerator<KSPParticleEmitter> be = t.Current.GetComponentsInChildren<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
+                        while (be.MoveNext())
 						{
 						    if (be.Current == null) continue;
 							if(be.Current.useWorldSpace)
@@ -431,7 +431,7 @@ namespace BDArmory.Parts
                     t.Dispose();
 				}
 
-                List<KSPParticleEmitter>.Enumerator pEmitter = part.partTransform.FindChild("model").GetComponentsInChildren<KSPParticleEmitter>().ToList().GetEnumerator();
+                IEnumerator<KSPParticleEmitter> pEmitter = part.partTransform.FindChild("model").GetComponentsInChildren<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
                 while (pEmitter.MoveNext())
                 {
                     if (pEmitter.Current == null) continue;
@@ -1189,7 +1189,7 @@ namespace BDArmory.Parts
 			if(!string.IsNullOrEmpty(deployAnimationName))
 			{
 				deployed = true;
-			    List<AnimationState>.Enumerator anim = deployStates.ToList().GetEnumerator();
+			    IEnumerator<AnimationState> anim = deployStates.AsEnumerable().GetEnumerator();
                 while (anim.MoveNext())
                 {
                     if (anim.Current == null) continue;
@@ -1272,8 +1272,8 @@ namespace BDArmory.Parts
 				audioSource.clip = thrustAudio;
 			}
 
-		    List<Light>.Enumerator light = gameObject.GetComponentsInChildren<Light>().ToList().GetEnumerator();
-			while(light.MoveNext())
+		    IEnumerator<Light> light = gameObject.GetComponentsInChildren<Light>().AsEnumerable().GetEnumerator();
+            while (light.MoveNext())
 			{
 			    if (light.Current == null) continue;
 				light.Current.intensity = 1.5f;	
@@ -1437,7 +1437,7 @@ namespace BDArmory.Parts
 		{
 			MissileState = MissileStates.PostThrust;
 
-            List<Light>.Enumerator light = gameObject.GetComponentsInChildren<Light>().ToList().GetEnumerator();
+            IEnumerator<Light> light = gameObject.GetComponentsInChildren<Light>().AsEnumerable().GetEnumerator();
             while (light.MoveNext())
             {
                 if (light.Current == null) continue;
