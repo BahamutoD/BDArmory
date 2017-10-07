@@ -33,9 +33,9 @@ namespace BDArmory.Misc
 
             Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
 
-            RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
+			RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
 
-            PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName.ToLower() == "filter by function");
+            PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
 
             PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
                 p => availableParts.Contains(p));
