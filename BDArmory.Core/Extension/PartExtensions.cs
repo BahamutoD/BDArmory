@@ -19,7 +19,7 @@ namespace BDArmory.Core.Extension
             double damage_d = Mathf.Clamp((float)Math.Log10(armorPct_),10,100) + 5 * damage;
             float damage_f = (float) damage_d;
             
-            if (caliber <= 30) damage_f *= 0.25f; //penalty for low caliber rounds
+            if (caliber <= 30 && armorPct_ >= 0.10) damage_f *= 0.125f; //penalty for low caliber rounds,not if armor is very low
             Dependencies.Get<DamageService>().AddDamageToPart(p, damage_f);
         }
 
@@ -58,45 +58,13 @@ namespace BDArmory.Core.Extension
         /// <returns></returns>
         public static double GetArmorMass(this Part p)
         {
-
-            if (p == null) return 0d;
-
-            //using (var resourceEnumerator = p.Resources.GetEnumerator())
-            //{
-            //    while (resourceEnumerator.MoveNext())
-            //    {
-            //        if(resourceEnumerator.Current == null) continue;
-
-            //        PartResource currentr = resourceEnumerator.Current;
-            //        if (currentr.resourceName == "Armor")
-            //        {
-            //            return currentr.amount;
-            //        }
-            //    }
-            //}
-
-            //return 0d;            
+            if (p == null) return 0d;        
             return Dependencies.Get<DamageService>().GetPartArmor(p);
         }
 
         public static float GetArmorPercentage(this Part p)
         {
             if (p == null) return 0;
-
-            //using (var resourceEnumerator = p.Resources.GetEnumerator())
-            //{
-            //    while (resourceEnumerator.MoveNext())
-            //    {
-            //        if (resourceEnumerator.Current == null) continue;
-
-            //        PartResource currentr = resourceEnumerator.Current;
-            //        if (currentr.resourceName == "Armor")
-            //        {
-            //            return (float) (currentr.amount / currentr.maxAmount);
-            //        }
-            //    }
-            //}
-            //return 0;
             float armor_ = Dependencies.Get<DamageService>().GetPartArmor(p);
             float maxArmor_ = Dependencies.Get<DamageService>().GetMaxArmor(p);
             return armor_ / maxArmor_;

@@ -304,10 +304,12 @@ namespace BDArmory
             
             prevPosition = currPosition;
             //move bullet            
-            transform.position += currentVelocity*Time.fixedDeltaTime;
+            transform.position += currentVelocity * Time.fixedDeltaTime;
             if(hasPenetrated) penTicker += 1;
 
-            if (currentVelocity.magnitude <= 150)//bullet should not go any further if moving too slowly after hit
+            //bullet should not go any further if moving too slowly after hit
+            //smaller caliber rounds would be too deformed to do any further damage
+            if (currentVelocity.magnitude <= 150 || (caliber < 30 && hasPenetrated))
             {
                 KillBullet();
                 return;
@@ -325,7 +327,7 @@ namespace BDArmory
             //Basic kinetic formula. 
             double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
                                     BDArmorySettings.DMG_MULTIPLIER
-                                    * 0.1);
+                                    * 0.0025);
 
             //Now, we know exactly how well the bullet was stopped by the armor. 
             //This value will be below 1 when it is stopped by the armor.
@@ -425,7 +427,6 @@ namespace BDArmory
                 flightTimeElapsed -= Time.fixedDeltaTime;
                 prevPosition = transform.position;
 
-                //hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
                 massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
                 massToReduce *= 0.25;
 
@@ -436,7 +437,6 @@ namespace BDArmory
             }
             else
             {
-                //hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
                 massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
                 massToReduce *= 0.125;
 
