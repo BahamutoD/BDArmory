@@ -231,13 +231,11 @@ namespace BDArmory
 
             if (collisionEnabled)
             {
-                float dist = initialSpeed*TimeWarp.fixedDeltaTime;
+                float dist = currentVelocity.magnitude * TimeWarp.fixedDeltaTime;
                 Ray ray = new Ray(prevPosition, currPosition - prevPosition);
-                List<RaycastHit> hits = Physics.RaycastAll(ray, dist, 557057).ToList();
-
-                Debug.Log("[BDArmory]:hits=" + hits.Count);
-               
-                if (hits.Count > 0)
+                var hits = Physics.RaycastAll(ray, dist, 557057);
+                              
+                if (hits.Length > 0)
                 {
                     var orderedHits = hits.OrderBy(x => x.distance);
 
@@ -318,7 +316,6 @@ namespace BDArmory
                         }
                     } 
                 }
-                hits.Clear();
             }
    
             ///////////////////////////////////////////////////////////////////////
