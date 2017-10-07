@@ -146,9 +146,6 @@
     <EmbeddedResource Include="Shaders\UnlitBlack.shader" />
     <EmbeddedResource Include="Shaders\BulletShader.shader" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
-  </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>@echo $(Targetname)
 SET ModName=BDArmory

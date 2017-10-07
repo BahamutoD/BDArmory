@@ -9,9 +9,9 @@ namespace BDArmory.Armor
         static BDArmor instance;
         public static BDArmor Instance => instance;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Thickness (mm)"),
-            UI_FloatRange(minValue = 30f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.All)]
-        public float EquivalentThickness = 0f;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor"),
+            UI_FloatRange(minValue = 30f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
+        public float Armor = 0f;
 
         [KSPField]
         public string explModelPath = "BDArmory/Models/explosion/explosionLarge";
@@ -26,7 +26,7 @@ namespace BDArmory.Armor
 
         public  float getEquivalentThickness()
         {
-            return EquivalentThickness;
+            return Armor;
         }
 
         public override void OnStart(StartState state)
@@ -35,10 +35,10 @@ namespace BDArmory.Armor
             part.force_activate();
             instance = this;
 
-            if (UI.BDArmorySettings.ADVANCED_EDIT)
-            {
-                Fields["EquivalentThickness"].guiActiveEditor = true;
-            }
+            //if (UI.BDArmorySettings.ADVANCED_EDIT)
+            //{
+            //    Fields["EquivalentThickness"].guiActiveEditor = true;
+            //}
 
             switch (explodeMode)
             {

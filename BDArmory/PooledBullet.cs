@@ -70,8 +70,8 @@ namespace BDArmory
         Light lightFlash;
         bool wasInitiated;
         public Vector3 currentVelocity;
-        public float mass;
-        public float caliber;
+        public float mass = 5.40133e-5f;
+        public float caliber = 0;
         public float bulletVelocity; //muzzle velocity
         public bool explosive = false;
         public float apBulletDmg = 0;
@@ -81,6 +81,9 @@ namespace BDArmory
         public static Shader bulletShader;
         public static bool shaderInitialized;
         private float impactVelocity;
+
+        public bool hasPenetrated = false;
+        public int penTicker = 0;
         #endregion
 
         void OnEnable()
@@ -265,30 +268,32 @@ namespace BDArmory
 
                     var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);                    
                     
-                    if (penetrationFactor > 1 && !ExplosiveDetonation(hitPart, hit, ray)) //fully penetrated, not explosive, continue ballistic damage
-                    { 
-                        ApplyDamage(hitPart, 1,penetrationFactor);
-                        //ExplosiveDetonation(hitPart, hit, ray);
-                    }
-                    else if(!ExplosiveDetonation(hitPart, hit, ray))
+                    if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                     {
-                        ApplyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor);
-                        //ExplosiveDetonation(hitPart, hit, ray);
-                        KillBullet(); // bullets that are stopped by armor should die                        
+                        ApplyDamage(hitPart, 1,penetrationFactor,caliber);
+                        hasPenetrated = true;
+                                              
+                    }
+                    else 
+                    {
+                        ApplyDamage(hitPart, penetrationFactor * 0.1f,penetrationFactor,caliber);
+                        ExplosiveDetonation(hitPart, hit, ray); // explosive bullets that get stopped by armor will explode                        
+                        hasPenetrated = false;                        
+                        KillBullet();
                     }
                    
                 }
             }
 
             ///////////////////////////////////////////////////////////////////////
-            //Flak Explosion (air detonation/proximity fuse)
+            //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
             ///////////////////////////////////////////////////////////////////////
 
-            if (explosive && airDetonation && distanceFromStart > detonationRange)
+            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >=2 && explosive))
             {
                 //detonate
                 ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
-                    currentVelocity.normalized, explModelPath, explSoundPath,false);
+                    currentVelocity.normalized, explModelPath, explSoundPath,false,caliber);
                 KillBullet();
                 return;
             }
@@ -300,6 +305,7 @@ namespace BDArmory
             prevPosition = currPosition;
             //move bullet            
             transform.position += currentVelocity*Time.fixedDeltaTime;
+            if(hasPenetrated) penTicker += 1;
 
             if (currentVelocity.magnitude <= 150)//bullet should not go any further if moving too slowly after hit
             {
@@ -308,32 +314,35 @@ namespace BDArmory
             }
         }
 
-        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor)
+        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
             if(hitPart == null) return;
-            if (hitPart.HasArmor()) return;
             if (hitPart.partInfo.name.Contains("Strut")) return;
-
+            // if (hitPart.HasArmor()) return; - Why would we not do damage if armor??
+            
             //Basic kinetic formula. 
-            double heatDamage = (0.5f * mass * Math.Pow(impactVelocity, 2) * BDArmorySettings.DMG_MULTIPLIER  * 0.1f);
- 
-            //Now, we know exactly how well the bullet was stopped by the armor. 
-            //This value will be below 1 when it is stopped by the armor. That means that we should not apply all the damage to the part that stopped by the bullet
+            double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
+                                    BDArmorySettings.DMG_MULTIPLIER
+                                    * 0.1);
 
+            //Now, we know exactly how well the bullet was stopped by the armor. 
+            //This value will be below 1 when it is stopped by the armor.
+            //That means that we should not apply all the damage to the part that stopped by the bullet
             //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
+
             heatDamage *= multiplier;
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Hit! damage applied: " + (int) heatDamage);
+                Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
                 Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
             }
 
             if (hitPart.vessel != sourceVessel)
             {
-                hitPart.AddDamage((float) heatDamage);
+                hitPart.AddDamage((float) heatDamage,caliber);
             }
             
         }
@@ -384,12 +393,13 @@ namespace BDArmory
 
             //TODO: Extract bdarmory settings from this values
             float thickness = CalculateThickness(hitPart, anglemultiplier);
+            if (thickness < 1) thickness = 1; //prevent divide by zero or other odd behavior
 
             var penetrationFactor = penetration / thickness;
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Armor penetration =" + penetration + " | Thickness =" + thickness);
+                Debug.Log("[BDArmory]: Armor penetration =" + penetration + " | Thickness = " + thickness);
             }
 
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
@@ -399,11 +409,12 @@ namespace BDArmory
                 BulletHitFX.CreateBulletHit(hit.point, hit.normal, !fullyPenetrated);
             }
 
+            double massToReduce = 0;
+
             if (fullyPenetrated)
             {
                 //lower velocity on penetrating armor plate
-                //does not affect low impact parts so that rounds can go through entire tank easily
-                //transform.position = armorData.hitResultOut.point;
+                //does not affect low impact parts so that rounds can go through entire tank easily                
 
                 currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
 
@@ -414,28 +425,35 @@ namespace BDArmory
                 flightTimeElapsed -= Time.fixedDeltaTime;
                 prevPosition = transform.position;
 
+                //hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
+                massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+                massToReduce *= 0.25;
+
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost =" + mass * impactVelocity);
+                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost = " + massToReduce);
                 }
-
-                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
-
             }
             else
             {
-                hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
-                    
+                //hitPart.ReduceArmor(0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor));
+                massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+                massToReduce *= 0.125;
+
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + mass * impactVelocity);
+                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + massToReduce);
                 }
             }
+            hitPart.ReduceArmor(massToReduce);
             return penetrationFactor;
         }
 
         private float CalculatePenetration()
         {
+
+            //TODO: Increase penetration for AP using pooled bullet modifiers
+
             float penetration = 0; //penetration of 0 for legacy support
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
@@ -447,25 +465,7 @@ namespace BDArmory
 
         private static float CalculateThickness(Part hitPart, float anglemultiplier)
         {
-            float thickness = 10; //regular KSP parts: 10mm armor
-
-            //TODO: Extract part extension method from this
-            if (hitPart.crashTolerance >= 80) //structural parts: 30mm armor
-            {
-                thickness = 30 ;
-            }
-
-            if (hitPart.HasArmor())
-            {
-                thickness = (float) hitPart.GetArmorMass();
-            }
-            else //add for thickness depending on the size of the part
-            {
-                thickness += (float)Math.Pow(hitPart.maxTemp, (1f / 3f)) - 12.6f;
-                thickness *= Mathf.Clamp01((1f - (float)(hitPart.temperature / hitPart.maxTemp)));
-            }
-         
-            //the minimum will be always 10 mm
+            float thickness = (float)hitPart.GetArmorMass();
             return Mathf.Max(thickness / anglemultiplier, 10) ;
         }
 
@@ -481,7 +481,8 @@ namespace BDArmory
                 if (explosive)
                 {
                     ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
-                        blastHeat, sourceVessel, currentVelocity.normalized, explModelPath, explSoundPath, false);
+                                                blastHeat, sourceVessel, currentVelocity.normalized,
+                                                explModelPath, explSoundPath, false,caliber);
                     KillBullet();
                     return true;
                 }
@@ -550,6 +551,8 @@ namespace BDArmory
         void KillBullet()
         {
             gameObject.SetActive(false);
+            hasPenetrated = false;
+            penTicker = 0;
         }
 
         void FadeColor()

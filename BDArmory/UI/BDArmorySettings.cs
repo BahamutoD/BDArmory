@@ -53,6 +53,7 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
         [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;
         [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK= false;
+        [BDAPersistantSettingsField] public static float MAX_DAMAGE_FACTOR = 100;
 
 
 
