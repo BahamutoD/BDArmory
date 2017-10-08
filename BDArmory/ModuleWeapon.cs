@@ -519,7 +519,7 @@ namespace BDArmory
                 shortName = part.partInfo.title;
             }
 
-            List<KSPParticleEmitter>.Enumerator emitter = part.FindModelComponents<KSPParticleEmitter>().ToList().GetEnumerator();
+            IEnumerator<KSPParticleEmitter> emitter = part.FindModelComponents<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())
             {
                 if (emitter.Current == null) continue;
@@ -546,7 +546,7 @@ namespace BDArmory
             }
 
             muzzleFlashEmitters = new List<KSPParticleEmitter>();
-            List<Transform>.Enumerator mtf = part.FindModelTransforms("muzzleTransform").ToList().GetEnumerator();
+            IEnumerator<Transform> mtf = part.FindModelTransforms("muzzleTransform").AsEnumerable().GetEnumerator();
             while (mtf.MoveNext())
             {
                 if (mtf.Current == null) continue;
@@ -576,7 +576,7 @@ namespace BDArmory
                 shellEjectTransforms = part.FindModelTransforms(shellEjectTransformName);
 
                 //setup emitters
-                List<KSPParticleEmitter>.Enumerator pe = part.FindModelComponents<KSPParticleEmitter>().ToList().GetEnumerator();
+                IEnumerator<KSPParticleEmitter> pe = part.FindModelComponents<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
                 while (pe.MoveNext())
                 {
                     if (pe.Current == null) continue;
@@ -1021,7 +1021,7 @@ namespace BDArmory
                             //shell ejection
                             if (BDArmorySettings.EJECT_SHELLS)
                             {
-                                List<Transform>.Enumerator sTf = shellEjectTransforms.ToList().GetEnumerator();
+                                IEnumerator<Transform> sTf = shellEjectTransforms.AsEnumerable().GetEnumerator();
                                 while (sTf.MoveNext())
                                 {
                                     if (sTf.Current == null) continue;

@@ -835,7 +835,7 @@ namespace BDArmory
             rb = gameObject.AddComponent<Rigidbody>();
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
 
-            List<KSPParticleEmitter>.Enumerator pe = pEmitters.ToList().GetEnumerator();
+            IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
             while (pe.MoveNext())
             {
                 if (pe.Current == null) continue;
@@ -934,7 +934,7 @@ namespace BDArmory
             if (Time.time - startTime > thrustTime)
             {
                 //isThrusting = false;
-                List<KSPParticleEmitter>.Enumerator pEmitter = pEmitters.ToList().GetEnumerator();
+                IEnumerator<KSPParticleEmitter> pEmitter = pEmitters.AsEnumerable().GetEnumerator();
                 while (pEmitter.MoveNext())
                 {
                     if (pEmitter.Current == null) continue;
@@ -1031,7 +1031,7 @@ namespace BDArmory
             ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, rb.velocity.normalized,
                 explModelPath, explSoundPath,true);
 
-            List<KSPParticleEmitter>.Enumerator emitter = pEmitters.ToList().GetEnumerator();
+            IEnumerator<KSPParticleEmitter> emitter = pEmitters.AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())
             {
                 if (emitter.Current == null) continue;
