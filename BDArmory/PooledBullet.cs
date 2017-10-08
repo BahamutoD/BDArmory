@@ -427,8 +427,9 @@ namespace BDArmory
                 flightTimeElapsed -= Time.fixedDeltaTime;
                 prevPosition = transform.position;
 
-                massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
-                massToReduce *= 0.25;
+                //massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+                //massToReduce *= 0.25;
+                massToReduce = mass;
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
@@ -437,8 +438,9 @@ namespace BDArmory
             }
             else
             {
-                massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
-                massToReduce *= 0.125;
+                //massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+                //massToReduce *= 0.125;
+                massToReduce = mass * 0.85;
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
