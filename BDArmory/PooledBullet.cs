@@ -327,7 +327,7 @@ namespace BDArmory
             //Basic kinetic formula. 
             double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
                                     BDArmorySettings.DMG_MULTIPLIER
-                                    * 0.0025);
+                                    * 0.0025); //dmg mult is 100 baseline, so this constant adjusted accordingly
 
             //Now, we know exactly how well the bullet was stopped by the armor. 
             //This value will be below 1 when it is stopped by the armor.
