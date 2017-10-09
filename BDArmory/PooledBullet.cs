@@ -183,7 +183,7 @@ namespace BDArmory
             }
         }
 
-        void FixedUpdate()
+        void Update()
         {
             float distanceFromStart = Vector3.Distance(transform.position, startPosition);
             if (!gameObject.activeInHierarchy)
@@ -191,11 +191,11 @@ namespace BDArmory
                 return;
             }
 
-            flightTimeElapsed += TimeWarp.fixedDeltaTime; //calculate flight time for drag purposes
+            flightTimeElapsed += TimeWarp.deltaTime; //calculate flight time for drag purposes
 
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
-                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.fixedDeltaTime;
+                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.deltaTime;
             }
 
             CalculateDragNumericalIntegration();
@@ -204,8 +204,8 @@ namespace BDArmory
             {
                 bulletTrail.SetPosition(0,
                     transform.position +
-                    ((currentVelocity*tracerDeltaFactor*TimeWarp.fixedDeltaTime/TimeWarp.CurrentRate) -
-                    (FlightGlobals.ActiveVessel.Velocity() * TimeWarp.fixedDeltaTime)) * 0.25);
+                    ((currentVelocity*tracerDeltaFactor*TimeWarp.deltaTime / TimeWarp.CurrentRate) -
+                    (FlightGlobals.ActiveVessel.Velocity() * TimeWarp.deltaTime)) * 0.25);
             }
             else
             {
@@ -231,10 +231,9 @@ namespace BDArmory
 
             if (collisionEnabled)
             {
-                float dist = currentVelocity.magnitude * TimeWarp.fixedDeltaTime;
-                Ray ray = new Ray(prevPosition, currPosition - prevPosition);
-                var hits = Physics.RaycastAll(ray, dist, 557057);
-                              
+                float dist = currentVelocity.magnitude * TimeWarp.deltaTime;
+                Ray ray = new Ray(currPosition, currPosition - prevPosition);
+                var hits = Physics.RaycastAll(ray, dist, 557057);        
                 if (hits.Length > 0)
                 {
                     var orderedHits = hits.OrderBy(x => x.distance);
@@ -253,6 +252,12 @@ namespace BDArmory
                             catch (NullReferenceException)
                             {
                                 Debug.Log("[BDArmory]:NullReferenceException");
+                                return;
+                            }
+
+                            if (hitPart?.vessel == sourceVessel)
+                            {
+                                //avoid autohit;
                                 return;
                             }
 
@@ -324,7 +329,7 @@ namespace BDArmory
             
             prevPosition = currPosition;
             //move bullet            
-            transform.position += currentVelocity * Time.fixedDeltaTime;
+            transform.position += currentVelocity * Time.deltaTime;
         }
 
         private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
@@ -371,7 +376,7 @@ namespace BDArmory
                 dragAcc *= 0.5f;
                 dragAcc /= ballisticCoefficient;
 
-                currentVelocity -= dragAcc * TimeWarp.fixedDeltaTime;
+                currentVelocity -= dragAcc * TimeWarp.deltaTime;
                 //numerical integration; using Euler is silly, but let's go with it anyway
             }
         }
@@ -435,7 +440,7 @@ namespace BDArmory
                 impactVelocity = currentVelocity.magnitude;
                 CalculateDragAnalyticEstimate();
 
-                flightTimeElapsed -= Time.fixedDeltaTime;
+                flightTimeElapsed -= Time.deltaTime;
                 prevPosition = transform.position;
 
                 //massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
@@ -570,10 +575,8 @@ namespace BDArmory
 
         void FadeColor()
         {
-            Vector4 currentColorV = new Vector4(currentColor.r, currentColor.g, currentColor.b, currentColor.a);
             Vector4 endColorV = new Vector4(projectileColor.r, projectileColor.g, projectileColor.b, projectileColor.a);
-            //float delta = (Vector4.Distance(currentColorV, endColorV)/0.15f) * TimeWarp.fixedDeltaTime;
-            float delta = TimeWarp.fixedDeltaTime;
+            float delta = TimeWarp.deltaTime;
             Vector4 finalColorV = Vector4.MoveTowards(currentColor, endColorV, delta);
             currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, Mathf.Clamp(finalColorV.w, 0.25f, 1f));
         }
