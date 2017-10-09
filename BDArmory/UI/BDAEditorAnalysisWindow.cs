@@ -272,7 +272,7 @@ namespace BDArmory.UI
             parts.Dispose();
 
             if (rcsCount > 0)
-                rcsReductionFactor = Mathf.Clamp((rcsReductionFactor * rcsCount), 0.15f, 1);    //same formula as in VesselECMJInfo must be used here!
+                rcsReductionFactor = Mathf.Clamp((rcsReductionFactor * rcsCount), 0.0f, 1);    //same formula as in VesselECMJInfo must be used here!
         }
 
 
