@@ -15,12 +15,16 @@ namespace BDArmory.Core.Extension
             //var maxPartDamage = Dependencies.Get<DamageService>().GetMaxPartDamage(p);
             //Dependencies.Get<DamageService>().AddDamageToPart(p, (maxPartDamage * (1f - p.GetArmorPercentage())) * 0.5f);
 
-            double armorPct_ = p.GetArmorPercentage();
-            double damage_d = Mathf.Clamp((float)Math.Log10(armorPct_),10,100) + 5 * damage;
-            float damage_f = (float) damage_d;
-            
-            if (caliber <= 30 && armorPct_ >= 0.10) damage_f *= 0.125f; //penalty for low caliber rounds,not if armor is very low
-            Dependencies.Get<DamageService>().AddDamageToPart(p, damage_f);
+            //double armorPct_ = p.GetArmorPercentage();
+            //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPct_),10,100) + 5) * damage;
+            //float damage_f = (float) damage_d;
+
+            //if (caliber <= 30 && armorPct_ >= 0.10) damage_f *= 0.0625f; //penalty for low caliber rounds,not if armor is very low
+
+            //Moving to ApplyDamage / PooledBullet
+            damage = (float) Math.Round((double)damage, 2);
+            Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
+            Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
         }
 
         public static void Destroy(this Part p)
@@ -46,7 +50,7 @@ namespace BDArmory.Core.Extension
         public static void ReduceArmor(this Part p, double massToReduce)
         {
             if (!p.HasArmor()) return;
-
+            massToReduce = Math.Max(0.10,Math.Round(massToReduce, 2));
             Dependencies.Get<DamageService>().ReduceArmorToPart(p, (float) massToReduce );            
            
         }

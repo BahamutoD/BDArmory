@@ -255,11 +255,7 @@ namespace BDArmory
                                 return;
                             }
 
-                            if (hitPart?.vessel == sourceVessel)
-                            {
-                                //avoid autohit;
-                                return;
-                            }
+                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                              
 
                             if (CheckGroundHit(hitPart, hit))
                             {
@@ -278,7 +274,7 @@ namespace BDArmory
                             //Standard Pipeline Damage, Armor and Explosives
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
                             impactVelocity = currentVelocity.magnitude;
-                            float anglemultiplier = (float)Math.Cos(3.14 * hitAngle / 180.0);
+                            float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
                             CalculateDragAnalyticEstimate();
 
@@ -286,15 +282,25 @@ namespace BDArmory
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                             {
-                                ApplyDamage(hitPart, 1, penetrationFactor, caliber);
                                 hasPenetrated = true;
+
+                                ApplyDamage(hitPart, 1, penetrationFactor, caliber);                                
                                 penTicker += 1;
                             }
                             else
                             {
-                                ApplyDamage(hitPart, penetrationFactor * 0.1f, penetrationFactor, caliber);
-                                ExplosiveDetonation(hitPart, hit, ray); // explosive bullets that get stopped by armor will explode                        
                                 hasPenetrated = false;
+
+                                if (explosive)
+                                {
+                                    // explosive bullets that get stopped by armor will explode
+                                    ApplyDamage(hitPart, 1, penetrationFactor, caliber);
+                                    ExplosiveDetonation(hitPart, hit, ray); 
+                                }
+                                else
+                                {                                    
+                                    ApplyDamage(hitPart, penetrationFactor * 0.1f, penetrationFactor, caliber);
+                                }                                
                                 KillBullet();
                             }
 
@@ -318,6 +324,7 @@ namespace BDArmory
                                 KillBullet();
                                 return;
                             }
+                            break;
                         }
                     } 
                 }
@@ -343,18 +350,29 @@ namespace BDArmory
             //Basic kinetic formula. 
             double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
                                     BDArmorySettings.DMG_MULTIPLIER
-                                    * 0.0025); //dmg mult is 100 baseline, so this constant adjusted accordingly
+                                    * 0.0030f); //dmg mult is 100 baseline, so this constant adjusted accordingly
 
             //Now, we know exactly how well the bullet was stopped by the armor. 
             //This value will be below 1 when it is stopped by the armor.
             //That means that we should not apply all the damage to the part that stopped by the bullet
             //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
 
-            heatDamage *= multiplier;
+            //as armor is decreased level of damage should increase exponentially
+            double armorMass_ = hitPart.GetArmorMass();
+            double armorPCT_ = hitPart.GetArmorPercentage();
 
+            heatDamage = (heatDamage * multiplier) * Math.Max(1f, armorPCT_);
+
+            //double damage_d = ((float)Math.Log10(Mathf.Clamp(hitPart.GetArmorPercentage() * 100, 1f,100f)) + 5f) * heatDamage * multiplier;
+            //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * heatDamage;
+            //float damage_f = (float)damage_d;
+
+            if (caliber <= 30f && armorMass_ >= 100d) heatDamage *= 0.0625f; //penalty for low caliber rounds,not if armor is very low
+
+            /////////////////////////////////////////////
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
+                //Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
                 Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
             }
 
@@ -417,7 +435,7 @@ namespace BDArmory
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Armor penetration =" + penetration + " | Thickness = " + thickness);
+                Debug.Log("[BDArmory]: Armor penetration = " + penetration + " | Thickness = " + thickness);
             }
 
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
@@ -426,15 +444,18 @@ namespace BDArmory
             {
                 BulletHitFX.CreateBulletHit(hit.point, hit.normal, !fullyPenetrated);
             }
-
-            double massToReduce = 0;
+                        
+            double massToReduce = Math.PI * Math.Pow((caliber*0.001) / 2,2) * (penetration);
+            //double massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
+            //massToReduce *= 0.125;
 
             if (fullyPenetrated)
             {
                 //lower velocity on penetrating armor plate
-                //does not affect low impact parts so that rounds can go through entire tank easily                
+                //does not affect low impact parts so that rounds can go through entire tank easily              
 
                 currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
+                if (penTicker > 0) currentVelocity *= 0.85f; //signifincanly reduce velocity on subsequent penetrations
 
                 //updating impact velocity
                 impactVelocity = currentVelocity.magnitude;
@@ -443,24 +464,18 @@ namespace BDArmory
                 flightTimeElapsed -= Time.deltaTime;
                 prevPosition = transform.position;
 
-                //massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
-                //massToReduce *= 0.25;
-                massToReduce = mass;
-
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost = " + massToReduce);
                 }
             }
             else
-            {
-                //massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
-                //massToReduce *= 0.125;
-                massToReduce = mass * 0.85;
+            {                
+                massToReduce *= 0.0625;                
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Stopped by Armor. Armor lost =" + massToReduce);
+                    Debug.Log("[BDArmory]: Bullet Stopped by Armor: Armor lost = " + massToReduce);
                 }
             }
             hitPart.ReduceArmor(massToReduce);

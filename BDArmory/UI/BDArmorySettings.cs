@@ -20,7 +20,12 @@ namespace BDArmory.UI
         //=======configurable settings
         [BDAPersistantSettingsField] public static bool INSTAKILL;
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
-        [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;
+        [BDAPersistantSettingsField] public static float PHYSICS_RANGE;
+        [BDAPersistantSettingsField] public static float MAX_BULLET_RANGE;
+        [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE;
+        [BDAPersistantSettingsField] public static float MAX_ACTIVE_RADAR_RANGE;
+        [BDAPersistantSettingsField] public static float MAX_ENGAGEMENT_RANGE;
+
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
         [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;
         [BDAPersistantSettingsField] public static bool INFINITE_AMMO;
@@ -29,13 +34,9 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static bool DRAW_AIMERS = true;
         [BDAPersistantSettingsField] public static bool AIM_ASSIST = true;
         [BDAPersistantSettingsField] public static bool REMOTE_SHOOTING;
-        [BDAPersistantSettingsField] public static bool BOMB_CLEARANCE_CHECK = true;
-        [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100;
-        [BDAPersistantSettingsField] public static float FLARE_CHANCE_FACTOR = 25;
-
-        public static bool SMART_GUARDS = true;
-
-        [BDAPersistantSettingsField] public static float MAX_BULLET_RANGE = 8000;
+        [BDAPersistantSettingsField] public static bool BOMB_CLEARANCE_CHECK = true;        
+        [BDAPersistantSettingsField] public static float FLARE_CHANCE_FACTOR = 25;      
+        
         [BDAPersistantSettingsField] public static float TRIGGER_HOLD_TIME = 0.3f;
         [BDAPersistantSettingsField] public static bool ALLOW_LEGACY_TARGETING = true;
         [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024;
@@ -44,18 +45,21 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static float FLARE_THERMAL = 1900;
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
-        [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000;
-        [BDAPersistantSettingsField] public static float MAX_ACTIVE_RADAR_RANGE = 40000;
-        [BDAPersistantSettingsField] public static float MAX_ENGAGEMENT_RANGE = 40000;
+
         [BDAPersistantSettingsField] public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
         [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
         [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
-        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;
         [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK= false;
-        [BDAPersistantSettingsField] public static float MAX_DAMAGE_FACTOR = 100;
 
+        [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100f;
+        [BDAPersistantSettingsField] public static float MAX_DAMAGE_FACTOR = 100f;
+        [BDAPersistantSettingsField] public static float EXP_HEAT_MOD;
+        [BDAPersistantSettingsField] public static float EXP_IMP_MOD;
 
+        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;
+
+        public static bool SMART_GUARDS = true;
 
         //=======Window position settings Git Issue #13
         [BDAWindowSettingsField] public static Rect WindowRectToolbar;

@@ -16,10 +16,7 @@ namespace BDArmory.FX
         public AudioClip exSound;
         public AudioSource audioSource;
         float maxTime;
-        public float range;
-
-        public static float ExplosionHeatMultiplier = 4200;
-        public static float ExplosionImpulseMultiplier = 1.125f; //adjust as necessary to increase/decrease the force of HE weapons
+        public float range;   
 
         public static List<Part> ignoreParts = new List<Part>();
         public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
@@ -205,7 +202,7 @@ namespace BDArmory.FX
                         Rigidbody rb = part.GetComponent<Rigidbody>();
                         if (rb)
                         {
-                            rb.AddForceAtPosition(ray.direction * power * distanceFactor * ExplosionImpulseMultiplier,
+                            rb.AddForceAtPosition(ray.direction * power * distanceFactor * BDArmorySettings.EXP_IMP_MOD,
                                 rayHit.point, ForceMode.Impulse);
                         }
 
@@ -215,8 +212,8 @@ namespace BDArmory.FX
                         //Damage pipeline for missiles then explosive bullets
                         //////////////////////////////////////////////////////////
 
-                        float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) * 
-                                           ExplosionHeatMultiplier * 
+                        float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) *
+                                           BDArmorySettings.EXP_HEAT_MOD * 
                                            heat *
                                            (distanceFactor / part.crashTolerance);
                         float armorReduction = 0;
@@ -277,7 +274,7 @@ namespace BDArmory.FX
                 if (building && !ignoreBldgs.Contains(building))
                 {
                     ignoreBldgs.Add(building);
-                    float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * ExplosionHeatMultiplier * 0.00645f *
+                    float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 0.00645f *
                                              power * distanceFactor;
                     if (damageToBuilding > building.impactMomentumThreshold / 10) building.AddDamage(damageToBuilding);
                     if (building.Damage > building.impactMomentumThreshold) building.Demolish();
