@@ -81,7 +81,7 @@ namespace BDArmory.Control
                 if (loadedVessels.Current == null) continue;
                 if (!loadedVessels.Current.loaded) continue;
                 BDModulePilotAI pilot = null;
-                List<BDModulePilotAI>.Enumerator ePilots = loadedVessels.Current.FindPartModulesImplementing<BDModulePilotAI>().ToList().GetEnumerator();
+                IEnumerator<BDModulePilotAI> ePilots = loadedVessels.Current.FindPartModulesImplementing<BDModulePilotAI>().AsEnumerable().GetEnumerator();
                 while (ePilots.MoveNext())
                 {
                     pilot = ePilots.Current;

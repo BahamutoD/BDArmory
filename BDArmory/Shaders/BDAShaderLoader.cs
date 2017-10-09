@@ -91,7 +91,7 @@ namespace BDArmory.Shaders
             if (shaderBundle != null)
             {
                 Shader[] shaders = shaderBundle.LoadAllAssets<Shader>();
-                List<Shader>.Enumerator shader = shaders.ToList().GetEnumerator();
+                IEnumerator<Shader> shader = shaders.AsEnumerable().GetEnumerator();
                 while (shader.MoveNext())
                 {
                     if (shader.Current == null) continue;

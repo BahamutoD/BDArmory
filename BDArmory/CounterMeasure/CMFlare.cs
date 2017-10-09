@@ -91,7 +91,7 @@ namespace BDArmory.CounterMeasure
                 lights = gameObject.GetComponentsInChildren<Light>();
             }
 
-            List<Light>.Enumerator lgt = lights.ToList().GetEnumerator();
+            IEnumerator<Light> lgt = lights.AsEnumerable().GetEnumerator();
             while (lgt.MoveNext())
             {
                 if (lgt.Current == null) continue;
@@ -209,7 +209,7 @@ namespace BDArmory.CounterMeasure
                 }
                 gpe.Dispose();
 
-                List<Light>.Enumerator lgt = lights.ToList().GetEnumerator();
+                IEnumerator<Light> lgt = lights.AsEnumerable().GetEnumerator();
                 while (lgt.MoveNext())
                 {
                     if (lgt.Current == null) continue;

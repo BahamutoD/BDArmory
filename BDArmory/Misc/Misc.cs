@@ -28,7 +28,7 @@ namespace BDArmory.Misc
         public static AnimationState[] SetUpAnimation(string animationName, Part part) //Thanks Majiir!
         {
             List<AnimationState> states = new List<AnimationState>();
-            List<UnityEngine.Animation>.Enumerator animation = part.FindModelAnimators(animationName).ToList().GetEnumerator();
+            IEnumerator<UnityEngine.Animation> animation = part.FindModelAnimators(animationName).AsEnumerable().GetEnumerator();
             while (animation.MoveNext())
             {
                 if (animation.Current == null) continue;
@@ -45,7 +45,7 @@ namespace BDArmory.Misc
 
         public static AnimationState SetUpSingleAnimation(string animationName, Part part)
         {
-            List<UnityEngine.Animation>.Enumerator animation = part.FindModelAnimators(animationName).ToList().GetEnumerator();
+            IEnumerator<UnityEngine.Animation> animation = part.FindModelAnimators(animationName).AsEnumerable().GetEnumerator();
             while (animation.MoveNext())
             {
                 if (animation.Current == null) continue;
