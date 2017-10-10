@@ -255,7 +255,8 @@ namespace BDArmory
                                 return;
                             }
 
-                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                              
+                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                         
+
 
                             if (CheckGroundHit(hitPart, hit))
                             {
@@ -284,7 +285,9 @@ namespace BDArmory
                             {
                                 hasPenetrated = true;
 
-                                ApplyDamage(hitPart, 1, penetrationFactor, caliber);                                
+                                //ApplyDamage(hitPart, 1, penetrationFactor, caliber);
+                                hitPart.AddDamage_Ballistic(mass, caliber, 1, penetrationFactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);
+                                ExplosiveDetonation(hitPart, hit, ray);
                                 penTicker += 1;
                             }
                             else
@@ -294,12 +297,12 @@ namespace BDArmory
                                 if (explosive)
                                 {
                                     // explosive bullets that get stopped by armor will explode
-                                    ApplyDamage(hitPart, 1, penetrationFactor, caliber);
+                                    ApplyDamage(hitPart, 1, penetrationFactor, caliber);                                    
                                     ExplosiveDetonation(hitPart, hit, ray); 
                                 }
                                 else
-                                {                                    
-                                    ApplyDamage(hitPart, penetrationFactor * 0.1f, penetrationFactor, caliber);
+                                {
+                                    ApplyDamage(hitPart, penetrationFactor * 0.1f, penetrationFactor, caliber);                                    
                                 }                                
                                 KillBullet();
                             }
@@ -321,6 +324,10 @@ namespace BDArmory
                             //smaller caliber rounds would be too deformed to do any further damage
                             if (currentVelocity.magnitude <= 150 || (caliber < 30 && hasPenetrated))
                             {
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                {
+                                    Debug.Log("[BDArmory]: Bullet Velocity too low, stopping");
+                                }
                                 KillBullet();
                                 return;
                             }
@@ -345,12 +352,20 @@ namespace BDArmory
             //No struts, they cause weird bugs :) -BahamutoD
             if(hitPart == null) return;
             if (hitPart.partInfo.name.Contains("Strut")) return;
+
+            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);
+
+
+
+
+
+
             // if (hitPart.HasArmor()) return; - Why would we not do damage if armor??
-            
+
             //Basic kinetic formula. 
-            double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
-                                    BDArmorySettings.DMG_MULTIPLIER
-                                    * 0.0030f); //dmg mult is 100 baseline, so this constant adjusted accordingly
+            //double heatDamage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
+            //                        BDArmorySettings.DMG_MULTIPLIER
+            //                        * 0.0055f); //dmg mult is 100 baseline, so this constant adjusted accordingly
 
             //Now, we know exactly how well the bullet was stopped by the armor. 
             //This value will be below 1 when it is stopped by the armor.
@@ -358,29 +373,30 @@ namespace BDArmory
             //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
 
             //as armor is decreased level of damage should increase exponentially
-            double armorMass_ = hitPart.GetArmorMass();
-            double armorPCT_ = hitPart.GetArmorPercentage();
+            //double armorMass_ = hitPart.GetArmorMass();
+            //double armorPCT_ = hitPart.GetArmorPercentage();
 
-            heatDamage = (heatDamage * multiplier) * Math.Max(1f, armorPCT_);
+            //heatDamage = (heatDamage * multiplier) * Math.Max(1f, armorPCT_);
 
             //double damage_d = ((float)Math.Log10(Mathf.Clamp(hitPart.GetArmorPercentage() * 100, 1f,100f)) + 5f) * heatDamage * multiplier;
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * heatDamage;
             //float damage_f = (float)damage_d;
 
-            if (caliber <= 30f && armorMass_ >= 100d) heatDamage *= 0.0625f; //penalty for low caliber rounds,not if armor is very low
+            //if (caliber <= 30f && armorMass_ >= 100d) heatDamage *= 0.0625f; //penalty for low caliber rounds,not if armor is very low
 
             /////////////////////////////////////////////
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-            {
-                //Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
-                Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
-            }
+            //if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            //{
+            //    //Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
+            //    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
+            //}
 
-            if (hitPart.vessel != sourceVessel)
-            {
-                hitPart.AddDamage((float) heatDamage,caliber);
-            }
-            
+            //if (hitPart.vessel != sourceVessel)
+            //{
+            //    hitPart.AddDamage((float) heatDamage,multiplier,caliber,false);
+            //}
+
+
         }
 
         private void CalculateDragNumericalIntegration()
@@ -463,11 +479,6 @@ namespace BDArmory
 
                 flightTimeElapsed -= Time.deltaTime;
                 prevPosition = transform.position;
-
-                if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                {
-                    Debug.Log("[BDArmory]: Bullet Penetrated Armor: Armor lost = " + massToReduce);
-                }
             }
             else
             {                
@@ -475,7 +486,7 @@ namespace BDArmory
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: Bullet Stopped by Armor: Armor lost = " + massToReduce);
+                    Debug.Log("[BDArmory]: Bullet Stopped by Armor");
                 }
             }
             hitPart.ReduceArmor(massToReduce);

@@ -185,8 +185,8 @@ namespace BDArmory.FX
                
                 if (part != null && part)
                 {
-                    bool hasArmor_ = part.HasArmor();
-                    double armorMass_ = part.GetArmorMass();
+                    //bool hasArmor_ = part.HasArmor();
+                    //double armorMass_ = part.GetArmorMass();
 
                     Vessel missileSource = null;
                     if (sourceVessel != null)
@@ -202,6 +202,7 @@ namespace BDArmory.FX
                         Rigidbody rb = part.GetComponent<Rigidbody>();
                         if (rb)
                         {
+                            //Adding Force to hit - blast pressure
                             rb.AddForceAtPosition(ray.direction * power * distanceFactor * BDArmorySettings.EXP_IMP_MOD,
                                 rayHit.point, ForceMode.Impulse);
                         }
@@ -212,37 +213,37 @@ namespace BDArmory.FX
                         //Damage pipeline for missiles then explosive bullets
                         //////////////////////////////////////////////////////////
 
-                        float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) *
-                                           BDArmorySettings.EXP_HEAT_MOD * 
-                                           heat *
-                                           (distanceFactor / part.crashTolerance);
-                        float armorReduction = 0;
+                        //float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) *
+                        //                   BDArmorySettings.EXP_HEAT_MOD * 
+                        //                   heat *
+                        //                   (distanceFactor / part.crashTolerance);
+                        //float armorReduction = 0;
 
                         //////////////////////////////////////////////////////////
                         //Missiles
                         //////////////////////////////////////////////////////////
-                        if (isMissile)
-                        {
-                            if (hasArmor_)
-                            {
-                                //TODO: figure out how much to nerf armor for missile hit                                
-                                armorReduction = heatDamage / 8;
-                            }                            
-                        }
+                        //if (isMissile)
+                        //{
+                        //    if (hasArmor_)
+                        //    {
+                        //        //TODO: figure out how much to nerf armor for missile hit                                
+                        //        armorReduction = heatDamage / 8;
+                        //    }                            
+                        //}
 
                         //////////////////////////////////////////////////////////
                         //Explosive Bullets
                         //////////////////////////////////////////////////////////
-                        
-                        if (!isMissile)
-                        {
-                            if (hasArmor_)
-                            {
-                                if(caliber < 50) heatDamage = heatDamage * heat / 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                                armorReduction = heatDamage / 16;
-                            }
 
-                        }
+                        //if (!isMissile)
+                        //{
+                        //    if (hasArmor_)
+                        //    {
+                        //        if(caliber < 50) heatDamage = heatDamage * heat / 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                        //        armorReduction = heatDamage / 16;
+                        //    }
+
+                        //}
 
                         //////////////////////////////////////////////////////////
 
@@ -259,11 +260,13 @@ namespace BDArmory.FX
                         // Apply Damage
                         //////////////////////////////////////////////////////////
 
-                        part.AddDamage(heatDamage);
-                        if (armorReduction != 0) part.ReduceArmor(armorReduction);
+                        //part.AddDamage(heatDamage,caliber,isMissile);
+                        part.AddDamage_Explosive(heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, distanceFactor, caliber, isMissile);
+                        
+                        //if (armorReduction != 0) part.ReduceArmor(armorReduction);
 
-                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                            Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
+                        //if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        //    Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: ");
 
                         return;
                     }
