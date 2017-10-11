@@ -72,7 +72,7 @@ namespace BDArmory
         Light lightFlash;
         bool wasInitiated;
         public Vector3 currentVelocity;
-        public float mass = 5.40133e-5f;
+        public float mass = 5.40133e-5f; 
         public float caliber = 0;
         public float bulletVelocity; //muzzle velocity
         public bool explosive = false;
@@ -322,7 +322,7 @@ namespace BDArmory
 
                             //bullet should not go any further if moving too slowly after hit
                             //smaller caliber rounds would be too deformed to do any further damage
-                            if (currentVelocity.magnitude <= 150 || (caliber < 30 && hasPenetrated))
+                            if (currentVelocity.magnitude <= 30 || (caliber < 30 && hasPenetrated))
                             {
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                 {

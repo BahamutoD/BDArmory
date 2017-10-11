@@ -60,7 +60,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart(p, (float)damage);
-            Debug.Log("[BDArmory]: ====== Explosion ray hit part! Damage : " + damage);
+            Debug.Log("[BDArmory]: ====== Explosion ray hit part! Damage : " + damage + "======");
         }
         public static void AddDamage_Ballistic(this Part p,
                                                float mass,
@@ -76,20 +76,16 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Basic Kinetic Formula
             //////////////////////////////////////////////////////////
-            double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2))) *
-                             DMG_MULT
-                             * 0.0055f);
-
-            //Now, we know exactly how well the bullet was stopped by the armor. 
-            //This value will be below 1 when it is stopped by the armor.
-            //That means that we should not apply all the damage to the part that stopped by the bullet
-            //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
+            double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))                             
+                             / 10f);
+            
+            //Also we are not considering hear the angle of penetration
+            //because we already did on the armor penetration calculations.
             //As armor is decreased level of damage should increase 
 
-            //damage = (damage * multiplier); // (float)Math.Max(1f, armorPCT_);
-            //double damage_d = ((float)Math.Log10(Mathf.Clamp(hitPart.GetArmorPercentage() * 100, 1f,100f)) + 5f) * heatDamage * multiplier;
-            double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
-            damage = (float)damage_d;
+            damage = (damage * multiplier);
+            //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
+            //damage = (float)damage_d;
 
             //penalty for low caliber rounds,not if armor is very low
             if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.0625f; 
@@ -99,7 +95,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart(p, (float)damage);
-            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
+            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
             Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
         }
 
