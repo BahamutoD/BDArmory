@@ -314,7 +314,7 @@ namespace BDArmory
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive))
                             {
                                 //detonate
-                                ExplosionFX.CreateExplosion(transform.position, radius, blastPower, blastHeat, sourceVessel,
+                                ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel,
                                     currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
                                 KillBullet();
                                 return;
@@ -330,8 +330,7 @@ namespace BDArmory
                                 }
                                 KillBullet();
                                 return;
-                            }
-                            break;
+                            }                            
                         }
                     } 
                 }
@@ -354,12 +353,8 @@ namespace BDArmory
             if (hitPart.partInfo.name.Contains("Strut")) return;
 
             hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);
-
-
-
-
-
-
+            
+            #region Code Moved To PartExtensions
             // if (hitPart.HasArmor()) return; - Why would we not do damage if armor??
 
             //Basic kinetic formula. 
@@ -395,8 +390,7 @@ namespace BDArmory
             //{
             //    hitPart.AddDamage((float) heatDamage,multiplier,caliber,false);
             //}
-
-
+            #endregion
         }
 
         private void CalculateDragNumericalIntegration()
@@ -494,15 +488,13 @@ namespace BDArmory
         }
 
         private float CalculatePenetration()
-        {
-
-            //TODO: Increase penetration for AP using pooled bullet modifiers
-
+        {        
             float penetration = 0; //penetration of 0 for legacy support
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
                 penetration = (float)(16f * impactVelocity * Math.Sqrt(mass) / Math.Sqrt(caliber));
             }
+            //if (apBulletDmg != 0) penetration += apBulletDmg;
 
             return penetration;
         }

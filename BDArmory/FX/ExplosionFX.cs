@@ -209,6 +209,7 @@ namespace BDArmory.FX
 
                         if (heat < 0) heat = power;
 
+                        #region Code moved to partextensions
                         //////////////////////////////////////////////////////////
                         //Damage pipeline for missiles then explosive bullets
                         //////////////////////////////////////////////////////////
@@ -253,8 +254,7 @@ namespace BDArmory.FX
                         //   {
                         //      part.parent.AddDamage(excessHeat);
                         //   }
-
-
+                        #endregion
 
                         //////////////////////////////////////////////////////////
                         // Apply Damage
@@ -262,11 +262,13 @@ namespace BDArmory.FX
 
                         //part.AddDamage(heatDamage,caliber,isMissile);
                         part.AddDamage_Explosive(heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, distanceFactor, caliber, isMissile);
-                        
+
+                        #region code moved to partextensions
                         //if (armorReduction != 0) part.ReduceArmor(armorReduction);
 
                         //if (BDArmorySettings.DRAW_DEBUG_LABELS)
                         //    Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: ");
+                        #endregion
 
                         return;
                     }

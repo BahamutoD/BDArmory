@@ -36,7 +36,7 @@ namespace BDArmory.Core.Extension
             float damage = (DMG_MULT / 100) * EXP_MOD * heat * (distanceFactor / (float)armorMass_);
 
             //////////////////////////////////////////////////////////
-            // Armor Reduction
+            // Armor Reduction factors
             //////////////////////////////////////////////////////////
             if (p.HasArmor())
             {
@@ -48,6 +48,7 @@ namespace BDArmory.Core.Extension
                 else
                 {
                     armorReduction = damage / 8;
+                    //damage *=  armorPCT;
                 }
                 
             }
@@ -85,7 +86,10 @@ namespace BDArmory.Core.Extension
             //Also we are not considering hear the angle of penetration , because we already did on the armor penetration calculations.
             //As armor is decreased level of damage should increase 
 
-            damage = (damage * multiplier); // (float)Math.Max(1f, armorPCT_);
+            //damage = (damage * multiplier); // (float)Math.Max(1f, armorPCT_);
+            //double damage_d = ((float)Math.Log10(Mathf.Clamp(hitPart.GetArmorPercentage() * 100, 1f,100f)) + 5f) * heatDamage * multiplier;
+            double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
+            damage = (float)damage_d;
 
             //penalty for low caliber rounds,not if armor is very low
             if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.0625f; 
