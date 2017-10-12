@@ -67,7 +67,7 @@ namespace BDArmory.Core.Module
 
         private float CalculateMaxDamage()
         {
-            return maxDamageFactor *Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
+            return maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
         }
 
         public void DestroyPart()
@@ -114,6 +114,7 @@ namespace BDArmory.Core.Module
 
         public void AddDamage(float partdamage)
         {
+            partdamage = Mathf.Max(partdamage, 0.01f);
             Damage += partdamage;
             if (Damage > GetMaxPartDamage())
             {

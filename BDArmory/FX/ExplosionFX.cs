@@ -16,10 +16,7 @@ namespace BDArmory.FX
         public AudioClip exSound;
         public AudioSource audioSource;
         float maxTime;
-        public float range;
-
-        public static float ExplosionHeatMultiplier = 4200;
-        public static float ExplosionImpulseMultiplier = 1.125f; //adjust as necessary to increase/decrease the force of HE weapons
+        public float range;   
 
         public static List<Part> ignoreParts = new List<Part>();
         public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
@@ -188,8 +185,8 @@ namespace BDArmory.FX
                
                 if (part != null && part)
                 {
-                    bool hasArmor_ = part.HasArmor();
-                    double armorMass_ = part.GetArmorMass();
+                    //bool hasArmor_ = part.HasArmor();
+                    //double armorMass_ = part.GetArmorMass();
 
                     Vessel missileSource = null;
                     if (sourceVessel != null)
@@ -205,47 +202,49 @@ namespace BDArmory.FX
                         Rigidbody rb = part.GetComponent<Rigidbody>();
                         if (rb)
                         {
-                            rb.AddForceAtPosition(ray.direction * power * distanceFactor * ExplosionImpulseMultiplier,
+                            //Adding Force to hit - blast pressure
+                            rb.AddForceAtPosition(ray.direction * power * distanceFactor * BDArmorySettings.EXP_IMP_MOD,
                                 rayHit.point, ForceMode.Impulse);
                         }
 
                         if (heat < 0) heat = power;
 
+                        #region Code moved to partextensions
                         //////////////////////////////////////////////////////////
                         //Damage pipeline for missiles then explosive bullets
                         //////////////////////////////////////////////////////////
 
-                        float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) * 
-                                           ExplosionHeatMultiplier * 
-                                           heat *
-                                           (distanceFactor / part.crashTolerance);
-                        float armorReduction = 0;
+                        //float heatDamage = (BDArmorySettings.DMG_MULTIPLIER / 100) *
+                        //                   BDArmorySettings.EXP_HEAT_MOD * 
+                        //                   heat *
+                        //                   (distanceFactor / part.crashTolerance);
+                        //float armorReduction = 0;
 
                         //////////////////////////////////////////////////////////
                         //Missiles
                         //////////////////////////////////////////////////////////
-                        if (isMissile)
-                        {
-                            if (hasArmor_)
-                            {
-                                //TODO: figure out how much to nerf armor for missile hit                                
-                                armorReduction = heatDamage / 8;
-                            }                            
-                        }
+                        //if (isMissile)
+                        //{
+                        //    if (hasArmor_)
+                        //    {
+                        //        //TODO: figure out how much to nerf armor for missile hit                                
+                        //        armorReduction = heatDamage / 8;
+                        //    }                            
+                        //}
 
                         //////////////////////////////////////////////////////////
                         //Explosive Bullets
                         //////////////////////////////////////////////////////////
-                        
-                        if (!isMissile)
-                        {
-                            if (hasArmor_)
-                            {
-                                if(caliber < 50) heatDamage = heatDamage * heat / 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                                armorReduction = heatDamage / 16;
-                            }
 
-                        }
+                        //if (!isMissile)
+                        //{
+                        //    if (hasArmor_)
+                        //    {
+                        //        if(caliber < 50) heatDamage = heatDamage * heat / 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                        //        armorReduction = heatDamage / 16;
+                        //    }
+
+                        //}
 
                         //////////////////////////////////////////////////////////
 
@@ -255,18 +254,21 @@ namespace BDArmory.FX
                         //   {
                         //      part.parent.AddDamage(excessHeat);
                         //   }
-
-
+                        #endregion
 
                         //////////////////////////////////////////////////////////
                         // Apply Damage
                         //////////////////////////////////////////////////////////
 
-                        part.AddDamage(heatDamage);
-                        if (armorReduction != 0) part.ReduceArmor(armorReduction);
+                        //part.AddDamage(heatDamage,caliber,isMissile);
+                        part.AddDamage_Explosive(heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, distanceFactor, caliber, isMissile);
 
-                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                            Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: " + heatDamage);
+                        #region code moved to partextensions
+                        //if (armorReduction != 0) part.ReduceArmor(armorReduction);
+
+                        //if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        //    Debug.Log("[BDArmory]:====== Explosion ray hit part! Damage: ");
+                        #endregion
 
                         return;
                     }
@@ -277,7 +279,7 @@ namespace BDArmory.FX
                 if (building && !ignoreBldgs.Contains(building))
                 {
                     ignoreBldgs.Add(building);
-                    float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * ExplosionHeatMultiplier * 0.00645f *
+                    float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 0.00645f *
                                              power * distanceFactor;
                     if (damageToBuilding > building.impactMomentumThreshold / 10) building.AddDamage(damageToBuilding);
                     if (building.Damage > building.impactMomentumThreshold) building.Demolish();

@@ -8,21 +8,114 @@ namespace BDArmory.Core.Extension
 {
     public static class PartExtensions
     {
-        public static  void AddDamage(this Part p, float damage, float caliber = 35)
+        public static void AddDamage(this Part p, float damage)
         {
-            //Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
+            //////////////////////////////////////////////////////////
+            // Basic Add Damage for compatibility
+            //////////////////////////////////////////////////////////
+            damage = (float)Math.Round((double)damage, 2);
+            Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
+            Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
 
-            //var maxPartDamage = Dependencies.Get<DamageService>().GetMaxPartDamage(p);
-            //Dependencies.Get<DamageService>().AddDamageToPart(p, (maxPartDamage * (1f - p.GetArmorPercentage())) * 0.5f);
+        }
+        public static void AddDamage_Explosive(this Part p,
+                                               float heat,
+                                               float EXP_MOD,
+                                               float DMG_MULT,
+                                               float distanceFactor,
+                                               float caliber,
+                                               bool isMissile)
+        {
+            double armorMass_ = p.GetArmorMass();
+            double armorPCT_ = p.GetArmorPercentage();
+            float armorReduction = 0;
 
-            double armorPct_ = p.GetArmorPercentage();
-            double damage_d = Mathf.Clamp((float)Math.Log10(armorPct_),10,100) + 5 * damage;
-            float damage_f = (float) damage_d;
+            //////////////////////////////////////////////////////////
+            // Explosive Damage
+            //////////////////////////////////////////////////////////
+            float damage = (DMG_MULT / 100) * EXP_MOD * heat * (distanceFactor / (float)armorMass_);
+
+            //////////////////////////////////////////////////////////
+            // Armor Reduction factors
+            //////////////////////////////////////////////////////////
+            if (p.HasArmor())
+            {
+                if (!isMissile)
+                {
+                    if (caliber < 50) damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                    armorReduction = damage / 2;
+                }
+                else
+                {
+                    armorReduction = damage / 8;
+                    //damage *=  armorPCT;
+                }
+                
+            }
+
+            if (armorReduction != 0) p.ReduceArmor(armorReduction);
+
+            //////////////////////////////////////////////////////////
+            // Do The Damage
+            //////////////////////////////////////////////////////////
+            damage = (float)Math.Round((double)damage, 2);
+            Dependencies.Get<DamageService>().AddDamageToPart(p, (float)damage);
+            Debug.Log("[BDArmory]: ====== Explosion ray hit part! Damage : " + damage + "======");
+        }
+        public static void AddDamage_Ballistic(this Part p,
+                                               float mass,
+                                               float caliber,
+                                               float multiplier,
+                                               float penetrationfactor,
+                                               float DMG_MULT,
+                                               float impactVelocity)
+        {
+            double armorMass_ = p.GetArmorMass();
+            double armorPCT_ = p.GetArmorPercentage();
+
+            //////////////////////////////////////////////////////////
+            // Basic Kinetic Formula
+            //////////////////////////////////////////////////////////
+            //Damage mult for scaling in settings
+            //1e-4 constant for adjusting MegaJoules for gameplay
+            double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
+                            * DMG_MULT * 0.01d
+                            * 1e-4f);
+
+            //Also we are not considering hear the angle of penetration
+            //because we already did on the armor penetration calculations.
+            //As armor is decreased level of damage should increase 
+
+            damage /= Mathf.Max(1,(float) armorPCT_ * 100);
+
+            //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
+            //damage = (float)damage_d;
+
+            //Caliber Adjustments for Gameplay balance
+            if (caliber <= 30f) 
+            {
+                damage = (damage * multiplier * 5f);
+            }
+            else
+            {
+                damage = (damage * multiplier * 16f);
+            }         
             
-            if (caliber <= 30 && armorPct_ >= 0.10) damage_f *= 0.125f; //penalty for low caliber rounds,not if armor is very low
-            Dependencies.Get<DamageService>().AddDamageToPart(p, damage_f);
+            //penalty for low caliber rounds,not if armor is very low
+            
+            if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.25f;
+            
+
+            //////////////////////////////////////////////////////////
+            // Do The Damage
+            //////////////////////////////////////////////////////////
+            damage = (float)Math.Round((double)damage, 2);
+            Dependencies.Get<DamageService>().AddDamageToPart(p, (float)damage);
+            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
+            Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
         }
 
+        
         public static void Destroy(this Part p)
         {
             Dependencies.Get<DamageService>().SetDamageToPart(p, float.MaxValue);
@@ -46,9 +139,9 @@ namespace BDArmory.Core.Extension
         public static void ReduceArmor(this Part p, double massToReduce)
         {
             if (!p.HasArmor()) return;
-
-            Dependencies.Get<DamageService>().ReduceArmorToPart(p, (float) massToReduce );            
-           
+            massToReduce = Math.Max(0.10,Math.Round(massToReduce, 2));
+            Dependencies.Get<DamageService>().ReduceArmorToPart(p, (float) massToReduce );
+            Debug.Log("[BDArmory]: Final Armor Removed : " + massToReduce);
         }
 
         /// <summary>
