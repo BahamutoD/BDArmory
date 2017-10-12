@@ -2109,7 +2109,7 @@ namespace BDArmory
         void SetupBulletPool()
         {
             GameObject templateBullet = new GameObject("Bullet");
-            templateBullet.SetActive(false);
+            templateBullet.SetActive(false);            
             templateBullet.AddComponent<PooledBullet>();
             bulletPool = ObjectPool.CreateObjectPool(templateBullet, 100, true, true);
         }

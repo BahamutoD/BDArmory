@@ -114,6 +114,7 @@ namespace BDArmory.Core.Module
 
         public void AddDamage(float partdamage)
         {
+            partdamage = Mathf.Max(partdamage, 0.01f);
             Damage += partdamage;
             if (Damage > GetMaxPartDamage())
             {

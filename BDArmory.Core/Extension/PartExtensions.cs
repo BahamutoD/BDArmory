@@ -42,8 +42,8 @@ namespace BDArmory.Core.Extension
             {
                 if (!isMissile)
                 {
-                    if (caliber < 50) damage = damage * heat / 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                    armorReduction = damage / 16;
+                    if (caliber < 50) damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                    armorReduction = damage / 2;
                 }
                 else
                 {
@@ -76,19 +76,35 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Basic Kinetic Formula
             //////////////////////////////////////////////////////////
-            double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))                             
-                             / 10f);
-            
+            //Damage mult for scaling in settings
+            //1e-4 constant for adjusting MegaJoules for gameplay
+            double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
+                            * DMG_MULT * 0.01d
+                            * 1e-4f);
+
             //Also we are not considering hear the angle of penetration
             //because we already did on the armor penetration calculations.
             //As armor is decreased level of damage should increase 
 
-            damage = (damage * multiplier);
+            damage /= Mathf.Max(1,(float) armorPCT_ * 100);
+
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
+            //Caliber Adjustments for Gameplay balance
+            if (caliber <= 30f) 
+            {
+                damage = (damage * multiplier * 5f);
+            }
+            else
+            {
+                damage = (damage * multiplier * 16f);
+            }         
+            
             //penalty for low caliber rounds,not if armor is very low
-            if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.0625f; 
+            
+            if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.25f;
+            
 
             //////////////////////////////////////////////////////////
             // Do The Damage

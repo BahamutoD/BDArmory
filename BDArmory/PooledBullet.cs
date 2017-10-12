@@ -85,6 +85,8 @@ namespace BDArmory
         private float impactVelocity;
 
         public bool hasPenetrated = false;
+        public bool hasDetonated = false;
+
         public int penTicker = 0;
         #endregion
 
@@ -243,7 +245,7 @@ namespace BDArmory
                         while (hitsEnu.MoveNext())
                         {
                             RaycastHit hit = hitsEnu.Current;
-                            Part hitPart = null;
+                            Part hitPart = null;                            
 
                             try
                             {
@@ -278,34 +280,22 @@ namespace BDArmory
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
                             CalculateDragAnalyticEstimate();
-
+                            
                             var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                             {
-                                hasPenetrated = true;
-
-                                //ApplyDamage(hitPart, 1, penetrationFactor, caliber);
-                                hitPart.AddDamage_Ballistic(mass, caliber, 1, penetrationFactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);
-                                ExplosiveDetonation(hitPart, hit, ray);
+                                hasPenetrated = true;                                
+                                hitPart.AddDamage_Ballistic(mass, caliber, 1f, penetrationFactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);                                
                                 penTicker += 1;
                             }
                             else
                             {
-                                hasPenetrated = false;
-
-                                if (explosive)
-                                {
-                                    // explosive bullets that get stopped by armor will explode
-                                    ApplyDamage(hitPart, 1, penetrationFactor, caliber);                                    
-                                    ExplosiveDetonation(hitPart, hit, ray); 
-                                }
-                                else
-                                {
-                                    ApplyDamage(hitPart, penetrationFactor * 0.1f, penetrationFactor, caliber);                                    
-                                }                                
-                                KillBullet();
-                            }
+                                hasPenetrated = false;               
+                                // explosive bullets that get stopped by armor will explode                                    
+                                ApplyDamage(hitPart, penetrationFactor, penetrationFactor, caliber);
+                                ExplosiveDetonation(hitPart, hit, ray);
+                            }                           
 
                             ///////////////////////////////////////////////////////////////////////
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
@@ -316,7 +306,7 @@ namespace BDArmory
                                 //detonate
                                 ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel,
                                     currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
-                                KillBullet();
+                                hasDetonated = true;
                                 return;
                             }
 
@@ -330,7 +320,9 @@ namespace BDArmory
                                 }
                                 KillBullet();
                                 return;
-                            }                            
+                            }
+                            if (!hasPenetrated) break;
+                            //end While
                         }
                     } 
                 }
@@ -342,7 +334,7 @@ namespace BDArmory
             
             prevPosition = currPosition;
             //move bullet            
-            transform.position += currentVelocity * Time.deltaTime;
+            transform.position += currentVelocity * Time.deltaTime;            
         }
 
         private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
@@ -492,7 +484,7 @@ namespace BDArmory
             float penetration = 0; //penetration of 0 for legacy support
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
-                penetration = (float)(16f * impactVelocity * Math.Sqrt(mass) / Math.Sqrt(caliber));
+                penetration = (float)(16f * impactVelocity * Math.Sqrt(mass/1000) / Math.Sqrt(caliber));
             }
             //if (apBulletDmg != 0) penetration += apBulletDmg;
 
@@ -586,7 +578,7 @@ namespace BDArmory
 
         void KillBullet()
         {
-            gameObject.SetActive(false);
+            gameObject.SetActive(false);            
             hasPenetrated = false;
             penTicker = 0;
         }
