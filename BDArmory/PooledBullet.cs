@@ -304,8 +304,7 @@ namespace BDArmory
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive))
                             {
                                 //detonate
-                                ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel,
-                                    currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
+                                ExplosionFx.CreateExplosion(hit.point, radius, blastPower, blastHeat, explModelPath, explSoundPath, false, caliber);
                                 hasDetonated = true;
                                 return;
                             }
@@ -508,9 +507,8 @@ namespace BDArmory
                 //if bullet hits and is HE, detonate and kill bullet
                 if (explosive)
                 {
-                    ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
-                                                blastHeat, sourceVessel, currentVelocity.normalized,
-                                                explModelPath, explSoundPath, false,caliber);
+                    ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
+                                                blastHeat, explModelPath, explSoundPath, false,caliber);
                     KillBullet();
                     return true;
                 }

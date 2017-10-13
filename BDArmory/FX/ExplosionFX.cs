@@ -8,165 +8,261 @@ using UnityEngine;
 
 namespace BDArmory.FX
 {
-    public class ExplosionFX : MonoBehaviour
+    public class ExplosionFx : MonoBehaviour
     {
-        KSPParticleEmitter[] pEmitters;
-        Light lightFX;
-        float startTime;
-        public AudioClip exSound;
-        public AudioSource audioSource;
-        float maxTime;
-        public float range;   
+        public KSPParticleEmitter[] PEmitters { get; set; }
 
-        public static List<Part> ignoreParts = new List<Part>();
-        public static List<DestructibleBuilding> ignoreBuildings = new List<DestructibleBuilding>();
+        public Light LightFx { get; set; }
 
-        void Start()
+        public float StartTime { get; set; }
+
+        public AudioClip ExSound { get; set; }
+        public AudioSource AudioSource { get; set; }
+        private float MaxTime { get; set; }
+        public float Range { get; set; }
+        public float Caliber { get; set; }
+
+        public bool IsMissile { get; set; }
+
+        public float Power { get; set; }
+
+        public Vector3 Position { get; set; }
+
+        public float TimeDetonation { get; set; }
+        public float TimeIndex => Time.time - StartTime;
+
+        public List<BlastHitEvent> ExplosionEvents = new List<BlastHitEvent>();
+        public static List<Part> IgnoreParts = new List<Part>();
+
+        public static List<DestructibleBuilding> IgnoreBuildings = new List<DestructibleBuilding>();
+
+        internal static readonly float ExplosionVelocity = 400f;
+
+        private bool SoundPlayed { get; set; }
+
+        private void Start()
         {
-            startTime = Time.time;
-            pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
-            IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
+            StartTime = Time.time;
+            MaxTime = Range / ExplosionVelocity;
+            CalculateBlastEvents();
+
+            PEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
+            IEnumerator<KSPParticleEmitter> pe = PEmitters.AsEnumerable().GetEnumerator();
             while (pe.MoveNext())
             {
                 if (pe.Current == null) continue;
                EffectBehaviour.AddParticleEmitter(pe.Current);
                 
                 pe.Current.emit = true;
-
-                if (pe.Current.maxEnergy > maxTime)
-                {
-                    maxTime = pe.Current.maxEnergy;
-                }
+                pe.Current.maxEnergy = MaxTime;
             }
             pe.Dispose();
 
-            lightFX = gameObject.AddComponent<Light>();
-            lightFX.color = Misc.Misc.ParseColor255("255,238,184,255");
-            lightFX.intensity = 8;
-            lightFX.range = range*3f;
-            lightFX.shadows = LightShadows.None;
+            LightFx = gameObject.AddComponent<Light>();
+            LightFx.color = Misc.Misc.ParseColor255("255,238,184,255");
+            LightFx.intensity = 8;
+            LightFx.range = Range*3f;
+            LightFx.shadows = LightShadows.None;
 
-            audioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-            audioSource.PlayOneShot(exSound);
+          
         }
 
-        void FixedUpdate()
+        private void CalculateBlastEvents()
+        {  
+            ProcessingPartsInRange();
+            ProcessingBuildingsInRange();
+        }
+
+        private void ProcessingBuildingsInRange()
         {
-            lightFX.intensity -= 12*Time.fixedDeltaTime;
-            if (Time.time - startTime > 0.2f)
+            List<DestructibleBuilding>.Enumerator bldg = BDATargetManager.LoadedBuildings.GetEnumerator();
+            while (bldg.MoveNext())
             {
-                IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
-                while (pe.MoveNext())
+                if (bldg.Current == null) continue;
+                var distance = (bldg.Current.transform.position - Position).magnitude;
+                if (distance >= Range * 1000) continue;
+
+                //Is Direct Hit?
+                bool isDirectHit = false;
+
+                Ray partRay = new Ray(Position, bldg.Current.transform.position - Position);
+                RaycastHit rayHit;
+                if (Physics.Raycast(partRay, out rayHit, Range, 557057))
                 {
-                    if (pe.Current == null) continue;
-                    pe.Current.emit = false;
-                }
-                pe.Dispose();
-            }
+                    DestructibleBuilding building = rayHit.collider.GetComponentInParent<DestructibleBuilding>();
 
-            if (Time.time - startTime > maxTime)
-            {
-                Destroy(gameObject);
+                    // Is not a direct hit, because we are hitting a different part
+                    if (building != null && !building.Equals(bldg.Current))
+                    {
+                        // use the more accurate distance
+                        distance = (rayHit.point - partRay.origin).magnitude;
+                        isDirectHit = true;
+                    }
+                }
+                ExplosionEvents.Add(new BuildingBlastHitEvent() { Distance = distance, IsDirectHit = isDirectHit, Building = bldg.Current, TimeToImpact = distance / ExplosionVelocity });
             }
+            bldg.Dispose();
         }
 
-        public static void CreateExplosion(Vector3 position, float radius, float power, float heat, Vessel sourceVessel,
-                                           Vector3 direction, string explModelPath, string soundPath, bool isMissile, float caliber = 0)
+        private void ProcessingPartsInRange()
         {
-            GameObject go;
-            AudioClip soundClip;
+            List<Vessel>.Enumerator v = BDATargetManager.LoadedVessels.GetEnumerator();
+            while (v.MoveNext())
+            {
+                if (v.Current == null) continue;
+                if (!v.Current.loaded || v.Current.packed || (v.Current.CoM - Position).magnitude >= Range * 4) continue;
+                List<Part>.Enumerator p = v.Current.parts.GetEnumerator();
+                while (p.MoveNext())
+                {
+                    if (p.Current == null) continue;
+                    var distance = (p.Current.transform.position - Position).magnitude;
+                    if (distance >= Range) continue;
 
-            go = GameDatabase.Instance.GetModel(explModelPath);
-            soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
+                    // 1. Normal forward explosive event
+
+                        //Is Direct Hit?
+                        bool isDirectHit = false;
+
+                        Ray partRay = new Ray(Position, p.Current.transform.position - Position);
+                        RaycastHit rayHit;
+                        if (Physics.Raycast(partRay, out rayHit, Range, 557057))
+                        {
+                            Part part = rayHit.collider.GetComponentInParent<Part>();
+
+                            // Is not a direct hit, because we are hitting a different part
+                            if (part != null && !part.Equals(p.Current))
+                            {
+                                // use the more accurate distance
+                                distance = (rayHit.point - partRay.origin).magnitude;
+                                isDirectHit = true;
+                            }
+                        }
+                    ExplosionEvents.Add(new PartBlastHitEvent() {Distance = distance,IsDirectHit = isDirectHit,Part = p.Current, TimeToImpact = distance/ExplosionVelocity});
+
+                    // 2. Add Reverse Sucking Event
+                    ExplosionEvents.Add(new PartBlastHitEvent() { Distance = Range - distance, IsDirectHit = false, Part = p.Current, TimeToImpact = (2*Range-distance)/ExplosionVelocity, IsNegativePressure = true});
+
+                }
+                p.Dispose();
+            }
+            v.Dispose();
+        }
+
+        public void Update()
+        {
+            LightFx.intensity = Mathf.Clamp01(MaxTime * 0.25f - TimeIndex);
+
+            if (!SoundPlayed)
+            {
+                if (Vector3.Distance(FlightGlobals.ActiveVessel.CoM, Position) > TimeIndex * ExplosionVelocity)
+                {
+                    AudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+                    AudioSource.PlayOneShot(ExSound);
+                    SoundPlayed = true;
+                }
+            }
+          
+            if (!(TimeIndex > MaxTime)) return;
+
+            IEnumerator<KSPParticleEmitter> pe = PEmitters.AsEnumerable().GetEnumerator();
+            while (pe.MoveNext())
+            {
+                if (pe.Current == null) continue;
+                pe.Current.emit = false;
+            }
+            pe.Dispose();
+
+            Destroy(gameObject);
+        }
+
+        public void FixedUpdate()
+        {
+            
+        }
+
+        public static void CreateExplosion(Vector3 position, float radius, float power, float heat, string explModelPath, string soundPath, bool isMissile, float caliber = 0)
+        {
+            var go = GameDatabase.Instance.GetModel(explModelPath);
+            var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
 
             Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
             GameObject newExplosion = (GameObject) Instantiate(go, position, rotation);
             newExplosion.SetActive(true);
-            ExplosionFX eFx = newExplosion.AddComponent<ExplosionFX>();
-            eFx.exSound = soundClip;
-            eFx.audioSource = newExplosion.AddComponent<AudioSource>();
-            eFx.audioSource.minDistance = 200;
-            eFx.audioSource.maxDistance = 5500;
-            eFx.audioSource.spatialBlend = 1;
-            eFx.range = radius;
+            ExplosionFx eFx = newExplosion.AddComponent<ExplosionFx>();
+            eFx.ExSound = soundClip;
+            eFx.AudioSource = newExplosion.AddComponent<AudioSource>();
+            eFx.AudioSource.minDistance = 200;
+            eFx.AudioSource.maxDistance = 5500;
+            eFx.AudioSource.spatialBlend = 1;
+            eFx.Range = radius;
+            eFx.Position = position;
+            eFx.Power = power;
+            eFx.IsMissile = isMissile;
+            eFx.Caliber = caliber;
 
             if (power <= 5)
             {
-                eFx.audioSource.minDistance = 4f;
-                eFx.audioSource.maxDistance = 3000;
-                eFx.audioSource.priority = 9999;
+                eFx.AudioSource.minDistance = 4f;
+                eFx.AudioSource.maxDistance = 3000;
+                eFx.AudioSource.priority = 9999;
             }
-            IEnumerator<KSPParticleEmitter> pe = newExplosion.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>()
-                .GetEnumerator();
-            while (pe.MoveNext())
-            {
-                if (pe.Current == null) continue;
-                pe.Current.emit = true;
-                
-            }
-            pe.Dispose();
 
-            DoExplosionDamage(position, power, heat, radius, sourceVessel,isMissile,caliber);
+            //IEnumerator<KSPParticleEmitter> pe = newExplosion.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>()
+            //    .GetEnumerator();
+            //while (pe.MoveNext())
+            //{
+            //    if (pe.Current == null) continue;
+            //    pe.Current.emit = true;
+                
+            //}
+            //pe.Dispose();
+
+            //DoExplosionDamage(position, power, heat, radius, sourceVessel,isMissile, eFx, caliber);
         }
 
-       	public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel, bool isMissile, float caliber = 0)
-		{
-			if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:======= Doing explosion sphere =========");
-			ignoreParts.Clear();
-			ignoreBuildings.Clear();
+  //      public static void DoExplosionDamage(Vector3 position, float power, float heat, float maxDistance, Vessel sourceVessel, bool isMissile, ExplosionFx expInstance, float caliber = 0)
+		//{
+		//	if(BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]:======= Doing explosion sphere =========");
+		//	IgnoreParts.Clear();
+		//	IgnoreBuildings.Clear();
 
-            // Unity does not like linq.  changing to an enumeration to extract needed lists.
-            #region Old code (For reference.  remove when satisfied new code works as expected)
-            //var vesselsAffected =
-            //    BDATargetManager.LoadedVessels.Where(
-            //        v => v != null && v.loaded && !v.packed && (v.CoM - position).magnitude < maxDistance * 4);
+          
+  //          // this replaces 2 passes through the vessels list and 2 passes through the parts lists with a single pass, and eliminates boxing and unboxing performed by linq and foreach loops.  Should be faster, with better gc
+  //          List<Vessel>.Enumerator v = BDATargetManager.LoadedVessels.GetEnumerator();
+		//    while (v.MoveNext())
+		//    {
+		//        if (v.Current == null) continue;
+  //              if (!v.Current.loaded || v.Current.packed || (v.Current.CoM - position).magnitude >= maxDistance * 4) continue;
+		//        List<Part>.Enumerator p = v.Current.parts.GetEnumerator();
+		//        while (p.MoveNext())
+		//        {
+		//            if (p.Current == null) continue;
+		//            var distance = (p.Current.transform.position - position).magnitude;
 
-            //var partsAffected =
-            //    vesselsAffected.SelectMany(v => v.parts).Where(p => p != null && p && (p.transform.position - position).magnitude < maxDistance);
+  //                  if ((p.Current.transform.position - position).magnitude >= maxDistance) continue;
 
-            //foreach (var part in partsAffected)
-            //{
-            //    DoExplosionRay(new Ray(position, part.transform.TransformPoint(part.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
-            //}
+  //                  expInstance.ExplosionEvents.Add(new PartExplosionEvent()
+  //                  {
+  //                      Part = p.Current,
+  //                      TimeToImpact = (distance / ExplosionVelocity)
+  //                  });
 
-            //foreach (var bldg in BDATargetManager.LoadedBuildings)
-            //{
-            //    if (bldg == null) continue;
-            //    if ((bldg.transform.position - position).magnitude < maxDistance * 1000)
-            //    {
-            //        DoExplosionRay(new Ray(position, bldg.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
-            //    }
-            //}
-            #endregion
+		//        }
+  //              p.Dispose();
+		//    }
+  //          v.Dispose();
 
-            // this replaces 2 passes through the vessels list and 2 passes through the parts lists with a single pass, and eliminates boxing and unboxing performed by linq and foreach loops.  Should be faster, with better gc
-            List<Vessel>.Enumerator v = BDATargetManager.LoadedVessels.GetEnumerator();
-		    while (v.MoveNext())
-		    {
-		        if (v.Current == null) continue;
-                if (!v.Current.loaded || v.Current.packed || (v.Current.CoM - position).magnitude >= maxDistance * 4) continue;
-		        List<Part>.Enumerator p = v.Current.parts.GetEnumerator();
-		        while (p.MoveNext())
-		        {
-		            if (p.Current == null) continue;
-		            if ((p.Current.transform.position - position).magnitude >= maxDistance) continue;
-		            DoExplosionRay(new Ray(position, p.Current.transform.TransformPoint(p.Current.CoMOffset) - position), power, heat, maxDistance, isMissile, ref ignoreParts, ref ignoreBuildings, sourceVessel,caliber);
-		        }
-                p.Dispose();
-		    }
-            v.Dispose();
-
-		    List<DestructibleBuilding>.Enumerator bldg = BDATargetManager.LoadedBuildings.GetEnumerator();
-			while(bldg.MoveNext())
-			{
-				if(bldg.Current == null) continue;
-				if((bldg.Current.transform.position - position).magnitude < maxDistance * 1000)
-				{
-					DoExplosionRay(new Ray(position, bldg.Current.transform.position - position), power, heat, maxDistance, isMissile, ref ignoreParts, ref ignoreBuildings,null,caliber);
-				}
-			}
-            bldg.Dispose();
-		}
+		//    List<DestructibleBuilding>.Enumerator bldg = BDATargetManager.LoadedBuildings.GetEnumerator();
+		//	while(bldg.MoveNext())
+		//	{
+		//		if(bldg.Current == null) continue;
+		//		if((bldg.Current.transform.position - position).magnitude < maxDistance * 1000)
+		//		{
+		//			DoExplosionRay(new Ray(position, bldg.Current.transform.position - position), power, heat, maxDistance, isMissile, ref IgnoreParts, ref IgnoreBuildings,null,caliber);
+		//		}
+		//	}
+  //          bldg.Dispose();
+		//}
 
         public static void DoExplosionRay(Ray ray, float power, float heat, float maxDistance,bool isMissile,
                                           ref List<Part> ignoreParts, ref List<DestructibleBuilding> ignoreBldgs,
@@ -289,6 +385,24 @@ namespace BDArmory.FX
                 }
             }
         }
+    }
+
+    public abstract class BlastHitEvent
+    {
+        public float Distance { get; set; }
+        public float TimeToImpact { get; set; }
+        public bool IsDirectHit { get; set; }
+        public bool IsNegativePressure { get; set; }
+    }
+
+    internal class PartBlastHitEvent : BlastHitEvent
+    {
+        public Part Part { get; set; }    
+    }
+
+    internal class BuildingBlastHitEvent : BlastHitEvent
+    {
+        public DestructibleBuilding Building { get; set; }
     }
 }
 
