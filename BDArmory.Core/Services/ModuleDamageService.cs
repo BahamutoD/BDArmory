@@ -7,7 +7,7 @@ namespace BDArmory.Core.Services
 {
     internal class ModuleDamageService : DamageService
     {
-        public override void ReduceArmorToPart(Part p, float armorMass)
+        public override void ReduceArmor_svc(Part p, float armorMass)
         {
             var damageModule = p.Modules.GetModule<DamageTracker>();
 
@@ -21,9 +21,8 @@ namespace BDArmory.Core.Services
                 Operation = DamageOperation.Set
             });
         }
-
         
-        public override void SetDamageToPart(Part p, float PartDamage)
+        public override void SetDamageToPart_svc(Part p, float PartDamage)
         {
             var damageModule = p.Modules.GetModule<DamageTracker>();
 
@@ -38,7 +37,22 @@ namespace BDArmory.Core.Services
             });
         }
 
-        public override void AddDamageToPart(Part p, float PartDamage)
+        public override void SetArmorThickness_svc(Part p, float thickness)
+        {
+            var damageModule = p.Modules.GetModule<DamageTracker>();
+
+            damageModule.SetThickness(thickness);
+
+            PublishEvent(new DamageEventArgs()
+            {
+                VesselId = p.vessel.GetInstanceID(),
+                PartId = p.GetInstanceID(),
+                Armor = thickness,
+                Operation = DamageOperation.Set
+            });
+        }            
+
+        public override void AddDamageToPart_svc(Part p, float PartDamage)
         {
             var damageModule = p.Modules.GetModule<DamageTracker>();
 
@@ -53,22 +67,22 @@ namespace BDArmory.Core.Services
             });
         }
 
-        public override float GetPartDamage(Part p)
+        public override float GetPartDamage_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().Damage;
         }
 
-        public override float GetPartArmor(Part p)
+        public override float GetPartArmor_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().Armor;
         }
 
-        public override float GetMaxPartDamage(Part p)
+        public override float GetMaxPartDamage_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().GetMaxPartDamage();
         }
 
-        public override float GetMaxArmor(Part p)
+        public override float GetMaxArmor_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().GetMaxArmor();
         }

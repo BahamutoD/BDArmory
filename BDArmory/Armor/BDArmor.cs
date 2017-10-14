@@ -1,57 +1,47 @@
 ﻿using System.Collections.Generic;
-using BDArmory.FX;
+using BDArmory.Core.Extension;
+using BDArmory.Core.Module;
 using UnityEngine;
 
 namespace BDArmory.Armor
 {
-    public class BDArmor : PartModule
+    public class BDArmor_ : PartModule
     {
-        static BDArmor instance;
-        public static BDArmor Instance => instance;
+        //static BDArmor instance;
+        //public static BDArmor Instance => instance;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor"),
-            UI_FloatRange(minValue = 30f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
-        public float Armor = 0f;
+        [KSPField(isPersistant = true)]
+        public float ArmorThickness = 0f;
 
-        [KSPField]
-        public string explModelPath = "BDArmory/Models/explosion/explosionLarge";
+        //[KSPField]
+        //public string explModelPath = "BDArmory/Models/explosion/explosionLarge";
 
-        [KSPField]
-        public string explSoundPath = "BDArmory/Sounds/explode1";
+        //[KSPField]
+        //public string explSoundPath = "BDArmory/Sounds/explode1";
 
-        [KSPField]
-        public string explodeMode = "Never";
+        //[KSPField]
+        //public string explodeMode = "Never";
 
-        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
-
-        public  float getEquivalentThickness()
-        {
-            return Armor;
-        }
+        //public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
 
         public override void OnStart(StartState state)
         {
             base.OnAwake();
             part.force_activate();
-            instance = this;
+            //instance = this;
 
-            //if (UI.BDArmorySettings.ADVANCED_EDIT)
+            //switch (explodeMode)
             //{
-            //    Fields["EquivalentThickness"].guiActiveEditor = true;
+            //    case "Always":
+            //        _explodeMode = ArmorUtils.ExplodeMode.Always;
+            //        break;
+            //    case "Dynamic":
+            //        _explodeMode = ArmorUtils.ExplodeMode.Dynamic;
+            //        break;
+            //    case "Never":
+            //        _explodeMode = ArmorUtils.ExplodeMode.Never;
+            //        break;
             //}
-
-            switch (explodeMode)
-            {
-                case "Always":
-                    _explodeMode = ArmorUtils.ExplodeMode.Always;
-                    break;
-                case "Dynamic":
-                    _explodeMode = ArmorUtils.ExplodeMode.Dynamic;
-                    break;
-                case "Never":
-                    _explodeMode = ArmorUtils.ExplodeMode.Never;
-                    break;
-            }
 
         }
 
@@ -79,27 +69,6 @@ namespace BDArmory.Armor
            //    explodeScale * blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath);
         }
 
-        public static bool GetArmor(Collider collider, Part hitPart)
-        {
-            Transform transform = null;
 
-            if (!hitPart) return false;
-
-            if (hitPart.FindModelTransform("ArmorRootTransform"))
-
-                transform = hitPart.FindModelTransform("ArmorRootTransform");
-
-            if (transform == null)
-            {
-                Debug.Log("[BDArmory]: Armor Transform not found!");
-                return false;
-            }
-
-            if (collider.transform == transform || collider.transform.IsChildOf(transform))
-            {
-                return true;
-            }
-            return false;
-        }
     }
 }

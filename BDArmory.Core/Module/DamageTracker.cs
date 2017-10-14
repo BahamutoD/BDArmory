@@ -13,6 +13,9 @@ namespace BDArmory.Core.Module
         UI_FloatRange(minValue = 15f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 15f;
 
+        //[KSPField(isPersistant = true)]
+        //public float ArmorThickness = 0f;
+
         //TODO: Add setting
         private readonly float maxDamageFactor = 100f;
 
@@ -35,17 +38,19 @@ namespace BDArmory.Core.Module
                 UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Damage"].uiControlEditor;
                 damageFieldEditor.maxValue = CalculateMaxDamage();
                 damageFieldEditor.minValue = 0f;
-                
+
                 //Add Armor
                 UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["Armor"].uiControlFlight;
                 armorFieldFlight.maxValue = 1000f;
-                armorFieldFlight.minValue = 15f;
+                armorFieldFlight.minValue = 10;
 
                 UI_FloatRange armorFieldEditor = (UI_FloatRange)Fields["Armor"].uiControlEditor;
                 armorFieldEditor.maxValue = 1000f;
-                armorFieldEditor.minValue = 15f;
-
+                armorFieldEditor.minValue = 10f;
+                                
                 part.RefreshAssociatedWindows();
+
+                SetThickness();
 
             }
             else
@@ -126,6 +131,16 @@ namespace BDArmory.Core.Module
         {
             Armor -= massToReduce;
             if (Armor < 0) Armor = 0;
+        }
+
+        public void SetThickness(float thickness = 0)
+        {
+            //if (thickness != 0) Armor = thickness;            
+            if (part.FindModuleImplementing<BDArmor>())
+            {                
+                float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
+                if(armor_ != 0) Armor = armor_;
+            }
         }
     }
 }
