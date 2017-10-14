@@ -13,14 +13,14 @@ namespace BDArmory.Core.Module
         UI_FloatRange(minValue = 15f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 15f;
 
-        //[KSPField(isPersistant = true)]
-        //public float ArmorThickness = 0f;
-
         //TODO: Add setting
         private readonly float maxDamageFactor = 100f;
 
         private MaterialColorUpdater damageRenderer;
-        private Gradient g = new Gradient();        
+        private Gradient g = new Gradient();
+
+        [KSPField(isPersistant = true)]
+        public bool armorSet = false;        
     
         public override void OnStart(StartState state)
         {
@@ -50,7 +50,7 @@ namespace BDArmory.Core.Module
                                 
                 part.RefreshAssociatedWindows();
 
-                SetThickness();
+                if(!armorSet) SetThickness();
 
             }
             else
@@ -135,12 +135,14 @@ namespace BDArmory.Core.Module
 
         public void SetThickness(float thickness = 0)
         {
-            //if (thickness != 0) Armor = thickness;            
+            armorSet = true;
+
             if (part.FindModuleImplementing<BDArmor>())
             {                
                 float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
-                if(armor_ != 0) Armor = armor_;
+                if(armor_ != 0) Armor = armor_;                
             }
         }
+
     }
 }

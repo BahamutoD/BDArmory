@@ -35,22 +35,7 @@ namespace BDArmory.Core.Services
                 Damage = PartDamage,
                 Operation = DamageOperation.Set
             });
-        }
-
-        public override void SetArmorThickness_svc(Part p, float thickness)
-        {
-            var damageModule = p.Modules.GetModule<DamageTracker>();
-
-            damageModule.SetThickness(thickness);
-
-            PublishEvent(new DamageEventArgs()
-            {
-                VesselId = p.vessel.GetInstanceID(),
-                PartId = p.GetInstanceID(),
-                Armor = thickness,
-                Operation = DamageOperation.Set
-            });
-        }            
+        }              
 
         public override void AddDamageToPart_svc(Part p, float PartDamage)
         {

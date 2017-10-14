@@ -142,12 +142,7 @@ namespace BDArmory.Core.Extension
             Dependencies.Get<DamageService>().ReduceArmor_svc(p, (float) massToReduce );
             Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
         }
-
-        public static void SetArmorThickness(this Part p, double thickness)
-        {
-            Dependencies.Get<DamageService>().SetArmorThickness_svc(p,(float) thickness);
-        }
-
+        
         /// <summary>
         /// This method returns the amount of Armor resource
         /// </summary>

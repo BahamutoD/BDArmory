@@ -256,9 +256,8 @@ namespace BDArmory
                                 return;
                             }
 
-                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                         
-
-
+                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
+                            
                             if (CheckGroundHit(hitPart, hit))
                             {
                                 ExplosiveDetonation(hitPart, hit, ray);
@@ -296,9 +295,9 @@ namespace BDArmory
                                 ExplosiveDetonation(hitPart, hit, ray);
                             }                           
 
-                            ///////////////////////////////////////////////////////////////////////
+                            /////////////////////////////////////////////////////////////////////////////////
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
-                            ///////////////////////////////////////////////////////////////////////
+                            /////////////////////////////////////////////////////////////////////////////////
 
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive))
                             {

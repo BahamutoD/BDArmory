@@ -10,8 +10,6 @@ namespace BDArmory.Core.Services
 
         public abstract void AddDamageToPart_svc(Part p, float damage);
 
-        public abstract void SetArmorThickness_svc(Part p, float thickness);
-
         public abstract float GetPartDamage_svc(Part p);
 
         public abstract float GetPartArmor_svc(Part p);
