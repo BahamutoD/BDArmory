@@ -2,6 +2,7 @@
 using BDArmory.Core.Enum;
 using BDArmory.Core.Events;
 using BDArmory.Core.Module;
+using UnityEngine;
 
 namespace BDArmory.Core.Services
 {
@@ -59,7 +60,8 @@ namespace BDArmory.Core.Services
 
         public override float GetPartArmor_svc(Part p)
         {
-            return p.Modules.GetModule<DamageTracker>().Armor;
+            float armor_ = Mathf.Max(1, p.Modules.GetModule<DamageTracker>().Armor);
+            return armor_;
         }
 
         public override float GetMaxPartDamage_svc(Part p)

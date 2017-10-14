@@ -85,6 +85,7 @@ namespace BDArmory
 
         public bool hasPenetrated = false;
         public bool hasDetonated = false;
+        public bool hasRichocheted = false;
 
         public int penTicker = 0;
         #endregion
@@ -278,7 +279,9 @@ namespace BDArmory
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
                             CalculateDragAnalyticEstimate();
-                            
+
+                            if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity)){ hasRichocheted = true; }
+
                             var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
@@ -319,7 +322,7 @@ namespace BDArmory
                                 KillBullet();
                                 return;
                             }
-                            if (!hasPenetrated) break;
+                            if (!hasPenetrated || hasRichocheted) break;
                             //end While
                         }
                     } 
@@ -589,7 +592,7 @@ namespace BDArmory
             currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, Mathf.Clamp(finalColorV.w, 0.25f, 1f));
         }
 
-        bool RicochetOnPart(Part p, float angleFromNormal, float impactVel)
+        bool RicochetOnPart(Part p, RaycastHit hit, float angleFromNormal, float impactVel)
         {
             float hitTolerance = p.crashTolerance;
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
@@ -598,7 +601,8 @@ namespace BDArmory
             if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
             if (random < chance)
             {
-                return true;
+                DoRicochet(p, hit, angleFromNormal);
+                return true;                
             }
             else
             {
@@ -606,6 +610,27 @@ namespace BDArmory
             }
         }
 
+        public void DoRicochet(Part p, RaycastHit hit,float hitAngle)
+        {
+            //ricochet            
+            if (BDArmorySettings.BULLET_HITS)
+            {
+                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+            }
+
+            tracerStartWidth /= 2;
+            tracerEndWidth /= 2;
+
+            transform.position = hit.point;
+            currentVelocity = Vector3.Reflect(currentVelocity, hit.normal);
+            currentVelocity = (hitAngle / 150) * currentVelocity * 0.65f;
+
+            Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
+
+            currentVelocity = Vector3.RotateTowards(currentVelocity, randomDirection,
+                UnityEngine.Random.Range(0f, 5f) * Mathf.Deg2Rad, 0);
+
+        }
         private float CalculateExplosionProbability(Part part)
         {
             float probability = 0;
