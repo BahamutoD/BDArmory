@@ -77,7 +77,7 @@ namespace BDArmory.Parts
 	        double explosiveMass = part.Resources["HighExplosive"].amount;   
 
 	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
-            blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
+            blastRadius = (float) (blastPower * 1.5);
 
             previousMass = part.Resources["HighExplosive"].amount;
 	    }
