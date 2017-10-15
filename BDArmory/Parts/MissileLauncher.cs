@@ -1870,7 +1870,13 @@ namespace BDArmory.Parts
 		{
 		    if (!HighLogic.LoadedSceneIsEditor)
 		    {
-		        drawLabels();
+                try
+                {
+                    drawLabels();
+                }
+                catch (Exception)
+                { }
+                
 		    }
         }
 

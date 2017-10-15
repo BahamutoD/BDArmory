@@ -163,6 +163,11 @@ namespace BDArmory
             StartCoroutine(FrameDelayedRoutine());
         }
 
+        void OnDestory()
+        {
+            StopCoroutine(FrameDelayedRoutine());
+        }        
+
         IEnumerator FrameDelayedRoutine()
         {
             yield return new WaitForFixedUpdate();

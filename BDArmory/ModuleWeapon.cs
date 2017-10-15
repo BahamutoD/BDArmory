@@ -655,8 +655,18 @@ namespace BDArmory
                 fireState.enabled = false;
             }
             bulletInfo = BulletInfo.bullets[bulletType];
+
             if (bulletInfo == null)
-                Debug.Log("[BDArmory]: Failed To load bullet : " + bulletType);
+            {
+                if(BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: Failed To load bullet : " + bulletType);
+            }
+            else
+            {
+                if(BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: BulletType Loaded : " + bulletType);
+            }              
+            
             BDArmorySettings.OnVolumeChange += UpdateVolume;
         }
 
