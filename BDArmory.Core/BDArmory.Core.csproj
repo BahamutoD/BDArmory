@@ -36,6 +36,7 @@
     <Compile Include="Extension\PartExtensions.cs" />
     <Compile Include="Events\DamageEventArgs.cs" />
     <Compile Include="Extension\VesselExtensions.cs" />
+    <Compile Include="Module\ArmorUtils.cs" />
     <Compile Include="Module\BDArmor.cs" />
     <Compile Include="Module\DamageTracker.cs" />
     <Compile Include="Services\DamageService.cs" />
