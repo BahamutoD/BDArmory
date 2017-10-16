@@ -265,23 +265,25 @@ namespace BDArmory
                             }
 
                             if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
-                            
-                            if (CheckGroundHit(hitPart, hit))
-                            {
-                                ExplosiveDetonation(hitPart, hit, ray);
-                                KillBullet();
-                                return;
-                            }
 
-                            if (CheckBuildingHit(hit))
-                            {
-                                ExplosiveDetonation(hitPart, hit, ray);
-                                KillBullet();
-                                return;
-                            }
-
-                            //Standard Pipeline Damage, Armor and Explosives
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
+
+                            if (CheckGroundHit(hitPart, hit) || CheckBuildingHit(hit))
+                            {
+                                if (!RicochetScenery(hitAngle))
+                                {
+                                    ExplosiveDetonation(hitPart, hit, ray);
+                                    KillBullet();
+                                }
+                                else
+                                {
+                                    DoRicochet(hitPart, hit, hitAngle);
+                                }
+                                return;
+                            }
+ 
+                            //Standard Pipeline Damage, Armor and Explosives
+                            
                             impactVelocity = currentVelocity.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
@@ -616,6 +618,18 @@ namespace BDArmory
             {
                 return false;
             }
+        }
+
+        bool RicochetScenery(float hitAngle)
+        {
+            float reflectRandom = UnityEngine.Random.Range(-75f, 90f);
+            if (reflectRandom > 90 - hitAngle)
+            {
+                return true;
+            }
+  
+             return false;                        
+
         }
 
         public void DoRicochet(Part p, RaycastHit hit,float hitAngle)
