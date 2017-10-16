@@ -296,15 +296,15 @@ namespace BDArmory
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                             {
                                 hasPenetrated = true;
-                                //CheckPartForExplosion(hitPart);                                
-                                hitPart.AddDamage_Ballistic(mass, caliber, 1f, penetrationFactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);                                
+                                //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
+                                ApplyDamage(hitPart, 1, penetrationFactor);
                                 penTicker += 1;
                             }
                             else
                             {
                                 hasPenetrated = false;               
                                 // explosive bullets that get stopped by armor will explode                                    
-                                ApplyDamage(hitPart, penetrationFactor, penetrationFactor, caliber);
+                                ApplyDamage(hitPart, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                             }                           
 
@@ -348,14 +348,14 @@ namespace BDArmory
             transform.position += currentVelocity * Time.deltaTime;            
         }
 
-        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
+        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
             if(hitPart == null) return;
             if (hitPart.partInfo.name.Contains("Strut")) return;
 
-            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);
+            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult, impactVelocity);
             
             #region Code Moved To PartExtensions
             // if (hitPart.HasArmor()) return; - Why would we not do damage if armor??

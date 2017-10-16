@@ -68,6 +68,7 @@ namespace BDArmory.Core.Extension
                                                float multiplier,
                                                float penetrationfactor,
                                                float DMG_MULT,
+                                               float bulletDmgMult,
                                                float impactVelocity)
         {
             double armorMass_ = p.GetArmorMass();
@@ -80,10 +81,11 @@ namespace BDArmory.Core.Extension
             //1e-4 constant for adjusting MegaJoules for gameplay
 
             double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
-                            * DMG_MULT * 0.01d
+                            * DMG_MULT * 0.01d * bulletDmgMult
                             * 1e-4f);
 
-            //As armor is decreased level of damage should increase 
+            //As armor is decreased level of damage should increase
+            // Ideally this would be logarithmic but my math is lacking right now... 
 
             damage /= Mathf.Max(1,(float) armorPCT_ * 100);
 
