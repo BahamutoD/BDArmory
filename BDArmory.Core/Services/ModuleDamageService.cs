@@ -2,12 +2,13 @@
 using BDArmory.Core.Enum;
 using BDArmory.Core.Events;
 using BDArmory.Core.Module;
+using UnityEngine;
 
 namespace BDArmory.Core.Services
 {
     internal class ModuleDamageService : DamageService
     {
-        public override void ReduceArmorToPart(Part p, float armorMass)
+        public override void ReduceArmor_svc(Part p, float armorMass)
         {
             var damageModule = p.Modules.GetModule<DamageTracker>();
 
@@ -21,9 +22,8 @@ namespace BDArmory.Core.Services
                 Operation = DamageOperation.Set
             });
         }
-
         
-        public override void SetDamageToPart(Part p, float PartDamage)
+        public override void SetDamageToPart_svc(Part p, float PartDamage)
         {
             var damageModule = p.Modules.GetModule<DamageTracker>();
 
@@ -36,9 +36,9 @@ namespace BDArmory.Core.Services
                 Damage = PartDamage,
                 Operation = DamageOperation.Set
             });
-        }
+        }              
 
-        public override void AddDamageToPart(Part p, float PartDamage)
+        public override void AddDamageToPart_svc(Part p, float PartDamage)
         {
             var damageModule = p.Modules.GetModule<DamageTracker>();
 
@@ -53,22 +53,23 @@ namespace BDArmory.Core.Services
             });
         }
 
-        public override float GetPartDamage(Part p)
+        public override float GetPartDamage_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().Damage;
         }
 
-        public override float GetPartArmor(Part p)
+        public override float GetPartArmor_svc(Part p)
         {
-            return p.Modules.GetModule<DamageTracker>().Armor;
+            float armor_ = Mathf.Max(1, p.Modules.GetModule<DamageTracker>().Armor);
+            return armor_;
         }
 
-        public override float GetMaxPartDamage(Part p)
+        public override float GetMaxPartDamage_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().GetMaxPartDamage();
         }
 
-        public override float GetMaxArmor(Part p)
+        public override float GetMaxArmor_svc(Part p)
         {
             return p.Modules.GetModule<DamageTracker>().GetMaxArmor();
         }

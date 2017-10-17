@@ -52,8 +52,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Armor\ArmorUtils.cs" />
-    <Compile Include="Armor\BDArmor.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\CFEnable.cs" />

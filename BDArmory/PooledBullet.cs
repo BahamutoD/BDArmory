@@ -1,14 +1,15 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using BDArmory.Armor;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Module;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using BDArmory.UI;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace BDArmory
 {
@@ -86,6 +87,7 @@ namespace BDArmory
 
         public bool hasPenetrated = false;
         public bool hasDetonated = false;
+        public bool hasRichocheted = false;
 
         public int penTicker = 0;
         #endregion
@@ -160,6 +162,11 @@ namespace BDArmory
             wasInitiated = true;
             StartCoroutine(FrameDelayedRoutine());
         }
+
+        void OnDestory()
+        {
+            StopCoroutine(FrameDelayedRoutine());
+        }        
 
         IEnumerator FrameDelayedRoutine()
         {
@@ -257,49 +264,53 @@ namespace BDArmory
                                 return;
                             }
 
-                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                         
+                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
 
-
-                            if (CheckGroundHit(hitPart, hit))
-                            {
-                                ExplosiveDetonation(hitPart, hit, ray);
-                                KillBullet();
-                                return;
-                            }
-
-                            if (CheckBuildingHit(hit))
-                            {
-                                ExplosiveDetonation(hitPart, hit, ray);
-                                KillBullet();
-                                return;
-                            }
-
-                            //Standard Pipeline Damage, Armor and Explosives
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
+
+                            if (CheckGroundHit(hitPart, hit) || CheckBuildingHit(hit))
+                            {
+                                if (!RicochetScenery(hitAngle))
+                                {
+                                    ExplosiveDetonation(hitPart, hit, ray);
+                                    KillBullet();
+                                }
+                                else
+                                {
+                                    DoRicochet(hitPart, hit, hitAngle);
+                                }
+                                return;
+                            }
+ 
+                            //Standard Pipeline Damage, Armor and Explosives
+                            
                             impactVelocity = currentVelocity.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
                             CalculateDragAnalyticEstimate();
-                            
+
+                            if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity)){ hasRichocheted = true; }
+
                             var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                             {
-                                hasPenetrated = true;                                
-                                hitPart.AddDamage_Ballistic(mass, caliber, 1f, penetrationFactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);                                
+                                hasPenetrated = true;
+                                //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
+                                ApplyDamage(hitPart, 1, penetrationFactor);
                                 penTicker += 1;
                             }
                             else
                             {
                                 hasPenetrated = false;               
                                 // explosive bullets that get stopped by armor will explode                                    
-                                ApplyDamage(hitPart, penetrationFactor, penetrationFactor, caliber);
+                                ApplyDamage(hitPart, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                             }                           
 
-                            ///////////////////////////////////////////////////////////////////////
+                            /////////////////////////////////////////////////////////////////////////////////
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
-                            ///////////////////////////////////////////////////////////////////////
+                            /////////////////////////////////////////////////////////////////////////////////
 
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive))
                             {
@@ -321,7 +332,7 @@ namespace BDArmory
                                 KillBullet();
                                 return;
                             }
-                            if (!hasPenetrated) break;
+                            if (!hasPenetrated || hasRichocheted) break;
                             //end While
                         }
                     } 
@@ -337,14 +348,14 @@ namespace BDArmory
             transform.position += currentVelocity * Time.deltaTime;            
         }
 
-        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor,float caliber = 0)
+        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
             if(hitPart == null) return;
             if (hitPart.partInfo.name.Contains("Strut")) return;
 
-            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, impactVelocity);
+            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult, impactVelocity);
             
             #region Code Moved To PartExtensions
             // if (hitPart.HasArmor()) return; - Why would we not do damage if armor??
@@ -591,7 +602,7 @@ namespace BDArmory
             currentColor = new Color(finalColorV.x, finalColorV.y, finalColorV.z, Mathf.Clamp(finalColorV.w, 0.25f, 1f));
         }
 
-        bool RicochetOnPart(Part p, float angleFromNormal, float impactVel)
+        bool RicochetOnPart(Part p, RaycastHit hit, float angleFromNormal, float impactVel)
         {
             float hitTolerance = p.crashTolerance;
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
@@ -600,11 +611,65 @@ namespace BDArmory
             if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
             if (random < chance)
             {
-                return true;
+                DoRicochet(p, hit, angleFromNormal);
+                return true;                
             }
             else
             {
                 return false;
+            }
+        }
+
+        bool RicochetScenery(float hitAngle)
+        {
+            float reflectRandom = UnityEngine.Random.Range(-75f, 90f);
+            if (reflectRandom > 90 - hitAngle)
+            {
+                return true;
+            }
+  
+             return false;                        
+
+        }
+
+        public void DoRicochet(Part p, RaycastHit hit,float hitAngle)
+        {
+            //ricochet            
+            if (BDArmorySettings.BULLET_HITS)
+            {
+                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+            }
+
+            tracerStartWidth /= 2;
+            tracerEndWidth /= 2;
+
+            transform.position = hit.point;
+            currentVelocity = Vector3.Reflect(currentVelocity, hit.normal);
+            currentVelocity = (hitAngle / 150) * currentVelocity * 0.65f;
+
+            Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
+
+            currentVelocity = Vector3.RotateTowards(currentVelocity, randomDirection,
+                UnityEngine.Random.Range(0f, 5f) * Mathf.Deg2Rad, 0);
+
+        }
+
+        public void CheckPartForExplosion(Part hitPart)
+        {
+            if (!hitPart.FindModuleImplementing<BDArmor>()) return;
+
+            switch (BDArmor.Instance._explodeMode)
+            {
+                case ArmorUtils.ExplodeMode.Always:
+                    CreateExplosion(hitPart);
+                    break;
+                case ArmorUtils.ExplodeMode.Dynamic:
+                    float probability = CalculateExplosionProbability(hitPart);
+                    if (probability > 0.1f)
+                        CreateExplosion(hitPart);
+                    break;
+                case ArmorUtils.ExplodeMode.Never:
+                    break;
             }
         }
 
@@ -624,10 +689,47 @@ namespace BDArmory
                         break;
                 }
             }
-            //if (bulletType == PooledBulletTypes.Explosive)
+            
             if (explosive)
                     probability += 0.1f;
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: Explosive Probablitliy " + probability);
+            }
+
             return probability;
         }
+        
+        public void CreateExplosion(Part part)
+        {
+            float explodeScale = 0;
+            IEnumerator<PartResource> resources = part.Resources.GetEnumerator();
+            while (resources.MoveNext())
+            {
+                if (resources.Current == null) continue;
+                switch (resources.Current.resourceName)
+                {
+                    case "LiquidFuel":
+                        explodeScale += (float)resources.Current.amount;
+                        break;
+                    case "Oxidizer":
+                        explodeScale += (float)resources.Current.amount;
+                        break;
+                }
+            }
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: Penetration of bullet detonated fuel!");
+            }
+
+            resources.Dispose();
+            explodeScale /= 100;
+            part.explode();
+            ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale * radius, explodeScale * blastPower * 2,
+                explodeScale * blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath, false);
+        }
+
     }
 }

@@ -14,7 +14,7 @@ namespace BDArmory.Core.Extension
             // Basic Add Damage for compatibility
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
-            Dependencies.Get<DamageService>().AddDamageToPart(p, damage);
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
             Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
 
         }
@@ -59,8 +59,8 @@ namespace BDArmory.Core.Extension
             // Do The Damage
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
-            Dependencies.Get<DamageService>().AddDamageToPart(p, (float)damage);
-            Debug.Log("[BDArmory]: ====== Explosion ray hit part! Damage : " + damage + "======");
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
+            Debug.Log("[BDArmory]: ====== Explosion ray hit part | Explosion Damage : " + damage + "======");
         }
         public static void AddDamage_Ballistic(this Part p,
                                                float mass,
@@ -68,6 +68,7 @@ namespace BDArmory.Core.Extension
                                                float multiplier,
                                                float penetrationfactor,
                                                float DMG_MULT,
+                                               float bulletDmgMult,
                                                float impactVelocity)
         {
             double armorMass_ = p.GetArmorMass();
@@ -78,13 +79,13 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             //Damage mult for scaling in settings
             //1e-4 constant for adjusting MegaJoules for gameplay
+
             double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
-                            * DMG_MULT * 0.01d
+                            * DMG_MULT * 0.01d * bulletDmgMult
                             * 1e-4f);
 
-            //Also we are not considering hear the angle of penetration
-            //because we already did on the armor penetration calculations.
-            //As armor is decreased level of damage should increase 
+            //As armor is decreased level of damage should increase
+            // Ideally this would be logarithmic but my math is lacking right now... 
 
             damage /= Mathf.Max(1,(float) armorPCT_ * 100);
 
@@ -110,15 +111,15 @@ namespace BDArmory.Core.Extension
             // Do The Damage
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
-            Dependencies.Get<DamageService>().AddDamageToPart(p, (float)damage);
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
+            Debug.Log("[BDArmory]: Damage Applied : " + damage);
         }
 
         
         public static void Destroy(this Part p)
         {
-            Dependencies.Get<DamageService>().SetDamageToPart(p, float.MaxValue);
+            Dependencies.Get<DamageService>().SetDamageToPart_svc(p, float.MaxValue);
         }
 
         public static bool HasArmor(this Part p)
@@ -128,22 +129,22 @@ namespace BDArmory.Core.Extension
 
         public static float Damage(this Part p)
         {
-            return Dependencies.Get<DamageService>().GetPartDamage(p);
+            return Dependencies.Get<DamageService>().GetPartDamage_svc(p);
         }
 
         public static float MaxDamage(this Part p)
         {
-            return Dependencies.Get<DamageService>().GetMaxPartDamage(p);
+            return Dependencies.Get<DamageService>().GetMaxPartDamage_svc(p);
         }
 
         public static void ReduceArmor(this Part p, double massToReduce)
         {
             if (!p.HasArmor()) return;
             massToReduce = Math.Max(0.10,Math.Round(massToReduce, 2));
-            Dependencies.Get<DamageService>().ReduceArmorToPart(p, (float) massToReduce );
-            Debug.Log("[BDArmory]: Final Armor Removed : " + massToReduce);
+            Dependencies.Get<DamageService>().ReduceArmor_svc(p, (float) massToReduce );
+            Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
         }
-
+        
         /// <summary>
         /// This method returns the amount of Armor resource
         /// </summary>
@@ -152,14 +153,15 @@ namespace BDArmory.Core.Extension
         public static double GetArmorMass(this Part p)
         {
             if (p == null) return 0d;        
-            return Dependencies.Get<DamageService>().GetPartArmor(p);
+            return Dependencies.Get<DamageService>().GetPartArmor_svc(p);
         }
 
         public static float GetArmorPercentage(this Part p)
         {
             if (p == null) return 0;
-            float armor_ = Dependencies.Get<DamageService>().GetPartArmor(p);
-            float maxArmor_ = Dependencies.Get<DamageService>().GetMaxArmor(p);
+            float armor_ = Dependencies.Get<DamageService>().GetPartArmor_svc(p);
+            float maxArmor_ = Dependencies.Get<DamageService>().GetMaxArmor_svc(p);
+
             return armor_ / maxArmor_;
         }
         //Thanks FlowerChild

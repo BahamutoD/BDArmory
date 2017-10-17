@@ -404,8 +404,7 @@ namespace BDArmory.UI
                 GameEvents.onVesselChange.Add(VesselChange);
             }
 
-           // if (BulletInfo.bullets.Count == 0 || BulletInfo.bullets == null)
-                BulletInfo.Load();
+            BulletInfo.Load();
         }
 
         private void CheckIfWindowsSettingsAreWithinScreen()

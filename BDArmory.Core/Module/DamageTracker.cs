@@ -17,7 +17,10 @@ namespace BDArmory.Core.Module
         private readonly float maxDamageFactor = 100f;
 
         private MaterialColorUpdater damageRenderer;
-        private Gradient g = new Gradient();        
+        private Gradient g = new Gradient();
+
+        [KSPField(isPersistant = true)]
+        public bool armorSet = false;        
     
         public override void OnStart(StartState state)
         {
@@ -35,17 +38,19 @@ namespace BDArmory.Core.Module
                 UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Damage"].uiControlEditor;
                 damageFieldEditor.maxValue = CalculateMaxDamage();
                 damageFieldEditor.minValue = 0f;
-                
+
                 //Add Armor
                 UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["Armor"].uiControlFlight;
                 armorFieldFlight.maxValue = 1000f;
-                armorFieldFlight.minValue = 15f;
+                armorFieldFlight.minValue = 10;
 
                 UI_FloatRange armorFieldEditor = (UI_FloatRange)Fields["Armor"].uiControlEditor;
                 armorFieldEditor.maxValue = 1000f;
-                armorFieldEditor.minValue = 15f;
-
+                armorFieldEditor.minValue = 10f;
+                                
                 part.RefreshAssociatedWindows();
+
+                if(!armorSet) SetThickness();
 
             }
             else
@@ -127,5 +132,17 @@ namespace BDArmory.Core.Module
             Armor -= massToReduce;
             if (Armor < 0) Armor = 0;
         }
+
+        public void SetThickness(float thickness = 0)
+        {
+            armorSet = true;
+
+            if (part.FindModuleImplementing<BDArmor>())
+            {                
+                float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
+                if(armor_ != 0) Armor = armor_;                
+            }
+        }
+
     }
 }
