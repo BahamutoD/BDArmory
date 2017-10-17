@@ -1761,7 +1761,7 @@ namespace BDArmory.Parts
 		    if(part!=null) part.Destroy();
             Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 		    if(SourceVessel==null) SourceVessel = vessel;
-		    ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, SourceVessel, transform.forward, explModelPath, explSoundPath, true); 
+		    ExplosionFx.CreateExplosion(position, blastRadius, blastPower, blastHeat, explModelPath, explSoundPath, true); 
 
 		    List<BDAGaplessParticleEmitter>.Enumerator e = gaplessEmitters.GetEnumerator();
             while (e.MoveNext())
