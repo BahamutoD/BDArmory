@@ -74,6 +74,11 @@ namespace BDArmory.Core.Services
             return p.Modules.GetModule<DamageTracker>().GetMaxArmor();
         }
 
+        public override float GetAreaOfPart_svc(Part p)
+        {
+            return p.Modules.GetModule<DamageTracker>().GetAreaOfPart();
+        }
+
         public override void DestroyPart(Part p)
         {
             p.Modules.GetModule<DamageTracker>().DestroyPart();
