@@ -55,6 +55,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\BDArmory\LocalDev\Refs\KSPAssets.dll</HintPath>
     </Reference>
+    <Reference Include="KSPDev_Utils.0.28">
+      <HintPath>..\BDArmory\LocalDev\Refs\KSPDev_Utils.0.28.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
