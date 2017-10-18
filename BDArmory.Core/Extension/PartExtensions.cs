@@ -164,6 +164,7 @@ namespace BDArmory.Core.Extension
 
             return armor_ / maxArmor_;
         }
+
         //Thanks FlowerChild
         //refreshes part action window
         public static void RefreshAssociatedWindows(this Part part)
@@ -179,5 +180,6 @@ namespace BDArmory.Core.Extension
             }
             window.Dispose();
         }
+
     }
 }
