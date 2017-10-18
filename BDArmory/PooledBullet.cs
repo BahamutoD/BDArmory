@@ -77,7 +77,7 @@ namespace BDArmory
         public float caliber = 0;
         public float bulletVelocity; //muzzle velocity
         public bool explosive = false;
-        public float apBulletDmg = 0;
+        public float apBulletMod = 0;
         public float ballisticCoefficient;
         public float flightTimeElapsed;
         bool collisionEnabled;
@@ -172,7 +172,7 @@ namespace BDArmory
         {
             yield return new WaitForFixedUpdate();
             lightFlash.enabled = false;
-            collisionEnabled = true;
+            collisionEnabled = true; 
         }
 
         void OnWillRenderObject()

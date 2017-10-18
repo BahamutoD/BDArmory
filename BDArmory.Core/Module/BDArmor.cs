@@ -76,7 +76,7 @@ namespace BDArmory.Core.Module
             PartVolume2 = GetPartVolume_withArmor(part.partInfo,part);
             ArmorMass = 8.05f * (PartVolume2 - PartVolume)/1000f;
 
-            part.mass += ArmorMass;
+
         }
 
         public static float GetPartVolume(AvailablePart partInfo,Part part)

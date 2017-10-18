@@ -16,11 +16,16 @@ namespace BDArmory.Armor
         public float blastPower { get; private set; }
         public float blastHeat { get; private set; }
         public float blastRadius { get; private set; }
-        public float apBulletDmg { get; private set; }
+        public float apBulletMod { get; private set; }
+        public string bulletDragTypeName { get; private set; }
+        public float bulletDragArea { get; private set; }
 
         public static BulletInfos bullets;
 
-        public BulletInfo(string name, float caliber, float bulletVelocity, float bulletMass, bool explosive, float blastPower, float blastHeat, float blastRadius, float apBulletDmg, float positiveCoefficient, FloatCurve penetration)
+        public BulletInfo(string name, float caliber, float bulletVelocity, float bulletMass,
+                          bool explosive, float blastPower, float blastHeat, float blastRadius,
+                          float apBulletDmg, string bulletDragTypeName, float bulletDragArea,
+                          float positiveCoefficient, FloatCurve penetration)
         {
             this.name = name;
             this.caliber = caliber;
@@ -30,7 +35,9 @@ namespace BDArmory.Armor
             this.blastPower = blastPower;
             this.blastHeat = blastHeat;
             this.blastRadius = blastRadius;
-            this.apBulletDmg = apBulletDmg;
+            this.apBulletMod = apBulletDmg;
+            this.bulletDragTypeName = bulletDragTypeName;
+            this.bulletDragArea = bulletDragArea;
             this.positiveCoefficient = positiveCoefficient;
             this.penetration = penetration;              
         }
@@ -57,7 +64,9 @@ namespace BDArmory.Armor
                         float.Parse(node.GetValue("blastPower")),
                         float.Parse(node.GetValue("blastHeat")),
                         float.Parse(node.GetValue("blastRadius")),
-                        float.Parse(node.GetValue("apBulletDmg")),
+                        float.Parse(node.GetValue("apBulletMod")),
+                        node.GetValue("bulletDragTypeName"),
+                        float.Parse(node.GetValue("bulletDragArea")),
                         float.Parse(node.GetValue("positiveCoefficient")),
                         penetrationCurve)
                         );

@@ -508,7 +508,7 @@ namespace BDArmory
             base.OnStart(state);
 
             ParseWeaponType();
-            ParseBulletDragType();
+            
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxEffectiveDistance);
 
@@ -1061,7 +1061,7 @@ namespace BDArmory
                         pBullet.bulletVelocity = bulletInfo.bulletVelocity;
                         pBullet.mass = bulletInfo.bulletMass;
                         pBullet.explosive = bulletInfo.explosive;
-                        pBullet.apBulletDmg = bulletInfo.apBulletDmg;                     
+                        pBullet.apBulletMod = bulletInfo.apBulletMod;                     
                         
                         pBullet.bulletDmgMult = bulletDmgMult;
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
@@ -1124,7 +1124,7 @@ namespace BDArmory
                             else
                             {
                                 //use values from bullets.cfg
-                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;                                
                                 pBullet.explModelPath = explModelPath;
                                 pBullet.explSoundPath = explSoundPath;
                                 pBullet.blastPower = bulletInfo.blastPower;
@@ -2135,7 +2135,8 @@ namespace BDArmory
         }
 
         void SetupBullet()
-        {
+        {        
+
             bulletInfo = BulletInfo.bullets[bulletType];
             if (bulletType != "def")
             {
@@ -2144,11 +2145,15 @@ namespace BDArmory
                 bulletVelocity = bulletInfo.bulletVelocity;
                 bulletMass = bulletInfo.bulletMass;
 
+                bulletDragTypeName = bulletInfo.bulletDragTypeName;
+                bulletDragArea = bulletInfo.bulletDragArea;
+
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastHeat;
                 cannonShellRadius = bulletInfo.blastRadius;         
                 
             }
+            ParseBulletDragType();
         }
         #endregion
 
