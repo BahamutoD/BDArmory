@@ -727,8 +727,8 @@ namespace BDArmory
             resources.Dispose();
             explodeScale /= 100;
             part.explode();
-            ExplosionFX.CreateExplosion(part.partTransform.position, explodeScale * radius, explodeScale * blastPower * 2,
-                explodeScale * blastHeat, part.vessel, FlightGlobals.upAxis, explModelPath, explSoundPath, false);
+
+            ExplosionFx.CreateExplosion(part.partTransform.position, explodeScale * radius, explodeScale * blastPower * 2, explodeScale * blastHeat, explModelPath, explSoundPath, false);
         }
 
     }

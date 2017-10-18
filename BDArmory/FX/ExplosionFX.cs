@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
-using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
 
