@@ -56,18 +56,18 @@ namespace BDArmory.Core.Module
             else
             {
                 Debug.Log("[BDArmory]:DamageTracker::OnStart part  is null");
-            }
+            }            
         }
 
         public override void OnUpdate()
         {
             //TODO: Add effects
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || this.Damage == 0f)
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || Damage == 0f)
             {
                 return;
             }
 
-            damageRenderer?.Update(GetDamageColor());
+            damageRenderer?.Update(GetDamageColor());         
         }
 
         private float CalculateMaxDamage()
@@ -142,6 +142,12 @@ namespace BDArmory.Core.Module
                 float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
                 if(armor_ != 0) Armor = armor_;                
             }
+        }
+
+        public float GetAreaOfPart()
+        {
+            float surfaceArea = part.surfaceAreas.magnitude;
+            return surfaceArea;
         }
 
     }

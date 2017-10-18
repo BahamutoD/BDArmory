@@ -398,6 +398,7 @@ namespace BDArmory
 
         private void CalculateDragNumericalIntegration()
         {
+            if (!bulletDrop) return;
             if (dragType == BulletDragTypes.NumericalIntegration)
             {
                 Vector3 dragAcc = currentVelocity * currentVelocity.magnitude *
@@ -414,6 +415,7 @@ namespace BDArmory
 
         private void CalculateDragAnalyticEstimate()
         {
+            if (!bulletDrop) return;
             if (dragType == BulletDragTypes.AnalyticEstimate)
             {
                 float analyticDragVelAdjustment =

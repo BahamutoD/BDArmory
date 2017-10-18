@@ -242,7 +242,7 @@ namespace BDArmory
         [KSPField]
         public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
         [KSPField]
-        public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
+        public float bulletMass = 0.3880f; //mass in KG - used for damage and recoil and drag
         [KSPField]
         public float caliber = 0; //caliber in mm, used for penetration calcs
         [KSPField]
