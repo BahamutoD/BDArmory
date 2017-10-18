@@ -57,11 +57,10 @@ namespace BDArmory.FX
             while (pe.MoveNext())
             {
                 if (pe.Current == null) continue;
-               EffectBehaviour.AddParticleEmitter(pe.Current);
-
-                pe.Current.maxEnergy = Mathf.Max((Range / ExplosionVelocity), pe.Current.maxEnergy);
-                pe.Current.minEnergy = Mathf.Max((Range / ExplosionVelocity), pe.Current.maxEnergy);
+                EffectBehaviour.AddParticleEmitter(pe.Current);
                 pe.Current.emit = true;
+                pe.Current.maxEnergy = Mathf.Max((Range / ExplosionVelocity), pe.Current.maxEnergy);
+
                
             }
             pe.Dispose();
@@ -78,8 +77,6 @@ namespace BDArmory.FX
                 Debug.Log(
                     "[BDArmory]:Explosion started StartTime: {"+ StartTime + "}, Duration: {" + MaxTime + "}");
             }
-
-            _ready = true;
         }
 
         private void CalculateBlastEvents()
@@ -183,7 +180,7 @@ namespace BDArmory.FX
 
         public void Update()
         {
-            if (!_ready) return;
+
             if (ExplosionEvents.Count == 0 && Time.time - StartTime > 0.2f)
             {
                 // Killing explosion
@@ -219,10 +216,7 @@ namespace BDArmory.FX
 
         public void FixedUpdate()
         {
-            if (!_ready) return;
-            if (ExplosionEvents.Count == 0) return;
-
-            while (ExplosionEvents.Peek().TimeToImpact <= TimeIndex)
+            while (ExplosionEvents.Count > 0 && ExplosionEvents.Peek().TimeToImpact <= TimeIndex)
             {
                 BlastHitEvent eventToExecute = ExplosionEvents.Dequeue();
 
@@ -235,7 +229,7 @@ namespace BDArmory.FX
                 {
                     ExecuteBuildingBlastEvent((BuildingBlastHitEvent) eventToExecute);
                 }
-            }
+            }   
         }
 
         private void ExecuteBuildingBlastEvent(BuildingBlastHitEvent eventToExecute)
@@ -333,6 +327,15 @@ namespace BDArmory.FX
                 eFx.AudioSource.priority = 9999;
             }
             newExplosion.SetActive(true);
+            IEnumerator<KSPParticleEmitter> pe = newExplosion.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>()
+                .GetEnumerator();
+            while (pe.MoveNext())
+            {
+                if (pe.Current == null) continue;
+                pe.Current.emit = true;
+
+            }
+            pe.Dispose();
         }
     }
 
