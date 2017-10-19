@@ -271,6 +271,8 @@ namespace BDArmory
         public float shellScale = 0.66f; //scale of shell to eject
         [KSPField]
         public bool hasRecoil = true;
+        [KSPField]
+        public float recoilReduction = 1; //for reducing recoil on large guns with built in compensation
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"),
          UI_Toggle(disabledText = "None", enabledText = "In range")]
@@ -952,7 +954,7 @@ namespace BDArmory
                         //recoil
                         if (hasRecoil)
                         {
-                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass/1000),
+                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass/1000 * 0.85f * recoilReduction),
                                 fireTransform.position, ForceMode.Impulse);
                         }
 
