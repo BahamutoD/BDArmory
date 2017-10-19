@@ -77,7 +77,8 @@ namespace BDArmory.Core.Module
 
         public void DestroyPart()
         {
-            part.temperature = part.maxTemp * 2;
+            //part.temperature = part.maxTemp * 2;
+            part.explode();
         }
 
         public float GetMaxArmor()

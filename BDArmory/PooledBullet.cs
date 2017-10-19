@@ -240,6 +240,12 @@ namespace BDArmory
 
             if (collisionEnabled)
             {
+                //reset our hit variables to default state
+                hasPenetrated = true;
+                hasDetonated = false;
+                hasRichocheted = false;
+                penTicker = 0;
+
                 float dist = currentVelocity.magnitude * TimeWarp.deltaTime;
                 Ray ray = new Ray(currPosition, currPosition - prevPosition);
                 var hits = Physics.RaycastAll(ray, dist, 557057);        
@@ -251,8 +257,10 @@ namespace BDArmory
                     {
                         while (hitsEnu.MoveNext())
                         {
+                            if (!hasPenetrated || hasRichocheted || hasDetonated) break;
+
                             RaycastHit hit = hitsEnu.Current;
-                            Part hitPart = null;                            
+                            Part hitPart = null;                                                           
 
                             try
                             {
@@ -260,10 +268,10 @@ namespace BDArmory
                             }
                             catch (NullReferenceException)
                             {
-                                Debug.Log("[BDArmory]:NullReferenceException");
+                                Debug.Log("[BDArmory]:NullReferenceException for Hit");
                                 return;
                             }
-
+                            //if (hit.collider.name.Contains("runway")) return;
                             if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
 
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
@@ -306,18 +314,21 @@ namespace BDArmory
                                 // explosive bullets that get stopped by armor will explode                                    
                                 ApplyDamage(hitPart, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
+                                hasDetonated = true;
+                                KillBullet();
                             }                           
 
                             /////////////////////////////////////////////////////////////////////////////////
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
                             /////////////////////////////////////////////////////////////////////////////////
 
-                            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive))
+                            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive)|| hasRichocheted)
                             {
                                 //detonate
                                 ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel,
                                     currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
-                                hasDetonated = true;
+                                hasDetonated = true;  
+
                                 return;
                             }
 
@@ -332,7 +343,7 @@ namespace BDArmory
                                 KillBullet();
                                 return;
                             }
-                            if (!hasPenetrated || hasRichocheted) break;
+                            if (!hasPenetrated || hasRichocheted || hasDetonated ) break;
                             //end While
                         }
                     } 
@@ -457,7 +468,7 @@ namespace BDArmory
 
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, !fullyPenetrated);
+                BulletHitFX.CreateBulletHit(hit.point, hit.normal, !fullyPenetrated,caliber);
             }
                         
             double massToReduce = Math.PI * Math.Pow((caliber*0.001) / 2,2) * (penetration);
@@ -468,8 +479,8 @@ namespace BDArmory
             {
                 //lower velocity on penetrating armor plate
                 //does not affect low impact parts so that rounds can go through entire tank easily              
-
-                currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
+                //If round penetrates easily it should not loose much velocity
+                if(penetrationFactor < 2) currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
                 if (penTicker > 0) currentVelocity *= 0.85f; //signifincanly reduce velocity on subsequent penetrations
 
                 //updating impact velocity
@@ -507,7 +518,7 @@ namespace BDArmory
         private static float CalculateThickness(Part hitPart, float anglemultiplier)
         {
             float thickness = (float)hitPart.GetArmorMass();
-            return Mathf.Max(thickness / anglemultiplier, 10) ;
+            return Mathf.Max(thickness / anglemultiplier, 1) ;
         }
 
         private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)
@@ -515,6 +526,11 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////                                 
             // High Explosive Detonation
             ///////////////////////////////////////////////////////////////////////
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker);
+            }
 
             if (hitPart == null || hitPart.vessel != sourceVessel)
             {
@@ -591,9 +607,7 @@ namespace BDArmory
 
         void KillBullet()
         {
-            gameObject.SetActive(false);            
-            hasPenetrated = false;
-            penTicker = 0;
+            gameObject.SetActive(false);
         }
 
         void FadeColor()

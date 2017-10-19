@@ -88,18 +88,19 @@ namespace BDArmory.Core.Extension
             // Ideally this would be logarithmic but my math is lacking right now... 
 
             damage /= Mathf.Max(1,(float) armorPCT_ * 100);
-
+            
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
             //Caliber Adjustments for Gameplay balance
+            //damage *= multiplier;
             if (caliber <= 30f) 
             {
-                damage = (damage * multiplier * 5f);
+                damage *= 5f;
             }
-            else
+            else if(multiplier < 1 || penetrationfactor < 1)
             {
-                damage = (damage * multiplier * 16f);
+                damage *= 16f;
             }         
             
             //penalty for low caliber rounds,not if armor is very low
