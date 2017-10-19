@@ -7,15 +7,17 @@ namespace BDArmory.Core.Module
     {
         static BDArmor instance;
         public static BDArmor Instance => instance;
+        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
 
+        #region KSP Fields
         [KSPField(isPersistant = true)]
         public float ArmorThickness = 0f;
 
         //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area")]
         //public float PartArea = 0;
 
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area2")]
-        //public float PartArea2 = 0;
+        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Damage")]
+        public float maxDamage = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
         public float PartVolume = 0;
@@ -45,8 +47,8 @@ namespace BDArmory.Core.Module
         [KSPField]
         public string explodeMode = "Never";
 
-        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
-
+        #endregion
+          
         public override void OnStart(StartState state)
         {
             base.OnAwake();
@@ -70,13 +72,10 @@ namespace BDArmory.Core.Module
         public void SetPartMassByArmor()
         {
             ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-            //PartArea = part.surfaceAreas.magnitude;
-            //PartArea2 = GetPartArea(part.partInfo);
+            maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
             PartVolume = GetPartVolume(part.partInfo,part);
             PartVolume2 = GetPartVolume_withArmor(part.partInfo,part);
             ArmorMass = 8.05f * (PartVolume2 - PartVolume)/1000f;
-
-
         }
 
         public static float GetPartVolume(AvailablePart partInfo,Part part)
@@ -91,11 +90,9 @@ namespace BDArmory.Core.Module
             return (float)(volume * Math.Pow(GetPartExternalScaleModifier(part), 3));
         }
 
-        public float GetPartVolume_withArmor(AvailablePart partInfo,Part part)
+        public float GetPartVolume_withArmor(AvailablePart partInfo,Part p)
         {
-            var p = partInfo.partPrefab;
             float volume;
-
             var boundsSize = PartGeometryUtil.MergeBounds(p.GetRendererBounds(), p.transform).size;
             volume = (boundsSize.x + (ArmorThickness/1000)) * boundsSize.y * boundsSize.z;
             volume *= 10f;

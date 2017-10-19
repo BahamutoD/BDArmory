@@ -322,13 +322,11 @@ namespace BDArmory
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
                             /////////////////////////////////////////////////////////////////////////////////
 
-                            if ((explosive && airDetonation && distanceFromStart > detonationRange) || (penTicker >= 2 && explosive)|| hasRichocheted)
+                            if ((explosive && airDetonation && distanceFromStart > detonationRange) ||
+                                (penTicker >= 2 && explosive)|| hasRichocheted)
                             {
                                 //detonate
-                                ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel,
-                                    currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
-                                hasDetonated = true;  
-
+                                ExplosiveDetonation(hitPart, hit, ray,airDetonation);
                                 return;
                             }
 
@@ -343,6 +341,7 @@ namespace BDArmory
                                 KillBullet();
                                 return;
                             }
+                            //we need to stop the loop if the bullet has stopped,richochet or detonated
                             if (!hasPenetrated || hasRichocheted || hasDetonated ) break;
                             //end While
                         }
@@ -521,7 +520,7 @@ namespace BDArmory
             return Mathf.Max(thickness / anglemultiplier, 1) ;
         }
 
-        private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray)
+        private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray,bool airDetonation = false)
         {
             ///////////////////////////////////////////////////////////////////////                                 
             // High Explosive Detonation
@@ -529,7 +528,7 @@ namespace BDArmory
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
-                Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker);
+                Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker + " airDet: " + airDetonation);
             }
 
             if (hitPart == null || hitPart.vessel != sourceVessel)
@@ -537,10 +536,19 @@ namespace BDArmory
                 //if bullet hits and is HE, detonate and kill bullet
                 if (explosive)
                 {
-                    ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
-                                                blastHeat, sourceVessel, currentVelocity.normalized,
-                                                explModelPath, explSoundPath, false,caliber);
+                    if (airDetonation)
+                    {
+                        ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, sourceVessel,
+                                                    currentVelocity.normalized, explModelPath, explSoundPath, false, caliber);
+                    }
+                    else
+                    {
+                        ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
+                                                    blastHeat, sourceVessel, currentVelocity.normalized,
+                                                    explModelPath, explSoundPath, false, caliber);
+                    }
                     KillBullet();
+                    hasDetonated = true;
                     return true;
                 }
             }
