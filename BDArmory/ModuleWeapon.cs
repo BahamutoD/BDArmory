@@ -244,11 +244,11 @@ namespace BDArmory
         [KSPField]
         public float bulletMass = 0.3880f; //mass in KG - used for damage and recoil and drag
         [KSPField]
-        public float caliber = 0; //caliber in mm, used for penetration calcs
+        public float caliber = 30; //caliber in mm, used for penetration calcs
         [KSPField]
         public float bulletDmgMult = 1; //Used for heat damage modifier for non-explosive bullets
         [KSPField]
-        public float bulletVelocity = 860; //velocity in meters/second
+        public float bulletVelocity = 1030; //velocity in meters/second
 
         [KSPField]
         public string bulletDragTypeName = "AnalyticEstimate";
@@ -264,13 +264,15 @@ namespace BDArmory
         public string bulletType = "def";
 
         [KSPField]
-        public string ammoName = "50CalAmmo"; //resource usage TODO: multi resource requirement
+        public string ammoName = "50CalAmmo"; //resource usage
         [KSPField]
         public float requestResourceAmount = 1; //amount of resource/ammo to deplete per shot
         [KSPField]
         public float shellScale = 0.66f; //scale of shell to eject
         [KSPField]
         public bool hasRecoil = true;
+        [KSPField]
+        public float recoilReduction = 1; //for reducing recoil on large guns with built in compensation
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"),
          UI_Toggle(disabledText = "None", enabledText = "In range")]
@@ -508,13 +510,13 @@ namespace BDArmory
             base.OnStart(state);
 
             ParseWeaponType();
-            ParseBulletDragType();
+            
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxEffectiveDistance);
 
-            bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000; //1000 to convert from tonnes to kilograms
+            bulletBallisticCoefficient = bulletMass / bulletDragArea; //bullets are now in KG
 
-            if (shortName == string.Empty)
+            if(shortName == string.Empty)
             {
                 shortName = part.partInfo.title;
             }
@@ -654,7 +656,8 @@ namespace BDArmory
                 fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, part);
                 fireState.enabled = false;
             }
-            bulletInfo = BulletInfo.bullets[bulletType];
+            //bulletInfo = BulletInfo.bullets[bulletType];
+            SetupBullet();
 
             if (bulletInfo == null)
             {
@@ -951,7 +954,7 @@ namespace BDArmory
                         //recoil
                         if (hasRecoil)
                         {
-                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass),
+                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass/1000 * 0.85f * recoilReduction),
                                 fireTransform.position, ForceMode.Impulse);
                         }
 
@@ -1060,7 +1063,7 @@ namespace BDArmory
                         pBullet.bulletVelocity = bulletInfo.bulletVelocity;
                         pBullet.mass = bulletInfo.bulletMass;
                         pBullet.explosive = bulletInfo.explosive;
-                        pBullet.apBulletDmg = bulletInfo.apBulletDmg;                     
+                        pBullet.apBulletMod = bulletInfo.apBulletMod;                     
                         
                         pBullet.bulletDmgMult = bulletDmgMult;
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
@@ -1123,7 +1126,7 @@ namespace BDArmory
                             else
                             {
                                 //use values from bullets.cfg
-                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;                                
                                 pBullet.explModelPath = explModelPath;
                                 pBullet.explSoundPath = explSoundPath;
                                 pBullet.blastPower = bulletInfo.blastPower;
@@ -2132,7 +2135,28 @@ namespace BDArmory
             templateShell.AddComponent<ShellCasing>();
             shellPool = ObjectPool.CreateObjectPool(templateShell, 50, true, true);
         }
-        
+
+        void SetupBullet()
+        {        
+
+            bulletInfo = BulletInfo.bullets[bulletType];
+            if (bulletType != "def")
+            {
+                //use values from bullets.cfg if not the Part Module defaults are used
+                caliber = bulletInfo.caliber;
+                bulletVelocity = bulletInfo.bulletVelocity;
+                bulletMass = bulletInfo.bulletMass;
+
+                bulletDragTypeName = bulletInfo.bulletDragTypeName;
+                bulletDragArea = bulletInfo.bulletDragArea;
+
+                cannonShellHeat = bulletInfo.blastHeat;
+                cannonShellPower = bulletInfo.blastHeat;
+                cannonShellRadius = bulletInfo.blastRadius;         
+                
+            }
+            ParseBulletDragType();
+        }
         #endregion
 
         // RMB info in editor

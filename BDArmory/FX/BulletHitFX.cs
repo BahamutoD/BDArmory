@@ -68,9 +68,19 @@ namespace BDArmory.FX
             }
         }
 
-        public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet)
+        public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet,float caliber = 0)
         {
-            GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
+            GameObject go;
+
+            if (caliber <= 30)
+            {
+                go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
+            }
+            else
+            {
+                go = GameDatabase.Instance.GetModel("SM_Armory/FX/Flak1a");
+            }            
+
             GameObject newExplosion =
                 (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));
             newExplosion.SetActive(true);
