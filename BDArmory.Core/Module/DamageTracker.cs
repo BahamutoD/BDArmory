@@ -5,13 +5,20 @@ namespace BDArmory.Core.Module
 {
     public class DamageTracker : PartModule
     {
+        #region KSP Fields
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Damage"),
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None,controlEnabled = false,scene = UI_Scene.All,maxValue = 100000,minValue = 0,requireFullControl = false)]
         public float Damage = 0f;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor"),
-        UI_FloatRange(minValue = 15f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
+        UI_FloatRange(minValue = 1f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 15f;
+
+        [KSPField(isPersistant = true)]
+        public bool armorSet = false;
+
+        #endregion
 
         //TODO: Add setting
         private readonly float maxDamageFactor = 100f;
@@ -19,9 +26,38 @@ namespace BDArmory.Core.Module
         private MaterialColorUpdater damageRenderer;
         private Gradient g = new Gradient();
 
-        [KSPField(isPersistant = true)]
-        public bool armorSet = false;        
-    
+        private Part _prefabPart;
+        private bool _setupRun =  false;
+
+        protected virtual void Setup()
+        {
+            if (_setupRun) return;
+            _prefabPart = part.partInfo.partPrefab;
+            _setupRun = true;
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+
+            if (part.partInfo == null)
+            {
+                // Loading of the prefab from the part config
+                _prefabPart = part;
+                //SetupPrefab();
+
+            }
+            else
+            {
+                // Loading of the part from a saved craft
+                //tweakScale = currentScale;
+                if (HighLogic.LoadedSceneIsEditor)
+                    Setup();
+                else
+                    enabled = false;
+            }
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -59,6 +95,8 @@ namespace BDArmory.Core.Module
             }            
         }
 
+        
+
         public override void OnUpdate()
         {
             //TODO: Add effects
@@ -70,15 +108,18 @@ namespace BDArmory.Core.Module
             damageRenderer?.Update(GetDamageColor());         
         }
 
+        
+        #region Damage Functions
+
         private float CalculateMaxDamage()
-        {
+        {            
             return maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
         }
 
         public void DestroyPart()
         {
-            //part.temperature = part.maxTemp * 2;
-            part.explode();
+            part.temperature = part.maxTemp * 2;
+            //part.explode();
         }
 
         public float GetMaxArmor()
@@ -102,14 +143,7 @@ namespace BDArmory.Core.Module
             return color;
         }
 
-        void OnDestroy()
-        {
-
-           
-
-        }
-
-        public void SetDamage(float partdamage)
+         public void SetDamage(float partdamage)
         {
             Damage = partdamage;
             if (Damage > GetMaxPartDamage())
@@ -150,6 +184,8 @@ namespace BDArmory.Core.Module
             float surfaceArea = part.surfaceAreas.magnitude;
             return surfaceArea;
         }
+
+        #endregion
 
     }
 }

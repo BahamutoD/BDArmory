@@ -93,7 +93,7 @@ namespace BDArmory.Core.Extension
             //damage = (float)damage_d;
 
             //Caliber Adjustments for Gameplay balance
-            //damage *= multiplier;
+            damage *= multiplier;
             if (caliber <= 30f) 
             {
                 damage *= 5f;
