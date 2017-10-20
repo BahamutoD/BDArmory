@@ -73,10 +73,12 @@ namespace BDArmory.Parts
 	        if (!part.Resources.Contains("HighExplosive")) return;
 
             if (part.Resources["HighExplosive"].amount == previousMass) return;
-           
-	        double explosiveMass = part.Resources["HighExplosive"].amount;   
 
-	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
+            double tntKgs = part.Resources["HighExplosive"].amount * part.Resources["HighExplosive"].info.density * 1000;
+
+	        var blastFactor = Math.Pow(6.666f, 3f);
+
+            blastPower = (float) ( Math.Pow(blastFactor * tntKgs, 1/3f));
             blastRadius = (float) (blastPower * 1.5);
 
             previousMass = part.Resources["HighExplosive"].amount;
