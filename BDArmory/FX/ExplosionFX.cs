@@ -39,8 +39,6 @@ namespace BDArmory.FX
 
         internal static readonly float ExplosionVelocity = 343f;
 
-        private bool SoundPlayed { get; set; }
-
         public float Heat { get; set; }
 
         private bool _ready = false;
@@ -57,9 +55,12 @@ namespace BDArmory.FX
                 if (pe.Current == null) continue;
                 EffectBehaviour.AddParticleEmitter(pe.Current);
                 pe.Current.emit = true;
-                pe.Current.maxEnergy = Mathf.Max((Range / ExplosionVelocity), pe.Current.maxEnergy);
 
-               
+                if (pe.Current.maxEnergy > MaxTime)
+                {
+                    MaxTime = pe.Current.maxEnergy;
+                }
+
             }
             pe.Dispose();
 
@@ -68,7 +69,6 @@ namespace BDArmory.FX
             LightFx.intensity = 8;
             LightFx.range = Range*3f;
             LightFx.shadows = LightShadows.None;
-
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
@@ -113,7 +113,7 @@ namespace BDArmory.FX
                     DestructibleBuilding building = rayHit.collider.GetComponentInParent<DestructibleBuilding>();
 
                     // Is not a direct hit, because we are hitting a different part
-                    if (building != null && !building.Equals(bldg.Current))
+                    if (building != null && building.Equals(bldg.Current))
                     {
                         // use the more accurate distance
                         distance = (rayHit.point - ray.origin).magnitude;
@@ -143,31 +143,7 @@ namespace BDArmory.FX
                     var distance = (p.Current.transform.position - Position).magnitude;
                     if (distance >= Range) continue;
 
-                    // 1. Normal forward explosive event
-                        Ray partRay = new Ray(Position, p.Current.transform.position - Position);
-                        RaycastHit rayHit;
-                        if (Physics.Raycast(partRay, out rayHit, Range, 557057))
-                        {
-                            Part part = rayHit.collider.GetComponentInParent<Part>();
-
-                            // Is a direct hit, because we are hitting the same part
-                            if (part != null && part.Equals(p.Current))
-                            {
-                                // use the more accurate distance
-                                distance = (rayHit.point - partRay.origin).magnitude;
-
-                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                {
-                                    Debug.Log(
-                                        "[BDArmory]:New direct blast event Part: {" + p.Current.name + "}, Distance: {" + distance + "), TimeToImpact: {" + (distance / ExplosionVelocity) + "}");
-                                } 
-                                result.Add(new PartBlastHitEvent() { Distance = distance, Part = p.Current, TimeToImpact = distance / ExplosionVelocity, HitPoint = rayHit.point });
-                            }
-                    }
-                 
-                    // 2. Add Reverse Negative Event
-                    result.Add(new PartBlastHitEvent() { Distance = Range - distance, Part = p.Current, TimeToImpact = 2*(Range/ExplosionVelocity)+ (Range-distance)/ExplosionVelocity, IsNegativePressure = true});
-
+                    result.Add(new PartBlastHitEvent() { Distance = distance, Part = p.Current, TimeToImpact = distance / ExplosionVelocity});
                 }
                 p.Dispose();
             }
@@ -179,9 +155,8 @@ namespace BDArmory.FX
         public void Update()
         {
 
-            if (ExplosionEvents.Count == 0 && Time.time - StartTime > 0.2f)
+            if (Time.time - StartTime > 0.2f)
             {
-                // Killing explosion
                 IEnumerator<KSPParticleEmitter> pe = PEmitters.AsEnumerable().GetEnumerator();
                 while (pe.MoveNext())
                 {
@@ -189,7 +164,10 @@ namespace BDArmory.FX
                     pe.Current.emit = false;
                 }
                 pe.Dispose();
+            }
 
+            if (ExplosionEvents.Count == 0 )
+            {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log(
@@ -199,17 +177,9 @@ namespace BDArmory.FX
                 return;
             }
 
-            LightFx.intensity -= Mathf.Max(12,Range) * Time.fixedDeltaTime;
+            LightFx.intensity -= (Range*12f/20f) * Time.deltaTime;
 
-            if (!SoundPlayed)
-            {
-                if (TimeIndex * ExplosionVelocity >= Vector3.Distance(FlightGlobals.ActiveVessel.CoM, Position))
-                {
-                    AudioSource.volume = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
-                    AudioSource.PlayOneShot(ExSound);
-                    SoundPlayed = true;
-                }
-            }
+           
         }
 
         public void FixedUpdate()
@@ -261,40 +231,60 @@ namespace BDArmory.FX
             if (part == null) return;
             if (part.physicalSignificance != Part.PhysicalSignificance.FULL) return;
 
-            Rigidbody rb = part.GetComponent<Rigidbody>();
 
-            if (rb == null || !rb) return;
-
-            var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
-
-            var force = Power * distanceFactor * BDArmorySettings.EXP_IMP_MOD;
-
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            // 1. Normal forward explosive event
+            Ray partRay = new Ray(Position, part.transform.position - Position);
+            RaycastHit rayHit;
+            if (Physics.Raycast(partRay, out rayHit, Range, 557057))
             {
-                Debug.Log(
-                    "[BDArmory]:Executing blast event Part: {" + part.name + "}, " +
-                    "Distance Factor: {" + distanceFactor + "}," +
-                    "TimeIndex: {" + TimeIndex + "}," +
-                    " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
-                    " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
-                  
+                Part partHit = rayHit.collider.GetComponentInParent<Part>();
+
+                // Is a direct hit, because we are hitting the expected part
+                if (partHit != null && partHit.Equals(part))
+                {
+                    // use the more accurate distance
+                    var realDistance = (rayHit.point - partRay.origin).magnitude;
+
+                    //Apply damage
+                    Rigidbody rb = part.GetComponent<Rigidbody>();
+
+                    if (rb == null || !rb) return;
+
+                    var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
+
+                    var force = Power * distanceFactor * BDArmorySettings.EXP_IMP_MOD;
+
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log(
+                            "[BDArmory]:Executing blast event Part: {" + part.name + "}, " +
+                            "Distance Factor: {" + distanceFactor + "}," +
+                            "TimeIndex: {" + TimeIndex + "}," +
+                            " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
+                            " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
+
+                    }
+                    if (!eventToExecute.IsNegativePressure)
+                    {
+                        rb.AddForceAtPosition(
+                            (part.transform.position - Position) * force,
+                            eventToExecute.HitPoint, ForceMode.Impulse);
+                        if (Heat <= 0) Heat = Power;
+
+                        part.AddDamage_Explosive(Heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD,
+                            distanceFactor, Caliber, IsMissile);
+
+                        // 2. Add Reverse Negative Event
+                        ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true });
+                    }
+                    else
+                    {
+                        rb.AddForceAtPosition(
+                            (Position - part.transform.position) * force * 0.25f,
+                            part.transform.position, ForceMode.Impulse);
+                    }
+                }
             }
-            if (!eventToExecute.IsNegativePressure)
-            {
-                rb.AddForceAtPosition(
-                    (part.transform.position - Position) * force,
-                    eventToExecute.HitPoint, ForceMode.Impulse);    
-                if (Heat <= 0) Heat = Power;
-
-                part.AddDamage_Explosive(Heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD,
-                    distanceFactor, Caliber, IsMissile);
-            }
-            else
-            {
-                rb.AddForceAtPosition(
-                    (Position - part.transform.position) * force * 0.1f,
-                    part.transform.position, ForceMode.Impulse);
-            }            
         }
         
 
