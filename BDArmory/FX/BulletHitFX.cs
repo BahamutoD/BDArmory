@@ -13,6 +13,7 @@ namespace BDArmory.FX
         public Vector3 normal;
         float startTime;
         public bool ricochet;
+        public float caliber;
 
         void Start()
         {
@@ -42,8 +43,16 @@ namespace BDArmory.FX
             }
             else
             {
-                string path = "BDArmory/Sounds/bulletHit" + random;
-                hitSound = GameDatabase.Instance.GetAudioClip(path);
+                if (caliber <= 30)
+                {
+                    string path = "BDArmory/Sounds/bulletHit" + random;
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
+                else
+                {
+                    string path = "BDArmory/Sounds/Artillery_Shot";
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
             }
 
             audioSource.PlayOneShot(hitSound);
@@ -78,7 +87,7 @@ namespace BDArmory.FX
             }
             else
             {
-                go = GameDatabase.Instance.GetModel("SM_Armory/FX/Flak1a");
+                go = GameDatabase.Instance.GetModel("BDArmory/FX/PenFX");
             }            
 
             GameObject newExplosion =
@@ -86,6 +95,7 @@ namespace BDArmory.FX
             newExplosion.SetActive(true);
             newExplosion.AddComponent<BulletHitFX>();
             newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;
+            newExplosion.GetComponent<BulletHitFX>().caliber = caliber;
             IEnumerator<KSPParticleEmitter> pe = newExplosion.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>().GetEnumerator();
             while (pe.MoveNext())
             {

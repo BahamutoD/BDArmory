@@ -7,15 +7,17 @@ namespace BDArmory.Core.Module
     {
         static BDArmor instance;
         public static BDArmor Instance => instance;
+        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
 
+        #region KSP Fields
         [KSPField(isPersistant = true)]
         public float ArmorThickness = 0f;
 
         //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area")]
         //public float PartArea = 0;
 
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area2")]
-        //public float PartArea2 = 0;
+        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Damage")]
+        public float maxDamage = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
         public float PartVolume = 0;
@@ -26,8 +28,11 @@ namespace BDArmory.Core.Module
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "ArmorMass")]
         public float ArmorMass = 0;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Calc Area")]
-        public static bool areacalc;
+        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Current Mass")]
+        public float currMass = 0;
+
+        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Rescale Factor")]
+        public float rescaleFactor = 0;
 
         [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Calc Part")]
         public void doCalc()
@@ -45,8 +50,8 @@ namespace BDArmory.Core.Module
         [KSPField]
         public string explodeMode = "Never";
 
-        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
-
+        #endregion
+          
         public override void OnStart(StartState state)
         {
             base.OnAwake();
@@ -70,16 +75,14 @@ namespace BDArmory.Core.Module
         public void SetPartMassByArmor()
         {
             ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-            //PartArea = part.surfaceAreas.magnitude;
-            //PartArea2 = GetPartArea(part.partInfo);
-            PartVolume = GetPartVolume(part.partInfo,part);
-            PartVolume2 = GetPartVolume_withArmor(part.partInfo,part);
-            ArmorMass = 8.05f * (PartVolume2 - PartVolume)/1000f;
-
-
+            maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
+            PartVolume = (float) Math.Round(GetPartVolume(part.partInfo, part),2);
+            PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo,part),2);
+            ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume)/1000f,2);
+            currMass = part.mass;
         }
 
-        public static float GetPartVolume(AvailablePart partInfo,Part part)
+        public float GetPartVolume(AvailablePart partInfo,Part part)
         {
             var p = partInfo.partPrefab;
             float volume;
@@ -91,11 +94,9 @@ namespace BDArmory.Core.Module
             return (float)(volume * Math.Pow(GetPartExternalScaleModifier(part), 3));
         }
 
-        public float GetPartVolume_withArmor(AvailablePart partInfo,Part part)
+        public float GetPartVolume_withArmor(AvailablePart partInfo,Part p)
         {
-            var p = partInfo.partPrefab;
             float volume;
-
             var boundsSize = PartGeometryUtil.MergeBounds(p.GetRendererBounds(), p.transform).size;
             volume = (boundsSize.x + (ArmorThickness/1000)) * boundsSize.y * boundsSize.z;
             volume *= 10f;
@@ -115,7 +116,7 @@ namespace BDArmory.Core.Module
             return area;
         }        
 
-        public static float GetPartExternalScaleModifier(Part part)
+        public float GetPartExternalScaleModifier(Part part)
         {
             double defaultScale = 1.0f;
             double currentScale = 1.0f;
@@ -134,6 +135,7 @@ namespace BDArmory.Core.Module
                     {
                         
                     }
+                    rescaleFactor = (float)(currentScale / defaultScale);
                     return (float)(currentScale / defaultScale);
                 }
             }
