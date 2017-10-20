@@ -538,11 +538,11 @@ namespace BDArmory
                 {
                     if (airDetonation)
                     {
-                        ExplosionFX.CreateExplosion(hit.point, radius, blastPower, blastHeat, explModelPath, explSoundPath, false, caliber);
+                        ExplosionFx.CreateExplosion(hit.point, radius, blastPower, blastHeat, explModelPath, explSoundPath, false, caliber);
                     }
                     else
                     {
-                        ExplosionFX.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
+                        ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
                                                     blastHeat,
                                                     explModelPath, explSoundPath, false, caliber);
                     }
