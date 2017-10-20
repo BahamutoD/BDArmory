@@ -112,15 +112,14 @@ namespace BDArmory.Core.Module
         #region Damage Functions
 
         private float CalculateMaxDamage()
-        {
-            
+        {            
             return maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
         }
 
         public void DestroyPart()
         {
-            //part.temperature = part.maxTemp * 2;
-            part.explode();
+            part.temperature = part.maxTemp * 2;
+            //part.explode();
         }
 
         public float GetMaxArmor()

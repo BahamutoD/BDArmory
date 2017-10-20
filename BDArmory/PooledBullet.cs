@@ -305,14 +305,14 @@ namespace BDArmory
                             {
                                 hasPenetrated = true;
                                 //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
-                                ApplyDamage(hitPart, 1, penetrationFactor);
+                                ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 penTicker += 1;
                             }
                             else
                             {
                                 hasPenetrated = false;               
                                 // explosive bullets that get stopped by armor will explode                                    
-                                ApplyDamage(hitPart, penetrationFactor, penetrationFactor);
+                                ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
                                 KillBullet();
@@ -358,12 +358,17 @@ namespace BDArmory
             transform.position += currentVelocity * Time.deltaTime;            
         }
 
-        private void ApplyDamage(Part hitPart, float multiplier, float penetrationfactor)
+        private void ApplyDamage(Part hitPart, RaycastHit hit, float multiplier, float penetrationfactor)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
             if(hitPart == null) return;
             if (hitPart.partInfo.name.Contains("Strut")) return;
+
+            if (BDArmorySettings.BULLET_HITS)
+            {
+                BulletHitFX.CreateBulletHit(hit.point, hit.normal, hasRichocheted, caliber);
+            }
 
             hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult, impactVelocity);
             
@@ -464,12 +469,7 @@ namespace BDArmory
             }
 
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
-
-            if (BDArmorySettings.BULLET_HITS)
-            {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, !fullyPenetrated,caliber);
-            }
-                        
+                                    
             double massToReduce = Math.PI * Math.Pow((caliber*0.001) / 2,2) * (penetration);
             //double massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
             //massToReduce *= 0.125;
@@ -557,13 +557,13 @@ namespace BDArmory
 
         private bool CheckGroundHit(Part hitPart, RaycastHit hit)
         {
-            if (hitPart == null) //kill bullet if impacted part isnt defined
+            if (hitPart == null)
             {
                 if (BDArmorySettings.BULLET_HITS)
                 {
-                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, caliber);
                 }
-               
+
                 return true;
             }
             return false;
@@ -661,7 +661,7 @@ namespace BDArmory
             //ricochet            
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true,caliber);
             }
 
             tracerStartWidth /= 2;
