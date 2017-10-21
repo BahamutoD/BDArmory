@@ -310,7 +310,7 @@ namespace BDArmory
                                   hasRichocheted = true;
                             }
 
-                            if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
+                            if (penetrationFactor > 1) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
                                 //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
@@ -332,10 +332,9 @@ namespace BDArmory
                                     KillBullet();
                                 }
                             }
-                            else
+                            else // explosive bullets that get stopped by armor will explode 
                             {
-                                hasPenetrated = false;               
-                                // explosive bullets that get stopped by armor will explode                                    
+                                hasPenetrated = false;                                                                             
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
