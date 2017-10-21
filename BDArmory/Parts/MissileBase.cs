@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
@@ -647,7 +648,7 @@ namespace BDArmory.Parts
                 LR.SetPosition(0, start);
                 LR.SetPosition(1, end);
             }
-        }        
+        }
 
         protected void CheckDetonationDistance()
         {
@@ -655,23 +656,41 @@ namespace BDArmory.Parts
             if (!TargetAcquired) return;
             //skip check of user set to zero, rely on OnCollisionEnter
             if (DetonationDistance == 0) return;
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance,100)) return;
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance, 100)) return;
             if (Vector3.Distance(vessel.CoM, TargetPosition) > 50 * DetonationDistance) return;
-          
-            Ray missileToTargetRay = new Ray(vessel.CoM, TargetPosition - vessel.CoM);
-            RaycastHit rayHit;
-            if (Physics.Raycast(missileToTargetRay, out rayHit, Vector3.Distance(TargetPosition, vessel.CoM), 557057))
-            {             
-                //parts
-                Part part = rayHit.collider.GetComponentInParent<Part>();
 
-                if (part != null && part && part.vessel != this.vessel)
+            float dist = (float) (DetonationDistance - vessel.Velocity().magnitude * TimeWarp.fixedDeltaTime);
+            Ray ray = new Ray(vessel.CoM, TargetPosition - vessel.CoM);
+            var hits = Physics.RaycastAll(ray, dist, 557057);
+            if (hits.Length > 0)
+            {
+                var orderedHits = hits.OrderBy(x => x.distance);
+                using (var hitsEnu = orderedHits.GetEnumerator())
                 {
-                    if (Vector3.Distance(vessel.CoM, part.transform.position) < DetonationDistance)
+                    while (hitsEnu.MoveNext())
                     {
-                        Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" + rayHit.distance + "DetonationDistance was " + DetonationDistance);
+                        RaycastHit hit = hitsEnu.Current;
+                        Part hitPart = null;
+
+                        try
+                        {
+                            hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                        }
+                        catch (NullReferenceException)
+                        {
+                            return;
+                        }
+
+                        //Continue to next hit if null or hit to own part;  
+                        if (hitPart == null ||
+                            !hitPart ||
+                            hitPart?.vessel == this.vessel) continue;
+
+
+                        Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" +
+                                  hit.distance + "DetonationDistance was " + DetonationDistance);
                         Detonate();
-                    } 
+                    }
                 }
             }
         }

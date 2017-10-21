@@ -73,11 +73,13 @@ namespace BDArmory.Parts
 	        if (!part.Resources.Contains("HighExplosive")) return;
 
             if (part.Resources["HighExplosive"].amount == previousMass) return;
-           
-	        double explosiveMass = part.Resources["HighExplosive"].amount;   
 
-	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
-            blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
+            double tntKgs = part.Resources["HighExplosive"].amount * part.Resources["HighExplosive"].info.density * 1000;
+
+	        var blastFactor = Math.Pow(6.666f, 3f);
+
+            blastPower = (float) ( Math.Pow(blastFactor * tntKgs, 1/3f));
+            blastRadius = (float) (blastPower * 1.5);
 
             previousMass = part.Resources["HighExplosive"].amount;
 	    }
@@ -99,7 +101,8 @@ namespace BDArmory.Parts
 
 	        }
 	        Vector3 position = part.vessel.CoM;
-	        ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(),
+	     
+            ExplosionFx.CreateExplosion(position, blastRadius, blastPower, blastHeat,
 	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true);
 	    }
     }
