@@ -10,28 +10,20 @@ namespace BDArmory.FX
     public class ExplosionFx : MonoBehaviour
     {
         public KSPParticleEmitter[] PEmitters { get; set; }
-
         public Light LightFx { get; set; }
-
         public float StartTime { get; set; }
-
         public AudioClip ExSound { get; set; }
         public AudioSource AudioSource { get; set; }
         private float MaxTime { get; set; }
         public float Range { get; set; }
         public float Caliber { get; set; }
-
         public bool IsMissile { get; set; }
-
         public float Power { get; set; }
-
         public Vector3 Position { get; set; }
-
         public float TimeDetonation { get; set; }
         public float TimeIndex => Time.time - StartTime;
 
         public Queue<BlastHitEvent> ExplosionEvents = new Queue<BlastHitEvent>();
-
 
         public static List<Part> IgnoreParts = new List<Part>();
 
@@ -236,7 +228,7 @@ namespace BDArmory.FX
             RaycastHit rayHit;
             if (Physics.Raycast(partRay, out rayHit, Range, 557057))
             {
-                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 120) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
+                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 90) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
 
                 Part partHit = rayHit.collider.GetComponentInParent<Part>();
 
@@ -274,7 +266,7 @@ namespace BDArmory.FX
                         if (Heat <= 0) Heat = Power;
 
                         part.AddDamage_Explosive(Heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD,
-                            distanceFactor, Caliber, IsMissile);
+                                                 distanceFactor, Caliber, IsMissile);
 
                         // 2. Add Reverse Negative Event
                         ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true });
@@ -282,7 +274,7 @@ namespace BDArmory.FX
                     else
                     {
                         rb.AddForceAtPosition(
-                            (Position - part.transform.position) * force * 0.25f,
+                            (Position - part.transform.position) * force * 0.125f,
                             part.transform.position, ForceMode.Impulse);
                     }
                 }

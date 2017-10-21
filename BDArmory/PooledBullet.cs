@@ -316,6 +316,18 @@ namespace BDArmory
                                 //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
                                 ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 penTicker += 1;
+
+
+                                if (explosive)
+                                {
+                                    prevPosition = currPosition;
+                                    //move bullet            
+                                    transform.position += (currentVelocity * Time.deltaTime) / 2;
+
+                                    ExplosiveDetonation(hitPart, hit, ray);
+                                    hasDetonated = true;
+                                    KillBullet();
+                                }
                             }
                             else
                             {

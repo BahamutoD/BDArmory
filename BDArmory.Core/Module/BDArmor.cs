@@ -56,14 +56,13 @@ namespace BDArmory.Core.Module
 
         private Part _prefabPart;
         private bool _setupRun = false;
+        private bool _firstSetup = true;
 
         protected virtual void Setup()
         {
             if (_setupRun) return;
             _prefabPart = part.partInfo.partPrefab;
             _setupRun = true;
-
-            SetPartMassByArmor();
         }
 
         public override void OnLoad(ConfigNode node)
@@ -91,8 +90,9 @@ namespace BDArmory.Core.Module
         {
             base.OnAwake();
             part.force_activate();
+            isEnabled = true;
 
-            SetPartMassByArmor();
+            if (part != null && _firstSetup) SetPartMassByArmor();
 
             switch (explodeMode)
             {
@@ -126,13 +126,20 @@ namespace BDArmory.Core.Module
 
         public void SetPartMassByArmor()
         {
-            ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-            maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
-            PartVolume = (float) Math.Round(GetPartVolume(part.partInfo, part),2);
-            PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo,part),2);
-            ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume)/1000f,2);
-            currMass = part.mass;
-                        
+            try
+            {
+                ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
+                maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
+                PartVolume = (float)Math.Round(GetPartVolume(part.partInfo, part), 2);
+                PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
+                ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
+                currMass = part.mass;
+            }
+            catch(Exception)
+            {
+
+            }
+                                    
         }
 
         public float GetPartVolume(AvailablePart partInfo,Part part)

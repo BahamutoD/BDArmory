@@ -12,7 +12,7 @@ namespace BDArmory.Core.Module
         public float Damage = 0f;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor"),
-        UI_FloatRange(minValue = 1f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
+        UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 15f;
 
         [KSPField(isPersistant = true)]
@@ -122,7 +122,7 @@ namespace BDArmory.Core.Module
                 _firstSetup = false;
                 SetupPrefab();
              }
-            //damageRenderer?.Update(GetDamageColor());         
+           // damageRenderer?.Update(GetDamageColor());         
         }
 
         public float GetPartExternalScaleModifier(Part part)
