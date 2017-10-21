@@ -33,7 +33,9 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Explosive Damage
             //////////////////////////////////////////////////////////
-            float damage = (DMG_MULT / 100) * EXP_MOD * heat * (distanceFactor / (float)armorMass_);
+            float damage = (DMG_MULT / 100) *
+                            EXP_MOD * heat *
+                            (distanceFactor / (float)armorMass_);
 
             //////////////////////////////////////////////////////////
             // Armor Reduction factors

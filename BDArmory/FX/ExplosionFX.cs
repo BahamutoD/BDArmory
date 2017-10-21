@@ -231,18 +231,20 @@ namespace BDArmory.FX
             if (part == null) return;
             if (part.physicalSignificance != Part.PhysicalSignificance.FULL) return;
 
-
             // 1. Normal forward explosive event
             Ray partRay = new Ray(Position, part.transform.position - Position);
             RaycastHit rayHit;
             if (Physics.Raycast(partRay, out rayHit, Range, 557057))
             {
+                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 120) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
+
                 Part partHit = rayHit.collider.GetComponentInParent<Part>();
 
                 // Is a direct hit, because we are hitting the expected part
                 if (partHit != null && partHit.Equals(part))
                 {
                     // use the more accurate distance
+
                     var realDistance = (rayHit.point - partRay.origin).magnitude;
 
                     //Apply damage

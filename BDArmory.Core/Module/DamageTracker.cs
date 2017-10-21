@@ -28,6 +28,7 @@ namespace BDArmory.Core.Module
 
         private Part _prefabPart;
         private bool _setupRun =  false;
+        private bool _firstSetup = true;
 
         protected virtual void Setup()
         {
@@ -99,11 +100,13 @@ namespace BDArmory.Core.Module
 
         public override void OnStart(StartState state)
         {
-            base.OnStart(state);
+            base.OnAwake();
+            part.force_activate();
+            isEnabled = true;
 
-            if (part != null) SetupPrefab();
+            if (part != null && _firstSetup) SetupPrefab();
 
-            damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);          
+            //damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);          
         }        
 
         public override void OnUpdate()
@@ -114,15 +117,46 @@ namespace BDArmory.Core.Module
                 return;
             }
 
-            damageRenderer?.Update(GetDamageColor());         
+            if (part != null && _firstSetup)
+            {
+                _firstSetup = false;
+                SetupPrefab();
+             }
+            //damageRenderer?.Update(GetDamageColor());         
         }
 
+        public float GetPartExternalScaleModifier(Part part)
+        {
+            double defaultScale = 1.0f;
+            double currentScale = 1.0f;
+
+            if (part.Modules.Contains("TweakScale"))
+            {
+                PartModule pM = part.Modules["TweakScale"];
+                if (pM.Fields.GetValue("currentScale") != null)
+                {
+                    try
+                    {
+                        defaultScale = pM.Fields.GetValue<float>("defaultScale");
+                        currentScale = pM.Fields.GetValue<float>("currentScale");
+                    }
+                    catch
+                    {
+
+                    }                    
+                    return (float)(currentScale / defaultScale);
+                }
+            }
+            return 1.0f;
+        }
         
         #region Damage Functions
 
         private float CalculateMaxDamage()
-        {            
-            return maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
+        {
+            float maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
+            Damage = maxDamage;
+            return maxDamage;
         }
 
         public void DestroyPart()
@@ -163,9 +197,10 @@ namespace BDArmory.Core.Module
 
         public void AddDamage(float partdamage)
         {
-            partdamage = Mathf.Max(partdamage, 0.01f);
+            partdamage = Mathf.Max(partdamage, 0.01f) * -1;
             Damage += partdamage;
-            if (Damage > GetMaxPartDamage())
+            //if (Damage > GetMaxPartDamage())
+            if (Damage <= 0)
             {
                 DestroyPart();
             }
@@ -186,13 +221,7 @@ namespace BDArmory.Core.Module
                 float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
                 if(armor_ != 0) Armor = armor_;                
             }
-        }
-
-        public float GetAreaOfPart()
-        {
-            float surfaceArea = part.surfaceAreas.magnitude;
-            return surfaceArea;
-        }
+        }       
 
         #endregion
 

@@ -295,9 +295,7 @@ namespace BDArmory
                             impactVelocity = currentVelocity.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
-                            CalculateDragAnalyticEstimate();
-
-                            
+                            CalculateDragAnalyticEstimate();                            
 
                             var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
 
