@@ -26,10 +26,20 @@ namespace BDArmory.Radar
         public static Texture2D GetTextureLateral { get { return drawTextureLateral; } }
         private static Texture2D drawTextureVentral;
         public static Texture2D GetTextureVentral { get { return drawTextureVentral; } }
+        // additional anti-exploit 45° offset renderings
+        private static Texture2D drawTextureFrontal45;
+        public static Texture2D GetTextureFrontal45 { get { return drawTextureFrontal45; } }
+        private static Texture2D drawTextureLateral45;
+        public static Texture2D GetTextureLateral45 { get { return drawTextureLateral45; } }
+        private static Texture2D drawTextureVentral45;
+        public static Texture2D GetTextureVentral45 { get { return drawTextureVentral45; } }
 
         internal static float rcsFrontal;             // internal so that editor analysis window has access to the details
         internal static float rcsLateral;             // dito
         internal static float rcsVentral;             // dito
+        internal static float rcsFrontal45;             // dito
+        internal static float rcsLateral45;             // dito
+        internal static float rcsVentral45;             // dito
         internal static float rcsTotal;               // dito
 
         internal const float RCS_NORMALIZATION_FACTOR = 16.0f;       //IMPORTANT FOR RCS CALCULATION! DO NOT CHANGE! (1x1 structural panel frontally facing should yield 1 m^2 of rcs!)
@@ -189,7 +199,6 @@ namespace BDArmory.Radar
             const float radarDistance = 1000f;
             const float radarFOV = 2.0f;
             Vector3 presentationPosition = -t.forward * radarDistance;
-            float distanceToShip;
 
             SetupResources();
 
@@ -224,58 +233,17 @@ namespace BDArmory.Radar
             }
 
             // pass1: frontal
-            radarCam.transform.position = vesselbounds.center + t.up * radarDistance;
-            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
-            // setup camera FOV
-            distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
-            radarCam.nearClipPlane = distanceToShip - 200;
-            radarCam.farClipPlane = distanceToShip + 200;
-            if (inEditorZoom)
-                radarCam.fieldOfView = Mathf.Atan(vesselbounds.size.magnitude / distanceToShip) * 180 / Mathf.PI;
-            else
-                radarCam.fieldOfView = radarFOV;
-            radarCam.targetTexture = rcsRenderingFrontal;
-            RenderTexture.active = rcsRenderingFrontal;
-            Shader.SetGlobalVector("_LIGHTDIR", -t.up);
-            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
-            drawTextureFrontal.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
-            drawTextureFrontal.Apply();
-
+            RenderSinglePass(t, inEditorZoom, t.up, vesselbounds, radarDistance, radarFOV, rcsRenderingFrontal, drawTextureFrontal);
             // pass2: lateral
-            radarCam.transform.position = vesselbounds.center + t.right * radarDistance;
-            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
-            // setup camera FOV
-            distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
-            radarCam.nearClipPlane = distanceToShip - 200;
-            radarCam.farClipPlane = distanceToShip + 200;
-            if (inEditorZoom)
-                radarCam.fieldOfView = Mathf.Atan(vesselbounds.size.magnitude / distanceToShip) * 180 / Mathf.PI;
-            else
-                radarCam.fieldOfView = radarFOV;
-            radarCam.targetTexture = rcsRenderingLateral;
-            RenderTexture.active = rcsRenderingLateral;
-            Shader.SetGlobalVector("_LIGHTDIR", -t.right);
-            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
-            drawTextureLateral.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
-            drawTextureLateral.Apply();
-
+            RenderSinglePass(t, inEditorZoom, t.right, vesselbounds, radarDistance, radarFOV, rcsRenderingLateral, drawTextureLateral);
             // pass3: Ventral
-            radarCam.transform.position = vesselbounds.center + t.forward * radarDistance;
-            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
-            // setup camera FOV
-            distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
-            radarCam.nearClipPlane = distanceToShip - 200;
-            radarCam.farClipPlane = distanceToShip + 200;
-            if (inEditorZoom)
-                radarCam.fieldOfView = Mathf.Atan(vesselbounds.size.magnitude / distanceToShip) * 180 / Mathf.PI;
-            else
-                radarCam.fieldOfView = radarFOV;
-            radarCam.targetTexture = rcsRenderingVentral;
-            RenderTexture.active = rcsRenderingVentral;
-            Shader.SetGlobalVector("_LIGHTDIR", -t.forward);
-            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
-            drawTextureVentral.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
-            drawTextureVentral.Apply();
+            RenderSinglePass(t, inEditorZoom, t.forward, vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral);
+
+            //additional 45° offset renderings:
+            RenderSinglePass(t, inEditorZoom, (t.up+t.right), vesselbounds, radarDistance, radarFOV, rcsRenderingFrontal, drawTextureFrontal45);
+            RenderSinglePass(t, inEditorZoom, (t.right-t.up), vesselbounds, radarDistance, radarFOV, rcsRenderingLateral, drawTextureLateral45);
+            RenderSinglePass(t, inEditorZoom, (t.forward+t.right), vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral45);
+
 
             // revert presentation (only if outside editor and thus vessel is a real vessel)
             if (HighLogic.LoadedSceneIsFlight)
@@ -287,6 +255,10 @@ namespace BDArmory.Radar
                 rcsFrontal = 0;
                 rcsLateral = 0;
                 rcsVentral = 0;
+                rcsFrontal45 = 0;
+                rcsLateral45 = 0;
+                rcsVentral45 = 0;
+
                 for (int x = 0; x < radarResolution; x++)
                 {
                     for (int y = 0; y < radarResolution; y++)
@@ -294,6 +266,10 @@ namespace BDArmory.Radar
                         rcsFrontal += drawTextureFrontal.GetPixel(x, y).maxColorComponent;
                         rcsLateral += drawTextureLateral.GetPixel(x, y).maxColorComponent;
                         rcsVentral += drawTextureVentral.GetPixel(x, y).maxColorComponent;
+
+                        rcsFrontal45 += drawTextureFrontal45.GetPixel(x, y).maxColorComponent;
+                        rcsLateral45 += drawTextureLateral45.GetPixel(x, y).maxColorComponent;
+                        rcsVentral45 += drawTextureVentral45.GetPixel(x, y).maxColorComponent;
                     }
                 }
 
@@ -301,14 +277,45 @@ namespace BDArmory.Radar
                 rcsFrontal /= RCS_NORMALIZATION_FACTOR;
                 rcsLateral /= RCS_NORMALIZATION_FACTOR;
                 rcsVentral /= RCS_NORMALIZATION_FACTOR;
-                rcsTotal = (rcsFrontal + rcsLateral + rcsVentral) / 3f;
+
+                rcsFrontal45 /= RCS_NORMALIZATION_FACTOR;
+                rcsLateral45 /= RCS_NORMALIZATION_FACTOR;
+                rcsVentral45 /= RCS_NORMALIZATION_FACTOR;
+
+                rcsTotal = (Mathf.Max(rcsFrontal, rcsFrontal45) + Mathf.Max(rcsLateral, rcsLateral45) + Mathf.Max(rcsVentral, rcsVentral45)) / 3f;
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                    Debug.Log("[BDArmory]: - Vessel rcs is (frontal/lateral/ventral): " + rcsFrontal + "/" + rcsLateral + "/" + rcsVentral + " = total: " + rcsTotal);
+                    Debug.Log($"[BDArmory]: - Vessel rcs is (frontal/lateral/ventral), (frontal45/lateral45/ventral45): {rcsFrontal}/{rcsLateral}/{rcsVentral}, {rcsFrontal45}/{rcsLateral45}/{rcsVentral45} = rcsTotal: {rcsTotal}");
                 }
             }
 
             return rcsTotal;
+        }
+
+
+        /// <summary>
+        /// Internal helpder method
+        /// </summary>
+        private static void RenderSinglePass(Transform t, bool inEditorZoom, Vector3 cameraDirection, Bounds vesselbounds, float radarDistance, float radarFOV, RenderTexture rcsRendering, Texture2D rcsTexture)
+        {
+            // Render one snapshop pass:
+            // setup camera FOV
+            radarCam.transform.position = vesselbounds.center + cameraDirection * radarDistance;
+            radarCam.transform.LookAt(vesselbounds.center, -t.forward);
+            float distanceToShip = Vector3.Distance(radarCam.transform.position, vesselbounds.center);
+            radarCam.nearClipPlane = distanceToShip - 200;
+            radarCam.farClipPlane = distanceToShip + 200;
+            if (inEditorZoom)
+                radarCam.fieldOfView = Mathf.Atan(vesselbounds.size.magnitude / distanceToShip) * 180 / Mathf.PI;
+            else
+                radarCam.fieldOfView = radarFOV;
+            // setup rendertexture
+            radarCam.targetTexture = rcsRendering;
+            RenderTexture.active = rcsRendering;
+            Shader.SetGlobalVector("_LIGHTDIR", -cameraDirection);
+            radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
+            rcsTexture.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
+            rcsTexture.Apply();
         }
 
 
@@ -358,6 +365,9 @@ namespace BDArmory.Radar
                 drawTextureFrontal = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
                 drawTextureLateral = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
                 drawTextureVentral = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
+                drawTextureFrontal45 = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
+                drawTextureLateral45 = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
+                drawTextureVentral45 = new Texture2D(radarResolution, radarResolution, TextureFormat.RGB24, false);
 
                 rcsSetupCompleted = true;
             }
@@ -387,6 +397,9 @@ namespace BDArmory.Radar
                 Texture2D.Destroy(drawTextureFrontal);
                 Texture2D.Destroy(drawTextureLateral);
                 Texture2D.Destroy(drawTextureVentral);
+                Texture2D.Destroy(drawTextureFrontal45);
+                Texture2D.Destroy(drawTextureLateral45);
+                Texture2D.Destroy(drawTextureVentral45);
                 GameObject.Destroy(radarCam);
                 rcsSetupCompleted = false;
             }

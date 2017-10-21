@@ -147,14 +147,26 @@ namespace BDArmory.UI
             if (takeSnapshot)
                 takeRadarSnapshot();
 
-            GUI.DrawTexture(new Rect(10, 70, 200, 200), RadarUtils.GetTextureFrontal, ScaleMode.StretchToFill);
-            GUI.DrawTexture(new Rect(220, 70, 200, 200), RadarUtils.GetTextureLateral, ScaleMode.StretchToFill);
-            GUI.DrawTexture(new Rect(430, 70, 200, 200), RadarUtils.GetTextureVentral, ScaleMode.StretchToFill);
+            // for each view draw the rendering with the higher cross section (normal or 45°):
+            if (RadarUtils.rcsFrontal > RadarUtils.rcsFrontal45)
+                GUI.DrawTexture(new Rect(10, 70, 200, 200), RadarUtils.GetTextureFrontal, ScaleMode.StretchToFill);
+            else
+                GUI.DrawTexture(new Rect(10, 70, 200, 200), RadarUtils.GetTextureFrontal45, ScaleMode.StretchToFill);
+
+            if (RadarUtils.rcsLateral > RadarUtils.rcsLateral45)
+                GUI.DrawTexture(new Rect(220, 70, 200, 200), RadarUtils.GetTextureLateral, ScaleMode.StretchToFill);
+            else
+                GUI.DrawTexture(new Rect(220, 70, 200, 200), RadarUtils.GetTextureLateral45, ScaleMode.StretchToFill);
+
+            if (RadarUtils.rcsVentral > RadarUtils.rcsVentral45)
+                GUI.DrawTexture(new Rect(430, 70, 200, 200), RadarUtils.GetTextureVentral, ScaleMode.StretchToFill);
+            else
+                GUI.DrawTexture(new Rect(430, 70, 200, 200), RadarUtils.GetTextureVentral45, ScaleMode.StretchToFill);
 
 
-            GUI.Label(new Rect(10, 275, 200, 20), string.Format("{0:0.00}", RadarUtils.rcsFrontal) + " m^2", HighLogic.Skin.label);
-            GUI.Label(new Rect(220, 275, 200, 20), string.Format("{0:0.00}", RadarUtils.rcsLateral) + " m^2", HighLogic.Skin.label);
-            GUI.Label(new Rect(430, 275, 200, 20), string.Format("{0:0.00}", RadarUtils.rcsVentral) + " m^2", HighLogic.Skin.label);
+            GUI.Label(new Rect(10, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsFrontal, RadarUtils.rcsFrontal45)) + " m^2", HighLogic.Skin.label);
+            GUI.Label(new Rect(220, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsLateral, RadarUtils.rcsLateral45)) + " m^2", HighLogic.Skin.label);
+            GUI.Label(new Rect(430, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsVentral, RadarUtils.rcsVentral45)) + " m^2", HighLogic.Skin.label);
 
             GUIStyle style = HighLogic.Skin.label;
             style.fontStyle = FontStyle.Bold;
@@ -304,6 +316,7 @@ namespace BDArmory.UI
                 EdLogInstance.Unlock("BDARCSLOCK");
             }
         }
+
 
         private Vector3 GetMousePos()
         {

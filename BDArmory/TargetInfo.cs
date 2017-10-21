@@ -231,7 +231,7 @@ namespace BDArmory
 		{
             alreadyScheduledRCSUpdate = true;
             yield return new WaitForSeconds(1.0f);
-            radarBaseSignatureNeedsUpdate = true;
+            //radarBaseSignatureNeedsUpdate = true;     //TODO: currently disabled to reduce stuttering effects due to more demanding radar rendering!
         }
 
 		void Update()
