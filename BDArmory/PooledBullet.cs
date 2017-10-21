@@ -303,11 +303,14 @@ namespace BDArmory
                             {
                                 //its not going to bounce if it goes right through
                                 hasRichocheted = false;
+
+
                             }
                             else
                             {
                                 if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity))
                                   hasRichocheted = true;
+                                
                             }
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
@@ -331,6 +334,12 @@ namespace BDArmory
                             }
                             else
                             {
+     
+                                //If stopped the kinetic energy of the bullet should be transfered to the part
+                                // F = 0.5 * m * v2 / d
+                                hitPart?.rb.AddForceAtPosition(0.5f * (mass/1000f) * currentVelocity.normalized * impactVelocity * impactVelocity * (1f / (impactVelocity * Time.deltaTime)),
+                                    hit.point, ForceMode.Impulse);
+
                                 hasPenetrated = false;               
                                 // explosive bullets that get stopped by armor will explode                                    
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
