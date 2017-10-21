@@ -297,9 +297,20 @@ namespace BDArmory
 
                             CalculateDragAnalyticEstimate();
 
-                            if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity)){ hasRichocheted = true; }
+                            
 
                             var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
+
+                            if (penetrationFactor >= 2)
+                            {
+                                //its not going to bounce if it goes right through
+                                hasRichocheted = false;
+                            }
+                            else
+                            {
+                                if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity))
+                                  hasRichocheted = true;
+                            }
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                             {

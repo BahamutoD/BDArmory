@@ -44,13 +44,12 @@ namespace BDArmory.Core.Module
             {
                 // Loading of the prefab from the part config
                 _prefabPart = part;
-                //SetupPrefab();
+                SetupPrefab();
 
             }
             else
             {
-                // Loading of the part from a saved craft
-                //tweakScale = currentScale;
+                // Loading of the part from a saved craft                
                 if (HighLogic.LoadedSceneIsEditor)
                     Setup();
                 else
@@ -58,11 +57,14 @@ namespace BDArmory.Core.Module
             }
         }
 
-        public override void OnStart(StartState state)
+        protected virtual void SetupPrefab()
         {
-            base.OnStart(state);
+            //var PartNode = GameDatabase.Instance.GetConfigs("PART").FirstOrDefault(c => c.name.Replace('_', '.') == part.name).config;
+            //var ModuleNode = PartNode.GetNodes("MODULE").FirstOrDefault(n => n.GetValue("name") == moduleName);
 
-            damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);
+            //ScaleType = new ScaleType(ModuleNode);
+            //SetupFromConfig(ScaleType);
+            //tweakScale = currentScale = defaultScale;
 
             if (part != null)
             {
@@ -83,19 +85,26 @@ namespace BDArmory.Core.Module
                 UI_FloatRange armorFieldEditor = (UI_FloatRange)Fields["Armor"].uiControlEditor;
                 armorFieldEditor.maxValue = 1000f;
                 armorFieldEditor.minValue = 10f;
-                                
+
                 part.RefreshAssociatedWindows();
 
-                if(!armorSet) SetThickness();
+                if (!armorSet) SetThickness();
 
             }
             else
             {
                 Debug.Log("[BDArmory]:DamageTracker::OnStart part  is null");
-            }            
+            }
         }
 
-        
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+
+            if (part != null) SetupPrefab();
+
+            damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);          
+        }        
 
         public override void OnUpdate()
         {
