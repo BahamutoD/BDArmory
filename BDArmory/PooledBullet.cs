@@ -318,7 +318,10 @@ namespace BDArmory
                                 penTicker += 1;
 
 
-                                if (explosive)
+                                //Explosive bullets that penetrate should explode shortly after
+                                //if penetration is very great, they will have moved on 
+                                //checking velocity as they would not be able to come out the other side
+                                if (explosive && penetrationFactor < 2 || currentVelocity.magnitude <= 800f)
                                 {
                                     prevPosition = currPosition;
                                     //move bullet            
