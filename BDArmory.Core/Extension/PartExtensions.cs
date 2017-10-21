@@ -33,7 +33,9 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Explosive Damage
             //////////////////////////////////////////////////////////
-            float damage = (DMG_MULT / 100) * EXP_MOD * heat * (distanceFactor / (float)armorMass_);
+            float damage = (DMG_MULT / 100) *
+                            EXP_MOD * heat *
+                            (distanceFactor / (float)armorMass_);
 
             //////////////////////////////////////////////////////////
             // Armor Reduction factors
@@ -87,13 +89,16 @@ namespace BDArmory.Core.Extension
             //As armor is decreased level of damage should increase
             // Ideally this would be logarithmic but my math is lacking right now... 
 
-            damage /= Mathf.Max(1,(float) armorPCT_ * 100);
-            
+            //damage /= Mathf.Max(1,(float) armorPCT_ * 100);
+
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
+            damage = damage - ((damage * armorPCT_) / 10);
+
             //Caliber Adjustments for Gameplay balance
             damage *= multiplier;
+
             if (caliber <= 30f) 
             {
                 damage *= 5f;

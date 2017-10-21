@@ -12,7 +12,7 @@ namespace BDArmory.Core.Module
         public float Damage = 0f;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor"),
-        UI_FloatRange(minValue = 1f, maxValue = 1000f, stepIncrement = 5f, scene = UI_Scene.All)]
+        UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 15f;
 
         [KSPField(isPersistant = true)]
@@ -28,6 +28,7 @@ namespace BDArmory.Core.Module
 
         private Part _prefabPart;
         private bool _setupRun =  false;
+        private bool _firstSetup = true;
 
         protected virtual void Setup()
         {
@@ -44,13 +45,12 @@ namespace BDArmory.Core.Module
             {
                 // Loading of the prefab from the part config
                 _prefabPart = part;
-                //SetupPrefab();
+                SetupPrefab();
 
             }
             else
             {
-                // Loading of the part from a saved craft
-                //tweakScale = currentScale;
+                // Loading of the part from a saved craft                
                 if (HighLogic.LoadedSceneIsEditor)
                     Setup();
                 else
@@ -58,11 +58,14 @@ namespace BDArmory.Core.Module
             }
         }
 
-        public override void OnStart(StartState state)
+        protected virtual void SetupPrefab()
         {
-            base.OnStart(state);
+            //var PartNode = GameDatabase.Instance.GetConfigs("PART").FirstOrDefault(c => c.name.Replace('_', '.') == part.name).config;
+            //var ModuleNode = PartNode.GetNodes("MODULE").FirstOrDefault(n => n.GetValue("name") == moduleName);
 
-            damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);
+            //ScaleType = new ScaleType(ModuleNode);
+            //SetupFromConfig(ScaleType);
+            //tweakScale = currentScale = defaultScale;
 
             if (part != null)
             {
@@ -83,19 +86,28 @@ namespace BDArmory.Core.Module
                 UI_FloatRange armorFieldEditor = (UI_FloatRange)Fields["Armor"].uiControlEditor;
                 armorFieldEditor.maxValue = 1000f;
                 armorFieldEditor.minValue = 10f;
-                                
+
                 part.RefreshAssociatedWindows();
 
-                if(!armorSet) SetThickness();
+                if (!armorSet) SetThickness();
 
             }
             else
             {
                 Debug.Log("[BDArmory]:DamageTracker::OnStart part  is null");
-            }            
+            }
         }
 
-        
+        public override void OnStart(StartState state)
+        {
+            base.OnAwake();
+            part.force_activate();
+            isEnabled = true;
+
+            if (part != null && _firstSetup) SetupPrefab();
+
+            //damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);          
+        }        
 
         public override void OnUpdate()
         {
@@ -105,15 +117,46 @@ namespace BDArmory.Core.Module
                 return;
             }
 
-            damageRenderer?.Update(GetDamageColor());         
+            if (part != null && _firstSetup)
+            {
+                _firstSetup = false;
+                SetupPrefab();
+             }
+           // damageRenderer?.Update(GetDamageColor());         
         }
 
+        public float GetPartExternalScaleModifier(Part part)
+        {
+            double defaultScale = 1.0f;
+            double currentScale = 1.0f;
+
+            if (part.Modules.Contains("TweakScale"))
+            {
+                PartModule pM = part.Modules["TweakScale"];
+                if (pM.Fields.GetValue("currentScale") != null)
+                {
+                    try
+                    {
+                        defaultScale = pM.Fields.GetValue<float>("defaultScale");
+                        currentScale = pM.Fields.GetValue<float>("currentScale");
+                    }
+                    catch
+                    {
+
+                    }                    
+                    return (float)(currentScale / defaultScale);
+                }
+            }
+            return 1.0f;
+        }
         
         #region Damage Functions
 
         private float CalculateMaxDamage()
-        {            
-            return maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
+        {
+            float maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
+            Damage = maxDamage;
+            return maxDamage;
         }
 
         public void DestroyPart()
@@ -154,9 +197,10 @@ namespace BDArmory.Core.Module
 
         public void AddDamage(float partdamage)
         {
-            partdamage = Mathf.Max(partdamage, 0.01f);
+            partdamage = Mathf.Max(partdamage, 0.01f) * -1;
             Damage += partdamage;
-            if (Damage > GetMaxPartDamage())
+            //if (Damage > GetMaxPartDamage())
+            if (Damage <= 0)
             {
                 DestroyPart();
             }
@@ -177,13 +221,7 @@ namespace BDArmory.Core.Module
                 float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
                 if(armor_ != 0) Armor = armor_;                
             }
-        }
-
-        public float GetAreaOfPart()
-        {
-            float surfaceArea = part.surfaceAreas.magnitude;
-            return surfaceArea;
-        }
+        }       
 
         #endregion
 

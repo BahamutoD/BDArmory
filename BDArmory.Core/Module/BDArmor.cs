@@ -1,10 +1,12 @@
 ﻿using System;
 using KSPDev.ConfigUtils;
+using System.Linq;
 
 namespace BDArmory.Core.Module
 {
     public class BDArmor : PartModule
     {
+
         static BDArmor instance;
         public static BDArmor Instance => instance;
         public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
@@ -51,12 +53,46 @@ namespace BDArmory.Core.Module
         public string explodeMode = "Never";
 
         #endregion
-          
+
+        private Part _prefabPart;
+        private bool _setupRun = false;
+        private bool _firstSetup = true;
+
+        protected virtual void Setup()
+        {
+            if (_setupRun) return;
+            _prefabPart = part.partInfo.partPrefab;
+            _setupRun = true;
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+
+            if (part.partInfo == null)
+            {
+                // Loading of the prefab from the part config
+                _prefabPart = part;
+                SetPartMassByArmor();
+
+            }
+            else
+            {
+                // Loading of the part from a saved craft                
+                if (HighLogic.LoadedSceneIsEditor)
+                    Setup();
+                else
+                    enabled = false;
+            }
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnAwake();
             part.force_activate();
-            doCalc();
+            isEnabled = true;
+
+            if (part != null && _firstSetup) SetPartMassByArmor();
 
             switch (explodeMode)
             {
@@ -72,14 +108,38 @@ namespace BDArmory.Core.Module
             }
         }
 
+
+        protected virtual void SetupPrefab()
+        {
+            var PartNode = GameDatabase.Instance.GetConfigs("PART").FirstOrDefault(c => c.name.Replace('_', '.') == part.name).config;
+            var ModuleNode = PartNode.GetNodes("MODULE").FirstOrDefault(n => n.GetValue("name") == moduleName);
+
+            //ScaleType = new ScaleType(ModuleNode);
+            //SetupFromConfig(ScaleType);
+            //tweakScale = currentScale = defaultScale;
+            
+        }
+
+        /////////////////////////////////////////////////////////////
+        //
+        /////////////////////////////////////////////////////////////
+
         public void SetPartMassByArmor()
         {
-            ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-            maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
-            PartVolume = (float) Math.Round(GetPartVolume(part.partInfo, part),2);
-            PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo,part),2);
-            ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume)/1000f,2);
-            currMass = part.mass;
+            try
+            {
+                ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
+                maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
+                PartVolume = (float)Math.Round(GetPartVolume(part.partInfo, part), 2);
+                PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
+                ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
+                currMass = part.mass;
+            }
+            catch(Exception)
+            {
+
+            }
+                                    
         }
 
         public float GetPartVolume(AvailablePart partInfo,Part part)

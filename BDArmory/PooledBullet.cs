@@ -295,11 +295,20 @@ namespace BDArmory
                             impactVelocity = currentVelocity.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
-                            CalculateDragAnalyticEstimate();
-
-                            if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity)){ hasRichocheted = true; }
+                            CalculateDragAnalyticEstimate();                            
 
                             var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
+
+                            if (penetrationFactor >= 2)
+                            {
+                                //its not going to bounce if it goes right through
+                                hasRichocheted = false;
+                            }
+                            else
+                            {
+                                if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity))
+                                  hasRichocheted = true;
+                            }
 
                             if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
                             {
@@ -307,6 +316,18 @@ namespace BDArmory
                                 //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
                                 ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 penTicker += 1;
+
+
+                                if (explosive)
+                                {
+                                    prevPosition = currPosition;
+                                    //move bullet            
+                                    transform.position += (currentVelocity * Time.deltaTime) / 2;
+
+                                    ExplosiveDetonation(hitPart, hit, ray);
+                                    hasDetonated = true;
+                                    KillBullet();
+                                }
                             }
                             else
                             {

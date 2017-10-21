@@ -38,8 +38,16 @@ namespace BDArmory.FX
 
             if (ricochet)
             {
-                string path = "BDArmory/Sounds/ricochet" + random;
-                hitSound = GameDatabase.Instance.GetAudioClip(path);
+                if (caliber <= 30)
+                {
+                    string path = "BDArmory/Sounds/ricochet" + random;
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
+                else
+                {
+                    string path = "BDArmory/Sounds/Artillery_Shot";
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
             }
             else
             {
