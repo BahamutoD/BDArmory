@@ -310,7 +310,7 @@ namespace BDArmory
                                   hasRichocheted = true;
                             }
 
-                            if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
+                            if (penetrationFactor > 1) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
                                 //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
@@ -318,7 +318,10 @@ namespace BDArmory
                                 penTicker += 1;
 
 
-                                if (explosive)
+                                //Explosive bullets that penetrate should explode shortly after
+                                //if penetration is very great, they will have moved on 
+                                //checking velocity as they would not be able to come out the other side
+                                if (explosive && penetrationFactor < 2 || currentVelocity.magnitude <= 800f)
                                 {
                                     prevPosition = currPosition;
                                     //move bullet            
@@ -329,10 +332,9 @@ namespace BDArmory
                                     KillBullet();
                                 }
                             }
-                            else
+                            else // explosive bullets that get stopped by armor will explode 
                             {
-                                hasPenetrated = false;               
-                                // explosive bullets that get stopped by armor will explode                                    
+                                hasPenetrated = false;                                                                             
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
