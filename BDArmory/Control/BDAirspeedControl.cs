@@ -144,10 +144,10 @@ namespace BDArmory.Control
 
 
             //estimate drag
-            float estimatedCurrentAccel = finalThrust/vesselMass;
-            float actualCurrentAccel = Vector3.Project(vessel.acceleration, vessel.ReferenceTransform.up).magnitude*
-                                       Mathf.Sign(Vector3.Dot(vessel.acceleration, -vessel.ReferenceTransform.up));
-            float accelError = (actualCurrentAccel - estimatedCurrentAccel)/2;
+            float estimatedCurrentAccel = finalThrust / vesselMass - GravAccel();
+            Vector3 vesselAccelProjected = Vector3.Project(vessel.acceleration_immediate, vessel.velocityD.normalized);
+            float actualCurrentAccel = vesselAccelProjected.magnitude * Mathf.Sign(Vector3.Dot(vesselAccelProjected, vessel.velocityD.normalized));
+            float accelError = (actualCurrentAccel - estimatedCurrentAccel); // /2 -- why divide by 2 here?
             dragAccel = accelError;
 
             possibleAccel += accel;
@@ -192,8 +192,7 @@ namespace BDArmory.Control
         float GravAccel()
         {
             Vector3 geeVector = FlightGlobals.getGeeForceAtPosition(vessel.CoM);
-            float gravAccel = Vector3.Project(geeVector, vessel.ReferenceTransform.up).magnitude;
-            gravAccel *= Mathf.Sign(Vector3.Dot(vessel.ReferenceTransform.up, geeVector));
+            float gravAccel = geeVector.magnitude * Mathf.Cos(Mathf.Deg2Rad * Vector3.Angle(FlightGlobals.getUpAxis(), vessel.velocityD));
 
             return gravAccel;
         }
