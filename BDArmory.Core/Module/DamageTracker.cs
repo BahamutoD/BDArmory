@@ -100,8 +100,6 @@ namespace BDArmory.Core.Module
 
         public override void OnStart(StartState state)
         {
-            base.OnAwake();
-            part.force_activate();
             isEnabled = true;
 
             if (part != null && _firstSetup) SetupPrefab();
