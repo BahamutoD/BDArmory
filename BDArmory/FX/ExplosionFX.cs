@@ -47,12 +47,6 @@ namespace BDArmory.FX
                 if (pe.Current == null) continue;
                 EffectBehaviour.AddParticleEmitter(pe.Current);
                 pe.Current.emit = true;
-
-                if (pe.Current.maxEnergy > MaxTime)
-                {
-                    MaxTime = pe.Current.maxEnergy;
-                }
-
             }
             pe.Dispose();
 
@@ -65,7 +59,7 @@ namespace BDArmory.FX
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log(
-                    "[BDArmory]:Explosion started StartTime: {"+ StartTime + "}, Duration: {" + MaxTime + "}");
+                    "[BDArmory]:Explosion started BlastRadius: {" + Range+ "} StartTime: {"+ StartTime + "}, Duration: {" + MaxTime + "}");
             }
         }
 
@@ -82,6 +76,12 @@ namespace BDArmory.FX
                 while (enuEvents.MoveNext())
                 {
                     if(enuEvents.Current == null) continue;
+
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log(
+                            "[BDArmory]:Enqueueing");
+                    }
 
                     ExplosionEvents.Enqueue(enuEvents.Current);
                 }
@@ -282,7 +282,7 @@ namespace BDArmory.FX
         }
         
 
-        public static void CreateExplosion(Vector3 position, float radius, float power, float heat, string explModelPath, string soundPath, bool isMissile, float caliber = 0)
+        public static void CreateExplosion(Vector3 position, float radius, float power, float heat, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0)
         {
             var go = GameDatabase.Instance.GetModel(explModelPath);
             var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
