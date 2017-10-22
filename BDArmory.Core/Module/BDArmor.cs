@@ -1,5 +1,4 @@
 ﻿using System;
-using KSPDev.ConfigUtils;
 using System.Linq;
 
 namespace BDArmory.Core.Module
