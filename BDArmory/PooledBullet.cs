@@ -313,7 +313,7 @@ namespace BDArmory
                                 
                             }
 
-                            if (penetrationFactor > 1) //fully penetrated, not explosive, continue ballistic damage
+                            if (penetrationFactor > 1) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
                                 //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
@@ -321,7 +321,10 @@ namespace BDArmory
                                 penTicker += 1;
 
 
-                                if (explosive)
+                                //Explosive bullets that penetrate should explode shortly after
+                                //if penetration is very great, they will have moved on 
+                                //checking velocity as they would not be able to come out the other side
+                                if (explosive && penetrationFactor < 2 || currentVelocity.magnitude <= 800f)
                                 {
                                     prevPosition = currPosition;
                                     //move bullet            
@@ -332,7 +335,7 @@ namespace BDArmory
                                     KillBullet();
                                 }
                             }
-                            else
+                            else // explosive bullets that get stopped by armor will explode 
                             {
      
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
@@ -340,8 +343,7 @@ namespace BDArmory
                                 hitPart?.rb.AddForceAtPosition(0.5f * (mass/1000f) * currentVelocity.normalized * impactVelocity * impactVelocity * (1f / (impactVelocity * Time.deltaTime)),
                                     hit.point, ForceMode.Impulse);
 
-                                hasPenetrated = false;               
-                                // explosive bullets that get stopped by armor will explode                                    
+                                hasPenetrated = false;                                          
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;

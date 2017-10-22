@@ -103,10 +103,10 @@ namespace BDArmory.Core.Extension
             {
                 damage *= 5f;
             }
-            else if(multiplier < 1 || penetrationfactor < 1)
-            {
-                damage *= 16f;
-            }         
+            //else if(multiplier < 1 || penetrationfactor < 1)
+            //{
+            //    damage *= 16f;
+            //}         
             
             //penalty for low caliber rounds,not if armor is very low
             
