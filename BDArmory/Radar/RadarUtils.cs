@@ -241,8 +241,8 @@ namespace BDArmory.Radar
 
             //additional 45° offset renderings:
             RenderSinglePass(t, inEditorZoom, (t.up+t.right), vesselbounds, radarDistance, radarFOV, rcsRenderingFrontal, drawTextureFrontal45);
-            RenderSinglePass(t, inEditorZoom, (t.right-t.up), vesselbounds, radarDistance, radarFOV, rcsRenderingLateral, drawTextureLateral45);
-            RenderSinglePass(t, inEditorZoom, (t.forward+t.right), vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral45);
+            RenderSinglePass(t, inEditorZoom, (t.right+t.forward), vesselbounds, radarDistance, radarFOV, rcsRenderingLateral, drawTextureLateral45);
+            RenderSinglePass(t, inEditorZoom, (t.forward-t.up), vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral45);
 
 
             // revert presentation (only if outside editor and thus vessel is a real vessel)
