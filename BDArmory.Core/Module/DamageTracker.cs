@@ -154,6 +154,17 @@ namespace BDArmory.Core.Module
 
         private float CalculateMaxDamage()
         {
+            if (part.Modules.Contains("MissileFire"))
+            {
+                Damage = float.MaxValue;
+                return Damage;
+            }
+            if (part.Modules.Contains("BDModulePilotAI"))
+            {
+                Damage = float.MaxValue;
+                return Damage;
+            }
+
             float maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
             Damage = maxDamage;
             return maxDamage;
