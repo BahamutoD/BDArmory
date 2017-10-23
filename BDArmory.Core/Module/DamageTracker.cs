@@ -153,18 +153,7 @@ namespace BDArmory.Core.Module
         #region Damage Functions
 
         private float CalculateMaxDamage()
-        {
-            if (part.Modules.Contains("MissileFire"))
-            {
-                Damage = float.MaxValue;
-                return Damage;
-            }
-            if (part.Modules.Contains("BDModulePilotAI"))
-            {
-                Damage = float.MaxValue;
-                return Damage;
-            }
-
+        {              
             float maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
             Damage = maxDamage;
             return maxDamage;
@@ -200,7 +189,8 @@ namespace BDArmory.Core.Module
          public void SetDamage(float partdamage)
         {
             Damage = partdamage;
-            if (Damage > GetMaxPartDamage())
+            //if (Damage > GetMaxPartDamage())
+            if(Damage <= 0)
             {
                 DestroyPart();
             }
@@ -208,6 +198,8 @@ namespace BDArmory.Core.Module
 
         public void AddDamage(float partdamage)
         {
+            if (part.name == "Weapon Manager" || part.name == "BDModulePilotAI") return;
+
             partdamage = Mathf.Max(partdamage, 0.01f) * -1;
             Damage += partdamage;
             //if (Damage > GetMaxPartDamage())

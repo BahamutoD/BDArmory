@@ -340,8 +340,10 @@ namespace BDArmory
      
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
                                 // F = 0.5 * m * v2 / d
-                                hitPart?.rb.AddForceAtPosition(0.5f * (mass/1000f) * currentVelocity.normalized * impactVelocity * impactVelocity * (1f / (impactVelocity * Time.deltaTime)),
-                                    hit.point, ForceMode.Impulse);
+                                hitPart?.rb.AddForceAtPosition(0.5f * (mass/1000f) * currentVelocity.normalized *
+                                                              impactVelocity * impactVelocity *
+                                                              (1f / (impactVelocity * Time.deltaTime)),
+                                                              hit.point, ForceMode.Impulse);
 
                                 hasPenetrated = false;                                          
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
