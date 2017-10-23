@@ -339,15 +339,28 @@ namespace BDArmory
                             {
 
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
-                                // F = 0.5 * m * v2 / d
-                                Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
-                                                              impactVelocity * impactVelocity *
-                                                              (1f / (impactVelocity * Time.deltaTime));
-                                _forceApplied /= 25;
-                                hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
+                                //// F = 0.5 * m * v2 / d
+                                //Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
+                                //                              impactVelocity * impactVelocity *
+                                //                              (1f / (impactVelocity * Time.deltaTime));
+                                //_forceApplied /= 25;
+                                //hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
+
+
+                                //New method
+
+                                Vector3 finalVelocityVector = hitPart.rb.velocity - this.currentVelocity;
+                                float finalVelocityMagnitude = finalVelocityVector.magnitude;
+
+                                float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
+                                                      (1f / hit.distance) * (mass / 1000f);
+
+                                Vector3 forceVector = -finalVelocityVector.normalized * forceAverageMagnitude;
+
+                                hitPart?.rb.AddForceAtPosition(forceVector / hitPart.vessel.GetTotalMass(), hit.point, ForceMode.Acceleration);
 
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(_forceApplied.magnitude, 2));
+                                    Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(forceVector / hitPart.vessel.GetTotalMass(), 2));
 
                                 hasPenetrated = false;                                          
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
