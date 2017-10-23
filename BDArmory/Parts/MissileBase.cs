@@ -50,8 +50,8 @@ namespace BDArmory.Parts
         public float maxOffBoresight = 360;
 
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float DetonationDistance = -1;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float DetonationDistance = 1;
 
        //[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "SLW Offset"), UI_FloatRange(minValue = -1000f, maxValue = 0f, stepIncrement = 100f, affectSymCounterparts = UI_Scene.All)]
        public float SLWOffset = 0;
@@ -656,16 +656,40 @@ namespace BDArmory.Parts
             if (!TargetAcquired) return;
             //skip check of user set to zero, rely on OnCollisionEnter
             if (DetonationDistance == 0) return;
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance, 100)) return;
-            if (Vector3.Distance(vessel.CoM, TargetPosition) > 50 * DetonationDistance) return;
 
-            float dist = (float) (DetonationDistance - vessel.Velocity().magnitude * TimeWarp.fixedDeltaTime);
-            Ray ray = new Ray(vessel.CoM, TargetPosition - vessel.CoM);
-            var hits = Physics.RaycastAll(ray, dist, 557057);
-            if (hits.Length > 0)
+            var targetDistancePerFrame = TargetVelocity * Time.fixedDeltaTime;
+            var missileDistancePerFrame = vessel.Velocity() * Time.fixedDeltaTime;
+
+            var futureTargetPosition = (TargetPosition + targetDistancePerFrame);
+            var futureMissilePosition = (vessel.CoM + missileDistancePerFrame);
+
+            var distance = (futureTargetPosition - futureMissilePosition).magnitude;
+
+            float relativeDistancePerFrame = (float) (targetDistancePerFrame -
+                                                      missileDistancePerFrame).magnitude;
+
+            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance, 100)) return;
+
+            if (distance > 50 * DetonationDistance) return;
+
+            float dist = DetonationDistance + Mathf.Clamp01(relativeDistancePerFrame);
+            Ray ray = new Ray(futureMissilePosition, (futureTargetPosition - futureMissilePosition));
+            Ray rayUp = new Ray(futureMissilePosition, Vector3.up);
+            Ray rayDown = new Ray(futureMissilePosition, Vector3.down);
+            Ray rayLeft = new Ray(futureMissilePosition, Vector3.left);
+            Ray rayRight = new Ray(futureMissilePosition, Vector3.right);
+
+            List<RaycastHit> allhits = new List<RaycastHit>();
+
+            allhits.AddRange(Physics.RaycastAll(ray, dist, 557057));
+            allhits.AddRange(Physics.RaycastAll(rayUp, dist, 557057));
+            allhits.AddRange(Physics.RaycastAll(rayDown, dist, 557057));
+            allhits.AddRange(Physics.RaycastAll(rayLeft, dist, 557057));
+            allhits.AddRange(Physics.RaycastAll(rayRight, dist, 557057));
+
+            if (allhits.Count > 0)
             {
-                var orderedHits = hits.OrderBy(x => x.distance);
-                using (var hitsEnu = orderedHits.GetEnumerator())
+                using (var hitsEnu = allhits.OrderBy(x => x.distance).GetEnumerator())
                 {
                     while (hitsEnu.MoveNext())
                     {
