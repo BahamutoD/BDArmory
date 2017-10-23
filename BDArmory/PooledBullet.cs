@@ -343,7 +343,7 @@ namespace BDArmory
                                 Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
                                                               impactVelocity * impactVelocity *
                                                               (1f / (impactVelocity * Time.deltaTime));
-                                _forceApplied /= 25;
+                                _forceApplied /= 20;
                                 hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
 
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)

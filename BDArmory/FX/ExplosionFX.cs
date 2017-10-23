@@ -252,9 +252,9 @@ namespace BDArmory.FX
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
                         Debug.Log(
-                            "[BDArmory]:Executing blast event Part: {" + part.name + "}, " +
+                            "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
                             "Distance Factor: {" + distanceFactor + "}," +
-                            "TimeIndex: {" + TimeIndex + "}," +
+                            " TimeIndex: {" + TimeIndex + "}," +
                             " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
                             " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
 

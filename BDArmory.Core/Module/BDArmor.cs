@@ -15,11 +15,14 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public float ArmorThickness = 0f;
 
+        [KSPField(isPersistant = true)]
+        public float maxDamage = 0f;
+
         //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area")]
         //public float PartArea = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Damage")]
-        public float maxDamage = 0;
+        public float maxDamage2 = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
         public float PartVolume = 0;
@@ -129,7 +132,7 @@ namespace BDArmory.Core.Module
             try
             {
                 ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-                maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
+                maxDamage2 = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
                 PartVolume = (float)Math.Round(GetPartVolume(part.partInfo, part), 2);
                 PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
                 ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
