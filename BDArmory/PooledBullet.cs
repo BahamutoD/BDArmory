@@ -337,13 +337,17 @@ namespace BDArmory
                             }
                             else // explosive bullets that get stopped by armor will explode 
                             {
-     
+
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
                                 // F = 0.5 * m * v2 / d
-                                hitPart?.rb.AddForceAtPosition(0.5f * (mass/1000f) * currentVelocity.normalized *
+                                Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
                                                               impactVelocity * impactVelocity *
-                                                              (1f / (impactVelocity * Time.deltaTime)),
-                                                              hit.point, ForceMode.Impulse);
+                                                              (1f / (impactVelocity * Time.deltaTime));
+                                _forceApplied /= 25;
+                                hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
+
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(_forceApplied.magnitude, 2));
 
                                 hasPenetrated = false;                                          
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
