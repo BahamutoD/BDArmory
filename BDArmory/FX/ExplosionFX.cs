@@ -4,6 +4,7 @@ using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
+using System;
 
 namespace BDArmory.FX
 {
@@ -260,9 +261,12 @@ namespace BDArmory.FX
                     }
                     if (!eventToExecute.IsNegativePressure)
                     {
-                        rb.AddForceAtPosition(
-                            (part.transform.position - Position) * force,
-                            eventToExecute.HitPoint, ForceMode.Impulse);
+                        //rb.AddForceAtPosition(
+                        //    (part.transform.position - Position) * force,
+                        //    eventToExecute.HitPoint, ForceMode.Impulse);
+
+                        AddForceAtPosition(rb,(part.transform.position - Position) * force, eventToExecute.HitPoint, ForceMode.Impulse);
+
                         if (Heat <= 0) Heat = Power;
 
                         part.AddDamage_Explosive(Heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD,
@@ -273,15 +277,16 @@ namespace BDArmory.FX
                     }
                     else
                     {
-                        rb.AddForceAtPosition(
-                            (Position - part.transform.position) * force * 0.125f,
-                            part.transform.position, ForceMode.Impulse);
+                        //rb.AddForceAtPosition(
+                        //    (Position - part.transform.position) * force * 0.125f,
+                        //    part.transform.position, ForceMode.Impulse);
+                        AddForceAtPosition(rb,(Position - part.transform.position) * force * 0.125f, part.transform.position, ForceMode.Impulse);
+
                     }
                 }
             }
         }
         
-
         public static void CreateExplosion(Vector3 position, float radius, float power, float heat, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0)
         {
             var go = GameDatabase.Instance.GetModel(explModelPath);
@@ -318,6 +323,17 @@ namespace BDArmory.FX
 
             }
             pe.Dispose();
+        }
+
+        public static void AddForceAtPosition(Rigidbody rb,Vector3 force,Vector3 position, ForceMode mode = ForceMode.Impulse)
+        {
+            //////////////////////////////////////////////////////////
+            // Add The force to part
+            //////////////////////////////////////////////////////////
+
+            rb.AddForceAtPosition(force, position, mode);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)            
+                Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
         }
     }
 

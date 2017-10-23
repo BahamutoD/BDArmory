@@ -122,7 +122,9 @@ namespace BDArmory.Core.Extension
             Debug.Log("[BDArmory]: Damage Applied : " + damage);
         }
 
-        
+
+ 
+
         public static void Destroy(this Part p)
         {
             Dependencies.Get<DamageService>().SetDamageToPart_svc(p, float.MaxValue);
