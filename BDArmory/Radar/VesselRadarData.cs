@@ -200,6 +200,14 @@ namespace BDArmory.Radar
         void Start()
         {
             rangeIndex = rIncrements.Length - 2;
+
+            //determine configured physics ranges and add a radar range level for the highest range
+            if (vessel.vesselRanges.flying.load > rIncrements[rIncrements.Length-1])
+            {
+                rIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, vessel.vesselRanges.flying.load };
+                rangeIndex--;
+            }
+
             UpdateLockedTargets();
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
@@ -521,6 +529,7 @@ namespace BDArmory.Radar
             if (origIndex != rangeIndex)
             {
                 pingPositionsDirty = true;
+                UpdateRWRRange();
             }
         }
 
@@ -531,6 +540,19 @@ namespace BDArmory.Radar
             if (origIndex != rangeIndex)
             {
                 pingPositionsDirty = true;
+                UpdateRWRRange();
+            }
+        }
+
+        /// <summary>
+        /// Update the radar range also on the rwr display
+        /// </summary>
+        void UpdateRWRRange()
+        {
+            List<RadarWarningReceiver>.Enumerator rwr = vessel.FindPartModulesImplementing<RadarWarningReceiver>().GetEnumerator();
+            while (rwr.MoveNext())
+            {
+                rwr.Current.rwrDisplayRange = rIncrements[rangeIndex];
             }
         }
 
