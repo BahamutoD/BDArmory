@@ -51,8 +51,7 @@ namespace BDArmory.Core.Extension
                 }
                 else
                 {
-                    armorReduction = damage / 8;
-                    //damage *=  armorPCT;
+                    armorReduction = damage / 8;                    
                 }
                 
             }

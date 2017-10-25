@@ -157,19 +157,19 @@ namespace BDArmory.Core.Module
 
         private float CalculateMaxDamage()
         {
-            //damageSet = true;
-            //float damage_ = 0;
             float maxDamage = 0;
 
-            //if (part.FindModuleImplementing<BDArmor>())
-            //{
-            //    damage_ = part.FindModuleImplementing<BDArmor>().maxDamage;
-            //    if (damage_ != 0) maxDamage = damage_;
-            //}
-            //else
-            //{
-                maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);                
-            //}
+            if (part.FindModuleImplementing<Parts.MissileLauncher>() == null)
+            {
+                maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) *
+                            Mathf.Clamp(part.crashTolerance, 1, 25);
+            }
+            else
+            {
+                maxDamage = 5;
+                Armor = 5;
+            }
+            
             Damage = maxDamage;
             return maxDamage;
         }

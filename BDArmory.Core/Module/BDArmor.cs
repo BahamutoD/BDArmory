@@ -1,5 +1,4 @@
 ﻿using System;
-using KSPDev.ConfigUtils;
 using System.Linq;
 
 namespace BDArmory.Core.Module
@@ -9,7 +8,7 @@ namespace BDArmory.Core.Module
 
         static BDArmor instance;
         public static BDArmor Instance => instance;
-        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
+        public static ArmorUtils.ExplodeMode explodeMode_ = ArmorUtils.ExplodeMode.Never;
 
         #region KSP Fields
         [KSPField(isPersistant = true)]
@@ -100,13 +99,13 @@ namespace BDArmory.Core.Module
             switch (explodeMode)
             {
                 case "Always":
-                    _explodeMode = ArmorUtils.ExplodeMode.Always;
+                    explodeMode_ = ArmorUtils.ExplodeMode.Always;
                     break;
                 case "Dynamic":
-                    _explodeMode = ArmorUtils.ExplodeMode.Dynamic;
+                    explodeMode_ = ArmorUtils.ExplodeMode.Dynamic;
                     break;
                 case "Never":
-                    _explodeMode = ArmorUtils.ExplodeMode.Never;
+                    explodeMode_ = ArmorUtils.ExplodeMode.Never;
                     break;
             }
         }
