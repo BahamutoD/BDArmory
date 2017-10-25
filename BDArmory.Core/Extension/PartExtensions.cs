@@ -15,7 +15,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Final Damage Applied : " + damage);
+            Debug.Log("[BDArmory]: Standard Damage Applied : " + damage);
 
         }
         public static void AddDamage_Explosive(this Part p,
@@ -27,7 +27,7 @@ namespace BDArmory.Core.Extension
                                                bool isMissile)
         {
             double armorMass_ = p.GetArmorMass();
-            double armorPCT_ = p.GetArmorPercentage();
+            float armorPCT_ = p.GetArmorPercentage();
             float armorReduction = 0;
 
             //////////////////////////////////////////////////////////
@@ -35,7 +35,9 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             float damage = (DMG_MULT / 100) *
                             EXP_MOD * heat *
-                            (distanceFactor / (float)armorMass_);
+                            (distanceFactor); // / (float)armorMass_);
+
+            damage = damage - ((damage * armorPCT_));
 
             //////////////////////////////////////////////////////////
             // Armor Reduction factors
@@ -49,8 +51,7 @@ namespace BDArmory.Core.Extension
                 }
                 else
                 {
-                    armorReduction = damage / 8;
-                    //damage *=  armorPCT;
+                    armorReduction = damage / 8;                    
                 }
                 
             }
@@ -62,7 +63,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
-            Debug.Log("[BDArmory]: ====== Explosion ray hit part | Explosion Damage : " + damage + "======");
+            Debug.Log("[BDArmory]: Explosive Damage Applied : " + damage);
         }
         public static void AddDamage_Ballistic(this Part p,
                                                float mass,
@@ -119,15 +120,24 @@ namespace BDArmory.Core.Extension
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Damage Applied : " + damage);
+            Debug.Log("[BDArmory]: Ballistic Damage Applied : " + damage);
         }
 
 
- 
+        public static void AddForceToPart(Rigidbody rb, Vector3 force, Vector3 position,ForceMode mode)
+        {
+
+            //////////////////////////////////////////////////////////
+            // Add The force to part
+            //////////////////////////////////////////////////////////
+
+            rb.AddForceAtPosition(force, position, mode);
+            Debug.Log("[BDArmory]: Force Applied : " + Math.Round(force.magnitude,2));
+        }
 
         public static void Destroy(this Part p)
         {
-            Dependencies.Get<DamageService>().SetDamageToPart_svc(p, float.MaxValue);
+            Dependencies.Get<DamageService>().SetDamageToPart_svc(p,-1);
         }
 
         public static bool HasArmor(this Part p)
