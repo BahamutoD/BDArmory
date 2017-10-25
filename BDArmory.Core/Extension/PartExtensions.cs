@@ -145,6 +145,16 @@ namespace BDArmory.Core.Extension
             return p.GetArmorMass() > 0d;
         }
 
+        public static float Damage(this Part p)
+         {		
+             return Dependencies.Get<DamageService>().GetPartDamage_svc(p);		
+         }		
+ 		
+        public static float MaxDamage(this Part p)
+         {		
+             return Dependencies.Get<DamageService>().GetMaxPartDamage_svc(p);		
+         }
+
         public static void ReduceArmor(this Part p, double massToReduce)
         {
             if (!p.HasArmor()) return;
@@ -188,7 +198,6 @@ namespace BDArmory.Core.Extension
             }
             window.Dispose();
         }
-
 
         public static bool IsMissile(this Part part)
         {
