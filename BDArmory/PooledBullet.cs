@@ -291,7 +291,7 @@ namespace BDArmory
                                 return;
                             }
  
-                            //Standard Pipeline Damage, Armor and Explosives
+                            //Standard Pipeline Hitpoints, Armor and Explosives
                             
                             impactVelocity = currentVelocity.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
@@ -340,15 +340,28 @@ namespace BDArmory
                             {
 
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
-                                // F = 0.5 * m * v2 / d
-                                Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
-                                                              impactVelocity * impactVelocity *
-                                                              (1f / (impactVelocity * Time.deltaTime));
-                                _forceApplied /= 20;
-                                hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
+                                //// F = 0.5 * m * v2 / d
+                                //Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
+                                //                              impactVelocity * impactVelocity *
+                                //                              (1f / (impactVelocity * Time.deltaTime));
+                                //_forceApplied /= 25;
+                                //hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
+
+
+                                //New method
+
+                                Vector3 finalVelocityVector = hitPart.rb.velocity - this.currentVelocity;
+                                float finalVelocityMagnitude = finalVelocityVector.magnitude;
+
+                                float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
+                                                      (1f / hit.distance) * (mass / 1000f);
+
+                                Vector3 forceVector = -finalVelocityVector.normalized * forceAverageMagnitude;
+
+                                hitPart?.rb.AddForceAtPosition(forceVector / hitPart.vessel.GetTotalMass(), hit.point, ForceMode.Acceleration);
 
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(_forceApplied.magnitude, 2));
+                                    Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(forceAverageMagnitude / hitPart.vessel.GetTotalMass(), 2));
 
                                 hasPenetrated = false;                                          
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
@@ -440,7 +453,7 @@ namespace BDArmory
             /////////////////////////////////////////////
             //if (BDArmorySettings.DRAW_DEBUG_LABELS)
             //{
-            //    //Debug.Log("[BDArmory]: Damage Applied: " + (int) heatDamage);
+            //    //Debug.Log("[BDArmory]: Hitpoints Applied: " + (int) heatDamage);
             //    Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " velocity: " + currentVelocity.magnitude + " multiplier: " + multiplier + " penetrationfactor: " + penetrationfactor);
             //}
 
@@ -628,8 +641,8 @@ namespace BDArmory
                     hitBuilding.Demolish();
                 }
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " +
-                              (damageToBuilding).ToString("0.00") + ", total Damage: " + hitBuilding.Damage);
+                    Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " +
+                              (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + hitBuilding.Damage);
 
                
                 return true;

@@ -38,7 +38,7 @@
     <Compile Include="Extension\VesselExtensions.cs" />
     <Compile Include="Module\ArmorUtils.cs" />
     <Compile Include="Module\BDArmor.cs" />
-    <Compile Include="Module\DamageTracker.cs" />
+    <Compile Include="Module\HitpointTracker.cs" />
     <Compile Include="Services\DamageService.cs" />
     <Compile Include="Interface\INotificableService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -50,9 +50,6 @@
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\BDArmory\LocalDev\Refs\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="BDArmory">
-      <HintPath>..\BDArmory\bin\Debug\BDArmory.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

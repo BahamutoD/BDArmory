@@ -240,7 +240,7 @@ namespace BDArmory.Misc
 						{
 							hitBuilding.Demolish();
 						}
-						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " + (damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
+						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " + (damageToBuilding).ToString("0.00")+ ", total Hitpoints: "+hitBuilding.Damage);
 					}
 					
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))

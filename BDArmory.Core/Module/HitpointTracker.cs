@@ -3,39 +3,39 @@ using UnityEngine;
 
 namespace BDArmory.Core.Module
 {
-    public class DamageTracker : PartModule
+    public class HitpointTracker : PartModule
     {
         #region KSP Fields
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Damage"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Hitpoints"),
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None,controlEnabled = false,scene = UI_Scene.All,maxValue = 100000,minValue = 0,requireFullControl = false)]
-        public float Damage = 0f;
+        public float Hitpoints;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor thickness"),
         UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 15f;
 
         [KSPField(isPersistant = true)]
-        public bool armorSet = false;
+        public bool ArmorSet;
 
         [KSPField(isPersistant = true)]
-        public bool damageSet = false;
+        public bool HitpointSet = false;
 
         #endregion
 
         //TODO: Add setting
-        private readonly float maxDamageFactor = 100f;
-
-        private MaterialColorUpdater damageRenderer;
-        private Gradient g = new Gradient();
+        private readonly float maxHitpointFactor = 100f;
 
         private Part _prefabPart;
-        private bool _setupRun =  false;
+        private bool _setupRun;
         private bool _firstSetup = true;
 
         protected virtual void Setup()
         {
-            if (_setupRun) return;
+            if (_setupRun)
+            {
+                return;
+            }
             _prefabPart = part.partInfo.partPrefab;
             _setupRun = true;
         }
@@ -72,12 +72,12 @@ namespace BDArmory.Core.Module
 
             if (part != null)
             {
-                //Add Damage
-                UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Damage"].uiControlFlight;
+                //Add Hitpoints
+                UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Hitpoints"].uiControlFlight;
                 damageFieldFlight.maxValue = CalculateMaxDamage();
                 damageFieldFlight.minValue = 0f;
 
-                UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Damage"].uiControlEditor;
+                UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Hitpoints"].uiControlEditor;
                 damageFieldEditor.maxValue = CalculateMaxDamage();
                 damageFieldEditor.minValue = 0f;
 
@@ -92,19 +92,17 @@ namespace BDArmory.Core.Module
 
                 part.RefreshAssociatedWindows();
 
-                if (!armorSet) SetThickness();               
+                if (!ArmorSet) SetThickness();               
 
             }
             else
             {
-                Debug.Log("[BDArmory]:DamageTracker::OnStart part  is null");
+                Debug.Log("[BDArmory]:HitpointTracker::OnStart part  is null");
             }
         }
 
         public override void OnStart(StartState state)
         {
-            base.OnAwake();
-            part.force_activate();
             isEnabled = true;
 
             if (part != null && _firstSetup) SetupPrefab();
@@ -115,7 +113,7 @@ namespace BDArmory.Core.Module
         public override void OnUpdate()
         {
             //TODO: Add effects
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || Damage == 0f)
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || Hitpoints == 0f)
             {
                 return;
             }
@@ -128,40 +126,40 @@ namespace BDArmory.Core.Module
            // damageRenderer?.Update(GetDamageColor());         
         }
 
-        public float GetPartExternalScaleModifier(Part part)
-        {
-            double defaultScale = 1.0f;
-            double currentScale = 1.0f;
+        //public float GetPartExternalScaleModifier(Part p)
+        //{
+        //    double defaultScale = 1.0f;
+        //    double currentScale = 1.0f;
 
-            if (part.Modules.Contains("TweakScale"))
-            {
-                PartModule pM = part.Modules["TweakScale"];
-                if (pM.Fields.GetValue("currentScale") != null)
-                {
-                    try
-                    {
-                        defaultScale = pM.Fields.GetValue<float>("defaultScale");
-                        currentScale = pM.Fields.GetValue<float>("currentScale");
-                    }
-                    catch
-                    {
-
-                    }                    
-                    return (float)(currentScale / defaultScale);
-                }
-            }
-            return 1.0f;
-        }
+        //    if (p.Modules.Contains("TweakScale"))
+        //    {
+        //        PartModule pM = part.Modules["TweakScale"];
+        //        if (pM.Fields.GetValue("currentScale") != null)
+        //        {
+        //            try
+        //            {
+        //                defaultScale = pM.Fields.GetValue<float>("defaultScale");
+        //                currentScale = pM.Fields.GetValue<float>("currentScale");
+        //            }
+        //            catch
+        //            {
+        //                // ignored
+        //            }
+        //            return (float)(currentScale / defaultScale);
+        //        }
+        //    }
+        //    return 1.0f;
+        //}
         
-        #region Damage Functions
+        #region Hitpoints Functions
 
         private float CalculateMaxDamage()
         {
-            float maxDamage = 0;
+            float maxDamage;
 
-            if (part.FindModuleImplementing<Parts.MissileLauncher>() == null)
+            if (!part.IsMissile())
             {
-                maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) *
+                maxDamage = maxHitpointFactor * Mathf.Clamp(part.mass, 0.001f, 50f) *
                             Mathf.Clamp(part.crashTolerance, 1, 25);
             }
             else
@@ -170,14 +168,13 @@ namespace BDArmory.Core.Module
                 Armor = 5;
             }
             
-            Damage = maxDamage;
+            Hitpoints = maxDamage;
             return maxDamage;
         }
 
         public void DestroyPart()
         {
             part.temperature = part.maxTemp * 2;
-            //part.explode();
         }
 
         public float GetMaxArmor()
@@ -187,25 +184,18 @@ namespace BDArmory.Core.Module
             return armorField.maxValue;
         }
 
-        public float GetMaxPartDamage()
+        public float GetMaxHitpoints()
         {
-            UI_ProgressBar damageField = (UI_ProgressBar) Fields["Damage"].uiControlEditor;
+            UI_ProgressBar hitpointField = (UI_ProgressBar) Fields["Hitpoints"].uiControlEditor;
 
-            return damageField.maxValue;
+            return hitpointField.maxValue;
         }        
-
-        public  Color GetDamageColor()
-        {
-            Color color = PhysicsGlobals.BlackBodyRadiation.Evaluate(Mathf.Clamp01(part.Damage() / part.MaxDamage()));
-            color.a *= PhysicsGlobals.BlackBodyRadiationAlphaMult * part.blackBodyRadiationAlphaMult; ;
-            return color;
-        }
 
         public void SetDamage(float partdamage)
         {
-            Damage = partdamage;
-            //if (Damage > GetMaxPartDamage())
-            if(Damage <= 0)
+            Hitpoints -= partdamage;
+
+            if(Hitpoints <= 0)
             {
                 DestroyPart();
             }
@@ -216,9 +206,10 @@ namespace BDArmory.Core.Module
             if (part.name == "Weapon Manager" || part.name == "BDModulePilotAI") return;
 
             partdamage = Mathf.Max(partdamage, 0.01f) * -1;
-            Damage += partdamage;
-            //if (Damage > GetMaxPartDamage())
-            if (Damage <= 0)
+
+            Hitpoints += partdamage;
+
+            if (Hitpoints <= 0)
             {
                 DestroyPart();
             }
@@ -227,17 +218,24 @@ namespace BDArmory.Core.Module
         public void ReduceArmor(float massToReduce)
         {
             Armor -= massToReduce;
-            if (Armor < 0) Armor = 0;
+            if (Armor < 0)
+            {
+                Armor = 0;
+            }
         }
 
         public void SetThickness(float thickness = 0)
         {
-            armorSet = true;
+            ArmorSet = true;
 
             if (part.FindModuleImplementing<BDArmor>())
             {                
-                float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
-                if(armor_ != 0) Armor = armor_;                
+                float armor = part.FindModuleImplementing<BDArmor>().ArmorThickness;
+
+                if (armor != 0)
+                {
+                    Armor = armor;
+                }                
             }
         }
       

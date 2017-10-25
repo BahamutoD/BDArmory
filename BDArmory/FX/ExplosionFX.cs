@@ -133,7 +133,7 @@ namespace BDArmory.FX
                 while (p.MoveNext())
                 {
                     if (p.Current == null) continue;
-                    var distance = (p.Current.transform.position - Position).magnitude;
+                    var distance = ((p.Current.transform.position + p.Current.Rigidbody.velocity * Time.fixedDeltaTime) - Position).magnitude;
                     if (distance >= Range) continue;
 
                     result.Add(new PartBlastHitEvent() { Distance = distance, Part = p.Current, TimeToImpact = distance / ExplosionVelocity});
@@ -212,8 +212,8 @@ namespace BDArmory.FX
                 }
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                      Debug.Log("[BDArmory]:== Explosion hit destructible building! Damage: " +
-                              (damageToBuilding).ToString("0.00") + ", total Damage: " + building.Damage);
+                      Debug.Log("[BDArmory]:== Explosion hit destructible building! Hitpoints: " +
+                              (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + building.Damage);
                 }   
             }
         }
@@ -245,7 +245,7 @@ namespace BDArmory.FX
 
                     if (rb == null || !rb) return;
 
-                    var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
+                    var distanceFactor = Mathf.Clamp01((Range - realDistance) / Range);
 
                     var force = Power * distanceFactor * BDArmorySettings.EXP_IMP_MOD;
 

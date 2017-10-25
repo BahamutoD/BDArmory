@@ -6,8 +6,8 @@ namespace BDArmory.Core.Module
     public class BDArmor : PartModule
     {
 
-        static BDArmor instance;
-        public static BDArmor Instance => instance;
+
+
         public static ArmorUtils.ExplodeMode explodeMode_ = ArmorUtils.ExplodeMode.Never;
 
         #region KSP Fields
@@ -20,7 +20,7 @@ namespace BDArmory.Core.Module
         //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area")]
         //public float PartArea = 0;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Damage")]
+        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Hitpoints")]
         public float maxDamage2 = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
@@ -130,8 +130,8 @@ namespace BDArmory.Core.Module
         {
             try
             {
-                ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-                maxDamage2 = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
+                ArmorThickness = part.FindModuleImplementing<HitpointTracker>().Armor;
+                maxDamage2 = part.FindModuleImplementing<HitpointTracker>().GetMaxHitpoints();
                 PartVolume = (float)Math.Round(GetPartVolume(part.partInfo, part), 2);
                 PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
                 ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
