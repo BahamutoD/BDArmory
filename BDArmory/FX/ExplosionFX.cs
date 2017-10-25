@@ -212,8 +212,8 @@ namespace BDArmory.FX
                 }
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                      Debug.Log("[BDArmory]:== Explosion hit destructible building! Damage: " +
-                              (damageToBuilding).ToString("0.00") + ", total Damage: " + building.Damage);
+                      Debug.Log("[BDArmory]:== Explosion hit destructible building! Hitpoints: " +
+                              (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + building.Damage);
                 }   
             }
         }

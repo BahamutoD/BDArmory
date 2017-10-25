@@ -11,11 +11,11 @@ namespace BDArmory.Core.Extension
         public static void AddDamage(this Part p, float damage)
         {
             //////////////////////////////////////////////////////////
-            // Basic Add Damage for compatibility
+            // Basic Add Hitpoints for compatibility
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Standard Damage Applied : " + damage);
+            Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
 
         }
         public static void AddDamage_Explosive(this Part p,
@@ -31,7 +31,7 @@ namespace BDArmory.Core.Extension
             float armorReduction = 0;
 
             //////////////////////////////////////////////////////////
-            // Explosive Damage
+            // Explosive Hitpoints
             //////////////////////////////////////////////////////////
             float damage = (DMG_MULT / 100) *
                             EXP_MOD * heat *
@@ -59,11 +59,11 @@ namespace BDArmory.Core.Extension
             if (armorReduction != 0) p.ReduceArmor(armorReduction);
 
             //////////////////////////////////////////////////////////
-            // Do The Damage
+            // Do The Hitpoints
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
-            Debug.Log("[BDArmory]: Explosive Damage Applied : " + damage);
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + damage);
         }
         public static void AddDamage_Ballistic(this Part p,
                                                float mass,
@@ -80,7 +80,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Basic Kinetic Formula
             //////////////////////////////////////////////////////////
-            //Damage mult for scaling in settings
+            //Hitpoints mult for scaling in settings
             //1e-4 constant for adjusting MegaJoules for gameplay
 
             double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
@@ -115,12 +115,12 @@ namespace BDArmory.Core.Extension
             
 
             //////////////////////////////////////////////////////////
-            // Do The Damage
+            // Do The Hitpoints
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Damage Applied : " + damage);
+            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + damage);
         }
 
 
@@ -143,16 +143,6 @@ namespace BDArmory.Core.Extension
         public static bool HasArmor(this Part p)
         {
             return p.GetArmorMass() > 0d;
-        }
-
-        public static float Damage(this Part p)
-        {
-            return Dependencies.Get<DamageService>().GetPartDamage_svc(p);
-        }
-
-        public static float MaxDamage(this Part p)
-        {
-            return Dependencies.Get<DamageService>().GetMaxPartDamage_svc(p);
         }
 
         public static void ReduceArmor(this Part p, double massToReduce)
@@ -197,6 +187,13 @@ namespace BDArmory.Core.Extension
                 }
             }
             window.Dispose();
+        }
+
+
+        public static bool IsMissile(this Part part)
+        {
+            return part.Modules.Contains("MissileBase") || part.Modules.Contains("MissileLauncher") ||
+                   part.Modules.Contains("BDModularGuidance");
         }
 
     }

@@ -10,7 +10,7 @@ namespace BDArmory.Core.Services
     {
         public override void ReduceArmor_svc(Part p, float armorMass)
         {
-            var damageModule = p.Modules.GetModule<DamageTracker>();
+            var damageModule = p.Modules.GetModule<HitpointTracker>();
 
             damageModule.ReduceArmor(armorMass);
 
@@ -25,7 +25,7 @@ namespace BDArmory.Core.Services
         
         public override void SetDamageToPart_svc(Part p, float PartDamage)
         {
-            var damageModule = p.Modules.GetModule<DamageTracker>();
+            var damageModule = p.Modules.GetModule<HitpointTracker>();
 
             damageModule.SetDamage(PartDamage);
 
@@ -40,7 +40,7 @@ namespace BDArmory.Core.Services
 
         public override void AddDamageToPart_svc(Part p, float PartDamage)
         {
-            var damageModule = p.Modules.GetModule<DamageTracker>();
+            var damageModule = p.Modules.GetModule<HitpointTracker>();
 
             damageModule.AddDamage(PartDamage);
 
@@ -55,28 +55,28 @@ namespace BDArmory.Core.Services
 
         public override float GetPartDamage_svc(Part p)
         {
-            return p.Modules.GetModule<DamageTracker>().Damage;
+            return p.Modules.GetModule<HitpointTracker>().Hitpoints;
         }
 
         public override float GetPartArmor_svc(Part p)
         {
-            float armor_ = Mathf.Max(1, p.Modules.GetModule<DamageTracker>().Armor);
+            float armor_ = Mathf.Max(1, p.Modules.GetModule<HitpointTracker>().Armor);
             return armor_;
         }
 
         public override float GetMaxPartDamage_svc(Part p)
         {
-            return p.Modules.GetModule<DamageTracker>().GetMaxPartDamage();
+            return p.Modules.GetModule<HitpointTracker>().GetMaxHitpoints();
         }
 
         public override float GetMaxArmor_svc(Part p)
         {
-            return p.Modules.GetModule<DamageTracker>().GetMaxArmor();
+            return p.Modules.GetModule<HitpointTracker>().GetMaxArmor();
         }
  
         public override void DestroyPart(Part p)
         {
-            p.Modules.GetModule<DamageTracker>().DestroyPart();
+            p.Modules.GetModule<HitpointTracker>().DestroyPart();
         }
     }
 }
