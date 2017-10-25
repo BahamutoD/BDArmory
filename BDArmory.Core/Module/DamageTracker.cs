@@ -18,6 +18,9 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public bool armorSet = false;
 
+        [KSPField(isPersistant = true)]
+        public bool damageSet = false;
+
         #endregion
 
         //TODO: Add setting
@@ -80,16 +83,16 @@ namespace BDArmory.Core.Module
 
                 //Add Armor
                 UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["Armor"].uiControlFlight;
-                armorFieldFlight.maxValue = 1000f;
+                armorFieldFlight.maxValue = 500f;
                 armorFieldFlight.minValue = 10;
 
                 UI_FloatRange armorFieldEditor = (UI_FloatRange)Fields["Armor"].uiControlEditor;
-                armorFieldEditor.maxValue = 1000f;
+                armorFieldEditor.maxValue = 500f;
                 armorFieldEditor.minValue = 10f;
 
                 part.RefreshAssociatedWindows();
 
-                if (!armorSet) SetThickness();
+                if (!armorSet) SetThickness();               
 
             }
             else
@@ -151,8 +154,20 @@ namespace BDArmory.Core.Module
         #region Damage Functions
 
         private float CalculateMaxDamage()
-        {              
-            float maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) * Mathf.Clamp(part.crashTolerance, 1, 25);
+        {
+            float maxDamage = 0;
+
+            if (part.FindModuleImplementing<Parts.MissileLauncher>() == null)
+            {
+                maxDamage = maxDamageFactor * Mathf.Clamp(part.mass, 0.001f, 50f) *
+                            Mathf.Clamp(part.crashTolerance, 1, 25);
+            }
+            else
+            {
+                maxDamage = 5;
+                Armor = 5;
+            }
+            
             Damage = maxDamage;
             return maxDamage;
         }
@@ -184,7 +199,7 @@ namespace BDArmory.Core.Module
             return color;
         }
 
-         public void SetDamage(float partdamage)
+        public void SetDamage(float partdamage)
         {
             Damage = partdamage;
             //if (Damage > GetMaxPartDamage())
@@ -222,8 +237,8 @@ namespace BDArmory.Core.Module
                 float armor_ = part.FindModuleImplementing<BDArmor>().ArmorThickness;
                 if(armor_ != 0) Armor = armor_;                
             }
-        }       
-
+        }
+      
         #endregion
 
     }

@@ -557,6 +557,8 @@ namespace BDArmory.Parts
 
         void OnCollisionEnter(Collision col)
 		{
+            if (HasExploded || !HasFired) return;
+
             Debug.Log("[BDArmory]: Missile Collided");
 
           if (TimeIndex>1 && this.part.vessel.speed > 10)

@@ -10,6 +10,7 @@ using BDArmory.Shaders;
 using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
+using static BDArmory.Core.Module.ArmorUtils;
 
 namespace BDArmory
 {
@@ -316,7 +317,7 @@ namespace BDArmory
                             if (penetrationFactor > 1) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
-                                //CheckPartForExplosion(hitPart); //cannot re-enable until we serially do hits otherwise everything the ray hits may explode on penetration simultaneousely                             
+                                CheckPartForExplosion(hitPart); 
                                 ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 penTicker += 1;
 
@@ -399,11 +400,12 @@ namespace BDArmory
                     } 
                 }
             }
-   
+
             ///////////////////////////////////////////////////////////////////////
             //Bullet Translation
             ///////////////////////////////////////////////////////////////////////
-            
+                       
+
             prevPosition = currPosition;
             //move bullet            
             transform.position += currentVelocity * Time.deltaTime;            
@@ -733,17 +735,17 @@ namespace BDArmory
         {
             if (!hitPart.FindModuleImplementing<BDArmor>()) return;
 
-            switch (BDArmor.Instance._explodeMode)
+            switch (hitPart.FindModuleImplementing<BDArmor>().explodeMode)
             {
-                case ArmorUtils.ExplodeMode.Always:
+                case "Always":
                     CreateExplosion(hitPart);
                     break;
-                case ArmorUtils.ExplodeMode.Dynamic:
+                case "Dynamic":
                     float probability = CalculateExplosionProbability(hitPart);
                     if (probability > 0.1f)
                         CreateExplosion(hitPart);
                     break;
-                case ArmorUtils.ExplodeMode.Never:
+                case "Never":
                     break;
             }
         }
@@ -801,7 +803,7 @@ namespace BDArmory
 
             resources.Dispose();
             explodeScale /= 100;
-            part.explode();
+            part.temperature = part.maxTemp * 2;
 
             ExplosionFx.CreateExplosion(part.partTransform.position, explodeScale * radius, explodeScale * blastPower * 2, explodeScale * blastHeat, explModelPath, explSoundPath, false);
         }

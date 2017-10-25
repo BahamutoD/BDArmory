@@ -8,17 +8,20 @@ namespace BDArmory.Core.Module
 
         static BDArmor instance;
         public static BDArmor Instance => instance;
-        public ArmorUtils.ExplodeMode _explodeMode { get; private set; } = ArmorUtils.ExplodeMode.Never;
+        public static ArmorUtils.ExplodeMode explodeMode_ = ArmorUtils.ExplodeMode.Never;
 
         #region KSP Fields
         [KSPField(isPersistant = true)]
         public float ArmorThickness = 0f;
 
+        [KSPField(isPersistant = true)]
+        public float maxDamage = 0f;
+
         //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area")]
         //public float PartArea = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Damage")]
-        public float maxDamage = 0;
+        public float maxDamage2 = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
         public float PartVolume = 0;
@@ -96,13 +99,13 @@ namespace BDArmory.Core.Module
             switch (explodeMode)
             {
                 case "Always":
-                    _explodeMode = ArmorUtils.ExplodeMode.Always;
+                    explodeMode_ = ArmorUtils.ExplodeMode.Always;
                     break;
                 case "Dynamic":
-                    _explodeMode = ArmorUtils.ExplodeMode.Dynamic;
+                    explodeMode_ = ArmorUtils.ExplodeMode.Dynamic;
                     break;
                 case "Never":
-                    _explodeMode = ArmorUtils.ExplodeMode.Never;
+                    explodeMode_ = ArmorUtils.ExplodeMode.Never;
                     break;
             }
         }
@@ -128,7 +131,7 @@ namespace BDArmory.Core.Module
             try
             {
                 ArmorThickness = part.FindModuleImplementing<DamageTracker>().Armor;
-                maxDamage = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
+                maxDamage2 = part.FindModuleImplementing<DamageTracker>().GetMaxPartDamage();
                 PartVolume = (float)Math.Round(GetPartVolume(part.partInfo, part), 2);
                 PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
                 ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
