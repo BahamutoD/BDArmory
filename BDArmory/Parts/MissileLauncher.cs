@@ -544,7 +544,6 @@ namespace BDArmory.Parts
 
         private void SetInitialDetonationDistance()
         {
-
             if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
             {
                 DetonationDistance = blastRadius;
@@ -561,11 +560,12 @@ namespace BDArmory.Parts
 
             Debug.Log("[BDArmory]: Missile Collided");
 
-          if (TimeIndex>1 && this.part.vessel.speed > 10)
+            if (TimeIndex > 1 && this.part.vessel.speed > 10)
             {
-                Detonate();                
+                Detonate();
             }
-		}        
+            
+        }        
         
 		void SetupAudio()
 		{

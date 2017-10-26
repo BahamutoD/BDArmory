@@ -595,10 +595,11 @@ namespace BDArmory
                     }
                     else
                     {
-                        ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
+                        ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f),
+                                                    radius,
+                                                    blastPower,
                                                     blastHeat,
-                                                    explModelPath, explSoundPath, false, caliber);
-                    }
+                                                    explModelPath, explSoundPath, false, caliber);}
 
                     KillBullet();
                     hasDetonated = true;
