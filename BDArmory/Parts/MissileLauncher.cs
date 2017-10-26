@@ -544,7 +544,6 @@ namespace BDArmory.Parts
 
         private void SetInitialDetonationDistance()
         {
-
             if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
             {
                 DetonationDistance = blastRadius;
@@ -557,15 +556,15 @@ namespace BDArmory.Parts
 
         void OnCollisionEnter(Collision col)
 		{
-            if (HasExploded || !HasFired) return;
+            if (HasExploded || !HasFired) return;            
 
-            Debug.Log("[BDArmory]: Missile Collided");
-
-          if (TimeIndex>1 && this.part.vessel.speed > 10)
+            if (TimeIndex > 1 && this.part.vessel.speed > 10)
             {
-                Detonate();                
+                Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
+                Detonate();
             }
-		}        
+            
+        }        
         
 		void SetupAudio()
 		{
@@ -629,7 +628,10 @@ namespace BDArmory.Parts
 		{
 		    if (HasFired) return;
 		    HasFired = true;
-		    GameEvents.onPartDie.Add(PartDie);
+
+            Debug.Log("[BDArmory]: Missile Fired! " + vessel.vesselName);
+
+            GameEvents.onPartDie.Add(PartDie);
 		    BDATargetManager.FiredMissiles.Add(this);
 
 		    if(GetComponentInChildren<KSPParticleEmitter>())
@@ -1746,7 +1748,10 @@ namespace BDArmory.Parts
 		public override void Detonate()
 		{
 		    if (HasExploded || !HasFired) return;
-		    BDArmorySettings.numberOfParticleEmitters--;	
+
+            Debug.Log("[BDArmory]: Detonate Triggered");
+
+            BDArmorySettings.numberOfParticleEmitters--;	
 		    HasExploded = true;
 				
 		    if(legacyTargetVessel!=null)

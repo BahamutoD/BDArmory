@@ -229,7 +229,7 @@ namespace BDArmory.FX
             RaycastHit rayHit;
             if (Physics.Raycast(partRay, out rayHit, Range, 557057))
             {
-                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 90) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
+                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 100) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
 
                 Part partHit = rayHit.collider.GetComponentInParent<Part>();
 

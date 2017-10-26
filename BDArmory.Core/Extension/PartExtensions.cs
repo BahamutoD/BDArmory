@@ -35,9 +35,9 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             float damage = (DMG_MULT / 100) *
                             EXP_MOD * heat *
-                            (distanceFactor); // / (float)armorMass_);
+                            (distanceFactor);
 
-            damage = damage - ((damage * armorPCT_));
+            damage = damage - ((damage * armorPCT_) / 10);
 
             //////////////////////////////////////////////////////////
             // Armor Reduction factors
@@ -47,7 +47,7 @@ namespace BDArmory.Core.Extension
                 if (!isMissile)
                 {
                     if (caliber < 50) damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                    armorReduction = damage / 2;
+                    armorReduction = damage / 2;                                      
                 }
                 else
                 {
@@ -95,14 +95,18 @@ namespace BDArmory.Core.Extension
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
+            //Armor limits Damage
             damage = damage - ((damage * armorPCT_) / 10);
 
-            //Caliber Adjustments for Gameplay balance
+            //penetration multipliers
+            int random = UnityEngine.Random.Range(1, 3);
+
             damage *= multiplier;
 
+            //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-                damage *= 5f;
+               damage *= 6f;
             }
             //else if(multiplier < 1 || penetrationfactor < 1)
             //{
@@ -144,6 +148,16 @@ namespace BDArmory.Core.Extension
         {
             return p.GetArmorMass() > 0d;
         }
+
+        public static float Damage(this Part p)
+         {		
+             return Dependencies.Get<DamageService>().GetPartDamage_svc(p);		
+         }		
+ 		
+        public static float MaxDamage(this Part p)
+         {		
+             return Dependencies.Get<DamageService>().GetMaxPartDamage_svc(p);		
+         }
 
         public static void ReduceArmor(this Part p, double massToReduce)
         {
@@ -188,7 +202,6 @@ namespace BDArmory.Core.Extension
             }
             window.Dispose();
         }
-
 
         public static bool IsMissile(this Part part)
         {

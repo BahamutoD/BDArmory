@@ -350,19 +350,22 @@ namespace BDArmory
 
                                 //New method
 
-                                Vector3 finalVelocityVector = hitPart.rb.velocity - this.currentVelocity;
-                                float finalVelocityMagnitude = finalVelocityVector.magnitude;
+                                if (hitPart.rb != null)
+                                {
+                                    Vector3 finalVelocityVector = hitPart.rb.velocity - this.currentVelocity;
+                                    float finalVelocityMagnitude = finalVelocityVector.magnitude;
 
-                                float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
-                                                      (1f / hit.distance) * (mass / 1000f);
+                                    float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
+                                                          (1f / hit.distance) * (mass / 1000f);
 
-                                Vector3 forceVector = -finalVelocityVector.normalized * forceAverageMagnitude;
+                                    Vector3 forceVector = -finalVelocityVector.normalized * forceAverageMagnitude;
 
-                                hitPart?.rb.AddForceAtPosition(forceVector / hitPart.vessel.GetTotalMass(), hit.point, ForceMode.Acceleration);
+                                    hitPart?.rb.AddForceAtPosition(forceVector / hitPart.vessel.GetTotalMass(), hit.point, ForceMode.Acceleration);
 
-                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                    Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(forceAverageMagnitude / hitPart.vessel.GetTotalMass(), 2));
-
+                                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                        Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(forceAverageMagnitude / hitPart.vessel.GetTotalMass(), 2));
+                                }
+                                
                                 hasPenetrated = false;                                          
                                 ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
@@ -595,10 +598,11 @@ namespace BDArmory
                     }
                     else
                     {
-                        ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f), radius, blastPower,
+                        ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f),
+                                                    radius,
+                                                    blastPower,
                                                     blastHeat,
-                                                    explModelPath, explSoundPath, false, caliber);
-                    }
+                                                    explModelPath, explSoundPath, false, caliber);}
 
                     KillBullet();
                     hasDetonated = true;
