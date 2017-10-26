@@ -556,12 +556,11 @@ namespace BDArmory.Parts
 
         void OnCollisionEnter(Collision col)
 		{
-            if (HasExploded || !HasFired) return;
-
-            Debug.Log("[BDArmory]: Missile Collided");
+            if (HasExploded || !HasFired) return;            
 
             if (TimeIndex > 1 && this.part.vessel.speed > 10)
             {
+                Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
                 Detonate();
             }
             
@@ -629,7 +628,10 @@ namespace BDArmory.Parts
 		{
 		    if (HasFired) return;
 		    HasFired = true;
-		    GameEvents.onPartDie.Add(PartDie);
+
+            Debug.Log("[BDArmory]: Missile Fired! " + vessel.vesselName);
+
+            GameEvents.onPartDie.Add(PartDie);
 		    BDATargetManager.FiredMissiles.Add(this);
 
 		    if(GetComponentInChildren<KSPParticleEmitter>())
@@ -1746,7 +1748,10 @@ namespace BDArmory.Parts
 		public override void Detonate()
 		{
 		    if (HasExploded || !HasFired) return;
-		    BDArmorySettings.numberOfParticleEmitters--;	
+
+            Debug.Log("[BDArmory]: Detonate Triggered");
+
+            BDArmorySettings.numberOfParticleEmitters--;	
 		    HasExploded = true;
 				
 		    if(legacyTargetVessel!=null)
