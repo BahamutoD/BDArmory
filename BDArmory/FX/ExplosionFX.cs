@@ -68,7 +68,7 @@ namespace BDArmory.FX
         {  
             var temporalEventList = new List<BlastHitEvent>();
 
-            temporalEventList.AddRange(ProcessingPartsInRange());
+            temporalEventList.AddRange(ProcessingPartsInRangeSphere());
             temporalEventList.AddRange(ProcessingBuildingsInRange());
 
             //Let's convert this temperal list on a ordered queue
@@ -81,7 +81,7 @@ namespace BDArmory.FX
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
                         Debug.Log(
-                            "[BDArmory]:Enqueueing");
+                            "[BDArmory]: Enqueueing Blast Event");
                     }
 
                     ExplosionEvents.Enqueue(enuEvents.Current);
@@ -141,6 +141,29 @@ namespace BDArmory.FX
                 p.Dispose();
             }
             v.Dispose();
+
+            return result;
+        }
+
+        private List<BlastHitEvent> ProcessingPartsInRangeSphere()
+        {
+            List<BlastHitEvent> result = new List<BlastHitEvent>();
+            Collider[] hitColliders = Physics.OverlapSphere(Position, Range);     
+            
+            int i = 0;
+
+            while (i < hitColliders.Length)
+            {
+                Part p = hitColliders[i].GetComponentInParent<Part>();
+                if (p != null)
+                {
+                   var distance = ((p.transform.position + p.Rigidbody.velocity * Time.fixedDeltaTime) - Position).magnitude;
+                   result.Add(new PartBlastHitEvent() { Distance = distance, Part = p, TimeToImpact = distance / ExplosionVelocity });
+
+                }
+
+                i++;
+            }            
 
             return result;
         }
@@ -226,7 +249,8 @@ namespace BDArmory.FX
 
             // 1. Normal forward explosive event
             Ray partRay = new Ray(Position, part.transform.position - Position);
-            RaycastHit rayHit;
+            RaycastHit rayHit;            
+
             if (Physics.Raycast(partRay, out rayHit, Range, 557057))
             {
                 if (BDArmorySettings.DRAW_DEBUG_LINES)

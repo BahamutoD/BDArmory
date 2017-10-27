@@ -106,7 +106,7 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 5.25f;
+               damage *= 4.75f;
             }
 
             //else if(multiplier < 1 || penetrationfactor < 1)

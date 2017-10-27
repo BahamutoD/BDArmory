@@ -314,7 +314,7 @@ namespace BDArmory
                                 
                             }
 
-                            if (penetrationFactor > 1) //fully penetrated continue ballistic damage
+                            if (penetrationFactor > 1 && !hasRichocheted) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
                                 CheckPartForExplosion(hitPart); 
@@ -336,7 +336,7 @@ namespace BDArmory
                                     KillBullet();
                                 }
                             }
-                            else // explosive bullets that get stopped by armor will explode 
+                            else if(!hasRichocheted) // explosive bullets that get stopped by armor will explode 
                             {
 
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
