@@ -304,14 +304,11 @@ namespace BDArmory
                             {
                                 //its not going to bounce if it goes right through
                                 hasRichocheted = false;
-
-
                             }
                             else
                             {
                                 if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity))
-                                  hasRichocheted = true;
-                                
+                                    hasRichocheted = true;                                                                
                             }
 
                             if (penetrationFactor > 1 && !hasRichocheted) //fully penetrated continue ballistic damage
@@ -371,14 +368,19 @@ namespace BDArmory
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
                                 KillBullet();
-                            }                           
+                            }
 
                             /////////////////////////////////////////////////////////////////////////////////
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
                             /////////////////////////////////////////////////////////////////////////////////
 
+                            //explosive bullet conditions
+                            //air detonation
+                            //penetrating explosive
+                            //richochets
+
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) ||
-                                (penTicker >= 2 && explosive)|| hasRichocheted)
+                                (penTicker >= 2 && explosive)|| (hasRichocheted && explosive))
                             {
                                 //detonate
                                 ExplosiveDetonation(hitPart, hit, ray,airDetonation);
@@ -560,7 +562,7 @@ namespace BDArmory
 
         private float CalculatePenetration()
         {        
-            float penetration = 0; //penetration of 0 for legacy support
+            float penetration = 0;
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
                 penetration = (float)(16f * impactVelocity * Math.Sqrt(mass/1000) / Math.Sqrt(caliber));

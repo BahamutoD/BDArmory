@@ -148,7 +148,7 @@ namespace BDArmory.FX
         private List<BlastHitEvent> ProcessingPartsInRangeSphere()
         {
             List<BlastHitEvent> result = new List<BlastHitEvent>();
-            Collider[] hitColliders = Physics.OverlapSphere(Position, Range);     
+            Collider[] hitColliders = Physics.OverlapSphere(Position, Range);              
             
             int i = 0;
 
@@ -159,7 +159,6 @@ namespace BDArmory.FX
                 {
                    var distance = ((p.transform.position + p.Rigidbody.velocity * Time.fixedDeltaTime) - Position).magnitude;
                    result.Add(new PartBlastHitEvent() { Distance = distance, Part = p, TimeToImpact = distance / ExplosionVelocity });
-
                 }
 
                 i++;
@@ -288,11 +287,7 @@ namespace BDArmory.FX
                     }
                     if (!eventToExecute.IsNegativePressure)
                     {
-                        //rb.AddForceAtPosition(
-                        //    (part.transform.position - Position) * force,
-                        //    eventToExecute.HitPoint, ForceMode.Impulse);
-
-                        AddForceAtPosition(rb,(part.transform.position - Position) * force, eventToExecute.HitPoint, ForceMode.Impulse);
+                        AddForceAtPosition(rb,(part.transform.position - Position) * force, eventToExecute.HitPoint, Range, ForceMode.Impulse);
 
                         if (Heat <= 0) Heat = Power;
 
@@ -304,11 +299,7 @@ namespace BDArmory.FX
                     }
                     else
                     {
-                        //rb.AddForceAtPosition(
-                        //    (Position - part.transform.position) * force * 0.125f,
-                        //    part.transform.position, ForceMode.Impulse);
-                        AddForceAtPosition(rb,(Position - part.transform.position) * force * 0.125f, part.transform.position, ForceMode.Impulse);
-
+                        AddForceAtPosition(rb,(Position - part.transform.position) * force * 0.125f, part.transform.position, Range, ForceMode.Impulse);                       
                     }
                 }
             }
@@ -352,13 +343,17 @@ namespace BDArmory.FX
             pe.Dispose();
         }
 
-        public static void AddForceAtPosition(Rigidbody rb,Vector3 force,Vector3 position, ForceMode mode = ForceMode.Impulse)
+        public static void AddForceAtPosition(Rigidbody rb,Vector3 force,Vector3 position,float range, ForceMode mode = ForceMode.Impulse)
         {
             //////////////////////////////////////////////////////////
             // Add The force to part
             //////////////////////////////////////////////////////////
 
+            // This method was meh...
+            //rb.AddExplosionForce(force.magnitude, position, range, 0, ForceMode.Impulse);
+
             rb.AddForceAtPosition(force, position, mode);
+
             if (BDArmorySettings.DRAW_DEBUG_LABELS)            
                 Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
         }
