@@ -37,7 +37,7 @@ namespace BDArmory.Core.Extension
                             EXP_MOD * heat *
                             (distanceFactor);
 
-            damage = damage - ((damage * armorPCT_) / 10);
+            damage = damage - ((damage * armorPCT_));
 
             //////////////////////////////////////////////////////////
             // Armor Reduction factors
@@ -47,11 +47,11 @@ namespace BDArmory.Core.Extension
                 if (!isMissile)
                 {
                     if (caliber < 50) damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                    armorReduction = damage / 2;                                      
+                    armorReduction = damage * 0.50f;                                      
                 }
                 else
                 {
-                    armorReduction = damage / 8;                    
+                    armorReduction = damage * 0.125f;                    
                 }
                 
             }
@@ -106,8 +106,9 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 6f;
+               damage *= 5.25f;
             }
+
             //else if(multiplier < 1 || penetrationfactor < 1)
             //{
             //    damage *= 16f;

@@ -581,17 +581,17 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////                                 
             // High Explosive Detonation
             ///////////////////////////////////////////////////////////////////////
-
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-            {
-                Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker + " airDet: " + airDetonation);
-            }
-
+            
             if (hitPart == null || hitPart.vessel != sourceVessel)
             {
                 //if bullet hits and is HE, detonate and kill bullet
                 if (explosive)
                 {
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker + " airDet: " + airDetonation);
+                    }
+
                     if (airDetonation)
                     {
                         ExplosionFx.CreateExplosion(hit.point, radius, blastPower, blastHeat, explModelPath, explSoundPath, false, caliber);
