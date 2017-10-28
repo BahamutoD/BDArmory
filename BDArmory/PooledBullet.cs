@@ -304,17 +304,14 @@ namespace BDArmory
                             {
                                 //its not going to bounce if it goes right through
                                 hasRichocheted = false;
-
-
                             }
                             else
                             {
                                 if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity))
-                                  hasRichocheted = true;
-                                
+                                    hasRichocheted = true;                                                                
                             }
 
-                            if (penetrationFactor > 1) //fully penetrated continue ballistic damage
+                            if (penetrationFactor > 1 && !hasRichocheted) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
                                 CheckPartForExplosion(hitPart); 
@@ -336,7 +333,7 @@ namespace BDArmory
                                     KillBullet();
                                 }
                             }
-                            else // explosive bullets that get stopped by armor will explode 
+                            else if(!hasRichocheted) // explosive bullets that get stopped by armor will explode 
                             {
 
                                 //If stopped the kinetic energy of the bullet should be transfered to the part
@@ -371,14 +368,19 @@ namespace BDArmory
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
                                 KillBullet();
-                            }                           
+                            }
 
                             /////////////////////////////////////////////////////////////////////////////////
                             //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
                             /////////////////////////////////////////////////////////////////////////////////
 
+                            //explosive bullet conditions
+                            //air detonation
+                            //penetrating explosive
+                            //richochets
+
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) ||
-                                (penTicker >= 2 && explosive)|| hasRichocheted)
+                                (penTicker >= 2 && explosive)|| (hasRichocheted && explosive))
                             {
                                 //detonate
                                 ExplosiveDetonation(hitPart, hit, ray,airDetonation);
@@ -560,7 +562,7 @@ namespace BDArmory
 
         private float CalculatePenetration()
         {        
-            float penetration = 0; //penetration of 0 for legacy support
+            float penetration = 0;
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
                 penetration = (float)(16f * impactVelocity * Math.Sqrt(mass/1000) / Math.Sqrt(caliber));
@@ -581,17 +583,17 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////                                 
             // High Explosive Detonation
             ///////////////////////////////////////////////////////////////////////
-
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-            {
-                Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker + " airDet: " + airDetonation);
-            }
-
+            
             if (hitPart == null || hitPart.vessel != sourceVessel)
             {
                 //if bullet hits and is HE, detonate and kill bullet
                 if (explosive)
                 {
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log("[BDArmory]: Detonation Triggered | penetration: " + hasPenetrated + " penTick: " + penTicker + " airDet: " + airDetonation);
+                    }
+
                     if (airDetonation)
                     {
                         ExplosionFx.CreateExplosion(hit.point, radius, blastPower, blastHeat, explModelPath, explSoundPath, false, caliber);
