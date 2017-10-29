@@ -121,9 +121,9 @@ namespace BDArmory.Parts
                 subScript.enabled = true;
                 subScript.deployed = true;
                 subScript.sourceVessel = missileLauncher.SourceVessel;
-                subScript.blastForce = missileLauncher.blastPower;
+                subScript.blastForce = missileLauncher.GetTntMass();
                 subScript.blastHeat = missileLauncher.blastHeat;
-                subScript.blastRadius = missileLauncher.blastRadius;
+                subScript.blastRadius = missileLauncher.GetBlastRadius();
                 subScript.subExplModelPath = subExplModelPath;
                 subScript.subExplSoundPath = subExplSoundPath;
                 sub.Current.AddComponent<KSPForceApplier>();

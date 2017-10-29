@@ -830,5 +830,10 @@ namespace BDArmory.Parts
                 GUI.Label(new Rect(200, Screen.height - 200, 400, 400), this.shortName + ":" + debugString);
             }
         }
+
+        public float GetTntMass()
+        {
+           return vessel.FindPartModulesImplementing<BDExplosivePart>().Max(x => x.tntMass);
+        }
     }
 }
