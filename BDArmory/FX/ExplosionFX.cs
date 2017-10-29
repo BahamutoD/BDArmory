@@ -82,7 +82,7 @@ namespace BDArmory.FX
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
                         Debug.Log(
-                            "[BDArmory]:Enqueueing");
+                            "[BDArmory]: Enqueueing Blast Event");
                     }
 
                     ExplosionEvents.Enqueue(enuEvents.Current);
@@ -227,11 +227,15 @@ namespace BDArmory.FX
 
             // 1. Normal forward explosive event
             Ray partRay = new Ray(Position, part.transform.position - Position);
-            RaycastHit rayHit;
+            RaycastHit rayHit;            
+
             if (Physics.Raycast(partRay, out rayHit, Range, 557057))
             {
-                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 100) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
+                if (BDArmorySettings.DRAW_DEBUG_LINES)
+                { Gizmos.DrawWireSphere(Position, Power); }
 
+                if (!((Vector3.Angle(partRay.direction, transform.forward)) < 100) && !IsMissile) { return; } // clamp explosion to forward of the hitpoint for bullets
+                
                 Part partHit = rayHit.collider.GetComponentInParent<Part>();
 
                 // Is a direct hit, because we are hitting the expected part

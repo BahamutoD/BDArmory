@@ -13,7 +13,7 @@ namespace BDArmory.Core.Module
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor thickness"),
         UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
-        public float Armor = 15f;
+        public float Armor = 10f;
 
         [KSPField(isPersistant = true)]
         public bool ArmorSet;
