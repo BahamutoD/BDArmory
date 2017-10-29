@@ -29,6 +29,7 @@
 
   * Fix missile infinite fuel
   * Fix rwr window invisible in fresh installs
+  * Display ranges of RWR and radar display now linked, selectable display range of radar display up to configured PRE physics max range!
   * Window position saving also for vesselswitcher
   * Prevent active radar missiles locking onto anything they see, now obey engagement settings
   * Sonar pings and torpedos only show on RWR if vessel is splashed/submerged
