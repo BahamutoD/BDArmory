@@ -18,7 +18,54 @@ namespace BDArmory.Core.Extension
             Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
 
         }
-      
+
+        public static void AddDamage_Explosive(this Part p,
+                                               float pressure,
+                                               float DMG_MULT,
+                                               float EXP_MOD,
+                                               float caliber,
+                                               bool isMissile)
+        {
+
+            //////////////////////////////////////////////////////////
+            // Explosive Hitpoints
+            //////////////////////////////////////////////////////////
+            float damage = (DMG_MULT / 100) *
+                            EXP_MOD *
+                            pressure;
+
+            //////////////////////////////////////////////////////////
+            // Armor Reduction factors
+            //////////////////////////////////////////////////////////
+            if (p.HasArmor())
+            {
+                float armorReduction = 0;
+                damage = damage - ((damage * p.GetArmorPercentage()) / 10);
+
+                if (!isMissile)
+                {
+                    if (caliber < 50)
+                    {
+                        damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                    }
+                    armorReduction = damage / 2;
+                }
+                else
+                {
+                    armorReduction = damage / 8;
+                }
+                p.ReduceArmor(armorReduction);
+
+            }
+
+            //////////////////////////////////////////////////////////
+            // Do The Hitpoints
+            //////////////////////////////////////////////////////////
+
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + Math.Round((double)damage, 2));
+        }
+
         public static void AddDamage_Ballistic(this Part p,
                                                float mass,
                                                float caliber,
