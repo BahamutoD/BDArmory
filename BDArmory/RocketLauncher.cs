@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.UI;
@@ -312,6 +313,8 @@ namespace BDArmory
                 }
             }
             SetupAudio();
+
+            blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
 
         IEnumerator DeployAnimRoutine(bool forward)
@@ -1028,7 +1031,7 @@ namespace BDArmory
         {
             BDArmorySettings.numberOfParticleEmitters--;
 
-            ExplosionFx.CreateExplosion(pos, blastRadius, blastForce, blastHeat,
+            ExplosionFx.CreateExplosion(pos, BlastPhysicsUtils.CalculateExplosiveMass(blastRadius),
                 explModelPath, explSoundPath,true);
 
             IEnumerator<KSPParticleEmitter> emitter = pEmitters.AsEnumerable().GetEnumerator();

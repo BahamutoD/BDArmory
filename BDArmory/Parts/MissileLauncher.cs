@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.Radar;
@@ -498,8 +499,13 @@ namespace BDArmory.Parts
 					KillRCS();
 				}
 				SetupAudio();
-			 
-            }
+
+                //TODO: Backward compatibility wordaround
+			    if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count == 0) //New Explosive module
+			    {
+			        FromBlastPowerToTNTMass();
+                }
+			}
 
 			if(GuidanceMode != GuidanceModes.Cruise)
 			{
@@ -541,6 +547,14 @@ namespace BDArmory.Parts
 		  
 
 		}
+
+        /// <summary>
+        /// This method will convert the blastPower to a tnt mass equivalent
+        /// </summary>
+        private void FromBlastPowerToTNTMass()
+        {
+            blastPower = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
+        }
 
         private void SetInitialDetonationDistance()
         {
@@ -621,13 +635,22 @@ namespace BDArmory.Parts
 
 	    public override float GetBlastRadius()
 	    {
-	        return blastRadius;
-	    }
+	        if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
+	        {
+	            return vessel.FindPartModulesImplementing<BDExplosivePart>().Max(x => x.blastRadius);
+	        }
+	        else
+	        {
+	            return blastRadius;
+	        }
+        }
 
 	    public override void FireMissile()
 		{
 		    if (HasFired) return;
-		    HasFired = true;
+
+		    ArmingExplosive();
+            HasFired = true;
 
             Debug.Log("[BDArmory]: Missile Fired! " + vessel.vesselName);
 
@@ -1765,12 +1788,21 @@ namespace BDArmory.Parts
 		        wpm.Dispose();
 		    }
 				
-		    if(part!=null) part.Destroy();
-            Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 		    if(SourceVessel==null) SourceVessel = vessel;
-		    ExplosionFx.CreateExplosion(position, blastRadius, blastPower, blastHeat, explModelPath, explSoundPath, true); 
 
-		    List<BDAGaplessParticleEmitter>.Enumerator e = gaplessEmitters.GetEnumerator();
+		    if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
+		    {
+		        vessel.FindPartModulesImplementing<BDExplosivePart>()
+		            .ForEach(explosivePart => explosivePart.DetonateIfPossible());
+		    }
+		    else
+		    {
+		        Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
+                ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true); 
+		    }
+		    if (part != null) part.Destroy();
+
+            List<BDAGaplessParticleEmitter>.Enumerator e = gaplessEmitters.GetEnumerator();
             while (e.MoveNext())
             {
                 if (e.Current == null) continue;

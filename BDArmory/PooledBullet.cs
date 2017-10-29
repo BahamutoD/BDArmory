@@ -58,6 +58,7 @@ namespace BDArmory
 
         //explosive parameters
         public float radius = 30;
+        public float tntMass = 0;
         public float blastPower = 8;
         public float blastHeat = -1;
         public float bulletDmgMult = 1;
@@ -335,16 +336,6 @@ namespace BDArmory
                             }
                             else if(!hasRichocheted) // explosive bullets that get stopped by armor will explode 
                             {
-
-                                //If stopped the kinetic energy of the bullet should be transfered to the part
-                                //// F = 0.5 * m * v2 / d
-                                //Vector3 _forceApplied = 0.5f * (mass / 1000f) * currentVelocity.normalized *
-                                //                              impactVelocity * impactVelocity *
-                                //                              (1f / (impactVelocity * Time.deltaTime));
-                                //_forceApplied /= 25;
-                                //hitPart?.rb.AddForceAtPosition(_forceApplied, hit.point, ForceMode.Impulse);
-
-
                                 //New method
 
                                 if (hitPart.rb != null)
@@ -353,14 +344,15 @@ namespace BDArmory
                                     float finalVelocityMagnitude = finalVelocityVector.magnitude;
 
                                     float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
-                                                          (1f / hit.distance) * (mass / 1000f);
+                                                          (1f / hit.distance) * (mass - tntMass);
 
-                                    Vector3 forceVector = -finalVelocityVector.normalized * forceAverageMagnitude;
+                                    float accelerationMagnitude =
+                                        forceAverageMagnitude / (hitPart.vessel.GetTotalMass() * 1000);
 
-                                    hitPart?.rb.AddForceAtPosition(forceVector / hitPart.vessel.GetTotalMass(), hit.point, ForceMode.Acceleration);
+                                    hitPart?.rb.AddForceAtPosition(-finalVelocityVector.normalized * accelerationMagnitude, hit.point, ForceMode.Acceleration);
 
                                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                        Debug.Log("[BDArmory]: Force Applied | Ballistic : " + Math.Round(forceAverageMagnitude / hitPart.vessel.GetTotalMass(), 2));
+                                        Debug.Log("[BDArmory]: Force Applied " + Math.Round(accelerationMagnitude, 2) + "| Vessel mass in kgs="+ hitPart.vessel.GetTotalMass() * 1000 + "| bullet effective mass ="+(mass - tntMass));
                                 }
                                 
                                 hasPenetrated = false;                                          
@@ -596,15 +588,14 @@ namespace BDArmory
 
                     if (airDetonation)
                     {
-                        ExplosionFx.CreateExplosion(hit.point, radius, blastPower, blastHeat, explModelPath, explSoundPath, false, caliber);
+                        ExplosionFx.CreateExplosion(hit.point, GetExplosivePower(), explModelPath, explSoundPath, false, caliber);
                     }
                     else
                     {
                         ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f),
-                                                    radius,
-                                                    blastPower,
-                                                    blastHeat,
-                                                    explModelPath, explSoundPath, false, caliber);}
+                                                    GetExplosivePower(),
+                                                    explModelPath, explSoundPath, false, caliber);
+                    }
 
                     KillBullet();
                     hasDetonated = true;
@@ -808,10 +799,16 @@ namespace BDArmory
             }
 
             resources.Dispose();
-            explodeScale /= 100;
-            part.temperature = part.maxTemp * 2;
+            //explodeScale /= 100;
+            part.explode();
 
-            ExplosionFx.CreateExplosion(part.partTransform.position, explodeScale * radius, explodeScale * blastPower * 2, explodeScale * blastHeat, explModelPath, explSoundPath, false);
+            //It doesn't make sense to create another explosion, lets just explode the part
+            //ExplosionFx.CreateExplosion(part.partTransform.position, GetExplosivePower(), explModelPath, explSoundPath, false);
+        }
+
+        private float GetExplosivePower()
+        {
+            return tntMass > 0 ? tntMass : blastPower;
         }
 
     }

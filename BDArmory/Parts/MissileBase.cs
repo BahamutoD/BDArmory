@@ -226,6 +226,16 @@ namespace BDArmory.Parts
 
         protected abstract void PartDie(Part p);
 
+        protected void DisablingExplosives()
+        {
+            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = false);
+        }
+
+        protected void ArmingExplosive()
+        {
+            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = true);
+        }
+
         public abstract void Detonate();
 
         public abstract Vector3 GetForwardTransform();
