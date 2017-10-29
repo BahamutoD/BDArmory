@@ -269,72 +269,18 @@ namespace BDArmory.FX
                     }
                     if (!eventToExecute.IsNegativePressure)
                     {
-                        //rb.AddForceAtPosition(
-                        //    (part.transform.position - Position) * force,
-                        //    eventToExecute.HitPoint, ForceMode.Impulse);
-
-
-                        AddForceAtPosition(rb,(part.transform.position - Position) * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD, eventToExecute.HitPoint, ForceMode.Acceleration);
-
-                        AddDamage_Explosive(part, blastInfo.Pressure, BDArmorySettings.DMG_MULTIPLIER, Caliber, IsMissile);
+                        AddForceAtPosition(rb, (part.transform.position - Position) * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD, eventToExecute.HitPoint, ForceMode.Acceleration);
+                        part.AddDamage_Explosive(blastInfo.Pressure, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
 
                         // 2. Add Reverse Negative Event
                         ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true });
                     }
                     else
                     {
-                        //rb.AddForceAtPosition(
-                        //    (Position - part.transform.position) * force * 0.125f,
-                        //    part.transform.position, ForceMode.Impulse);
-                        AddForceAtPosition(rb,(Position - part.transform.position) * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD * 0.125f, part.transform.position, ForceMode.Acceleration);
-
+                        AddForceAtPosition(rb, (Position - part.transform.position) * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD * 0.525f, part.transform.position, ForceMode.Acceleration);
                     }
                 }
             }
-        }
-
-        public static void AddDamage_Explosive( Part p,
-            float pressure,
-            float DMG_MULT,
-            float caliber,
-            bool isMissile)
-        {
-             
-            //////////////////////////////////////////////////////////
-            // Explosive Hitpoints
-            //////////////////////////////////////////////////////////
-            float damage = (DMG_MULT / 100) *
-                           pressure;
-
-            //////////////////////////////////////////////////////////
-            // Armor Reduction factors
-            //////////////////////////////////////////////////////////
-            if (p.HasArmor())
-            {
-                float armorReduction = 0;
-                damage = damage - ((damage * p.GetArmorPercentage()) / 10);
-
-                if (!isMissile)
-                {
-                    if (caliber < 50){
-                        damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                    }
-                    armorReduction = damage / 2;
-                }
-                else
-                {
-                    armorReduction = damage / 8;
-                }
-                p.ReduceArmor(armorReduction);
-
-            }
-
-            //////////////////////////////////////////////////////////
-            // Do The Hitpoints
-            //////////////////////////////////////////////////////////
-
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + Math.Round((double)damage, 2));
         }
 
         public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0)
