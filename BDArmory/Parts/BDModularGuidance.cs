@@ -400,16 +400,6 @@ namespace BDArmory.Parts
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
         }
 
-        private void DisablingExplosives()
-        {
-            vessel.FindPartModulesImplementing<BDExplosivePart>().Where( exp => exp != null && exp ).Select(exp => exp.Armed = false);
-        }
-
-        private void ArmingExplosive()
-        {
-            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = true);
-        }
-
         private void UpdateTargetingMode(TargetingModes newTargetingMode)
         {
             if (newTargetingMode == TargetingModes.Radar)

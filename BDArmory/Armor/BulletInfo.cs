@@ -12,6 +12,7 @@ namespace BDArmory.Armor
         public float bulletMass { get; private set; }
         public float bulletVelocity { get; private set; }
         public bool explosive { get; private set; }
+        public float tntMass { get; private set; }
         public float blastPower { get; private set; }
         public float blastHeat { get; private set; }
         public float blastRadius { get; private set; }
@@ -22,7 +23,7 @@ namespace BDArmory.Armor
         public static BulletInfos bullets;
 
         public BulletInfo(string name, float caliber, float bulletVelocity, float bulletMass,
-                          bool explosive, float blastPower, float blastHeat, float blastRadius,
+                          bool explosive,float tntMass, float blastPower, float blastHeat, float blastRadius,
                           float apBulletDmg, string bulletDragTypeName, float bulletDragArea)
                      
         {
@@ -31,6 +32,7 @@ namespace BDArmory.Armor
             this.bulletVelocity = bulletVelocity;
             this.bulletMass = bulletMass;
             this.explosive = explosive;
+            this.tntMass = tntMass;
             this.blastPower = blastPower;
             this.blastHeat = blastHeat;
             this.blastRadius = blastRadius;
@@ -55,6 +57,7 @@ namespace BDArmory.Armor
                         float.Parse(node.GetValue("bulletVelocity")),
                         float.Parse(node.GetValue("bulletMass")),
                         Convert.ToBoolean(node.GetValue("explosive")),
+                        float.Parse(node.GetValue("tntMass")),
                         float.Parse(node.GetValue("blastPower")),
                         float.Parse(node.GetValue("blastHeat")),
                         float.Parse(node.GetValue("blastRadius")),

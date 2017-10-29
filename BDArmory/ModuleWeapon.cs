@@ -1129,6 +1129,7 @@ namespace BDArmory
                                 pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;                                
                                 pBullet.explModelPath = explModelPath;
                                 pBullet.explSoundPath = explSoundPath;
+                                pBullet.tntMass = bulletInfo.tntMass;
                                 pBullet.blastPower = bulletInfo.blastPower;
                                 pBullet.blastHeat = bulletInfo.blastHeat;
                                 pBullet.radius = bulletInfo.blastRadius;

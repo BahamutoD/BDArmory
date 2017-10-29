@@ -107,6 +107,14 @@ namespace BDArmory.Core.Module
 
             if (part != null && _firstSetup) SetupPrefab();
 
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                UI_FloatRange armorField = (UI_FloatRange)Fields["Armor"].uiControlFlight;
+                //Once started the max value of the field should be the initial one
+                armorField.maxValue = Armor;
+                this.part.RefreshAssociatedWindows();
+            }
+
             //damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);          
         }        
 
@@ -124,33 +132,7 @@ namespace BDArmory.Core.Module
                 SetupPrefab();
              }
            // damageRenderer?.Update(GetDamageColor());         
-        }
-
-        //public float GetPartExternalScaleModifier(Part p)
-        //{
-        //    double defaultScale = 1.0f;
-        //    double currentScale = 1.0f;
-
-        //    if (p.Modules.Contains("TweakScale"))
-        //    {
-        //        PartModule pM = part.Modules["TweakScale"];
-        //        if (pM.Fields.GetValue("currentScale") != null)
-        //        {
-        //            try
-        //            {
-        //                defaultScale = pM.Fields.GetValue<float>("defaultScale");
-        //                currentScale = pM.Fields.GetValue<float>("currentScale");
-        //            }
-        //            catch
-        //            {
-        //                // ignored
-        //            }
-        //            return (float)(currentScale / defaultScale);
-        //        }
-        //    }
-        //    return 1.0f;
-        //}
-        
+        }        
         #region Hitpoints Functions
 
         private float CalculateMaxDamage()
@@ -159,7 +141,7 @@ namespace BDArmory.Core.Module
 
             if (!part.IsMissile())
             {
-                maxDamage = maxHitpointFactor * Mathf.Clamp(part.mass, 0.001f, 50f) *
+                maxDamage = maxHitpointFactor * Mathf.Clamp(part.mass, 0.01f, 50f) *
                             Mathf.Clamp(part.crashTolerance, 1, 25);
             }
             else
@@ -174,7 +156,7 @@ namespace BDArmory.Core.Module
 
         public void DestroyPart()
         {
-            part.temperature = part.maxTemp * 2;
+            part.explode();
         }
 
         public float GetMaxArmor()

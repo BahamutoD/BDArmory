@@ -256,7 +256,7 @@ namespace BDArmory.Parts
 
         void Detonate(Vector3 pos)
         {
-            ExplosionFx.CreateExplosion(pos, blastRadius, blastForce, blastHeat,
+            ExplosionFx.CreateExplosion(pos, blastForce,
                 subExplModelPath, subExplSoundPath,true);
             Destroy(gameObject); //destroy bullet on collision
         }

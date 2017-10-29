@@ -18,53 +18,7 @@ namespace BDArmory.Core.Extension
             Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
 
         }
-        public static void AddDamage_Explosive(this Part p,
-                                               float heat,
-                                               float EXP_MOD,
-                                               float DMG_MULT,
-                                               float distanceFactor,
-                                               float caliber,
-                                               bool isMissile)
-        {
-            double armorMass_ = p.GetArmorMass();
-            float armorPCT_ = p.GetArmorPercentage();
-            float armorReduction = 0;
-
-            //////////////////////////////////////////////////////////
-            // Explosive Hitpoints
-            //////////////////////////////////////////////////////////
-            float damage = (DMG_MULT / 100) *
-                            EXP_MOD * heat *
-                            (distanceFactor);
-
-            damage = damage - ((damage * armorPCT_) / 10);
-
-            //////////////////////////////////////////////////////////
-            // Armor Reduction factors
-            //////////////////////////////////////////////////////////
-            if (p.HasArmor())
-            {
-                if (!isMissile)
-                {
-                    if (caliber < 50) damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                    armorReduction = damage / 2;                                      
-                }
-                else
-                {
-                    armorReduction = damage / 8;                    
-                }
-                
-            }
-
-            if (armorReduction != 0) p.ReduceArmor(armorReduction);
-
-            //////////////////////////////////////////////////////////
-            // Do The Hitpoints
-            //////////////////////////////////////////////////////////
-            damage = (float)Math.Round((double)damage, 2);
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + damage);
-        }
+      
         public static void AddDamage_Ballistic(this Part p,
                                                float mass,
                                                float caliber,
@@ -74,8 +28,7 @@ namespace BDArmory.Core.Extension
                                                float bulletDmgMult,
                                                float impactVelocity)
         {
-            double armorMass_ = p.GetArmorMass();
-            double armorPCT_ = p.GetArmorPercentage();
+            
 
             //////////////////////////////////////////////////////////
             // Basic Kinetic Formula
@@ -87,6 +40,15 @@ namespace BDArmory.Core.Extension
                             * DMG_MULT * 0.01d * bulletDmgMult
                             * 1e-4f);
 
+            //penetration multipliers   
+            damage *= multiplier;
+
+            //Caliber Adjustments for Gameplay balance
+            if (caliber <= 30f) 
+            {
+               damage *= 6f;
+            }
+
             //As armor is decreased level of damage should increase
             // Ideally this would be logarithmic but my math is lacking right now... 
 
@@ -95,36 +57,23 @@ namespace BDArmory.Core.Extension
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
-            //Armor limits Damage
-            damage = damage - ((damage * armorPCT_) / 10);
-
-            //penetration multipliers
-            int random = UnityEngine.Random.Range(1, 3);
-
-            damage *= multiplier;
-
-            //Caliber Adjustments for Gameplay balance
-            if (caliber <= 30f) 
+            if (p.HasArmor())
             {
-               damage *= 6f;
+                double armorMass_ = p.GetArmorMass();
+                double armorPCT_ = p.GetArmorPercentage();
+                //Armor limits Damage
+                damage = damage - ((damage * armorPCT_) / 10);
+                //penalty for low caliber rounds,not if armor is very low
+                if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.25f;
             }
-            //else if(multiplier < 1 || penetrationfactor < 1)
-            //{
-            //    damage *= 16f;
-            //}         
-            
-            //penalty for low caliber rounds,not if armor is very low
-            
-            if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.25f;
             
 
             //////////////////////////////////////////////////////////
             // Do The Hitpoints
             //////////////////////////////////////////////////////////
-            damage = (float)Math.Round((double)damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + damage);
+            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round((double)damage, 2));
         }
 
 
@@ -146,7 +95,7 @@ namespace BDArmory.Core.Extension
 
         public static bool HasArmor(this Part p)
         {
-            return p.GetArmorMass() > 0d;
+            return p.GetArmorMass() > 15f;
         }
 
         public static float Damage(this Part p)

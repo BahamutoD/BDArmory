@@ -5,6 +5,10 @@ using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
 using System;
+using BDArmory.Core;
+using BDArmory.Core.Module;
+using BDArmory.Core.Services;
+using BDArmory.Core.Utils;
 
 namespace BDArmory.FX
 {
@@ -21,7 +25,6 @@ namespace BDArmory.FX
         public bool IsMissile { get; set; }
         public float Power { get; set; }
         public Vector3 Position { get; set; }
-        public float TimeDetonation { get; set; }
         public float TimeIndex => Time.time - StartTime;
 
         public Queue<BlastHitEvent> ExplosionEvents = new Queue<BlastHitEvent>();
@@ -31,8 +34,6 @@ namespace BDArmory.FX
         public static List<DestructibleBuilding> IgnoreBuildings = new List<DestructibleBuilding>();
 
         internal static readonly float ExplosionVelocity = 343f;
-
-        public float Heat { get; set; }
 
         private bool _ready = false;
 
@@ -60,7 +61,7 @@ namespace BDArmory.FX
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log(
-                    "[BDArmory]:Explosion started BlastRadius: {" + Range+ "} StartTime: {"+ StartTime + "}, Duration: {" + MaxTime + "}");
+                    "[BDArmory]:Explosion started tntMass: {" + Power + "}  BlastRadius: {" + Range+ "} StartTime: {"+ StartTime + "}, Duration: {" + MaxTime + "}");
             }
         }
 
@@ -245,15 +246,18 @@ namespace BDArmory.FX
 
                     if (rb == null || !rb) return;
 
-                    var distanceFactor = Mathf.Clamp01((Range - realDistance) / Range);
+                    //var force = Power * distanceFactor * BDArmorySettings.EXP_IMP_MOD;
 
-                    var force = Power * distanceFactor * BDArmorySettings.EXP_IMP_MOD;
+                    BlastInfo blastInfo =
+                        BlastPhysicsUtils.CalculatePartAcceleration(BDArmor.GetPartArea(partHit.partInfo) * 0.5f,
+                            partHit.vessel.totalMass * 1000f, Power, realDistance);
 
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
                         Debug.Log(
                             "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
-                            "Distance Factor: {" + distanceFactor + "}," +
+                            " Acceleration: {" + blastInfo.Acceleration + "}," +
+                            " Pressure: {" + blastInfo.Pressure + "}," +
                             " TimeIndex: {" + TimeIndex + "}," +
                             " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
                             " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
@@ -265,12 +269,10 @@ namespace BDArmory.FX
                         //    (part.transform.position - Position) * force,
                         //    eventToExecute.HitPoint, ForceMode.Impulse);
 
-                        AddForceAtPosition(rb,(part.transform.position - Position) * force, eventToExecute.HitPoint, ForceMode.Impulse);
 
-                        if (Heat <= 0) Heat = Power;
+                        AddForceAtPosition(rb,(part.transform.position - Position) * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD, eventToExecute.HitPoint, ForceMode.Acceleration);
 
-                        part.AddDamage_Explosive(Heat, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD,
-                                                 distanceFactor, Caliber, IsMissile);
+                        AddDamage_Explosive(part, blastInfo.Pressure, BDArmorySettings.DMG_MULTIPLIER, Caliber, IsMissile);
 
                         // 2. Add Reverse Negative Event
                         ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true });
@@ -280,14 +282,58 @@ namespace BDArmory.FX
                         //rb.AddForceAtPosition(
                         //    (Position - part.transform.position) * force * 0.125f,
                         //    part.transform.position, ForceMode.Impulse);
-                        AddForceAtPosition(rb,(Position - part.transform.position) * force * 0.125f, part.transform.position, ForceMode.Impulse);
+                        AddForceAtPosition(rb,(Position - part.transform.position) * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD * 0.125f, part.transform.position, ForceMode.Acceleration);
 
                     }
                 }
             }
         }
-        
-        public static void CreateExplosion(Vector3 position, float radius, float power, float heat, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0)
+
+        public static void AddDamage_Explosive( Part p,
+            float pressure,
+            float DMG_MULT,
+            float caliber,
+            bool isMissile)
+        {
+             
+            //////////////////////////////////////////////////////////
+            // Explosive Hitpoints
+            //////////////////////////////////////////////////////////
+            float damage = (DMG_MULT / 100) *
+                           pressure;
+
+            //////////////////////////////////////////////////////////
+            // Armor Reduction factors
+            //////////////////////////////////////////////////////////
+            if (p.HasArmor())
+            {
+                float armorReduction = 0;
+                damage = damage - ((damage * p.GetArmorPercentage()) / 10);
+
+                if (!isMissile)
+                {
+                    if (caliber < 50){
+                        damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                    }
+                    armorReduction = damage / 2;
+                }
+                else
+                {
+                    armorReduction = damage / 8;
+                }
+                p.ReduceArmor(armorReduction);
+
+            }
+
+            //////////////////////////////////////////////////////////
+            // Do The Hitpoints
+            //////////////////////////////////////////////////////////
+
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + Math.Round((double)damage, 2));
+        }
+
+        public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0)
         {
             var go = GameDatabase.Instance.GetModel(explModelPath);
             var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
@@ -300,14 +346,13 @@ namespace BDArmory.FX
             eFx.AudioSource.minDistance = 200;
             eFx.AudioSource.maxDistance = 5500;
             eFx.AudioSource.spatialBlend = 1;
-            eFx.Range = radius;
+            eFx.Range = BlastPhysicsUtils.CalculateBlastRange(tntMassEquivalent);
             eFx.Position = position;
-            eFx.Power = power;
+            eFx.Power = tntMassEquivalent;
             eFx.IsMissile = isMissile;
             eFx.Caliber = caliber;
-            eFx.Heat = heat;
 
-            if (power <= 5)
+            if (tntMassEquivalent <= 5)
             {
                 eFx.AudioSource.minDistance = 4f;
                 eFx.AudioSource.maxDistance = 3000;
