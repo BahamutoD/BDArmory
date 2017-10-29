@@ -4,6 +4,7 @@ using BDArmory.Parts;
 using BDArmory.Radar;
 using UniLinq;
 using UnityEngine;
+using BDArmory.UI;
 
 namespace BDArmory
 {
@@ -450,7 +451,8 @@ namespace BDArmory
                     while (t.MoveNext())
                     {
                         if (t.Current == null) continue;
-                        Debug.Log("[BDArmory] : MissileTurret moving transform: " + t.Current.gameObject.name);
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.Log("[BDArmory] : MissileTurret moving transform: " + t.Current.gameObject.name);
                         t.Current.parent = mTf;
                     }
                     t.Dispose();

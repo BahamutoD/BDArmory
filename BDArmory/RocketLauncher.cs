@@ -776,10 +776,12 @@ namespace BDArmory
             output.Append(Environment.NewLine);
             output.Append($"Rocket Type: {rocketType}");
             output.Append(Environment.NewLine);
-            output.Append($"Max Range: {maxTargetingRange} meters");
+            output.Append($"Max Range: {maxTargetingRange} m");
             output.Append(Environment.NewLine);
 
-            output.Append($"Blast radius/force/heat: {blastRadius}/{blastForce}/{blastHeat}");
+            output.Append($"Blast radius/power/heat:");
+            output.Append(Environment.NewLine);
+            output.Append($"{blastRadius} / {blastForce} / {blastHeat}");
             output.Append(Environment.NewLine);
 
             return output.ToString();

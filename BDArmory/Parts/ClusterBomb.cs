@@ -148,7 +148,7 @@ namespace BDArmory.Parts
             part.explosionPotential = 0;
             missileLauncher.HasFired = false;
 
-            part.SetDamage(part.maxTemp + 10);
+            part.SetDamage(part.maxTemp*2);
         }
 
 
@@ -200,7 +200,7 @@ namespace BDArmory.Parts
 
                 //floatingOrigin fix
                 if (sourceVessel != null &&
-                    Vector3.Distance(transform.position - sourceVessel.transform.position, relativePos) > 800)
+                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
                 {
                     transform.position = sourceVessel.transform.position + relativePos +
                                          (rb.velocity*Time.fixedDeltaTime);
@@ -234,7 +234,7 @@ namespace BDArmory.Parts
                         Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
                         if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
                         {
-                            hitPart.SetDamage(hitPart.maxTemp + 100);
+                            hitPart.SetDamage(hitPart.maxTemp*2);
                         }
                     }
                     if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
@@ -284,7 +284,7 @@ namespace BDArmory.Parts
             {
                 //floatingOrigin fix
                 if (sourceVessel != null &&
-                    Vector3.Distance(transform.position - sourceVessel.transform.position, relativePos) > 800)
+                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
                 {
                     transform.position = sourceVessel.transform.position + relativePos +
                                          (rb.velocity*Time.fixedDeltaTime);

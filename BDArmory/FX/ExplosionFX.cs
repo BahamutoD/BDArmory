@@ -218,12 +218,12 @@ namespace BDArmory.FX
 		    while (v.MoveNext())
 		    {
 		        if (v.Current == null) continue;
-                if (!v.Current.loaded || v.Current.packed || (v.Current.CoM - position).magnitude >= maxDistance * 4) continue;
+                if (!v.Current.loaded || v.Current.packed || (v.Current.CoM - position).sqrMagnitude >= (maxDistance*maxDistance) * 4) continue;
 		        List<Part>.Enumerator p = v.Current.parts.GetEnumerator();
 		        while (p.MoveNext())
 		        {
 		            if (p.Current == null) continue;
-		            if ((p.Current.transform.position - position).magnitude >= maxDistance) continue;
+		            if ((p.Current.transform.position - position).sqrMagnitude >= maxDistance*maxDistance) continue;
 		            DoExplosionRay(new Ray(position, p.Current.transform.TransformPoint(p.Current.CoMOffset) - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings, sourceVessel);
 		        }
                 p.Dispose();
@@ -234,7 +234,7 @@ namespace BDArmory.FX
 			while(bldg.MoveNext())
 			{
 				if(bldg.Current == null) continue;
-				if((bldg.Current.transform.position - position).magnitude < maxDistance * 1000)
+				if((bldg.Current.transform.position - position).sqrMagnitude < maxDistance*maxDistance * 1000)
 				{
 					DoExplosionRay(new Ray(position, bldg.Current.transform.position - position), power, heat, maxDistance, ref ignoreParts, ref ignoreBuildings);
 				}

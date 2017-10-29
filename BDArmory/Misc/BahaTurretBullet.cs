@@ -4,6 +4,7 @@ using BDArmory.FX;
 using BDArmory.UI;
 using UnityEngine;
 
+/*
 namespace BDArmory.Misc
 {
 	/// <summary>
@@ -319,3 +320,4 @@ namespace BDArmory.Misc
 	}
 }
 
+*/

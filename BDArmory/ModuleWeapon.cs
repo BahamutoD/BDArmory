@@ -906,6 +906,7 @@ namespace BDArmory
             {
                 DrawAlignmentIndicator();
             }
+
         }
 
         #endregion
@@ -1682,13 +1683,13 @@ namespace BDArmory
                         simPrevPos = simCurrPos;
 
                         if (legacyTargetVessel != null && legacyTargetVessel.loaded && !legacyTargetVessel.Landed &&
-                            Vector3.Distance(simStartPos, simCurrPos) > targetLeadDistance)
+                            (simStartPos - simCurrPos).sqrMagnitude > targetLeadDistance*targetLeadDistance)
                         {
                             bulletPrediction = simStartPos + (simCurrPos - simStartPos).normalized * targetLeadDistance;
                             simulating = false;
                         }
 
-                        if ((simStartPos - simCurrPos).magnitude > maxTargetingRange)
+                        if ((simStartPos - simCurrPos).sqrMagnitude > maxTargetingRange*maxTargetingRange)
                         {
                             bulletPrediction = simStartPos + ((simCurrPos - simStartPos).normalized * maxTargetingRange);
                             simulating = false;
@@ -1873,7 +1874,7 @@ namespace BDArmory
                 //legacy or visual range guard targeting
                 if (aiControlled && weaponManager && legacyTargetVessel &&
                     (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
-                     (legacyTargetVessel.transform.position - transform.position).magnitude < weaponManager.guardRange))
+                     (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
                     targetVelocity = legacyTargetVessel.Velocity();
@@ -2113,20 +2114,41 @@ namespace BDArmory
             output.Append(Environment.NewLine);
             output.Append($"Weapon Type: {weaponType}");
             output.Append(Environment.NewLine);
-            output.Append($"Rounds Per Minute: {roundsPerMinute}");
-            output.Append(Environment.NewLine);
-            output.Append($"Ammunition: {ammoName}");
-            output.Append(Environment.NewLine);
-            output.Append($"Bullet type: {bulletType}");
-            output.Append(Environment.NewLine);
-            output.Append($"Max Range: {maxEffectiveDistance} meters");
-            output.Append(Environment.NewLine);
-            if (weaponType == "cannon")
+
+            if (weaponType == "laser")
             {
-                output.Append($"Shell power/heat/radius: {cannonShellPower}/{cannonShellHeat}/{cannonShellRadius}");
+                output.Append($"Laser damage: {laserDamage}");
                 output.Append(Environment.NewLine);
-                output.Append($"Air detonation: {airDetonation}");
+            }
+            else
+            {
+                output.Append($"Rounds Per Minute: {roundsPerMinute}");
                 output.Append(Environment.NewLine);
+                output.Append($"Ammunition: {ammoName}");
+                output.Append(Environment.NewLine);
+                output.Append($"Bullet type: {bulletType}");
+                output.Append(Environment.NewLine);
+                output.Append($"Muzzle velocity: {bulletVelocity} m/s");
+                output.Append(Environment.NewLine);
+                output.Append($"Max Range: {maxEffectiveDistance} m");
+                output.Append(Environment.NewLine);
+                if (weaponType == "cannon")
+                {
+                    output.Append($"Shell radius/power/heat:");
+                    output.Append(Environment.NewLine);
+                    output.Append($"{cannonShellRadius} / {cannonShellPower} / {cannonShellHeat}");
+                    output.Append(Environment.NewLine);
+                    output.Append(Environment.NewLine);
+                    output.Append($"Air detonation: {airDetonation}");
+                    output.Append(Environment.NewLine);
+                    if (airDetonation)
+                    {
+                        output.Append($"- auto timing: {airDetonationTiming}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"- max range: {maxAirDetonationRange}");
+                        output.Append(Environment.NewLine);
+                    }
+                }
             }
 
             return output.ToString();
