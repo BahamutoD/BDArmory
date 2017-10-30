@@ -141,13 +141,19 @@ namespace BDArmory.Core.Module
 
             if (!part.IsMissile())
             {
-                maxDamage = maxHitpointFactor * Mathf.Clamp(part.mass, 0.01f, 50f) *
+                maxDamage = maxHitpointFactor *
+                            Mathf.Clamp(part.mass, 0.01f, 50f) *
                             Mathf.Clamp(part.crashTolerance, 1, 25);
+            }
+            else if (part.IsAero())
+            {
+                maxDamage = maxHitpointFactor *
+                            Mathf.Clamp(part.crashTolerance, 0.01f, 25f);
             }
             else
             {
                 maxDamage = 5;
-                Armor = 5;
+                Armor = 2;
             }
             
             Hitpoints = maxDamage;

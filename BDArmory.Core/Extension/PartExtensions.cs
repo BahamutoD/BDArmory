@@ -205,5 +205,10 @@ namespace BDArmory.Core.Extension
                    part.Modules.Contains("BDModularGuidance");
         }
 
+        public static bool IsAero(this Part part)
+        {
+            return part.Modules.Contains("ModuleLiftingSurface") || part.Modules.Contains("ModuleControlSurface");
+        }
+
     }
 }
