@@ -27,8 +27,9 @@
 
 * FIXES / ENHANCEMENTS:
 
-  * Localization updates (thanks @ACEA)
+  * Localization updates, including chinese localization (thanks @ACEA)
   * Fixed indestructible Kerbals - weapons/explosions have effect on Kerbals again! (thanks @Designer225)
+  * Fixed AIPilot problem with drag estimations (thanks @RichardDastardly)
   * Fix missile infinite fuel
   * Fix rwr window invisible in fresh installs
   * Display ranges of RWR and radar display now linked, selectable display range of radar display up to configured PRE physics max range!
