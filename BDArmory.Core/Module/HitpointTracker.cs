@@ -24,7 +24,7 @@ namespace BDArmory.Core.Module
         #endregion
 
         //TODO: Add setting
-        private readonly float maxHitpointFactor = 100f;
+        private readonly float maxHitpointFactor = 125f;
 
         private Part _prefabPart;
         private bool _setupRun;
@@ -105,7 +105,7 @@ namespace BDArmory.Core.Module
         {
             isEnabled = true;
 
-            if (part != null && _firstSetup) SetupPrefab();
+            if (part != null) SetupPrefab();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -142,13 +142,8 @@ namespace BDArmory.Core.Module
             if (!part.IsMissile())
             {
                 maxDamage = maxHitpointFactor *
-                            Mathf.Clamp(part.mass, 0.01f, 50f) *
-                            Mathf.Clamp(part.crashTolerance, 1, 25);
-            }
-            else if (part.IsAero())
-            {
-                maxDamage = maxHitpointFactor *
-                            Mathf.Clamp(part.crashTolerance, 0.01f, 25f);
+                            Mathf.Clamp(part.mass, 0.01f, 40f) *
+                            Mathf.Clamp(part.crashTolerance, 1, 20);
             }
             else
             {
