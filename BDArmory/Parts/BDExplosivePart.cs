@@ -90,14 +90,7 @@ namespace BDArmory.Parts
 
 	    private void Detonate()
 	    {
-	        if (part != null)
-	        {
-	            part.Destroy();
-
-	        }
-	        Vector3 position = part.vessel.CoM;
-	     
-            ExplosionFx.CreateExplosion(position, tntMass,
+            ExplosionFx.CreateExplosion(part.transform.position, tntMass,
 	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true);
 	    }
     }
