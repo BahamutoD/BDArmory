@@ -540,11 +540,7 @@ namespace BDArmory.Parts
 				deployedDrag = simpleDrag;	
 			}
 
-		    if (this.DetonationDistance == -1)
-		    {
-		          SetInitialDetonationDistance();
-		    }
-		  
+		    SetInitialDetonationDistance();
 
 		}
 
@@ -556,17 +552,7 @@ namespace BDArmory.Parts
             blastPower = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
 
-        private void SetInitialDetonationDistance()
-        {
-            if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
-            {
-                DetonationDistance = blastRadius;
-            }
-            else
-            {
-                DetonationDistance = blastPower;
-            }
-        }
+     
 
         void OnCollisionEnter(Collision col)
 		{
@@ -628,7 +614,12 @@ namespace BDArmory.Parts
 			}
 		}
 
-		void OnDestroy()
+        void Update()
+        {
+            CheckDetonationState();
+        }
+
+        void OnDestroy()
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
 		}
@@ -725,8 +716,8 @@ namespace BDArmory.Parts
 		    part.SetReferenceTransform(refObject.transform);
 		    vessel.SetReferenceTransform(part);
 		    vesselReferenceTransform = refObject.transform;
-
-		    MissileState = MissileStates.Drop;
+		    DetonationDistanceState = DetonationDistanceStates.NotSafe;
+            MissileState = MissileStates.Drop;
 		    part.crashTolerance = 9999;
 		    StartCoroutine(MissileRoutine());
 		}
@@ -833,7 +824,7 @@ namespace BDArmory.Parts
 				
 				UpdateThrustForces();
 				UpdateGuidance();
-				RaycastCollisions();
+				//RaycastCollisions();
             
                 //Timed detonation
                 if (isTimed && TimeIndex > detonationTime)
@@ -842,37 +833,6 @@ namespace BDArmory.Parts
                     Detonate();
 				}
 			}
-		}
-
-	    Vector3 previousPos;
-		void RaycastCollisions()
-		{
-			if(weaponClass == WeaponClasses.Bomb) return;
-
-			if(TimeIndex > 1f && vessel.srfSpeed > part.crashTolerance)
-			{
-                Vector3 floatingorigin_current = FloatingOrigin.Offset;
-                bool floatingorigin_hasshifted = false;
-
-                if ((floatingorigin_previous != Vector3.zero) && (floatingorigin_current - floatingorigin_previous).sqrMagnitude > 100)
-                {
-                    floatingorigin_hasshifted = true;
-                }
-                floatingorigin_previous = floatingorigin_current;
-
-				RaycastHit lineHit;
-				if((!floatingorigin_hasshifted) && Physics.Linecast(part.transform.position, previousPos, out lineHit, 557057))
-				{
-					if(lineHit.collider.GetComponentInParent<Part>() != part)
-					{
-						Debug.Log("[BDArmory]:" + part.partInfo.title + " linecast hit on " + (lineHit.collider.attachedRigidbody ? lineHit.collider.attachedRigidbody.gameObject.name : lineHit.collider.gameObject.name));
-                        part.Destroy();
-
-                    }
-				}
-			}
-
-			previousPos = part.transform.position;
 		}
 
         private void CheckMiss()
@@ -1639,7 +1599,7 @@ namespace BDArmory.Parts
 				}
 
 				//proxy detonation
-				if(proxyDetonate && ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(blastRadius*0.5f,2))
+				if(proxyDetonate && ((TargetPosition+(TargetVelocity*Time.fixedDeltaTime))-(transform.position)).sqrMagnitude < Mathf.Pow(GetBlastRadius()*0.5f,2))
 				{
 					part.Destroy();
                 }
@@ -1702,7 +1662,7 @@ namespace BDArmory.Parts
                 }
 
                 //proxy detonation
-                if (proxyDetonate && ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(blastRadius * 0.5f, 2))
+                if (proxyDetonate && ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position)).sqrMagnitude < Mathf.Pow(GetBlastRadius() * 0.5f, 2))
                 {
                     part.Destroy();
                 }
@@ -1798,8 +1758,8 @@ namespace BDArmory.Parts
 		    else
 		    {
 		        Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
-                ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true); 
-		    }
+		        ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true,0, part);
+            }
 		    if (part != null) part.Destroy();
 
             List<BDAGaplessParticleEmitter>.Enumerator e = gaplessEmitters.GetEnumerator();
@@ -2077,7 +2037,7 @@ namespace BDArmory.Parts
 
             output.Append($"Min/Max Range: {minStaticLaunchRange}/{maxStaticLaunchRange} meters");
             output.Append(Environment.NewLine);
-            output.Append($"Blast radius/power/heat: {blastRadius}/{blastPower}/{blastHeat}");
+            output.Append($"Blast radius/tntMass/heat: {blastRadius}/{blastPower}/{blastHeat}");
             output.Append(Environment.NewLine);
             return output.ToString();
 

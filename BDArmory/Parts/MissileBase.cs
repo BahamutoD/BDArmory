@@ -51,7 +51,7 @@ namespace BDArmory.Parts
 
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Detonation distance override"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float DetonationDistance = 1;
+        public float DetonationDistance = -1;
 
        //[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "SLW Offset"), UI_FloatRange(minValue = -1000f, maxValue = 0f, stepIncrement = 100f, affectSymCounterparts = UI_Scene.All)]
        public float SLWOffset = 0;
@@ -112,9 +112,15 @@ namespace BDArmory.Parts
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
+        public enum DetonationDistanceStates {NotSafe, Cruising, CheckingProximity,
+            Detonate
+        }
+
         public enum TargetingModes { None, Radar, Heat, Laser, Gps, AntiRad }
 
         public MissileStates MissileState { get; set; } = MissileStates.Idle;
+
+        public DetonationDistanceStates DetonationDistanceState { get; set; } = DetonationDistanceStates.NotSafe;
 
         public enum GuidanceModes { None, AAMLead, AAMPure, AGM, AGMBallistic, Cruise, STS, Bomb, RCS, BeamRiding, SLW}
 
@@ -662,70 +668,11 @@ namespace BDArmory.Parts
 
         protected void CheckDetonationDistance()
         {
-            //Guard clauses     
-            if (!TargetAcquired) return;
-            //skip check of user set to zero, rely on OnCollisionEnter
-            if (DetonationDistance == 0) return;
-
-            var targetDistancePerFrame = TargetVelocity * Time.fixedDeltaTime;
-            var missileDistancePerFrame = vessel.Velocity() * Time.fixedDeltaTime;
-
-            var futureTargetPosition = (TargetPosition + targetDistancePerFrame);
-            var futureMissilePosition = (vessel.CoM + missileDistancePerFrame);
-
-            var distance = (futureTargetPosition - futureMissilePosition).magnitude;
-
-            float relativeDistancePerFrame = (float) (targetDistancePerFrame -
-                                                      missileDistancePerFrame).magnitude;
-
-            if (Vector3.Distance(vessel.CoM, SourceVessel.CoM) < Math.Min(4 * DetonationDistance, 100)) return;
-
-            if (distance > 50 * DetonationDistance) return;
-
-            float dist = DetonationDistance + Mathf.Clamp01(relativeDistancePerFrame);
-            Ray ray = new Ray(futureMissilePosition, (futureTargetPosition - futureMissilePosition));
-            Ray rayUp = new Ray(futureMissilePosition, Vector3.up);
-            Ray rayDown = new Ray(futureMissilePosition, Vector3.down);
-            Ray rayLeft = new Ray(futureMissilePosition, Vector3.left);
-            Ray rayRight = new Ray(futureMissilePosition, Vector3.right);
-
-            List<RaycastHit> allhits = new List<RaycastHit>();
-
-            allhits.AddRange(Physics.RaycastAll(ray, dist, 557057));
-            allhits.AddRange(Physics.RaycastAll(rayUp, dist, 557057));
-            allhits.AddRange(Physics.RaycastAll(rayDown, dist, 557057));
-            allhits.AddRange(Physics.RaycastAll(rayLeft, dist, 557057));
-            allhits.AddRange(Physics.RaycastAll(rayRight, dist, 557057));
-
-            if (allhits.Count > 0)
+            if (DetonationDistanceState == DetonationDistanceStates.Detonate)
             {
-                using (var hitsEnu = allhits.OrderBy(x => x.distance).GetEnumerator())
-                {
-                    while (hitsEnu.MoveNext())
-                    {
-                        RaycastHit hit = hitsEnu.Current;
-                        Part hitPart = null;
+                Debug.Log("[BDArmory]: Target detected inside sphere - detonating");
 
-                        try
-                        {
-                            hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                        }
-                        catch (NullReferenceException)
-                        {
-                            return;
-                        }
-
-                        //Continue to next hit if null or hit to own part;  
-                        if (hitPart == null ||
-                            !hitPart ||
-                            hitPart?.vessel == this.vessel) continue;
-
-
-                        Debug.Log("[BDArmory]:CheckDetonationDistance - Proximity detonation activated Distance=" +
-                                  hit.distance + "DetonationDistance was " + DetonationDistance);
-                        Detonate();
-                    }
-                }
+                Detonate();
             }
         }
 
@@ -834,6 +781,117 @@ namespace BDArmory.Parts
         public float GetTntMass()
         {
            return vessel.FindPartModulesImplementing<BDExplosivePart>().Max(x => x.tntMass);
+        }
+
+        public void CheckDetonationState()
+        {
+            //Guard clauses     
+            if (!TargetAcquired) return;
+            //skip check of user set to zero, rely on OnCollisionEnter
+            if (DetonationDistance == 0) return;
+
+            var targetDistancePerFrame = TargetVelocity * Time.deltaTime;
+            var missileDistancePerFrame = vessel.Velocity() * Time.deltaTime;
+
+            var futureTargetPosition = (TargetPosition + targetDistancePerFrame);
+            var futureMissilePosition = (vessel.CoM + missileDistancePerFrame);
+             
+            switch (DetonationDistanceState)
+            {
+                case DetonationDistanceStates.NotSafe:
+                    //Lets check if we are at a safe distance from the source vessel
+                    Ray raySourceVessel = new Ray(futureMissilePosition, SourceVessel.CoM + SourceVessel.Velocity()*Time.deltaTime );
+
+                    var hits = Physics.RaycastAll(raySourceVessel, GetBlastRadius() * 2, 557057).AsEnumerable();
+       
+                    using (var hitsEnu = hits.GetEnumerator())
+                    {
+                        while (hitsEnu.MoveNext())
+                        {
+                            RaycastHit hit = hitsEnu.Current;
+
+                            try
+                            {
+                                var hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+
+                                if (hitPart?.vessel == SourceVessel)
+                                {
+                                    //We found a hit to the vessel
+                                    return;
+                                }
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
+                        }
+                    }
+
+                    //We are safe and we can continue with the next state
+                    DetonationDistanceState = DetonationDistanceStates.Cruising;
+                    break;
+                case DetonationDistanceStates.Cruising:
+                  
+                    if (Vector3.Distance(futureMissilePosition, futureTargetPosition) < GetBlastRadius() * 10)
+                    {
+                        //We are now close enough to start checking the detonation distance
+                        DetonationDistanceState = DetonationDistanceStates.CheckingProximity;
+                    }
+                    break;
+                case DetonationDistanceStates.CheckingProximity:
+                    float relativeDistancePerFrame = (float)(targetDistancePerFrame -
+                                                             missileDistancePerFrame).magnitude;
+                    float optimalDistance = DetonationDistance + Mathf.Clamp01(relativeDistancePerFrame);
+
+                    var targetHits = Physics.SphereCastAll(new Ray(vessel.CoM, vessel.CoM + missileDistancePerFrame), optimalDistance,
+                        optimalDistance, 557057).AsEnumerable();
+
+                    using (var hitsEnu = targetHits.GetEnumerator())
+                    {
+                        while (hitsEnu.MoveNext())
+                        {
+                            RaycastHit hit = hitsEnu.Current;
+
+                            try
+                            {
+                                var hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+
+                                if (hitPart?.vessel == vessel) continue;
+
+                                Debug.Log("[BDArmory]: Missile proximity sphere hit - Distance : "+ hit.distance);
+                                //We found a hit a different vessel than ours
+                                DetonationDistanceState =   DetonationDistanceStates.Detonate;
+                                return;
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
+                        }
+                    }
+
+                    break;
+            }
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: DetonationDistanceState = : " + DetonationDistanceState);
+            }
+        }
+
+        protected void SetInitialDetonationDistance()
+        {
+            if (this.DetonationDistance == -1)
+            {
+                if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
+                {
+                    DetonationDistance = GetBlastRadius() * 0.25f;
+                }
+                else
+                {
+                    DetonationDistance = GetBlastRadius() * 0.10f;
+                }
+            }
         }
     }
 }

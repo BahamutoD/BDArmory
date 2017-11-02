@@ -133,6 +133,11 @@ namespace BDArmory.Parts
             }
         }
 
+        void Update()
+        {
+            CheckDetonationState();
+        }
+
         private void CheckNextStage()
         {
             if (ShouldExecuteNextStage())
@@ -310,10 +315,7 @@ namespace BDArmory.Parts
 
             activeRadarRange = ActiveRadarRange;
 
-            if (this.DetonationDistance == -1)
-            {
-                this.DetonationDistance = GetBlastRadius();
-            }
+            SetInitialDetonationDistance();
 
 
             //TODO: BDModularGuidance should be configurable?
@@ -735,6 +737,7 @@ namespace BDArmory.Parts
                 }
                
                 HasFired = true;
+                DetonationDistanceState = DetonationDistanceStates.NotSafe;
             }
         }
 
