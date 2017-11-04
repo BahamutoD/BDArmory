@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Parts;
 using BDArmory.Radar;
 using UniLinq;
 using UnityEngine;
+using BDArmory.UI;
 
 namespace BDArmory
 {
@@ -373,12 +375,25 @@ namespace BDArmory
             Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
             Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
             RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
+            //KerbalEVA hitEVA = null;
+            //if (Physics.Raycast(ray, out hit, maxTargetingRange, 2228224))
+            //{
+            //    targetPosition = hit.point;
+            //    hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+
+            //    if (hitEVA && hitEVA.part.vessel && hitEVA.part.vessel == vessel)
+            //    {
+            //        targetPosition = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
+            //    }
+            //}
+
+            if (Physics.Raycast(ray, out hit, maxTargetingRange, 688129))
             {
                 targetPosition = hit.point;
 
                 //aim through self vessel if occluding mouseray
-                Part p = hit.collider.gameObject.GetComponentInParent<Part>();
+                KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                Part p = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
                 if (p && p.vessel && p.vessel == vessel)
                 {
                     targetPosition = ray.direction*maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
@@ -445,11 +460,12 @@ namespace BDArmory
                     mTf.localPosition = Vector3.zero;
                     mTf.localRotation = Quaternion.identity;
                     mTf.localScale = Vector3.one;
-                    List<Transform>.Enumerator t = tfchildren.ToList().GetEnumerator();
+                    IEnumerator<Transform> t = tfchildren.AsEnumerable().GetEnumerator();
                     while (t.MoveNext())
                     {
                         if (t.Current == null) continue;
-                        Debug.Log("[BDArmory] : MissileTurret moving transform: " + t.Current.gameObject.name);
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.Log("[BDArmory] : MissileTurret moving transform: " + t.Current.gameObject.name);
                         t.Current.parent = mTf;
                     }
                     t.Dispose();
@@ -567,7 +583,7 @@ namespace BDArmory
 
                 Vector3 projPos = Vector3.Project(ml.vessel.transform.position - ray.origin, ray.direction) + ray.origin;
                 Vector3 railVel = part.rb.GetPointVelocity(projPos);
-                //Vector3 projVel = Vector3.Project(ml.vessel.srf_velocity-railVel, ray.direction);
+                //Vector3 projVel = Vector3.Project(ml.vessel.Velocity-railVel, ray.direction);
 
                 ml.vessel.SetPosition(projPos);
                 ml.vessel.SetWorldVelocity(railVel + (forwardSpeed*ray.direction));
