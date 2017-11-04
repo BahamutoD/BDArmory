@@ -1,5 +1,6 @@
 ﻿using System;
 using BDArmory.Core.Module;
+using UnityEngine;
 
 namespace BDArmory.Core.Utils
 {
@@ -10,13 +11,15 @@ namespace BDArmory.Core.Utils
     
             double scaledDistance = CalculateScaledDistance(explosiveMass, range);
 
-            double pressure = CalculateIncidentPressure(scaledDistance);
+            //double pressure = CalculateIncidentPressure(scaledDistance);
+
+            double pressure = CalculateIncidentImpulse(scaledDistance, explosiveMass);
 
             double force = CalculateForce(pressure, partArea);
 
             var acceleration = (force / vesselMass);
 
-            return new BlastInfo() {Acceleration = (float) acceleration, Pressure = (float) pressure};
+            return new BlastInfo() {Acceleration = Math.Max(0,(float) acceleration), Pressure = Math.Max(0,(float) pressure)};
         }
 
         private static double CalculateScaledDistance(float explosiveCharge, float range)
@@ -45,7 +48,35 @@ namespace BDArmory.Core.Utils
             ip = Math.Pow(10, ip);
             return ip;
         }
-
+        private static double CalculateIncidentImpulse(double scaledDistance, float explosiveCharge)
+        {
+            double t = Math.Log(scaledDistance) / Math.Log(10);
+            double  cubeRootOfChargeWeight = Math.Pow(explosiveCharge, 0.3333333);
+            double  ii = 0;
+            if (scaledDistance <= 0.955)
+            { //NATO version
+                double U = 2.06761908721 + 3.0760329666 * t;
+                ii = 2.52455620925 - 0.502992763686 * U +
+                     0.171335645235 * Math.Pow(U, 2) +
+                     0.0450176963051 * Math.Pow(U, 3) -
+                     0.0118964626402 * Math.Pow(U, 4);
+            }
+            else if (scaledDistance > 0.955)
+            { //version from ???
+               var  U = -1.94708846747 + 2.40697745406 * t;
+                ii = 1.67281645863 - 0.384519026965 * U -
+                     0.0260816706301 * Math.Pow(U, 2) +
+                     0.00595798753822 * Math.Pow(U, 3) +
+                     0.014544526107 * Math.Pow(U, 4) -
+                     0.00663289334734 * Math.Pow(U, 5) -
+                     0.00284189327204 * Math.Pow(U, 6) +
+                     0.0013644816227 * Math.Pow(U, 7);
+            }
+           
+            ii = Math.Pow(10, ii);
+            ii = ii * cubeRootOfChargeWeight;
+            return ii;
+        }
         /// <summary>
         /// Calculate newtons from the pressure in kPa and the surface on Square meters
         /// </summary>
@@ -54,7 +85,7 @@ namespace BDArmory.Core.Utils
         /// <returns></returns>
         private static double CalculateForce(double pressure, float surface)
         {
-            return pressure * surface;
+            return pressure * 1000 * surface;
         }
 
 

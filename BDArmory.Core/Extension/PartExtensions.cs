@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using BDArmory.Core.Module;
 using BDArmory.Core.Services;
 using UniLinq;
 using UnityEngine;
@@ -205,5 +206,16 @@ namespace BDArmory.Core.Extension
                    part.Modules.Contains("BDModularGuidance");
         }
 
+        public static float GetPartArea(this Part part)
+        {
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            return 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+        }
+
+        public static float GetPartVolumen(this Part part)
+        {
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            return boundsSize.x * boundsSize.y * boundsSize.z;
+        }
     }
 }

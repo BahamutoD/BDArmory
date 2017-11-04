@@ -82,17 +82,21 @@ namespace BDArmory.Parts
 		public void DetonateIfPossible()
 		{
 			if(!hasDetonated && Armed && part.vessel.speed > 10)
-			{   
-			   Detonate();
-               hasDetonated = true;
+			{
+			    ExplosionFx.CreateExplosion(part.transform.position, tntMass,
+			        "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part);
+                hasDetonated = true;
 			}
 		}
 
 	    private void Detonate()
 	    {
+	        part.Destroy();
             ExplosionFx.CreateExplosion(part.transform.position, tntMass,
-	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true);
-	    }
+	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true,0, part);
+
+	      
+        }
     }
 }
 
