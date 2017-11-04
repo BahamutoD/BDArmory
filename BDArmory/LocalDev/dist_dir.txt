@@ -1,1 +1,1 @@
-C:\cygwin\home\dlane\repo\gamerepo\Distribution
+D:\wip\ksp-mod-dev\BDA-TheDog\BDArmory\bin
