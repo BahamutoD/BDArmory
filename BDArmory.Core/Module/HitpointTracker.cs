@@ -175,7 +175,7 @@ namespace BDArmory.Core.Module
             }
             else
             {
-                maxDamage = 5;
+                hitpoints = 5;
                 Armor = 2;
             }
             return hitpoints;
