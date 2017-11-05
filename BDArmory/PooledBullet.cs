@@ -196,7 +196,7 @@ namespace BDArmory
 
         void Update()
         {
-            float distanceFromStart = Vector3.Distance(transform.position, startPosition);
+            float distanceFromStartSqr = (transform.position - startPosition).sqrMagnitude;
             if (!gameObject.activeInHierarchy)
             {
                 return;

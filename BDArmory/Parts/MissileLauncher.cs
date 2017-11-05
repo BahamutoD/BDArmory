@@ -135,6 +135,8 @@ namespace BDArmory.Parts
         public float terminalGuidanceDistance = 0.0f;
 
         private bool terminalGuidanceActive;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Terminal Guidance: "), UI_Toggle(disabledText = "false", enabledText = "true")]
+        public bool terminalGuidanceShouldActivate = true;
 
         [KSPField]
 		public string explModelPath = "BDArmory/Models/explosion/explosion";
@@ -524,14 +526,23 @@ namespace BDArmory.Parts
 		        Fields["BallisticOverShootFactor"].guiActiveEditor = false;
 		    }
 
-
             if (part.partInfo.title.Contains("Bomb"))
 			{
 				Fields["dropTime"].guiActive = false;
 				Fields["dropTime"].guiActiveEditor = false;
 			}
-			
-			if(deployAnimationName != "")
+
+            if (TargetingModeTerminal != TargetingModes.None)
+            {
+                Fields["terminalGuidanceShouldActivate"].guiName += terminalGuidanceType;
+            }
+            else
+            {
+                Fields["terminalGuidanceShouldActivate"].guiActive = false;
+                Fields["terminalGuidanceShouldActivate"].guiActiveEditor = false;
+            }
+
+            if (deployAnimationName != "")
 			{
 				deployStates = Misc.Misc.SetUpAnimation(deployAnimationName, part);
 			}
@@ -542,7 +553,18 @@ namespace BDArmory.Parts
 
 		    SetInitialDetonationDistance();
 
-		}
+		
+
+
+            // fill activeRadarLockTrackCurve with default values if not set by part config:
+                if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
+            {
+                activeRadarLockTrackCurve.Add(0f, 0f);
+                activeRadarLockTrackCurve.Add(activeRadarRange, RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);           // TODO: tune & balance constants!
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: OnStart missile "+shortName+": setting default locktrackcurve with maxrange/minrcs: "+activeRadarLockTrackCurve.maxTime+"/"+ RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
+            }
+        }
 
         /// <summary>
         /// This method will convert the blastPower to a tnt mass equivalent
@@ -556,6 +578,8 @@ namespace BDArmory.Parts
 
         void OnCollisionEnter(Collision col)
 		{
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: Something Collided: " + col.ToString());
             if (HasExploded || !HasFired) return;            
 
             if (TimeIndex > 1 && this.part.vessel.speed > 10)
@@ -622,7 +646,8 @@ namespace BDArmory.Parts
         void OnDestroy()
 		{
 			BDArmorySettings.OnVolumeChange -= UpdateVolume;
-		}
+            GameEvents.onPartDie.Remove(PartDie);
+        }
 
 	    public override float GetBlastRadius()
 	    {
@@ -766,7 +791,8 @@ namespace BDArmory.Parts
 		
 		public override void OnFixedUpdate()
 		{
-            debugString = "";
+            debugString.Length = 0;
+
 			if(HasFired && !HasExploded && part!=null)
 			{
                 CheckDetonationDistance();
@@ -929,7 +955,8 @@ namespace BDArmory.Parts
 			        controlAuthority = 1;
 			    }
 
-				debugString += "\ncontrolAuthority: "+controlAuthority;
+				debugString.Append($"controlAuthority: {controlAuthority}");
+                debugString.Append(Environment.NewLine);
 
 				if(guidanceActive)// && timeIndex - dropTime > 0.5f)
 				{
@@ -1036,9 +1063,9 @@ namespace BDArmory.Parts
         private void UpdateTerminalGuidance()
         {
             // check if guidance mode should be changed for terminal phase
-            float distance = Vector3.Distance(TargetPosition, transform.position);
+            float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-            if ((TargetingModeTerminal != TargetingModes.None) && (distance < terminalGuidanceDistance) && !terminalGuidanceActive)
+            if ((TargetingModeTerminal != TargetingModes.None) && (distanceSqr < terminalGuidanceDistance*terminalGuidanceDistance) && !terminalGuidanceActive && terminalGuidanceShouldActivate)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory][Terminal Guidance]: missile "+this.name+" updating targeting mode: " + terminalGuidanceType);
@@ -1079,7 +1106,8 @@ namespace BDArmory.Parts
                         TargetSignatureData.ResetTSDArray(ref scannedTargets);
                         Ray ray = new Ray(transform.position, TargetPosition - GetForwardTransform());
 
-                        RadarUtils.UpdateRadarLock(ray, maxOffBoresight, activeRadarMinThresh, ref scannedTargets, 0.4f, true, RadarWarningReceiver.RWRThreatTypes.MissileLock, true);
+                        //RadarUtils.UpdateRadarLock(ray, maxOffBoresight, activeRadarMinThresh, ref scannedTargets, 0.4f, true, RadarWarningReceiver.RWRThreatTypes.MissileLock, true);
+                        RadarUtils.RadarUpdateMissileLock(ray, maxOffBoresight, ref scannedTargets, 0.4f, this);
                         float sqrThresh = Mathf.Pow(terminalGuidanceDistance * 1.5f, 2);
 
                         //float smallestAngle = maxOffBoresight;
@@ -1090,10 +1118,7 @@ namespace BDArmory.Parts
                             if (scannedTargets[i].exists && (scannedTargets[i].predictedPosition - TargetPosition).sqrMagnitude < sqrThresh)
                             {
                                 //re-check engagement envelope, only lock appropriate targets
-                                if ((scannedTargets[i].targetInfo.isMissile && engageMissile) ||
-                                    (scannedTargets[i].targetInfo.isFlying && engageAir) ||
-                                    ((scannedTargets[i].targetInfo.isLanded || scannedTargets[i].targetInfo.isSplashed) && engageGround) ||
-                                    (scannedTargets[i].targetInfo.isUnderwater && engageSLW))
+                                if (CheckTargetEngagementEnvelope(scannedTargets[i].targetInfo))
                                 {
                                      lockedTarget = scannedTargets[i];
                                      ActiveRadar = true;
@@ -1105,12 +1130,16 @@ namespace BDArmory.Parts
                         {
                             radarTarget = lockedTarget;
                             TargetAcquired = true;
-                            TargetPosition = radarTarget.predictedPosition;
+                            TargetPosition = radarTarget.predictedPositionWithChaffFactor;
                             TargetVelocity = radarTarget.velocity;
                             TargetAcceleration = radarTarget.acceleration;
                             targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
 
-                            RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+                            if (weaponClass == WeaponClasses.SLW)
+                                RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.Torpedo, 2f);
+                            else
+                                RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
+
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                 Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0") + " - target: "+radarTarget.vessel.name);
                         }
@@ -1521,30 +1550,33 @@ namespace BDArmory.Parts
 		void CruiseGuidance()
 		{
 			Vector3 cruiseTarget = Vector3.zero;
-			float distance = Vector3.Distance(TargetPosition, transform.position);
+			float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-			if(terminalManeuvering && distance < 4500)
+			if(terminalManeuvering && distanceSqr < 4500*4500)
 			{
 				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, cruiseAltitude);
-				debugString += "\nTerminal Maneuvers";
-			}
+                debugString.Append($"Terminal Maneuvers");
+                debugString.Append(Environment.NewLine);
+            }
 			else
 			{
-				float agmThreshDist = 2500;
-				if(distance <agmThreshDist)
+                float agmThreshDistSqr = 2500 * 2500;
+				if(distanceSqr < agmThreshDistSqr)
 				{
 					if(!MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, true, out cruiseTarget))
 					{
 						cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, agmDescentRatio);
 					}
 				
-					debugString += "\nDescending On Target";
-				}
+                    debugString.Append($"Descending On Target");
+                    debugString.Append(Environment.NewLine);
+                }
 				else
 				{
 					cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, cruiseAltitude);
-					debugString += "\nCruising";
-				}
+                    debugString.Append($"Cruising");
+                    debugString.Append(Environment.NewLine);
+                }
 			}
 					
 			//float clampedSpeed = Mathf.Clamp((float)vessel.srfSpeed, 1, 1000);
@@ -1581,7 +1613,8 @@ namespace BDArmory.Parts
 			DoAero(cruiseTarget);
 			CheckMiss();
 
-			debugString += "\nRadarAlt: " + MissileGuidance.GetRadarAltitude(vessel);
+			debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
+            debugString.Append(Environment.NewLine);
 		}
 
 		void AAMGuidance()
@@ -1867,7 +1900,7 @@ namespace BDArmory.Parts
 
 		void OnGUI()
 		{
-		    if (!HighLogic.LoadedSceneIsEditor)
+		    if (HighLogic.LoadedSceneIsFlight)
 		    {
                 try
                 {
@@ -2004,41 +2037,170 @@ namespace BDArmory.Parts
         }
 
 
+        private string GetBrevityCode()
+        {
+            //torpedo: determine subtype
+            if (missileType.ToLower() == "torpedo")
+            {
+                if ((TargetingMode == TargetingModes.Radar) && (activeRadarRange > 0))
+                    return "Active Sonar";
+
+                if ((TargetingMode == TargetingModes.Radar) && (activeRadarRange <= 0))
+                    return "Passive Sonar";
+
+                if ((TargetingMode == TargetingModes.Laser) || (TargetingMode == TargetingModes.Gps))
+                    return "Optical/wireguided";
+
+                if ((TargetingMode == TargetingModes.Heat))
+                    return "Heat guided";
+
+                if ((TargetingMode == TargetingModes.None))
+                    return "Unguided";
+            }
+
+            if (missileType.ToLower() == "bomb")
+            {
+                if ((TargetingMode == TargetingModes.Laser) || (TargetingMode == TargetingModes.Gps))
+                    return "JDAM";
+
+                if ((TargetingMode == TargetingModes.None))
+                    return "Unguided";
+            }
+
+            //else: missiles:
+
+            if (TargetingMode == TargetingModes.Radar)
+            {
+                //radar: determine subtype
+                if (activeRadarRange <= 0)
+                    return "SARH";
+                if (activeRadarRange > 0 && activeRadarRange < maxStaticLaunchRange)
+                    return "Mixed SARH/F&F";
+                if (activeRadarRange >= maxStaticLaunchRange)
+                    return "Fire&Forget";
+            }
+
+            if (TargetingMode == TargetingModes.AntiRad)
+                return "Fire&Forget";
+
+            if (TargetingMode == TargetingModes.Heat)
+                return "Fire&Forget";
+
+            if (TargetingMode == TargetingModes.Laser)
+                return "SALH";
+
+            if (TargetingMode == TargetingModes.Gps)
+            {
+                if (TargetingModeTerminal != TargetingModes.None)
+                    return "GPS/Terminal";
+                else
+                    return "GPS";
+            }
+
+            // default:
+            return "Unguided";
+        }
+
+
         // RMB info in editor
         public override string GetInfo()
         {
+            ParseModes();
+
             StringBuilder output = new StringBuilder();
+            output.Append($"{missileType.ToUpper()} - {GetBrevityCode()}");
             output.Append(Environment.NewLine);
-            output.Append($"Weapon Type: {missileType}");
             output.Append(Environment.NewLine);
-            output.Append($"Guidance Mode: {homingType.ToString().ToUpper()}");
+            output.Append($"Targeting Type: {targetingType.ToString().ToLower()}");
             output.Append(Environment.NewLine);
-            output.Append($"Targetting Mode: {targetingType.ToString().ToUpper()}");
+            output.Append($"Guidance Mode: {homingType.ToString().ToLower()}");
+            output.Append(Environment.NewLine);
+            if (missileRadarCrossSection != RadarUtils.RCS_MISSILES)
+            {
+                output.Append($"Detectable cross section: {missileRadarCrossSection} m^2");
+                output.Append(Environment.NewLine);
+            }
+            output.Append($"Min/Max Range: {minStaticLaunchRange} / {maxStaticLaunchRange} m");
             output.Append(Environment.NewLine);
 
-            if (targetingType.ToLower() == "radar")
+            if (TargetingMode == TargetingModes.Radar)
             {
-                output.Append($"Active Radar Range: {activeRadarRange}");
+                if (activeRadarRange > 0)
+                {
+                    output.Append($"Active Radar Range: {activeRadarRange} m");
+                    output.Append(Environment.NewLine);
+                    if (activeRadarLockTrackCurve.maxTime > 0)
+                        output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                    else
+                        output.Append($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange/1000} km");
+                    output.Append(Environment.NewLine);
+                    output.Append($"- LOAL: {radarLOAL}");
+                    output.Append(Environment.NewLine);
+                }
+                output.Append($"Max Offborsight: {maxOffBoresight}");
+                output.Append(Environment.NewLine);
+                output.Append($"Locked FOV: {lockedSensorFOV}");
                 output.Append(Environment.NewLine);
             }
 
-            if (targetingType.ToLower() == "gps")
+            if (TargetingMode == TargetingModes.Heat)
+            {
+                output.Append($"All Aspect: {allAspect}");
+                output.Append(Environment.NewLine);
+                output.Append($"Min Heat threshold: {heatThreshold}");
+                output.Append(Environment.NewLine);
+                output.Append($"Max Offborsight: {maxOffBoresight}");
+                output.Append(Environment.NewLine);
+                output.Append($"Locked FOV: {lockedSensorFOV}");
+                output.Append(Environment.NewLine);
+            }
+
+            if (TargetingMode == TargetingModes.Gps)
             {
                 output.Append($"Terminal Maneuvering: {terminalManeuvering}");
                 output.Append(Environment.NewLine);
                 if (terminalGuidanceType != "")
                 {
-                    output.Append(
-                        $"Terminal guidance: {terminalGuidanceType}, distance: {terminalGuidanceDistance} meters");
+                    output.Append($"Terminal guidance: {terminalGuidanceType} @ distance: {terminalGuidanceDistance} m");
                     output.Append(Environment.NewLine);
+
+                    if (TargetingModeTerminal == TargetingModes.Radar)
+                    {
+                        output.Append($"Active Radar Range: {activeRadarRange} m");
+                        output.Append(Environment.NewLine);
+                        if (activeRadarLockTrackCurve.maxTime > 0)
+                            output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                        else
+                            output.Append($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange / 1000} km");
+                        output.Append(Environment.NewLine);
+                        output.Append($"- LOAL: {radarLOAL}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Max Offborsight: {maxOffBoresight}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Locked FOV: {lockedSensorFOV}");
+                        output.Append(Environment.NewLine);
+                    }
+
+                    if (TargetingModeTerminal == TargetingModes.Heat)
+                    {
+                        output.Append($"All Aspect: {allAspect}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Min Heat threshold: {heatThreshold}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Max Offborsight: {maxOffBoresight}");
+                        output.Append(Environment.NewLine);
+                        output.Append($"Locked FOV: {lockedSensorFOV}");
+                        output.Append(Environment.NewLine);
+                    }
+
                 }
             }
 
-
-            output.Append($"Min/Max Range: {minStaticLaunchRange}/{maxStaticLaunchRange} meters");
+            output.Append($"Warhead radius/power/heat:");
             output.Append(Environment.NewLine);
             output.Append($"Blast radius/tntMass/heat: {blastRadius}/{blastPower}/{blastHeat}");
             output.Append(Environment.NewLine);
+
             return output.ToString();
 
         }

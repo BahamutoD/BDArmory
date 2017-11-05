@@ -62,10 +62,10 @@ namespace BDArmory.Misc
 
         public static bool CheckMouseIsOnGui()
         {
+
             if (!BDArmorySettings.GAME_UI_ENABLED) return false;
 
             if (!BDInputSettingsFields.WEAP_FIRE_KEY.inputString.Contains("mouse")) return false;
-
 
             Vector3 inverseMousePos = new Vector3(Input.mousePosition.x, Screen.height - Input.mousePosition.y, 0);
             Rect topGui = new Rect(0, 0, Screen.width, 65);
@@ -199,9 +199,9 @@ namespace BDArmory.Misc
             Ray ray = new Ray(origin, target - origin);
             ray.origin += ray.direction*startDistance;
             RaycastHit rayHit;
-            if (Physics.Raycast(ray, out rayHit, dist, 557057))
+            if (Physics.Raycast(ray, out rayHit, dist, 688129))
             {
-                if (Vector3.Distance(target, rayHit.point) < threshold)
+                if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
                 {
                     return true;
                 }
@@ -221,9 +221,10 @@ namespace BDArmory.Misc
             Ray ray = new Ray(origin, target - origin);
             ray.origin += ray.direction*startDistance;
             RaycastHit rayHit;
-            if (Physics.Raycast(ray, out rayHit, dist, 557057))
+
+            if (Physics.Raycast(ray, out rayHit, dist, 688129))
             {
-                if (Vector3.Distance(target, rayHit.point) < threshold)
+                if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
                 {
                     return true;
                 }
