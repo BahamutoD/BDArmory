@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.Net;
 using BDArmory.Core.Module;
 using BDArmory.Core.Services;
 using UniLinq;
@@ -20,10 +21,10 @@ namespace BDArmory.Core.Extension
 
         }
 
-        public static void AddDamage_Explosive(this Part p,
-                                               float pressure,
-                                               float DMG_MULT,
-                                               float EXP_MOD,
+        public static void AddExplosiveDamage(this Part p,
+                                               float explosiveDamage,
+                                               float DMG_MULTIPLIER,
+                                               float EXP_HEAT_MOD,
                                                float caliber,
                                                bool isMissile)
         {
@@ -31,9 +32,9 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Explosive Hitpoints
             //////////////////////////////////////////////////////////
-            float damage = (DMG_MULT / 100) *
-                            EXP_MOD *
-                            pressure;
+            float damage = (DMG_MULTIPLIER / 100) * EXP_HEAT_MOD * explosiveDamage;
+                          
+                           
 
             //////////////////////////////////////////////////////////
             // Armor Reduction factors
@@ -206,16 +207,21 @@ namespace BDArmory.Core.Extension
                    part.Modules.Contains("BDModularGuidance");
         }
 
-        public static float GetPartArea(this Part part)
+        public static float GetArea(this Part part)
         {
             var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
             return 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
         }
 
-        public static float GetPartVolumen(this Part part)
+        public static float GetVolumen(this Part part)
         {
             var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
             return boundsSize.x * boundsSize.y * boundsSize.z;
+        }
+
+        public static float GetDensity (this Part part)
+        {
+            return (part.mass * 1000) / part.GetVolumen();
         }
     }
 }
