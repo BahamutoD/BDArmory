@@ -910,24 +910,22 @@ namespace BDArmory.Parts
                 case DetonationDistanceStates.CheckingProximity:
                     float relativeDistancePerFrame = (float)(targetDistancePerFrame -
                                                              missileDistancePerFrame).magnitude;
-                    float optimalDistance = DetonationDistance + Mathf.Clamp01(relativeDistancePerFrame);
+                    float optimalDistance = DetonationDistance + relativeDistancePerFrame;
 
-                    var targetHits = Physics.SphereCastAll(new Ray(vessel.CoM, vessel.CoM + missileDistancePerFrame), optimalDistance,
-                        optimalDistance, 557057).AsEnumerable();
 
-                    using (var hitsEnu = targetHits.GetEnumerator())
+                    using (var hitsEnu = Physics.OverlapSphere(vessel.CoM, optimalDistance, 557057).AsEnumerable().GetEnumerator())
                     {
                         while (hitsEnu.MoveNext())
                         {
-                            RaycastHit hit = hitsEnu.Current;
+                            if (hitsEnu.Current == null) continue;
 
                             try
                             {
-                                var hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                                Part partHit = hitsEnu.Current.GetComponentInParent<Part>();
+                      
+                                if (partHit?.vessel == vessel) continue;
 
-                                if (hitPart?.vessel == vessel) continue;
-
-                                Debug.Log("[BDArmory]: Missile proximity sphere hit - Distance : "+ hit.distance);
+                                Debug.Log("[BDArmory]: Missile proximity sphere hit ");
                                 //We found a hit a different vessel than ours
                                 DetonationDistanceState =   DetonationDistanceStates.Detonate;
                                 return;
