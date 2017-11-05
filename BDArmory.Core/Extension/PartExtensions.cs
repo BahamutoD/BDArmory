@@ -221,7 +221,7 @@ namespace BDArmory.Core.Extension
             return 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
         }
 
-        public static float GetVolumen(this Part part)
+        public static float GetVolume(this Part part)
         {
             var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
             return boundsSize.x * boundsSize.y * boundsSize.z;
@@ -229,7 +229,7 @@ namespace BDArmory.Core.Extension
 
         public static float GetDensity (this Part part)
         {
-            return (part.mass * 1000) / part.GetVolumen();
+            return (part.mass * 1000) / part.GetVolume();
         }
         public static bool IsAero(this Part part)
         {
