@@ -594,7 +594,7 @@ namespace BDArmory
                     {
                         ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f),
                                                     GetExplosivePower(),
-                                                    explModelPath, explSoundPath, false, caliber);
+                                                    explModelPath, explSoundPath, false, caliber,null,direction: currentVelocity);
                     }
 
                     KillBullet();
