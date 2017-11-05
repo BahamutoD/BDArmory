@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.Net;
+using BDArmory.Core.Module;
 using BDArmory.Core.Services;
 using UniLinq;
 using UnityEngine;
@@ -19,10 +21,10 @@ namespace BDArmory.Core.Extension
 
         }
 
-        public static void AddDamage_Explosive(this Part p,
-                                               float pressure,
-                                               float DMG_MULT,
-                                               float EXP_MOD,
+        public static void AddExplosiveDamage(this Part p,
+                                               float explosiveDamage,
+                                               float DMG_MULTIPLIER,
+                                               float EXP_HEAT_MOD,
                                                float caliber,
                                                bool isMissile)
         {
@@ -30,9 +32,9 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Explosive Hitpoints
             //////////////////////////////////////////////////////////
-            float damage = (DMG_MULT / 100) *
-                            EXP_MOD *
-                            pressure;
+            float damage = (DMG_MULTIPLIER / 100) * EXP_HEAT_MOD * explosiveDamage;
+                          
+                           
 
             //////////////////////////////////////////////////////////
             // Caliber Adjustments
@@ -71,7 +73,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + Math.Round((double)damage, 2));
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round((double)damage, 2));
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -213,6 +215,22 @@ namespace BDArmory.Core.Extension
                    part.Modules.Contains("BDModularGuidance");
         }
 
+        public static float GetArea(this Part part)
+        {
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            return 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+        }
+
+        public static float GetVolumen(this Part part)
+        {
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            return boundsSize.x * boundsSize.y * boundsSize.z;
+        }
+
+        public static float GetDensity (this Part part)
+        {
+            return (part.mass * 1000) / part.GetVolumen();
+        }
         public static bool IsAero(this Part part)
         {
             return part.Modules.Contains("ModuleControlSurface") ||

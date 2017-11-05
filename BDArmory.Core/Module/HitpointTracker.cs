@@ -24,7 +24,7 @@ namespace BDArmory.Core.Module
         #endregion
 
         //TODO: Add setting
-        private readonly float maxHitpointFactor = 125f;
+        private readonly float hitpointMultiplier = 1f;
 
         private Part _prefabPart;
         private bool _setupRun;
@@ -61,6 +61,8 @@ namespace BDArmory.Core.Module
             }
         }
 
+        private float previousHitpoints;
+
         protected virtual void SetupPrefab()
         {
             //var PartNode = GameDatabase.Instance.GetConfigs("PART").FirstOrDefault(c => c.name.Replace('_', '.') == part.name).config;
@@ -72,14 +74,20 @@ namespace BDArmory.Core.Module
 
             if (part != null)
             {
+                var maxHitPoints = CalculateTotalHitpoints();
+
+                if (previousHitpoints == maxHitPoints) return;
+
                 //Add Hitpoints
                 UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Hitpoints"].uiControlFlight;
-                damageFieldFlight.maxValue = CalculateMaxDamage();
+                damageFieldFlight.maxValue = maxHitPoints;
                 damageFieldFlight.minValue = 0f;
 
                 UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Hitpoints"].uiControlEditor;
-                damageFieldEditor.maxValue = CalculateMaxDamage();
+                damageFieldEditor.maxValue = maxHitPoints;
                 damageFieldEditor.minValue = 0f;
+
+                Hitpoints = maxHitPoints;
 
                 //Add Armor
                 UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["Armor"].uiControlFlight;
@@ -92,8 +100,10 @@ namespace BDArmory.Core.Module
 
                 part.RefreshAssociatedWindows();
 
-                if (!ArmorSet) SetThickness();               
+                if (!ArmorSet) SetThickness();
 
+
+                previousHitpoints = Hitpoints;
             }
             else
             {
@@ -116,7 +126,21 @@ namespace BDArmory.Core.Module
             }
 
             //damageRenderer = new MaterialColorUpdater(this.part.transform, PhysicsGlobals.TemperaturePropertyID);          
-        }        
+        }
+
+        private void ShipModified(ShipConstruct data)
+        {
+            SetupPrefab();
+        }
+
+        void OnGUI()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                SetupPrefab();
+            }
+        }
+
 
         public override void OnUpdate()
         {
@@ -135,24 +159,26 @@ namespace BDArmory.Core.Module
         }        
         #region Hitpoints Functions
 
-        private float CalculateMaxDamage()
+        private float CalculateTotalHitpoints()
         {
-            float maxDamage;
+            float hitpoints;
 
             if (!part.IsMissile())
             {
-                maxDamage = maxHitpointFactor *
-                            Mathf.Clamp(part.mass, 0.01f, 40f) *
-                            Mathf.Clamp(part.crashTolerance, 1, 20);
+
+                //1. Density of the dry mass of the part.
+                var density = part.GetDensity();
+                //2. Lets simulate a new volume based on the surface of the part and crashtolerance
+                var simulatedVolumen = part.GetArea() * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.30f);
+                //3. final calculations 
+                hitpoints = simulatedVolumen * density * 5f * hitpointMultiplier;
             }
             else
             {
-                maxDamage = 5;
+                hitpoints = 5;
                 Armor = 2;
             }
-            
-            Hitpoints = maxDamage;
-            return maxDamage;
+            return hitpoints;
         }
 
         public void DestroyPart()

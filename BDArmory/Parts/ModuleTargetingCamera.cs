@@ -5,6 +5,7 @@ using BDArmory.Misc;
 using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace BDArmory.Parts
 {
@@ -146,10 +147,13 @@ namespace BDArmory.Parts
 				if(wpmr == null || wpmr.vessel!=vessel)
 				{
 					wpmr = null;
-					foreach(MissileFire mf in vessel.FindPartModulesImplementing<MissileFire>())
+                    List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                    while (mf.MoveNext())
 					{
-						wpmr = mf;
+                        if (mf.Current)
+						    wpmr = mf.Current;
 					}
+                    mf.Dispose();
 				}
 
 				return wpmr;
@@ -256,14 +260,16 @@ namespace BDArmory.Parts
 
 		ModuleTargetingCamera FindNextActiveCamera()
 		{
-			foreach(ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
+            List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
+            while (mtc.MoveNext())
 			{
-				if(mtc.cameraEnabled)
+				if(mtc.Current && mtc.Current.cameraEnabled)
 				{
-					mtc.EnableCamera();
-					return mtc;
+					mtc.Current.EnableCamera();
+					return mtc.Current;
 				}
 			}
+            mtc.Dispose();
 
 			return null;
 		}
@@ -317,10 +323,12 @@ namespace BDArmory.Parts
 					DelayedEnable();
 				}
 
-				foreach(MissileFire wm in vessel.FindPartModulesImplementing<MissileFire>())
-				{
-					wm.targetingPods.Add(this);
+                List<MissileFire>.Enumerator wm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (wm.MoveNext())
+                {
+                    wm.Current.targetingPods.Add(this);
 				}
+                wm.Dispose();
 			}
 		}
 
@@ -695,7 +703,7 @@ namespace BDArmory.Parts
 
 				if(BDArmorySettings.DRAW_DEBUG_LABELS)
 				{
-					GUI.Label(new Rect(500, 800, 500, 500), "Slew rate: " + finalSlewSpeed);
+					GUI.Label(new Rect(600, 1000, 100, 100), "Slew rate: " + finalSlewSpeed);
 				}
 
 				if(BDArmorySettings.DRAW_DEBUG_LINES)
@@ -710,8 +718,6 @@ namespace BDArmory.Parts
 					}
 				}
 			}
-
-
 
 		}
 
@@ -1068,10 +1074,12 @@ namespace BDArmory.Parts
 
 		void SlaveTurrets()
 		{
-			foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
-			{
-				mtc.slaveTurrets = false;
+            List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
+            while (mtc.MoveNext())
+            {
+                mtc.Current.slaveTurrets = false;
 			}
+            mtc.Dispose();
 
 			if(weaponManager && weaponManager.vesselRadarData)
 			{
@@ -1083,10 +1091,12 @@ namespace BDArmory.Parts
 
 		void UnslaveTurrets()
 		{
-			foreach (ModuleTargetingCamera mtc in vessel.FindPartModulesImplementing<ModuleTargetingCamera>())
-			{
-				mtc.slaveTurrets = false;
+            List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
+            while (mtc.MoveNext())
+            {
+                mtc.Current.slaveTurrets = false;
 			}
+            mtc.Dispose();
 
 			if(weaponManager && weaponManager.vesselRadarData)
 			{
@@ -1209,7 +1219,7 @@ namespace BDArmory.Parts
 
 			RaycastHit rayHit;
 			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
-			bool raycasted = Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 557057);
+			bool raycasted = Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 688129);
 			if(raycasted)
 			{
 				if(FlightGlobals.getAltitudeAtPos(rayHit.point) < 0)
@@ -1223,7 +1233,8 @@ namespace BDArmory.Parts
 
 					if(CoMLock)
 					{
-						Part p = rayHit.collider.GetComponentInParent<Part>();
+                        KerbalEVA hitEVA = rayHit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                        Part p = hitEVA ? hitEVA.part : rayHit.collider.GetComponentInParent<Part>();
 						if(p && p.vessel && p.vessel.CoM != Vector3.zero)
 						{
 							groundTargetPosition = p.vessel.CoM + (p.vessel.Velocity() * Time.fixedDeltaTime);
@@ -1286,7 +1297,7 @@ namespace BDArmory.Parts
 
 			RaycastHit rayHit;
 			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
-			if(Physics.Raycast(ray, out rayHit, maxRayDistance-50, 557057))
+			if(Physics.Raycast(ray, out rayHit, maxRayDistance-50, 688129))
 			{
 				targetPointPosition = rayHit.point;
 
@@ -1297,8 +1308,9 @@ namespace BDArmory.Parts
 					
 					if(CoMLock)
 					{
-						Part p = rayHit.collider.GetComponentInParent<Part>();
-						if(p && p.vessel && p.vessel.Landed)
+                        KerbalEVA hitEVA = rayHit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                        Part p = hitEVA ? hitEVA.part : rayHit.collider.GetComponentInParent<Part>();
+                        if (p && p.vessel && p.vessel.Landed)
 						{
 							groundTargetPosition = p.vessel.CoM;
 						}
@@ -1435,7 +1447,9 @@ namespace BDArmory.Parts
 						weaponManager.slavingTurrets = false;
 					}
 				}
-			}
+
+                GameEvents.onVesselCreate.Remove(Disconnect);
+            }
 		}
 
 		Vector2 TargetAzimuthElevationScreenPos(Rect screenRect, Vector3 targetPosition, float textureSize)
