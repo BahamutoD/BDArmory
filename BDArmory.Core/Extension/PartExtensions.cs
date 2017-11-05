@@ -37,6 +37,14 @@ namespace BDArmory.Core.Extension
                            
 
             //////////////////////////////////////////////////////////
+            // Caliber Adjustments
+            //////////////////////////////////////////////////////////
+            if (caliber < 50 && !isMissile)
+            {
+                damage *= 0.0235f;
+            }
+                                  
+            //////////////////////////////////////////////////////////
             // Armor Reduction factors
             //////////////////////////////////////////////////////////
             if (p.HasArmor())
@@ -95,7 +103,7 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 4.75f;
+               damage *= 5f;
             }
 
             //As armor is decreased level of damage should increase
@@ -223,5 +231,11 @@ namespace BDArmory.Core.Extension
         {
             return (part.mass * 1000) / part.GetVolumen();
         }
+        public static bool IsAero(this Part part)
+        {
+            return part.Modules.Contains("ModuleControlSurface") ||
+                   part.Modules.Contains("ModuleLiftingSurface");
+        }
+
     }
 }

@@ -115,7 +115,7 @@ namespace BDArmory.Core.Module
         {
             isEnabled = true;
 
-            if (part != null && _firstSetup) SetupPrefab();
+            if (part != null) SetupPrefab();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -175,8 +175,8 @@ namespace BDArmory.Core.Module
             }
             else
             {
-                hitpoints = 5;
-                Armor = 5;
+                maxDamage = 5;
+                Armor = 2;
             }
             return hitpoints;
         }
