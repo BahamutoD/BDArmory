@@ -53,7 +53,7 @@ namespace BDArmory.UI
         [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK= false;
 
         [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100f;
-        [BDAPersistantSettingsField] public static float MAX_DAMAGE_FACTOR = 100f;
+        [BDAPersistantSettingsField] public static float HITPOINT_MULTIPLIER = 1f;
         [BDAPersistantSettingsField] public static float EXP_HEAT_MOD;
         [BDAPersistantSettingsField] public static float EXP_IMP_MOD;
 
