@@ -148,7 +148,7 @@ namespace BDArmory.Parts
             part.explosionPotential = 0;
             missileLauncher.HasFired = false;
 
-            part.SetDamage(part.maxTemp + 10);
+            part.SetDamage(part.maxTemp*2);
         }
 
 
@@ -200,7 +200,7 @@ namespace BDArmory.Parts
 
                 //floatingOrigin fix
                 if (sourceVessel != null &&
-                    Vector3.Distance(transform.position - sourceVessel.transform.position, relativePos) > 800)
+                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
                 {
                     transform.position = sourceVessel.transform.position + relativePos +
                                          (rb.velocity*Time.fixedDeltaTime);
@@ -212,12 +212,45 @@ namespace BDArmory.Parts
                 float dist = (currPosition - prevPosition).magnitude;
                 Ray ray = new Ray(prevPosition, currPosition - prevPosition);
                 RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, dist, 557057))
+                //if (Physics.Raycast(ray, out hit, dist, 2228224))
+                //{
+                //    try
+                //    {
+                //        hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                //        if (hitEVA != null)
+                //            Debug.Log("[BDArmory]:Hit on kerbal confirmed!");
+                //    }
+                //    catch (NullReferenceException)
+                //    {
+                //        Debug.Log("[BDArmory]:Whoops ran amok of the exception handler");
+                //    }
+
+                //    Part hitPart = hitEVA.part;
+
+                //    float destroyChance = (rb.mass / hitPart.crashTolerance) *
+                //                              (rb.velocity - hit.rigidbody.velocity).magnitude * 8000;
+                //    if (BDArmorySettings.INSTAKILL)
+                //    {
+                //        destroyChance = 100;
+                //    }
+                //    Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
+                //    if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
+                //    {
+                //        hitPart.SetDamage(hitPart.maxTemp + 100);
+                //    }
+                //    if (hitPart.vessel != sourceVessel)
+                //    {
+                //        Detonate(hit.point);
+                //    }
+                //}
+
+                if (Physics.Raycast(ray, out hit, dist, 688129))
                 {
                     Part hitPart = null;
                     try
                     {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                        KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                        hitPart = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
                     }
                     catch (NullReferenceException)
                     {
@@ -234,7 +267,7 @@ namespace BDArmory.Parts
                         Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
                         if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
                         {
-                            hitPart.SetDamage(hitPart.maxTemp + 100);
+                            hitPart.SetDamage(hitPart.maxTemp*2);
                         }
                     }
                     if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
@@ -284,7 +317,7 @@ namespace BDArmory.Parts
             {
                 //floatingOrigin fix
                 if (sourceVessel != null &&
-                    Vector3.Distance(transform.position - sourceVessel.transform.position, relativePos) > 800)
+                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
                 {
                     transform.position = sourceVessel.transform.position + relativePos +
                                          (rb.velocity*Time.fixedDeltaTime);
@@ -296,7 +329,7 @@ namespace BDArmory.Parts
                 float dist = (currPosition - prevPosition).magnitude;
                 Ray ray = new Ray(prevPosition, currPosition - prevPosition);
                 RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, dist, 557057))
+                if (Physics.Raycast(ray, out hit, dist, 688129))
                 {
                     Destroy(gameObject);
                 }
