@@ -287,18 +287,22 @@ namespace BDArmory.FX
             Part part = eventToExecute.Part;
             Rigidbody rb = part.Rigidbody;
             var realDistance = eventToExecute.Distance;
-            var partArea = part.GetPartArea() * 0.33f;
+            var partArea = part.GetArea() * 0.50f;
             BlastInfo blastInfo =
                 BlastPhysicsUtils.CalculatePartAcceleration(partArea,
                     part.vessel.totalMass * 1000f, Power, realDistance);
 
+            var explosiveDamage = blastInfo.Pressure * 3f /
+                                  Math.Max(1, (eventToExecute.HitPoint + part.rb.velocity * TimeIndex -
+                                               part.transform.position).magnitude);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log(
                     "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
                     " Acceleration: {" + blastInfo.Acceleration + "}," +
-                    " Distance: {" + realDistance + "}," +
-                   " Pressure: {" + blastInfo.Pressure + "}," +
+                     " Distance: {" + realDistance + "}," +
+                    " Pressure: {" + blastInfo.Pressure + "}," +
+                    " ExplosiveDamage: {" + explosiveDamage + "}," +
                     " Surface: {" + partArea + "}," +
                     " Vessel mass: {" + part.vessel.totalMass * 1000f + "}," +
                     " TimeIndex: {" + TimeIndex + "}," +
@@ -312,7 +316,7 @@ namespace BDArmory.FX
                     BDArmorySettings.EXP_IMP_MOD,
                     eventToExecute.HitPoint + part.rb.velocity * TimeIndex);
                
-                part.AddDamage_Explosive(blastInfo.Pressure, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
+                part.AddExplosiveDamage(explosiveDamage, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
                 
                 // 2. Add Reverse Negative Event
                 ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true});
