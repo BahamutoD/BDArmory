@@ -24,7 +24,7 @@ namespace BDArmory.Core.Module
         #endregion
 
         //TODO: Add setting
-        private readonly float maxHitpointFactor = 100f;
+        private readonly float hitpointMultiplier = 1f;
 
         private Part _prefabPart;
         private bool _setupRun;
@@ -74,7 +74,7 @@ namespace BDArmory.Core.Module
 
             if (part != null)
             {
-                var maxHitPoints = CalculateMaxDamage();
+                var maxHitPoints = CalculateTotalHitpoints();
 
                 if (previousHitpoints == maxHitPoints) return;
 
@@ -159,9 +159,9 @@ namespace BDArmory.Core.Module
         }        
         #region Hitpoints Functions
 
-        private float CalculateMaxDamage()
+        private float CalculateTotalHitpoints()
         {
-            float maxDamage;
+            float hitpoints;
 
             if (!part.IsMissile())
             {
@@ -171,16 +171,14 @@ namespace BDArmory.Core.Module
                 //2. Lets simulate a new volume based on the surface of the part and crashtolerance
                 var simulatedVolumen = part.GetArea() * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.30f);
                 //3. final calculations 
-                maxDamage = simulatedVolumen * density * 5f;
-
-                Debug.Log("[BDArmory]:CalculateMaxDamage MaxDamage ="+ maxDamage +" | Density ="+density+"| simulatedVolumen ="+simulatedVolumen);
+                hitpoints = simulatedVolumen * density * 5f * hitpointMultiplier;
             }
             else
             {
-                maxDamage = 5;
+                hitpoints = 5;
                 Armor = 5;
             }
-            return maxDamage;
+            return hitpoints;
         }
 
         public void DestroyPart()

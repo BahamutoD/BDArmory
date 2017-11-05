@@ -231,7 +231,6 @@ namespace BDArmory.Parts
 
         public GPSTargetInfo designatedGPSInfo;
 
-        private Vector3 floatingorigin_previous;
         #endregion
 
 
