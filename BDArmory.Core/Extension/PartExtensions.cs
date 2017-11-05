@@ -65,7 +65,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied : " + Math.Round((double)damage, 2));
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round((double)damage, 2));
         }
 
         public static void AddDamage_Ballistic(this Part p,
