@@ -135,12 +135,11 @@ namespace BDArmory.Core.Module
 
         void OnGUI()
         {
-            if (HighLogic.LoadedSceneIsEditor)
+            if (HighLogic.LoadedSceneIsEditor && _firstSetup)
             {
                 SetupPrefab();
             }
         }
-
 
         public override void OnUpdate()
         {
@@ -157,6 +156,7 @@ namespace BDArmory.Core.Module
              }
            // damageRenderer?.Update(GetDamageColor());         
         }        
+
         #region Hitpoints Functions
 
         private float CalculateTotalHitpoints()
@@ -165,13 +165,13 @@ namespace BDArmory.Core.Module
 
             if (!part.IsMissile())
             {
-
                 //1. Density of the dry mass of the part.
                 var density = part.GetDensity();
                 //2. Lets simulate a new volume based on the surface of the part and crashtolerance
-                var simulatedVolumen = part.GetArea() * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.30f);
+                var simulatedVolume = part.GetArea() * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.25f);
                 //3. final calculations 
-                hitpoints = simulatedVolumen * density * 5f * hitpointMultiplier;
+                hitpoints = simulatedVolume * density * hitpointMultiplier * 0.70f;
+                hitpoints = Mathf.Round(hitpoints);
             }
             else
             {
