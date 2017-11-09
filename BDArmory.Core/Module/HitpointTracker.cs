@@ -16,10 +16,13 @@ namespace BDArmory.Core.Module
         public float Armor = 10f;
 
         [KSPField(isPersistant = true)]
-        public bool ArmorSet;
+        public float maxHitPoints = 0f;
 
         [KSPField(isPersistant = true)]
-        public bool HitpointSet = false;
+        public float ArmorThickness = 0f;
+
+        [KSPField(isPersistant = true)]
+        public bool ArmorSet;
 
         #endregion
 
@@ -65,29 +68,22 @@ namespace BDArmory.Core.Module
 
         protected virtual void SetupPrefab()
         {
-            //var PartNode = GameDatabase.Instance.GetConfigs("PART").FirstOrDefault(c => c.name.Replace('_', '.') == part.name).config;
-            //var ModuleNode = PartNode.GetNodes("MODULE").FirstOrDefault(n => n.GetValue("name") == moduleName);
-
-            //ScaleType = new ScaleType(ModuleNode);
-            //SetupFromConfig(ScaleType);
-            //tweakScale = currentScale = defaultScale;
-
             if (part != null)
             {
-                var maxHitPoints = CalculateTotalHitpoints();
+                var maxHitPoints_ = CalculateTotalHitpoints();
 
-                if (previousHitpoints == maxHitPoints) return;
+                if (previousHitpoints == maxHitPoints_) return;
 
                 //Add Hitpoints
                 UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Hitpoints"].uiControlFlight;
-                damageFieldFlight.maxValue = maxHitPoints;
+                damageFieldFlight.maxValue = maxHitPoints_;
                 damageFieldFlight.minValue = 0f;
 
                 UI_ProgressBar damageFieldEditor = (UI_ProgressBar)Fields["Hitpoints"].uiControlEditor;
-                damageFieldEditor.maxValue = maxHitPoints;
+                damageFieldEditor.maxValue = maxHitPoints_;
                 damageFieldEditor.minValue = 0f;
 
-                Hitpoints = maxHitPoints;
+                Hitpoints = maxHitPoints_;
 
                 //Add Armor
                 UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["Armor"].uiControlFlight;
@@ -100,9 +96,8 @@ namespace BDArmory.Core.Module
 
                 part.RefreshAssociatedWindows();
 
-                if (!ArmorSet) SetThickness();
-
-
+                if (!ArmorSet) overrideArmorSetFromConfig();           
+                
                 previousHitpoints = Hitpoints;
             }
             else
@@ -164,13 +159,13 @@ namespace BDArmory.Core.Module
             float hitpoints;
 
             if (!part.IsMissile())
-            {
+            {           
                 //1. Density of the dry mass of the part.
                 var density = part.GetDensity();
                 //2. Lets simulate a new volume based on the surface of the part and crashtolerance
-                var simulatedVolume = part.GetArea() * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.25f);
+                var simulatedVolume = (part.GetArea() * 0.7125f) * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.30f);
                 //3. final calculations 
-                hitpoints = simulatedVolume * density * hitpointMultiplier * 0.70f;
+                hitpoints = simulatedVolume * density * hitpointMultiplier;
                 hitpoints = Mathf.Round(hitpoints);
             }
             else
@@ -178,6 +173,12 @@ namespace BDArmory.Core.Module
                 hitpoints = 5;
                 Armor = 2;
             }
+
+            if (maxHitPoints != 0)
+            {
+                hitpoints = maxHitPoints;
+            }
+
             return hitpoints;
         }
 
@@ -234,21 +235,15 @@ namespace BDArmory.Core.Module
             }
         }
 
-        public void SetThickness(float thickness = 0)
+        public void overrideArmorSetFromConfig(float thickness = 0)
         {
-            ArmorSet = true;
-
-            if (part.FindModuleImplementing<BDArmor>())
-            {                
-                float armor = part.FindModuleImplementing<BDArmor>().ArmorThickness;
-
-                if (armor != 0)
-                {
-                    Armor = armor;
-                }                
-            }
+            ArmorSet = true;                     
+            if (ArmorThickness != 0)
+            {
+                Armor = ArmorThickness;
+            }            
         }
-      
+
         #endregion
 
     }

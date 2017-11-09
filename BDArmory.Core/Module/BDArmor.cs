@@ -8,14 +8,6 @@ namespace BDArmory.Core.Module
         public static ArmorUtils.ExplodeMode explodeMode_ = ArmorUtils.ExplodeMode.Never;
 
         #region KSP Fields
-        [KSPField(isPersistant = true)]
-        public float ArmorThickness = 0f;
-
-        [KSPField(isPersistant = true)]
-        public float maxDamage = 0f;
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Area")]
-        //public float PartArea = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Max Hitpoints")]
         public float maxDamage2 = 0;
@@ -23,8 +15,8 @@ namespace BDArmory.Core.Module
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
         public float PartVolume = 0;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume with Armor")]
-        public float PartVolume2 = 0;
+        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume with Armor")]
+        //public float PartVolume2 = 0;
 
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "ArmorMass")]
         public float ArmorMass = 0;
@@ -107,7 +99,6 @@ namespace BDArmory.Core.Module
             }
         }
 
-
         protected virtual void SetupPrefab()
         {
             var PartNode = GameDatabase.Instance.GetConfigs("PART").FirstOrDefault(c => c.name.Replace('_', '.') == part.name).config;
@@ -127,11 +118,11 @@ namespace BDArmory.Core.Module
         {
             try
             {
-                ArmorThickness = part.FindModuleImplementing<HitpointTracker>().Armor;
+                //ArmorThickness = part.FindModuleImplementing<HitpointTracker>().Armor;
                 maxDamage2 = part.FindModuleImplementing<HitpointTracker>().GetMaxHitpoints();
                 PartVolume = (float)Math.Round(GetPartVolume(part.partInfo, part), 2);
-                PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
-                ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
+                //PartVolume2 = (float)Math.Round(GetPartVolume_withArmor(part.partInfo, part), 2);
+                //ArmorMass = (float)Math.Round(8.05f * (PartVolume2 - PartVolume) / 1000f, 2);
                 currMass = part.mass;
             }
             catch(Exception)
@@ -153,16 +144,16 @@ namespace BDArmory.Core.Module
             return (float)(volume * Math.Pow(GetPartExternalScaleModifier(part), 3));
         }
 
-        public float GetPartVolume_withArmor(AvailablePart partInfo,Part p)
-        {
-            float volume;
-            var boundsSize = PartGeometryUtil.MergeBounds(p.GetRendererBounds(), p.transform).size;
-            volume = (boundsSize.x + (ArmorThickness/1000)) * boundsSize.y * boundsSize.z;
-            volume *= 10f;
+        //public float GetPartVolume_withArmor(AvailablePart partInfo,Part p)
+        //{
+        //    float volume;
+        //    var boundsSize = PartGeometryUtil.MergeBounds(p.GetRendererBounds(), p.transform).size;
+        //    //volume = (boundsSize.x + (ArmorThickness/1000)) * boundsSize.y * boundsSize.z;
+        //    volume *= 10f;
 
-            // Apply cube of the scale modifier since volume involves all 3 axis.
-            return (float)(volume * Math.Pow(GetPartExternalScaleModifier(part), 3));
-        }
+        //    // Apply cube of the scale modifier since volume involves all 3 axis.
+        //    return (float)(volume * Math.Pow(GetPartExternalScaleModifier(part), 3));
+        //}
 
         public static float GetPartArea(AvailablePart partInfo)
         {
