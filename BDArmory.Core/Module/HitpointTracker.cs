@@ -162,10 +162,16 @@ namespace BDArmory.Core.Module
             {           
                 //1. Density of the dry mass of the part.
                 var density = part.GetDensity();
-                //2. Lets simulate a new volume based on the surface of the part and crashtolerance
-                var simulatedVolume = (part.GetArea() * 0.7125f) * Mathf.Clamp(part.crashTolerance / 100f, 0.01f, 0.30f);
+                //2. Incresing density based on crash tolerance
+                density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
+
+                //12 square meters is the standard size of MK1 fuselage using it as a base
+                var areaExcess = Mathf.Max(part.GetArea() - 12f,0);
+
+                var areaCalculation = Mathf.Min(12f, part.GetArea()) + Mathf.Pow(areaExcess, (1f / 3f)); 
                 //3. final calculations 
-                hitpoints = simulatedVolume * density * hitpointMultiplier;
+
+                hitpoints = areaCalculation * density * hitpointMultiplier;
                 hitpoints = Mathf.Round(hitpoints);
             }
             else

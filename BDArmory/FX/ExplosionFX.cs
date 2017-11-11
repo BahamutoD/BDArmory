@@ -299,8 +299,7 @@ namespace BDArmory.FX
                     BlastPhysicsUtils.CalculatePartAcceleration(partArea,
                         part.vessel.totalMass * 1000f, Power, realDistance);
 
-                var distanceFromHitToPartcenter = Math.Max(1, Vector3.Distance(eventToExecute.HitPoint, part.transform.position));
-                var explosiveDamage = blastInfo.Pressure * 3f / distanceFromHitToPartcenter;
+                var explosiveDamage = blastInfo.Pressure * 3f;
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
@@ -309,7 +308,6 @@ namespace BDArmory.FX
                         " Acceleration: {" + blastInfo.Acceleration + "}," +
                         " Distance: {" + realDistance + "}," +
                         " Pressure: {" + blastInfo.Pressure + "}," +
-                        " distanceFromHitToPartcenter: {" + distanceFromHitToPartcenter + "}," +
                         " ExplosiveDamage: {" + explosiveDamage + "}," +
                         " Surface: {" + partArea + "}," +
                         " Vessel mass: {" + part.vessel.totalMass * 1000f + "}," +
