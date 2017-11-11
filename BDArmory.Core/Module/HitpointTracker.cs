@@ -24,6 +24,9 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public bool ArmorSet;
 
+        [KSPField]
+        public string explodeMode = "Never";
+
         #endregion
 
         //TODO: Add setting

@@ -693,9 +693,9 @@ namespace BDArmory
 
         public void CheckPartForExplosion(Part hitPart)
         {
-            if (!hitPart.FindModuleImplementing<BDArmor>()) return;
+            if (!hitPart.FindModuleImplementing<HitpointTracker>()) return;
 
-            switch (hitPart.FindModuleImplementing<BDArmor>().explodeMode)
+            switch (hitPart.FindModuleImplementing<HitpointTracker>().explodeMode)
             {
                 case "Always":
                     CreateExplosion(hitPart);
