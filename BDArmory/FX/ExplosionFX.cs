@@ -294,9 +294,9 @@ namespace BDArmory.FX
                 Part part = eventToExecute.Part;
                 Rigidbody rb = part.Rigidbody;
                 var realDistance = eventToExecute.Distance;
-                var partArea = part.GetArea() * 0.50f;
+                var effectivePartArea = Math.Min(part.GetArea() * 0.50f, Range);
                 BlastInfo blastInfo =
-                    BlastPhysicsUtils.CalculatePartAcceleration(partArea,
+                    BlastPhysicsUtils.CalculatePartAcceleration(effectivePartArea,
                         part.vessel.totalMass * 1000f, Power, realDistance);
 
                 var explosiveDamage = blastInfo.Pressure * 3f;
@@ -309,7 +309,7 @@ namespace BDArmory.FX
                         " Distance: {" + realDistance + "}," +
                         " Pressure: {" + blastInfo.Pressure + "}," +
                         " ExplosiveDamage: {" + explosiveDamage + "}," +
-                        " Surface: {" + partArea + "}," +
+                        " effectiveArea: {" + effectivePartArea + "}," +
                         " Vessel mass: {" + part.vessel.totalMass * 1000f + "}," +
                         " TimeIndex: {" + TimeIndex + "}," +
                         " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
@@ -326,6 +326,7 @@ namespace BDArmory.FX
                         eventToExecute.HitPoint + part.rb.velocity * TimeIndex);
 
                     part.AddExplosiveDamage(explosiveDamage, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
+
                 }
                 else
                 {
@@ -382,7 +383,7 @@ namespace BDArmory.FX
             //////////////////////////////////////////////////////////
             // Add The force to part
             //////////////////////////////////////////////////////////
-
+            if (rb == null) return;
             rb.AddForceAtPosition(force, position, mode);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)            
                 Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
