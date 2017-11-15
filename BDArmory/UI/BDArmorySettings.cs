@@ -10,6 +10,7 @@ using BDArmory.Parts;
 using BDArmory.Radar;
 using UnityEngine;
 
+
 namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.EveryScene, false)]

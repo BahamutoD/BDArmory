@@ -30,10 +30,10 @@ namespace BDArmory.Core.Module
         #endregion
 
         //TODO: Add setting
-        private readonly float hitpointMultiplier = 1f;
+        private readonly float hitpointMultiplier = 3f;
 
         private Part _prefabPart;
-        private bool _setupRun;
+        private bool _setupRun = false;
         private bool _firstSetup = true;
 
         protected virtual void Setup()

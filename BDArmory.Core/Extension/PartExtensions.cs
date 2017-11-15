@@ -98,19 +98,18 @@ namespace BDArmory.Core.Extension
                             * 1e-4f);
 
             //penetration multipliers   
-            damage *= multiplier;
+            damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
 
             //Caliber Adjustments for Gameplay balance
-            if (caliber <= 30f) 
-            {
-               damage *= 5f;
-            }
+            //if (caliber <= 30f) 
+            //{
+            //   damage *= 5f;
+            //}
 
             //As armor is decreased level of damage should increase
-            // Ideally this would be logarithmic but my math is lacking right now... 
-
+            //Ideally this would be logarithmic but my math is lacking right now... 
+                
             //damage /= Mathf.Max(1,(float) armorPCT_ * 100);
-
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
@@ -118,10 +117,12 @@ namespace BDArmory.Core.Extension
             {
                 double armorMass_ = p.GetArmorMass();
                 double armorPCT_ = p.GetArmorPercentage();
+                
                 //Armor limits Damage
-                damage = damage - ((damage * armorPCT_) / 10);
+                damage = damage - (damage * armorPCT_);
+
                 //penalty for low caliber rounds,not if armor is very low
-                if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.25f;
+                if (caliber <= 30f && armorMass_ >= 20d) damage *= 0.125f;
             }
             
 
@@ -217,8 +218,12 @@ namespace BDArmory.Core.Extension
 
         public static float GetArea(this Part part)
         {
-            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
-            return 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+            //var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            //float sfcAreaCalc =  2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+            //Debug.Log("[BDArmory]: Surface Area1: " + part.surfaceAreas.magnitude);
+            //Debug.Log("[BDArmory]: Surface Area2: " + sfcAreaCalc);
+
+            return part.surfaceAreas.magnitude;
         }
 
         public static float GetVolume(this Part part)

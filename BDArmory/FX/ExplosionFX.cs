@@ -310,7 +310,7 @@ namespace BDArmory.FX
                         " Pressure: {" + blastInfo.Pressure + "}," +
                         " ExplosiveDamage: {" + explosiveDamage + "}," +
                         " effectiveArea: {" + effectivePartArea + "}," +
-                        " Vessel mass: {" + part.vessel.totalMass * 1000f + "}," +
+                        " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
                         " TimeIndex: {" + TimeIndex + "}," +
                         " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
                         " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
