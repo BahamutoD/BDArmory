@@ -83,12 +83,13 @@
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
+    <Compile Include="UI\BDAPersistantSettingsField.cs" />
+    <Compile Include="UI\BDArmorySettings.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
-    <Compile Include="Armor\BulletInfo.cs" />
+    <Compile Include="Bullets\BulletInfo.cs" />
     <Compile Include="Parts\MissileLauncher.cs" />
     <Compile Include="Misc\Misc.cs" />
     <Compile Include="FX\ShellCasing.cs" />
-    <Compile Include="UI\BDArmorySettings.cs" />
     <Compile Include="FX\ExplosionFX.cs" />
     <Compile Include="FX\BulletHitFX.cs" />
     <Compile Include="CounterMeasure\CMFlare.cs" />
@@ -156,7 +157,6 @@
     <Compile Include="Parts\BDRotaryRail.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Control\BDACompetitionMode.cs" />
-    <Compile Include="UI\BDAPersistantSettingsField.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BDArmory.Core\BDArmory.Core.csproj">

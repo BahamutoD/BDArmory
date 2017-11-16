@@ -24,13 +24,16 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public bool ArmorSet;
 
+        [KSPField]
+        public string explodeMode = "Never";
+
         #endregion
 
         //TODO: Add setting
-        private readonly float hitpointMultiplier = 1f;
+        private readonly float hitpointMultiplier = 4f;
 
         private Part _prefabPart;
-        private bool _setupRun;
+        private bool _setupRun = false;
         private bool _firstSetup = true;
 
         protected virtual void Setup()

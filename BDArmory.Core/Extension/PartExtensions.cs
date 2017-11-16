@@ -15,7 +15,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Basic Add Hitpoints for compatibility
             //////////////////////////////////////////////////////////
-            damage = (float)Math.Round((double)damage, 2);
+            damage = (float)Math.Round(damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
             Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
 
@@ -73,7 +73,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round((double)damage, 2));
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage, 2));
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -81,7 +81,7 @@ namespace BDArmory.Core.Extension
                                                float caliber,
                                                float multiplier,
                                                float penetrationfactor,
-                                               float DMG_MULT,
+                                               float DMG_MULTIPLIER,
                                                float bulletDmgMult,
                                                float impactVelocity)
         {
@@ -94,11 +94,11 @@ namespace BDArmory.Core.Extension
             //1e-4 constant for adjusting MegaJoules for gameplay
 
             double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
-                            * DMG_MULT * 0.01d * bulletDmgMult
-                            * 1e-4f);
+                            * (DMG_MULTIPLIER / 100) * bulletDmgMult
+                            * 1e-5f);
 
             //penetration multipliers   
-            damage *= multiplier;
+            damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
 
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
@@ -107,10 +107,9 @@ namespace BDArmory.Core.Extension
             }
 
             //As armor is decreased level of damage should increase
-            // Ideally this would be logarithmic but my math is lacking right now... 
-
+            //Ideally this would be logarithmic but my math is lacking right now... 
+                
             //damage /= Mathf.Max(1,(float) armorPCT_ * 100);
-
             //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
             //damage = (float)damage_d;
 
@@ -118,10 +117,12 @@ namespace BDArmory.Core.Extension
             {
                 double armorMass_ = p.GetArmorMass();
                 double armorPCT_ = p.GetArmorPercentage();
+                
                 //Armor limits Damage
-                damage = damage - ((damage * armorPCT_) / 10);
+                damage = damage - (damage * armorPCT_);
+
                 //penalty for low caliber rounds,not if armor is very low
-                if (caliber <= 30f && armorMass_ >= 100d) damage *= 0.25f;
+                if (caliber <= 30f && armorMass_ >= 20d) damage *= 0.125f;
             }
             
 
@@ -130,7 +131,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round((double)damage, 2));
+            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage, 2));
         }
 
 
@@ -217,8 +218,12 @@ namespace BDArmory.Core.Extension
 
         public static float GetArea(this Part part)
         {
-            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
-            return 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+            //var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            //float sfcAreaCalc =  2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+            //Debug.Log("[BDArmory]: Surface Area1: " + part.surfaceAreas.magnitude);
+            //Debug.Log("[BDArmory]: Surface Area2: " + sfcAreaCalc);
+
+            return part.surfaceAreas.magnitude;
         }
 
         public static float GetVolume(this Part part)

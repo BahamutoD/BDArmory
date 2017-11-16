@@ -356,7 +356,7 @@ namespace BDArmory
                                 }
                                 
                                 hasPenetrated = false;                                          
-                                ApplyDamage(hitPart, hit, penetrationFactor, penetrationFactor);
+                                ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
                                 KillBullet();
@@ -468,6 +468,7 @@ namespace BDArmory
             ///////////////////////////////////////////////////////////////////////                                 
             // Armor Penetration
             ///////////////////////////////////////////////////////////////////////
+
             float penetration = CalculatePenetration();
 
             //TODO: Extract bdarmory settings from this values
@@ -484,14 +485,13 @@ namespace BDArmory
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
                                     
             double massToReduce = Math.PI * Math.Pow((caliber*0.001) / 2,2) * (penetration);
-            //double massToReduce = 0.5f * mass * Math.Pow(impactVelocity, 2) * Mathf.Clamp01(penetrationFactor);
-            //massToReduce *= 0.125;
 
             if (fullyPenetrated)
             {
                 //lower velocity on penetrating armor plate
                 //does not affect low impact parts so that rounds can go through entire tank easily              
                 //If round penetrates easily it should not loose much velocity
+
                 if(penetrationFactor < 2) currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
                 if (penTicker > 0) currentVelocity *= 0.85f; //signifincanly reduce velocity on subsequent penetrations
 
@@ -504,7 +504,7 @@ namespace BDArmory
             }
             else
             {                
-                massToReduce *= 0.0625;                
+                massToReduce *= 0.125f;                
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
@@ -693,9 +693,9 @@ namespace BDArmory
 
         public void CheckPartForExplosion(Part hitPart)
         {
-            if (!hitPart.FindModuleImplementing<BDArmor>()) return;
+            if (!hitPart.FindModuleImplementing<HitpointTracker>()) return;
 
-            switch (hitPart.FindModuleImplementing<BDArmor>().explodeMode)
+            switch (hitPart.FindModuleImplementing<HitpointTracker>().explodeMode)
             {
                 case "Always":
                     CreateExplosion(hitPart);

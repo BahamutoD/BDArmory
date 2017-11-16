@@ -67,6 +67,5 @@
       <HintPath>..\BDArmory\LocalDev\Refs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

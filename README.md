@@ -15,6 +15,7 @@ Current Maintainers:
 - [SpannerMonkey](https://github.com/SpannerMonkey)
 - [gomker](https://github.com/gomker)
 - [TheDog](https://github.com/TheDogKSP)
+- [DoctorDavinci](https://github.com/DoctorDavinci)
 
 Contribution Guidance
 ========
