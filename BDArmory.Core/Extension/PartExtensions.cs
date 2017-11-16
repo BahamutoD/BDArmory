@@ -95,16 +95,16 @@ namespace BDArmory.Core.Extension
 
             double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
                             * (DMG_MULTIPLIER / 100) * bulletDmgMult
-                            * 1e-4f);
+                            * 1e-5f);
 
             //penetration multipliers   
             damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
 
             //Caliber Adjustments for Gameplay balance
-            //if (caliber <= 30f) 
-            //{
-            //   damage *= 5f;
-            //}
+            if (caliber <= 30f) 
+            {
+               damage *= 5f;
+            }
 
             //As armor is decreased level of damage should increase
             //Ideally this would be logarithmic but my math is lacking right now... 
