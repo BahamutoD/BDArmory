@@ -15,7 +15,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Basic Add Hitpoints for compatibility
             //////////////////////////////////////////////////////////
-            damage = (float)Math.Round((double)damage, 2);
+            damage = (float)Math.Round(damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
             Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
 
@@ -73,7 +73,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round((double)damage, 2));
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage, 2));
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -81,7 +81,7 @@ namespace BDArmory.Core.Extension
                                                float caliber,
                                                float multiplier,
                                                float penetrationfactor,
-                                               float DMG_MULT,
+                                               float DMG_MULTIPLIER,
                                                float bulletDmgMult,
                                                float impactVelocity)
         {
@@ -94,7 +94,7 @@ namespace BDArmory.Core.Extension
             //1e-4 constant for adjusting MegaJoules for gameplay
 
             double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
-                            * DMG_MULT * 0.01d * bulletDmgMult
+                            * (DMG_MULTIPLIER / 100) * bulletDmgMult
                             * 1e-4f);
 
             //penetration multipliers   
@@ -131,7 +131,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round((double)damage, 2));
+            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage, 2));
         }
 
 
