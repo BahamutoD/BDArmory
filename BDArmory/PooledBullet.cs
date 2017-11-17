@@ -75,8 +75,8 @@ namespace BDArmory
         Light lightFlash;
         bool wasInitiated;
         public Vector3 currentVelocity;
-        public float mass = 5.40133e-5f; 
-        public float caliber = 0;
+        public float mass; 
+        public float caliber = 1;
         public float bulletVelocity; //muzzle velocity
         public bool explosive = false;
         public float apBulletMod = 0;
@@ -206,7 +206,7 @@ namespace BDArmory
 
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
-                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.deltaTime;
+                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.deltaTime;
             }
 
             CalculateDragNumericalIntegration();
@@ -319,15 +319,15 @@ namespace BDArmory
                                 ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 penTicker += 1;
 
-
                                 //Explosive bullets that penetrate should explode shortly after
                                 //if penetration is very great, they will have moved on 
                                 //checking velocity as they would not be able to come out the other side
-                                if (explosive && penetrationFactor < 2 || currentVelocity.magnitude <= 800f)
+                                //if (explosive && penetrationFactor < 3 || currentVelocity.magnitude <= 800f)
+                                if (explosive)
                                 {
                                     prevPosition = currPosition;
                                     //move bullet            
-                                    transform.position += (currentVelocity * Time.deltaTime) / 2;
+                                    transform.position += (currentVelocity * Time.deltaTime) / 3;
 
                                     ExplosiveDetonation(hitPart, hit, ray);
                                     hasDetonated = true;
@@ -381,7 +381,7 @@ namespace BDArmory
 
                             //bullet should not go any further if moving too slowly after hit
                             //smaller caliber rounds would be too deformed to do any further damage
-                            if (currentVelocity.magnitude <= 30 || (caliber < 30 && hasPenetrated))
+                            if (currentVelocity.magnitude <= 100 && hasPenetrated)
                             {
                                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                 {
@@ -400,8 +400,7 @@ namespace BDArmory
 
             ///////////////////////////////////////////////////////////////////////
             //Bullet Translation
-            ///////////////////////////////////////////////////////////////////////
-                       
+            ///////////////////////////////////////////////////////////////////////                     
 
             prevPosition = currPosition;
             //move bullet            
@@ -420,7 +419,9 @@ namespace BDArmory
                 BulletHitFX.CreateBulletHit(hit.point, hit.normal, hasRichocheted, caliber);
             }
 
-            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor, BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult, impactVelocity);
+            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor,
+                                        BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult,
+                                        impactVelocity,explosive);
    
         }
 
@@ -492,8 +493,10 @@ namespace BDArmory
                 //does not affect low impact parts so that rounds can go through entire tank easily              
                 //If round penetrates easily it should not loose much velocity
 
-                if(penetrationFactor < 2) currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
-                if (penTicker > 0) currentVelocity *= 0.85f; //signifincanly reduce velocity on subsequent penetrations
+                //if (penetrationFactor < 2)
+                currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
+                //signifincanly reduce velocity on subsequent penetrations
+                if (penTicker > 0) currentVelocity *= 0.55f; 
 
                 //updating impact velocity
                 impactVelocity = currentVelocity.magnitude;
