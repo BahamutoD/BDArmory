@@ -6,10 +6,13 @@ namespace BDArmory.Core.Utils
 {
     public static class BlastPhysicsUtils
     {
+        private const float MaxAcceleration = 200;
+
         public static BlastInfo CalculatePartAcceleration(float partArea, double vesselMass,  float explosiveMass, float range)
         {
-    
-            double scaledDistance = CalculateScaledDistance(explosiveMass, range);
+            float clampedRange = ClampRange(explosiveMass, range);
+
+            double scaledDistance = CalculateScaledDistance(explosiveMass, clampedRange);
 
             //double pressure = CalculateIncidentPressure(scaledDistance);
 
@@ -17,9 +20,9 @@ namespace BDArmory.Core.Utils
 
             double force = CalculateForce(pressure, partArea);
 
-            var acceleration = (force / vesselMass);
+            float acceleration = (float) (force / vesselMass);
 
-            return new BlastInfo() {Acceleration = Math.Max(0,(float) acceleration), Pressure = Math.Max(0,(float) pressure)};
+            return new BlastInfo() {Acceleration = Mathf.Clamp(acceleration, 0f, 200f), Pressure = Math.Max(0,(float) pressure)};
         }
 
         private static double CalculateScaledDistance(float explosiveCharge, float range)
@@ -27,6 +30,13 @@ namespace BDArmory.Core.Utils
             return (range / Math.Pow(explosiveCharge, 1f / 3f));
         }
 
+
+        private static float ClampRange (float explosiveCharge , float range)
+        {
+            float cubeRootOfChargeWeight = (float) Math.Pow(explosiveCharge, 1f / 3f);
+
+            return Mathf.Clamp(range, 0.0674f * cubeRootOfChargeWeight, 40 * cubeRootOfChargeWeight);
+        }
         private static double CalculateIncidentPressure(double scaledDistance)
 
         {

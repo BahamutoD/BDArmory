@@ -294,7 +294,9 @@ namespace BDArmory.FX
                 Part part = eventToExecute.Part;
                 Rigidbody rb = part.Rigidbody;
                 var realDistance = eventToExecute.Distance;
-                var effectivePartArea = Math.Min(part.GetArea() * 0.50f, Range);
+
+                var effectivePartArea = CalculateEffectiveBlastAreaToPart(Range, realDistance, part);
+
                 BlastInfo blastInfo =
                     BlastPhysicsUtils.CalculatePartAcceleration(effectivePartArea,
                         part.vessel.totalMass * 1000f, Power, realDistance);
@@ -337,6 +339,15 @@ namespace BDArmory.FX
             {
                 // ignored due to depending on previous event an object could be disposed
             }
+        }
+
+        private float CalculateEffectiveBlastAreaToPart(float range, float realDistance, Part part)
+        {
+            var effectiveDistance = range * 0.25f - realDistance;
+
+            var circularArea = Mathf.PI * effectiveDistance * effectiveDistance;
+
+            return Mathf.Clamp(circularArea, 0, part.GetArea() * 0.40f);
         }
 
         public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0, Part explosivePart = null, Vector3 direction = default(Vector3))
