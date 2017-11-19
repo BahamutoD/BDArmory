@@ -92,6 +92,8 @@ namespace BDArmory
         public bool hasRichocheted = false;
 
         public int penTicker = 0;
+
+        public Rigidbody rb;
         #endregion
 
         void OnEnable()
@@ -202,14 +204,28 @@ namespace BDArmory
                 return;
             }
 
-            flightTimeElapsed += TimeWarp.deltaTime; //calculate flight time for drag purposes
+            //calculate flight time for drag purposes
+            flightTimeElapsed += TimeWarp.deltaTime; 
 
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
-                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.deltaTime;
+                // Gravity???
+                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.deltaTime;                                            
             }
 
-            CalculateDragNumericalIntegration();
+            //Drag types currently only affect Impactvelocity 
+            // Numerical Integration is currently Broken
+            switch (dragType)
+            {
+                case BulletDragTypes.None:
+                    break;
+                case BulletDragTypes.AnalyticEstimate:
+                    CalculateDragAnalyticEstimate();
+                    break;
+                case BulletDragTypes.NumericalIntegration:
+                    CalculateDragNumericalIntegration();
+                    break;
+            }
 
             if (tracerLength == 0)
             {
@@ -296,10 +312,8 @@ namespace BDArmory
                             
                             impactVelocity = currentVelocity.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
-
-                            CalculateDragAnalyticEstimate();                            
-
-                            var penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
+                                                                    
+                            float penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
 
                             if (penetrationFactor >= 2)
                             {
@@ -426,10 +440,7 @@ namespace BDArmory
         }
 
         private void CalculateDragNumericalIntegration()
-        {
-            if (!bulletDrop) return;
-            if (dragType == BulletDragTypes.NumericalIntegration)
-            {
+        {       
                 Vector3 dragAcc = currentVelocity * currentVelocity.magnitude *
                                   (float)
                                   FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position),
@@ -439,29 +450,27 @@ namespace BDArmory
 
                 currentVelocity -= dragAcc * TimeWarp.deltaTime;
                 //numerical integration; using Euler is silly, but let's go with it anyway
-            }
+           
         }
 
         private void CalculateDragAnalyticEstimate()
-        {
-            if (!bulletDrop) return;
-            if (dragType == BulletDragTypes.AnalyticEstimate)
-            {
-                float analyticDragVelAdjustment =
-                    (float)
-                    FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition),
-                        FlightGlobals.getExternalTemperature(currPosition));
-                analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
-                analyticDragVelAdjustment += 2 * ballisticCoefficient;
+        {          
+               float analyticDragVelAdjustment = (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition), FlightGlobals.getExternalTemperature(currPosition));
+               analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
+               analyticDragVelAdjustment += 2 * ballisticCoefficient;
 
-                analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;
-                //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
+               analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;
+               //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
 
-                analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
-                //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
-                //the above number should be negative...
-                impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
-            }
+               analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
+            //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
+            //the above number should be negative...
+
+            //impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
+
+            impactVelocity = currentVelocity.magnitude - (analyticDragVelAdjustment + bulletVelocity);
+
+
         }
 
         private float CalculateArmorPenetration( Part hitPart, float anglemultiplier, RaycastHit hit)
@@ -499,8 +508,7 @@ namespace BDArmory
                 if (penTicker > 0) currentVelocity *= 0.55f; 
 
                 //updating impact velocity
-                impactVelocity = currentVelocity.magnitude;
-                CalculateDragAnalyticEstimate();
+                //impactVelocity = currentVelocity.magnitude;
 
                 flightTimeElapsed -= Time.deltaTime;
                 prevPosition = transform.position;
