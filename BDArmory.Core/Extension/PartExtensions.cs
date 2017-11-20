@@ -218,12 +218,18 @@ namespace BDArmory.Core.Extension
 
         public static float GetArea(this Part part)
         {
-            //var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
-            //float sfcAreaCalc =  2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            float sfcAreaCalc = 2f * (boundsSize.x * boundsSize.y) + 2f * (boundsSize.y * boundsSize.z) + 2f * (boundsSize.x * boundsSize.z);
             //Debug.Log("[BDArmory]: Surface Area1: " + part.surfaceAreas.magnitude);
             //Debug.Log("[BDArmory]: Surface Area2: " + sfcAreaCalc);
 
-            return part.surfaceAreas.magnitude;
+            return sfcAreaCalc;
+        }
+
+        public static float GetAverageBoundSize(this Part part)
+        {
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            return (boundsSize.x + boundsSize.y + boundsSize.z) / 3f;
         }
 
         public static float GetVolume(this Part part)

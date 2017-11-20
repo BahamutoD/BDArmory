@@ -294,22 +294,24 @@ namespace BDArmory.FX
                 Part part = eventToExecute.Part;
                 Rigidbody rb = part.Rigidbody;
                 var realDistance = eventToExecute.Distance;
-                var effectivePartArea = Math.Min(part.GetArea() * 0.50f, Range);
-                BlastInfo blastInfo =
-                    BlastPhysicsUtils.CalculatePartAcceleration(effectivePartArea,
-                        part.vessel.totalMass * 1000f, Power, realDistance);
 
-                var explosiveDamage = blastInfo.Pressure * 3f;
+               
+
+                BlastInfo blastInfo =
+                    BlastPhysicsUtils.CalculatePartBlastEffects(part, realDistance,
+                        part.vessel.totalMass * 1000f, Power, Range, BDArmorySettings.DMG_MULTIPLIER);
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log(
                         "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
-                        " Acceleration: {" + blastInfo.Acceleration + "}," +
+                        " VelocityChange: {" + blastInfo.VelocityChange + "}," +
                         " Distance: {" + realDistance + "}," +
-                        " Pressure: {" + blastInfo.Pressure + "}," +
-                        " ExplosiveDamage: {" + explosiveDamage + "}," +
-                        " effectiveArea: {" + effectivePartArea + "}," +
+                        " TotalPressure: {" + blastInfo.TotalPressure + "}," +
+                        " Damage: {" + blastInfo.Damage + "}," +
+                        " EffectiveArea: {" + blastInfo.EffectivePartArea + "}," +
+                        " EffectiveRange: {" + blastInfo.EffectiveDistance + "}," +
+                        " Positive Phase duration: {" + blastInfo.PositivePhaseDuration + "}," +
                         " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
                         " TimeIndex: {" + TimeIndex + "}," +
                         " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
@@ -321,16 +323,16 @@ namespace BDArmory.FX
                     ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true });
 
                     AddForceAtPosition(rb,
-                        (eventToExecute.HitPoint + part.rb.velocity * TimeIndex - Position).normalized * blastInfo.Acceleration *
+                        (eventToExecute.HitPoint + part.rb.velocity * TimeIndex - Position).normalized * blastInfo.VelocityChange *
                         BDArmorySettings.EXP_IMP_MOD,
                         eventToExecute.HitPoint + part.rb.velocity * TimeIndex);
 
-                    part.AddExplosiveDamage(explosiveDamage, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
+                    part.AddExplosiveDamage(blastInfo.Damage, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
 
                 }
                 else
                 {
-                    AddForceAtPosition(rb, (Position - part.transform.position).normalized * blastInfo.Acceleration * BDArmorySettings.EXP_IMP_MOD * 0.25f, part.transform.position);
+                    AddForceAtPosition(rb, (Position - part.transform.position).normalized * blastInfo.VelocityChange * BDArmorySettings.EXP_IMP_MOD * 0.25f, part.transform.position);
                 }
             }
             catch
@@ -338,6 +340,8 @@ namespace BDArmory.FX
                 // ignored due to depending on previous event an object could be disposed
             }
         }
+
+        
 
         public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0, Part explosivePart = null, Vector3 direction = default(Vector3))
         {
@@ -378,13 +382,13 @@ namespace BDArmory.FX
             pe.Dispose();
         }
 
-        public static void AddForceAtPosition(Rigidbody rb,Vector3 force,Vector3 position, ForceMode mode = ForceMode.Acceleration)
+        public static void AddForceAtPosition(Rigidbody rb,Vector3 force,Vector3 position)
         {
             //////////////////////////////////////////////////////////
             // Add The force to part
             //////////////////////////////////////////////////////////
             if (rb == null) return;
-            rb.AddForceAtPosition(force, position, mode);
+            rb.AddForceAtPosition(force , position, ForceMode.VelocityChange);
             if (BDArmorySettings.DRAW_DEBUG_LABELS)            
                 Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
         }
