@@ -4,13 +4,13 @@ using System.Linq;
 using BDArmory.Armor;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Module;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
-using static BDArmory.Core.Module.ArmorUtils;
 
 namespace BDArmory
 {
@@ -210,11 +210,13 @@ namespace BDArmory
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
                 // Gravity???
-                currentVelocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.deltaTime;                                            
+                //var gravity_ = FlightGlobals.getGeeForceAtPosition(transform.position);
+                var gravity_ = Physics.gravity;
+                currentVelocity += gravity_ * TimeWarp.deltaTime;                                            
             }
 
             //Drag types currently only affect Impactvelocity 
-            // Numerical Integration is currently Broken
+            //Numerical Integration is currently Broken
             switch (dragType)
             {
                 case BulletDragTypes.None:
@@ -354,7 +356,7 @@ namespace BDArmory
 
                                 if (hitPart.rb != null)
                                 {
-                                    Vector3 finalVelocityVector = hitPart.rb.velocity - this.currentVelocity;
+                                    Vector3 finalVelocityVector = hitPart.rb.velocity - currentVelocity;
                                     float finalVelocityMagnitude = finalVelocityVector.magnitude;
 
                                     float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
@@ -454,24 +456,21 @@ namespace BDArmory
         }
 
         private void CalculateDragAnalyticEstimate()
-        {          
-               float analyticDragVelAdjustment = (float) FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition), FlightGlobals.getExternalTemperature(currPosition));
-               analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
-               analyticDragVelAdjustment += 2 * ballisticCoefficient;
+        {
+            float analyticDragVelAdjustment = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPosition), FlightGlobals.getExternalTemperature(currPosition));
+            analyticDragVelAdjustment *= flightTimeElapsed * initialSpeed;
+            analyticDragVelAdjustment += 2 * ballisticCoefficient;
 
-               analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;
-               //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
+            analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;
+            //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
 
-               analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
+            analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
             //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
             //the above number should be negative...
 
-            //impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
+            impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
 
-            impactVelocity = currentVelocity.magnitude - (analyticDragVelAdjustment + bulletVelocity);
-
-
-        }
+       }
 
         private float CalculateArmorPenetration( Part hitPart, float anglemultiplier, RaycastHit hit)
         {
@@ -532,8 +531,7 @@ namespace BDArmory
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
                 penetration = (float)(16f * impactVelocity * Math.Sqrt(mass/1000) / Math.Sqrt(caliber));
-            }
-            //if (apBulletDmg != 0) penetration += apBulletDmg;
+            }          
 
             return penetration;
         }
