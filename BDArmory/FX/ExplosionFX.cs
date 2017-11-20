@@ -98,6 +98,8 @@ namespace BDArmory.FX
         private List<BlastHitEvent> ProcessingBlastSphere()
         {
             List<BlastHitEvent> result = new List<BlastHitEvent>();
+            List<Part> parstAdded = new List<Part>();
+            List<DestructibleBuilding> bulidingAdded = new List<DestructibleBuilding>();
 
             using (var hitCollidersEnu = Physics.OverlapSphere(Position, Range, 557057).AsEnumerable().GetEnumerator())
             {
@@ -107,17 +109,17 @@ namespace BDArmory.FX
 
                     Part partHit = hitCollidersEnu.Current.GetComponentInParent<Part>();
 
-                    if (partHit != null && partHit.mass > 0)
+                    if (partHit != null && partHit.mass > 0  && !parstAdded.Contains(partHit))
                     {
-                        ProcessPartEvent(partHit, result);
+                        ProcessPartEvent(partHit, result, parstAdded);
                     }
                     else
                     {
                          DestructibleBuilding building = hitCollidersEnu.Current.GetComponentInParent<DestructibleBuilding>();
 
-                        if (building != null)
+                        if (building != null && !bulidingAdded.Contains(building))
                         {
-                            ProcessBuildingEvent(building, result);
+                            ProcessBuildingEvent(building, result, bulidingAdded);
                         }
                     }
                 }
@@ -125,7 +127,7 @@ namespace BDArmory.FX
             return result;
         }
 
-        private void ProcessBuildingEvent(DestructibleBuilding building, List<BlastHitEvent> eventList)
+        private void ProcessBuildingEvent(DestructibleBuilding building, List<BlastHitEvent> eventList, List<DestructibleBuilding> bulidingAdded)
         {
             Ray ray = new Ray(Position, building.transform.position - Position);
             RaycastHit rayHit;
@@ -140,14 +142,15 @@ namespace BDArmory.FX
                 {
                     var distance = Vector3.Distance(Position, rayHit.point);
                     eventList.Add(new BuildingBlastHitEvent() { Distance = Vector3.Distance(Position, rayHit.point), Building = building, TimeToImpact = distance / ExplosionVelocity });
+                    bulidingAdded.Add(building);
                 }
             }
         }
 
-        private void ProcessPartEvent(Part part, List<BlastHitEvent> eventList)
+        private void ProcessPartEvent(Part part, List<BlastHitEvent> eventList, List<Part> partsAdded)
         {
             RaycastHit hit;
-           
+        
             if (IsInLineOfSight(part, ExplosivePart, out hit))
             {
                 if (IsAngleAllowed(Direction, hit))
@@ -161,6 +164,7 @@ namespace BDArmory.FX
                         TimeToImpact = realDistance / ExplosionVelocity,
                         HitPoint = hit.point,
                     });
+                    partsAdded.Add(part);
                 }
             }               
         }
