@@ -1,4 +1,5 @@
 ﻿using System;
+using BDArmory.Core.Extension;
 using BDArmory.Core.Module;
 using UnityEngine;
 
@@ -6,36 +7,61 @@ namespace BDArmory.Core.Utils
 {
     public static class BlastPhysicsUtils
     {
-        private const float MaxAcceleration = 200;
+        private const float MaxAcceleration = 2009;
 
-        public static BlastInfo CalculatePartAcceleration(float partArea, double vesselMass,  float explosiveMass, float range)
+        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range, float damageMultiplier)
         {
-            float clampedRange = ClampRange(explosiveMass, range);
 
-            double scaledDistance = CalculateScaledDistance(explosiveMass, clampedRange);
+        
 
-            //double pressure = CalculateIncidentPressure(scaledDistance);
+            float clampedDistanceToHit = ClampRange(explosiveMass, distanceToHit);
 
-            double pressure = CalculateIncidentImpulse(scaledDistance, explosiveMass);
+            double scaledDistance = CalculateScaledDistance(explosiveMass, clampedDistanceToHit);
 
-            double force = CalculateForce(pressure, partArea);
+
+            double pressurePerMs = CalculateIncidentImpulse(scaledDistance, explosiveMass);
+
+            double totalMs = CalculatePositivePhaseDuration(scaledDistance, explosiveMass);
+
+            double totalPressure = pressurePerMs * totalMs;
+
+            //Calculation impulse
+            float effectiveDistance = Mathf.Clamp(range * 0.25f - distanceToHit, range * 0.05f, range * 0.25f);
+
+            float effectivePartArea = CalculateEffectiveBlastAreaToPart(effectiveDistance, part);
+
+            double force = CalculateForce(totalPressure, effectivePartArea, totalMs);
 
             float acceleration = (float) (force / vesselMass);
 
-            return new BlastInfo() {Acceleration = Mathf.Clamp(acceleration, 0f, 200f), Pressure = Math.Max(0,(float) pressure)};
+            // Calculation of damage
+            float damage = (float) (totalPressure * (effectiveDistance / part.GetAverageBoundSize()));
+
+            return new BlastInfo() { TotalPressure = totalPressure, EffectiveDistance = effectiveDistance, EffectivePartArea = effectivePartArea, PositivePhaseDuration = totalMs,  VelocityChange = acceleration , Damage = damage };
         }
 
-        private static double CalculateScaledDistance(float explosiveCharge, float range)
+        private static float CalculateEffectiveBlastAreaToPart(float effectiveDistance, Part part)
         {
-            return (range / Math.Pow(explosiveCharge, 1f / 3f));
+            float circularArea = Mathf.PI * effectiveDistance * effectiveDistance;
+
+            return Mathf.Clamp(circularArea, 0f, part.GetArea() * 0.33f);
+        }
+
+        private static double CalculateScaledDistance(float explosiveCharge, float distanceToHit)
+        {
+            return (distanceToHit / Math.Pow(explosiveCharge, 1f / 3f));
         }
 
 
-        private static float ClampRange (float explosiveCharge , float range)
+        private static float ClampRange (float explosiveCharge , float distanceToHit)
         {
             float cubeRootOfChargeWeight = (float) Math.Pow(explosiveCharge, 1f / 3f);
 
-            return Mathf.Clamp(range, 0.0674f * cubeRootOfChargeWeight, 40 * cubeRootOfChargeWeight);
+            if (distanceToHit < 0.0674f * cubeRootOfChargeWeight)
+            {
+                return 0.0674f * cubeRootOfChargeWeight;
+            }
+                return distanceToHit;    
         }
         private static double CalculateIncidentPressure(double scaledDistance)
 
@@ -86,16 +112,69 @@ namespace BDArmory.Core.Utils
             ii = Math.Pow(10, ii);
             ii = ii * cubeRootOfChargeWeight;
             return ii;
-        }
+        }
+
+
+        private static double  CalculatePositivePhaseDuration(double scaledDistance, float explosiveCharge)
+        {
+            double t = Math.Log(scaledDistance) / Math.Log(10);
+            double cubeRootOfChargeWeight = Math.Pow(explosiveCharge, 0.3333333);
+            double ppd = 0;
+            if (scaledDistance <= 0.178)
+            {
+                return scaledDistance;
+            }
+            if (scaledDistance > 0.178 && scaledDistance <= 1.01)
+            {
+                double U = 1.92946154068 + 5.25099193925 * t;
+                ppd = -0.614227603559 + 0.130143717675 * U +
+                      0.134872511954 * Math.Pow(U, 2) +
+                      0.0391574276906 * Math.Pow(U, 3) -
+                      0.00475933664702 * Math.Pow(U, 4) -
+                      0.00428144598008 * Math.Pow(U, 5);
+
+            }
+            else if (scaledDistance > 1.01 && scaledDistance <= 2.78)
+            {
+                double U = 2.12492525216 + 9.2996288611 * t;
+                ppd = 0.315409245784 - 0.0297944268976 * U +
+                      0.030632954288 * Math.Pow(U, 2) +
+                      0.0183405574086 * Math.Pow(U, 3) -
+                      0.0173964666211 * Math.Pow(U, 4) -
+                      0.00106321963633 * Math.Pow(U, 5) +
+                      0.00562060030977 * Math.Pow(U, 6) +
+                      0.0001618217499 * Math.Pow(U, 7) -
+                      0.0006860188944 * Math.Pow(U, 8);
+
+            }
+            else if (scaledDistance > 2.78 && scaledDistance <= 40.0)
+            {
+                double U = -3.53626218091 + 3.46349745571 * t;
+                ppd = 0.686906642409 + 0.0933035304009 * U -
+                      0.0005849420883 * Math.Pow(U, 2) -
+                      0.00226884995013 * Math.Pow(U, 3) -
+                      0.00295908591505 * Math.Pow(U, 4) +
+                      0.00148029868929 * Math.Pow(U, 5);
+
+            }
+            else
+            {
+                return Mathf.Clamp((float) scaledDistance, 0.1f, 50f);
+            }
+
+            ppd = Math.Pow(10, ppd);
+            ppd = ppd * cubeRootOfChargeWeight;
+            return ppd;
+        }
         /// <summary>
         /// Calculate newtons from the pressure in kPa and the surface on Square meters
         /// </summary>
         /// <param name="pressure">kPa</param>
         /// <param name="surface">m2</param>
         /// <returns></returns>
-        private static double CalculateForce(double pressure, float surface)
+        private static double CalculateForce(double pressure, float surface, double timeInMs)
         {
-            return pressure * 1000 * surface;
+            return pressure * 1000f * surface * (timeInMs / 1000f);
         }
 
 
@@ -125,7 +204,11 @@ namespace BDArmory.Core.Utils
 
     public struct BlastInfo
     {
-        public float Acceleration;
-        public float Pressure;
+        public float VelocityChange { get; set; }
+        public float EffectivePartArea { get; set; }
+        public float Damage { get; set; }
+        public double TotalPressure { get; set; }
+        public float EffectiveDistance { get; set; }
+        public double PositivePhaseDuration { get; set; }
     }
 }

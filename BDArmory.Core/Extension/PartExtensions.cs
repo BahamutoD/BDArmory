@@ -226,6 +226,12 @@ namespace BDArmory.Core.Extension
             return sfcAreaCalc;
         }
 
+        public static float GetAverageBoundSize(this Part part)
+        {
+            var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+            return (boundsSize.x + boundsSize.y + boundsSize.z) / 3f;
+        }
+
         public static float GetVolume(this Part part)
         {
             var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
