@@ -98,6 +98,18 @@ namespace BDArmory
 
         void OnEnable()
         {
+            
+            ////////////////////////////////////////////////////////////
+            //gameObject.transform.rotation = transform.rotation;
+            //gameObject.AddComponent<CapsuleCollider>();
+
+            //rb = gameObject.AddComponent<Rigidbody>();
+            //rb.mass = mass;
+            //rb.drag = 0.05f;
+
+            //gameObject.AddComponent<physicalObject>();
+            ////////////////////////////////////////////////////////////
+
             startPosition = transform.position;
             collisionEnabled = false;
 

@@ -92,7 +92,6 @@ namespace BDArmory.Misc
             {
                 DontDestroyOnLoad(poolObject);
             }
-
             return op;
         }
     }
