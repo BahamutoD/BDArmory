@@ -222,8 +222,8 @@ namespace BDArmory
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
                 // Gravity???
-                //var gravity_ = FlightGlobals.getGeeForceAtPosition(transform.position);
-                var gravity_ = Physics.gravity;
+                var gravity_ = FlightGlobals.getGeeForceAtPosition(transform.position);
+                //var gravity_ = Physics.gravity;
                 currentVelocity += gravity_ * TimeWarp.deltaTime;                                            
             }
 
