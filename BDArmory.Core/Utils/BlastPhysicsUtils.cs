@@ -12,8 +12,6 @@ namespace BDArmory.Core.Utils
         public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range, float damageMultiplier)
         {
 
-        
-
             float clampedDistanceToHit = ClampRange(explosiveMass, distanceToHit);
 
             double scaledDistance = CalculateScaledDistance(explosiveMass, clampedDistanceToHit);
@@ -26,7 +24,7 @@ namespace BDArmory.Core.Utils
             double totalPressure = pressurePerMs * totalMs;
 
             //Calculation impulse
-            float effectiveDistance = Mathf.Clamp(range * 0.25f - distanceToHit, range * 0.05f, range * 0.25f);
+            float effectiveDistance = Mathf.Clamp((range - distanceToHit) * 0.15f, range * 0.01f, range * 0.15f);
 
             float effectivePartArea = CalculateEffectiveBlastAreaToPart(effectiveDistance, part);
 
@@ -35,7 +33,7 @@ namespace BDArmory.Core.Utils
             float acceleration = (float) (force / vesselMass);
 
             // Calculation of damage
-            float damage = (float) (totalPressure * (effectiveDistance / part.GetAverageBoundSize()));
+            float damage = (float) (totalPressure * Mathf.Clamp01(effectiveDistance / part.GetAverageBoundSize()));
 
             return new BlastInfo() { TotalPressure = totalPressure, EffectiveDistance = effectiveDistance, EffectivePartArea = effectivePartArea, PositivePhaseDuration = totalMs,  VelocityChange = acceleration , Damage = damage };
         }
@@ -122,7 +120,7 @@ namespace BDArmory.Core.Utils
             double ppd = 0;
             if (scaledDistance <= 0.178)
             {
-                return scaledDistance;
+                return Mathf.Clamp((float)scaledDistance, 0.5f, 50f);
             }
             if (scaledDistance > 0.178 && scaledDistance <= 1.01)
             {
@@ -159,12 +157,13 @@ namespace BDArmory.Core.Utils
             }
             else
             {
-                return Mathf.Clamp((float) scaledDistance, 0.1f, 50f);
+                return Mathf.Clamp((float) scaledDistance , 0.5f, 50f);
             }
 
             ppd = Math.Pow(10, ppd);
             ppd = ppd * cubeRootOfChargeWeight;
-            return ppd;
+
+            return Mathf.Clamp((float) ppd,0.5f, 50f);
         }
         /// <summary>
         /// Calculate newtons from the pressure in kPa and the surface on Square meters
