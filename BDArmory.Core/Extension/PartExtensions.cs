@@ -99,7 +99,7 @@ namespace BDArmory.Core.Extension
                             * 1e-4f);
 
             //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
-            if (explosive) damage *= 0.25f;
+            if (explosive) damage *= 0.85f;
             
             //penetration multipliers   
             damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
@@ -107,7 +107,7 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 5f;
+               damage *= 5.25f;
             }
 
             //As armor is decreased level of damage should increase

@@ -1069,7 +1069,7 @@ namespace BDArmory
                         bulletDragArea = Mathf.PI * Mathf.Pow(caliber / 2f, 2f);
 
                         //Bc = m/Cd * A
-                        bulletBallisticCoefficient = bulletMass / ((bulletDragArea / 1000000) * 0.295f);
+                        bulletBallisticCoefficient = bulletMass / ((bulletDragArea / 1000000f) * 0.295f); // mm^2 to m^2
                         
 
                         //Bc = m/d^2 * i where i = 0.484
