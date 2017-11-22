@@ -18,13 +18,12 @@ namespace BDArmory.Armor
         public float blastRadius { get; private set; }
         public float apBulletMod { get; private set; }
         public string bulletDragTypeName { get; private set; }
-        public float bulletDragArea { get; private set; }
 
         public static BulletInfos bullets;
 
         public BulletInfo(string name, float caliber, float bulletVelocity, float bulletMass,
                           bool explosive,float tntMass, float blastPower, float blastHeat, float blastRadius,
-                          float apBulletDmg, string bulletDragTypeName, float bulletDragArea)
+                          float apBulletDmg, string bulletDragTypeName)
                      
         {
             this.name = name;
@@ -38,7 +37,7 @@ namespace BDArmory.Armor
             this.blastRadius = blastRadius;
             this.apBulletMod = apBulletDmg;
             this.bulletDragTypeName = bulletDragTypeName;
-            this.bulletDragArea = bulletDragArea;           
+         
         }
 
         public static void Load()
@@ -62,8 +61,7 @@ namespace BDArmory.Armor
                         float.Parse(node.GetValue("blastHeat")),
                         float.Parse(node.GetValue("blastRadius")),
                         float.Parse(node.GetValue("apBulletMod")),
-                        node.GetValue("bulletDragTypeName"),
-                        float.Parse(node.GetValue("bulletDragArea"))
+                        node.GetValue("bulletDragTypeName")
                         )
                         );
                 }

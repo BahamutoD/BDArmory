@@ -75,7 +75,7 @@ namespace BDArmory
         Light lightFlash;
         bool wasInitiated;
         public Vector3 currentVelocity;
-        public float mass; 
+        public float bulletMass; 
         public float caliber = 1;
         public float bulletVelocity; //muzzle velocity
         public bool explosive = false;
@@ -86,6 +86,7 @@ namespace BDArmory
         public static Shader bulletShader;
         public static bool shaderInitialized;
         private float impactVelocity;
+        private float dragVelocity;
 
         public bool hasPenetrated = false;
         public bool hasDetonated = false;
@@ -324,7 +325,7 @@ namespace BDArmory
  
                             //Standard Pipeline Hitpoints, Armor and Explosives
                             
-                            impactVelocity = currentVelocity.magnitude;
+                            impactVelocity = currentVelocity.magnitude + dragVelocity;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
                                                                     
                             float penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
@@ -372,7 +373,7 @@ namespace BDArmory
                                     float finalVelocityMagnitude = finalVelocityVector.magnitude;
 
                                     float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
-                                                          (1f / hit.distance) * (mass - tntMass);
+                                                          (1f / hit.distance) * (bulletMass - tntMass);
 
                                     float accelerationMagnitude =
                                         forceAverageMagnitude / (hitPart.vessel.GetTotalMass() * 1000);
@@ -380,7 +381,7 @@ namespace BDArmory
                                     hitPart?.rb.AddForceAtPosition(-finalVelocityVector.normalized * accelerationMagnitude, hit.point, ForceMode.Acceleration);
 
                                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                        Debug.Log("[BDArmory]: Force Applied " + Math.Round(accelerationMagnitude, 2) + "| Vessel mass in kgs="+ hitPart.vessel.GetTotalMass() * 1000 + "| bullet effective mass ="+(mass - tntMass));
+                                        Debug.Log("[BDArmory]: Force Applied " + Math.Round(accelerationMagnitude, 2) + "| Vessel mass in kgs="+ hitPart.vessel.GetTotalMass() * 1000 + "| bullet effective mass ="+(bulletMass - tntMass));
                                 }
                                 
                                 hasPenetrated = false;                                          
@@ -447,7 +448,7 @@ namespace BDArmory
                 BulletHitFX.CreateBulletHit(hit.point, hit.normal, hasRichocheted, caliber);
             }
 
-            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor,
+            hitPart.AddDamage_Ballistic(bulletMass, caliber, multiplier, penetrationfactor,
                                         BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult,
                                         impactVelocity,explosive);
    
@@ -479,8 +480,9 @@ namespace BDArmory
             analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
             //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
             //the above number should be negative...
+            //impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
 
-            impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
+            dragVelocity = analyticDragVelAdjustment;           
 
        }
 
@@ -542,7 +544,7 @@ namespace BDArmory
             float penetration = 0;
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
-                penetration = (float)(16f * impactVelocity * Math.Sqrt(mass/1000) / Math.Sqrt(caliber));
+                penetration = (float)(16f * impactVelocity * Math.Sqrt(bulletMass/1000) / Math.Sqrt(caliber));
             }          
 
             return penetration;
@@ -614,7 +616,7 @@ namespace BDArmory
 
             if (hitBuilding != null && hitBuilding.IsIntact)
             {
-                float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER /
+                float damageToBuilding = bulletMass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER /
                                          12000;
                 hitBuilding.AddDamage(damageToBuilding);
                 if (hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
