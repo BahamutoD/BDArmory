@@ -74,9 +74,16 @@ namespace BDArmory.Core.Services
             return p.Modules.GetModule<HitpointTracker>().GetMaxArmor();
         }
  
-        public override void DestroyPart(Part p)
+        public override void DestroyPart_svc(Part p)
         {
             p.Modules.GetModule<HitpointTracker>().DestroyPart();
         }
+
+        public override string GetExplodeMode_svc(Part p)
+        {
+            return p.Modules.GetModule<HitpointTracker>().ExplodeMode;
+        }
+
+           
     }
 }

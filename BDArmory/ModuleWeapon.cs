@@ -1050,8 +1050,7 @@ namespace BDArmory
                             }
                             effectsShot = true;
                         }
-
-
+                        
                         //firing bullet
                         GameObject firedBullet = bulletPool.GetPooledObject();
                         PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
@@ -1060,14 +1059,20 @@ namespace BDArmory
 
                         pBullet.caliber = bulletInfo.caliber;
                         pBullet.bulletVelocity = bulletInfo.bulletVelocity;
-                        pBullet.mass = bulletInfo.bulletMass;
+                        pBullet.bulletMass = bulletInfo.bulletMass;
                         pBullet.explosive = bulletInfo.explosive;
                         pBullet.apBulletMod = bulletInfo.apBulletMod;                  
                         pBullet.bulletDmgMult = bulletDmgMult;
 
                         //A = π x (Ø / 2)^2
                         bulletDragArea = Mathf.PI * Mathf.Pow(caliber / 2f, 2f);
-                        bulletBallisticCoefficient = ((bulletMass * 1000) / (bulletDragArea * 0.295f)); //bullets are now in KG
+
+                        //Bc = m/Cd * A
+                        bulletBallisticCoefficient = bulletMass / ((bulletDragArea / 1000000f) * 0.295f); // mm^2 to m^2
+                        
+                        //Bc = m/d^2 * i where i = 0.484
+                        //bulletBallisticCoefficient = bulletMass / Mathf.Pow(caliber / 1000, 2f) * 0.484f;
+
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
 
                         pBullet.flightTimeElapsed = 0;
@@ -1758,23 +1763,7 @@ namespace BDArmory
                         if (bulletDrop) simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
                         simCurrPos += simVelocity * simDeltaTime;
                         pointPositions.Add(simCurrPos);
-                        
-                        //if (Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit, Vector3.Distance(simPrevPos, simCurrPos), 2228224))
-                        //{
-                        //    Vessel hitVessel = null;
-                        //    try
-                        //    {
-                        //        hitVessel = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>().part.vessel;
-                        //    } catch (NullReferenceException)
-                        //    {
-                        //    }
 
-                        //    if (!hitVessel || (hitVessel && hitVessel == vessel))
-                        //    {
-                        //        bulletPrediction = hit.point;
-                        //        simulating = false;
-                        //    }
-                        //}
                         if (Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit,
                             Vector3.Distance(simPrevPos, simCurrPos), 688129))
                         {
@@ -2226,10 +2215,7 @@ namespace BDArmory
                 caliber = bulletInfo.caliber;
                 bulletVelocity = bulletInfo.bulletVelocity;
                 bulletMass = bulletInfo.bulletMass;
-
                 bulletDragTypeName = bulletInfo.bulletDragTypeName;
-                bulletDragArea = bulletInfo.bulletDragArea;
-
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastHeat;
                 cannonShellRadius = bulletInfo.blastRadius;         

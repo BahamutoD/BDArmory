@@ -99,7 +99,7 @@ namespace BDArmory.Core.Extension
                             * 1e-4f);
 
             //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
-            if (explosive) damage *= 0.25f;
+            if (explosive) damage *= 0.85f;
             
             //penetration multipliers   
             damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
@@ -107,7 +107,7 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 5f;
+               damage *= 6.25f;
             }
 
             //As armor is decreased level of damage should increase
@@ -178,11 +178,6 @@ namespace BDArmory.Core.Extension
             Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
         }
         
-        /// <summary>
-        /// This method returns the amount of Armor resource
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
         public static double GetArmorMass(this Part p)
         {
             if (p == null) return 0d;        
@@ -198,10 +193,11 @@ namespace BDArmory.Core.Extension
             return armor_ / maxArmor_;
         }
 
-        //Thanks FlowerChild
-        //refreshes part action window
         public static void RefreshAssociatedWindows(this Part part)
         {
+            //Thanks FlowerChild
+            //refreshes part action window
+
             IEnumerator<UIPartActionWindow> window = UnityEngine.Object.FindObjectsOfType(typeof(UIPartActionWindow)).Cast<UIPartActionWindow>().GetEnumerator();
             while (window.MoveNext())
             {
@@ -246,10 +242,16 @@ namespace BDArmory.Core.Extension
         {
             return (part.mass * 1000) / part.GetVolume();
         }
+
         public static bool IsAero(this Part part)
         {
             return part.Modules.Contains("ModuleControlSurface") ||
                    part.Modules.Contains("ModuleLiftingSurface");
+        }
+
+        public static string GetExplodeMode(this Part part)
+        {
+            return Dependencies.Get<DamageService>().GetExplodeMode_svc(part);
         }
 
     }
