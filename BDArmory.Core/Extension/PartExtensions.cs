@@ -238,6 +238,49 @@ namespace BDArmory.Core.Extension
             return boundsSize.x * boundsSize.y * boundsSize.z;
         }
 
+        public static float GetDensity (this Part part)
+        {
+            return (part.mass * 1000) / part.GetVolume();
+        }
+
+        public static bool IsAero(this Part part)
+        {
+            return part.Modules.Contains("ModuleControlSurface") ||
+                   part.Modules.Contains("ModuleLiftingSurface");
+        }
+
+        public static string GetExplodeMode(this Part part)
+        {
+            return Dependencies.Get<DamageService>().GetExplodeMode_svc(part);
+        }
+
+        //public static float GetPartExternalScaleModifier(this Part part)
+        //{
+        //    double defaultScale = 1.0f;
+        //    double currentScale = 1.0f;
+        //    float rescaleFactor;
+
+        //    if (part.Modules.Contains("TweakScale"))
+        //    {
+        //        PartModule pM = part.Modules["TweakScale"];
+        //        if (pM.Fields.GetValue("currentScale") != null)
+        //        {
+        //            try
+        //            {
+        //                defaultScale = pM.Fields.GetValue<float>("defaultScale");
+        //                currentScale = pM.Fields.GetValue<float>("currentScale");
+        //            }
+        //            catch
+        //            {
+
+        //            }
+        //            rescaleFactor = (float)(currentScale / defaultScale);
+        //            return (float)(currentScale / defaultScale);
+        //        }
+        //    }
+        //    return 1.0f;
+        //}
+
         //public static float GetVolumeWithArmor(this Part part, float Armor_)
         //{
         //    var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
@@ -258,48 +301,5 @@ namespace BDArmory.Core.Extension
         //    return armorMass;
 
         //}
-
-        public static float GetDensity (this Part part)
-        {
-            return (part.mass * 1000) / part.GetVolume();
-        }
-
-        public static bool IsAero(this Part part)
-        {
-            return part.Modules.Contains("ModuleControlSurface") ||
-                   part.Modules.Contains("ModuleLiftingSurface");
-        }
-
-        public static string GetExplodeMode(this Part part)
-        {
-            return Dependencies.Get<DamageService>().GetExplodeMode_svc(part);
-        }
-
-        public static float GetPartExternalScaleModifier(this Part part)
-        {
-            double defaultScale = 1.0f;
-            double currentScale = 1.0f;
-            float rescaleFactor;
-
-            if (part.Modules.Contains("TweakScale"))
-            {
-                PartModule pM = part.Modules["TweakScale"];
-                if (pM.Fields.GetValue("currentScale") != null)
-                {
-                    try
-                    {
-                        defaultScale = pM.Fields.GetValue<float>("defaultScale");
-                        currentScale = pM.Fields.GetValue<float>("currentScale");
-                    }
-                    catch
-                    {
-
-                    }
-                    rescaleFactor = (float)(currentScale / defaultScale);
-                    return (float)(currentScale / defaultScale);
-                }
-            }
-            return 1.0f;
-        }
     }
 }

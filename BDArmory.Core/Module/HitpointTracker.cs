@@ -11,7 +11,7 @@ namespace BDArmory.Core.Module
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None,controlEnabled = false,scene = UI_Scene.All,maxValue = 100000,minValue = 0,requireFullControl = false)]
         public float Hitpoints;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor thickness"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor Thickness"),
         UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 10f;
 
@@ -118,7 +118,7 @@ namespace BDArmory.Core.Module
             }
             else
             {
-                Debug.Log("[BDArmory]:HitpointTracker::OnStart part  is null");
+                Debug.Log("[BDArmory]: HitpointTracker::OnStart part  is null");
             }
         }
 
@@ -149,10 +149,6 @@ namespace BDArmory.Core.Module
             if (HighLogic.LoadedSceneIsEditor && _firstSetup)
             {
                 SetupPrefab();
-
-                //PartVolume = Mathf.Round(part.GetVolume());
-                //PartVolumeWArmor = Mathf.Round(part.GetVolumeWithArmor(Armor));
-                //ArmorMass = part.GetArmorMass();
             }
         }
 
