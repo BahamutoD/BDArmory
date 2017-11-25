@@ -119,7 +119,7 @@ namespace BDArmory.Core.Extension
 
             if (p.HasArmor())
             {
-                double armorMass_ = p.GetArmorMass();
+                double armorMass_ = p.GetArmorThickness();
                 double armorPCT_ = p.GetArmorPercentage();
                 
                 //Armor limits Damage
@@ -157,7 +157,7 @@ namespace BDArmory.Core.Extension
 
         public static bool HasArmor(this Part p)
         {
-            return p.GetArmorMass() > 15f;
+            return p.GetArmorThickness() > 15f;
         }
 
         public static float Damage(this Part p)
@@ -178,7 +178,7 @@ namespace BDArmory.Core.Extension
             Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
         }
         
-        public static double GetArmorMass(this Part p)
+        public static double GetArmorThickness(this Part p)
         {
             if (p == null) return 0d;        
             return Dependencies.Get<DamageService>().GetPartArmor_svc(p);
@@ -238,6 +238,27 @@ namespace BDArmory.Core.Extension
             return boundsSize.x * boundsSize.y * boundsSize.z;
         }
 
+        //public static float GetVolumeWithArmor(this Part part, float Armor_)
+        //{
+        //    var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
+        //    return (boundsSize.x + (Armor_/1000)) * boundsSize.y * boundsSize.z;
+        //}
+
+        //public static float GetArmorMass(this Part part)
+        //{
+        //    // Density of Steel = 8050 kg/m^3 
+        //    // Mass = D x V
+
+        //    float originalVolume = GetVolume(part);
+        //    float withArmorVolume = GetVolumeWithArmor(part,(float) GetArmorThickness(part));
+        //    float armorVolume = withArmorVolume - originalVolume;
+
+        //    float armorMass = armorVolume * 8050f;
+
+        //    return armorMass;
+
+        //}
+
         public static float GetDensity (this Part part)
         {
             return (part.mass * 1000) / part.GetVolume();
@@ -254,5 +275,31 @@ namespace BDArmory.Core.Extension
             return Dependencies.Get<DamageService>().GetExplodeMode_svc(part);
         }
 
+        public static float GetPartExternalScaleModifier(this Part part)
+        {
+            double defaultScale = 1.0f;
+            double currentScale = 1.0f;
+            float rescaleFactor;
+
+            if (part.Modules.Contains("TweakScale"))
+            {
+                PartModule pM = part.Modules["TweakScale"];
+                if (pM.Fields.GetValue("currentScale") != null)
+                {
+                    try
+                    {
+                        defaultScale = pM.Fields.GetValue<float>("defaultScale");
+                        currentScale = pM.Fields.GetValue<float>("currentScale");
+                    }
+                    catch
+                    {
+
+                    }
+                    rescaleFactor = (float)(currentScale / defaultScale);
+                    return (float)(currentScale / defaultScale);
+                }
+            }
+            return 1.0f;
+        }
     }
 }

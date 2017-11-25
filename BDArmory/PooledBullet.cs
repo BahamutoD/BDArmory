@@ -552,7 +552,7 @@ namespace BDArmory
 
         private static float CalculateThickness(Part hitPart, float anglemultiplier)
         {
-            float thickness = (float)hitPart.GetArmorMass();
+            float thickness = (float)hitPart.GetArmorThickness();
             return Mathf.Max(thickness / anglemultiplier, 1);
         }
 

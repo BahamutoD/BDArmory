@@ -30,11 +30,24 @@ namespace BDArmory.Core.Module
         #endregion
 
         //TODO: Add setting
-        private readonly float hitpointMultiplier = 2f;
+        private readonly float hitpointMultiplier = 1.855f;
 
         private Part _prefabPart;
         private bool _setupRun = false;
         private bool _firstSetup = true;
+
+        ////////////////////////////////////////
+        // Temp Diagnostic Fields
+        ////////////////////////////////////////
+
+        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
+        //public float PartVolume = 0;
+
+        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume Armor")]
+        //public float PartVolumeWArmor = 0;
+
+        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Armor Mass")]
+        //public float ArmorMass = 0;
 
         protected virtual void Setup()
         {
@@ -136,6 +149,10 @@ namespace BDArmory.Core.Module
             if (HighLogic.LoadedSceneIsEditor && _firstSetup)
             {
                 SetupPrefab();
+
+                //PartVolume = Mathf.Round(part.GetVolume());
+                //PartVolumeWArmor = Mathf.Round(part.GetVolumeWithArmor(Armor));
+                //ArmorMass = part.GetArmorMass();
             }
         }
 
@@ -162,20 +179,20 @@ namespace BDArmory.Core.Module
             float hitpoints;
 
             if (!part.IsMissile())
-            {           
+            {
                 //1. Density of the dry mass of the part.
                 var density = part.GetDensity();
+
                 //2. Incresing density based on crash tolerance
                 density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
 
                 //12 square meters is the standard size of MK1 fuselage using it as a base
-                var areaExcess = Mathf.Max(part.GetArea() - 12f,0);
+                var areaExcess = Mathf.Max(part.GetArea() - 12f, 0);
+                var areaCalculation = Mathf.Min(12f, part.GetArea()) + Mathf.Pow(areaExcess, (1f / 3f));
 
-                var areaCalculation = Mathf.Min(12f, part.GetArea()) + Mathf.Pow(areaExcess, (1f / 3f)); 
                 //3. final calculations 
-
                 hitpoints = areaCalculation * density * hitpointMultiplier;
-                hitpoints = Mathf.Round(hitpoints);
+                hitpoints = Mathf.Round(hitpoints/1000) * 1000;
             }
             else
             {
