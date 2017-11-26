@@ -270,8 +270,10 @@ namespace BDArmory.FX
             DestructibleBuilding building = eventToExecute.Building;
             if (building)
             {
+                // * 0.00645f
+
                 var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
-                float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 0.00645f *
+                float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 
                                          Power * distanceFactor;
                 if (damageToBuilding > building.impactMomentumThreshold / 10)
                 {
@@ -343,9 +345,7 @@ namespace BDArmory.FX
             {
                 // ignored due to depending on previous event an object could be disposed
             }
-        }
-
-        
+        }        
 
         public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true, float caliber = 0, Part explosivePart = null, Vector3 direction = default(Vector3))
         {
