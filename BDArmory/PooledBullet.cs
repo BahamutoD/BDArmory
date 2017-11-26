@@ -618,7 +618,7 @@ namespace BDArmory
 
             if (building != null && building.IsIntact)
             {
-                float damageToBuilding = ((0.5f * (bulletMass * Mathf.Pow(impactVelocity, 2)))
+                float damageToBuilding = ((0.5f * (bulletMass * Mathf.Pow(currentVelocity.magnitude, 2)))
                             * (BDArmorySettings.DMG_MULTIPLIER / 100) * bulletDmgMult
                             * 1e-4f);
                 damageToBuilding /= 8f;
