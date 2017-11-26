@@ -3,8 +3,8 @@ using System.Linq;
 
 namespace BDArmory.Core.Module
 {
-    //public class BDArmor : PartModule
-    //{
+    public class BDArmor : PartModule
+    {
     //    public static ArmorUtils.ExplodeMode explodeMode_ = ArmorUtils.ExplodeMode.Never;
 
     //    #region KSP Fields
@@ -192,5 +192,5 @@ namespace BDArmory.Core.Module
     //        return 1.0f;
     //    }
 
-    //}
+    }
 }

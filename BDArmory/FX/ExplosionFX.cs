@@ -94,7 +94,6 @@ namespace BDArmory.FX
             }
         }
 
-
         private List<BlastHitEvent> ProcessingBlastSphere()
         {
             List<BlastHitEvent> result = new List<BlastHitEvent>();
@@ -268,25 +267,27 @@ namespace BDArmory.FX
             //TODO: Review if the damage is sensible after so many changes
             //buildings
             DestructibleBuilding building = eventToExecute.Building;
+            building.damageDecay = 600f;
+            
+
             if (building)
             {
-                // * 0.00645f
-
                 var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
                 float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 
-                                         Power * distanceFactor;
-                if (damageToBuilding > building.impactMomentumThreshold / 10)
-                {
-                    building.AddDamage(damageToBuilding);
-                }
-                if (building.Damage > building.impactMomentumThreshold)
+                                         Power * distanceFactor * 100;
+                //if (damageToBuilding > building.impactMomentumThreshold * 0.85f)
+               // {
+                building.AddDamage(damageToBuilding);
+                //}
+                if (building.Damage  > building.impactMomentumThreshold)
                 {
                     building.Demolish();
                 }
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
-                      Debug.Log("[BDArmory]:== Explosion hit destructible building! Hitpoints: " +
-                              (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + building.Damage);
+                      Debug.Log("[BDArmory]: Explosion hit destructible building! Hitpoints Applied: " + Mathf.Round(damageToBuilding) +
+                               ", Building Damage : " + Mathf.Round(building.Damage) +
+                               " Building Threshold : " + building.impactMomentumThreshold);
                 }   
             }
         }
