@@ -303,44 +303,63 @@ namespace BDArmory.FX
                 Rigidbody rb = part.Rigidbody;
                 var realDistance = eventToExecute.Distance;
 
-               
 
-                BlastInfo blastInfo =
-                    BlastPhysicsUtils.CalculatePartBlastEffects(part, realDistance,
-                        part.vessel.totalMass * 1000f, Power, Range, BDArmorySettings.DMG_MULTIPLIER);
-
-                if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                {
-                    Debug.Log(
-                        "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
-                        " VelocityChange: {" + blastInfo.VelocityChange + "}," +
-                        " Distance: {" + realDistance + "}," +
-                        " TotalPressure: {" + blastInfo.TotalPressure + "}," +
-                        " Damage: {" + blastInfo.Damage + "}," +
-                        " EffectiveArea: {" + blastInfo.EffectivePartArea + "}," +
-                        " EffectiveRange: {" + blastInfo.EffectiveDistance + "}," +
-                        " Positive Phase duration: {" + blastInfo.PositivePhaseDuration + "}," +
-                        " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
-                        " TimeIndex: {" + TimeIndex + "}," +
-                        " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
-                        " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
-                }
                 if (!eventToExecute.IsNegativePressure)
                 {
+                    BlastInfo blastInfo =
+                        BlastPhysicsUtils.CalculatePartBlastEffects(part, realDistance,
+                            part.vessel.totalMass * 1000f, Power, Range, BDArmorySettings.DMG_MULTIPLIER);
+
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log(
+                            "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
+                            " VelocityChange: {" + blastInfo.VelocityChange + "}," +
+                            " Distance: {" + realDistance + "}," +
+                            " TotalPressure: {" + blastInfo.TotalPressure + "}," +
+                            " Damage: {" + blastInfo.Damage + "}," +
+                            " EffectiveArea: {" + blastInfo.EffectivePartArea + "}," +
+                            " EffectiveRange: {" + blastInfo.EffectiveDistance + "}," +
+                            " Positive Phase duration: {" + blastInfo.PositivePhaseDuration + "}," +
+                            " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
+                            " TimeIndex: {" + TimeIndex + "}," +
+                            " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
+                            " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
+                    }
+
                     // Add Reverse Negative Event
-                    ExplosionEvents.Enqueue(new PartBlastHitEvent() { Distance = Range - realDistance, Part = part, TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity, IsNegativePressure = true });
+                    ExplosionEvents.Enqueue(new PartBlastHitEvent()
+                    {
+                        Distance = Range - realDistance,
+                        Part = part,
+                        TimeToImpact = 2 * (Range / ExplosionVelocity) + (Range - realDistance) / ExplosionVelocity,
+                        IsNegativePressure = true,
+                        NegativeForce = blastInfo.VelocityChange * 0.25f
+                    });
 
                     AddForceAtPosition(rb,
-                        (eventToExecute.HitPoint + part.rb.velocity * TimeIndex - Position).normalized * blastInfo.VelocityChange *
+                        (eventToExecute.HitPoint + part.rb.velocity * TimeIndex - Position).normalized *
+                        blastInfo.VelocityChange *
                         BDArmorySettings.EXP_IMP_MOD,
                         eventToExecute.HitPoint + part.rb.velocity * TimeIndex);
 
-                    part.AddExplosiveDamage(blastInfo.Damage, BDArmorySettings.DMG_MULTIPLIER, BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
-
+                    part.AddExplosiveDamage(blastInfo.Damage, BDArmorySettings.DMG_MULTIPLIER,
+                        BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
                 }
                 else
                 {
-                    AddForceAtPosition(rb, (Position - part.transform.position).normalized * blastInfo.VelocityChange * BDArmorySettings.EXP_IMP_MOD * 0.25f, part.transform.position);
+                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    {
+                        Debug.Log(
+                            "[BDArmory]: Executing blast event Part: {" + part.name + "}, " +
+                            " VelocityChange: {" + eventToExecute.NegativeForce + "}," +
+                            " Distance: {" + realDistance + "}," +
+                            " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
+                            " TimeIndex: {" + TimeIndex + "}," +
+                            " TimePlanned: {" + eventToExecute.TimeToImpact + "}," +
+                            " NegativePressure: {" + eventToExecute.IsNegativePressure + "}");
+                    }
+                    AddForceAtPosition(rb, (Position - part.transform.position).normalized * eventToExecute.NegativeForce * BDArmorySettings.EXP_IMP_MOD * 0.25f, part.transform.position);
                 }
             }
             catch
@@ -411,6 +430,10 @@ namespace BDArmory.FX
     {
         public Part Part { get; set; }
         public Vector3 HitPoint { get; set; }
+
+        public bool IsNegativePressure { get; set; }
+
+        public float NegativeForce { get; set; }
     }
 
     internal class BuildingBlastHitEvent : BlastHitEvent
