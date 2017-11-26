@@ -19,7 +19,8 @@ namespace BDArmory.Core.Utils
 
             double pressurePerMs = CalculateIncidentImpulse(scaledDistance, explosiveMass);
 
-            double totalMs = CalculatePositivePhaseDuration(scaledDistance, explosiveMass);
+            //double totalMs = CalculatePositivePhaseDuration(scaledDistance, explosiveMass);
+            var totalMs = 5;
 
             double totalPressure = pressurePerMs * totalMs;
 
@@ -116,13 +117,13 @@ namespace BDArmory.Core.Utils
         private static double  CalculatePositivePhaseDuration(double scaledDistance, float explosiveCharge)
         {
             double t = Math.Log(scaledDistance) / Math.Log(10);
-            double cubeRootOfChargeWeight = Math.Pow(explosiveCharge, 0.3333333);
+            double cubeRootOfChargeWeight = Math.Pow(explosiveCharge, 1f/3f);
             double ppd = 0;
             if (scaledDistance <= 0.178)
             {
-                return Mathf.Clamp((float)scaledDistance, 0.5f, 50f);
+                return CalculatePositivePhaseDuration(0.179, explosiveCharge);
             }
-            if (scaledDistance > 0.178 && scaledDistance <= 1.01)
+            else if (scaledDistance > 0.178 && scaledDistance <= 1.01)
             {
                 double U = 1.92946154068 + 5.25099193925 * t;
                 ppd = -0.614227603559 + 0.130143717675 * U +
@@ -132,20 +133,20 @@ namespace BDArmory.Core.Utils
                       0.00428144598008 * Math.Pow(U, 5);
 
             }
-            else if (scaledDistance > 1.01 && scaledDistance <= 2.78)
-            {
-                double U = 2.12492525216 + 9.2996288611 * t;
-                ppd = 0.315409245784 - 0.0297944268976 * U +
-                      0.030632954288 * Math.Pow(U, 2) +
-                      0.0183405574086 * Math.Pow(U, 3) -
-                      0.0173964666211 * Math.Pow(U, 4) -
-                      0.00106321963633 * Math.Pow(U, 5) +
-                      0.00562060030977 * Math.Pow(U, 6) +
-                      0.0001618217499 * Math.Pow(U, 7) -
-                      0.0006860188944 * Math.Pow(U, 8);
+            //else if (scaledDistance > 1.01 && scaledDistance <= 2.78)
+            //{
+            //    double U = 2.12492525216 + 9.2996288611 * t;
+            //    ppd = 0.315409245784 - 0.0297944268976 * U +
+            //          0.030632954288 * Math.Pow(U, 2) +
+            //          0.0183405574086 * Math.Pow(U, 3) -
+            //          0.0173964666211 * Math.Pow(U, 4) -
+            //          0.00106321963633 * Math.Pow(U, 5) +
+            //          0.00562060030977 * Math.Pow(U, 6) +
+            //          0.0001618217499 * Math.Pow(U, 7) -
+            //          0.0006860188944 * Math.Pow(U, 8);
 
-            }
-            else if (scaledDistance > 2.78 && scaledDistance <= 40.0)
+            //}
+            else if (scaledDistance > 1.01 && scaledDistance <= 40.0)
             {
                 double U = -3.53626218091 + 3.46349745571 * t;
                 ppd = 0.686906642409 + 0.0933035304009 * U -
@@ -155,15 +156,15 @@ namespace BDArmory.Core.Utils
                       0.00148029868929 * Math.Pow(U, 5);
 
             }
-            else
+            else if(scaledDistance > 40.0)
             {
-                return Mathf.Clamp((float) scaledDistance , 0.5f, 50f);
+                return CalculatePositivePhaseDuration(39.9, explosiveCharge);
             }
 
-            ppd = Math.Pow(10, ppd);
-            ppd = ppd * cubeRootOfChargeWeight;
-
-            return Mathf.Clamp((float) ppd,0.5f, 50f);
+           double fppd = Math.Pow(10, ppd);
+           fppd = fppd * cubeRootOfChargeWeight;
+            Debug.Log("scaledDistance = " + scaledDistance + "; ppd = " + ppd+ ";fppd = "+fppd);
+            return fppd;
         }
         /// <summary>
         /// Calculate newtons from the pressure in kPa and the surface on Square meters
