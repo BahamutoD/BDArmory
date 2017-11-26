@@ -309,8 +309,9 @@ namespace BDArmory
 
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
 
-                            if (CheckGroundHit(hitPart, hit) || CheckBuildingHit(hit))
+                            if (CheckGroundHit(hitPart, hit))
                             {
+                                CheckBuildingHit(hit);
                                 if (!RicochetScenery(hitAngle))
                                 {
                                     ExplosiveDetonation(hitPart, hit, ray);
@@ -607,25 +608,29 @@ namespace BDArmory
 
         private bool CheckBuildingHit(RaycastHit hit)
         {
-            DestructibleBuilding hitBuilding = null;
+            DestructibleBuilding building = null;
             try
             {
-                hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
-                hitBuilding.damageDecay = 600f;
+                building = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+                building.damageDecay = 600f;
             }
             catch (Exception) { }
 
-            if (hitBuilding != null && hitBuilding.IsIntact)
+            if (building != null && building.IsIntact)
             {
-                float damageToBuilding = bulletMass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER * 100;
-                hitBuilding.AddDamage(damageToBuilding);
-                if (hitBuilding.Damage > hitBuilding.impactMomentumThreshold * 150)
+                float damageToBuilding = ((0.5f * (bulletMass * Mathf.Pow(impactVelocity, 2)))
+                            * (BDArmorySettings.DMG_MULTIPLIER / 100) * bulletDmgMult
+                            * 1e-4f);
+                damageToBuilding /= 8f;
+                building.AddDamage(damageToBuilding);
+                if (building.Damage > building.impactMomentumThreshold * 150)
                 {
-                    hitBuilding.Demolish();
+                    building.Demolish();
                 }
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " +
-                              (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + hitBuilding.Damage);
+                    Debug.Log("[BDArmory]: Ballistic hit destructible building! Hitpoints Applied: " + Mathf.Round(damageToBuilding) +
+                             ", Building Damage : " + Mathf.Round(building.Damage) +
+                             " Building Threshold : " + building.impactMomentumThreshold);
 
 
                 return true;
