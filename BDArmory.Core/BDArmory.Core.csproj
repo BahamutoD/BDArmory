@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
+    <Compile Include="BuildingDamage.cs" />
     <Compile Include="Dependencies.cs" />
     <Compile Include="Enum\DamageOperation.cs" />
     <Compile Include="Extension\PartExtensions.cs" />

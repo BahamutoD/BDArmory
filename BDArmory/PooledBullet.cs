@@ -611,15 +611,15 @@ namespace BDArmory
             try
             {
                 hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+                hitBuilding.damageDecay = 600f;
             }
             catch (Exception) { }
 
             if (hitBuilding != null && hitBuilding.IsIntact)
             {
-                float damageToBuilding = bulletMass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER /
-                                         12000;
+                float damageToBuilding = bulletMass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER * 100;
                 hitBuilding.AddDamage(damageToBuilding);
-                if (hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
+                if (hitBuilding.Damage > hitBuilding.impactMomentumThreshold * 150)
                 {
                     hitBuilding.Demolish();
                 }
