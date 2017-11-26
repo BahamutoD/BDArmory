@@ -400,9 +400,9 @@ namespace BDArmory.Parts
             }
             else
             {
-                detonationDistance.maxValue = 500;
+                detonationDistance.maxValue = 100;
 
-                detonationDistance.stepIncrement = 10;
+                detonationDistance.stepIncrement = 1;
             }
         }
 
