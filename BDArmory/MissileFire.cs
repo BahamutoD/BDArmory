@@ -223,7 +223,7 @@ namespace BDArmory
                 wpnName.Dispose();
                 node.SetValue("RippleData", rippleData, true);
             }
-            Debug.Log("[BDArmory]: Saved ripple data: " + rippleData);
+            //Debug.Log("[BDArmory]: Saved ripple data");
         }
 
         public bool hasSingleFired;

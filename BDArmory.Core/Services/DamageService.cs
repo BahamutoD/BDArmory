@@ -18,6 +18,8 @@ namespace BDArmory.Core.Services
 
         public abstract float GetMaxArmor_svc(Part p);
 
-        public abstract void DestroyPart(Part p);
+        public abstract void DestroyPart_svc(Part p);
+
+        public abstract string GetExplodeMode_svc(Part p);
     }
 }

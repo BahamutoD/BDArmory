@@ -63,7 +63,7 @@ namespace BDArmory
         public float blastHeat = -1;
         public float bulletDmgMult = 1;
         public string explModelPath;
-        public string explSoundPath;        
+        public string explSoundPath;
 
         Vector3 startPosition;
         public bool airDetonation = false;
@@ -75,7 +75,7 @@ namespace BDArmory
         Light lightFlash;
         bool wasInitiated;
         public Vector3 currentVelocity;
-        public float mass; 
+        public float bulletMass;
         public float caliber = 1;
         public float bulletVelocity; //muzzle velocity
         public bool explosive = false;
@@ -86,6 +86,7 @@ namespace BDArmory
         public static Shader bulletShader;
         public static bool shaderInitialized;
         private float impactVelocity;
+        private float dragVelocity;
 
         public bool hasPenetrated = false;
         public bool hasDetonated = false;
@@ -98,6 +99,18 @@ namespace BDArmory
 
         void OnEnable()
         {
+
+            ////////////////////////////////////////////////////////////
+            //gameObject.transform.rotation = transform.rotation;
+            //gameObject.AddComponent<CapsuleCollider>();
+
+            //rb = gameObject.AddComponent<Rigidbody>();
+            //rb.mass = mass;
+            //rb.drag = 0.05f;
+
+            //gameObject.AddComponent<physicalObject>();
+            ////////////////////////////////////////////////////////////
+
             startPosition = transform.position;
             collisionEnabled = false;
 
@@ -145,11 +158,11 @@ namespace BDArmory
             if (!shaderInitialized)
             {
                 shaderInitialized = true;
-                bulletShader = BDAShaderLoader.BulletShader; 
+                bulletShader = BDAShaderLoader.BulletShader;
             }
 
             if (!wasInitiated)
-            {               
+            {
                 bulletTrail.material = new Material(bulletShader);
                 randomWidthScale = UnityEngine.Random.Range(0.5f, 1f);
                 gameObject.layer = 15;
@@ -161,7 +174,7 @@ namespace BDArmory
 
             tracerStartWidth *= 2f;
             tracerEndWidth *= 2f;
-            
+
             leftPenetration = 1;
             wasInitiated = true;
             StartCoroutine(FrameDelayedRoutine());
@@ -170,13 +183,13 @@ namespace BDArmory
         void OnDestory()
         {
             StopCoroutine(FrameDelayedRoutine());
-        }        
+        }
 
         IEnumerator FrameDelayedRoutine()
         {
             yield return new WaitForFixedUpdate();
             lightFlash.enabled = false;
-            collisionEnabled = true; 
+            collisionEnabled = true;
         }
 
         void OnWillRenderObject()
@@ -205,14 +218,14 @@ namespace BDArmory
             }
 
             //calculate flight time for drag purposes
-            flightTimeElapsed += TimeWarp.deltaTime; 
+            flightTimeElapsed += TimeWarp.deltaTime;
 
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
                 // Gravity???
-                //var gravity_ = FlightGlobals.getGeeForceAtPosition(transform.position);
-                var gravity_ = Physics.gravity;
-                currentVelocity += gravity_ * TimeWarp.deltaTime;                                            
+                var gravity_ = FlightGlobals.getGeeForceAtPosition(transform.position);
+                //var gravity_ = Physics.gravity;
+                currentVelocity += gravity_ * TimeWarp.deltaTime;
             }
 
             //Drag types currently only affect Impactvelocity 
@@ -233,19 +246,19 @@ namespace BDArmory
             {
                 bulletTrail.SetPosition(0,
                     transform.position +
-                    ((currentVelocity*tracerDeltaFactor*TimeWarp.deltaTime / TimeWarp.CurrentRate) -
+                    ((currentVelocity * tracerDeltaFactor * TimeWarp.deltaTime / TimeWarp.CurrentRate) -
                     (FlightGlobals.ActiveVessel.Velocity() * TimeWarp.deltaTime)) * 0.25);
             }
             else
             {
                 bulletTrail.SetPosition(0,
-                    transform.position + ((currentVelocity - sourceOriginalV).normalized*tracerLength));
+                    transform.position + ((currentVelocity - sourceOriginalV).normalized * tracerLength));
             }
 
             if (fadeColor)
             {
                 FadeColor();
-                bulletTrail.material.SetColor("_TintColor", currentColor*tracerLuminance);
+                bulletTrail.material.SetColor("_TintColor", currentColor * tracerLuminance);
             }
 
             bulletTrail.SetPosition(1, transform.position);
@@ -268,7 +281,7 @@ namespace BDArmory
 
                 float dist = currentVelocity.magnitude * TimeWarp.deltaTime;
                 Ray ray = new Ray(currPosition, currPosition - prevPosition);
-                var hits = Physics.RaycastAll(ray, dist, 557057);        
+                var hits = Physics.RaycastAll(ray, dist, 557057);
                 if (hits.Length > 0)
                 {
                     var orderedHits = hits.OrderBy(x => x.distance);
@@ -280,7 +293,7 @@ namespace BDArmory
                             if (!hasPenetrated || hasRichocheted || hasDetonated) break;
 
                             RaycastHit hit = hitsEnu.Current;
-                            Part hitPart = null;                                                           
+                            Part hitPart = null;
 
                             try
                             {
@@ -309,12 +322,12 @@ namespace BDArmory
                                 }
                                 return;
                             }
- 
+
                             //Standard Pipeline Hitpoints, Armor and Explosives
-                            
-                            impactVelocity = currentVelocity.magnitude;
+
+                            impactVelocity = currentVelocity.magnitude + dragVelocity;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
-                                                                    
+
                             float penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
 
                             if (penetrationFactor >= 2)
@@ -325,15 +338,15 @@ namespace BDArmory
                             else
                             {
                                 if (RicochetOnPart(hitPart, hit, hitAngle, impactVelocity))
-                                    hasRichocheted = true;                                                                
+                                    hasRichocheted = true;
                             }
 
                             if (penetrationFactor > 1 && !hasRichocheted) //fully penetrated continue ballistic damage
                             {
                                 hasPenetrated = true;
-                                CheckPartForExplosion(hitPart); 
                                 ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 penTicker += 1;
+                                CheckPartForExplosion(hitPart);
 
                                 //Explosive bullets that penetrate should explode shortly after
                                 //if penetration is very great, they will have moved on 
@@ -350,7 +363,7 @@ namespace BDArmory
                                     KillBullet();
                                 }
                             }
-                            else if(!hasRichocheted) // explosive bullets that get stopped by armor will explode 
+                            else if (!hasRichocheted) // explosive bullets that get stopped by armor will explode 
                             {
                                 //New method
 
@@ -360,7 +373,7 @@ namespace BDArmory
                                     float finalVelocityMagnitude = finalVelocityVector.magnitude;
 
                                     float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
-                                                          (1f / hit.distance) * (mass - tntMass);
+                                                          (1f / hit.distance) * (bulletMass - tntMass);
 
                                     float accelerationMagnitude =
                                         forceAverageMagnitude / (hitPart.vessel.GetTotalMass() * 1000);
@@ -368,10 +381,10 @@ namespace BDArmory
                                     hitPart?.rb.AddForceAtPosition(-finalVelocityVector.normalized * accelerationMagnitude, hit.point, ForceMode.Acceleration);
 
                                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                        Debug.Log("[BDArmory]: Force Applied " + Math.Round(accelerationMagnitude, 2) + "| Vessel mass in kgs="+ hitPart.vessel.GetTotalMass() * 1000 + "| bullet effective mass ="+(mass - tntMass));
+                                        Debug.Log("[BDArmory]: Force Applied " + Math.Round(accelerationMagnitude, 2) + "| Vessel mass in kgs=" + hitPart.vessel.GetTotalMass() * 1000 + "| bullet effective mass =" + (bulletMass - tntMass));
                                 }
-                                
-                                hasPenetrated = false;                                          
+
+                                hasPenetrated = false;
                                 ApplyDamage(hitPart, hit, 1, penetrationFactor);
                                 ExplosiveDetonation(hitPart, hit, ray);
                                 hasDetonated = true;
@@ -388,10 +401,10 @@ namespace BDArmory
                             //richochets
 
                             if ((explosive && airDetonation && distanceFromStart > detonationRange) ||
-                                (penTicker >= 2 && explosive)|| (hasRichocheted && explosive))
+                                (penTicker >= 2 && explosive) || (hasRichocheted && explosive))
                             {
                                 //detonate
-                                ExplosiveDetonation(hitPart, hit, ray,airDetonation);
+                                ExplosiveDetonation(hitPart, hit, ray, airDetonation);
                                 return;
                             }
 
@@ -407,10 +420,10 @@ namespace BDArmory
                                 return;
                             }
                             //we need to stop the loop if the bullet has stopped,richochet or detonated
-                            if (!hasPenetrated || hasRichocheted || hasDetonated ) break;
+                            if (!hasPenetrated || hasRichocheted || hasDetonated) break;
                             //end While
                         }
-                    } 
+                    }
                 }
             }
 
@@ -420,14 +433,14 @@ namespace BDArmory
 
             prevPosition = currPosition;
             //move bullet            
-            transform.position += currentVelocity * Time.deltaTime;            
+            transform.position += currentVelocity * Time.deltaTime;
         }
 
         private void ApplyDamage(Part hitPart, RaycastHit hit, float multiplier, float penetrationfactor)
         {
             //hitting a vessel Part
             //No struts, they cause weird bugs :) -BahamutoD
-            if(hitPart == null) return;
+            if (hitPart == null) return;
             if (hitPart.partInfo.name.Contains("Strut")) return;
 
             if (BDArmorySettings.BULLET_HITS)
@@ -435,24 +448,24 @@ namespace BDArmory
                 BulletHitFX.CreateBulletHit(hit.point, hit.normal, hasRichocheted, caliber);
             }
 
-            hitPart.AddDamage_Ballistic(mass, caliber, multiplier, penetrationfactor,
+            hitPart.AddDamage_Ballistic(bulletMass, caliber, multiplier, penetrationfactor,
                                         BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult,
-                                        impactVelocity,explosive);
-   
+                                        impactVelocity, explosive);
+
         }
 
         private void CalculateDragNumericalIntegration()
-        {       
-                Vector3 dragAcc = currentVelocity * currentVelocity.magnitude *
-                                  (float)
-                                  FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position),
-                                      FlightGlobals.getExternalTemperature(transform.position));
-                dragAcc *= 0.5f;
-                dragAcc /= ballisticCoefficient;
+        {
+            Vector3 dragAcc = currentVelocity * currentVelocity.magnitude *
+                              (float)
+                              FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position),
+                                  FlightGlobals.getExternalTemperature(transform.position));
+            dragAcc *= 0.5f;
+            dragAcc /= ballisticCoefficient;
 
-                currentVelocity -= dragAcc * TimeWarp.deltaTime;
-                //numerical integration; using Euler is silly, but let's go with it anyway
-           
+            currentVelocity -= dragAcc * TimeWarp.deltaTime;
+            //numerical integration; using Euler is silly, but let's go with it anyway
+
         }
 
         private void CalculateDragAnalyticEstimate()
@@ -467,12 +480,13 @@ namespace BDArmory
             analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
             //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
             //the above number should be negative...
+            //impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
 
-            impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
+            dragVelocity = analyticDragVelAdjustment;
 
-       }
+        }
 
-        private float CalculateArmorPenetration( Part hitPart, float anglemultiplier, RaycastHit hit)
+        private float CalculateArmorPenetration(Part hitPart, float anglemultiplier, RaycastHit hit)
         {
             ///////////////////////////////////////////////////////////////////////                                 
             // Armor Penetration
@@ -492,8 +506,8 @@ namespace BDArmory
             }
 
             bool fullyPenetrated = penetration > thickness; //check whether bullet penetrates the plate
-                                    
-            double massToReduce = Math.PI * Math.Pow((caliber*0.001) / 2,2) * (penetration);
+
+            double massToReduce = Math.PI * Math.Pow((caliber * 0.001) / 2, 2) * (penetration);
 
             if (fullyPenetrated)
             {
@@ -504,7 +518,7 @@ namespace BDArmory
                 //if (penetrationFactor < 2)
                 currentVelocity = currentVelocity * (float)Math.Sqrt(thickness / penetration);
                 //signifincanly reduce velocity on subsequent penetrations
-                if (penTicker > 0) currentVelocity *= 0.55f; 
+                if (penTicker > 0) currentVelocity *= 0.55f;
 
                 //updating impact velocity
                 //impactVelocity = currentVelocity.magnitude;
@@ -513,8 +527,8 @@ namespace BDArmory
                 prevPosition = transform.position;
             }
             else
-            {                
-                massToReduce *= 0.125f;                
+            {
+                massToReduce *= 0.125f;
 
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
@@ -526,28 +540,28 @@ namespace BDArmory
         }
 
         private float CalculatePenetration()
-        {        
+        {
             float penetration = 0;
             if (caliber > 10) //use the "krupp" penetration formula for anything larger then HMGs
             {
-                penetration = (float)(16f * impactVelocity * Math.Sqrt(mass/1000) / Math.Sqrt(caliber));
-            }          
+                penetration = (float)(16f * impactVelocity * Math.Sqrt(bulletMass / 1000) / Math.Sqrt(caliber));
+            }
 
             return penetration;
         }
 
         private static float CalculateThickness(Part hitPart, float anglemultiplier)
         {
-            float thickness = (float)hitPart.GetArmorMass();
-            return Mathf.Max(thickness / anglemultiplier, 1) ;
+            float thickness = (float)hitPart.GetArmorThickness();
+            return Mathf.Max(thickness / anglemultiplier, 1);
         }
 
-        private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray,bool airDetonation = false)
+        private bool ExplosiveDetonation(Part hitPart, RaycastHit hit, Ray ray, bool airDetonation = false)
         {
             ///////////////////////////////////////////////////////////////////////                                 
             // High Explosive Detonation
             ///////////////////////////////////////////////////////////////////////
-            
+
             if (hitPart == null || hitPart.vessel != sourceVessel)
             {
                 //if bullet hits and is HE, detonate and kill bullet
@@ -566,7 +580,7 @@ namespace BDArmory
                     {
                         ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f),
                                                     GetExplosivePower(),
-                                                    explModelPath, explSoundPath, false, caliber,null,direction: currentVelocity);
+                                                    explModelPath, explSoundPath, false, caliber, null, direction: currentVelocity);
                     }
 
                     KillBullet();
@@ -602,7 +616,7 @@ namespace BDArmory
 
             if (hitBuilding != null && hitBuilding.IsIntact)
             {
-                float damageToBuilding = mass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER /
+                float damageToBuilding = bulletMass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER /
                                          12000;
                 hitBuilding.AddDamage(damageToBuilding);
                 if (hitBuilding.Damage > hitBuilding.impactMomentumThreshold)
@@ -613,7 +627,7 @@ namespace BDArmory
                     Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " +
                               (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + hitBuilding.Damage);
 
-               
+
                 return true;
             }
             return false;
@@ -627,10 +641,10 @@ namespace BDArmory
             }
 
             float fov = c.fieldOfView;
-            float factor = (fov/60)*resizeFactor*
-                           Mathf.Clamp(Vector3.Distance(transform.position, c.transform.position), 0, 3000)/50;
-            float width1 = tracerStartWidth*factor*randomWidthScale;
-            float width2 = tracerEndWidth*factor*randomWidthScale;
+            float factor = (fov / 60) * resizeFactor *
+                           Mathf.Clamp(Vector3.Distance(transform.position, c.transform.position), 0, 3000) / 50;
+            float width1 = tracerStartWidth * factor * randomWidthScale;
+            float width2 = tracerEndWidth * factor * randomWidthScale;
 
             bulletTrail.SetWidth(width1, width2);
         }
@@ -652,13 +666,13 @@ namespace BDArmory
         {
             float hitTolerance = p.crashTolerance;
             //15 degrees should virtually guarantee a ricochet, but 75 degrees should nearly always be fine
-            float chance = (((angleFromNormal - 5)/75)*(hitTolerance/150))*100/Mathf.Clamp01(impactVel/600);
+            float chance = (((angleFromNormal - 5) / 75) * (hitTolerance / 150)) * 100 / Mathf.Clamp01(impactVel / 600);
             float random = UnityEngine.Random.Range(0f, 100f);
-            if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: "+chance);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Ricochet chance: " + chance);
             if (random < chance)
             {
                 DoRicochet(p, hit, angleFromNormal);
-                return true;                
+                return true;
             }
             else
             {
@@ -673,17 +687,17 @@ namespace BDArmory
             {
                 return true;
             }
-  
-             return false;                        
+
+            return false;
 
         }
 
-        public void DoRicochet(Part p, RaycastHit hit,float hitAngle)
+        public void DoRicochet(Part p, RaycastHit hit, float hitAngle)
         {
             //ricochet            
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true,caliber);
+                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, caliber);
             }
 
             tracerStartWidth /= 2;
@@ -704,14 +718,14 @@ namespace BDArmory
         {
             if (!hitPart.FindModuleImplementing<HitpointTracker>()) return;
 
-            switch (hitPart.FindModuleImplementing<HitpointTracker>().explodeMode)
+            switch (hitPart.GetExplodeMode())
             {
                 case "Always":
                     CreateExplosion(hitPart);
                     break;
                 case "Dynamic":
                     float probability = CalculateExplosionProbability(hitPart);
-                    if (probability > 0.1f)
+                    if (probability >= 4)
                         CreateExplosion(hitPart);
                     break;
                 case "Never":
@@ -721,32 +735,77 @@ namespace BDArmory
 
         private float CalculateExplosionProbability(Part part)
         {
+
+            ///////////////////////////////////////////////////////////////
             float probability = 0;
+            float fuelPct = 0;            
             for (int i = 0; i < part.Resources.Count; i++)
             {
                 PartResource current = part.Resources[i];
                 switch (current.resourceName)
                 {
                     case "LiquidFuel":
-                        probability += (float) (current.amount/current.maxAmount);
+                        fuelPct = (float)(current.amount / current.maxAmount);
                         break;
-                    case "Oxidizer":
-                        probability += (float) (current.amount/current.maxAmount);
-                        break;
+                        //case "Oxidizer":
+                        //   probability += (float) (current.amount/current.maxAmount);
+                        //    break;
                 }
             }
-            
-            if (explosive)
-                    probability += 0.1f;
+
+            if (fuelPct > 0 && fuelPct <= 0.60f)
+            {
+                probability = RangedProbability(new[] { 5f, 20f, 25f, 50f });
+            }
+            else
+            {
+                probability = RangedProbability(new[] { 50f, 30f, 10f, 10f });
+            }
+
+            if (fuelPct == 1f || fuelPct == 0f)
+                probability = 0f;
 
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: Explosive Probablitliy " + probability);
             }
 
+            //probability = 1 - probability;
+
+            ////if (explosive)
+            ////        probability += 0.1f;
+
+            //if (probability == 0) probability = 1f;
             return probability;
         }
-        
+
+        float RangedProbability(float[] probs)
+        {
+
+            float total = 0;
+            //probs = new[] { 50f, 25f, 20f, 5f };
+
+            foreach (float elem in probs)
+            {
+                total += elem;
+            }
+
+            float randomPoint = UnityEngine.Random.value * total;
+
+            for (int i = 0; i < probs.Length; i++)
+            {
+                if (randomPoint < probs[i])
+                {
+                    return i;
+                }
+                else
+                {
+                    randomPoint -= probs[i];
+                }
+            }
+            return probs.Length - 1;
+        }       
+
         public void CreateExplosion(Part part)
         {
             float explodeScale = 0;
