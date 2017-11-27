@@ -171,7 +171,7 @@ namespace BDArmory.Control
                         while (ePilots.MoveNext())
                         {
                             if (ePilots.Current == null) continue;
-                            if (ePilots.Current.currentCommand != BDModulePilotAI.PilotCommands.Follow ||
+                            if (ePilots.Current.currentCommand != PilotCommands.Follow ||
                                 !((ePilots.Current.vessel.CoM - ePilots.Current.commandLeader.vessel.CoM).sqrMagnitude > 1000f*1000f)) continue;
                             competitionStatus = "Competition: Waiting for teams to get in position.";
                             waiting = true;

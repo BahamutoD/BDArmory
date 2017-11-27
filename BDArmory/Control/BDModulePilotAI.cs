@@ -9,12 +9,10 @@ using System.Text;
 
 namespace BDArmory.Control
 {
-	public class BDModulePilotAI : PartModule
+	public class BDModulePilotAI : PartModule, IBDAICommandable, IBDAIControl
 	{
-		public enum SteerModes{NormalFlight, Aiming}
+		public enum SteerModes { NormalFlight, Aiming }
 		SteerModes steerMode = SteerModes.NormalFlight;
-
-		public enum PilotCommands{Free, Attack, Follow, FlyTo}
 
 
 		[KSPField(isPersistant = true)]
@@ -44,7 +42,7 @@ namespace BDArmory.Control
 		{
 			get
 			{
-				if(!vobj)
+				if (!vobj)
 				{
 					vobj = new GameObject("velObject");
 					vobj.transform.position = vessel.ReferenceTransform.position;
@@ -63,7 +61,7 @@ namespace BDArmory.Control
 
 		Vector3 upDirection = Vector3.up;
 
-		public MissileFire weaponManager;
+		public MissileFire weaponManager { get; set; }
 
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Alt."),
@@ -222,7 +220,7 @@ namespace BDArmory.Control
 		}
 		double commandSpeed;
 		Vector3d commandHeading;
-		public string currentStatus = "Free";
+		public string currentStatus { get; set; } = "Free";
 
 
 		void Start()
@@ -2023,6 +2021,12 @@ namespace BDArmory.Control
 			defaultOrbitCoords = gpsCoords;
 			commandGeoPos = gpsCoords;
 			command = PilotCommands.Attack;
+		}
+
+		public void CommandTakeOff()
+		{
+			ActivatePilot();
+			standbyMode = false;
 		}
 
 		void OnGUI()
