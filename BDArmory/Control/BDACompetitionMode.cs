@@ -71,28 +71,27 @@ namespace BDArmory.Control
         {
             competitionStarting = true;
             competitionStatus = "Competition: Pilots are taking off.";
-            Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>> pilots =
-                new Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>>();
-            pilots.Add(BDArmorySettings.BDATeams.A, new List<BDModulePilotAI>());
-            pilots.Add(BDArmorySettings.BDATeams.B, new List<BDModulePilotAI>());
+            Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>> pilots =
+                new Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>();
+            pilots.Add(BDArmorySettings.BDATeams.A, new List<IBDAIControl>());
+            pilots.Add(BDArmorySettings.BDATeams.B, new List<IBDAIControl>());
             List<Vessel>.Enumerator loadedVessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedVessels.MoveNext())
             {
                 if (loadedVessels.Current == null) continue;
                 if (!loadedVessels.Current.loaded) continue;
-                BDModulePilotAI pilot = null;
-                IEnumerator<BDModulePilotAI> ePilots = loadedVessels.Current.FindPartModulesImplementing<BDModulePilotAI>().AsEnumerable().GetEnumerator();
+                IBDAIControl pilot = null;
+                IEnumerator<IBDAIControl> ePilots = loadedVessels.Current.FindPartModulesImplementing<IBDAIControl>().AsEnumerable().GetEnumerator();
                 while (ePilots.MoveNext())
                 {
                     pilot = ePilots.Current;
                     break;
                 }
                 ePilots.Dispose();
-                if (!pilot || !pilot.weaponManager) continue;
+                if (pilot == null || !pilot.weaponManager) continue;
 
                 pilots[BDATargetManager.BoolToTeam(pilot.weaponManager.team)].Add(pilot);
-                pilot.ActivatePilot();
-                pilot.standbyMode = false;
+				pilot.CommandTakeOff();
                 if (pilot.weaponManager.guardMode)
                 {
                     pilot.weaponManager.ToggleGuardMode();
@@ -112,20 +111,20 @@ namespace BDArmory.Control
                 yield break;
             }
 
-            BDModulePilotAI aLeader = pilots[BDArmorySettings.BDATeams.A][0];
-            BDModulePilotAI bLeader = pilots[BDArmorySettings.BDATeams.B][0];
+            IBDAIControl aLeader = pilots[BDArmorySettings.BDATeams.A][0];
+            IBDAIControl bLeader = pilots[BDArmorySettings.BDATeams.B][0];
 
             aLeader.weaponManager.wingCommander.CommandAllFollow();
             bLeader.weaponManager.wingCommander.CommandAllFollow();
 
 
             //wait till the leaders are airborne
-            while (aLeader && bLeader && (aLeader.vessel.LandedOrSplashed || bLeader.vessel.LandedOrSplashed))
+            while (aLeader != null && bLeader != null && (aLeader.vessel.LandedOrSplashed || bLeader.vessel.LandedOrSplashed))
             {
                 yield return null;
             }
 
-            if (!aLeader || !bLeader)
+            if (aLeader == null || bLeader == null)
             {
                 StopCompetition();
             }
@@ -153,7 +152,7 @@ namespace BDArmory.Control
             {
                 waiting = false;
 
-                if (!aLeader || !bLeader)
+                if (aLeader == null || bLeader == null)
                 {
                     StopCompetition();
                 }
@@ -164,10 +163,10 @@ namespace BDArmory.Control
                 }
                 else
                 {
-                    Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>>.KeyCollection.Enumerator keys = pilots.Keys.GetEnumerator();
+                    Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>.KeyCollection.Enumerator keys = pilots.Keys.GetEnumerator();
                     while (keys.MoveNext())
                     {
-                        List<BDModulePilotAI>.Enumerator ePilots = pilots[keys.Current].GetEnumerator();
+                        List<IBDAIControl>.Enumerator ePilots = pilots[keys.Current].GetEnumerator();
                         while (ePilots.MoveNext())
                         {
                             if (ePilots.Current == null) continue;
@@ -185,10 +184,10 @@ namespace BDArmory.Control
             }
 
             //start the match
-            Dictionary<BDArmorySettings.BDATeams, List<BDModulePilotAI>>.KeyCollection.Enumerator pKeys = pilots.Keys.GetEnumerator();
+            Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>.KeyCollection.Enumerator pKeys = pilots.Keys.GetEnumerator();
             while (pKeys.MoveNext())
             {
-                List<BDModulePilotAI>.Enumerator pPilots = pilots[pKeys.Current].GetEnumerator();
+                List<IBDAIControl>.Enumerator pPilots = pilots[pKeys.Current].GetEnumerator();
                 while (pPilots.MoveNext())
                 {
                     if (pPilots.Current == null) continue;
@@ -211,7 +210,7 @@ namespace BDArmory.Control
 
                     //release command
                     pPilots.Current.ReleaseCommand();
-                    pPilots.Current.defaultOrbitCoords = centerGPS;
+                    pPilots.Current.CommandAttack(centerGPS);
                 }
             }
             pKeys.Dispose();

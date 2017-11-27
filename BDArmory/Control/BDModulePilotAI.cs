@@ -9,14 +9,14 @@ using System.Text;
 
 namespace BDArmory.Control
 {
-	public class BDModulePilotAI : PartModule, IBDAICommandable, IBDAIControl
+	public class BDModulePilotAI : PartModule, IBDAIControl
 	{
 		public enum SteerModes { NormalFlight, Aiming }
 		SteerModes steerMode = SteerModes.NormalFlight;
 
 
 		[KSPField(isPersistant = true)]
-		public bool pilotEnabled;
+		public bool pilotEnabled { get; private set; }
 
 		bool belowMinAltitude;
 		bool extending;
@@ -29,12 +29,17 @@ namespace BDArmory.Control
 			get { return extending || requestedExtend; }
 		}
 
-		public bool isLeadingFormation;
+		public bool isLeadingFormation { get; set; }
 
 		public void RequestExtend(Vector3 tPosition)
 		{
 			requestedExtend = true;
 			requestedExtendTpos = tPosition;
+		}
+
+		public bool CanEngage()
+		{
+			return !vessel.LandedOrSplashed;
 		}
 
 		GameObject vobj;
@@ -197,7 +202,7 @@ namespace BDArmory.Control
 				return command;
 			}
 		}
-		public ModuleWingCommander commandLeader;
+		public ModuleWingCommander commandLeader { get; private set; }
 		bool useRollHint;
 		Vector3d commandGeoPos;
 		public Vector3d commandPosition
@@ -1729,37 +1734,6 @@ namespace BDArmory.Control
 			}
 		}
 
-		public bool GetLaunchAuthorization(Vessel targetV, MissileFire mf)
-		{
-			bool launchAuthorized = false;
-			Vector3 target = targetV.transform.position;
-			MissileBase missile = mf.CurrentMissile;
-			if(missile != null)
-			{
-				if(!targetV.LandedOrSplashed)
-				{
-					target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
-				}
-
-				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
-
-				//if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
-
-				float fTime = 2f;
-				Vector3 futurePos = target + (targetV.Velocity() * fTime);
-				Vector3 myFuturePos = vesselTransform.position + (vessel.Velocity() * fTime);
-				bool fDot = Vector3.Dot(vesselTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
-
-               if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < missile.maxOffBoresight * boresightFactor)
-               {
-                        launchAuthorized = true;
-               }
-                    
-			}
-
-			return launchAuthorized;
-		}
-
 		void GetGuardTarget()
 		{
 			if(weaponManager!=null && weaponManager.vessel == vessel)
@@ -1772,7 +1746,7 @@ namespace BDArmory.Control
 				{
 					targetVessel = null;
 				}
-				weaponManager.pilotAI = this;
+				weaponManager.AI = this;
 				return;
 			}
 			else
@@ -1786,12 +1760,19 @@ namespace BDArmory.Control
                         : null;
 
 					weaponManager = mfs.Current;
-                    mfs.Current.pilotAI = this;
+                    mfs.Current.AI = this;
 
 					return;
 				}
                 mfs.Dispose();
 			}
+		}
+
+		public bool IsValidDirectFireTarget(Vessel target)
+		{
+			if (!vessel) return false;
+			// aircraft can aim at anything
+			return true;
 		}
 
 		bool DetectCollision(Vector3 direction, out Vector3 badDirection)
@@ -1964,13 +1945,14 @@ namespace BDArmory.Control
 		    {
 		        if(commandLeader)
 		        {
-		            List<BDModulePilotAI>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<BDModulePilotAI>().GetEnumerator();
+		            List<IBDAIControl>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
                     while (pilots.MoveNext())
                     {
                         if (pilots.Current == null) continue;
                         pilots.Current.isLeadingFormation = false;
 		            }
                     pilots.Dispose();
+					commandLeader = null;
 		        }
 		    }
 		    Debug.Log(vessel.vesselName + " was released from command.");
@@ -1988,7 +1970,7 @@ namespace BDArmory.Control
 		    command = PilotCommands.Follow;
 		    commandLeader = leader;
 		    commandFollowIndex = followerIndex;
-		    List<BDModulePilotAI>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<BDModulePilotAI>().GetEnumerator();
+		    List<IBDAIControl>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
 		    while (pilots.MoveNext())
 		    {
 		        if (pilots.Current == null) continue;

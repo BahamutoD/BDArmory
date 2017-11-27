@@ -13,9 +13,9 @@ namespace BDArmory.Control
     {
         public MissileFire weaponManager;
 
-        List<IBDAICommandable> friendlies;
+        List<IBDAIControl> friendlies;
 
-        List<IBDAICommandable> wingmen;
+        List<IBDAIControl> wingmen;
         [KSPField(isPersistant = true)] public string savedWingmen = string.Empty;
 
         //[KSPField(guiActive = false, guiActiveEditor = false, guiName = "")]
@@ -46,8 +46,8 @@ namespace BDArmory.Control
             RefreshFriendlies();
 
             //TEMPORARY
-            wingmen = new List<IBDAICommandable>();
-            List<IBDAICommandable>.Enumerator ps = friendlies.GetEnumerator();
+            wingmen = new List<IBDAIControl>();
+            List<IBDAIControl>.Enumerator ps = friendlies.GetEnumerator();
             while (ps.MoveNext())
             {
                 if (ps.Current == null) continue;
@@ -123,16 +123,16 @@ namespace BDArmory.Control
         void RefreshFriendlies()
         {
             if (!weaponManager) return;
-            friendlies = new List<IBDAICommandable>();
+            friendlies = new List<IBDAIControl>();
             List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
             while (vs.MoveNext())
             {
                 if (vs.Current == null) continue;
                 if (!vs.Current.loaded || vs.Current == vessel) continue;
 
-				IBDAICommandable pilot = null;
+				IBDAIControl pilot = null;
                 MissileFire wm = null;
-                List<IBDAICommandable>.Enumerator ps = vs.Current.FindPartModulesImplementing<IBDAICommandable>().GetEnumerator();
+                List<IBDAIControl>.Enumerator ps = vs.Current.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
                 while (ps.MoveNext())
                 {
                     if (ps.Current == null) continue;
@@ -156,8 +156,8 @@ namespace BDArmory.Control
             vs.Dispose();
 
             //TEMPORARY
-            wingmen = new List<IBDAICommandable>();
-            List<IBDAICommandable>.Enumerator fs = friendlies.GetEnumerator();
+            wingmen = new List<IBDAIControl>();
+            List<IBDAIControl>.Enumerator fs = friendlies.GetEnumerator();
             while (fs.MoveNext())
             {
                 if (fs.Current == null) continue;
@@ -170,7 +170,7 @@ namespace BDArmory.Control
         {
             if (wingmen == null)
             {
-                wingmen = new List<IBDAICommandable>();
+                wingmen = new List<IBDAIControl>();
                 //focusIndex = 0;
                 focusIndexes.Clear();
                 return;
@@ -199,7 +199,7 @@ namespace BDArmory.Control
             }
 
             savedWingmen = string.Empty;
-            List<IBDAICommandable>.Enumerator pilots = wingmen.GetEnumerator();
+            List<IBDAIControl>.Enumerator pilots = wingmen.GetEnumerator();
             while (pilots.MoveNext())
             {
                 if (pilots.Current == null) continue;
@@ -210,7 +210,7 @@ namespace BDArmory.Control
 
         void LoadWingmen()
         {
-            wingmen = new List<IBDAICommandable>();
+            wingmen = new List<IBDAIControl>();
 
             if (savedWingmen == string.Empty) return;
             IEnumerator<string> wingIDs = savedWingmen.Split(new char[] {','}).AsEnumerable().GetEnumerator();
@@ -223,7 +223,7 @@ namespace BDArmory.Control
                     if (!vs.Current.loaded) continue;
 
                     if (vs.Current.id.ToString() != wingIDs.Current) continue;
-                    List<IBDAICommandable>.Enumerator pilots = vs.Current.FindPartModulesImplementing<IBDAICommandable>().GetEnumerator();
+                    List<IBDAIControl>.Enumerator pilots = vs.Current.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
                     while (pilots.MoveNext())
                     {
                         if (pilots.Current == null) continue;
@@ -300,7 +300,7 @@ namespace BDArmory.Control
                 ScaleMode.StretchToFill, true);
         }
 
-        delegate void CommandFunction(IBDAICommandable wingman, int index, object data);
+        delegate void CommandFunction(IBDAIControl wingman, int index, object data);
 
         void WingmenWindow(int windowID)
         {
@@ -424,7 +424,7 @@ namespace BDArmory.Control
 
                     if (commandSelf)
                     {
-                        List<IBDAICommandable>.Enumerator ai = vessel.FindPartModulesImplementing<IBDAICommandable>().GetEnumerator();
+                        List<IBDAIControl>.Enumerator ai = vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
                         while (ai.MoveNext())
                         {
                             func(ai.Current, -1, data);
@@ -441,12 +441,12 @@ namespace BDArmory.Control
             buttonLine++;
         }
 
-        void CommandRelease(IBDAICommandable wingman, int index, object data)
+        void CommandRelease(IBDAIControl wingman, int index, object data)
         {
             wingman.ReleaseCommand();
         }
 
-        void CommandFollow(IBDAICommandable wingman, int index, object data)
+        void CommandFollow(IBDAIControl wingman, int index, object data)
         {
             wingman.CommandFollow(this, index);
         }
@@ -455,7 +455,7 @@ namespace BDArmory.Control
         {
             RefreshFriendlies();
             int i = 0;
-            List<IBDAICommandable>.Enumerator wingman = friendlies.GetEnumerator();
+            List<IBDAIControl>.Enumerator wingman = friendlies.GetEnumerator();
             while(wingman.MoveNext())
             {
                 if (wingman.Current == null) continue;
@@ -465,7 +465,7 @@ namespace BDArmory.Control
             wingman.Dispose();
         }
 
-        void CommandAG(IBDAICommandable wingman, int index, object ag)
+        void CommandAG(IBDAIControl wingman, int index, object ag)
         {
             //Debug.Log("object to string: "+ag.ToString());
             KSPActionGroup actionGroup = (KSPActionGroup) ag;
@@ -473,12 +473,12 @@ namespace BDArmory.Control
             wingman.CommandAG(actionGroup);
         }
 
-        void CommandTakeOff(IBDAICommandable wingman, int index, object data)
+        void CommandTakeOff(IBDAIControl wingman, int index, object data)
         {
 			wingman.CommandTakeOff();
         }
 
-        void OpenAGWindow(IBDAICommandable wingman, int index, object data)
+        void OpenAGWindow(IBDAIControl wingman, int index, object data)
         {
             showAGWindow = !showAGWindow;
         }
@@ -520,7 +520,7 @@ namespace BDArmory.Control
             agWindowHeight = newHeight;
         }
 
-        void SelectAll(IBDAICommandable wingman, int index, object data)
+        void SelectAll(IBDAIControl wingman, int index, object data)
         {
             for (int i = 0; i < wingmen.Count; i++)
             {
@@ -531,12 +531,12 @@ namespace BDArmory.Control
             }
         }
 
-        void CommandFlyTo(IBDAICommandable wingman, int index, object data)
+        void CommandFlyTo(IBDAIControl wingman, int index, object data)
         {
             StartCoroutine(CommandPosition(wingman, PilotCommands.FlyTo));
         }
 
-        void CommandAttack(IBDAICommandable wingman, int index, object data)
+        void CommandAttack(IBDAIControl wingman, int index, object data)
         {
             StartCoroutine(CommandPosition(wingman, PilotCommands.Attack));
         }
@@ -545,7 +545,7 @@ namespace BDArmory.Control
         bool waitingForFlytoPos;
         bool waitingForAttackPos;
 
-        IEnumerator CommandPosition(IBDAICommandable wingman, PilotCommands command)
+        IEnumerator CommandPosition(IBDAIControl wingman, PilotCommands command)
         {
             if (focusIndexes.Count == 0 && !commandSelf)
             {
@@ -609,7 +609,7 @@ namespace BDArmory.Control
             ScreenMessages.RemoveMessage(screenMessage);
         }
 
-        IEnumerator CommandPositionGUIRoutine(IBDAICommandable wingman, GPSTargetInfo tInfo)
+        IEnumerator CommandPositionGUIRoutine(IBDAIControl wingman, GPSTargetInfo tInfo)
         {
             //RemoveCommandPos(tInfo);
             commandedPositions.Add(tInfo);
