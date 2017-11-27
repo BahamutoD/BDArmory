@@ -11,9 +11,12 @@ namespace BDArmory.Control
 
 		MissileFire weaponManager { get; }
 
+		void ActivatePilot();
+		void DeactivatePilot();
 		void TogglePilot();
 
 		bool pilotEnabled { get; }
+
 		bool IsValidDirectFireTarget(Vessel target);
 		bool CanEngage();
 

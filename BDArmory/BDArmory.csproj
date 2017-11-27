@@ -78,8 +78,8 @@
   <ItemGroup>
     <Compile Include="Armor\ArmorPenetration.cs" />
     <Compile Include="Armor\BDArmor.cs" />
-    <Compile Include="Control\IBDAICommandable.cs" />
-    <Compile Include="Control\IBDAIControlable.cs" />
+    <Compile Include="Control\BDModuleShipAI.cs" />
+    <Compile Include="Control\IBDAIControl.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\CFEnable.cs" />
