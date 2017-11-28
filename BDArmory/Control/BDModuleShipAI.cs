@@ -249,13 +249,13 @@ namespace BDArmory.Control
 			// check for collisions
 			{
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
-				Vector3? dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
+				Vector3? dodgeVector = PredictRunningAshore(20f * predictMult, 2f);
 				List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
 				while (dodgeVector == null && vs.MoveNext())
 				{
 					if (vs.Current == null || vs.Current == vessel) continue;
 					if (!vs.Current.Splashed || (command == PilotCommands.Follow && vs.Current == commandLeader)) continue;
-					dodgeVector = PredictCollisionWithVessel(vs.Current, 2.5f * predictMult, 0.5f);
+					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 1f);
 				}
 				vs.Dispose();
 
@@ -304,7 +304,8 @@ namespace BDArmory.Control
 
 			// goto
 
-			targetDirection = Vector3.ProjectOnPlane(assignedPosition - vesselTransform.position, upDir);
+			Vector3 assignedPositionWorld = VectorUtils.GetWorldSurfacePostion(assignedPosition, vessel.mainBody);
+			targetDirection = Vector3.ProjectOnPlane(assignedPositionWorld - vesselTransform.position, upDir);
 			if (targetDirection.sqrMagnitude > 500f * 500f)
 			{
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
