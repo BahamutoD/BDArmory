@@ -304,7 +304,7 @@ namespace BDArmory.Control
 
 			// goto
 
-			targetDirection = Vector3.ProjectOnPlane(VectorUtils.GetWorldSurfacePostion(assignedPosition, vessel.mainBody) - vesselTransform.position, upDir);
+			targetDirection = Vector3.ProjectOnPlane(assignedPosition - vesselTransform.position, upDir);
 			if (targetDirection.sqrMagnitude > 500f * 500f)
 			{
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
