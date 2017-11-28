@@ -76,17 +76,16 @@ namespace BDArmory.Control
 		public string currentStatus { get; private set; } = "Free";
 		int commandFollowIndex;
 
-		Vector3d commandGeoPos;
-		public Vector3d commandGPS => commandGeoPos;
+		public Vector3d commandGPS => assignedPosition;
 		public Vector3d commandPosition
 		{
 			get
 			{
-				return VectorUtils.GetWorldSurfacePostion(commandGeoPos, vessel.mainBody);
+				return VectorUtils.GetWorldSurfacePostion(assignedPosition, vessel.mainBody);
 			}
-			set
+			private set
 			{
-				commandGeoPos = VectorUtils.WorldPositionToGeoCoords(value, vessel.mainBody);
+				assignedPosition = VectorUtils.WorldPositionToGeoCoords(value, vessel.mainBody);
 			}
 		}
 
@@ -162,7 +161,7 @@ namespace BDArmory.Control
 			GameEvents.onVesselDestroy.Remove(RemoveAutopilot);
 			GameEvents.onVesselDestroy.Add(RemoveAutopilot);
 
-			assignedPosition = VectorUtils.WorldPositionToGeoCoords(vessel.ReferenceTransform.position, vessel.mainBody);
+			commandPosition = vessel.ReferenceTransform.position;
 
 			RefreshPartWindow();
 		}
@@ -219,6 +218,7 @@ namespace BDArmory.Control
 
 		void AutoPilot(FlightCtrlState s)
 		{
+			Debug.Log("Running AutoPilot");
 			if (!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
 			{
 				return;
@@ -236,12 +236,16 @@ namespace BDArmory.Control
 			// if we're not in water, cut throttle and panic
 			if (!vessel.Splashed) return;
 
+			Debug.Log("Running Logic");
 			PilotLogic();
 
 			targetVelocity = Mathf.Clamp(targetVelocity, 0, MaxSpeed);
 
+			Debug.Log("TargetYaw");
 			TargetYaw(s, targetDirection);
+			Debug.Log("Setting Velocity");
 			AdjustThrottle(targetVelocity);
+			Debug.Log("Done");
 		}
 
 		void PilotLogic()
@@ -282,7 +286,6 @@ namespace BDArmory.Control
 			}
 
 			// follow
-			
 			if (command == PilotCommands.Follow)
 			{
 				Vector3 targetPosition = GetFormationPosition();
@@ -304,8 +307,7 @@ namespace BDArmory.Control
 
 			// goto
 
-			Vector3 assignedPositionWorld = VectorUtils.GetWorldSurfacePostion(assignedPosition, vessel.mainBody);
-			targetDirection = Vector3.ProjectOnPlane(assignedPositionWorld - vesselTransform.position, upDir);
+			targetDirection = Vector3.ProjectOnPlane(commandPosition - vesselTransform.position, upDir);
 			if (targetDirection.sqrMagnitude > 500f * 500f)
 			{
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
@@ -322,7 +324,7 @@ namespace BDArmory.Control
 			Vector3 yawTarget = Vector3.ProjectOnPlane(target, vesselTransform.forward);
 			yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift, 0); // limit "aoa"
 			float angle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
-			float yawMomentum = vesselTransform.localRotation.Yaw();
+			float yawMomentum = vesselTransform.localRotation.Yaw() * 10f;
 			float d2 = Math.Abs(Math.Abs(yawMomentum) - derivatives[2].y);
 			float d3 = d2 - derivatives[3].y;
 
@@ -414,11 +416,11 @@ namespace BDArmory.Control
 			while (time < maxTime)
 			{
 				Vector3 myPos = PredictPosition(vessel, time);
-				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.02f, 0)) > -5f)
+				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0)) > -5f)
 				{
 					return -vesselTransform.right;
 				}
-				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.02f, 0)) > -5f)
+				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0)) > -5f)
 				{
 					return vesselTransform.right;
 				}
@@ -459,7 +461,7 @@ namespace BDArmory.Control
 			Debug.Log(vessel.vesselName + " was released from command.");
 			command = PilotCommands.Free;
 
-			assignedPosition = VectorUtils.WorldPositionToGeoCoords(vesselTransform.position, vessel.mainBody);
+			commandPosition = vesselTransform.position;
 		}
 
 		public void CommandFollow(ModuleWingCommander leader, int followerIndex)
@@ -492,7 +494,6 @@ namespace BDArmory.Control
 
 			Debug.Log(vessel.vesselName + " was commanded to fly to.");
 			assignedPosition = gpsCoords;
-			commandGeoPos = gpsCoords;
 			command = PilotCommands.FlyTo;
 		}
 
@@ -502,7 +503,6 @@ namespace BDArmory.Control
 
 			Debug.Log(vessel.vesselName + " was commanded to attack.");
 			assignedPosition = gpsCoords;
-			commandGeoPos = gpsCoords;
 			command = PilotCommands.Attack;
 		}
 
