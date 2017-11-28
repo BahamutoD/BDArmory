@@ -28,8 +28,8 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity;
 
-		//max second derivative, max third derivative, previous momentum, previous momentum derivative, previous command -- pitch, yaw, roll
-		Vector3[] derivatives = new Vector3[5];
+		//max second derivative, max third derivative, previous orientation, previous momentum, previous momentum derivative, previous command -- pitch, yaw, roll
+		Vector3[] derivatives = new Vector3[6];
 
 		public bool CanEngage() => vessel.Splashed;
 		public bool IsValidDirectFireTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
@@ -218,7 +218,6 @@ namespace BDArmory.Control
 
 		void AutoPilot(FlightCtrlState s)
 		{
-			Debug.Log("Running AutoPilot");
 			if (!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
 			{
 				return;
@@ -232,20 +231,21 @@ namespace BDArmory.Control
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
 			GetGuardTarget();
+			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && weaponManager.guardMode &&
+				(BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0 || BDArmorySettings.PEACE_MODE));
 
 			// if we're not in water, cut throttle and panic
 			if (!vessel.Splashed) return;
 
-			Debug.Log("Running Logic");
 			PilotLogic();
 
 			targetVelocity = Mathf.Clamp(targetVelocity, 0, MaxSpeed);
 
-			Debug.Log("TargetYaw");
-			TargetYaw(s, targetDirection);
-			Debug.Log("Setting Velocity");
+			SetYaw(s, targetDirection);
+			SetPitch(s);
+			SetRoll(s);
+
 			AdjustThrottle(targetVelocity);
-			Debug.Log("Done");
 		}
 
 		void PilotLogic()
@@ -274,15 +274,29 @@ namespace BDArmory.Control
 				}
 			}
 
-			// TODO: check for incoming fire and try to dodge
+			// PointForImprovement: check for incoming fire and try to dodge
+			// though ships are probably too slow for that, generally, so just try to keep moving
 
 			Vector3 upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
 			// if guard mode on, check for enemy targets and engage
-			if (weaponManager && weaponManager.guardMode && 
+			if (weaponManager && weaponManager.guardMode &&
 				(BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0 || BDArmorySettings.PEACE_MODE))
 			{
-
+				if (BroadsideAttack)
+				{
+					//TODO
+				}
+				else // just point at target and go
+				{
+					var vecToTarget = targetVessel.CoM - vessel.CoM;
+					targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
+					var angle = Vector3.Angle(targetDirection, vesselTransform.up);
+					if (angle > 0.75f) targetVelocity = MaxSpeed;
+					else targetVelocity = Mathf.Sqrt(vecToTarget.magnitude - EngagementRange) + Vector3.Dot(vessel.Velocity(), targetVessel.Velocity());
+					targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed);
+				}
+				return;
 			}
 
 			// follow
@@ -290,8 +304,8 @@ namespace BDArmory.Control
 			{
 				Vector3 targetPosition = GetFormationPosition();
 				Vector3 targetDistance = targetPosition - vesselTransform.position;
-				if (Vector3.Dot(targetDistance, vesselTransform.up) < 0 
-					&& Vector3.ProjectOnPlane(targetDistance, upDir).sqrMagnitude < 250f*250f 
+				if (Vector3.Dot(targetDistance, vesselTransform.up) < 0
+					&& Vector3.ProjectOnPlane(targetDistance, upDir).sqrMagnitude < 250f * 250f
 					&& Vector3.Angle(vesselTransform.up, commandLeader.vessel.Velocity()) < 0.8f)
 				{
 					targetVelocity = (float)(commandLeader.vessel.horizontalSrfSpeed - (vesselTransform.position - targetPosition).magnitude / 15);
@@ -313,40 +327,55 @@ namespace BDArmory.Control
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
 				return;
 			}
-			
+
 			targetDirection = vesselTransform.up;
 		}
 
 		void AdjustThrottle(float targetSpeed) => speedController.targetSpeed = targetSpeed;
 
-		void TargetYaw(FlightCtrlState s, Vector3 target)
+		void SetYaw(FlightCtrlState s, Vector3 target)
 		{
 			Vector3 yawTarget = Vector3.ProjectOnPlane(target, vesselTransform.forward);
-			yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift, 0); // limit "aoa"
+			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed) yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift, 0); // limit "aoa"
 			float angle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
-			float yawMomentum = vesselTransform.localRotation.Yaw() * 10f;
-			float d2 = Math.Abs(Math.Abs(yawMomentum) - derivatives[2].y);
-			float d3 = d2 - derivatives[3].y;
+			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
+			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
+			float yawMomentum = orientation - derivatives[2].y;
+			float d2 = Math.Abs(Math.Abs(yawMomentum) - derivatives[3].y);
+			//float d3 = d2 - derivatives[4].y;
 
-			float yawOrder = Mathf.Clamp((angle * 2 / (derivatives[0].y * (derivatives[0].y + 1)) - yawMomentum) / derivatives[0].y, -1, 1);
+			float yawOrder = Mathf.Clamp((Mathf.Sqrt(Math.Abs(angle / derivatives[0].y))-1)*Math.Sign(angle) + (yawMomentum / derivatives[0].y), -1, 1);
+			debugString.Append("angleSeconds " + ((Mathf.Sqrt(Math.Abs(angle / derivatives[0].y)) - 1) * Math.Sign(angle)).ToString() +
+				" momentumSeconds " + (yawMomentum / derivatives[0].y).ToString());
+			debugString.Append(Environment.NewLine);
+			if (float.IsNaN(yawOrder)) yawOrder = 1; // division by zero :(
 
 			// update derivatives
-			if (derivatives[4].y > 0.2f)
+			if (derivatives[5].y > 0.2f)
 			{
-				derivatives[1].y = derivatives[1].y * 0.9f + d3 / derivatives[4].y * 0.1f;
-				derivatives[0].y = derivatives[0].y * 0.9f + derivatives[3].y / derivatives[4].y * 0.1f;
-				debugString.Append("Derivatives: " + derivatives[3].y + " " + derivatives[4].y);
-				debugString.Append(Environment.NewLine);
+				//derivatives[1].y = derivatives[1].y * 0.9f + d3 / derivatives[5].y * 0.05f;
+				derivatives[0].y = derivatives[0].y * 0.9f + d2 / derivatives[5].y * 0.05f;
 			}
-			derivatives[3].y = d2;
-			derivatives[2].y = Math.Abs(yawMomentum);
-			derivatives[4].y = Math.Abs(yawOrder);
+			derivatives[2].y = orientation;
+			//derivatives[4].y = d2;
+			derivatives[3].y = Math.Abs(yawMomentum);
+			derivatives[5].y = Math.Abs(yawOrder);
 
 			// set yaw
 			s.yaw = yawOrder;
 
-			debugString.Append("YawAngle " + angle.ToString()+" momentum "+yawMomentum.ToString()+" derivative "+derivatives[0].y.ToString()+" order "+yawOrder.ToString());
+			debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
 			debugString.Append(Environment.NewLine);
+		}
+
+		void SetPitch(FlightCtrlState s)
+		{
+			//TODO
+		}
+
+		void SetRoll(FlightCtrlState s)
+		{
+			//TODO
 		}
 
 		#endregion
