@@ -172,8 +172,8 @@ namespace BDArmory.Control
                             if (ePilots.Current == null) continue;
                             if (ePilots.Current.currentCommand != PilotCommands.Follow ||
                                 !(Vector3.ProjectOnPlane(
-									ePilots.Current.vessel.CoM - ePilots.Current.commandLeader.vessel.CoM, 
-									ePilots.Current.commandLeader.vessel.up
+									ePilots.Current.vessel.CoM - ePilots.Current.commandLeader.vessel.CoM,
+									VectorUtils.GetUpDirection(ePilots.Current.commandLeader.vessel.transform.position)
 									).sqrMagnitude > 1000f*1000f)) continue;
                             competitionStatus = "Competition: Waiting for teams to get in position.";
                             waiting = true;
