@@ -291,11 +291,13 @@ namespace BDArmory.Control
 				{
 					var vecToTarget = targetVessel.CoM - vessel.CoM;
 					targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
-					var angle = Vector3.Angle(targetDirection, vesselTransform.up);
-					if (angle > 0.75f) targetVelocity = MaxSpeed;
+					if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0;
 					else targetVelocity = Mathf.Sqrt(vecToTarget.magnitude - EngagementRange) + Vector3.Dot(vessel.Velocity(), targetVessel.Velocity());
 					targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed);
 				}
+				currentStatus = "Engaging target";
+				debugString.Append($"Engaging target");
+				debugString.Append(Environment.NewLine);
 				return;
 			}
 
@@ -316,6 +318,10 @@ namespace BDArmory.Control
 					targetVelocity = (float)(commandLeader.vessel.horizontalSrfSpeed + (vesselTransform.position - targetPosition).magnitude / 15);
 					targetDirection = Vector3.ProjectOnPlane(targetDistance, upDir);
 				}
+				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
+				currentStatus = "Following";
+				debugString.Append($"Following");
+				debugString.Append(Environment.NewLine);
 				return;
 			}
 
@@ -325,6 +331,10 @@ namespace BDArmory.Control
 			if (targetDirection.sqrMagnitude > 500f * 500f)
 			{
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
+				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
+				currentStatus = "Moving";
+				debugString.Append($"Moving");
+				debugString.Append(Environment.NewLine);
 				return;
 			}
 
@@ -337,11 +347,7 @@ namespace BDArmory.Control
 		{
 			Vector3 yawTarget = Vector3.ProjectOnPlane(target, vesselTransform.forward);
 			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
-			{
 				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift*Mathf.Deg2Rad, 0); // limit "aoa"
-				debugString.Append("limiting aoa "+Vector3.Angle(yawTarget, vessel.srf_velocity)+" "+ Vector3.Angle(yawTarget, vesselTransform.up));
-				debugString.Append(Environment.NewLine);
-			}
 			float angle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
 			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
@@ -355,8 +361,8 @@ namespace BDArmory.Control
 			// update derivatives
 			if (derivatives[5].y > 0.2f)
 			{
-				//derivatives[1].y = derivatives[1].y * 0.9f + d3 / derivatives[5].y * 0.05f;
-				derivatives[0].y = derivatives[0].y * 0.9f + d2 / derivatives[5].y * 0.05f;
+				//derivatives[1].y = derivatives[1].y * 0.95f + d3 / derivatives[5].y * 0.05f;
+				derivatives[0].y = derivatives[0].y * 0.95f + d2 / derivatives[5].y * 0.05f;
 			}
 			derivatives[2].y = orientation;
 			//derivatives[4].y = d2;
@@ -366,18 +372,47 @@ namespace BDArmory.Control
 			// set yaw
 			s.yaw = yawOrder;
 
-			debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
-			debugString.Append(Environment.NewLine);
+			//debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
+			//debugString.Append(Environment.NewLine);
 		}
 
 		void SetPitch(FlightCtrlState s)
 		{
-			//TODO
+			float angle = TargetPitch * Mathf.Clamp((float)vessel.horizontalSrfSpeed / CruiseSpeed, 0, 1);
+			float pitch = 90 - Vector3.Angle(vesselTransform.up, VectorUtils.GetUpDirection(vesselTransform.position));
+			float error = angle - pitch;
+			float change = pitch - derivatives[2].x;
+			float targetChange = Mathf.Clamp(error / 512, -0.01f, 0.01f);
+
+			float pitchOrder = Mathf.Clamp(derivatives[1].x + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f, -1, 1);
+
+			if (float.IsNaN(pitchOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10) pitchOrder = 0;
+
+			derivatives[1].x = pitchOrder;
+			derivatives[2].x = pitch;
+
+			s.pitch = pitchOrder;
+			//debugString.Append(pitch+"PitchAngle " + angle.ToString() + " factor3 " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) + " retainedOrder " + derivatives[1].x + "change" + change);
+			//debugString.Append(Environment.NewLine);
 		}
 
 		void SetRoll(FlightCtrlState s)
 		{
-			//TODO
+			float angle = BankAngle * Mathf.Clamp(VectorUtils.SignedAngle(vessel.GetSrfVelocity(), vesselTransform.up, vesselTransform.right) / (MaxDrift), -1, 1);
+			float roll = VectorUtils.SignedAngle(VectorUtils.GetUpDirection(vesselTransform.position), -vesselTransform.forward, vesselTransform.right);
+			float error = angle - roll;
+			float change = roll - derivatives[2].z;
+			float targetChange = Mathf.Clamp(error / 256, -0.04f, 0.04f);
+
+			float rollOrder = Mathf.Clamp(derivatives[1].z + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.4f, -1, 1);
+			if (float.IsNaN(rollOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10 || angle * rollOrder * BankAngle < 0) rollOrder = 0;
+
+			derivatives[1].z = rollOrder;
+			derivatives[2].z = roll;
+
+			s.roll = rollOrder;
+			debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f);
+			debugString.Append(Environment.NewLine);
 		}
 
 		#endregion
