@@ -336,7 +336,12 @@ namespace BDArmory.Control
 		void SetYaw(FlightCtrlState s, Vector3 target)
 		{
 			Vector3 yawTarget = Vector3.ProjectOnPlane(target, vesselTransform.forward);
-			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed) yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift, 0); // limit "aoa"
+			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
+			{
+				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift*Mathf.Deg2Rad, 0); // limit "aoa"
+				debugString.Append("limiting aoa "+Vector3.Angle(yawTarget, vessel.srf_velocity)+" "+ Vector3.Angle(yawTarget, vesselTransform.up));
+				debugString.Append(Environment.NewLine);
+			}
 			float angle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
 			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
@@ -345,9 +350,6 @@ namespace BDArmory.Control
 			//float d3 = d2 - derivatives[4].y;
 
 			float yawOrder = Mathf.Clamp((Mathf.Sqrt(Math.Abs(angle / derivatives[0].y))-1)*Math.Sign(angle) + (yawMomentum / derivatives[0].y), -1, 1);
-			debugString.Append("angleSeconds " + ((Mathf.Sqrt(Math.Abs(angle / derivatives[0].y)) - 1) * Math.Sign(angle)).ToString() +
-				" momentumSeconds " + (yawMomentum / derivatives[0].y).ToString());
-			debugString.Append(Environment.NewLine);
 			if (float.IsNaN(yawOrder)) yawOrder = 1; // division by zero :(
 
 			// update derivatives
