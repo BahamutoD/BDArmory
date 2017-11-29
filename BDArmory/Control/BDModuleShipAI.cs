@@ -24,6 +24,7 @@ namespace BDArmory.Control
 
 		Vector3d assignedPosition;
 		Vessel targetVessel;
+		Vessel extendingTarget = null;
 
 		Vector3d targetDirection;
 		float targetVelocity;
@@ -63,9 +64,13 @@ namespace BDArmory.Control
 			UI_Toggle(enabledText = "Broadside", disabledText = "Bow")]
 		public bool BroadsideAttack = true;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engagement range"),
-			UI_FloatRange(minValue = 100f, maxValue = 10000f, stepIncrement = 100f, scene = UI_Scene.All)]
-		public float EngagementRange = 2000;
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min engagement range"),
+			UI_FloatRange(minValue = 100f, maxValue = 6000f, stepIncrement = 100f, scene = UI_Scene.All)]
+		public float MinEngagementRange = 2000;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
+			UI_FloatRange(minValue = 1000f, maxValue = 30000f, stepIncrement = 500f, scene = UI_Scene.All)]
+		public float MaxEngagementRange = 4000;
 
 
 		//wing commander
@@ -231,8 +236,9 @@ namespace BDArmory.Control
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
 			GetGuardTarget();
-			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && weaponManager.guardMode &&
-				(BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0 || BDArmorySettings.PEACE_MODE));
+			GetNonGuardTarget();
+			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE 
+				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
 
 			// if we're not in water, cut throttle and panic
 			if (!vessel.Splashed) return;
@@ -240,6 +246,7 @@ namespace BDArmory.Control
 			PilotLogic();
 
 			targetVelocity = Mathf.Clamp(targetVelocity, 0, MaxSpeed);
+			debugString.Append("target velocity: " + targetVelocity);
 
 			SetYaw(s, targetDirection);
 			SetPitch(s);
@@ -280,20 +287,42 @@ namespace BDArmory.Control
 			Vector3 upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
 			// if guard mode on, check for enemy targets and engage
-			if (weaponManager && weaponManager.guardMode &&
-				(BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0 || BDArmorySettings.PEACE_MODE))
+			if (weaponManager && targetVessel != null && !BDArmorySettings.PEACE_MODE)
 			{
+				Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
 				if (BroadsideAttack)
 				{
-					//TODO
+					Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
+					sideVector *= Mathf.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // pick a side for attack
+					float sidestep = vecToTarget.magnitude >= MaxEngagementRange ? Mathf.Clamp01((vecToTarget.magnitude - MaxEngagementRange) / (CruiseSpeed * Mathf.Clamp(180 / MaxDrift, 0, 10))) / 2 :
+						Mathf.Clamp01((vecToTarget.magnitude - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange)) + 0.5f; //calculate the broadside angle (45 to 135 degrees from maxrange to minrange)
+					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
+					targetVelocity = MaxSpeed;
+					debugString.Append("Broadside attack angle " + sidestep);
+					debugString.Append(Environment.NewLine);
 				}
 				else // just point at target and go
 				{
-					var vecToTarget = targetVessel.CoM - vessel.CoM;
-					targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
-					if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0;
-					else targetVelocity = Mathf.Sqrt(vecToTarget.magnitude - EngagementRange) + Vector3.Dot(vessel.Velocity(), targetVessel.Velocity());
-					targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed);
+					if ((targetVessel.horizontalSrfSpeed < 10 || Vector3.Dot(Vector3.ProjectOnPlane(targetVessel.srf_vel_direction, upDir), vessel.up) < 0) //if target is stationary or we're facing in opposite directions
+						&& (vecToTarget.magnitude < MinEngagementRange || (vecToTarget.magnitude < (MinEngagementRange*3 + MaxEngagementRange) / 4 //and too close together
+						&& extendingTarget != null && targetVessel != null && extendingTarget == targetVessel))) 
+					{
+						extendingTarget = targetVessel;
+						targetDirection = -vecToTarget; //extend
+						targetVelocity = MaxSpeed;
+						currentStatus = "Extending";
+						debugString.Append($"Extending");
+						debugString.Append(Environment.NewLine);
+						return;
+					}
+					else
+					{
+						extendingTarget = null;
+						targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
+						if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0; // if facing away from target
+						else targetVelocity = Mathf.Sqrt(vecToTarget.magnitude - (MaxEngagementRange + MinEngagementRange) / 2) + Vector3.Dot(vessel.Velocity(), targetVessel.Velocity()); //slow down if inside engagement range to extend shooting opportunities
+						targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed); // maintain a bit of speed if using powered steering
+					}
 				}
 				currentStatus = "Engaging target";
 				debugString.Append($"Engaging target");
@@ -338,10 +367,23 @@ namespace BDArmory.Control
 				return;
 			}
 
+			currentStatus = "Free";
+			debugString.Append($"Not doing anything in particular");
+			debugString.Append(Environment.NewLine);
 			targetDirection = vesselTransform.up;
 		}
 
-		void AdjustThrottle(float targetSpeed) => speedController.targetSpeed = targetSpeed;
+		void AdjustThrottle(float targetSpeed)
+		{
+			if (float.IsNaN(targetSpeed)) //because yeah, I might have left division by zero in there somewhere
+			{
+				targetSpeed = CruiseSpeed;
+				debugString.Append("Narrowly avoided setting speed to NaN");
+				debugString.Append(Environment.NewLine);
+			}
+			speedController.targetSpeed = targetSpeed;
+		} 
+			
 
 		void SetYaw(FlightCtrlState s, Vector3 target)
 		{
@@ -355,6 +397,11 @@ namespace BDArmory.Control
 			float d2 = Math.Abs(Math.Abs(yawMomentum) - derivatives[3].y);
 			//float d3 = d2 - derivatives[4].y;
 
+			// calculate for how many frames we'd have to apply our current change in momentum to halt our momentum exactly when facing the target direction
+			// if we have more frames left, continue yawing in the same direction, otherwise apply counterforce in the opposite direction
+			// this pretty much guarantees that we're applying non-max yaw for single frames only
+			// and completely disregards how fast we can change our yaw (that's the commented out parts)
+			// but works rather well for boats which use gimballed engines and gyroscopes which change force instantly
 			float yawOrder = Mathf.Clamp((Mathf.Sqrt(Math.Abs(angle / derivatives[0].y))-1)*Math.Sign(angle) + (yawMomentum / derivatives[0].y), -1, 1);
 			if (float.IsNaN(yawOrder)) yawOrder = 1; // division by zero :(
 
@@ -372,8 +419,8 @@ namespace BDArmory.Control
 			// set yaw
 			s.yaw = yawOrder;
 
-			//debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
-			//debugString.Append(Environment.NewLine);
+			debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
+			debugString.Append(Environment.NewLine);
 		}
 
 		void SetPitch(FlightCtrlState s)
@@ -384,7 +431,7 @@ namespace BDArmory.Control
 			float change = pitch - derivatives[2].x;
 			float targetChange = Mathf.Clamp(error / 512, -0.01f, 0.01f);
 
-			float pitchOrder = Mathf.Clamp(derivatives[1].x + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f, -1, 1);
+			float pitchOrder = Mathf.Clamp(derivatives[1].x + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f, -1, 1); // very basic - change pitch input slowly until we're at the right pitch
 
 			if (float.IsNaN(pitchOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10) pitchOrder = 0;
 
@@ -402,7 +449,7 @@ namespace BDArmory.Control
 			float roll = VectorUtils.SignedAngle(VectorUtils.GetUpDirection(vesselTransform.position), -vesselTransform.forward, vesselTransform.right);
 			float error = angle - roll;
 			float change = roll - derivatives[2].z;
-			float targetChange = Mathf.Clamp(error / 256, -0.04f, 0.04f);
+			float targetChange = Mathf.Clamp(error / 128, -0.05f, 0.05f);
 
 			float rollOrder = Mathf.Clamp(derivatives[1].z + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.4f, -1, 1);
 			if (float.IsNaN(rollOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10 || angle * rollOrder * BankAngle < 0) rollOrder = 0;
@@ -447,9 +494,22 @@ namespace BDArmory.Control
 					weaponManager = mfs.Current;
 					mfs.Current.AI = this;
 
-					return;
+					break;
 				}
 				mfs.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// If guard mode off, and UI target is of the opposing team, set it as target
+		/// </summary>
+		void GetNonGuardTarget()
+		{
+			if (weaponManager != null && !weaponManager.guardMode)
+			{
+				if (vessel.targetObject != null && vessel.targetObject is Vessel 
+					&& BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(!weaponManager.team)].FirstOrDefault(x => x.weaponManager.vessel == (Vessel)vessel.targetObject))
+					targetVessel = (Vessel)vessel.targetObject;
 			}
 		}
 
