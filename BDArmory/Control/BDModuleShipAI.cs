@@ -260,7 +260,7 @@ namespace BDArmory.Control
 			// check for collisions
 			{
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
-				Vector3? dodgeVector = PredictRunningAshore(20f * predictMult, 2f);
+				Vector3? dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
 				List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
 				while (dodgeVector == null && vs.MoveNext())
 				{
@@ -290,12 +290,14 @@ namespace BDArmory.Control
 			if (weaponManager && targetVessel != null && !BDArmorySettings.PEACE_MODE)
 			{
 				Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
+				float distance = vecToTarget.magnitude;
 				if (BroadsideAttack)
 				{
 					Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
 					sideVector *= Mathf.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // pick a side for attack
-					float sidestep = vecToTarget.magnitude >= MaxEngagementRange ? Mathf.Clamp01((vecToTarget.magnitude - MaxEngagementRange) / (CruiseSpeed * Mathf.Clamp(180 / MaxDrift, 0, 10))) / 2 :
-						Mathf.Clamp01((vecToTarget.magnitude - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange)) + 0.5f; //calculate the broadside angle (45 to 135 degrees from maxrange to minrange)
+					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((distance - MaxEngagementRange) / (CruiseSpeed * Mathf.Clamp(180 / MaxDrift, 0, 10))) / 2 : // direct to target to 45 degrees if over maxrange
+						(distance <= MinEngagementRange ? 1.5f - distance / (MinEngagementRange * 2) : // 90 to 135 degrees if closer than minrange
+						(distance - MinEngagementRange) / ((MaxEngagementRange - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
 					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
 					targetVelocity = MaxSpeed;
 					debugString.Append("Broadside attack angle " + sidestep);
@@ -304,7 +306,7 @@ namespace BDArmory.Control
 				else // just point at target and go
 				{
 					if ((targetVessel.horizontalSrfSpeed < 10 || Vector3.Dot(Vector3.ProjectOnPlane(targetVessel.srf_vel_direction, upDir), vessel.up) < 0) //if target is stationary or we're facing in opposite directions
-						&& (vecToTarget.magnitude < MinEngagementRange || (vecToTarget.magnitude < (MinEngagementRange*3 + MaxEngagementRange) / 4 //and too close together
+						&& (distance < MinEngagementRange || (distance < (MinEngagementRange*3 + MaxEngagementRange) / 4 //and too close together
 						&& extendingTarget != null && targetVessel != null && extendingTarget == targetVessel))) 
 					{
 						extendingTarget = targetVessel;
@@ -445,20 +447,42 @@ namespace BDArmory.Control
 
 		void SetRoll(FlightCtrlState s)
 		{
-			float angle = BankAngle * Mathf.Clamp(VectorUtils.SignedAngle(vessel.GetSrfVelocity(), vesselTransform.up, vesselTransform.right) / (MaxDrift), -1, 1);
+			float angleRatio = Mathf.Clamp(VectorUtils.SignedAngle(vessel.GetSrfVelocity(), vesselTransform.up, vesselTransform.right) / (MaxDrift), -1, 1);
+			float angle = BankAngle * angleRatio;
 			float roll = VectorUtils.SignedAngle(VectorUtils.GetUpDirection(vesselTransform.position), -vesselTransform.forward, vesselTransform.right);
 			float error = angle - roll;
 			float change = roll - derivatives[2].z;
-			float targetChange = Mathf.Clamp(error / 128, -0.05f, 0.05f);
 
-			float rollOrder = Mathf.Clamp(derivatives[1].z + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.4f, -1, 1);
-			if (float.IsNaN(rollOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10 || angle * rollOrder * BankAngle < 0) rollOrder = 0;
+			if (vessel.horizontalSrfSpeed > CruiseSpeed / 5f)
+			{
+				// stable state factor
+				if (change * error > 0)
+				{
+					if (error * angle >= 0)
+						derivatives[0].z *= 0.99f;
+					else
+						derivatives[0].z += 0.003f;
+				}
+				// change factor
+				if (Mathf.Abs(error) > 2)
+				{
+					const int oF = 20; // let the compiler figure them out
+					const int uF = 100;
+					if (oF * change + oF * (oF - 1) / 2 * (change - derivatives[3].z) > error) 
+						derivatives[1].z *= 0.95f;
+					if (uF * change + uF * (uF - 1) / 2 * (change - derivatives[3].z) > error)
+						derivatives[1].z += 0.01f;
+				}
+			}
 
-			derivatives[1].z = rollOrder;
+			float rollOrder = Mathf.Clamp(derivatives[0].z * angleRatio + derivatives[1].z * error * Mathf.Abs(error), -1, 1);
+			if (float.IsNaN(rollOrder)) rollOrder = 0;
+
 			derivatives[2].z = roll;
+			derivatives[3].z = change;
 
 			s.roll = rollOrder;
-			debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f);
+			debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
 			debugString.Append(Environment.NewLine);
 		}
 
@@ -541,12 +565,13 @@ namespace BDArmory.Control
 			float time = Mathf.Min(0.5f, maxTime);
 			while (time < maxTime)
 			{
+				const float minDepth = 10f;
 				Vector3 myPos = PredictPosition(vessel, time);
-				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0)) > -5f)
+				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0)) > -minDepth)
 				{
 					return -vesselTransform.right;
 				}
-				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0)) > -5f)
+				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0)) > -minDepth)
 				{
 					return vesselTransform.right;
 				}
