@@ -46,7 +46,7 @@ namespace BDArmory.Control
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max drift"),
 			UI_FloatRange(minValue = 1f, maxValue = 180f, stepIncrement = 1f, scene = UI_Scene.All)]
-		public float MaxDrift = 180;
+		public float MaxDrift = 30;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Moving pitch"),
 			UI_FloatRange(minValue = -45f, maxValue = 45f, stepIncrement = 1f, scene = UI_Scene.All)]
@@ -65,11 +65,11 @@ namespace BDArmory.Control
 		public bool BroadsideAttack = true;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min engagement range"),
-			UI_FloatRange(minValue = 100f, maxValue = 6000f, stepIncrement = 100f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 200f, maxValue = 6000f, stepIncrement = 200f, scene = UI_Scene.All)]
 		public float MinEngagementRange = 2000;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
-			UI_FloatRange(minValue = 1000f, maxValue = 30000f, stepIncrement = 500f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 1000f, maxValue = 8000f, stepIncrement = 500f, scene = UI_Scene.All)]
 		public float MaxEngagementRange = 4000;
 
 
