@@ -33,7 +33,7 @@ namespace BDArmory.Control
 		Vector3[] derivatives = new Vector3[6];
 
 		public bool CanEngage() => vessel.Splashed;
-		public bool IsValidDirectFireTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
+		public bool IsValidFixedWeaponTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),

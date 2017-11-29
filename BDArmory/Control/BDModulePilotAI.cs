@@ -1768,7 +1768,7 @@ namespace BDArmory.Control
 			}
 		}
 
-		public bool IsValidDirectFireTarget(Vessel target)
+		public bool IsValidFixedWeaponTarget(Vessel target)
 		{
 			if (!vessel) return false;
 			// aircraft can aim at anything

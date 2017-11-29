@@ -9,6 +9,9 @@ namespace BDArmory.Control
 		Transform transform { get; }
 		#endregion
 
+		/// <summary>
+		/// The weapon manager the AI connects to.
+		/// </summary>
 		MissileFire weaponManager { get; }
 
 		void ActivatePilot();
@@ -17,7 +20,19 @@ namespace BDArmory.Control
 
 		bool pilotEnabled { get; }
 
-		bool IsValidDirectFireTarget(Vessel target);
+		/// <summary>
+		/// A function to check if AI could possibly fire at the target with forward looking fixed weapons.
+		/// E.g. ships won't be able to fire at airborne targets, hot air baloons might never return true, etc.
+		/// </summary>
+		/// <param name="target">Vessel to be checked</param>
+		/// <returns>true if the AI thinks it might eventually fire on the target with direct fire weapons, false otherwise</returns>
+		bool IsValidFixedWeaponTarget(Vessel target);
+
+		/// <summary>
+		/// Check if AI is combat-capable.
+		/// E.g. dogfight competition mode checks this before starting the competition.
+		/// </summary>
+		/// <returns>true if AI is ready for combat</returns>
 		bool CanEngage();
 
 		#region WingCommander

@@ -4276,7 +4276,7 @@ namespace BDArmory
 		/// <returns>true if AI might fire</returns>
 		bool AIMightDirectFire()
 		{
-			return (AI == null || !AI.pilotEnabled || !AI.CanEngage() || !guardTarget || !AI.IsValidDirectFireTarget(guardTarget));
+			return (AI == null || !AI.pilotEnabled || !AI.CanEngage() || !guardTarget || !AI.IsValidFixedWeaponTarget(guardTarget));
 		}
 
 		#endregion
