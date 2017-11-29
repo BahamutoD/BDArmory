@@ -235,8 +235,11 @@ namespace BDArmory.Control
 			targetDirection = vesselTransform.up;
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
-			GetGuardTarget();
-			GetNonGuardTarget();
+			GetGuardTarget(); // get the guard target from weapon manager
+			GetNonGuardTarget(); // if guard mode is off, get the UI target
+			GetGuardNonTarget(); // pick a target if guard mode is on, but no target is selected, 
+								 // though really targeting should be managed by the weaponManager, what if we pick an airplane while having only abrams cannons? :P
+
 			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE 
 				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
 
@@ -535,6 +538,18 @@ namespace BDArmory.Control
 				if (vessel.targetObject != null && vessel.targetObject is Vessel 
 					&& BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(!weaponManager.team)].FirstOrDefault(x => x.weaponManager.vessel == (Vessel)vessel.targetObject))
 					targetVessel = (Vessel)vessel.targetObject;
+			}
+		}
+
+		void GetGuardNonTarget()
+		{
+			if (weaponManager && weaponManager.guardMode && !targetVessel)
+			{
+				TargetInfo potentialTarget = BDATargetManager.GetLeastEngagedTarget(weaponManager);
+				if (potentialTarget && potentialTarget.Vessel)
+				{
+					targetVessel = potentialTarget.Vessel;
+				}
 			}
 		}
 
