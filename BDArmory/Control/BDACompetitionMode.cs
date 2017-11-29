@@ -70,7 +70,7 @@ namespace BDArmory.Control
         IEnumerator DogfightCompetitionModeRoutine(float distance)
         {
             competitionStarting = true;
-            competitionStatus = "Competition: Pilots are taking off.";
+            competitionStatus = "Competition: Pilots are checking if they are in the air/water/wherever they are supposed to be.";
             Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>> pilots =
                 new Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>();
             pilots.Add(BDArmorySettings.BDATeams.A, new List<IBDAIControl>());
@@ -119,7 +119,7 @@ namespace BDArmory.Control
 
 
             //wait till the leaders are ready to engage (airborne for PilotAI)
-            while (aLeader != null && bLeader != null && (aLeader.CanEngage() || bLeader.CanEngage()))
+            while (aLeader != null && bLeader != null && (!aLeader.CanEngage() || !bLeader.CanEngage()))
             {
                 yield return null;
             }
