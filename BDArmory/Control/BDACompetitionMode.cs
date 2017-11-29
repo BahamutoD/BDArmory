@@ -118,8 +118,8 @@ namespace BDArmory.Control
             bLeader.weaponManager.wingCommander.CommandAllFollow();
 
 
-            //wait till the leaders are airborne
-            while (aLeader != null && bLeader != null && (aLeader.vessel.LandedOrSplashed || bLeader.vessel.LandedOrSplashed))
+            //wait till the leaders are ready to engage (airborne for PilotAI)
+            while (aLeader != null && bLeader != null && (aLeader.CanEngage() || bLeader.CanEngage()))
             {
                 yield return null;
             }
