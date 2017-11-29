@@ -70,7 +70,7 @@ namespace BDArmory.Control
         IEnumerator DogfightCompetitionModeRoutine(float distance)
         {
             competitionStarting = true;
-            competitionStatus = "Competition: Pilots are checking if they are in the air/water/wherever they are supposed to be.";
+            competitionStatus = "Competition: Pilots are taking off, captains are testing the water.";
             Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>> pilots =
                 new Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>();
             pilots.Add(BDArmorySettings.BDATeams.A, new List<IBDAIControl>());
