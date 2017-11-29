@@ -282,11 +282,12 @@ namespace BDArmory.Control
 			}
 
 			// PointForImprovement: check for incoming fire and try to dodge
-			// though ships are probably too slow for that, generally, so just try to keep moving
+			// though ships are probably too slow for that, generally, so for now just try to keep moving
 
 			Vector3 upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
-			// if guard mode on, check for enemy targets and engage
+			// check for enemy targets and engage
+			// not checking for guard mode, because if guard mode is off now you can select a target manually and if it is of opposing team, the AI will try to engage while you can man the turrets
 			if (weaponManager && targetVessel != null && !BDArmorySettings.PEACE_MODE)
 			{
 				Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
@@ -456,7 +457,7 @@ namespace BDArmory.Control
 			if (vessel.horizontalSrfSpeed > CruiseSpeed / 5f)
 			{
 				// stable state factor
-				if (change * error > 0)
+				if (change * error > 0.25f)
 				{
 					if (error * angle >= 0)
 						derivatives[0].z *= 0.99f;
