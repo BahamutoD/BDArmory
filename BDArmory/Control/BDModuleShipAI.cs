@@ -301,7 +301,7 @@ namespace BDArmory.Control
 					sideVector *= Mathf.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // pick a side for attack
 					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(180 / MaxDrift, 0, 10)) + 1) / 2 : // direct to target to 45 degrees if over maxrange
 						(distance <= MinEngagementRange ? 1.5f - distance / (MinEngagementRange * 2) : // 90 to 135 degrees if closer than minrange
-						(distance - MinEngagementRange) / ((MaxEngagementRange - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
+						(MaxEngagementRange - MinEngagementRange) / ((distance - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
 					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
 					targetVelocity = MaxSpeed;
 					debugString.Append("Broadside attack angle " + sidestep);
