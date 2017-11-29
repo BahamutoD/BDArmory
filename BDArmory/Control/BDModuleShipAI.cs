@@ -486,8 +486,8 @@ namespace BDArmory.Control
 			derivatives[3].z = change;
 
 			s.roll = rollOrder;
-			debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
-			debugString.Append(Environment.NewLine);
+			//debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
+			//debugString.Append(Environment.NewLine);
 		}
 
 		#endregion

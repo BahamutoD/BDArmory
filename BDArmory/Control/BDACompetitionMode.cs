@@ -91,7 +91,7 @@ namespace BDArmory.Control
                 if (pilot == null || !pilot.weaponManager) continue;
 
                 pilots[BDATargetManager.BoolToTeam(pilot.weaponManager.team)].Add(pilot);
-				pilot.CommandTakeOff();
+                pilot.CommandTakeOff();
                 if (pilot.weaponManager.guardMode)
                 {
                     pilot.weaponManager.ToggleGuardMode();
@@ -172,9 +172,9 @@ namespace BDArmory.Control
                             if (ePilots.Current == null) continue;
                             if (ePilots.Current.currentCommand != PilotCommands.Follow ||
                                 !(Vector3.ProjectOnPlane(
-									ePilots.Current.vessel.CoM - ePilots.Current.commandLeader.vessel.CoM,
-									VectorUtils.GetUpDirection(ePilots.Current.commandLeader.vessel.transform.position)
-									).sqrMagnitude > 1000f*1000f)) continue;
+                                    ePilots.Current.vessel.CoM - ePilots.Current.commandLeader.vessel.CoM,
+                                    VectorUtils.GetUpDirection(ePilots.Current.commandLeader.vessel.transform.position)
+                                    ).sqrMagnitude > 1000f*1000f)) continue;
                             competitionStatus = "Competition: Waiting for teams to get in position.";
                             waiting = true;
                         }
