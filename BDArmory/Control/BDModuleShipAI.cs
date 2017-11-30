@@ -143,9 +143,7 @@ namespace BDArmory.Control
 				{
 					targetVelocity = MaxSpeed;
 					targetDirection = (Vector3)dodgeVector;
-					currentStatus = "AvoidCollision";
-					debugString.Append($"Avoiding Collision");
-					debugString.Append(Environment.NewLine);
+					SetStatus($"Avoiding Collision");
 					return;
 				}
 			}
@@ -170,8 +168,7 @@ namespace BDArmory.Control
 						(MaxEngagementRange - distance) / ((MaxEngagementRange - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
 					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
 					targetVelocity = MaxSpeed;
-					debugString.Append("Broadside attack angle " + sidestep);
-					debugString.Append(Environment.NewLine);
+					DebugLine("Broadside attack angle " + sidestep);
 				}
 				else // just point at target and go
 				{
@@ -182,9 +179,7 @@ namespace BDArmory.Control
 						extendingTarget = targetVessel;
 						targetDirection = -vecToTarget; //extend
 						targetVelocity = MaxSpeed;
-						currentStatus = "Extending";
-						debugString.Append($"Extending");
-						debugString.Append(Environment.NewLine);
+						SetStatus($"Extending");
 						return;
 					}
 					else
@@ -197,12 +192,10 @@ namespace BDArmory.Control
 						targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed); // maintain a bit of speed if using powered steering
 					}
 				}
-				currentStatus = "Engaging target";
-				debugString.Append($"Engaging target");
-				debugString.Append(Environment.NewLine);
+				SetStatus($"Engaging target");
 				return;
 			}
-
+			
 			// follow
 			if (command == PilotCommands.Follow)
 			{
@@ -221,9 +214,7 @@ namespace BDArmory.Control
 					targetDirection = Vector3.ProjectOnPlane(targetDistance, upDir);
 				}
 				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
-				currentStatus = "Following";
-				debugString.Append($"Following");
-				debugString.Append(Environment.NewLine);
+				SetStatus($"Following");
 				return;
 			}
 
@@ -234,15 +225,11 @@ namespace BDArmory.Control
 			{
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
 				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
-				currentStatus = "Moving";
-				debugString.Append($"Moving");
-				debugString.Append(Environment.NewLine);
+				SetStatus($"Moving");
 				return;
 			}
 
-			currentStatus = "Free";
-			debugString.Append($"Not doing anything in particular");
-			debugString.Append(Environment.NewLine);
+			SetStatus($"Not doing anything in particular");
 			targetDirection = vesselTransform.up;
 		}
 
@@ -251,8 +238,7 @@ namespace BDArmory.Control
 			if (float.IsNaN(targetSpeed)) //because yeah, I might have left division by zero in there somewhere
 			{
 				targetSpeed = CruiseSpeed;
-				debugString.Append("Narrowly avoided setting speed to NaN");
-				debugString.Append(Environment.NewLine);
+				DebugLine("Narrowly avoided setting speed to NaN");
 			}
 			speedController.targetSpeed = targetSpeed;
 		} 
@@ -292,8 +278,7 @@ namespace BDArmory.Control
 			// set yaw
 			s.yaw = yawOrder * maxSteer;
 
-			debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
-			debugString.Append(Environment.NewLine);
+			DebugLine("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
 		}
 
 		void SetPitch(FlightCtrlState s)
@@ -312,8 +297,7 @@ namespace BDArmory.Control
 			derivatives[2].x = pitch;
 
 			s.pitch = pitchOrder * maxSteer;
-			//debugString.Append(pitch+"PitchAngle " + angle.ToString() + " factor3 " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) + " retainedOrder " + derivatives[1].x + "change" + change);
-			//debugString.Append(Environment.NewLine);
+			//DebugLine(pitch+"PitchAngle " + angle.ToString() + " factor3 " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) + " retainedOrder " + derivatives[1].x + "change" + change);
 		}
 
 		void SetRoll(FlightCtrlState s)
@@ -353,8 +337,7 @@ namespace BDArmory.Control
 			derivatives[3].z = change;
 
 			s.roll = rollOrder * maxSteer;
-			//debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
-			//debugString.Append(Environment.NewLine);
+			//DebugLine("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
 		}
 
 		#endregion

@@ -11,6 +11,7 @@ namespace BDArmory.Control
 {
 	public abstract class BDGenericAIBase : PartModule, IBDAIControl
 	{
+		#region declarations
 		[KSPField(isPersistant = true)]
 		public bool pilotEnabled { get; protected set; }
 
@@ -46,9 +47,10 @@ namespace BDArmory.Control
 		public string currentStatus { get; protected set; } = "Free";
 		protected int commandFollowIndex;
 
+		#endregion
+
 		public PilotCommands currentCommand => command;
 		public Vector3d commandGPS => assignedPosition;
-
 
 
 		protected abstract void AutoPilot(FlightCtrlState s);
@@ -218,6 +220,18 @@ namespace BDArmory.Control
 					targetVessel = potentialTarget.Vessel;
 				}
 			}
+		}
+
+		protected void DebugLine(string text)
+		{
+			debugString.Append(text);
+			debugString.Append(Environment.NewLine);
+		}
+
+		protected void SetStatus(string text)
+		{
+			currentStatus = text;
+			DebugLine(text);
 		}
 		#endregion
 
