@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BDArmory.UI;
+using BDArmory.Misc;
 using UniLinq;
 using UnityEngine;
 
@@ -20,7 +21,17 @@ namespace BDArmory.FX
 
         public static Queue<GameObject> decalsInPool;
         public static Queue<GameObject> decalsActiveInWorld;
-        
+
+        public static ObjectPool decalPool;
+
+
+        public static void SetupShellPool()
+        {
+            GameObject templateShell =
+                Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/BDAc_BulletHole"));
+            templateShell.SetActive(false);            
+            if(decalPool == null) decalPool = ObjectPool.CreateObjectPool(templateShell, 100, true, true);
+        }
 
         public void InitializeDecals()
         {
@@ -46,8 +57,9 @@ namespace BDArmory.FX
 
         public static void SpawnDecal(RaycastHit hit,Part hitPart)
         {
-            GameObject decal = GetNextAvailableDecal();
-            if (decal != null)
+            //GameObject decal = GetNextAvailableDecal();
+            GameObject decal = decalPool.GetPooledObject();
+            if (decal != null && hitPart != null)
             {
                 decal.transform.SetParent(hitPart.transform);
                 decal.transform.position = hit.point;                
@@ -56,7 +68,7 @@ namespace BDArmory.FX
 
                 decal.SetActive(true);
 
-                decalsActiveInWorld.Enqueue(decal);
+                //decalsActiveInWorld.Enqueue(decal);
             }
         }
 
@@ -80,7 +92,8 @@ namespace BDArmory.FX
 
         void Start()
         {
-            InitializeDecals();
+            //InitializeDecals();
+            SetupShellPool();
 
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
@@ -152,6 +165,7 @@ namespace BDArmory.FX
 
         public static void CreateBulletHit(Part hitPart,Vector3 position, RaycastHit hit, Vector3 normalDirection, bool ricochet,float caliber = 0)
         {
+            if(decalPool == null) SetupShellPool();
             GameObject go;
 
             if (caliber <= 30)

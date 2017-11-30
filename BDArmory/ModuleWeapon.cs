@@ -2209,8 +2209,7 @@ namespace BDArmory
         }
 
         void SetupBullet()
-        {        
-
+        {
             bulletInfo = BulletInfo.bullets[bulletType];
             if (bulletType != "def")
             {
@@ -2221,8 +2220,7 @@ namespace BDArmory
                 bulletDragTypeName = bulletInfo.bulletDragTypeName;
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastHeat;
-                cannonShellRadius = bulletInfo.blastRadius;         
-                
+                cannonShellRadius = bulletInfo.blastRadius;      
             }
             ParseBulletDragType();
         }
