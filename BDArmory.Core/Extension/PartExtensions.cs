@@ -32,8 +32,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             // Explosive Hitpoints
             //////////////////////////////////////////////////////////
-            float damage = (DMG_MULTIPLIER / 100) * EXP_HEAT_MOD * explosiveDamage;
-                          
+            float damage = (DMG_MULTIPLIER / 100) * EXP_HEAT_MOD * explosiveDamage;                          
                            
 
             //////////////////////////////////////////////////////////
@@ -107,7 +106,7 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 10.25f;
+               damage *= 12f;
             }
 
             //As armor is decreased level of damage should increase
@@ -126,7 +125,7 @@ namespace BDArmory.Core.Extension
                 damage = damage - (damage * armorPCT_);
 
                 //penalty for low caliber rounds,not if armor is very low
-                if (caliber <= 30f && armorMass_ >= 20d) damage *= 0.125f;
+                //if (caliber <= 30f && armorMass_ >= 20d) damage *= 0.125f;
             }
             
 

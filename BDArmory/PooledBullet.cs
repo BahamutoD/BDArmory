@@ -446,7 +446,7 @@ namespace BDArmory
 
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, hasRichocheted, caliber);
+                BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, hasRichocheted, caliber);
             }
 
             hitPart.AddDamage_Ballistic(bulletMass, caliber, multiplier, penetrationfactor,
@@ -598,7 +598,7 @@ namespace BDArmory
             {
                 if (BDArmorySettings.BULLET_HITS)
                 {
-                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, caliber);
+                    BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, true, caliber);
                 }
 
                 return true;
@@ -702,7 +702,7 @@ namespace BDArmory
             //ricochet            
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, caliber);
+                BulletHitFX.CreateBulletHit(p,hit.point, hit, hit.normal, true, caliber);
             }
 
             tracerStartWidth /= 2;

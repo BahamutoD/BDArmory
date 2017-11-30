@@ -15,8 +15,73 @@ namespace BDArmory.FX
         public bool ricochet;
         public float caliber;
 
+        public GameObject bulletHoleDecalPrefab;
+        private int maxConcurrentDecals = 10;
+
+        public static Queue<GameObject> decalsInPool;
+        public static Queue<GameObject> decalsActiveInWorld;
+        
+
+        public void InitializeDecals()
+        {
+            bulletHoleDecalPrefab = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/BDAc_BulletHole");
+
+            decalsInPool = new Queue<GameObject>();
+            decalsActiveInWorld = new Queue<GameObject>();
+
+            for (int i = 0; i < maxConcurrentDecals; i++)
+            {
+                InstantiateDecal();
+            }
+        }
+
+        public void InstantiateDecal()
+        {
+            var spawned = Instantiate(bulletHoleDecalPrefab);
+            spawned.transform.SetParent(this.transform);
+
+            decalsInPool.Enqueue(spawned);
+            spawned.SetActive(false);
+        }
+
+        public static void SpawnDecal(RaycastHit hit,Part hitPart)
+        {
+            GameObject decal = GetNextAvailableDecal();
+            if (decal != null)
+            {
+                decal.transform.SetParent(hitPart.transform);
+                decal.transform.position = hit.point;                
+                decal.transform.rotation = Quaternion.FromToRotation(-Vector3.forward, hit.normal);
+                decal.transform.rotation *= Quaternion.Euler(0, 90f, 0);
+
+                decal.SetActive(true);
+
+                decalsActiveInWorld.Enqueue(decal);
+            }
+        }
+
+        public static GameObject GetNextAvailableDecal()
+        {
+            if (decalsInPool == null)
+            {
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                {
+                    Debug.Log("[BDArmory]: Decals broken");
+                }
+                return null;
+            }
+
+            if (decalsInPool.Count > 0)
+                return decalsInPool.Dequeue();
+
+            var oldestActiveDecal = decalsActiveInWorld.Dequeue();
+            return oldestActiveDecal;
+        }
+
         void Start()
         {
+            InitializeDecals();
+
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
             IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
@@ -85,7 +150,7 @@ namespace BDArmory.FX
             }
         }
 
-        public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet,float caliber = 0)
+        public static void CreateBulletHit(Part hitPart,Vector3 position, RaycastHit hit, Vector3 normalDirection, bool ricochet,float caliber = 0)
         {
             GameObject go;
 
@@ -96,7 +161,9 @@ namespace BDArmory.FX
             else
             {
                 go = GameDatabase.Instance.GetModel("BDArmory/FX/PenFX");
-            }            
+            }
+
+            SpawnDecal(hit,hitPart);
 
             GameObject newExplosion =
                 (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));
