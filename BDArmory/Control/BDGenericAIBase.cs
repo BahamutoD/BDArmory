@@ -204,6 +204,21 @@ namespace BDArmory.Control
 				return;
 			}
 		}
+
+		/// <summary>
+		/// If guard mode is set but not target is selected, pick something
+		/// </summary>
+		protected virtual void GetGuardNonTarget()
+		{
+			if (weaponManager && weaponManager.guardMode && !targetVessel)
+			{
+				TargetInfo potentialTarget = BDATargetManager.GetLeastEngagedTarget(weaponManager);
+				if (potentialTarget && potentialTarget.Vessel)
+				{
+					targetVessel = potentialTarget.Vessel;
+				}
+			}
+		}
 		#endregion
 
 		#region WingCommander

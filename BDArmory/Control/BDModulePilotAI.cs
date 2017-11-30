@@ -319,14 +319,7 @@ namespace BDArmory.Control
 		void UpdateAI(FlightCtrlState s)
 		{
 			currentStatus = "Free";
-			if(weaponManager && weaponManager.guardMode && !targetVessel)
-			{
-				TargetInfo potentialTarget = BDATargetManager.GetLeastEngagedTarget(weaponManager);
-				if(potentialTarget && potentialTarget.Vessel)
-				{
-					targetVessel = potentialTarget.Vessel;
-				}
-			}
+			GetGuardNonTarget();
 
 			if(requestedExtend)
 			{

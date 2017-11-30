@@ -374,18 +374,6 @@ namespace BDArmory.Control
 			}
 		}
 
-		void GetGuardNonTarget()
-		{
-			if (weaponManager && weaponManager.guardMode && !targetVessel)
-			{
-				TargetInfo potentialTarget = BDATargetManager.GetLeastEngagedTarget(weaponManager);
-				if (potentialTarget && potentialTarget.Vessel)
-				{
-					targetVessel = potentialTarget.Vessel;
-				}
-			}
-		}
-
 		/// <returns>null if no collision, dodge vector if one detected</returns>
 		Vector3? PredictCollisionWithVessel(Vessel v, float maxTime, float interval)
 		{
