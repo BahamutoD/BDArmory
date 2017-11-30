@@ -3,20 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
-using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
 using System.Text;
 
 namespace BDArmory.Control
 {
-	public class BDModuleShipAI : PartModule, IBDAIControl
+	public class BDModuleShipAI : BDGenericAIBase, IBDAIControl
 	{
 		#region Declarations
-		[KSPField(isPersistant = true)]
-		public bool pilotEnabled { get; private set; }
 
-		public MissileFire weaponManager { get; private set; }
 		StringBuilder debugString = new StringBuilder();
 
 		BDAirspeedControl speedController;
@@ -47,6 +43,10 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max drift"),
 			UI_FloatRange(minValue = 1f, maxValue = 180f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float MaxDrift = 30;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"),
+			UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)]
+		public float maxSteer = 1;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Moving pitch"),
 			UI_FloatRange(minValue = -45f, maxValue = 45f, stepIncrement = 1f, scene = UI_Scene.All)]
@@ -424,7 +424,7 @@ namespace BDArmory.Control
 			derivatives[5].y = Math.Abs(yawOrder);
 
 			// set yaw
-			s.yaw = yawOrder;
+			s.yaw = yawOrder * maxSteer;
 
 			debugString.Append("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
 			debugString.Append(Environment.NewLine);
@@ -445,7 +445,7 @@ namespace BDArmory.Control
 			derivatives[1].x = pitchOrder;
 			derivatives[2].x = pitch;
 
-			s.pitch = pitchOrder;
+			s.pitch = pitchOrder * maxSteer;
 			//debugString.Append(pitch+"PitchAngle " + angle.ToString() + " factor3 " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) + " retainedOrder " + derivatives[1].x + "change" + change);
 			//debugString.Append(Environment.NewLine);
 		}
@@ -486,7 +486,7 @@ namespace BDArmory.Control
 			derivatives[2].z = roll;
 			derivatives[3].z = change;
 
-			s.roll = rollOrder;
+			s.roll = rollOrder * maxSteer;
 			//debugString.Append("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
 			//debugString.Append(Environment.NewLine);
 		}
@@ -563,8 +563,8 @@ namespace BDArmory.Control
 			float time = Mathf.Min(0.5f, maxTime);
 			while (time < maxTime)
 			{
-				Vector3 tPos = PredictPosition(v, time);
-				Vector3 myPos = PredictPosition(vessel, time);
+				Vector3 tPos = AIUtils.PredictPosition(v, time);
+				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
 				if (Vector3.SqrMagnitude(tPos - myPos) < 2500f) //changed this variable though
 				{
 					return Vector3.Dot(tPos - myPos, vesselTransform.right) > 0 ? -vesselTransform.right : vesselTransform.right;
@@ -583,12 +583,12 @@ namespace BDArmory.Control
 			while (time < maxTime)
 			{
 				const float minDepth = 10f;
-				Vector3 myPos = PredictPosition(vessel, time);
-				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0)) > -minDepth)
+				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
+				if (AIUtils.GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
 				{
 					return -vesselTransform.right;
 				}
-				if (GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0)) > -minDepth)
+				if (AIUtils.GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
 				{
 					return vesselTransform.right;
 				}
@@ -597,16 +597,6 @@ namespace BDArmory.Control
 			}
 			return null;
 		}
-
-		Vector3 PredictPosition(Vessel v, float time)
-		{
-			Vector3 pos = v.CoM;
-			pos += v.Velocity() * time;
-			pos += 0.5f * v.acceleration * time * time;
-			return pos;
-		}
-
-		float GetAltitude(Vector3 position) => (float)vessel.mainBody.TerrainAltitude(vessel.mainBody.GetLatitude(position), vessel.mainBody.GetLongitude(position), true);
 
 		#endregion
 
@@ -689,23 +679,7 @@ namespace BDArmory.Control
 
 		Vector3d GetFormationPosition()
 		{
-			return commandLeader.vessel.ReferenceTransform.TransformPoint(GetLocalFormationPosition(commandFollowIndex));
-		}
-
-		Vector3d GetLocalFormationPosition(int index)
-		{
-			float indexF = (float)index;
-			indexF++;
-
-			double rightSign = indexF % 2 == 0 ? -1 : 1;
-			double positionFactor = Math.Ceiling(indexF / 2);
-			double spread = commandLeader.spread;
-			double lag = commandLeader.lag;
-
-			double right = rightSign * positionFactor * spread;
-			double back = positionFactor * lag * -1;
-
-			return new Vector3d(right, back, 0);
+			return commandLeader.vessel.ReferenceTransform.TransformPoint(this.GetLocalFormationPosition(commandFollowIndex));
 		}
 		#endregion
 	}

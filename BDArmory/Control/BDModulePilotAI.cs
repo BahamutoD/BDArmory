@@ -9,14 +9,10 @@ using System.Text;
 
 namespace BDArmory.Control
 {
-	public class BDModulePilotAI : PartModule, IBDAIControl
+	public class BDModulePilotAI : BDGenericAIBase, IBDAIControl
 	{
 		public enum SteerModes { NormalFlight, Aiming }
 		SteerModes steerMode = SteerModes.NormalFlight;
-
-
-		[KSPField(isPersistant = true)]
-		public bool pilotEnabled { get; private set; }
 
 		bool belowMinAltitude;
 		bool extending;
@@ -65,8 +61,6 @@ namespace BDArmory.Control
 		Transform vesselTransform;
 
 		Vector3 upDirection = Vector3.up;
-
-		public MissileFire weaponManager { get; set; }
 
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Alt."),
@@ -699,8 +693,8 @@ namespace BDArmory.Control
 			float time = Mathf.Min(0.5f, maxTime);
 			while(time < maxTime)
 			{
-				Vector3 tPos = PredictPosition(v, time);
-				Vector3 myPos = PredictPosition(vessel, time);
+				Vector3 tPos = AIUtils.PredictPosition(v, time);
+				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
 				if(Vector3.SqrMagnitude(tPos - myPos) < 900f)
 				{
 					badDirection = tPos - vesselTransform.position;
@@ -712,14 +706,6 @@ namespace BDArmory.Control
 
 			badDirection = Vector3.zero;
 			return false;
-		}
-
-		Vector3 PredictPosition(Vessel v, float time)
-		{
-			Vector3 pos = v.CoM;
-			pos += v.Velocity() * time;
-			pos += 0.5f * v.acceleration * time * time;
-			return pos;
 		}
 
 		void FlyToTargetVessel(FlightCtrlState s, Vessel v)
@@ -1913,30 +1899,13 @@ namespace BDArmory.Control
 				velocityTransform.rotation = commandLeader.vessel.ReferenceTransform.rotation;
 			}
 
-			Vector3d pos = velocityTransform.TransformPoint(GetLocalFormationPosition(commandFollowIndex));// - lateralVelVector - verticalVelVector;
+			Vector3d pos = velocityTransform.TransformPoint(this.GetLocalFormationPosition(commandFollowIndex));// - lateralVelVector - verticalVelVector;
 
 			velocityTransform.localPosition = origVLPos;
 			velocityTransform.rotation = origVRot;
 
 			return pos;
 		}
-
-		Vector3d GetLocalFormationPosition(int index)
-		{
-			float indexF = (float)index;
-			indexF++;
-
-			double rightSign = indexF % 2 == 0 ? -1 : 1;
-			double positionFactor = Math.Ceiling(indexF/ 2);
-			double spread = commandLeader.spread;
-			double lag = commandLeader.lag;
-
-			double right = rightSign * positionFactor * spread;
-			double back = positionFactor * lag * -1;
-
-			return new Vector3d(right, back, 0);
-		}
-
 
 		public void ReleaseCommand()
 		{
