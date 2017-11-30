@@ -299,9 +299,9 @@ namespace BDArmory.Control
 				{
 					Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
 					sideVector *= Mathf.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // pick a side for attack
-					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(180 / MaxDrift, 0, 10)) + 1) / 2 : // direct to target to 45 degrees if over maxrange
+					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(90 / MaxDrift, 0, 10)) + 1) / 2 : // direct to target to 45 degrees if over maxrange
 						(distance <= MinEngagementRange ? 1.5f - distance / (MinEngagementRange * 2) : // 90 to 135 degrees if closer than minrange
-						(MaxEngagementRange - MinEngagementRange) / ((distance - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
+						(MaxEngagementRange - distance) / ((MaxEngagementRange - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
 					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
 					targetVelocity = MaxSpeed;
 					debugString.Append("Broadside attack angle " + sidestep);
@@ -326,7 +326,8 @@ namespace BDArmory.Control
 						extendingTarget = null;
 						targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
 						if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0; // if facing away from target
-						else targetVelocity = Mathf.Sqrt(vecToTarget.magnitude - (MaxEngagementRange + MinEngagementRange) / 2) + Vector3.Dot(vessel.Velocity(), targetVessel.Velocity()); //slow down if inside engagement range to extend shooting opportunities
+						else if (distance >= MaxEngagementRange || distance <= MinEngagementRange) targetVelocity = MaxSpeed;
+						else targetVelocity = CruiseSpeed + (MaxSpeed - CruiseSpeed) * (distance - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange); //slow down if inside engagement range to extend shooting opportunities
 						targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed); // maintain a bit of speed if using powered steering
 					}
 				}
