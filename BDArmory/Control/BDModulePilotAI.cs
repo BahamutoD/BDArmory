@@ -25,8 +25,6 @@ namespace BDArmory.Control
 			get { return extending || requestedExtend; }
 		}
 
-		public bool isLeadingFormation { get; set; }
-
 		public void RequestExtend(Vector3 tPosition)
 		{
 			requestedExtend = true;
@@ -57,8 +55,6 @@ namespace BDArmory.Control
 
 		Vessel targetVessel;
 
-
-		Transform vesselTransform;
 
 		Vector3 upDirection = Vector3.up;
 
@@ -173,8 +169,6 @@ namespace BDArmory.Control
 		LineRenderer lr;
 		Vector3 flyingToPosition;
 
-		public Vector3d defaultOrbitCoords;
-
 		//speed controller
 		BDAirspeedControl speedController;
 		bool useAB = true;
@@ -187,39 +181,10 @@ namespace BDArmory.Control
 		Vector3 collisionAvoidDirection;
 
 		//wing command
-		int commandFollowIndex;
-		PilotCommands command;
-		public PilotCommands currentCommand
-		{
-			get
-			{
-				return command;
-			}
-		}
-		public ModuleWingCommander commandLeader { get; private set; }
 		bool useRollHint;
-		Vector3d commandGeoPos;
-		public Vector3d commandPosition
-		{
-			get
-			{
-				return VectorUtils.GetWorldSurfacePostion(commandGeoPos, vessel.mainBody);
-			}
-			set
-			{
-				commandGeoPos = VectorUtils.WorldPositionToGeoCoords(value, vessel.mainBody);
-			}
-		}
-		public Vector3d commandGPS
-		{
-			get
-			{
-				return commandGeoPos;
-			}
-		}
+		private Vector3d debugFollowPosition;
 		double commandSpeed;
 		Vector3d commandHeading;
-		public string currentStatus { get; set; } = "Free";
 
 
 		void Start()
@@ -229,7 +194,6 @@ namespace BDArmory.Control
 				part.OnJustAboutToBeDestroyed += DeactivatePilot;
 				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
 				MissileFire.OnToggleTeam += OnToggleTeam;
-				vesselTransform = vessel.ReferenceTransform;
 
 			    List<MissileFire>.Enumerator wms = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                 while (wms.MoveNext())
@@ -281,7 +245,7 @@ namespace BDArmory.Control
 		}
 
 
-		public void ActivatePilot()
+		public override void ActivatePilot()
 		{
 			pilotEnabled = true;
 			vessel.OnFlyByWire -= AutoPilot;
@@ -301,7 +265,7 @@ namespace BDArmory.Control
 			GameEvents.onVesselDestroy.Remove(RemoveAutopilot);
 			GameEvents.onVesselDestroy.Add(RemoveAutopilot);
 
-			defaultOrbitCoords = VectorUtils.WorldPositionToGeoCoords(vessel.ReferenceTransform.position, vessel.mainBody);
+			assignedPosition = VectorUtils.WorldPositionToGeoCoords(vessel.ReferenceTransform.position, vessel.mainBody);
 
 			RefreshPartWindow();
 		}
@@ -387,7 +351,6 @@ namespace BDArmory.Control
 			{
 				return;
 			}
-			vesselTransform = vessel.ReferenceTransform;
 			finalMaxSteer = maxSteer;
 
 			//default brakes off full throttle
@@ -606,7 +569,7 @@ namespace BDArmory.Control
 				if(!extending)
 				{
 					currentStatus = "Orbiting";
-					FlyOrbit(s, defaultOrbitCoords, 2000, idleSpeed, true);
+					FlyOrbit(s, assignedPosition, 2000, idleSpeed, true);
 				}
 			}
 
@@ -1329,7 +1292,7 @@ namespace BDArmory.Control
 
             if (vessel.LandedOrSplashed && vessel.srfSpeed < takeOffSpeed)
 			{
-				defaultOrbitCoords = VectorUtils.WorldPositionToGeoCoords(vessel.transform.position, vessel.mainBody);
+				assignedPosition = VectorUtils.WorldPositionToGeoCoords(vessel.transform.position, vessel.mainBody);
 				return;
 			}
 
@@ -1799,12 +1762,12 @@ namespace BDArmory.Control
 			else if(command == PilotCommands.FlyTo)
 			{
 				currentStatus = "Fly To";
-				FlyOrbit(s, defaultOrbitCoords, 2500, idleSpeed, true);
+				FlyOrbit(s, assignedPosition, 2500, idleSpeed, true);
 			}
 			else if(command == PilotCommands.Attack)
 			{
 				currentStatus = "Attack";
-				FlyOrbit(s, defaultOrbitCoords, 4500, maxSpeed, true);
+				FlyOrbit(s, assignedPosition, 4500, maxSpeed, true);
 			}
 		}
 
@@ -1817,7 +1780,8 @@ namespace BDArmory.Control
 			commandHeading = commandLeader.vessel.Velocity().normalized;
 
 			//formation position
-			commandPosition = GetFormationPosition();
+			Vector3d commandPosition = GetFormationPosition();
+			debugFollowPosition = commandPosition;
 
 			float distanceToPos = Vector3.Distance(vesselTransform.position, commandPosition);
 
@@ -1907,76 +1871,9 @@ namespace BDArmory.Control
 			return pos;
 		}
 
-		public void ReleaseCommand()
+		public override void CommandTakeOff()
 		{
-		    if (!vessel || command == PilotCommands.Free) return;
-		    if(command == PilotCommands.Follow)
-		    {
-		        if(commandLeader)
-		        {
-		            List<IBDAIControl>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
-                    while (pilots.MoveNext())
-                    {
-                        if (pilots.Current == null) continue;
-                        pilots.Current.isLeadingFormation = false;
-		            }
-                    pilots.Dispose();
-					commandLeader = null;
-		        }
-		    }
-		    Debug.Log(vessel.vesselName + " was released from command.");
-		    command = PilotCommands.Free;
-
-		    defaultOrbitCoords = VectorUtils.WorldPositionToGeoCoords(vesselTransform.position, vessel.mainBody);
-		}
-
-		public void CommandFollow(ModuleWingCommander leader, int followerIndex)
-		{
-		    if (!pilotEnabled) return;
-		    if (leader == vessel || followerIndex < 0) return;
-
-		    Debug.Log(vessel.vesselName + " was commanded to follow.");
-		    command = PilotCommands.Follow;
-		    commandLeader = leader;
-		    commandFollowIndex = followerIndex;
-		    List<IBDAIControl>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
-		    while (pilots.MoveNext())
-		    {
-		        if (pilots.Current == null) continue;
-		        pilots.Current.isLeadingFormation = true;
-		    }
-            pilots.Dispose();
-		}
-
-		public void CommandAG(KSPActionGroup ag)
-		{
-			if(!pilotEnabled) return;
-			vessel.ActionGroups.ToggleGroup(ag);
-		}
-
-		public void CommandFlyTo(Vector3 gpsCoords)
-		{
-			if(!pilotEnabled) return;
-
-			Debug.Log(vessel.vesselName + " was commanded to fly to.");
-			defaultOrbitCoords = gpsCoords;
-			commandGeoPos = gpsCoords;
-			command = PilotCommands.FlyTo;
-		}
-
-		public void CommandAttack(Vector3 gpsCoords)
-		{
-		    if (!pilotEnabled) return;
-
-			Debug.Log(vessel.vesselName + " was commanded to attack.");
-			defaultOrbitCoords = gpsCoords;
-			commandGeoPos = gpsCoords;
-			command = PilotCommands.Attack;
-		}
-
-		public void CommandTakeOff()
-		{
-			ActivatePilot();
+			base.CommandTakeOff();
 			standbyMode = false;
 		}
 
@@ -1991,7 +1888,7 @@ namespace BDArmory.Control
 		    if (!BDArmorySettings.DRAW_DEBUG_LINES) return;
 		    if(command == PilotCommands.Follow)
 		    {
-		        BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, commandPosition, 2, Color.red);
+		        BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, debugFollowPosition, 2, Color.red);
 		    }
 
 		    BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + rollTarget, 2, Color.blue);
