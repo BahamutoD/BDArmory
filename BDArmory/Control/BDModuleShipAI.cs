@@ -12,12 +12,7 @@ namespace BDArmory.Control
 	public class BDModuleShipAI : BDGenericAIBase, IBDAIControl
 	{
 		#region Declarations
-
-		StringBuilder debugString = new StringBuilder();
-
-		BDAirspeedControl speedController;
-
-		Vessel targetVessel;
+		
 		Vessel extendingTarget = null;
 
 		Vector3d targetDirection;
@@ -26,8 +21,8 @@ namespace BDArmory.Control
 		//max second derivative, max third derivative, previous orientation, previous momentum, previous momentum derivative, previous command -- pitch, yaw, roll
 		Vector3[] derivatives = new Vector3[6];
 
-		public bool CanEngage() => vessel.Splashed;
-		public bool IsValidFixedWeaponTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
+		public override bool CanEngage() => vessel.Splashed;
+		public override bool IsValidFixedWeaponTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
@@ -73,43 +68,12 @@ namespace BDArmory.Control
 		#endregion
 
 		#region Unity events
-		void Start()
+
+		protected override void OnGUI()
 		{
-			if (HighLogic.LoadedSceneIsFlight)
-			{
-				part.OnJustAboutToBeDestroyed += DeactivatePilot;
-				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
-				MissileFire.OnToggleTeam += OnToggleTeam;
+			base.OnGUI();
 
-				List<MissileFire>.Enumerator wms = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-				while (wms.MoveNext())
-				{
-					weaponManager = wms.Current;
-					break;
-				}
-				wms.Dispose();
-
-				if (pilotEnabled)
-				{
-					ActivatePilot();
-				}
-			}
-
-			RefreshPartWindow();
-		}
-
-		void OnDestroy()
-		{
-			MissileFire.OnToggleTeam -= OnToggleTeam;
-		}
-
-		void OnGUI()
-		{
 			if (!pilotEnabled || !vessel.isActiveVessel) return;
-			if (BDArmorySettings.DRAW_DEBUG_LABELS)
-			{
-				GUI.Label(new Rect(200, Screen.height - 200, 400, 400), vessel.name + ":" + debugString.ToString());
-			}
 
 			if (!BDArmorySettings.DRAW_DEBUG_LINES) return;
 			if (command == PilotCommands.Follow)
@@ -122,81 +86,9 @@ namespace BDArmory.Control
 		}
 		#endregion
 
-		#region Pilot on/off
-
-		public override void ActivatePilot()
-		{
-			pilotEnabled = true;
-			vessel.OnFlyByWire -= AutoPilot;
-			vessel.OnFlyByWire += AutoPilot;
-
-			if (!speedController)
-			{
-				speedController = gameObject.AddComponent<BDAirspeedControl>();
-				speedController.vessel = vessel;
-			}
-
-			speedController.Activate();
-
-			GameEvents.onVesselDestroy.Remove(RemoveAutopilot);
-			GameEvents.onVesselDestroy.Add(RemoveAutopilot);
-
-			assignedPositionGeo = vessel.ReferenceTransform.position;
-
-			RefreshPartWindow();
-		}
-
-		public void DeactivatePilot()
-		{
-			pilotEnabled = false;
-			vessel.OnFlyByWire -= AutoPilot;
-			RefreshPartWindow();
-
-			if (speedController)
-			{
-				speedController.Deactivate();
-			}
-		}
-
-		void RemoveAutopilot(Vessel v)
-		{
-			if (v == vessel)
-			{
-				v.OnFlyByWire -= AutoPilot;
-			}
-		}
-
-		void RefreshPartWindow()
-		{
-			Events["TogglePilot"].guiName = pilotEnabled ? "Deactivate Pilot" : "Activate Pilot";
-		}
-
-		[KSPEvent(guiActive = true, guiName = "Toggle Pilot", active = true)]
-		public void TogglePilot()
-		{
-			if (pilotEnabled)
-			{
-				DeactivatePilot();
-			}
-			else
-			{
-				ActivatePilot();
-			}
-		}
-
-		[KSPAction("Activate Pilot")]
-		public void AGActivatePilot(KSPActionParam param) => ActivatePilot();
-
-		[KSPAction("Deactivate Pilot")]
-		public void AGDeactivatePilot(KSPActionParam param) => DeactivatePilot();
-
-		[KSPAction("Toggle Pilot")]
-		public void AGTogglePilot(KSPActionParam param) => TogglePilot();
-		#endregion
-
 		#region Actual AI Pilot
 
-		void AutoPilot(FlightCtrlState s)
+		protected override void AutoPilot(FlightCtrlState s)
 		{
 			if (!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
 			{
@@ -469,40 +361,6 @@ namespace BDArmory.Control
 
 		#region Autopilot helper functions
 
-		void GetGuardTarget()
-		{
-			if (weaponManager != null && weaponManager.vessel == vessel)
-			{
-				if (weaponManager.guardMode && weaponManager.currentTarget != null)
-				{
-					targetVessel = weaponManager.currentTarget.Vessel;
-				}
-				else
-				{
-					targetVessel = null;
-				}
-				weaponManager.AI = this;
-				return;
-			}
-			else
-			{
-				List<MissileFire>.Enumerator mfs = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-				while (mfs.MoveNext())
-				{
-					if (mfs.Current == null) continue;
-					targetVessel = mfs.Current.currentTarget != null
-						? mfs.Current.currentTarget.Vessel
-						: null;
-
-					weaponManager = mfs.Current;
-					mfs.Current.AI = this;
-
-					break;
-				}
-				mfs.Dispose();
-			}
-		}
-
 		/// <summary>
 		/// If guard mode off, and UI target is of the opposing team, set it as target
 		/// </summary>
@@ -575,14 +433,6 @@ namespace BDArmory.Control
 		#endregion
 
 		#region WingCommander
-
-		void OnToggleTeam(MissileFire mf, BDArmorySettings.BDATeams team)
-		{
-			if (mf.vessel == vessel || (commandLeader && commandLeader.vessel == mf.vessel))
-			{
-				ReleaseCommand();
-			}
-		}
 
 		Vector3d GetFormationPosition()
 		{

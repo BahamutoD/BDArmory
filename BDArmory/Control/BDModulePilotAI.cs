@@ -31,7 +31,7 @@ namespace BDArmory.Control
 			requestedExtendTpos = tPosition;
 		}
 
-		public bool CanEngage()
+		public override bool CanEngage()
 		{
 			return !vessel.LandedOrSplashed;
 		}
@@ -51,10 +51,6 @@ namespace BDArmory.Control
 				return vobj.transform;
 			}
 		}
-
-
-		Vessel targetVessel;
-
 
 		Vector3 upDirection = Vector3.up;
 
@@ -164,13 +160,10 @@ namespace BDArmory.Control
 		float evasiveTimer;
 		Vector3 lastTargetPosition;
 
-		StringBuilder debugString = new StringBuilder();
-
 		LineRenderer lr;
 		Vector3 flyingToPosition;
 
 		//speed controller
-		BDAirspeedControl speedController;
 		bool useAB = true;
 		bool useBrakes = true;
 		bool regainEnergy;
@@ -187,129 +180,23 @@ namespace BDArmory.Control
 		Vector3d commandHeading;
 
 
-		void Start()
+		protected override void Start()
 		{
+			base.Start();
+
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				part.OnJustAboutToBeDestroyed += DeactivatePilot;
-				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
-				MissileFire.OnToggleTeam += OnToggleTeam;
-
-			    List<MissileFire>.Enumerator wms = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-                while (wms.MoveNext())
-				{
-					weaponManager = wms.Current;
-					break;
-				}
-                wms.Dispose();
-				if(pilotEnabled)
-				{
-					ActivatePilot();
-				}
 				maxAllowedCosAoA = (float)Math.Cos(maxAllowedAoA * Math.PI / 180.0);
 				lastAllowedAoA = maxAllowedAoA;
 			}
-
-			RefreshPartWindow();
 		}
-
-		void OnDestroy()
-		{
-			MissileFire.OnToggleTeam -= OnToggleTeam;
-		}
-
-		void OnToggleTeam(MissileFire mf, BDArmorySettings.BDATeams team)
-		{
-			if(mf.vessel == vessel || (commandLeader && commandLeader.vessel == mf.vessel))
-			{
-				ReleaseCommand();
-			}
-		}
-
-		[KSPAction("Activate Pilot")]
-		public void AGActivatePilot(KSPActionParam param)
-		{
-			ActivatePilot();
-		}
-
-		[KSPAction("Deactivate Pilot")]
-		public void AGDeactivatePilot(KSPActionParam param)
-		{
-			DeactivatePilot();
-		}
-
-		[KSPAction("Toggle Pilot")]
-		public void AGTogglePilot(KSPActionParam param)
-		{
-			TogglePilot();
-		}
-
 
 		public override void ActivatePilot()
 		{
-			pilotEnabled = true;
-			vessel.OnFlyByWire -= AutoPilot;
-			vessel.OnFlyByWire += AutoPilot;
+			base.ActivatePilot();
+
 			belowMinAltitude = vessel.LandedOrSplashed;
-
 			prevTargetDir = vesselTransform.up;
-
-			if(!speedController)
-			{
-				speedController = gameObject.AddComponent<BDAirspeedControl>();
-				speedController.vessel = vessel;
-			}
-
-			speedController.Activate();
-
-			GameEvents.onVesselDestroy.Remove(RemoveAutopilot);
-			GameEvents.onVesselDestroy.Add(RemoveAutopilot);
-
-			assignedPosition = VectorUtils.WorldPositionToGeoCoords(vessel.ReferenceTransform.position, vessel.mainBody);
-
-			RefreshPartWindow();
-		}
-
-		public void DeactivatePilot()
-		{
-			pilotEnabled = false;
-			vessel.OnFlyByWire -= AutoPilot;
-			RefreshPartWindow();
-
-			if(speedController)
-			{
-				speedController.Deactivate();
-			}
-		}
-
-		void RemoveAutopilot(Vessel v)
-		{
-			if(v == vessel)
-			{
-				v.OnFlyByWire -= AutoPilot;
-			}
-		}
-
-
-
-		[KSPEvent(guiActive = true, guiName = "Toggle Pilot", active = true)]
-		public void TogglePilot()
-		{
-			if(pilotEnabled)
-			{
-				DeactivatePilot();
-			}
-			else
-			{
-				ActivatePilot();
-			}
-		}
-
-		void RefreshPartWindow()
-		{
-			Events["TogglePilot"].guiName = pilotEnabled ? "Deactivate Pilot" : "Activate Pilot";
-
-			//Misc.RefreshAssociatedWindows(part);
 		}
 
 		void Update()
@@ -345,7 +232,7 @@ namespace BDArmory.Control
 
 
 		float finalMaxSteer = 1;
-		void AutoPilot(FlightCtrlState s)
+		protected override void AutoPilot(FlightCtrlState s)
 		{
 			if(!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
 			{
@@ -1683,41 +1570,7 @@ namespace BDArmory.Control
 			}
 		}
 
-		void GetGuardTarget()
-		{
-			if(weaponManager!=null && weaponManager.vessel == vessel)
-			{
-				if(weaponManager.guardMode && weaponManager.currentTarget!=null)
-				{
-					targetVessel = weaponManager.currentTarget.Vessel;
-				}
-				else
-				{
-					targetVessel = null;
-				}
-				weaponManager.AI = this;
-				return;
-			}
-			else
-			{
-			    List<MissileFire>.Enumerator mfs = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-                while (mfs.MoveNext())
-                {
-                    if (mfs.Current == null) continue;
-					targetVessel = mfs.Current.currentTarget!=null 
-                        ? mfs.Current.currentTarget.Vessel 
-                        : null;
-
-					weaponManager = mfs.Current;
-                    mfs.Current.AI = this;
-
-					return;
-				}
-                mfs.Dispose();
-			}
-		}
-
-		public bool IsValidFixedWeaponTarget(Vessel target)
+		public override bool IsValidFixedWeaponTarget(Vessel target)
 		{
 			if (!vessel) return false;
 			// aircraft can aim at anything
@@ -1877,13 +1730,11 @@ namespace BDArmory.Control
 			standbyMode = false;
 		}
 
-		void OnGUI()
+		protected override void OnGUI()
 		{
+			base.OnGUI();
+
 		    if (!pilotEnabled || !vessel.isActiveVessel) return;
-		    if(BDArmorySettings.DRAW_DEBUG_LABELS)
-		    {
-		        GUI.Label(new Rect(200, Screen.height - 200, 400, 400), vessel.name+":"+ debugString.ToString());	
-		    }
 
 		    if (!BDArmorySettings.DRAW_DEBUG_LINES) return;
 		    if(command == PilotCommands.Follow)
