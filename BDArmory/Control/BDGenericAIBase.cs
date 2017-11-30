@@ -52,16 +52,42 @@ namespace BDArmory.Control
 		public PilotCommands currentCommand => command;
 		public Vector3d commandGPS => assignedPosition;
 
-
+		/// <summary>
+		/// This will be called every update and should run the autopilot logic.
+		/// For advanced use cases you probably know what you're doing :P
+		/// 
+		/// For simple use cases:
+		///		1. Engage your target (get in position to engage, shooting is done by guard mode)
+		///		2. If no target, check command, and follow it
+		///		Do this by setting s.pitch, s.yaw and s.roll.
+		/// </summary>
+		/// <param name="s">current flight control state</param>
 		protected abstract void AutoPilot(FlightCtrlState s);
+
+		// A small wrapper to make sure the autopilot does not do anything when it shouldn't
+		private void autoPilot(FlightCtrlState s)
+		{
+			if (!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
+				return;
+
+			debugString.Length = 0;
+
+			// generally other AI and guard mode expects this target to be engaged
+			GetGuardTarget(); // get the guard target from weapon manager
+			GetNonGuardTarget(); // if guard mode is off, get the UI target
+			GetGuardNonTarget(); // pick a target if guard mode is on, but no target is selected, 
+								 // though really targeting should be managed by the weaponManager, what if we pick an airplane while having only abrams cannons? :P
+
+			AutoPilot(s);
+		}
 
 		#region Pilot on/off
 
 		public virtual void ActivatePilot()
 		{
 			pilotEnabled = true;
-			vessel.OnFlyByWire -= AutoPilot;
-			vessel.OnFlyByWire += AutoPilot;
+			vessel.OnFlyByWire -= autoPilot;
+			vessel.OnFlyByWire += autoPilot;
 
 			if (!speedController)
 			{
@@ -82,7 +108,7 @@ namespace BDArmory.Control
 		public virtual void DeactivatePilot()
 		{
 			pilotEnabled = false;
-			vessel.OnFlyByWire -= AutoPilot;
+			vessel.OnFlyByWire -= autoPilot;
 			RefreshPartWindow();
 
 			if (speedController)
@@ -95,7 +121,7 @@ namespace BDArmory.Control
 		{
 			if (v == vessel)
 			{
-				v.OnFlyByWire -= AutoPilot;
+				v.OnFlyByWire -= autoPilot;
 			}
 		}
 
@@ -219,6 +245,18 @@ namespace BDArmory.Control
 				{
 					targetVessel = potentialTarget.Vessel;
 				}
+			}
+		}
+
+		/// <summary>
+		/// If guard mode off, and UI target is of the opposing team, set it as target
+		/// </summary>
+		protected void GetNonGuardTarget()
+		{
+			if (weaponManager != null && !weaponManager.guardMode)
+			{
+				if (vessel.targetObject?.GetVessel()?.FindPartModuleImplementing<MissileFire>()?.team == !weaponManager.team)
+					targetVessel = (Vessel)vessel.targetObject;
 			}
 		}
 

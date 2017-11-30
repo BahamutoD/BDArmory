@@ -234,10 +234,6 @@ namespace BDArmory.Control
 		float finalMaxSteer = 1;
 		protected override void AutoPilot(FlightCtrlState s)
 		{
-			if(!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
-			{
-				return;
-			}
 			finalMaxSteer = maxSteer;
 
 			//default brakes off full throttle
@@ -253,8 +249,6 @@ namespace BDArmory.Control
 			useVelRollTarget = false;
 
 
-
-			GetGuardTarget();
 			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0||BDArmorySettings.PEACE_MODE))
 			{
 				//s.mainThrottle = 0;
@@ -264,7 +258,6 @@ namespace BDArmory.Control
 			}
 			//upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
 			upDirection = VectorUtils.GetUpDirection(vessel.transform.position);
-			debugString.Length = 0;
 
 			CalculateAccelerationAndTurningCircle();
 			float minAltNeeded = MinAltitudeNeeded();
@@ -319,7 +312,6 @@ namespace BDArmory.Control
 		void UpdateAI(FlightCtrlState s)
 		{
 			currentStatus = "Free";
-			GetGuardNonTarget();
 
 			if(requestedExtend)
 			{

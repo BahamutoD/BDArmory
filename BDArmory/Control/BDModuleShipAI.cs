@@ -90,21 +90,9 @@ namespace BDArmory.Control
 
 		protected override void AutoPilot(FlightCtrlState s)
 		{
-			if (!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
-			{
-				return;
-			}
-			debugString.Length = 0;
-			debugString.Append(Environment.NewLine);
-
 			targetVelocity = 0;
 			targetDirection = vesselTransform.up;
 			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-
-			GetGuardTarget(); // get the guard target from weapon manager
-			GetNonGuardTarget(); // if guard mode is off, get the UI target
-			GetGuardNonTarget(); // pick a target if guard mode is on, but no target is selected, 
-								 // though really targeting should be managed by the weaponManager, what if we pick an airplane while having only abrams cannons? :P
 
 			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE 
 				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
