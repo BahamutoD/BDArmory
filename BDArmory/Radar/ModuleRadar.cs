@@ -222,7 +222,6 @@ namespace BDArmory.Radar
         //locking
         public float lockScanAngle;
         public bool slaveTurrets;
-        public MissileLauncher lastMissile;
         public ModuleTurret lockingTurret;
         public bool lockingPitch = true;
         public bool lockingYaw = true;
