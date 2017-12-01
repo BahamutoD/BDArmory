@@ -1320,7 +1320,7 @@ namespace BDArmory
 
                         if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
                         {
-                            BulletHitFX.CreateBulletHit(p,hit.point, hit, hit.normal, false);
+                            BulletHitFX.CreateBulletHit(p,hit.point, hit, hit.normal, false,0,0);
                         }
 
                     }
@@ -2226,7 +2226,9 @@ namespace BDArmory
         }
         #endregion
 
-        // RMB info in editor
+        #region RMB Info
+
+        
         public override string GetInfo()
         {
             StringBuilder output = new StringBuilder();
@@ -2273,5 +2275,7 @@ namespace BDArmory
             return output.ToString();
         }
 
+
+        #endregion
     }
 }
