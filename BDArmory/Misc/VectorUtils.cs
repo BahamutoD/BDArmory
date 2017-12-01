@@ -5,6 +5,7 @@ namespace BDArmory.Misc
 {
 	public static class VectorUtils
 	{
+		/// <param name="referenceRight">Right compared to fromDirection, make sure it's not orthogonal to toDirection, or you'll get unstable signs</param>
 		public static float SignedAngle(Vector3 fromDirection, Vector3 toDirection, Vector3 referenceRight)
 		{
 			float angle = Vector3.Angle(fromDirection, toDirection);

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
-using System.Text;
 
 namespace BDArmory.Control
 {
@@ -18,11 +16,7 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity;
 
-		//max second derivative, max third derivative, previous orientation, previous momentum, previous momentum derivative, previous command -- pitch, yaw, roll
-		Vector3[] derivatives = new Vector3[6];
-
-		public override bool CanEngage() => vessel.Splashed;
-		public override bool IsValidFixedWeaponTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
+		float[] yawMomentums = new float[6];
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
@@ -37,10 +31,6 @@ namespace BDArmory.Control
 			UI_FloatRange(minValue = 1f, maxValue = 180f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float MaxDrift = 30;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"),
-			UI_FloatRange(minValue = .1f, maxValue = 1f, stepIncrement = .05f, scene = UI_Scene.All)]
-		public float maxSteer = 1;
-
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Moving pitch"),
 			UI_FloatRange(minValue = -45f, maxValue = 45f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float TargetPitch = 0;
@@ -52,6 +42,10 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
 			UI_Toggle(enabledText = "Powered", disabledText = "Passive")]
 		public bool PoweredSteering = true;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
+			UI_Toggle(enabledText = "Careful", disabledText = "Reckless")]
+		public bool DriveCarefully = false;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Attack vector"),
 			UI_Toggle(enabledText = "Broadside", disabledText = "Bow")]
@@ -92,7 +86,6 @@ namespace BDArmory.Control
 		{
 			targetVelocity = 0;
 			targetDirection = vesselTransform.up;
-			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
 			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE 
 				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
@@ -102,13 +95,8 @@ namespace BDArmory.Control
 
 			PilotLogic();
 
-			targetVelocity = Mathf.Clamp(targetVelocity, 0, MaxSpeed);
-			debugString.Append("target velocity: " + targetVelocity);
 
-			SetYaw(s, targetDirection);
-			SetPitch(s);
-			SetRoll(s);
-
+			AttitudeControl(s);
 			AdjustThrottle(targetVelocity);
 		}
 
@@ -209,7 +197,7 @@ namespace BDArmory.Control
 			// goto
 
 			targetDirection = Vector3.ProjectOnPlane(assignedPositionGeo - vesselTransform.position, upDir);
-			if (targetDirection.sqrMagnitude > 500f * 500f)
+			if (targetDirection.sqrMagnitude > 400f * 400f)
 			{
 				targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
 				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
@@ -223,127 +211,83 @@ namespace BDArmory.Control
 
 		void AdjustThrottle(float targetSpeed)
 		{
+			targetVelocity = Mathf.Clamp(targetVelocity, 0, MaxSpeed);
+
 			if (float.IsNaN(targetSpeed)) //because yeah, I might have left division by zero in there somewhere
 			{
 				targetSpeed = CruiseSpeed;
-				DebugLine("Narrowly avoided setting speed to NaN");
+				DebugLine("Target velocity NaN, set to CruiseSpeed.");
 			}
-			speedController.targetSpeed = targetSpeed;
-		} 
-			
+			else
+				DebugLine("Target velocity: " + targetVelocity);
 
-		void SetYaw(FlightCtrlState s, Vector3 target)
+			speedController.targetSpeed = targetSpeed;
+		}
+
+		void AttitudeControl(FlightCtrlState s)
 		{
-			Vector3 yawTarget = Vector3.ProjectOnPlane(target, vesselTransform.forward);
+			var upDir = VectorUtils.GetUpDirection(vessel.CoM);
+			Vector3 yawTarget = Vector3.ProjectOnPlane(targetDirection, upDir);
+			
+			// limit "aoa" if we're moving
 			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
-				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift*Mathf.Deg2Rad, 0); // limit "aoa"
-			float angle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
+				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad
+					* (DriveCarefully ? Mathf.Clamp01((MaxSpeed - (float)vessel.srfSpeed) / (MaxSpeed - CruiseSpeed)) : 1), 0);
+
+			float yawAngle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
+			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
+			float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
+			float rollAngle = BankAngle * Mathf.Clamp(-drift / MaxDrift, -1, 1);
+
+			vessel.SetSASDirection(Vector3.RotateTowards(yawTarget, upDir, pitchAngle * Mathf.Deg2Rad, 0), rollAngle);
+			if (!DriveCarefully)
+				AggresiveYaw(s, yawAngle);
+
+			DebugLine("Pitch " + pitchAngle + " Yaw " + yawAngle + " Roll " + rollAngle);
+		}
+
+		void AggresiveYaw(FlightCtrlState s, float angle)
+		{
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
 			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
-			float yawMomentum = orientation - derivatives[2].y;
-			float d2 = Math.Abs(Math.Abs(yawMomentum) - derivatives[3].y);
-			//float d3 = d2 - derivatives[4].y;
+			float yawMomentum = orientation - yawMomentums[2];
+			float d2 = Math.Abs(Math.Abs(yawMomentum) - yawMomentums[3]);
+			//float d3 = d2 - derivatives[4];
 
 			// calculate for how many frames we'd have to apply our current change in momentum to halt our momentum exactly when facing the target direction
 			// if we have more frames left, continue yawing in the same direction, otherwise apply counterforce in the opposite direction
-			// this pretty much guarantees that we're applying non-max yaw for single frames only
-			// and completely disregards how fast we can change our yaw (that's the commented out parts)
-			// but works rather well for boats which use gimballed engines and gyroscopes which change force instantly
-			float yawOrder = Mathf.Clamp((Mathf.Sqrt(Math.Abs(angle / derivatives[0].y))-1)*Math.Sign(angle) + (yawMomentum / derivatives[0].y), -1, 1);
+
+			float yawOrder = Mathf.Clamp((Mathf.Sqrt(Math.Abs(angle / yawMomentums[0]))-1)*Math.Sign(angle) + (yawMomentum / yawMomentums[0]), -1, 1);
 			if (float.IsNaN(yawOrder)) yawOrder = 1; // division by zero :(
 
 			// update derivatives
-			if (derivatives[5].y > 0.2f)
+			if (yawMomentums[5] > 0.2f)
 			{
-				//derivatives[1].y = derivatives[1].y * 0.95f + d3 / derivatives[5].y * 0.05f;
-				derivatives[0].y = derivatives[0].y * 0.95f + d2 / derivatives[5].y * 0.05f;
+				//derivatives[1] = derivatives[1] * 0.95f + d3 / derivatives[5] * 0.05f;
+				yawMomentums[0] = yawMomentums[0] * 0.95f + d2 / yawMomentums[5] * 0.05f;
 			}
-			derivatives[2].y = orientation;
-			//derivatives[4].y = d2;
-			derivatives[3].y = Math.Abs(yawMomentum);
-			derivatives[5].y = Math.Abs(yawOrder);
+			yawMomentums[2] = orientation;
+			//derivatives[4] = d2;
+			yawMomentums[3] = Math.Abs(yawMomentum);
+			yawMomentums[5] = Math.Abs(yawOrder);
 
 			// set yaw
-			s.yaw = yawOrder * maxSteer;
+			s.yaw = yawOrder;
 
-			DebugLine("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + derivatives[0].y.ToString() + " order " + yawOrder.ToString());
-		}
-
-		void SetPitch(FlightCtrlState s)
-		{
-			float angle = TargetPitch * Mathf.Clamp((float)vessel.horizontalSrfSpeed / CruiseSpeed, 0, 1);
-			float pitch = 90 - Vector3.Angle(vesselTransform.up, VectorUtils.GetUpDirection(vesselTransform.position));
-			float error = angle - pitch;
-			float change = pitch - derivatives[2].x;
-			float targetChange = Mathf.Clamp(error / 512, -0.01f, 0.01f);
-
-			float pitchOrder = Mathf.Clamp(derivatives[1].x + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f, -1, 1); // very basic - change pitch input slowly until we're at the right pitch
-
-			if (float.IsNaN(pitchOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10) pitchOrder = 0;
-
-			derivatives[1].x = pitchOrder;
-			derivatives[2].x = pitch;
-
-			s.pitch = pitchOrder * maxSteer;
-			//DebugLine(pitch+"PitchAngle " + angle.ToString() + " factor3 " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) + " retainedOrder " + derivatives[1].x + "change" + change);
-		}
-
-		void SetRoll(FlightCtrlState s)
-		{
-			float angleRatio = Mathf.Clamp(VectorUtils.SignedAngle(vessel.GetSrfVelocity(), vesselTransform.up, vesselTransform.right) / (MaxDrift), -1, 1);
-			float angle = BankAngle * angleRatio;
-			float roll = VectorUtils.SignedAngle(VectorUtils.GetUpDirection(vesselTransform.position), -vesselTransform.forward, vesselTransform.right);
-			float error = angle - roll;
-			float change = roll - derivatives[2].z;
-
-			if (vessel.horizontalSrfSpeed > CruiseSpeed / 5f)
-			{
-				// stable state factor
-				if (change * error > 0.25f)
-				{
-					if (error * angle >= 0)
-						derivatives[0].z *= 0.99f;
-					else
-						derivatives[0].z += 0.003f;
-				}
-				// change factor
-				if (Mathf.Abs(error) > 2)
-				{
-					const int oF = 20; // let the compiler figure them out
-					const int uF = 100;
-					if (oF * change + oF * (oF - 1) / 2 * (change - derivatives[3].z) > error) 
-						derivatives[1].z *= 0.95f;
-					if (uF * change + uF * (uF - 1) / 2 * (change - derivatives[3].z) > error)
-						derivatives[1].z += 0.01f;
-				}
-			}
-
-			float rollOrder = Mathf.Clamp(derivatives[0].z * angleRatio + derivatives[1].z * error * Mathf.Abs(error), -1, 1);
-			if (float.IsNaN(rollOrder)) rollOrder = 0;
-
-			derivatives[2].z = roll;
-			derivatives[3].z = change;
-
-			s.roll = rollOrder * maxSteer;
-			//DebugLine("BankAngle " + angle.ToString() + " roll " + roll + " factor1 " + derivatives[0].z + " factor2 " + derivatives[1].z);
+			DebugLine("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + yawMomentums[0].ToString() + " order " + yawOrder.ToString());
 		}
 
 		#endregion
 
 		#region Autopilot helper functions
 
-		/// <summary>
-		/// If guard mode off, and UI target is of the opposing team, set it as target
-		/// </summary>
-		void GetNonGuardTarget()
+		public override bool CanEngage()
 		{
-			if (weaponManager != null && !weaponManager.guardMode)
-			{
-				if (vessel.targetObject != null && vessel.targetObject is Vessel 
-					&& BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(!weaponManager.team)].FirstOrDefault(x => x.weaponManager.vessel == (Vessel)vessel.targetObject))
-					targetVessel = (Vessel)vessel.targetObject;
-			}
+			if (!vessel.Splashed) DebugLine(vessel.vesselName + " cannot engage: ship not in water");
+			return vessel.Splashed;
 		}
+
+		public override bool IsValidFixedWeaponTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
 
 		/// <returns>null if no collision, dodge vector if one detected</returns>
 		Vector3? PredictCollisionWithVessel(Vessel v, float maxTime, float interval)
@@ -375,11 +319,11 @@ namespace BDArmory.Control
 			{
 				const float minDepth = 10f;
 				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
-				if (AIUtils.GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
 				{
 					return -vesselTransform.right;
 				}
-				if (AIUtils.GetAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
 				{
 					return vesselTransform.right;
 				}

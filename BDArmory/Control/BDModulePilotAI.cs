@@ -5,7 +5,6 @@ using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
-using System.Text;
 
 namespace BDArmory.Control
 {

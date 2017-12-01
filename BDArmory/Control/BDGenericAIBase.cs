@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
@@ -9,6 +7,10 @@ using System.Text;
 
 namespace BDArmory.Control
 {
+	/// <summary>
+	/// A base class for implementing AI.
+	/// Note: You do not have to use it, it is just for convenience, all the game cares about is that you implement the IBDAIControl interface.
+	/// </summary>
 	public abstract class BDGenericAIBase : PartModule, IBDAIControl
 	{
 		#region declarations
@@ -16,9 +18,14 @@ namespace BDArmory.Control
 		public bool pilotEnabled { get; protected set; }
 
 		public MissileFire weaponManager { get; protected set; }
+
+		/// <summary>
+		/// The default is BDAirspeedControl. If you want to use something else, just override ActivatePilot  (and, potentially, DeactivatePilot), and make it use something else.
+		/// </summary>
 		protected BDAirspeedControl speedController;
 
 		protected Transform vesselTransform => vessel.ReferenceTransform;
+
 		protected StringBuilder debugString = new StringBuilder(); 
 
 		protected Vessel targetVessel;
@@ -37,9 +44,6 @@ namespace BDArmory.Control
 			}
 		}
 
-		public abstract bool CanEngage();
-		public abstract bool IsValidFixedWeaponTarget(Vessel target);
-
 		//wing commander
 		public ModuleWingCommander commandLeader { get; protected set; }
 		protected PilotCommands command;
@@ -47,19 +51,23 @@ namespace BDArmory.Control
 		public string currentStatus { get; protected set; } = "Free";
 		protected int commandFollowIndex;
 
-		#endregion
-
 		public PilotCommands currentCommand => command;
 		public Vector3d commandGPS => assignedPosition;
 
+		#endregion
+
+		public abstract bool CanEngage();
+		public abstract bool IsValidFixedWeaponTarget(Vessel target);
+
 		/// <summary>
 		/// This will be called every update and should run the autopilot logic.
-		/// For advanced use cases you probably know what you're doing :P
 		/// 
 		/// For simple use cases:
 		///		1. Engage your target (get in position to engage, shooting is done by guard mode)
 		///		2. If no target, check command, and follow it
 		///		Do this by setting s.pitch, s.yaw and s.roll.
+		///		
+		/// For advanced use cases you probably know what you're doing :P
 		/// </summary>
 		/// <param name="s">current flight control state</param>
 		protected abstract void AutoPilot(FlightCtrlState s);
@@ -77,6 +85,7 @@ namespace BDArmory.Control
 			GetNonGuardTarget(); // if guard mode is off, get the UI target
 			GetGuardNonTarget(); // pick a target if guard mode is on, but no target is selected, 
 								 // though really targeting should be managed by the weaponManager, what if we pick an airplane while having only abrams cannons? :P
+								 // (this is another reason why target selection is hardcoded into the base class, so changing this later is less of a mess :) )
 
 			AutoPilot(s);
 		}
@@ -214,7 +223,7 @@ namespace BDArmory.Control
 			mfs.Dispose();
 		}
 
-		protected virtual void GetGuardTarget()
+		protected void GetGuardTarget()
 		{
 			if (weaponManager == null || weaponManager.vessel == vessel)
 				UpdateWeaponManager();
@@ -260,6 +269,10 @@ namespace BDArmory.Control
 			}
 		}
 
+		/// <summary>
+		/// Write some text to the debug field (the one on lower left when debug labels are on), followed by a newline.
+		/// </summary>
+		/// <param name="text">text to write</param>
 		protected void DebugLine(string text)
 		{
 			debugString.Append(text);

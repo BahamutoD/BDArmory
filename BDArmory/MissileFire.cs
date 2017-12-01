@@ -272,7 +272,7 @@ namespace BDArmory
 		//AIPilot
 		public IBDAIControl AI;
 		// some extending related code still uses pilotAI, which is implementation specific and does not make sense to include in the interface
-        private BDModulePilotAI pilotAI { get { if (AI is BDModulePilotAI) return (BDModulePilotAI)AI; return null; } }
+        private BDModulePilotAI pilotAI { get { return AI as BDModulePilotAI; } }
         public float timeBombReleased;
 
         //targeting pods
