@@ -274,7 +274,8 @@ namespace BDArmory.FX
             {
                 var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
                 float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 
-                                         Power * distanceFactor * 100;
+                                         Power * distanceFactor;
+                damageToBuilding *= 2f;
                 //if (damageToBuilding > building.impactMomentumThreshold * 0.85f)
                // {
                 building.AddDamage(damageToBuilding);

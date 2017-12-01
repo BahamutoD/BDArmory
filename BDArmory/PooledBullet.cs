@@ -309,8 +309,9 @@ namespace BDArmory
 
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
 
-                            if (CheckGroundHit(hitPart, hit) || CheckBuildingHit(hit))
+                            if (CheckGroundHit(hitPart, hit))
                             {
+                                CheckBuildingHit(hit);
                                 if (!RicochetScenery(hitAngle))
                                 {
                                     ExplosiveDetonation(hitPart, hit, ray);
@@ -445,7 +446,7 @@ namespace BDArmory
 
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, hasRichocheted, caliber);
+                BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, hasRichocheted, caliber,penetrationfactor);
             }
 
             hitPart.AddDamage_Ballistic(bulletMass, caliber, multiplier, penetrationfactor,
@@ -597,7 +598,7 @@ namespace BDArmory
             {
                 if (BDArmorySettings.BULLET_HITS)
                 {
-                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, caliber);
+                    BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, true, 0,0);
                 }
 
                 return true;
@@ -607,25 +608,29 @@ namespace BDArmory
 
         private bool CheckBuildingHit(RaycastHit hit)
         {
-            DestructibleBuilding hitBuilding = null;
+            DestructibleBuilding building = null;
             try
             {
-                hitBuilding = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
-                hitBuilding.damageDecay = 600f;
+                building = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+                building.damageDecay = 600f;
             }
             catch (Exception) { }
 
-            if (hitBuilding != null && hitBuilding.IsIntact)
+            if (building != null && building.IsIntact)
             {
-                float damageToBuilding = bulletMass * initialSpeed * initialSpeed * BDArmorySettings.DMG_MULTIPLIER * 100;
-                hitBuilding.AddDamage(damageToBuilding);
-                if (hitBuilding.Damage > hitBuilding.impactMomentumThreshold * 150)
+                float damageToBuilding = ((0.5f * (bulletMass * Mathf.Pow(currentVelocity.magnitude, 2)))
+                            * (BDArmorySettings.DMG_MULTIPLIER / 100) * bulletDmgMult
+                            * 1e-4f);
+                damageToBuilding /= 8f;
+                building.AddDamage(damageToBuilding);
+                if (building.Damage > building.impactMomentumThreshold * 150)
                 {
-                    hitBuilding.Demolish();
+                    building.Demolish();
                 }
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " +
-                              (damageToBuilding).ToString("0.00") + ", total Hitpoints: " + hitBuilding.Damage);
+                    Debug.Log("[BDArmory]: Ballistic hit destructible building! Hitpoints Applied: " + Mathf.Round(damageToBuilding) +
+                             ", Building Damage : " + Mathf.Round(building.Damage) +
+                             " Building Threshold : " + building.impactMomentumThreshold);
 
 
                 return true;
@@ -697,7 +702,7 @@ namespace BDArmory
             //ricochet            
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hit.point, hit.normal, true, caliber);
+                BulletHitFX.CreateBulletHit(p,hit.point, hit, hit.normal, true,0,0);
             }
 
             tracerStartWidth /= 2;
@@ -830,11 +835,12 @@ namespace BDArmory
             }
 
             resources.Dispose();
-            //explodeScale /= 100;
-            part.explode();
 
-            //It doesn't make sense to create another explosion, lets just explode the part
-            //ExplosionFx.CreateExplosion(part.partTransform.position, GetExplosivePower(), explModelPath, explSoundPath, false);
+            explodeScale /= 100;
+            part.explosionPotential = explodeScale;
+
+            part.explode();
+            
         }
 
         private float GetExplosivePower()

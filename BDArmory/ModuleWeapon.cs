@@ -1300,16 +1300,12 @@ namespace BDArmory
 
                         //lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
                         lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
-                        lr.SetPosition(1, laserPoint);
-                    
-                    
-                        if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
-                        {
-                            BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
-                        }
+                        lr.SetPosition(1, laserPoint);                   
+
 
                         KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                         Part p = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
+
                         if (p && p.vessel && p.vessel != vessel)
                         {
                             float distance = hit.distance;
@@ -1320,6 +1316,13 @@ namespace BDArmory
 
                             if (BDArmorySettings.INSTAKILL) p.Destroy();
                         }
+
+
+                        if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
+                        {
+                            BulletHitFX.CreateBulletHit(p,hit.point, hit, hit.normal, false,0,0);
+                        }
+
                     }
                     else
                     {
@@ -2206,8 +2209,7 @@ namespace BDArmory
         }
 
         void SetupBullet()
-        {        
-
+        {
             bulletInfo = BulletInfo.bullets[bulletType];
             if (bulletType != "def")
             {
@@ -2218,14 +2220,15 @@ namespace BDArmory
                 bulletDragTypeName = bulletInfo.bulletDragTypeName;
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastHeat;
-                cannonShellRadius = bulletInfo.blastRadius;         
-                
+                cannonShellRadius = bulletInfo.blastRadius;      
             }
             ParseBulletDragType();
         }
         #endregion
 
-        // RMB info in editor
+        #region RMB Info
+
+        
         public override string GetInfo()
         {
             StringBuilder output = new StringBuilder();
@@ -2272,5 +2275,7 @@ namespace BDArmory
             return output.ToString();
         }
 
+
+        #endregion
     }
 }

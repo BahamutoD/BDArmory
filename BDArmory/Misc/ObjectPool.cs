@@ -36,32 +36,31 @@ namespace BDArmory.Misc
             return pool[index];
         }
 
-
         public GameObject GetPooledObject()
         {
-                for (int i = 0; i < pool.Count; i++)
+            if (canGrow)
+            {
+                if (!poolObject)
+                {
+                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +")");
+                }
+
+                GameObject obj = Instantiate(poolObject);
+                obj.SetActive(false);
+                pool.Add(obj);
+                size++;
+
+                return obj;
+            }
+
+            for (int i = 0; i < pool.Count; i++)
                 {
                     if (!pool[i].activeInHierarchy)
                     {                        
                         return pool[i];
                     }
                 }
-
-                if (canGrow)
-                {
-                    if (!poolObject)
-                    {
-                        Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +
-                                         ")");
-                    }
-                    GameObject obj = Instantiate(poolObject);
-
-                obj.SetActive(false);
-                pool.Add(obj);
-                size++;
-
-                    return obj;
-                }                
+                          
             return null;
         }
 
@@ -80,7 +79,7 @@ namespace BDArmory.Misc
             }
         }
 
-        public static ObjectPool CreateObjectPool(GameObject obj, int size, bool canGrow, bool destroyOnLoad)
+        public static ObjectPool CreateObjectPool(GameObject obj, int size, bool canGrow, bool destroyOnLoad, bool disableAfterDelay = false)
         {
             GameObject poolObject = new GameObject(obj.name + "Pool");
             ObjectPool op = poolObject.AddComponent<ObjectPool>();
