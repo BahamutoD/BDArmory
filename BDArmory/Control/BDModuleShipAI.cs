@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
@@ -16,7 +15,7 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity;
 
-		float[] yawMomentums = new float[6];
+		float[] yawDerivatives = new float[7];
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
@@ -45,7 +44,7 @@ namespace BDArmory.Control
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
 			UI_Toggle(enabledText = "Careful", disabledText = "Reckless")]
-		public bool DriveCarefully = false;
+		public bool DriveCarefully = true;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Attack vector"),
 			UI_Toggle(enabledText = "Broadside", disabledText = "Bow")]
@@ -94,7 +93,6 @@ namespace BDArmory.Control
 			if (!vessel.Splashed) return;
 
 			PilotLogic();
-
 
 			AttitudeControl(s);
 			AdjustThrottle(targetVelocity);
@@ -179,7 +177,7 @@ namespace BDArmory.Control
 				Vector3 targetDistance = targetPosition - vesselTransform.position;
 				if (Vector3.Dot(targetDistance, vesselTransform.up) < 0
 					&& Vector3.ProjectOnPlane(targetDistance, upDir).sqrMagnitude < 250f * 250f
-					&& Vector3.Angle(vesselTransform.up, commandLeader.vessel.Velocity()) < 0.8f)
+					&& Vector3.Angle(vesselTransform.up, commandLeader.vessel.srf_velocity) < 0.8f)
 				{
 					targetVelocity = (float)(commandLeader.vessel.horizontalSrfSpeed - (vesselTransform.position - targetPosition).magnitude / 15);
 					targetDirection = Vector3.RotateTowards(Vector3.ProjectOnPlane(commandLeader.vessel.srf_vel_direction, upDir), targetDistance, 0.2f, 0);
@@ -240,8 +238,11 @@ namespace BDArmory.Control
 			float rollAngle = BankAngle * Mathf.Clamp(-drift / MaxDrift, -1, 1);
 
 			vessel.SetSASDirection(Vector3.RotateTowards(yawTarget, upDir, pitchAngle * Mathf.Deg2Rad, 0), rollAngle);
+
 			if (!DriveCarefully)
 				AggresiveYaw(s, yawAngle);
+			else if (Mathf.Abs(yawAngle) + Mathf.Abs(drift) > 5)
+				targetVelocity = Mathf.Clamp(targetVelocity, 0, CruiseSpeed);
 
 			DebugLine("Pitch " + pitchAngle + " Yaw " + yawAngle + " Roll " + rollAngle);
 		}
@@ -250,31 +251,42 @@ namespace BDArmory.Control
 		{
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
 			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
-			float yawMomentum = orientation - yawMomentums[2];
-			float d2 = Math.Abs(Math.Abs(yawMomentum) - yawMomentums[3]);
-			//float d3 = d2 - derivatives[4];
+			float d1 = orientation - yawDerivatives[2]; //first derivative
+			float d2 = d1 - yawDerivatives[3]; //second derivative
+			float d3 = d2 - yawDerivatives[4]; //third derivative
 
 			// calculate for how many frames we'd have to apply our current change in momentum to halt our momentum exactly when facing the target direction
 			// if we have more frames left, continue yawing in the same direction, otherwise apply counterforce in the opposite direction
 
-			float yawOrder = Mathf.Clamp((Mathf.Sqrt(Math.Abs(angle / yawMomentums[0]))-1)*Math.Sign(angle) + (yawMomentum / yawMomentums[0]), -1, 1);
-			if (float.IsNaN(yawOrder)) yawOrder = 1; // division by zero :(
+			float timeToZero = 0; // not including timeSmall
+			float timeSmall = d2 / yawDerivatives[1] * Mathf.Sign(d1);
+			if (Mathf.Abs(d1) < yawDerivatives[6] - timeSmall * Mathf.Abs(d2) / 2)
+				timeToZero = 2 * Mathf.Sqrt((Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2)) / yawDerivatives[1]);
+			else
+				timeToZero = yawDerivatives[5] + (Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2) - yawDerivatives[6]) / yawDerivatives[0];
+			float angleChangeTillStop = d1 * timeToZero / 2 + timeSmall * d2 * d2 / 3;
+
+			if (float.IsNaN(timeToZero) || angleChangeTillStop > Mathf.Abs(angle))
+				s.yaw = -Mathf.Sign(angle);
+			else
+				s.yaw = Mathf.Sign(angle);
+
 
 			// update derivatives
-			if (yawMomentums[5] > 0.2f)
+			const float safetyFactor = 0.9f; // a small margin to acount for favorable drag conditions and stuff
+			if (Mathf.Abs(d2) * safetyFactor > yawDerivatives[0] || Mathf.Abs(d3) * safetyFactor > yawDerivatives[1])
 			{
-				//derivatives[1] = derivatives[1] * 0.95f + d3 / derivatives[5] * 0.05f;
-				yawMomentums[0] = yawMomentums[0] * 0.95f + d2 / yawMomentums[5] * 0.05f;
+				if (Mathf.Abs(d2) * safetyFactor > yawDerivatives[0]) yawDerivatives[0] = Mathf.Abs(d2) * safetyFactor;
+				if (Mathf.Abs(d3) * safetyFactor > yawDerivatives[1]) yawDerivatives[1] = Mathf.Abs(d3) * safetyFactor;
+				yawDerivatives[5] = yawDerivatives[0] / yawDerivatives[1] * 2; //time to full change
+				yawDerivatives[6] = yawDerivatives[0] * yawDerivatives[5] / 2; //triangle 2 (x2)
 			}
-			yawMomentums[2] = orientation;
-			//derivatives[4] = d2;
-			yawMomentums[3] = Math.Abs(yawMomentum);
-			yawMomentums[5] = Math.Abs(yawOrder);
+				
+			yawDerivatives[2] = orientation;
+			yawDerivatives[3] = d1;
+			yawDerivatives[4] = d2;
 
-			// set yaw
-			s.yaw = yawOrder;
-
-			DebugLine("YawAngle " + angle.ToString() + " momentum " + yawMomentum.ToString() + " derivative " + yawMomentums[0].ToString() + " order " + yawOrder.ToString());
+			DebugLine("YawAngle " + angle + " maxD2 " + yawDerivatives[0] + " maxD3 " + yawDerivatives[1]);
 		}
 
 		#endregion

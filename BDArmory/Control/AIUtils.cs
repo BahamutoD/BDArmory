@@ -57,22 +57,42 @@ namespace BDArmory.Control
 			return new Vector3d(right, back, 0);
 		}
 
+		/// <summary>
+		/// Sets SAS to rotate to the specified direction at the specified roll
+		/// </summary>
+		/// <param name="vessel">Reference to the vessel for which SAS should be set</param>
+		/// <param name="forwardDirection">Vector3 going in the direction to face</param>
+		/// <param name="roll">angle in degrees relative to the horizon plane</param>
 		public static void SetSASDirection(this Vessel vessel, Vector3 forwardDirection, float roll)
 		{
-			var upDir = VectorUtils.GetUpDirection(vessel.CoM);
-			var rightDir = Vector3.Cross(forwardDirection, upDir);
-			vessel.SetSASDirection(forwardDirection, Vector3.RotateTowards(upDir, rightDir != Vector3.zero ? rightDir : VectorUtils.GetNorthVector(vessel.CoM, vessel.mainBody), roll, 0));
+			var upCP = Vector3.Cross(forwardDirection, Vector3.Cross(forwardDirection, VectorUtils.GetUpDirection(vessel.CoM)));
+			if (upCP != Vector3.zero)
+				vessel.setSASDirection(Quaternion.AngleAxis(roll, -forwardDirection) * Quaternion.LookRotation(upCP, forwardDirection));
+			else
+				vessel.setSASDirection(Quaternion.LookRotation(-vessel.ReferenceTransform.forward, forwardDirection));
 		}
 
-		public static void SetSASDirection(this Vessel vessel, Vector3 forwardDirection, Vector3 upDirection)
-			=> vessel.SetSASDirection(Quaternion.LookRotation(forwardDirection, upDirection));
-
+		/// <summary>
+		/// Set the SAS target direction to specified pitch, yaw and roll
+		/// </summary>
+		/// <param name="vessel">Reference to the vessel for which SAS should be set</param>
+		/// <param name="pitch">angle in degrees relative to the horizon</param>
+		/// <param name="yaw">angle in degrees relative to north</param>
+		/// <param name="roll">angle in degrees relative to the horizon plane</param>
 		public static void SetSASDirection(this Vessel vessel, float pitch, float yaw, float roll)
-			=> vessel.SetSASDirection(Quaternion.Euler(pitch, yaw, roll));
-
-		public static void SetSASDirection(this Vessel vessel, Quaternion rotation)
 		{
-			vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+			var upDir = VectorUtils.GetUpDirection(vessel.CoM);
+			var north = VectorUtils.GetNorthVector(vessel.CoM, vessel.mainBody);
+			var direction = Quaternion.AngleAxis(yaw, upDir) * Quaternion.AngleAxis(pitch, Vector3.Cross(north, upDir)) * Quaternion.LookRotation(-upDir, north);
+			vessel.setSASDirection(Quaternion.AngleAxis(roll, direction * Vector3.up) * direction);
+		}
+
+		// this one sets rotation relative to the orientation of the solar system => usefulness is limited => kept private
+		private static void setSASDirection(this Vessel vessel, Quaternion rotation)
+		{
+			if (!vessel.Autopilot.Enabled)
+				vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+
 			vessel.Autopilot.SAS.LockRotation(rotation);
 		}
 	}

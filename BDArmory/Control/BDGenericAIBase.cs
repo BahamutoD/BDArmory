@@ -65,7 +65,7 @@ namespace BDArmory.Control
 		/// For simple use cases:
 		///		1. Engage your target (get in position to engage, shooting is done by guard mode)
 		///		2. If no target, check command, and follow it
-		///		Do this by setting s.pitch, s.yaw and s.roll.
+		///		Do this by setting s.pitch, s.yaw and s.roll. Or use the SetSASDirection extension from AIUtils if you don't feel like like implementing a PID controller. :)
 		///		
 		/// For advanced use cases you probably know what you're doing :P
 		/// </summary>
