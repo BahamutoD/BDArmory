@@ -235,19 +235,16 @@ namespace BDArmory.Control
 			float yawAngle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
 			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
 			float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
-			float rollAngle = BankAngle * Mathf.Clamp(-drift / MaxDrift, -1, 1);
 
-			vessel.SetSASDirection(Vector3.RotateTowards(yawTarget, upDir, pitchAngle * Mathf.Deg2Rad, 0), rollAngle);
+			SetYaw(s, yawAngle);
+			PitchControl(s, pitchAngle);
+			RollControl(s, yawAngle, drift);
 
-			if (!DriveCarefully)
-				AggresiveYaw(s, yawAngle);
-			else if (Mathf.Abs(yawAngle) + Mathf.Abs(drift) > 5)
+			if (DriveCarefully && Mathf.Abs(yawAngle) + Mathf.Abs(drift) > 5)
 				targetVelocity = Mathf.Clamp(targetVelocity, 0, CruiseSpeed);
-
-			DebugLine("Pitch " + pitchAngle + " Yaw " + yawAngle + " Roll " + rollAngle);
 		}
 
-		void AggresiveYaw(FlightCtrlState s, float angle)
+		void SetYaw(FlightCtrlState s, float angle)
 		{
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
 			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
@@ -287,6 +284,56 @@ namespace BDArmory.Control
 			yawDerivatives[4] = d2;
 
 			DebugLine("YawAngle " + angle + " maxD2 " + yawDerivatives[0] + " maxD3 " + yawDerivatives[1]);
+		}
+
+		void RollControl(FlightCtrlState s, float yawAngle, float drift)
+		{
+			// we're gonna do this really simply (same way a person would do it):
+			// if we're turning and over the bank angle, panic and apply max input to roll 
+			// otherwise let SAS keep it stable
+			// since this is a ship, center of drag should pretty much always be below the center of mass, so the physics of turning will work to roll ship outwards, so only considering it one way
+
+			const float errorMargin = 2f; // this is how much deviation is still considered stable
+
+			if (vessel.horizontalSrfSpeed * 10 < CruiseSpeed) return;
+
+			var upDir = VectorUtils.GetUpDirection(vesselTransform.position);
+			float currentBank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
+			//DebugLine("calculated drift " + drift + " bank " + currentBank + " bank limit " + BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift));
+
+			if (Mathf.Abs(yawAngle) < errorMargin && Mathf.Abs(drift) < errorMargin)
+			{
+				//stable state
+				if (Mathf.Abs(currentBank) > errorMargin)
+				{
+					s.roll = -currentBank / Mathf.Abs(BankAngle);
+					DebugLine("Reverting roll: " + -Math.Sign(currentBank));
+					return;
+				}
+			}
+			else
+			{
+
+				if (BankAngle > 0)
+				{
+					if (currentBank * drift > 0 || Mathf.Abs(currentBank) < BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift))
+					{
+						s.roll = -Math.Sign(drift);
+						DebugLine("Increasing roll: " + -Math.Sign(drift));
+						return;
+					}
+				}
+				else
+				{
+					if (currentBank * drift > 0 && -Mathf.Abs(currentBank) < BankAngle)
+					{
+						s.roll = -Math.Sign(drift);
+						DebugLine("Reducing roll: " + -Math.Sign(drift));
+						return;
+					}
+				}
+			}
+			DebugLine("SAS roll control");
 		}
 
 		#endregion
