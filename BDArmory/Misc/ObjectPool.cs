@@ -42,12 +42,10 @@ namespace BDArmory.Misc
             {
                 if (!poolObject)
                 {
-                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +
-                                     ")");
+                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +")");
                 }
 
                 GameObject obj = Instantiate(poolObject);
-
                 obj.SetActive(false);
                 pool.Add(obj);
                 size++;
@@ -62,8 +60,7 @@ namespace BDArmory.Misc
                         return pool[i];
                     }
                 }
-
-              
+                          
             return null;
         }
 

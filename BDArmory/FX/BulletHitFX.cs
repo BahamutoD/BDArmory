@@ -19,28 +19,26 @@ namespace BDArmory.FX
         public GameObject bulletHoleDecalPrefab;
         public static ObjectPool decalPool_small;
         public static ObjectPool decalPool_large;
+        public static int maxPoolSize = 200;
 
-        public static void SetupShellPool(float caliber,float penetrationfactor)
+        public static void SetupShellPool()
         {
-            GameObject templateShell_small;
-            GameObject templateShell_large;
-            if (caliber >= 90f)
-            {
-                templateShell_large =
-                    Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal2"));
 
-                templateShell_large.SetActive(false);
-                if (decalPool_large == null) decalPool_large = ObjectPool.CreateObjectPool(templateShell_large, 250, true, true);
-            }
-            else
-            {
-                templateShell_small = 
-                    Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal1"));
-                templateShell_small.SetActive(false);
-                if (decalPool_small == null) decalPool_small = ObjectPool.CreateObjectPool(templateShell_small, 250, true, true);
-            }             
-                          
-        }         
+            GameObject templateShell_large;
+            templateShell_large =
+                    Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal2"));
+            templateShell_large.SetActive(false);
+            if (decalPool_large == null)
+                decalPool_large = ObjectPool.CreateObjectPool(templateShell_large, maxPoolSize, true, true);
+
+            GameObject templateShell_small;
+            templateShell_small =
+                Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal1"));
+            templateShell_small.SetActive(false);
+            if (decalPool_small == null)
+                decalPool_small = ObjectPool.CreateObjectPool(templateShell_small, maxPoolSize, true, true);
+            
+        }
 
         public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float pentrationfactor)
         {
@@ -79,9 +77,10 @@ namespace BDArmory.FX
             }
         }
 
-
         void Start()
         {
+            if (decalPool_large == null || decalPool_small == null) SetupShellPool();
+
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
             IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
@@ -150,11 +149,21 @@ namespace BDArmory.FX
             }
         }
 
+        System.Collections.IEnumerator DisableBullet(GameObject bulletPool)
+        {
+            yield return new WaitForSeconds(30f);
+            if (bulletPool != null)
+            {
+                bulletPool.SetActive(false);
+            }
+
+        }
+
         public static void CreateBulletHit(Part hitPart,Vector3 position, RaycastHit hit, Vector3 normalDirection,
                                             bool ricochet,float caliber,float penetrationfactor)
         {
             
-            if (decalPool_large == null || decalPool_small == null) SetupShellPool(caliber,penetrationfactor);
+            if (decalPool_large == null || decalPool_small == null) SetupShellPool();
             GameObject go;
 
             if (caliber <= 30)

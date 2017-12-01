@@ -835,11 +835,12 @@ namespace BDArmory
             }
 
             resources.Dispose();
-            //explodeScale /= 100;
-            part.explode();
 
-            //It doesn't make sense to create another explosion, lets just explode the part
-            //ExplosionFx.CreateExplosion(part.partTransform.position, GetExplosivePower(), explModelPath, explSoundPath, false);
+            explodeScale /= 100;
+            part.explosionPotential = explodeScale;
+
+            part.explode();
+            
         }
 
         private float GetExplosivePower()
