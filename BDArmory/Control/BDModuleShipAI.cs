@@ -153,6 +153,9 @@ namespace BDArmory.Control
 			{
 				Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
 				float distance = vecToTarget.magnitude;
+				// lead the target a bit, where 950f is a ballpark estimate of the average bullet velocity (gau 983, vulcan 950, .50 860)
+				vecToTarget = AIUtils.PredictPosition(targetVessel, distance / 950f) - vessel.CoM;  
+
 				if (BroadsideAttack)
 				{
 					Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
