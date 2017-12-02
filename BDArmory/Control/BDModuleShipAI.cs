@@ -17,6 +17,7 @@ namespace BDArmory.Control
 
 		float[] yawDerivatives = new float[7] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
 		float[] pitchDerivatives = new float[2];
+		float[] rollDerivatives = new float[4] { 0.05f, 0, 0, 0 };
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
@@ -332,7 +333,7 @@ namespace BDArmory.Control
 			float change = pitch - pitchDerivatives[1];
 			float targetChange = Mathf.Clamp(error / 512, -0.01f, 0.01f);
 
-			float pitchOrder = Mathf.Clamp(pitchDerivatives[0] + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.1f, -1, 1); // very basic - change pitch input slowly until we're at the right pitch
+			float pitchOrder = Mathf.Clamp(pitchDerivatives[0] + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.02f, -1, 1); // very basic - change pitch input slowly until we're at the right pitch
 
 			if (float.IsNaN(pitchOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10) pitchOrder = 0;
 
@@ -350,27 +351,40 @@ namespace BDArmory.Control
 			// otherwise let SAS keep it stable
 			// since this is a ship, center of drag should pretty much always be below the center of mass, so the physics of turning will work to roll ship outwards, so only considering it one way
 
-			const float errorMargin = 2f; // this is how much deviation is still considered stable
+			const float errorMargin = 4f; // this is how much deviation is still considered stable
 
 			if (vessel.horizontalSrfSpeed * 10 < CruiseSpeed) return;
 
 			var upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 			float currentBank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
+			float rollMomentum = currentBank - rollDerivatives[2];
 			//DebugLine("calculated drift " + drift + " bank " + currentBank + " bank limit " + BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift));
 
 			if (Mathf.Abs(yawAngle) < errorMargin && Mathf.Abs(drift) < errorMargin)
 			{
 				//stable state
+				if (rollDerivatives[1] * currentBank > 0) //if overcorrected 
+				{
+					rollDerivatives[0] *= 0.5f;
+					debugString.Append("Overcorrecting, reducing factor: ");
+				}
+				else if (rollDerivatives[1] * currentBank < 0 && rollMomentum * currentBank > 0 && Mathf.Abs(rollMomentum) > Mathf.Abs(rollDerivatives[3])) //if undercorrected
+				{
+					rollDerivatives[0] /= 0.99f;
+					debugString.Append("Undercorrecting, increasing factor: ");
+				}
+					
 				if (Mathf.Abs(currentBank) > errorMargin)
 				{
-					s.roll = -currentBank / 15;
-					DebugLine("Reverting roll: " + -Math.Sign(currentBank));
+					s.roll = -currentBank * rollDerivatives[0];
+					rollDerivatives[1] = Mathf.Sign(-currentBank);
+					DebugLine("Reverting roll: " + -currentBank * rollDerivatives[0] + " factor " + rollDerivatives[0]);
 					return;
 				}
 			}
 			else
 			{
-
+				rollDerivatives[1] = 0;
 				if (BankAngle > 0)
 				{
 					if (currentBank * drift > 0 || Mathf.Abs(currentBank) < BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift))
@@ -390,6 +404,10 @@ namespace BDArmory.Control
 					}
 				}
 			}
+
+			rollDerivatives[2] = BankAngle;
+			rollDerivatives[3] = rollMomentum;
+
 			DebugLine("SAS roll control");
 		}
 
