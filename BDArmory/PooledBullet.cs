@@ -280,7 +280,7 @@ namespace BDArmory
                 penTicker = 0;
 
                 float dist = currentVelocity.magnitude * TimeWarp.deltaTime;
-                Ray ray = new Ray(currPosition, currPosition - prevPosition);
+                Ray ray = new Ray(currPosition, currentVelocity);
                 var hits = Physics.RaycastAll(ray, dist, 557057);
                 if (hits.Length > 0)
                 {

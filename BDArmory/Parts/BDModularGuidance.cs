@@ -696,24 +696,29 @@ namespace BDArmory.Parts
         #region KSP ACTIONS
         [KSPAction("Fire Missile")]
         public void AgFire(KSPActionParam param)
-        {
-            FireMissile();
+        {            
+            FireMissile();        
         }
 
         #endregion
 
         #region KSP EVENTS
-
+        [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
+        public void GuiFire()
+        {
+            FireMissile();
+        }
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire Missile", active = true)]
         public override void FireMissile()
         {
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null &&
+                BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel)
+            {
+                BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            }
+
             if (!HasFired)
             {
-                if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                {
-                     BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-                }                   
-
                 GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
@@ -751,6 +756,10 @@ namespace BDArmory.Parts
                
                 HasFired = true;
                 DetonationDistanceState = DetonationDistanceStates.NotSafe;
+            }
+            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
+            {
+                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
             }
         }
 
