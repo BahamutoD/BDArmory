@@ -150,7 +150,7 @@ namespace BDArmory.Control
 			// avoid collisions if any are found
 			if (dodgeVector != null)
 			{
-				targetVelocity = MaxSpeed;
+				targetVelocity = DriveCarefully ? CruiseSpeed : MaxSpeed;
 				targetDirection = (Vector3)dodgeVector;
 				SetStatus($"Avoiding Collision");
 				return;
