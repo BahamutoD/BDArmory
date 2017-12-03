@@ -581,7 +581,7 @@ namespace BDArmory.Parts
                 Debug.Log("[BDArmory]: Something Collided: " + col.ToString());
             if (HasExploded || !HasFired) return;            
 
-            if (TimeIndex > 1 && this.part.vessel.speed > 10)
+            if (TimeIndex > 1 && this.part.vessel.Velocity().magnitude > 10f)
             {
                 Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
                 Detonate();
@@ -649,15 +649,17 @@ namespace BDArmory.Parts
         }
 
 	    public override float GetBlastRadius()
-	    {
-	        if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
+        { 
+	        if (part.FindModuleImplementing<BDExplosivePart>() != null )
 	        {
-	            return vessel.FindPartModulesImplementing<BDExplosivePart>().Max(x => x.blastRadius);
+
+                return part.FindModuleImplementing<BDExplosivePart>().GetBlastRadius();
+
 	        }
 	        else
 	        {
 	            return blastRadius;
-	        }
+	        }     
         }
 
 	    public override void FireMissile()

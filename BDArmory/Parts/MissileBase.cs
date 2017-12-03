@@ -908,9 +908,8 @@ namespace BDArmory.Parts
                     }
                     break;
                 case DetonationDistanceStates.CheckingProximity:
-                    float relativeDistancePerFrame = (float)(targetDistancePerFrame -
-                                                             missileDistancePerFrame).magnitude;
-                    float optimalDistance = DetonationDistance + relativeDistancePerFrame;
+                  
+                    float optimalDistance = (float) (DetonationDistance + missileDistancePerFrame.magnitude);
 
 
                     using (var hitsEnu = Physics.OverlapSphere(vessel.CoM, optimalDistance, 557057).AsEnumerable().GetEnumerator())
@@ -925,7 +924,8 @@ namespace BDArmory.Parts
                       
                                 if (partHit?.vessel == vessel) continue;
 
-                                Debug.Log("[BDArmory]: Missile proximity sphere hit ");
+                                Debug.Log("[BDArmory]: Missile proximity sphere hit . distance overlap = " + optimalDistance + "| Part name = " + partHit.name);
+
                                 //We found a hit a different vessel than ours
                                 DetonationDistanceState =   DetonationDistanceStates.Detonate;
                                 return;
@@ -948,6 +948,7 @@ namespace BDArmory.Parts
 
         protected void SetInitialDetonationDistance()
         {
+          
             if (this.DetonationDistance == -1)
             {
                 if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
@@ -956,8 +957,12 @@ namespace BDArmory.Parts
                 }
                 else
                 {
-                    DetonationDistance = GetBlastRadius() * 0.10f;
+                    DetonationDistance = GetBlastRadius() * 0.05f;
                 }
+            }
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: DetonationDistance = : " + DetonationDistance);
             }
         }
     }
