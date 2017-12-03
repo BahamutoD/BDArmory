@@ -1748,8 +1748,7 @@ namespace BDArmory
                 }
                 else //ballistic/cannon weapons
                 {
-                    float simDeltaTime = 0.15f;
-
+                    float simDeltaTime = 0.155f;
 
                     Vector3 simVelocity = part.rb.velocity + (bulletVelocity * fireTransform.forward);
                     Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
@@ -1786,7 +1785,6 @@ namespace BDArmory
                                 simulating = false;
                             }
                         }
-
 
                         simPrevPos = simCurrPos;
 
