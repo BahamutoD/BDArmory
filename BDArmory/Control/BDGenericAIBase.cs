@@ -47,7 +47,6 @@ namespace BDArmory.Control
 		//wing commander
 		public ModuleWingCommander commandLeader { get; protected set; }
 		protected PilotCommands command;
-		public bool isLeadingFormation { get; set; }
 		public string currentStatus { get; protected set; } = "Free";
 		protected int commandFollowIndex;
 
@@ -210,17 +209,9 @@ namespace BDArmory.Control
 		#region utilities
 		protected void UpdateWeaponManager()
 		{
-			List<MissileFire>.Enumerator mfs = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-			while (mfs.MoveNext())
-			{
-				if (mfs.Current == null) continue;
-
-				weaponManager = mfs.Current;
-				mfs.Current.AI = this;
-
-				break;
-			}
-			mfs.Dispose();
+			weaponManager = vessel.FindPartModuleImplementing<MissileFire>();
+			if (weaponManager != null)
+				weaponManager.AI = this;
 		}
 
 		protected void GetGuardTarget()
@@ -293,13 +284,6 @@ namespace BDArmory.Control
 			if (!vessel || command == PilotCommands.Free) return;
 			if (command == PilotCommands.Follow && commandLeader)
 			{
-				List<IBDAIControl>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
-				while (pilots.MoveNext())
-				{
-					if (pilots.Current == null) continue;
-					pilots.Current.isLeadingFormation = false;
-				}
-				pilots.Dispose();
 				commandLeader = null;
 			}
 			Debug.Log(vessel.vesselName + " was released from command.");
@@ -317,13 +301,6 @@ namespace BDArmory.Control
 			command = PilotCommands.Follow;
 			commandLeader = leader;
 			commandFollowIndex = followerIndex;
-			List<IBDAIControl>.Enumerator pilots = commandLeader.vessel.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
-			while (pilots.MoveNext())
-			{
-				if (pilots.Current == null) continue;
-				pilots.Current.isLeadingFormation = true;
-			}
-			pilots.Dispose();
 		}
 
 		public virtual void CommandAG(KSPActionGroup ag)

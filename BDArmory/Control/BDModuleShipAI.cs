@@ -13,11 +13,14 @@ namespace BDArmory.Control
 		Vessel extendingTarget = null;
 
 		Vector3d targetDirection;
-		float targetVelocity;
+		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
 		float[] yawDerivatives = new float[7] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
 		float[] pitchDerivatives = new float[2];
 		float[] rollDerivatives = new float[4] { 0.05f, 0, 0, 0 };
+
+		int collisionDetectionTicker = 0;
+		Vector3? dodgeVector;
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
@@ -120,26 +123,30 @@ namespace BDArmory.Control
 
 		void PilotLogic()
 		{
-			// check for collisions
+			// check for collisions, but not every frame
+			if (collisionDetectionTicker == 0)
 			{
+				collisionDetectionTicker = 20;
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
-				Vector3? dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
+				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
 				List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
 				while (dodgeVector == null && vs.MoveNext())
 				{
 					if (vs.Current == null || vs.Current == vessel) continue;
-					if (!vs.Current.Splashed || (command == PilotCommands.Follow && vs.Current == commandLeader)) continue;
+					if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader.vessel == vessel) continue;
 					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 1f);
 				}
 				vs.Dispose();
-
-				if (dodgeVector != null)
-				{
-					targetVelocity = MaxSpeed;
-					targetDirection = (Vector3)dodgeVector;
-					SetStatus($"Avoiding Collision");
-					return;
-				}
+			}
+			else
+				collisionDetectionTicker--;
+			// avoid collisions if any are found
+			if (dodgeVector != null)
+			{
+				targetVelocity = MaxSpeed;
+				targetDirection = (Vector3)dodgeVector;
+				SetStatus($"Avoiding Collision");
+				return;
 			}
 
 			// PointForImprovement: check for incoming fire and try to dodge
@@ -437,7 +444,7 @@ namespace BDArmory.Control
 			{
 				Vector3 tPos = AIUtils.PredictPosition(v, time);
 				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
-				if (Vector3.SqrMagnitude(tPos - myPos) < 2500f) //changed this variable though
+				if (Vector3.SqrMagnitude(tPos - myPos) < 2500f)
 				{
 					return Vector3.Dot(tPos - myPos, vesselTransform.right) > 0 ? -vesselTransform.right : vesselTransform.right;
 				}
@@ -455,15 +462,16 @@ namespace BDArmory.Control
 			while (time < maxTime)
 			{
 				const float minDepth = 10f;
-				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
-				{
+				Vector3 testVector = AIUtils.PredictPosition(vessel, time) - vessel.CoM;
+				// unrolled loop, because I am lazy
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, vesselTransform.right, 0.03f, 0), vessel.mainBody) > -minDepth)
 					return -vesselTransform.right;
-				}
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(myPos - vessel.CoM, -vesselTransform.right, 0.05f, 0), vessel.mainBody) > -minDepth)
-				{
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, -vesselTransform.right, 0.03f, 0), vessel.mainBody) > -minDepth)
 					return vesselTransform.right;
-				}
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, vesselTransform.right, 0.13f, 0), vessel.mainBody) > -minDepth)
+					return -vesselTransform.right;
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, -vesselTransform.right, 0.13f, 0), vessel.mainBody) > -minDepth)
+					return vesselTransform.right;
 
 				time = Mathf.MoveTowards(time, maxTime, interval);
 			}

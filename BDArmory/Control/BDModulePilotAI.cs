@@ -484,7 +484,7 @@ namespace BDArmory.Control
 				{
 					avoid = true;
 				}
-				else if(command != PilotCommands.Follow && !isLeadingFormation) //check collisions with other flying vessels
+				else if(command != PilotCommands.Follow) //check collisions with other flying vessels
 				{
 				    List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
                     while (vs.MoveNext())
@@ -494,6 +494,8 @@ namespace BDArmory.Control
                             !(Vector3.Dot(vs.Current.transform.position - vesselTransform.position,
                                   vesselTransform.up) > 0)) continue;
                         if (!PredictCollisionWithVessel(vs.Current, 2.5f, 0.5f, out badDirection)) continue;
+						// the 'isLeadingFormation' check was bad anyway, as releasing one member would unset it, while still having other followers, moving it here
+						if (vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader.vessel == vessel) continue;
                         avoid = true;
                         break;
                     }

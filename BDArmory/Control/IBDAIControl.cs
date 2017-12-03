@@ -47,7 +47,6 @@ namespace BDArmory.Control
 
 		Vector3d commandGPS { get; }
 		PilotCommands currentCommand { get; }
-		bool isLeadingFormation { get; set; }
 		ModuleWingCommander commandLeader { get; }
 		#endregion
 	}
