@@ -1312,7 +1312,7 @@ namespace BDArmory
                             //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
                             p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
                                              TimeWarp.fixedDeltaTime
-                                             * 0.525f);
+                                             * 0.425f);
 
                             if (BDArmorySettings.INSTAKILL) p.Destroy();
                         }
