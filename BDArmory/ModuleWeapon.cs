@@ -1312,7 +1312,7 @@ namespace BDArmory
                             //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
                             p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
                                              TimeWarp.fixedDeltaTime
-                                             * 0.525f);
+                                             * 0.425f);
 
                             if (BDArmorySettings.INSTAKILL) p.Destroy();
                         }
@@ -1748,8 +1748,7 @@ namespace BDArmory
                 }
                 else //ballistic/cannon weapons
                 {
-                    float simDeltaTime = 0.15f;
-
+                    float simDeltaTime = 0.155f;
 
                     Vector3 simVelocity = part.rb.velocity + (bulletVelocity * fireTransform.forward);
                     Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
@@ -1786,7 +1785,6 @@ namespace BDArmory
                                 simulating = false;
                             }
                         }
-
 
                         simPrevPos = simCurrPos;
 
