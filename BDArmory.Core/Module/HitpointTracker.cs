@@ -30,7 +30,7 @@ namespace BDArmory.Core.Module
         #endregion
 
         //TODO: Add setting
-        private readonly float hitpointMultiplier = 1.855f;
+        private readonly float hitpointMultiplier = 2.00f;
 
         private Part _prefabPart;
         private bool _setupRun = false;
@@ -188,7 +188,7 @@ namespace BDArmory.Core.Module
 
                 //3. final calculations 
                 hitpoints = areaCalculation * density * hitpointMultiplier;
-                hitpoints = Mathf.Round(hitpoints/1000) * 1000;
+                hitpoints = Mathf.Round(hitpoints/500) * 500;
 
                 if (hitpoints <= 0) hitpoints = 500;
             }

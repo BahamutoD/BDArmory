@@ -51,8 +51,7 @@ namespace BDArmory.FX
             else
             {
                 decalPool_ = decalPool_small;
-            }
-            
+            }            
             
             //front hit
             GameObject decalFront = decalPool_.GetPooledObject();
@@ -79,7 +78,8 @@ namespace BDArmory.FX
 
         void Start()
         {
-            if (decalPool_large == null || decalPool_small == null) SetupShellPool();
+            if (decalPool_large == null || decalPool_small == null)
+                SetupShellPool();
 
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();

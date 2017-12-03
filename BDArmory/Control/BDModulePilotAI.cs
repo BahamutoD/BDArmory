@@ -224,8 +224,12 @@ namespace BDArmory.Control
 		Vector3d commandHeading;
 		public string currentStatus = "Free";
 
+        float finalMaxSteer = 1;
 
-		void Start()
+
+
+
+        void Start()
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
@@ -283,7 +287,6 @@ namespace BDArmory.Control
 			TogglePilot();
 		}
 
-
 		public void ActivatePilot()
 		{
 			pilotEnabled = true;
@@ -328,8 +331,6 @@ namespace BDArmory.Control
 				v.OnFlyByWire -= AutoPilot;
 			}
 		}
-
-
 
 		[KSPEvent(guiActive = true, guiName = "Toggle Pilot", active = true)]
 		public void TogglePilot()
@@ -380,10 +381,7 @@ namespace BDArmory.Control
 				}
 			}
 		}
-
-
-
-		float finalMaxSteer = 1;
+		
 		void AutoPilot(FlightCtrlState s)
 		{
 			if(!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
@@ -622,7 +620,6 @@ namespace BDArmory.Control
                 FlyExtend(s, lastTargetPosition);
 			}
 		}
-
 
 		bool FlyAvoidCollision(FlightCtrlState s)
 		{
@@ -885,8 +882,6 @@ namespace BDArmory.Control
 			}
 		}
 
-
-
 		void RegainEnergy(FlightCtrlState s, Vector3 direction)
 		{
             debugString.Append($"Regaining energy");
@@ -918,7 +913,6 @@ namespace BDArmory.Control
             return Mathf.Clamp01(limiter);
 		}
 
-		//test
 		Vector3 prevTargetDir;
 		bool useVelRollTarget;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)
@@ -1957,7 +1951,6 @@ namespace BDArmory.Control
 
 			return new Vector3d(right, back, 0);
 		}
-
 
 		public void ReleaseCommand()
 		{

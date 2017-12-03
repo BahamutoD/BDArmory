@@ -98,7 +98,7 @@ namespace BDArmory.Core.Extension
                             * 1e-4f);
 
             //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
-            if (explosive) damage *= 0.85f;
+            if (explosive) damage *= 0.625f;
             
             //penetration multipliers   
             damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
