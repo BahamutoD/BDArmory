@@ -80,7 +80,7 @@
     <Compile Include="Armor\BDArmor.cs" />
     <Compile Include="Control\AIUtils.cs" />
     <Compile Include="Control\BDGenericAIBase.cs" />
-    <Compile Include="Control\BDModuleShipAI.cs" />
+    <Compile Include="Control\BDModuleBoatAI.cs" />
     <Compile Include="Control\IBDAIControl.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />

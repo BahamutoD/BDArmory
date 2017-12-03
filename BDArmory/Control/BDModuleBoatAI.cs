@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace BDArmory.Control
 {
-	public class BDModuleShipAI : BDGenericAIBase, IBDAIControl
+	public class BDModuleBoatAI : BDGenericAIBase, IBDAIControl
 	{
 		#region Declarations
 		
@@ -431,7 +431,7 @@ namespace BDArmory.Control
 
 		public override bool CanEngage()
 		{
-			if (!vessel.Splashed) DebugLine(vessel.vesselName + " cannot engage: ship not in water");
+			if (!vessel.Splashed) DebugLine(vessel.vesselName + " cannot engage: boat not in water");
 			return vessel.Splashed;
 		}
 
