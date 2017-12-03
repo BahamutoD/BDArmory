@@ -22,6 +22,8 @@ namespace BDArmory.Control
 		int collisionDetectionTicker = 0;
 		Vector3? dodgeVector;
 
+		Vector3 upDir;
+
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
 			UI_FloatRange(minValue = 5f, maxValue = 200f, stepIncrement = 1f, scene = UI_Scene.All)]
@@ -106,14 +108,19 @@ namespace BDArmory.Control
 
 		protected override void AutoPilot(FlightCtrlState s)
 		{
-			targetVelocity = 0;
-			targetDirection = vesselTransform.up;
-
-			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE 
-				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
+			if (!vessel.Autopilot.Enabled)
+				vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
 			// if we're not in water, cut throttle and panic
 			if (!vessel.Splashed) return;
+
+
+			targetVelocity = 0;
+			targetDirection = vesselTransform.up;
+			upDir = VectorUtils.GetUpDirection(vesselTransform.position);
+
+			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE
+				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
 
 			PilotLogic();
 
@@ -149,10 +156,8 @@ namespace BDArmory.Control
 				return;
 			}
 
-			// PointForImprovement: check for incoming fire and try to dodge
+			// Possible Improvement: check for incoming fire and try to dodge
 			// though ships are probably too slow for that, generally, so for now just try to keep moving
-
-			Vector3 upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
 			// check for enemy targets and engage
 			// not checking for guard mode, because if guard mode is off now you can select a target manually and if it is of opposing team, the AI will try to engage while you can man the turrets
@@ -255,7 +260,6 @@ namespace BDArmory.Control
 
 		void AttitudeControl(FlightCtrlState s)
 		{
-			var upDir = VectorUtils.GetUpDirection(vessel.CoM);
 			Vector3 yawTarget = Vector3.ProjectOnPlane(targetDirection, upDir);
 			
 			// limit "aoa" if we're moving
@@ -278,7 +282,7 @@ namespace BDArmory.Control
 		void SetYaw(FlightCtrlState s, float angle)
 		{
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
-			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, VectorUtils.GetUpDirection(vesselTransform.position)));
+			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, upDir));
 			float d1 = orientation - yawDerivatives[2]; //first derivative
 			if (Mathf.Abs(d1) > 180) d1 -= 360 * Mathf.Sign(d1); // angles
 			float d2 = d1 - yawDerivatives[3]; //second derivative
@@ -338,7 +342,7 @@ namespace BDArmory.Control
 
 		void PitchControl(FlightCtrlState s, float angle)
 		{
-			float pitch = 90 - Vector3.Angle(vesselTransform.up, VectorUtils.GetUpDirection(vesselTransform.position));
+			float pitch = 90 - Vector3.Angle(vesselTransform.up, upDir);
 			float error = angle - pitch;
 			float change = pitch - pitchDerivatives[1];
 			float targetChange = Mathf.Clamp(error / 512, -0.01f, 0.01f);
@@ -365,7 +369,6 @@ namespace BDArmory.Control
 
 			if (vessel.horizontalSrfSpeed * 10 < CruiseSpeed) return;
 
-			var upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 			float currentBank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
 			float rollMomentum = currentBank - rollDerivatives[2];
 			//DebugLine("calculated drift " + drift + " bank " + currentBank + " bank limit " + BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift));
