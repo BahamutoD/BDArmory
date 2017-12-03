@@ -31,3 +31,11 @@ It is preferred that any major changes use thier own separate branch with the na
 The "support" Branch is for bug fixes in between releases 
 
 Finally the "master" branch is the latest release and considered production
+
+Licensing
+========
+This mod for Kerbal Space Program was originally developed by Paolo Encarnacion (BahamutoD) and distributed under the license CC-BY-SA 2.0.
+This mod is now being maintained in BahamutoD's absence by Joe Korinek (Papa_Joe) and continues to be distributed under the license CC-BY-SA 2.0.
+Please read about the license at
+https://creativecommons.org/licenses/by-sa/2.0/
+before attempting to modify and redistribute it.
