@@ -9,7 +9,7 @@ namespace BDArmory.Core.Utils
     {
         private const float MaxAcceleration = 2009;
 
-        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range, float damageMultiplier)
+        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass, float explosiveMass, float range, float damageMultiplier)
         {
 
             float clampedDistanceToHit = ClampRange(explosiveMass, distanceToHit);
@@ -19,24 +19,22 @@ namespace BDArmory.Core.Utils
 
             double pressurePerMs = CalculateIncidentImpulse(scaledDistance, explosiveMass);
 
-            //double totalMs = CalculatePositivePhaseDuration(scaledDistance, explosiveMass);
-            var totalMs = 5;
-
-            double totalPressure = pressurePerMs * totalMs;
+            double totalPressure = pressurePerMs * 5;
+            double totalDamage = pressurePerMs * 2;
 
             //Calculation impulse
             float effectiveDistance = Mathf.Clamp((range - distanceToHit) * 0.15f, range * 0.01f, range * 0.15f);
 
             float effectivePartArea = CalculateEffectiveBlastAreaToPart(effectiveDistance, part);
 
-            double force = CalculateForce(totalPressure, effectivePartArea, totalMs);
+            double force = CalculateForce(pressurePerMs, effectivePartArea, 5);
 
-            float acceleration = (float) (force / vesselMass);
+            float acceleration = (float)(force / vesselMass);
 
             // Calculation of damage
-            float damage = (float) (totalPressure * Mathf.Clamp01(effectiveDistance / part.GetAverageBoundSize()));
+            float damage = (float)(totalDamage * Mathf.Clamp01(effectiveDistance / part.GetAverageBoundSize()));
 
-            return new BlastInfo() { TotalPressure = totalPressure, EffectiveDistance = effectiveDistance, EffectivePartArea = effectivePartArea, PositivePhaseDuration = totalMs,  VelocityChange = acceleration , Damage = damage };
+            return new BlastInfo() { TotalPressure = totalPressure, EffectiveDistance = effectiveDistance, EffectivePartArea = effectivePartArea, PositivePhaseDuration = 5, VelocityChange = acceleration, Damage = damage };
         }
 
         private static float CalculateEffectiveBlastAreaToPart(float effectiveDistance, Part part)
