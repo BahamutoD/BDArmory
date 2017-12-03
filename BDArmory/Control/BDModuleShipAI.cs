@@ -141,9 +141,10 @@ namespace BDArmory.Control
 				{
 					if (vs.Current == null || vs.Current == vessel) continue;
 					if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader.vessel == vessel) continue;
-					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 1f);
+					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
 				}
 				vs.Dispose();
+				if (dodgeVector != null) DebugLine(dodgeVector.ToString());
 			}
 			else
 				collisionDetectionTicker--;
@@ -466,15 +467,16 @@ namespace BDArmory.Control
 			{
 				const float minDepth = 10f;
 				Vector3 testVector = AIUtils.PredictPosition(vessel, time) - vessel.CoM;
+				Vector3 sideVector = Vector3.Cross(testVector, upDir).normalized * (float)vessel.srfSpeed;
 				// unrolled loop, because I am lazy
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, vesselTransform.right, 0.03f, 0), vessel.mainBody) > -minDepth)
-					return -vesselTransform.right;
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, -vesselTransform.right, 0.03f, 0), vessel.mainBody) > -minDepth)
-					return vesselTransform.right;
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, vesselTransform.right, 0.13f, 0), vessel.mainBody) > -minDepth)
-					return -vesselTransform.right;
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector, -vesselTransform.right, 0.13f, 0), vessel.mainBody) > -minDepth)
-					return vesselTransform.right;
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector * 2, sideVector, 0.03f, 0), vessel.mainBody) > -minDepth)
+					return -sideVector;
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector * 2, -sideVector, 0.03f, 0), vessel.mainBody) > -minDepth)
+					return sideVector;
+				if (AIUtils.GetTerrainAltitude(vessel.CoM + sideVector + Vector3.RotateTowards(testVector, sideVector, 0.15f, 0), vessel.mainBody) > -minDepth)
+					return -sideVector;
+				if (AIUtils.GetTerrainAltitude(vessel.CoM - sideVector + Vector3.RotateTowards(testVector, -sideVector, 0.15f, 0), vessel.mainBody) > -minDepth)
+					return sideVector;
 
 				time = Mathf.MoveTowards(time, maxTime, interval);
 			}
