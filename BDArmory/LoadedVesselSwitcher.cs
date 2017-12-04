@@ -26,8 +26,8 @@ namespace BDArmory
         private float _windowHeight; //auto adjusting
         private Rect _windowRect
         {
-            get { return BDArmorySettings.WindowRectVesselSwitcher; }
-            set { BDArmorySettings.WindowRectVesselSwitcher = value; }
+            get { return BDArmorySetup.WindowRectVesselSwitcher; }
+            set { BDArmorySetup.WindowRectVesselSwitcher = value; }
         }
         private readonly float _windowWidth = 250;
 
@@ -61,7 +61,7 @@ namespace BDArmory
             FloatingOrigin.fetch.thresholdSqr = 20000*20000; //20km
             Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
 
-            //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySettings persisted field!
+            //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySetup persisted field!
         }
 
         private void OnDestroy()
@@ -80,15 +80,15 @@ namespace BDArmory
 
         private IEnumerator WaitForBdaSettings()
         {
-            while (BDArmorySettings.Instance == null)
+            while (BDArmorySetup.Instance == null)
                 yield return null;
 
             _ready = true;
-            BDArmorySettings.Instance.hasVS = true;
+            BDArmorySetup.Instance.hasVS = true;
             _guiCheckIndex = Misc.Misc.RegisterGUIRect(new Rect());
         }
 
-        private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySettings.BDATeams team)
+        private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
         {
             if (_showGui)
                 UpdateList();
@@ -104,10 +104,10 @@ namespace BDArmory
         {
             if (_ready)
             {
-                if (BDArmorySettings.Instance.showVSGUI != _showGui)
+                if (BDArmorySetup.Instance.showVSGUI != _showGui)
                 {
                     updateTimer -= Time.fixedDeltaTime;
-                    _showGui = BDArmorySettings.Instance.showVSGUI;
+                    _showGui = BDArmorySetup.Instance.showVSGUI;
                     if (_showGui && updateTimer < 0)
                     {
                         UpdateList();
@@ -160,7 +160,7 @@ namespace BDArmory
         {
             if (_ready)
             {
-                if (_showGui && BDArmorySettings.GAME_UI_ENABLED)
+                if (_showGui && BDArmorySetup.GAME_UI_ENABLED)
                 {
                     SetNewHeight(_windowHeight);
                     _windowRect = GUI.Window(10293444, _windowRect, ListWindow, "BDA Vessel Switcher",
@@ -184,7 +184,7 @@ namespace BDArmory
 
         private void SetNewHeight(float windowHeight)
         {
-            BDArmorySettings.WindowRectVesselSwitcher.height = windowHeight;
+            BDArmorySetup.WindowRectVesselSwitcher.height = windowHeight;
         }
 
         private void ListWindow(int id)
@@ -193,7 +193,7 @@ namespace BDArmory
             if (GUI.Button(new Rect(_windowWidth - _buttonHeight - 4, 4, _buttonHeight, _buttonHeight), "X",
                 HighLogic.Skin.button))
             {
-                BDArmorySettings.Instance.showVSGUI = false;
+                BDArmorySetup.Instance.showVSGUI = false;
                 return;
             }
             float height = 0;

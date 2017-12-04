@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using BDArmory.Armor;
 using BDArmory.Control;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
@@ -14,52 +15,9 @@ using UnityEngine;
 namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.EveryScene, false)]
-    public class BDArmorySettings : MonoBehaviour
-    {
-        public static string settingsConfigURL = "GameData/BDArmory/settings.cfg";
-        
-        //=======configurable settings
-        [BDAPersistantSettingsField] public static bool INSTAKILL;
-        [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
-        [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;                 //TODO: remove all references to this so it can be deprecated!
-        [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
-        [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;            //CAN BE CONFIGURED, BUT HAS NO ACTUAL EFFECT ANYWHERE. SUGGEST TO REMOVE.
-        [BDAPersistantSettingsField] public static bool INFINITE_AMMO;
-        [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LINES;
-        [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LABELS;
-        [BDAPersistantSettingsField] public static bool DRAW_AIMERS = true;
-        [BDAPersistantSettingsField] public static bool AIM_ASSIST = true;
-        [BDAPersistantSettingsField] public static bool REMOTE_SHOOTING;
-        [BDAPersistantSettingsField] public static bool BOMB_CLEARANCE_CHECK = true;
-        //[BDAPersistantSettingsField] public static float FLARE_CHANCE_FACTOR = 25;            //DEPRECATED, NOT USED ANYWHERE!
-
+    public class BDArmorySetup : MonoBehaviour
+    {    
         public static bool SMART_GUARDS = true;
-
-        [BDAPersistantSettingsField] public static float MAX_BULLET_RANGE = 8000;               //TODO: remove all references to this so it can be deprecated! all ranges should be supplied in part config!
-        [BDAPersistantSettingsField] public static float TRIGGER_HOLD_TIME = 0.3f;
-        [BDAPersistantSettingsField] public static bool ALLOW_LEGACY_TARGETING = true;          //TODO: remove all references to this so it can be deprecated! legacy targeting should not be support anymore in future versions.
-        [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024;
-        [BDAPersistantSettingsField] public static bool BW_TARGET_CAM = true;
-        [BDAPersistantSettingsField] public static float SMOKE_DEFLECTION_FACTOR = 10;
-        //[BDAPersistantSettingsField] public static float FLARE_THERMAL = 1900;                  //DEPRECATED, NOT USED ANYMORE!
-        [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
-        [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
-        [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000;
-        [BDAPersistantSettingsField] public static float MAX_ACTIVE_RADAR_RANGE = 40000;        //NOTE: used ONLY for display range of radar windows! Actual radar range provided by part configs!
-        [BDAPersistantSettingsField] public static float MAX_ENGAGEMENT_RANGE = 40000;          //NOTE: used ONLY for missile dlz parameters!
-        [BDAPersistantSettingsField] public static float GLOBAL_LIFT_MULTIPLIER = 0.20f;
-        [BDAPersistantSettingsField] public static float GLOBAL_DRAG_MULTIPLIER = 4f;
-        [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
-        [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
-        [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK= false;
-        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;                  //DEPRECATED, NOT USED ANYWHERE!
-
-        [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100f;
-        [BDAPersistantSettingsField] public static float HITPOINT_MULTIPLIER = 1f;
-        [BDAPersistantSettingsField] public static float EXP_DMG_MOD_BALLISTIC;
-        [BDAPersistantSettingsField] public static float EXP_DMG_MOD_MISSILE;
-        [BDAPersistantSettingsField] public static float EXP_IMP_MOD;
-
 
         //=======Window position settings Git Issue #13
         [BDAWindowSettingsField] public static Rect WindowRectToolbar;
@@ -93,7 +51,7 @@ namespace BDArmory.UI
 
         //particle optimization
         public static int numberOfParticleEmitters = 0;
-        public static BDArmorySettings Instance;
+        public static BDArmorySetup Instance;
         public static bool GAME_UI_ENABLED = true;
 
         //settings gui
@@ -916,7 +874,7 @@ namespace BDArmory.UI
                     }
                     guardLines += 1.25f;
 
-                    string scanLabel = ALLOW_LEGACY_TARGETING ? "Scan Interval" : "Firing Interval";
+                    string scanLabel = BDArmorySettings.ALLOW_LEGACY_TARGETING ? "Scan Interval" : "Firing Interval";
                     GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), scanLabel, leftLabel);
                     ActiveWeaponManager.targetScanInterval =
                         GUI.HorizontalSlider(
@@ -953,12 +911,12 @@ namespace BDArmory.UI
                         ActiveWeaponManager.guardAngle.ToString(), leftLabel);
                     guardLines++;
 
-                    string rangeLabel = ALLOW_LEGACY_TARGETING ? "Guard Range" : "Visual Range";
+                    string rangeLabel = BDArmorySettings.ALLOW_LEGACY_TARGETING ? "Guard Range" : "Visual Range";
                     GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), rangeLabel, leftLabel);
                     float guardRange = ActiveWeaponManager.guardRange;
-                    float maxVisRange = ALLOW_LEGACY_TARGETING
-                        ? Mathf.Clamp(PHYSICS_RANGE, 2500, 100000)
-                        : MAX_GUARD_VISUAL_RANGE;
+                    float maxVisRange = BDArmorySettings. ALLOW_LEGACY_TARGETING
+                        ? Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, 100000)
+                        : BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
                     guardRange =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
@@ -1348,29 +1306,29 @@ namespace BDArmory.UI
                 InputSettings();
                 return;
             }
-            INSTAKILL = GUI.Toggle(SLeftRect(line), INSTAKILL, "Instakill");
-            INFINITE_AMMO = GUI.Toggle(SRightRect(line), INFINITE_AMMO, "Infinte Ammo");
+            BDArmorySettings.INSTAKILL = GUI.Toggle(SLeftRect(line), BDArmorySettings.INSTAKILL, "Instakill");
+            BDArmorySettings.INFINITE_AMMO = GUI.Toggle(SRightRect(line), BDArmorySettings.INFINITE_AMMO, "Infinte Ammo");
             line++;
-            BULLET_HITS = GUI.Toggle(SLeftRect(line), BULLET_HITS, "Bullet Hits");
-            EJECT_SHELLS = GUI.Toggle(SRightRect(line), EJECT_SHELLS, "Eject Shells");
+            BDArmorySettings.BULLET_HITS = GUI.Toggle(SLeftRect(line), BDArmorySettings.BULLET_HITS, "Bullet Hits");
+            BDArmorySettings.EJECT_SHELLS = GUI.Toggle(SRightRect(line), BDArmorySettings.EJECT_SHELLS, "Eject Shells");
             line++;
-            AIM_ASSIST = GUI.Toggle(SLeftRect(line), AIM_ASSIST, "Aim Assist");
-            DRAW_AIMERS = GUI.Toggle(SRightRect(line), DRAW_AIMERS, "Draw Aimers");
+            BDArmorySettings.AIM_ASSIST = GUI.Toggle(SLeftRect(line), BDArmorySettings.AIM_ASSIST, "Aim Assist");
+            BDArmorySettings.DRAW_AIMERS = GUI.Toggle(SRightRect(line), BDArmorySettings.DRAW_AIMERS, "Draw Aimers");
             line++;
-            DRAW_DEBUG_LINES = GUI.Toggle(SLeftRect(line), DRAW_DEBUG_LINES, "Debug Lines");
-            DRAW_DEBUG_LABELS = GUI.Toggle(SRightRect(line), DRAW_DEBUG_LABELS, "Debug Labels");
+            BDArmorySettings.DRAW_DEBUG_LINES = GUI.Toggle(SLeftRect(line), BDArmorySettings.DRAW_DEBUG_LINES, "Debug Lines");
+            BDArmorySettings.DRAW_DEBUG_LABELS = GUI.Toggle(SRightRect(line), BDArmorySettings.DRAW_DEBUG_LABELS, "Debug Labels");
             line++;
-            REMOTE_SHOOTING = GUI.Toggle(SLeftRect(line), REMOTE_SHOOTING, "Remote Firing");
-            BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BOMB_CLEARANCE_CHECK, "Clearance Check");
+            BDArmorySettings.REMOTE_SHOOTING = GUI.Toggle(SLeftRect(line), BDArmorySettings.REMOTE_SHOOTING, "Remote Firing");
+            BDArmorySettings.BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BDArmorySettings.BOMB_CLEARANCE_CHECK, "Clearance Check");
             line++;
-            ALLOW_LEGACY_TARGETING = GUI.Toggle(SLeftRect(line), ALLOW_LEGACY_TARGETING, "Legacy Targeting");
-            SHELL_COLLISIONS = GUI.Toggle(SRightRect(line), SHELL_COLLISIONS, "Shell Collisions");
+            BDArmorySettings.ALLOW_LEGACY_TARGETING = GUI.Toggle(SLeftRect(line), BDArmorySettings.ALLOW_LEGACY_TARGETING, "Legacy Targeting");
+            BDArmorySettings.SHELL_COLLISIONS = GUI.Toggle(SRightRect(line), BDArmorySettings.SHELL_COLLISIONS, "Shell Collisions");
             line++;
             line++;
 
-            bool origPm = PEACE_MODE;
-            PEACE_MODE = GUI.Toggle(SLeftRect(line), PEACE_MODE, "Peace Mode");
-            if (PEACE_MODE && !origPm)
+            bool origPm = BDArmorySettings.PEACE_MODE;
+            BDArmorySettings.PEACE_MODE = GUI.Toggle(SLeftRect(line), BDArmorySettings.PEACE_MODE, "Peace Mode");
+            if (BDArmorySettings.PEACE_MODE && !origPm)
             {
                 BDATargetManager.ClearDatabase();
                 if (OnPeaceEnabled != null)
@@ -1382,29 +1340,29 @@ namespace BDArmory.UI
             line++;
 
 
-            GUI.Label(SLeftRect(line), "Trigger Hold: " + TRIGGER_HOLD_TIME.ToString("0.00") + "s", leftLabel);
-            TRIGGER_HOLD_TIME = GUI.HorizontalSlider(SRightRect(line), TRIGGER_HOLD_TIME, 0.02f, 1f);
+            GUI.Label(SLeftRect(line), "Trigger Hold: " + BDArmorySettings.TRIGGER_HOLD_TIME.ToString("0.00") + "s", leftLabel);
+            BDArmorySettings.TRIGGER_HOLD_TIME = GUI.HorizontalSlider(SRightRect(line), BDArmorySettings.TRIGGER_HOLD_TIME, 0.02f, 1f);
             line++;
 
 
-            GUI.Label(SLeftRect(line), "UI Volume: " + (BDARMORY_UI_VOLUME*100).ToString("0"), leftLabel);
-            float uiVol = BDARMORY_UI_VOLUME;
+            GUI.Label(SLeftRect(line), "UI Volume: " + (BDArmorySettings.BDARMORY_UI_VOLUME * 100).ToString("0"), leftLabel);
+            float uiVol = BDArmorySettings.BDARMORY_UI_VOLUME;
             uiVol = GUI.HorizontalSlider(SRightRect(line), uiVol, 0f, 1f);
-            if (uiVol != BDARMORY_UI_VOLUME && OnVolumeChange != null)
+            if (uiVol != BDArmorySettings.BDARMORY_UI_VOLUME && OnVolumeChange != null)
             {
                 OnVolumeChange();
             }
-            BDARMORY_UI_VOLUME = uiVol;
+            BDArmorySettings.BDARMORY_UI_VOLUME = uiVol;
             line++;
 
-            GUI.Label(SLeftRect(line), "Weapon Volume: " + (BDARMORY_WEAPONS_VOLUME*100).ToString("0"), leftLabel);
-            float weaponVol = BDARMORY_WEAPONS_VOLUME;
+            GUI.Label(SLeftRect(line), "Weapon Volume: " + (BDArmorySettings.BDARMORY_WEAPONS_VOLUME * 100).ToString("0"), leftLabel);
+            float weaponVol = BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
             weaponVol = GUI.HorizontalSlider(SRightRect(line), weaponVol, 0f, 1f);
-            if (uiVol != BDARMORY_WEAPONS_VOLUME && OnVolumeChange != null)
+            if (uiVol != BDArmorySettings.BDARMORY_WEAPONS_VOLUME && OnVolumeChange != null)
             {
                 OnVolumeChange();
             }
-            BDARMORY_WEAPONS_VOLUME = weaponVol;
+            BDArmorySettings.BDARMORY_WEAPONS_VOLUME = weaponVol;
             line++;
             line++;
  
@@ -1598,7 +1556,7 @@ namespace BDArmory.UI
         
         void OnVesselGoOffRails(Vessel v)
         {
-            if (DRAW_DEBUG_LABELS)
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: Loaded vessel: " + v.vesselName + ", Velocity: " + v.Velocity() + ", packed: " + v.packed);
                 //v.SetWorldVelocity(Vector3d.zero);	
@@ -1612,49 +1570,6 @@ namespace BDArmory.UI
             SeismicChargeFX.originalAmbienceVolume = GameSettings.AMBIENCE_VOLUME;
         }
 
-        public static object ParseValue(Type type, string value)
-        {
-            if (type == typeof(string))
-            {
-                return value;
-            }
-
-            if (type == typeof(bool))
-            {
-                return Boolean.Parse(value);
-            }
-            else if (type.IsEnum)
-            {
-                return Enum.Parse(type, value);
-            }
-            else if (type == typeof(float))
-            {
-                return Single.Parse(value);
-            }
-            else if (type == typeof(Single))
-            {
-                return Single.Parse(value);
-            }
-            else if (type == typeof(Rect))
-            {
-                string[] strings = value.Split(',');
-                int xVal = Int32.Parse(strings[0].Split(':')[1].Split('.')[0]);
-                int yVal = Int32.Parse(strings[1].Split(':')[1].Split('.')[0]);
-                int wVal = Int32.Parse(strings[2].Split(':')[1].Split('.')[0]);
-                int hVal = Int32.Parse(strings[3].Split(':')[1].Split('.')[0]);
-                Rect rectVal = new Rect
-                {
-                    x = xVal,
-                    y = yVal,
-                    width = wVal,
-                    height = hVal
-                };
-                return rectVal;
-            }
-            Debug.LogError("[BDArmory]: BDAPersistantSettingsField to parse settings field of type " + type.ToString() +
-                           " and value " + value);
-
-            return null;
-        }
+       
     }
 }

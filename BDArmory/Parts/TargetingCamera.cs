@@ -1,5 +1,6 @@
 using BDArmory.UI;
 using System.Collections.Generic;
+using BDArmory.Core;
 using UnityEngine;
 
 namespace BDArmory.Parts

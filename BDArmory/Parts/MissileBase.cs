@@ -8,6 +8,7 @@ using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
 using System.Text;
+using BDArmory.Core;
 
 namespace BDArmory.Parts
 {

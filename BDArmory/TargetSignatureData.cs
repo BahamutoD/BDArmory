@@ -18,7 +18,7 @@ namespace BDArmory
 		public float timeAcquired;
         public float signalStrength;
 		public TargetInfo targetInfo;
-		public BDArmorySettings.BDATeams team;
+		public BDArmorySetup.BDATeams team;
 		public Vector2 pingPosition;
 		public VesselECMJInfo vesselJammer;
 		public ModuleRadar lockedByRadar;
@@ -57,7 +57,7 @@ namespace BDArmory
                 targetInfo = v.gameObject.AddComponent<TargetInfo>();
             }
 
-            team = BDArmorySettings.BDATeams.None;
+            team = BDArmorySetup.BDATeams.None;
 
 			if(targetInfo)
 			{
@@ -91,7 +91,7 @@ namespace BDArmory
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			vesselJammer = null;
-			team = BDArmorySettings.BDATeams.None;
+			team = BDArmorySetup.BDATeams.None;
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;
@@ -109,7 +109,7 @@ namespace BDArmory
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			vesselJammer = null;
-			team = BDArmorySettings.BDATeams.None;
+			team = BDArmorySetup.BDATeams.None;
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;

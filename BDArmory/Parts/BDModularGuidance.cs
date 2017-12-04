@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Radar;
@@ -709,10 +710,10 @@ namespace BDArmory.Parts
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire Missile", active = true)]
         public override void FireMissile()
         {
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null &&
-                BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel)
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null &&
+                BDArmorySetup.Instance.ActiveWeaponManager.vessel == vessel)
             {
-                BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+                BDArmorySetup.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
             }
 
             if (!HasFired)
@@ -755,9 +756,9 @@ namespace BDArmory.Parts
                 HasFired = true;
                 DetonationDistanceState = DetonationDistanceStates.NotSafe;
             }
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null)
             {
-                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+                BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
             }
         }
 
@@ -826,8 +827,8 @@ namespace BDArmory.Parts
                 ((ModuleAnchoredDecoupler) _targetDecoupler).Decouple();
             }
 
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null)
+                BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
      

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Armor;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
@@ -665,14 +666,14 @@ namespace BDArmory
             {
                 if(BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory]: BulletType Loaded : " + bulletType);
-            }              
-            
-            BDArmorySettings.OnVolumeChange += UpdateVolume;
+            }
+
+            BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
         void OnDestroy()
         {
-            BDArmorySettings.OnVolumeChange -= UpdateVolume;
+            BDArmorySetup.OnVolumeChange -= UpdateVolume;
         }
 
         void Update()
@@ -873,12 +874,12 @@ namespace BDArmory
                                 new Color(0, 1, 0, 0.6f));
                         }
 
-                        BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture,
+                        BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySetup.Instance.greenDotTexture,
                             new Vector2(6, 6), 0);
 
                         if (atprAcquired)
                         {
-                            BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySettings.Instance.openGreenSquare,
+                            BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySetup.Instance.openGreenSquare,
                                 new Vector2(20, 20), 0);
                         }
                     }
@@ -896,11 +897,11 @@ namespace BDArmory
                 Texture2D texture;
                 if (Vector3.Angle(pointingAtPosition - transform.position, finalAimTarget - transform.position) < 1f)
                 {
-                    texture = BDArmorySettings.Instance.greenSpikedPointCircleTexture;
+                    texture = BDArmorySetup.Instance.greenSpikedPointCircleTexture;
                 }
                 else
                 {
-                    texture = BDArmorySettings.Instance.greenPointCircleTexture;
+                    texture = BDArmorySetup.Instance.greenPointCircleTexture;
                 }
                 BDGUIUtils.DrawTextureOnWorldPos(reticlePosition, texture, new Vector2(size, size), 0);
 
@@ -914,7 +915,7 @@ namespace BDArmory
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor && BDArmorySettings.showWeaponAlignment)
+            if (HighLogic.LoadedSceneIsEditor && BDArmorySetup.showWeaponAlignment)
             {
                 DrawAlignmentIndicator();
             }
@@ -927,7 +928,7 @@ namespace BDArmory
 
         private void Fire()
         {
-            if (BDArmorySettings.GameIsPaused)
+            if (BDArmorySetup.GameIsPaused)
             {
                 if (audioSource.isPlaying)
                 {
@@ -1262,7 +1263,7 @@ namespace BDArmory
                     //    lr.SetPosition(1, laserPoint);
 
 
-                    //    if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
+                    //    if (Time.time - timeFired > 6 / 120 && BDArmorySetup.BULLET_HITS)
                     //    {
                     //        BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
                     //    }
@@ -1288,7 +1289,7 @@ namespace BDArmory
                     //            p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
                     //                             TimeWarp.fixedDeltaTime);
 
-                    //            if (BDArmorySettings.INSTAKILL) p.AddDamage(p.maxTemp);
+                    //            if (BDArmorySetup.INSTAKILL) p.AddDamage(p.maxTemp);
                     //        }
                     //    }
                     //}
@@ -1372,7 +1373,7 @@ namespace BDArmory
 
         bool WMgrAuthorized()
         {
-            MissileFire manager = BDArmorySettings.Instance.ActiveWeaponManager;
+            MissileFire manager = BDArmorySetup.Instance.ActiveWeaponManager;
             if (manager != null && manager.vessel == vessel)
             {
                 if (manager.hasSingleFired) return false;
@@ -2115,14 +2116,14 @@ namespace BDArmory
 
             weaponState = WeaponStates.Enabled;
             UpdateGUIWeaponState();
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
         }
 
         IEnumerator ShutdownRoutine()
         {
             weaponState = WeaponStates.PoweringDown;
             UpdateGUIWeaponState();
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
             if (turret)
             {
                 yield return new WaitForSeconds(0.2f);

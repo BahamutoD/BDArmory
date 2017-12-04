@@ -83,8 +83,7 @@
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
-    <Compile Include="UI\BDAPersistantSettingsField.cs" />
-    <Compile Include="UI\BDArmorySettings.cs" />
+    <Compile Include="UI\BDArmorySetup.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
     <Compile Include="Bullets\BulletInfo.cs" />
     <Compile Include="Parts\MissileLauncher.cs" />

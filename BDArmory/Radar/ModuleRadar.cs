@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.UI;
@@ -506,7 +507,7 @@ namespace BDArmory.Radar
             }
 
             drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled &&
-                       vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
+                       vessel.isActiveVessel && BDArmorySetup.GAME_UI_ENABLED && !MapView.MapIsEnabled);
         }
 
         
@@ -1021,7 +1022,7 @@ namespace BDArmory.Radar
                 if (boresightScan)
                 {
                     BDGUIUtils.DrawTextureOnWorldPos(transform.position + (3500*transform.up),
-                        BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
+                        BDArmorySetup.Instance.dottedLargeGreenCircle, new Vector2(156, 156), 0);
                 }
             }
         }
