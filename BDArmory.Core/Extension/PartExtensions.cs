@@ -261,6 +261,18 @@ namespace BDArmory.Core.Extension
             return Dependencies.Get<DamageService>().GetExplodeMode_svc(part);
         }
 
+        public static bool IgnoreDecal(this Part part)
+        {
+            if(part.Modules.Contains("FSplanePropellerSpinner"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }            
+        }
+
         //public static float GetPartExternalScaleModifier(this Part part)
         //{
         //    double defaultScale = 1.0f;
