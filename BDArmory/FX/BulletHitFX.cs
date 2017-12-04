@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using BDArmory.UI;
 using BDArmory.Misc;
+using BDArmory.Core.Extension;
 using UniLinq;
 using UnityEngine;
 
@@ -175,7 +176,10 @@ namespace BDArmory.FX
                 go = GameDatabase.Instance.GetModel("BDArmory/FX/PenFX");
             }
 
-            if(caliber !=0) SpawnDecal(hit,hitPart,caliber,penetrationfactor); //No bullet decals for laser or ricochet
+            if(caliber !=0 && !hitPart.IgnoreDecal())
+            {
+                SpawnDecal(hit,hitPart,caliber,penetrationfactor); //No bullet decals for laser or ricochet
+            }
 
             GameObject newExplosion =
                 (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));

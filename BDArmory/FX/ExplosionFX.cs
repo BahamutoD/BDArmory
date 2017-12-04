@@ -273,7 +273,7 @@ namespace BDArmory.FX
             if (building)
             {
                 var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
-                float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_HEAT_MOD * 
+                float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_BALLISTIC * 
                                          Power * distanceFactor;
                 damageToBuilding *= 2f;
                 //if (damageToBuilding > building.impactMomentumThreshold * 0.85f)
@@ -343,8 +343,11 @@ namespace BDArmory.FX
                         BDArmorySettings.EXP_IMP_MOD,
                         eventToExecute.HitPoint + part.rb.velocity * TimeIndex);
 
-                    part.AddExplosiveDamage(blastInfo.Damage, BDArmorySettings.DMG_MULTIPLIER,
-                        BDArmorySettings.EXP_HEAT_MOD, Caliber, IsMissile);
+                    part.AddExplosiveDamage(blastInfo.Damage,
+                                            BDArmorySettings.DMG_MULTIPLIER,
+                                            BDArmorySettings.EXP_DMG_MOD_MISSILE,
+                                            BDArmorySettings.EXP_DMG_MOD_BALLISTIC,
+                                            Caliber, IsMissile);
                 }
                 else
                 {
