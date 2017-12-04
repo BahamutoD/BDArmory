@@ -319,7 +319,7 @@ namespace BDArmory.FX
                             " TotalPressure: {" + blastInfo.TotalPressure + "}," +
                             " Damage: {" + blastInfo.Damage + "}," +
                             " EffectiveArea: {" + blastInfo.EffectivePartArea + "}," +
-                            " EffectiveRange: {" + blastInfo.EffectiveDistance + "}," +
+                            " PercentageOfPartAffected: {" +Math.Round(blastInfo.PercentageOfPartAffected) + "}," +
                             " Positive Phase duration: {" + blastInfo.PositivePhaseDuration + "}," +
                             " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
                             " TimeIndex: {" + TimeIndex + "}," +

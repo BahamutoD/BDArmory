@@ -7,9 +7,8 @@ namespace BDArmory.Core.Utils
 {
     public static class BlastPhysicsUtils
     {
-        private const float MaxAcceleration = 2009;
 
-        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass, float explosiveMass, float range, float damageMultiplier)
+        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range, float damageMultiplier)
         {
 
             float clampedDistanceToHit = ClampRange(explosiveMass, distanceToHit);
@@ -19,22 +18,26 @@ namespace BDArmory.Core.Utils
 
             double pressurePerMs = CalculateIncidentImpulse(scaledDistance, explosiveMass);
 
-            double totalPressure = pressurePerMs * 5;
             double totalDamage = pressurePerMs * 2;
 
             //Calculation impulse
-            float effectiveDistance = Mathf.Clamp((range - distanceToHit) * 0.15f, range * 0.01f, range * 0.15f);
+            float effectiveDistance = Mathf.Clamp(range * 0.15f - distanceToHit , range * 0.01f, range * 0.15f);
 
             float effectivePartArea = CalculateEffectiveBlastAreaToPart(effectiveDistance, part);
 
-            double force = CalculateForce(pressurePerMs, effectivePartArea, 5);
+            float positivePhase = Mathf.Clamp(distanceToHit, 0.5f, 5f);
 
-            float acceleration = (float)(force / vesselMass);
+            double force = CalculateForce(pressurePerMs, effectivePartArea, positivePhase);
+
+            float acceleration = (float) (force / vesselMass);
 
             // Calculation of damage
-            float damage = (float)(totalDamage * Mathf.Clamp01(effectiveDistance / part.GetAverageBoundSize()));
 
-            return new BlastInfo() { TotalPressure = totalPressure, EffectiveDistance = effectiveDistance, EffectivePartArea = effectivePartArea, PositivePhaseDuration = 5, VelocityChange = acceleration, Damage = damage };
+            float percentageOfPartAffected = Mathf.Clamp01(effectiveDistance / part.GetAverageBoundSize());
+
+            float finalDamage = Mathf.Clamp((float) totalDamage, 0f, part.MaxDamage() * percentageOfPartAffected);
+         
+            return new BlastInfo() { TotalPressure = pressurePerMs, PercentageOfPartAffected = percentageOfPartAffected * 100, EffectivePartArea = effectivePartArea, PositivePhaseDuration = positivePhase,  VelocityChange = acceleration , Damage = finalDamage };
         }
 
         private static float CalculateEffectiveBlastAreaToPart(float effectiveDistance, Part part)
@@ -206,7 +209,7 @@ namespace BDArmory.Core.Utils
         public float EffectivePartArea { get; set; }
         public float Damage { get; set; }
         public double TotalPressure { get; set; }
-        public float EffectiveDistance { get; set; }
+        public float PercentageOfPartAffected { get; set; }
         public double PositivePhaseDuration { get; set; }
     }
 }

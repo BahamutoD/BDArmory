@@ -315,8 +315,6 @@ namespace BDArmory.Parts
 
             activeRadarRange = ActiveRadarRange;
 
-            SetInitialDetonationDistance();
-
 
             //TODO: BDModularGuidance should be configurable?
             heatThreshold = 50;

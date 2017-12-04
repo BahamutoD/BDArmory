@@ -6,17 +6,12 @@ namespace BDArmory.Core.Extension
     {
         public static bool InOrbit(this Vessel v)
         {
-            try
-            {
-                return !v.LandedOrSplashed &&
-                       (v.situation == Vessel.Situations.ORBITING ||
-                        v.situation == Vessel.Situations.SUB_ORBITAL ||
-                        v.situation == Vessel.Situations.ESCAPING);
-            }
-            catch
-            {
-                return false;
-            }
+            if (v == null) return false;
+
+            return !v.LandedOrSplashed &&
+                    (v.situation == Vessel.Situations.ORBITING ||
+                    v.situation == Vessel.Situations.SUB_ORBITAL ||
+                    v.situation == Vessel.Situations.ESCAPING);
         }
 
         public static bool InVacuum(this Vessel v)
@@ -26,20 +21,15 @@ namespace BDArmory.Core.Extension
 
         public static Vector3d Velocity(this Vessel v)
         {
-            try
-            {
-                if (!v.InOrbit())
-                {
-                    return v.srf_velocity;
-                }
-                else
-                {
-                    return v.obt_velocity;
-                }
-            }
-            catch
+            if( v == null) return Vector3d.zero;
+
+            if (!v.InOrbit())
             {
                 return v.srf_velocity;
+            }
+            else
+            {
+                return v.obt_velocity;
             }
         }
        

@@ -2,6 +2,7 @@ using System;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
+using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory.Parts
@@ -97,6 +98,12 @@ namespace BDArmory.Parts
 
 	      
         }
-    }
+
+	    public float GetBlastRadius()
+	    {
+	        CalculateBlast();
+	        return blastRadius;
+	    }
+	}
 }
 
