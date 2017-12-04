@@ -44,16 +44,18 @@ namespace BDArmory.Core.Extension
             }               
 
             //////////////////////////////////////////////////////////
-            // Caliber Adjustments
+            //   Caliber Adjustments
             //////////////////////////////////////////////////////////
+
             if (caliber < 50 && !isMissile)
             {
                 damage_ *= 0.0335f;
             }
                                   
             //////////////////////////////////////////////////////////
-            // Armor Reduction factors
+            //   Armor Reduction factors
             //////////////////////////////////////////////////////////
+
             if (p.HasArmor())
             {
                 float armorReduction = 0;
@@ -71,6 +73,7 @@ namespace BDArmory.Core.Extension
                 {
                     armorReduction = damage_ / 8;
                 }
+
                 p.ReduceArmor(armorReduction);
 
             }
@@ -81,6 +84,7 @@ namespace BDArmory.Core.Extension
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
             Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage_, 2));
+
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -109,7 +113,7 @@ namespace BDArmory.Core.Extension
             if (explosive) damage *= 0.725f;
             
             //penetration multipliers   
-            damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
+            damage *= multiplier * Mathf.Clamp(penetrationfactor,0,3f);
 
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
