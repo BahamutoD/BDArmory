@@ -24,23 +24,31 @@ namespace BDArmory.Core.Extension
         public static void AddExplosiveDamage(this Part p,
                                                float explosiveDamage,
                                                float DMG_MULTIPLIER,
-                                               float EXP_HEAT_MOD,
+                                               float EXP_DMG_MOD_MISSILE,
+                                               float EXP_DMG_MOD_BALLISTIC,                                               
                                                float caliber,
                                                bool isMissile)
         {
 
+            float damage_ = 0f;
             //////////////////////////////////////////////////////////
             // Explosive Hitpoints
             //////////////////////////////////////////////////////////
-            float damage = (DMG_MULTIPLIER / 100) * EXP_HEAT_MOD * explosiveDamage;                          
-                           
+            if (isMissile)
+            {
+                damage_ = (DMG_MULTIPLIER / 100) * EXP_DMG_MOD_MISSILE * explosiveDamage;
+            }
+            else
+            {
+                damage_ = (DMG_MULTIPLIER / 100) * EXP_DMG_MOD_BALLISTIC * explosiveDamage;
+            }               
 
             //////////////////////////////////////////////////////////
             // Caliber Adjustments
             //////////////////////////////////////////////////////////
             if (caliber < 50 && !isMissile)
             {
-                damage *= 0.0235f;
+                damage_ *= 0.0335f;
             }
                                   
             //////////////////////////////////////////////////////////
@@ -49,19 +57,19 @@ namespace BDArmory.Core.Extension
             if (p.HasArmor())
             {
                 float armorReduction = 0;
-                damage = damage - ((damage * p.GetArmorPercentage()) / 10);
+                damage_ = damage_ - ((damage_ * p.GetArmorPercentage()) / 10);
 
                 if (!isMissile)
                 {
                     if (caliber < 50)
                     {
-                        damage /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
+                        damage_ /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
                     }
-                    armorReduction = damage / 2;
+                    armorReduction = damage_ / 2;
                 }
                 else
                 {
-                    armorReduction = damage / 8;
+                    armorReduction = damage_ / 8;
                 }
                 p.ReduceArmor(armorReduction);
 
@@ -71,8 +79,8 @@ namespace BDArmory.Core.Extension
             // Do The Hitpoints
             //////////////////////////////////////////////////////////
 
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage, 2));
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage_, 2));
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -98,7 +106,7 @@ namespace BDArmory.Core.Extension
                             * 1e-4f);
 
             //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
-            if (explosive) damage *= 0.625f;
+            if (explosive) damage *= 0.725f;
             
             //penetration multipliers   
             damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);

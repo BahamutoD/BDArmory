@@ -56,7 +56,8 @@ namespace BDArmory.UI
 
         [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100f;
         [BDAPersistantSettingsField] public static float HITPOINT_MULTIPLIER = 1f;
-        [BDAPersistantSettingsField] public static float EXP_HEAT_MOD;
+        [BDAPersistantSettingsField] public static float EXP_DMG_MOD_BALLISTIC;
+        [BDAPersistantSettingsField] public static float EXP_DMG_MOD_MISSILE;
         [BDAPersistantSettingsField] public static float EXP_IMP_MOD;
 
 

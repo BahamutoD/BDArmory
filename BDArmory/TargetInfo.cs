@@ -28,8 +28,6 @@ namespace BDArmory
 		{
 			get
 			{
-                //if(!vessel) return false;
-                //return vessel.Landed;
                 if (!vessel) return false;
                 if (
                     (vessel.situation == Vessel.Situations.LANDED ||
@@ -152,7 +150,7 @@ namespace BDArmory
 
 			if(!vessel)
 			{
-				Debug.Log ("[BDArmory]: TargetInfo was added to a non-vessel");
+				//Debug.Log ("[BDArmory]: TargetInfo was added to a non-vessel");
 				Destroy (this);
 				return;
 			}
