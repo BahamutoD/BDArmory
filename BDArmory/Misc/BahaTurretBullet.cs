@@ -69,8 +69,8 @@ namespace BDArmory.Misc
 		{
 			startPosition = transform.position;
 
-			float maxLimit = Mathf.Clamp(BDArmorySettings.MAX_BULLET_RANGE, 0, 8000);
-			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, maxLimit);
+			float maxLimit = Mathf.Clamp(BDArmorySetup.MAX_BULLET_RANGE, 0, 8000);
+			maxDistance = Mathf.Clamp(BDArmorySetup.PHYSICS_RANGE, 2500, maxLimit);
 			projectileColor.a = projectileColor.a/2;
 			startColor.a = startColor.a/2;
 			
@@ -195,7 +195,7 @@ namespace BDArmory.Misc
                 //        {
                 //            heatDamage = heatDamage / 8;
                 //        }
-                //        if (BDArmorySettings.INSTAKILL)
+                //        if (BDArmorySetup.INSTAKILL)
                 //        //instakill support, will be removed once mod becomes officially MP
                 //        {
                 //            heatDamage = (float)hitEVA.part.maxTemp + 100;
@@ -219,7 +219,7 @@ namespace BDArmory.Misc
                 //            {
                 //                //ricochet
                 //                hasBounced = true;
-                //                if (BDArmorySettings.BULLET_HITS)
+                //                if BDArmorySettings.BULLET_HITS)
                 //                {
                 //                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
                 //                }
@@ -234,7 +234,7 @@ namespace BDArmory.Misc
                 //            }
                 //            else
                 //            {
-                //                if (BDArmorySettings.BULLET_HITS)
+                //                if BDArmorySettings.BULLET_HITS)
                 //                {
                 //                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
                 //                }
@@ -289,11 +289,11 @@ namespace BDArmory.Misc
 						{
 							heatDamage = heatDamage/8;
 						}
-						if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
+						if(BDArmorySetup.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
 						{
                             heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 						}
-                        if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
+                        if (BDArmorySetup.BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
 
                         if (hitPart.mass <= 0.01)   //if part mass is below 0.01, instakill it and do minor collateral (anti-exploit and to keep people from abusing near massless or massless crap as armor)
                         {
@@ -333,7 +333,7 @@ namespace BDArmory.Misc
 						{
 							hitBuilding.Demolish();
 						}
-						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " + (damageToBuilding).ToString("0.00")+ ", total Hitpoints: "+hitBuilding.Damage);
+						if(BDArmorySetup.BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " + (damageToBuilding).ToString("0.00")+ ", total Hitpoints: "+hitBuilding.Damage);
 					}
 					
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
@@ -342,7 +342,7 @@ namespace BDArmory.Misc
 						{
 							//ricochet
 							hasBounced = true;
-							if(BDArmorySettings.BULLET_HITS)
+							ifBDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
 							}	
@@ -357,7 +357,7 @@ namespace BDArmory.Misc
 						}
 						else
 						{
-							if(BDArmorySettings.BULLET_HITS)
+							ifBDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
 							}

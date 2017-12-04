@@ -9,7 +9,7 @@ namespace BDArmory
 {
 	public class TargetInfo : MonoBehaviour
 	{
-		public BDArmorySettings.BDATeams team;
+		public BDArmorySetup.BDATeams team;
 		public bool isMissile;
 		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
@@ -166,7 +166,7 @@ namespace BDArmory
                 }
             }
 
-			team = BDArmorySettings.BDATeams.None;
+			team = BDArmorySetup.BDATeams.None;
 			bool foundMf = false;
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
@@ -191,7 +191,7 @@ namespace BDArmory
                 ml.Dispose();
 			}
 				
-			if(team != BDArmorySettings.BDATeams.None)
+			if(team != BDArmorySetup.BDATeams.None)
 			{
                 BDATargetManager.AddTarget(this);
 			}
@@ -201,11 +201,11 @@ namespace BDArmory
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;            
 
             //add delegate to peace enable event
-            BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
+            BDArmorySetup.OnPeaceEnabled += OnPeaceEnabled;
 
             //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
 
-            if (!isMissile && team != BDArmorySettings.BDATeams.None)
+            if (!isMissile && team != BDArmorySetup.BDATeams.None)
 			{
                 GameEvents.onVesselPartCountChanged.Add(VesselModified);
                 //massRoutine = StartCoroutine(MassRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
@@ -220,7 +220,7 @@ namespace BDArmory
 		void OnDestroy()
 		{
 			//remove delegate from peace enable event
-			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
+			BDArmorySetup.OnPeaceEnabled -= OnPeaceEnabled;
             vessel.OnJustAboutToBeDestroyed -= AboutToBeDestroyed;
             GameEvents.onVesselPartCountChanged.Remove(VesselModified);
         }
@@ -243,7 +243,7 @@ namespace BDArmory
 				if((vessel.vesselType == VesselType.Debris) && (weaponManager == null))
 				{
 					RemoveFromDatabases();
-					team = BDArmorySettings.BDATeams.None;
+					team = BDArmorySetup.BDATeams.None;
 				}
 			}
 		}
@@ -295,8 +295,8 @@ namespace BDArmory
 
 		public void RemoveFromDatabases()
 		{
-			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.A].Remove(this);
-			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.B].Remove(this);
+			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.A].Remove(this);
+			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.B].Remove(this);
 		}
 
         public void VesselModified(Vessel v)

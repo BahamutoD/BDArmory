@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BDArmory.Control;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
@@ -476,7 +477,7 @@ namespace BDArmory
 		public string teamString = "A";
 		void UpdateTeamString()
 		{
-			teamString = Enum.GetName(typeof(BDArmorySettings.BDATeams), BDATargetManager.BoolToTeam(team));
+			teamString = Enum.GetName(typeof(BDArmorySetup.BDATeams), BDATargetManager.BoolToTeam(team));
 		}
 		
 		
@@ -490,7 +491,7 @@ namespace BDArmory
             ToggleTeam();
         }
 
-        public delegate void ToggleTeamDelegate(MissileFire wm, BDArmorySettings.BDATeams team);
+        public delegate void ToggleTeamDelegate(MissileFire wm, BDArmorySetup.BDATeams team);
 
         public static event ToggleTeamDelegate OnToggleTeam;
 
@@ -620,7 +621,7 @@ namespace BDArmory
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Open GUI", active = true)]
         public void ToggleToolbarGUI()
         {
-            BDArmorySettings.toolbarGuiEnabled = !BDArmorySettings.toolbarGuiEnabled;
+            BDArmorySetup.toolbarGuiEnabled = !BDArmorySetup.toolbarGuiEnabled;
         }
 
         #endregion
@@ -715,12 +716,12 @@ namespace BDArmory
 
                 if (vessel.isActiveVessel)
                 {
-                    BDArmorySettings.Instance.ActiveWeaponManager = this;
+                    BDArmorySetup.Instance.ActiveWeaponManager = this;
                 }
 
                 UpdateVolume();
-                BDArmorySettings.OnVolumeChange += UpdateVolume;
-                BDArmorySettings.OnSavedSettings += ClampVisualRange;
+                BDArmorySetup.OnVolumeChange += UpdateVolume;
+                BDArmorySetup.OnSavedSettings += ClampVisualRange;
 
                 StartCoroutine(StartupListUpdater());
                 missilesAway = 0;
@@ -894,8 +895,8 @@ namespace BDArmory
 
         void OnDestroy()
         {
-            BDArmorySettings.OnVolumeChange -= UpdateVolume;
-            BDArmorySettings.OnSavedSettings -= ClampVisualRange;
+            BDArmorySetup.OnVolumeChange -= UpdateVolume;
+            BDArmorySetup.OnSavedSettings -= ClampVisualRange;
             GameEvents.onVesselCreate.Remove(OnVesselCreate);
             GameEvents.onPartJointBreak.Remove(OnPartJointBreak);
             GameEvents.onPartDie.Remove(OnPartDie);
@@ -914,7 +915,7 @@ namespace BDArmory
         void OnGUI()
         {
             if (HighLogic.LoadedSceneIsFlight && vessel == FlightGlobals.ActiveVessel &&
-                BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled)
+                BDArmorySetup.GAME_UI_ENABLED && !MapView.MapIsEnabled)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LINES)
                 {
@@ -937,12 +938,12 @@ namespace BDArmory
                     if (ml)
                     {
                         float size = 128;
-                        Texture2D texture = BDArmorySettings.Instance.greenCircleTexture;
+                        Texture2D texture = BDArmorySetup.Instance.greenCircleTexture;
 
 
                         if ((ml is MissileLauncher && ((MissileLauncher)ml).guidanceActive) || ml is BDModularGuidance)
                         {
-                            texture = BDArmorySettings.Instance.largeGreenCircleTexture;
+                            texture = BDArmorySetup.Instance.largeGreenCircleTexture;
                             size = 256;
                         }
                         BDGUIUtils.DrawTextureOnWorldPos(bombAimerPosition, texture, new Vector2(size, size), 0);
@@ -959,7 +960,7 @@ namespace BDArmory
                     {
                         if (laserPointDetected && foundCam)
                         {
-                            BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector2(48, 48), 1);
+                            BDGUIUtils.DrawTextureOnWorldPos(foundCam.groundTargetPosition, BDArmorySetup.Instance.greenCircleTexture, new Vector2(48, 48), 1);
                         }
 
                         List<ModuleTargetingCamera>.Enumerator cam = BDATargetManager.ActiveLasers.GetEnumerator();
@@ -968,7 +969,7 @@ namespace BDArmory
                             if (cam.Current == null) continue;
                             if (cam.Current.vessel != vessel && cam.Current.surfaceDetected && cam.Current.groundStabilized && !cam.Current.gimbalLimitReached)
                             {
-                                BDGUIUtils.DrawTextureOnWorldPos(cam.Current.groundTargetPosition, BDArmorySettings.Instance.greenDiamondTexture, new Vector2(18, 18), 0);
+                                BDGUIUtils.DrawTextureOnWorldPos(cam.Current.groundTargetPosition, BDArmorySetup.Instance.greenDiamondTexture, new Vector2(18, 18), 0);
                             }
                         }
                         cam.Dispose();
@@ -978,17 +979,17 @@ namespace BDArmory
                         MissileBase ml = CurrentMissile;
                         if (heatTarget.exists)
                         {
-                            BDGUIUtils.DrawTextureOnWorldPos(heatTarget.position, BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+                            BDGUIUtils.DrawTextureOnWorldPos(heatTarget.position, BDArmorySetup.Instance.greenCircleTexture, new Vector2(36, 36), 3);
                             float distanceToTarget = Vector3.Distance(heatTarget.position, ml.MissileReferenceTransform.position);
-                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.GetForwardTransform()), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
+                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.GetForwardTransform()), BDArmorySetup.Instance.largeGreenCircleTexture, new Vector2(128, 128), 0);
                             Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(ml, heatTarget.position, heatTarget.velocity);
                             Vector3 fsDirection = (fireSolution - ml.MissileReferenceTransform.position).normalized;
-                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySetup.Instance.greenDotTexture, new Vector2(6, 6), 0);
                         }
                         else
                         {
-                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.GetForwardTransform()), BDArmorySettings.Instance.greenCircleTexture, new Vector2(36, 36), 3);
-                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.GetForwardTransform()), BDArmorySettings.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
+                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.GetForwardTransform()), BDArmorySetup.Instance.greenCircleTexture, new Vector2(36, 36), 3);
+                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (2000 * ml.GetForwardTransform()), BDArmorySetup.Instance.largeGreenCircleTexture, new Vector2(156, 156), 0);
                         }
                     }
                     else if (missile.TargetingMode == MissileBase.TargetingModes.Radar)
@@ -998,11 +999,11 @@ namespace BDArmory
                         if (vesselRadarData && vesselRadarData.locked)
                         {
                             float distanceToTarget = Vector3.Distance(vesselRadarData.lockedTargetData.targetData.predictedPosition, ml.MissileReferenceTransform.position);
-                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.GetForwardTransform()), BDArmorySettings.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
+                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * ml.GetForwardTransform()), BDArmorySetup.Instance.dottedLargeGreenCircle, new Vector2(128, 128), 0);
                             //Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(CurrentMissile, radar.lockedTarget.predictedPosition, radar.lockedTarget.velocity);
                             Vector3 fireSolution = MissileGuidance.GetAirToAirFireSolution(ml, vesselRadarData.lockedTargetData.targetData.predictedPosition, vesselRadarData.lockedTargetData.targetData.velocity);
                             Vector3 fsDirection = (fireSolution - ml.MissileReferenceTransform.position).normalized;
-                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+                            BDGUIUtils.DrawTextureOnWorldPos(ml.MissileReferenceTransform.position + (distanceToTarget * fsDirection), BDArmorySetup.Instance.greenDotTexture, new Vector2(6, 6), 0);
 
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                             {
@@ -1022,7 +1023,7 @@ namespace BDArmory
                             {
                                 if (rwr.pingsData[i].exists && (rwr.pingsData[i].signalStrength == 0 || rwr.pingsData[i].signalStrength == 5) && Vector3.Dot(rwr.pingWorldPositions[i] - missile.transform.position, missile.GetForwardTransform()) > 0)
                                 {
-                                    BDGUIUtils.DrawTextureOnWorldPos(rwr.pingWorldPositions[i], BDArmorySettings.Instance.greenDiamondTexture, new Vector2(22, 22), 0);
+                                    BDGUIUtils.DrawTextureOnWorldPos(rwr.pingWorldPositions[i], BDArmorySetup.Instance.greenDiamondTexture, new Vector2(22, 22), 0);
                                 }
                             }
                         }
@@ -1030,16 +1031,16 @@ namespace BDArmory
                         if (antiRadTargetAcquired)
                         {
                             BDGUIUtils.DrawTextureOnWorldPos(antiRadiationTarget,
-                                BDArmorySettings.Instance.openGreenSquare, new Vector2(22, 22), 0);
+                                BDArmorySetup.Instance.openGreenSquare, new Vector2(22, 22), 0);
                         }
                     }
                 }
 
-                if ((missile && missile.TargetingMode == MissileBase.TargetingModes.Gps) || BDArmorySettings.Instance.showingGPSWindow)
+                if ((missile && missile.TargetingMode == MissileBase.TargetingModes.Gps) || BDArmorySetup.Instance.showingGPSWindow)
                 {
                     if (designatedGPSCoords != Vector3d.zero)
                     {
-                        BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(designatedGPSCoords, vessel.mainBody), BDArmorySettings.Instance.greenSpikedPointCircleTexture, new Vector2(22, 22), 0);
+                        BDGUIUtils.DrawTextureOnWorldPos(VectorUtils.GetWorldSurfacePostion(designatedGPSCoords, vessel.mainBody), BDArmorySetup.Instance.greenSpikedPointCircleTexture, new Vector2(22, 22), 0);
                     }
                 }
 
@@ -1067,7 +1068,7 @@ namespace BDArmory
                 yield return null;
                 if (vessel.isActiveVessel)
                 {
-                    BDArmorySettings.Instance.ActiveWeaponManager = this;
+                    BDArmorySetup.Instance.ActiveWeaponManager = this;
                 }
             }
             UpdateList();
@@ -1646,7 +1647,7 @@ namespace BDArmory
 
         void UpdateTargetingAudio()
         {
-            if (BDArmorySettings.GameIsPaused)
+            if (BDArmorySetup.GameIsPaused)
             {
                 if (targetingAudioSource.isPlaying)
                 {
@@ -1702,8 +1703,8 @@ namespace BDArmory
             if (distance < this.guardRange)
             {
                 warningSounding = true;
-                BDArmorySettings.Instance.missileWarningTime = Time.time;
-                BDArmorySettings.Instance.missileWarning = true;
+                BDArmorySetup.Instance.missileWarningTime = Time.time;
+                BDArmorySetup.Instance.missileWarning = true;
                 warningAudioSource.pitch = distance < 800 ? 1.45f : 1f;
                 warningAudioSource.PlayOneShot(warningSound);
 
@@ -1997,7 +1998,7 @@ namespace BDArmory
 
         void DisplaySelectedWeaponMessage()
         {
-            if (BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
+            if (BDArmorySetup.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
             {
                 ScreenMessages.RemoveMessage(selectionMessage);
                 selectionMessage.textInstance = null;

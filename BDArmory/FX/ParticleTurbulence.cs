@@ -27,7 +27,7 @@ namespace BDArmory.FX
 
         void FixedUpdate()
         {
-            //if(BDArmorySettings.numberOfParticleEmitters > 0)
+            //if(BDArmorySetup.numberOfParticleEmitters > 0)
             //{
             if (Time.time - flareTurbTimer > flareTurbDelta)
             {
