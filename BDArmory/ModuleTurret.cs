@@ -1,3 +1,4 @@
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
@@ -145,7 +146,7 @@ namespace BDArmory
             {
                 if (hasAudio)
                 {
-                    if (!BDArmorySettings.GameIsPaused && audioRotationRate > 0.05f)
+                    if (!BDArmorySetup.GameIsPaused && audioRotationRate > 0.05f)
                     {
                         if (!audioSource.isPlaying) audioSource.Play();
                     }

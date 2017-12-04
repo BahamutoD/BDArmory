@@ -6,6 +6,7 @@ using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
 using System.Text;
+using BDArmory.Core;
 
 namespace BDArmory.Control
 {
@@ -261,7 +262,7 @@ namespace BDArmory.Control
 			MissileFire.OnToggleTeam -= OnToggleTeam;
 		}
 
-		void OnToggleTeam(MissileFire mf, BDArmorySettings.BDATeams team)
+		void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
 		{
 			if(mf.vessel == vessel || (commandLeader && commandLeader.vessel == mf.vessel))
 			{
@@ -406,7 +407,7 @@ namespace BDArmory.Control
 
 
 			GetGuardTarget();
-			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0||BDArmorySettings.PEACE_MODE))
+			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0|| BDArmorySettings.PEACE_MODE))
 			{
 				//s.mainThrottle = 0;
 				//vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);

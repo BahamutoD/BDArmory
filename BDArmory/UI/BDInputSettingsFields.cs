@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using BDArmory.Core;
 
 namespace BDArmory.UI
 {

@@ -11,6 +11,7 @@ using BDArmory.Shaders;
 using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
+using BDArmory.Core;
 
 namespace BDArmory
 {

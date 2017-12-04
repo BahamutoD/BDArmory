@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
@@ -37,10 +38,10 @@ namespace BDArmory.Radar
         [KSPField(isPersistant = true)] public bool rwrEnabled;
 
         public static Texture2D rwrDiamondTexture =
-            GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrDiamond", false);
+            GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "rwrDiamond", false);
 
         public static Texture2D rwrMissileTexture =
-            GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "rwrMissileIcon", false);
+            GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "rwrMissileIcon", false);
 
         public static AudioClip radarPingSound;
         public static AudioClip missileLockSound;
@@ -121,12 +122,12 @@ namespace BDArmory.Radar
                 audioSource.loop = false;
 
                 UpdateVolume();
-                BDArmorySettings.OnVolumeChange += UpdateVolume;
+                BDArmorySetup.OnVolumeChange += UpdateVolume;
 
                 float size = displayRect.height + 20;
                 if (!WindowRectRWRInitialized)
                 {
-                    BDArmorySettings.WindowRectRwr = new Rect(40, Screen.height - size - 20, size, size + 20);
+                    BDArmorySetup.WindowRectRwr = new Rect(40, Screen.height - size - 20, size, size + 20);
                     WindowRectRWRInitialized = true;
                 }
 
@@ -171,7 +172,7 @@ namespace BDArmory.Radar
         {
             OnRadarPing -= ReceivePing;
             OnMissileLaunch -= ReceiveLaunchWarning;
-            BDArmorySettings.OnVolumeChange -= UpdateVolume;
+            BDArmorySetup.OnVolumeChange -= UpdateVolume;
         }
 
 
@@ -331,22 +332,22 @@ namespace BDArmory.Radar
 
         void OnGUI()
         {
-            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySettings.GAME_UI_ENABLED &&
+            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySetup.GAME_UI_ENABLED &&
                 vessel.isActiveVessel && rwrEnabled)
             {
                 if (audioSourceRepeatDelay > 0)
                     audioSourceRepeatDelay -= Time.fixedDeltaTime;
 
-                BDArmorySettings.WindowRectRwr = GUI.Window(94353, BDArmorySettings.WindowRectRwr, RWRWindow,
+                BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, RWRWindow,
                     "Radar Warning Receiver", HighLogic.Skin.window);
-                BDGUIUtils.UseMouseEventInRect(BDArmorySettings.WindowRectRwr);
+                BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectRwr);
             }
         }
 
         void RWRWindow(int windowID)
         {
-            GUI.DragWindow(new Rect(0, 0, BDArmorySettings.WindowRectRwr.width - 18, 30));
-            if (GUI.Button(new Rect(BDArmorySettings.WindowRectRwr.width - 28, 2, 26, 26), "X", HighLogic.Skin.button))
+            GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectRwr.width - 18, 30));
+            if (GUI.Button(new Rect(BDArmorySetup.WindowRectRwr.width - 28, 2, 26, 26), "X", HighLogic.Skin.button))
             {
                 DisableRWR();
             }

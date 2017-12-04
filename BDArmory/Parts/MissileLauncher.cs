@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
@@ -237,7 +238,7 @@ namespace BDArmory.Parts
         [KSPAction("Fire Missile")]
         public void AGFire(KSPActionParam param)
         {
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null && BDArmorySetup.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySetup.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
             if (missileTurret)
             {
                 missileTurret.FireMissile(this);
@@ -250,13 +251,13 @@ namespace BDArmory.Parts
             {
                 FireMissile();
             }
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null) BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
         [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
         public void GuiFire()
         {
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null && BDArmorySettings.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySettings.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null && BDArmorySetup.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySetup.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
             if (missileTurret)
             {
                 missileTurret.FireMissile(this);
@@ -269,7 +270,7 @@ namespace BDArmory.Parts
             {
                 FireMissile();
             }
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null) BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
         [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
@@ -278,7 +279,7 @@ namespace BDArmory.Parts
             if (missileTurret) return;
 
             part.decouple(0);
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null) BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null) BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
         void ParseWeaponClass()
@@ -622,7 +623,7 @@ namespace BDArmory.Parts
 			}
 
 			UpdateVolume();
-			BDArmorySettings.OnVolumeChange += UpdateVolume;
+			BDArmorySetup.OnVolumeChange += UpdateVolume;
 		}
 
 		void UpdateVolume()
@@ -644,7 +645,7 @@ namespace BDArmory.Parts
 
         void OnDestroy()
 		{
-			BDArmorySettings.OnVolumeChange -= UpdateVolume;
+			BDArmorySetup.OnVolumeChange -= UpdateVolume;
             GameEvents.onPartDie.Remove(PartDie);
         }
 
@@ -676,7 +677,7 @@ namespace BDArmory.Parts
 
 		    if(GetComponentInChildren<KSPParticleEmitter>())
 		    {
-		        BDArmorySettings.numberOfParticleEmitters++;
+		        BDArmorySetup.numberOfParticleEmitters++;
 		    }
 
 		    List<MissileFire>.Enumerator wpm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
@@ -1224,7 +1225,7 @@ namespace BDArmory.Parts
 			{
 				//light, sound & particle fx
 				//sound
-				if(!BDArmorySettings.GameIsPaused)
+				if(!BDArmorySetup.GameIsPaused)
 				{
 					if(!audioSource.isPlaying)
 					{
@@ -1368,7 +1369,7 @@ namespace BDArmory.Parts
 			float cruiseStartTime = Time.time;
 			while(Time.time - cruiseStartTime < cruiseTime)
 			{
-				if(!BDArmorySettings.GameIsPaused)
+				if(!BDArmorySetup.GameIsPaused)
 				{
 					if(!audioSource.isPlaying || audioSource.clip != thrustAudio)
 					{
@@ -1768,7 +1769,7 @@ namespace BDArmory.Parts
 
             Debug.Log("[BDArmory]: Detonate Triggered");
 
-            BDArmorySettings.numberOfParticleEmitters--;	
+            BDArmorySetup.numberOfParticleEmitters--;	
 		    HasExploded = true;
 				
 		    if(legacyTargetVessel!=null)
