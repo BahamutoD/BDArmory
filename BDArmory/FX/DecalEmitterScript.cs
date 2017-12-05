@@ -6,9 +6,9 @@ namespace BDArmory.FX
     {
         private readonly float _maxCombineDistance = 0.6f;
 
-        private readonly float _shrinkRateFlame = 2f;
+        private readonly float _shrinkRateFlame = 2.25f;
 
-        private readonly float _shrinkRateSmoke = 2f;
+        private readonly float _shrinkRateSmoke = 2.25f;
         private GameObject _destroyer;
 
         private float _destroyTimerStart;
