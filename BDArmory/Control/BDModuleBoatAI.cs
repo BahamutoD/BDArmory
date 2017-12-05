@@ -51,7 +51,7 @@ namespace BDArmory.Control
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Turning"),
 			UI_Toggle(enabledText = "Careful", disabledText = "Reckless")]
-		public bool DriveCarefully = false;
+		public bool DriveCarefully = true;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Attack vector"),
 			UI_Toggle(enabledText = "Broadside", disabledText = "Bow")]
@@ -284,8 +284,9 @@ namespace BDArmory.Control
 		{
 			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
 			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, upDir));
-			float d1 = orientation - yawDerivatives[2]; //first derivative
+			float d1 = (orientation - yawDerivatives[2]); //first derivative per update
 			if (Mathf.Abs(d1) > 180) d1 -= 360 * Mathf.Sign(d1); // angles
+			d1 = d1 / Time.deltaTime; // normalize to seconds? that probably is seconds
 			float d2 = d1 - yawDerivatives[3]; //second derivative
 			float d3 = d2 - yawDerivatives[4]; //third derivative
 
@@ -299,15 +300,18 @@ namespace BDArmory.Control
 				if (Mathf.Abs(d1) < yawDerivatives[6] - timeSmall * Mathf.Abs(d2) / 2)
 				{
 					timeToZero = 2 * Mathf.Sqrt((Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2)) / yawDerivatives[1]);
+					DebugLine("Triangle yaw.");
+					
 				}
 				else
 				{
 					timeToZero = yawDerivatives[5] + (Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2) - yawDerivatives[6]) / yawDerivatives[0];
+					DebugLine("Trapezoid yaw.");
 				}
 				float angleChangeTillStop = Mathf.Abs(d1) * timeToZero * 2 + timeSmall * d2 * d2 / 3; // if I'm not missing anything, the first term should be divided by two, not multiplied
 				                                                                                      // but since this works better, I'm probably missing something
 
-				//DebugLine("timeToZero " + timeToZero + " angleToStop " + angleChangeTillStop + " d1 " + d1 + " timeSmall " + timeSmall);
+				DebugLine("timeToZero " + timeToZero + " angleToStop " + angleChangeTillStop + " timeSmall " + timeSmall);
 
 				if (float.IsNaN(angleChangeTillStop))
 					s.yaw = -Mathf.Sign(d1); // if timeSmall is more than area, cancel momentum
@@ -321,6 +325,8 @@ namespace BDArmory.Control
 				s.yaw = Mathf.Sign(angle); // if we're turning in the opposite side of the want we one, stop that
 				//DebugLine("straightforward, turn the oppposite way");
 			}
+
+			DebugLine("d2 " + d2 + " yawDer1 " + yawDerivatives[1] + " yawDer6 " + yawDerivatives[6] + " d1 " + d1 + " or " + orientation + " yawDer2 " + yawDerivatives[2] + " yawDer3 " + yawDerivatives[3]);
 
 			// update derivatives
 			const float decayFactor = 0.997f;
