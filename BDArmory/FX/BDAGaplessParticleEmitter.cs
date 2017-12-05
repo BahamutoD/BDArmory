@@ -6,18 +6,12 @@ namespace BDArmory.FX
     public class BDAGaplessParticleEmitter : MonoBehaviour
     {
         public KSPParticleEmitter pEmitter;
-
         private float maxDistance = 0.6f;
-
         public bool emit = false;
-
         public Part part = null;
-
         public Rigidbody rb;
-
         Vector3 internalVelocity;
         Vector3 lastPos;
-
         bool useInternalV;
 
         Vector3 velocity

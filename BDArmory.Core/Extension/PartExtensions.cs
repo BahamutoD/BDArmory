@@ -44,16 +44,18 @@ namespace BDArmory.Core.Extension
             }               
 
             //////////////////////////////////////////////////////////
-            // Caliber Adjustments
+            //   Caliber Adjustments
             //////////////////////////////////////////////////////////
+
             if (caliber < 50 && !isMissile)
             {
                 damage_ *= 0.0335f;
             }
                                   
             //////////////////////////////////////////////////////////
-            // Armor Reduction factors
+            //   Armor Reduction factors
             //////////////////////////////////////////////////////////
+
             if (p.HasArmor())
             {
                 float armorReduction = 0;
@@ -71,6 +73,7 @@ namespace BDArmory.Core.Extension
                 {
                     armorReduction = damage_ / 8;
                 }
+
                 p.ReduceArmor(armorReduction);
 
             }
@@ -81,6 +84,7 @@ namespace BDArmory.Core.Extension
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
             Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage_, 2));
+
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -101,20 +105,20 @@ namespace BDArmory.Core.Extension
             //Hitpoints mult for scaling in settings
             //1e-4 constant for adjusting MegaJoules for gameplay
 
-            double damage = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
+            double damage_ = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
                             * (DMG_MULTIPLIER / 100) * bulletDmgMult
                             * 1e-4f);
 
             //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
-            if (explosive) damage *= 0.725f;
+            if (explosive) damage_ *= 0.725f;
             
             //penetration multipliers   
-            damage *= multiplier * Mathf.Clamp(penetrationfactor,penetrationfactor,1.5f);
+            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.75f);
 
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage *= 12f;
+               damage_ *= 12f;
             }
 
             //As armor is decreased level of damage should increase
@@ -130,19 +134,19 @@ namespace BDArmory.Core.Extension
                 double armorPCT_ = p.GetArmorPercentage();
                 
                 //Armor limits Damage
-                damage = damage - (damage * armorPCT_);
+                damage_ = damage_ - (damage_ * armorPCT_);
 
                 //penalty for low caliber rounds,not if armor is very low
-                //if (caliber <= 30f && armorMass_ >= 20d) damage *= 0.125f;
+                if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
             }
             
 
             //////////////////////////////////////////////////////////
             // Do The Hitpoints
             //////////////////////////////////////////////////////////
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage);
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage_);
             Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage, 2));
+            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage_, 2));
         }
 
 
@@ -263,7 +267,9 @@ namespace BDArmory.Core.Extension
 
         public static bool IgnoreDecal(this Part part)
         {
-            if(part.Modules.Contains("FSplanePropellerSpinner"))
+            if(part.Modules.Contains("FSplanePropellerSpinner") ||
+               part.Modules.Contains("ModuleWheelBase") ||
+               part.Modules.Contains("KSPWheelBase"))
             {
                 return true;
             }
@@ -271,6 +277,24 @@ namespace BDArmory.Core.Extension
             {
                 return false;
             }            
+        }
+
+        public static bool HasFuel(this Part part)
+        {
+            bool hasFuel = false;
+            IEnumerator<PartResource> resources = part.Resources.GetEnumerator();
+            while (resources.MoveNext())
+            {
+                if (resources.Current == null) continue;
+                switch (resources.Current.resourceName)
+                {
+                    case "LiquidFuel":
+                        if(resources.Current.amount > 1d) hasFuel = true;
+                        break;               
+                }
+            }
+            return hasFuel;
+
         }
 
         //public static float GetPartExternalScaleModifier(this Part part)

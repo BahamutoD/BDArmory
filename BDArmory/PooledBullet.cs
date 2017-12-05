@@ -731,7 +731,7 @@ namespace BDArmory
                     break;
                 case "Dynamic":
                     float probability = CalculateExplosionProbability(hitPart);
-                    if (probability >= 4)
+                    if (probability >= 3)
                         CreateExplosion(hitPart);
                     break;
                 case "Never":
@@ -761,11 +761,11 @@ namespace BDArmory
 
             if (fuelPct > 0 && fuelPct <= 0.60f)
             {
-                probability = RangedProbability(new[] { 5f, 20f, 25f, 50f });
+                probability = RangedProbability(new[] { 50f, 25f, 20f, 5f });
             }
             else
             {
-                probability = RangedProbability(new[] { 50f, 30f, 10f, 10f });
+                probability = RangedProbability(new[] { 50f, 25f, 20f, 2f });
             }
 
             if (fuelPct == 1f || fuelPct == 0f)
@@ -776,21 +776,13 @@ namespace BDArmory
                 Debug.Log("[BDArmory]: Explosive Probablitliy " + probability);
             }
 
-            //probability = 1 - probability;
-
-            ////if (explosive)
-            ////        probability += 0.1f;
-
-            //if (probability == 0) probability = 1f;
             return probability;
+
         }
 
         float RangedProbability(float[] probs)
         {
-
-            float total = 0;
-            //probs = new[] { 50f, 25f, 20f, 5f };
-
+            float total = 0;          
             foreach (float elem in probs)
             {
                 total += elem;
