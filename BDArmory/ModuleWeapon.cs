@@ -1036,8 +1036,7 @@ namespace BDArmory
                                 IEnumerator<Transform> sTf = shellEjectTransforms.AsEnumerable().GetEnumerator();
                                 while (sTf.MoveNext())
                                 {
-                                    if (sTf.Current == null) continue;
-                                    //GameObject ejectedShell = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"), sTf.position + (part.rb.velocity*Time.fixedDeltaTime), sTf.rotation);
+                                    if (sTf.Current == null) continue;                                    
                                     GameObject ejectedShell = shellPool.GetPooledObject();
                                     ejectedShell.transform.position = sTf.Current.position;
                                     //+(part.rb.velocity*TimeWarp.fixedDeltaTime);

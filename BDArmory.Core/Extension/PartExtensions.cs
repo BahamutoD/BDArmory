@@ -113,12 +113,12 @@ namespace BDArmory.Core.Extension
             if (explosive) damage_ *= 0.725f;
             
             //penetration multipliers   
-            damage_ *= multiplier * Mathf.Clamp(penetrationfactor,0,3f);
+            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.75f);
 
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage_ *= 12f;
+               damage_ *= 10f;
             }
 
             //As armor is decreased level of damage should increase
@@ -137,7 +137,7 @@ namespace BDArmory.Core.Extension
                 damage_ = damage_ - (damage_ * armorPCT_);
 
                 //penalty for low caliber rounds,not if armor is very low
-                //if (caliber <= 30f && armorMass_ >= 20d) damage *= 0.125f;
+                if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
             }
             
 
@@ -277,6 +277,24 @@ namespace BDArmory.Core.Extension
             {
                 return false;
             }            
+        }
+
+        public static bool HasFuel(this Part part)
+        {
+            bool hasFuel = false;
+            IEnumerator<PartResource> resources = part.Resources.GetEnumerator();
+            while (resources.MoveNext())
+            {
+                if (resources.Current == null) continue;
+                switch (resources.Current.resourceName)
+                {
+                    case "LiquidFuel":
+                        if(resources.Current.amount > 1d) hasFuel = true;
+                        break;               
+                }
+            }
+            return hasFuel;
+
         }
 
         //public static float GetPartExternalScaleModifier(this Part part)

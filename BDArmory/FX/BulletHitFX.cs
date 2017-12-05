@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using BDArmory.Core;
-using BDArmory.UI;
 using BDArmory.Misc;
 using BDArmory.Core.Extension;
 using UniLinq;
@@ -45,6 +44,7 @@ namespace BDArmory.FX
         public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float pentrationfactor)
         {
             ObjectPool decalPool_;
+            bool hasFuel_ = hitPart.HasFuel();
 
             if (caliber >= 90f)
             {
@@ -63,6 +63,8 @@ namespace BDArmory.FX
                 decalFront.transform.position = hit.point + new Vector3(0.25f, 0f, 0f);                               
                 decalFront.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
                 decalFront.SetActive(true);
+
+                if(hasFuel_) DecalEmitters.AttachFlames(hit, hitPart);
             }
             //back hole if fully penetrated
             if (pentrationfactor > 1)
