@@ -118,7 +118,7 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage_ *= 10f;
+               damage_ *= 12f;
             }
 
             //As armor is decreased level of damage should increase

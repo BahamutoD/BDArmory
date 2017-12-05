@@ -5,8 +5,8 @@ namespace BDArmory.FX
 {
     public class DecalEmitters : MonoBehaviour
     {
-        private float timeNoFlames;
-        private Vessel LastVesselLoaded = null;
+        //private float timeNoFlames;
+        //private Vessel LastVesselLoaded = null;
         public static List<GameObject> FlameObjects = new List<GameObject>();
         public List<Vessel> vesselsAllowed = new List<Vessel>();
 
@@ -17,7 +17,7 @@ namespace BDArmory.FX
 
         public static void AttachFlames(RaycastHit hit, Part hitPart)
         {
-            var modelUrl = "DestructionEffects/Models/FlameEffect2/model";
+            var modelUrl = "BDArmory/FX/FlameEffect2/model";           
 
             var flameObject =
                 (GameObject)
