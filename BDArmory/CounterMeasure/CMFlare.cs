@@ -36,7 +36,7 @@ namespace BDArmory.CounterMeasure
         void OnEnable()
         {
             // OLD:
-            //thermal = BDArmorySettings.FLARE_THERMAL*UnityEngine.Random.Range(0.45f, 1.25f);
+            //thermal = BDArmorySetup.FLARE_THERMAL*UnityEngine.Random.Range(0.45f, 1.25f);
             // NEW: generate flare within spectrum of emitting vessel's heat signature
             thermal = BDATargetManager.GetVesselHeatSignature(sourceVessel) * UnityEngine.Random.Range(0.65f, 1.75f);
             startThermal = thermal;
@@ -83,7 +83,7 @@ namespace BDArmory.CounterMeasure
             }
             pEmitter.Dispose();
 
-            BDArmorySettings.numberOfParticleEmitters++;
+            BDArmorySetup.numberOfParticleEmitters++;
 
 
             if (lights == null)
@@ -104,7 +104,7 @@ namespace BDArmory.CounterMeasure
             //gameObject.AddComponent<KSPForceApplier>().drag = 0.4f;
 
 
-            BDArmorySettings.Flares.Add(this);            
+            BDArmorySetup.Flares.Add(this);            
 
             if (sourceVessel != null)
             {
@@ -191,7 +191,7 @@ namespace BDArmory.CounterMeasure
             if (Time.time - startTime > lifeTime) //stop emitting after lifeTime seconds
             {
                 alive = false;
-                BDArmorySettings.Flares.Remove(this);
+                BDArmorySetup.Flares.Remove(this);
 
                 List<KSPParticleEmitter>.Enumerator pe = pEmitters.GetEnumerator();
                 while (pe.MoveNext())
@@ -221,7 +221,7 @@ namespace BDArmory.CounterMeasure
 
             if (Time.time - startTime > lifeTime + 11) //disable object after x seconds
             {
-                BDArmorySettings.numberOfParticleEmitters--;
+                BDArmorySetup.numberOfParticleEmitters--;
                 gameObject.SetActive(false);
                 return;
             }

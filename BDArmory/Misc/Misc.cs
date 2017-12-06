@@ -63,7 +63,7 @@ namespace BDArmory.Misc
         public static bool CheckMouseIsOnGui()
         {
 
-            if (!BDArmorySettings.GAME_UI_ENABLED) return false;
+            if (!BDArmorySetup.GAME_UI_ENABLED) return false;
 
             if (!BDInputSettingsFields.WEAP_FIRE_KEY.inputString.Contains("mouse")) return false;
 
@@ -72,13 +72,13 @@ namespace BDArmory.Misc
 
 
             if (topGui.Contains(inverseMousePos)) return true;
-            if (BDArmorySettings.toolbarGuiEnabled && BDArmorySettings.WindowRectToolbar.Contains(inverseMousePos))
+            if (BDArmorySetup.toolbarGuiEnabled && BDArmorySetup.WindowRectToolbar.Contains(inverseMousePos))
                 return true;
             if (ModuleTargetingCamera.windowIsOpen && ModuleTargetingCamera.camWindowRect.Contains(inverseMousePos))
                 return true;
-            if (BDArmorySettings.Instance.ActiveWeaponManager)
+            if (BDArmorySetup.Instance.ActiveWeaponManager)
             {
-                MissileFire wm = BDArmorySettings.Instance.ActiveWeaponManager;
+                MissileFire wm = BDArmorySetup.Instance.ActiveWeaponManager;
 
                 if (wm.vesselRadarData && wm.vesselRadarData.guiEnabled)
                 {
@@ -86,7 +86,7 @@ namespace BDArmory.Misc
                     if (wm.vesselRadarData.linkWindowOpen && wm.vesselRadarData.linkWindowRect.Contains(inverseMousePos))
                         return true;
                 }
-                if (wm.rwr && wm.rwr.rwrEnabled && BDArmorySettings.WindowRectRwr.Contains(inverseMousePos))
+                if (wm.rwr && wm.rwr.rwrEnabled && BDArmorySetup.WindowRectRwr.Contains(inverseMousePos))
                     return true;
                 if (wm.wingCommander && wm.wingCommander.showGUI)
                 {

@@ -24,7 +24,7 @@ namespace BDArmory.Misc
         {
             for (int i = 0; i < size; i++)
             {
-                GameObject obj = (GameObject) Instantiate(poolObject);
+                GameObject obj = Instantiate(poolObject);
                 obj.transform.SetParent(transform);
                 obj.SetActive(false);
                 pool.Add(obj);
@@ -36,34 +36,31 @@ namespace BDArmory.Misc
             return pool[index];
         }
 
-
         public GameObject GetPooledObject()
         {
-            for (int i = 0; i < pool.Count; i++)
-            {
-                if (!pool[i].activeInHierarchy)
-                {
-                    //pool[i].SetActive(true);
-                    return pool[i];
-                }
-            }
-
             if (canGrow)
             {
                 if (!poolObject)
                 {
-                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +
-                                     ")");
+                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +")");
                 }
-                GameObject obj = (GameObject) Instantiate(poolObject);
-                obj.transform.SetParent(transform);
+
+                GameObject obj = Instantiate(poolObject);
                 obj.SetActive(false);
-                //obj.SetActive(true);
                 pool.Add(obj);
                 size++;
+
                 return obj;
             }
 
+            for (int i = 0; i < pool.Count; i++)
+                {
+                    if (!pool[i].activeInHierarchy)
+                    {                        
+                        return pool[i];
+                    }
+                }
+                          
             return null;
         }
 
@@ -82,7 +79,7 @@ namespace BDArmory.Misc
             }
         }
 
-        public static ObjectPool CreateObjectPool(GameObject obj, int size, bool canGrow, bool destroyOnLoad)
+        public static ObjectPool CreateObjectPool(GameObject obj, int size, bool canGrow, bool destroyOnLoad, bool disableAfterDelay = false)
         {
             GameObject poolObject = new GameObject(obj.name + "Pool");
             ObjectPool op = poolObject.AddComponent<ObjectPool>();
@@ -94,7 +91,6 @@ namespace BDArmory.Misc
             {
                 DontDestroyOnLoad(poolObject);
             }
-
             return op;
         }
     }

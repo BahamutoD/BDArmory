@@ -2,7 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using BDArmory.Core;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.UI;
@@ -142,8 +145,8 @@ namespace BDArmory
             }
 
             part.decouple(0);
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null)
+                BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
         [KSPEvent(guiActive = false, guiName = "Toggle Turret", guiActiveEditor = false)]
@@ -241,7 +244,7 @@ namespace BDArmory
             sfAudioSource.spatialBlend = 1;
 
             UpdateVolume();
-            BDArmorySettings.OnVolumeChange += UpdateVolume;
+            BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
         void UpdateVolume()
@@ -262,7 +265,7 @@ namespace BDArmory
             {
                 part.force_activate();
 
-                aimerTexture = BDArmorySettings.Instance.greenPointCircleTexture;
+                aimerTexture = BDArmorySetup.Instance.greenPointCircleTexture;
                 // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
 
 
@@ -275,7 +278,7 @@ namespace BDArmory
                 }
 
                 UpdateAudio();
-                BDArmorySettings.OnVolumeChange += UpdateAudio;
+                BDArmorySetup.OnVolumeChange += UpdateAudio;
             }
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
@@ -312,12 +315,14 @@ namespace BDArmory
                 }
             }
             SetupAudio();
+
+            blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
 
         IEnumerator DeployAnimRoutine(bool forward)
         {
             readyToFire = false;
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
 
             if (forward)
             {
@@ -349,7 +354,7 @@ namespace BDArmory
             deployAnimState.speed = 0;
 
             readyToFire = deployed;
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
         }
 
         void UpdateAudio()
@@ -362,7 +367,7 @@ namespace BDArmory
 
         void OnDestroy()
         {
-            BDArmorySettings.OnVolumeChange -= UpdateAudio;
+            BDArmorySetup.OnVolumeChange -= UpdateAudio;
         }
 
 
@@ -831,7 +836,7 @@ namespace BDArmory
 
         void Start()
         {
-            BDArmorySettings.numberOfParticleEmitters++;
+            BDArmorySetup.numberOfParticleEmitters++;
 
             rb = gameObject.AddComponent<Rigidbody>();
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
@@ -1032,7 +1037,7 @@ namespace BDArmory
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
-                if (BDArmorySettings.GameIsPaused)
+                if (BDArmorySetup.GameIsPaused)
                 {
                     if (audioSource.isPlaying)
                     {
@@ -1051,10 +1056,10 @@ namespace BDArmory
 
         void Detonate(Vector3 pos)
         {
-            BDArmorySettings.numberOfParticleEmitters--;
+            BDArmorySetup.numberOfParticleEmitters--;
 
-            ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, rb.velocity.normalized,
-                explModelPath, explSoundPath);
+            ExplosionFx.CreateExplosion(pos, BlastPhysicsUtils.CalculateExplosiveMass(blastRadius),
+                explModelPath, explSoundPath, true);
 
             IEnumerator<KSPParticleEmitter> emitter = pEmitters.AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())
@@ -1084,7 +1089,7 @@ namespace BDArmory
             audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
 
             UpdateVolume();
-            BDArmorySettings.OnVolumeChange += UpdateVolume;
+            BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
         void UpdateVolume()

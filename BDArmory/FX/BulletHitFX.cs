@@ -1,5 +1,7 @@
 using System.Collections.Generic;
-using BDArmory.UI;
+using BDArmory.Core;
+using BDArmory.Misc;
+using BDArmory.Core.Extension;
 using UniLinq;
 using UnityEngine;
 
@@ -13,14 +15,76 @@ namespace BDArmory.FX
         public Vector3 normal;
         float startTime;
         public bool ricochet;
+        public float caliber;
 
-        //static GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit"); 
-        //===TODO: static object wont load after scene reload
-        // JDK:  This issue is due to the fact tht recent changes in Unity will not allow dynamic assignment in the static constructor
-        // Declare the static var and then populate/Refresh it during awake or Start.
+        public GameObject bulletHoleDecalPrefab;
+        public static ObjectPool decalPool_small;
+        public static ObjectPool decalPool_large;
+        public static int maxPoolSize = 200;
+
+        public static void SetupShellPool()
+        {
+
+            GameObject templateShell_large;
+            templateShell_large =
+                    Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal2"));
+            templateShell_large.SetActive(false);
+            if (decalPool_large == null)
+                decalPool_large = ObjectPool.CreateObjectPool(templateShell_large, maxPoolSize, true, true);
+
+            GameObject templateShell_small;
+            templateShell_small =
+                Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal1"));
+            templateShell_small.SetActive(false);
+            if (decalPool_small == null)
+                decalPool_small = ObjectPool.CreateObjectPool(templateShell_small, maxPoolSize, true, true);
+            
+        }
+
+        public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float pentrationfactor)
+        {
+            ObjectPool decalPool_;
+            bool hasFuel_ = hitPart.HasFuel();
+
+            if (caliber >= 90f)
+            {
+                decalPool_ = decalPool_large;
+            }
+            else
+            {
+                decalPool_ = decalPool_small;
+            }            
+            
+            //front hit
+            GameObject decalFront = decalPool_.GetPooledObject();
+            if (decalFront != null && hitPart != null)
+            {
+                decalFront.transform.SetParent(hitPart.transform);
+                decalFront.transform.position = hit.point + new Vector3(0.25f, 0f, 0f);                               
+                decalFront.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+                decalFront.SetActive(true);
+
+                if(hasFuel_) DecalEmitters.AttachFlames(hit, hitPart);
+            }
+            //back hole if fully penetrated
+            if (pentrationfactor > 1)
+            {
+                GameObject decalBack = decalPool_.GetPooledObject();
+                if (decalBack != null && hitPart != null)
+                {
+                    decalBack.transform.SetParent(hitPart.transform);
+                    decalBack.transform.position = hit.point + new Vector3(-0.25f, 0f, 0f);
+                    decalBack.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+                    decalBack.SetActive(true);
+                }
+            }
+        }
 
         void Start()
         {
+            if (decalPool_large == null || decalPool_small == null)
+                SetupShellPool();
+
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
             IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
@@ -29,6 +93,7 @@ namespace BDArmory.FX
                 if (pe.Current == null) continue;
                 EffectBehaviour.AddParticleEmitter(pe.Current);
             }
+
             pe.Dispose();
 
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -41,15 +106,30 @@ namespace BDArmory.FX
 
             if (ricochet)
             {
-                string path = "BDArmory/Sounds/ricochet" + random;
-                hitSound = GameDatabase.Instance.GetAudioClip(path);
+                if (caliber <= 30)
+                {
+                    string path = "BDArmory/Sounds/ricochet" + random;
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
+                else
+                {
+                    string path = "BDArmory/Sounds/Artillery_Shot";
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
             }
             else
             {
-                string path = "BDArmory/Sounds/bulletHit" + random;
-                hitSound = GameDatabase.Instance.GetAudioClip(path);
+                if (caliber <= 30)
+                {
+                    string path = "BDArmory/Sounds/bulletHit" + random;
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
+                else
+                {
+                    string path = "BDArmory/Sounds/Artillery_Shot";
+                    hitSound = GameDatabase.Instance.GetAudioClip(path);
+                }
             }
-
 
             audioSource.PlayOneShot(hitSound);
         }
@@ -73,14 +153,43 @@ namespace BDArmory.FX
             }
         }
 
-        public static void CreateBulletHit(Vector3 position, Vector3 normalDirection, bool ricochet)
+        System.Collections.IEnumerator DisableBullet(GameObject bulletPool)
         {
-            GameObject go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
+            yield return new WaitForSeconds(30f);
+            if (bulletPool != null)
+            {
+                bulletPool.SetActive(false);
+            }
+
+        }
+
+        public static void CreateBulletHit(Part hitPart,Vector3 position, RaycastHit hit, Vector3 normalDirection,
+                                            bool ricochet,float caliber,float penetrationfactor)
+        {
+            
+            if (decalPool_large == null || decalPool_small == null) SetupShellPool();
+            GameObject go;
+
+            if (caliber <= 30)
+            {
+                go = GameDatabase.Instance.GetModel("BDArmory/Models/bulletHit/bulletHit");
+            }
+            else
+            {
+                go = GameDatabase.Instance.GetModel("BDArmory/FX/PenFX");
+            }
+
+            if(caliber !=0 && !hitPart.IgnoreDecal())
+            {
+                SpawnDecal(hit,hitPart,caliber,penetrationfactor); //No bullet decals for laser or ricochet
+            }
+
             GameObject newExplosion =
                 (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));
             newExplosion.SetActive(true);
             newExplosion.AddComponent<BulletHitFX>();
             newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;
+            newExplosion.GetComponent<BulletHitFX>().caliber = caliber;
             IEnumerator<KSPParticleEmitter> pe = newExplosion.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>().GetEnumerator();
             while (pe.MoveNext())
             {

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Armor;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
@@ -242,11 +243,13 @@ namespace BDArmory
         [KSPField]
         public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
         [KSPField]
-        public float bulletMass = 5.40133e-5f; //mass in tons - used for damage and recoil and drag
+        public float bulletMass = 0.3880f; //mass in KG - used for damage and recoil and drag
+        [KSPField]
+        public float caliber = 30; //caliber in mm, used for penetration calcs
         [KSPField]
         public float bulletDmgMult = 1; //Used for heat damage modifier for non-explosive bullets
         [KSPField]
-        public float bulletVelocity = 860; //velocity in meters/second
+        public float bulletVelocity = 1030; //velocity in meters/second
 
         [KSPField]
         public string bulletDragTypeName = "AnalyticEstimate";
@@ -262,13 +265,15 @@ namespace BDArmory
         public string bulletType = "def";
 
         [KSPField]
-        public string ammoName = "50CalAmmo"; //resource usage TODO: multi resource requirement
+        public string ammoName = "50CalAmmo"; //resource usage
         [KSPField]
         public float requestResourceAmount = 1; //amount of resource/ammo to deplete per shot
         [KSPField]
         public float shellScale = 0.66f; //scale of shell to eject
         [KSPField]
         public bool hasRecoil = true;
+        [KSPField]
+        public float recoilReduction = 1; //for reducing recoil on large guns with built in compensation
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"),
          UI_Toggle(disabledText = "None", enabledText = "In range")]
@@ -506,13 +511,10 @@ namespace BDArmory
             base.OnStart(state);
 
             ParseWeaponType();
-            ParseBulletDragType();
+            
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxEffectiveDistance);
-
-            bulletBallisticCoefficient = bulletMass / bulletDragArea * 1000; //1000 to convert from tonnes to kilograms
-
-            if (shortName == string.Empty)
+            if(shortName == string.Empty)
             {
                 shortName = part.partInfo.title;
             }
@@ -652,15 +654,26 @@ namespace BDArmory
                 fireState = Misc.Misc.SetUpSingleAnimation(fireAnimName, part);
                 fireState.enabled = false;
             }
-            bulletInfo = BulletInfo.bullets[bulletType];
+
+            SetupBullet();
+
             if (bulletInfo == null)
-                Debug.Log("[BDArmory]: Failed To load bullet!");
-            BDArmorySettings.OnVolumeChange += UpdateVolume;
+            {
+                if(BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: Failed To load bullet : " + bulletType);
+            }
+            else
+            {
+                if(BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: BulletType Loaded : " + bulletType);
+            }
+
+            BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
         void OnDestroy()
         {
-            BDArmorySettings.OnVolumeChange -= UpdateVolume;
+            BDArmorySetup.OnVolumeChange -= UpdateVolume;
         }
 
         void Update()
@@ -861,12 +874,12 @@ namespace BDArmory
                                 new Color(0, 1, 0, 0.6f));
                         }
 
-                        BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySettings.Instance.greenDotTexture,
+                        BDGUIUtils.DrawTextureOnWorldPos(pointingAtPosition, BDArmorySetup.Instance.greenDotTexture,
                             new Vector2(6, 6), 0);
 
                         if (atprAcquired)
                         {
-                            BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySettings.Instance.openGreenSquare,
+                            BDGUIUtils.DrawTextureOnWorldPos(targetPosition, BDArmorySetup.Instance.openGreenSquare,
                                 new Vector2(20, 20), 0);
                         }
                     }
@@ -884,11 +897,11 @@ namespace BDArmory
                 Texture2D texture;
                 if (Vector3.Angle(pointingAtPosition - transform.position, finalAimTarget - transform.position) < 1f)
                 {
-                    texture = BDArmorySettings.Instance.greenSpikedPointCircleTexture;
+                    texture = BDArmorySetup.Instance.greenSpikedPointCircleTexture;
                 }
                 else
                 {
-                    texture = BDArmorySettings.Instance.greenPointCircleTexture;
+                    texture = BDArmorySetup.Instance.greenPointCircleTexture;
                 }
                 BDGUIUtils.DrawTextureOnWorldPos(reticlePosition, texture, new Vector2(size, size), 0);
 
@@ -902,7 +915,7 @@ namespace BDArmory
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor && BDArmorySettings.showWeaponAlignment)
+            if (HighLogic.LoadedSceneIsEditor && BDArmorySetup.showWeaponAlignment)
             {
                 DrawAlignmentIndicator();
             }
@@ -915,7 +928,7 @@ namespace BDArmory
 
         private void Fire()
         {
-            if (BDArmorySettings.GameIsPaused)
+            if (BDArmorySetup.GameIsPaused)
             {
                 if (audioSource.isPlaying)
                 {
@@ -940,7 +953,7 @@ namespace BDArmory
                         //recoil
                         if (hasRecoil)
                         {
-                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass),
+                            part.rb.AddForceAtPosition((-fireTransform.forward) * (bulletVelocity * bulletMass/1000 * 0.85f * recoilReduction),
                                 fireTransform.position, ForceMode.Impulse);
                         }
 
@@ -1023,8 +1036,7 @@ namespace BDArmory
                                 IEnumerator<Transform> sTf = shellEjectTransforms.AsEnumerable().GetEnumerator();
                                 while (sTf.MoveNext())
                                 {
-                                    if (sTf.Current == null) continue;
-                                    //GameObject ejectedShell = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"), sTf.position + (part.rb.velocity*Time.fixedDeltaTime), sTf.rotation);
+                                    if (sTf.Current == null) continue;                                    
                                     GameObject ejectedShell = shellPool.GetPooledObject();
                                     ejectedShell.transform.position = sTf.Current.position;
                                     //+(part.rb.velocity*TimeWarp.fixedDeltaTime);
@@ -1038,16 +1050,31 @@ namespace BDArmory
                             }
                             effectsShot = true;
                         }
-
-
+                        
                         //firing bullet
                         GameObject firedBullet = bulletPool.GetPooledObject();
                         PooledBullet pBullet = firedBullet.GetComponent<PooledBullet>();
+
                         firedBullet.transform.position = fireTransform.position;
 
-                        pBullet.mass = bulletMass;
+                        pBullet.caliber = bulletInfo.caliber;
+                        pBullet.bulletVelocity = bulletInfo.bulletVelocity;
+                        pBullet.bulletMass = bulletInfo.bulletMass;
+                        pBullet.explosive = bulletInfo.explosive;
+                        pBullet.apBulletMod = bulletInfo.apBulletMod;                  
                         pBullet.bulletDmgMult = bulletDmgMult;
+
+                        //A = π x (Ø / 2)^2
+                        bulletDragArea = Mathf.PI * Mathf.Pow(caliber / 2f, 2f);
+
+                        //Bc = m/Cd * A
+                        bulletBallisticCoefficient = bulletMass / ((bulletDragArea / 1000000f) * 0.295f); // mm^2 to m^2
+                        
+                        //Bc = m/d^2 * i where i = 0.484
+                        //bulletBallisticCoefficient = bulletMass / Mathf.Pow(caliber / 1000, 2f) * 0.484f;
+
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
+
                         pBullet.flightTimeElapsed = 0;
                         pBullet.maxDistance = Mathf.Max(maxTargetingRange, maxEffectiveDistance); //limit distance to weapons maxeffective distance
 
@@ -1090,16 +1117,34 @@ namespace BDArmory
 
                         pBullet.bulletDrop = bulletDrop;
 
-                        if (eWeaponType == WeaponTypes.Cannon)
+                        if (eWeaponType == WeaponTypes.Cannon || bulletInfo.explosive)
                         {
-                            pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
-                            pBullet.explModelPath = explModelPath;
-                            pBullet.explSoundPath = explSoundPath;
-                            pBullet.blastPower = cannonShellPower;
-                            pBullet.blastHeat = cannonShellHeat;
-                            pBullet.radius = cannonShellRadius;
-                            pBullet.airDetonation = airDetonation;
-                            pBullet.detonationRange = detonationRange;
+                            if (bulletType == "def")
+                            {
+                                //legacy model, per weapon config
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;
+                                pBullet.explModelPath = explModelPath;
+                                pBullet.explSoundPath = explSoundPath;
+                                pBullet.blastPower = cannonShellPower;
+                                pBullet.blastHeat = cannonShellHeat;
+                                pBullet.radius = cannonShellRadius;
+                                pBullet.airDetonation = airDetonation;
+                                pBullet.detonationRange = detonationRange;
+                            }
+                            else
+                            {
+                                //use values from bullets.cfg
+                                pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;                                
+                                pBullet.explModelPath = explModelPath;
+                                pBullet.explSoundPath = explSoundPath;
+                                pBullet.tntMass = bulletInfo.tntMass;
+                                pBullet.blastPower = bulletInfo.blastPower;
+                                pBullet.blastHeat = bulletInfo.blastHeat;
+                                pBullet.radius = bulletInfo.blastRadius;
+                                pBullet.airDetonation = airDetonation;
+                                pBullet.detonationRange = detonationRange;
+                            }
+
                         }
                         else
                         {
@@ -1118,8 +1163,8 @@ namespace BDArmory
                                 pBullet.dragType = PooledBullet.BulletDragTypes.NumericalIntegration;
                                 break;
                         }
-                        pBullet.bullet = BulletInfo.bullets[bulletType];
 
+                        pBullet.bullet = BulletInfo.bullets[bulletType];
                         pBullet.gameObject.SetActive(true);
 
 
@@ -1217,7 +1262,7 @@ namespace BDArmory
                     //    lr.SetPosition(1, laserPoint);
 
 
-                    //    if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
+                    //    if (Time.time - timeFired > 6 / 120 && BDArmorySetup.BULLET_HITS)
                     //    {
                     //        BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
                     //    }
@@ -1243,7 +1288,7 @@ namespace BDArmory
                     //            p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
                     //                             TimeWarp.fixedDeltaTime);
 
-                    //            if (BDArmorySettings.INSTAKILL) p.AddDamage(p.maxTemp);
+                    //            if (BDArmorySetup.INSTAKILL) p.AddDamage(p.maxTemp);
                     //        }
                     //    }
                     //}
@@ -1255,25 +1300,29 @@ namespace BDArmory
 
                         //lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
                         lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
-                        lr.SetPosition(1, laserPoint);
-                    
-                    
-                        if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
-                        {
-                            BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
-                        }
+                        lr.SetPosition(1, laserPoint);                   
+
 
                         KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                         Part p = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
+
                         if (p && p.vessel && p.vessel != vessel)
                         {
                             float distance = hit.distance;
                             //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
                             p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
-                                             TimeWarp.fixedDeltaTime);
-                        
-                            if (BDArmorySettings.INSTAKILL) p.AddDamage(p.maxTemp);
+                                             TimeWarp.fixedDeltaTime
+                                             * 0.425f);
+
+                            if (BDArmorySettings.INSTAKILL) p.Destroy();
                         }
+
+
+                        if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
+                        {
+                            BulletHitFX.CreateBulletHit(p,hit.point, hit, hit.normal, false,0,0);
+                        }
+
                     }
                     else
                     {
@@ -1323,7 +1372,7 @@ namespace BDArmory
 
         bool WMgrAuthorized()
         {
-            MissileFire manager = BDArmorySettings.Instance.ActiveWeaponManager;
+            MissileFire manager = BDArmorySetup.Instance.ActiveWeaponManager;
             if (manager != null && manager.vessel == vessel)
             {
                 if (manager.hasSingleFired) return false;
@@ -1342,15 +1391,6 @@ namespace BDArmory
             {
                 Ray ray = new Ray(fireTransforms[i].position, fireTransforms[i].forward);
                 RaycastHit hit;
-                //if (Physics.Raycast(ray, out hit, maxTargetingRange, 2228224))
-                //{
-                //    KerbalEVA hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
-                //    if (hitEVA && hitEVA.part.vessel && hitEVA.part.vessel == vessel)
-                //    {
-                //        pointingAtSelf = true;
-                //        break;
-                //    }
-                //}
 
                 if (Physics.Raycast(ray, out hit, maxTargetingRange, 688129))
                 {
@@ -1708,8 +1748,7 @@ namespace BDArmory
                 }
                 else //ballistic/cannon weapons
                 {
-                    float simDeltaTime = 0.15f;
-
+                    float simDeltaTime = 0.155f;
 
                     Vector3 simVelocity = part.rb.velocity + (bulletVelocity * fireTransform.forward);
                     Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
@@ -1726,23 +1765,7 @@ namespace BDArmory
                         if (bulletDrop) simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
                         simCurrPos += simVelocity * simDeltaTime;
                         pointPositions.Add(simCurrPos);
-                        
-                        //if (Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit, Vector3.Distance(simPrevPos, simCurrPos), 2228224))
-                        //{
-                        //    Vessel hitVessel = null;
-                        //    try
-                        //    {
-                        //        hitVessel = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>().part.vessel;
-                        //    } catch (NullReferenceException)
-                        //    {
-                        //    }
 
-                        //    if (!hitVessel || (hitVessel && hitVessel == vessel))
-                        //    {
-                        //        bulletPrediction = hit.point;
-                        //        simulating = false;
-                        //    }
-                        //}
                         if (Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit,
                             Vector3.Distance(simPrevPos, simCurrPos), 688129))
                         {
@@ -1762,7 +1785,6 @@ namespace BDArmory
                                 simulating = false;
                             }
                         }
-
 
                         simPrevPos = simCurrPos;
 
@@ -2093,14 +2115,14 @@ namespace BDArmory
 
             weaponState = WeaponStates.Enabled;
             UpdateGUIWeaponState();
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
         }
 
         IEnumerator ShutdownRoutine()
         {
             weaponState = WeaponStates.PoweringDown;
             UpdateGUIWeaponState();
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
             if (turret)
             {
                 yield return new WaitForSeconds(0.2f);
@@ -2166,15 +2188,12 @@ namespace BDArmory
                     break;
             }
         }
-
-
+        
         void SetupBulletPool()
         {
-            GameObject templateBullet = new GameObject("Bullet");
-            templateBullet.SetActive(false);
+            GameObject templateBullet = new GameObject("Bullet");                                 
             templateBullet.AddComponent<PooledBullet>();
-
-
+            templateBullet.SetActive(false);
             bulletPool = ObjectPool.CreateObjectPool(templateBullet, 100, true, true);
         }
 
@@ -2184,14 +2203,30 @@ namespace BDArmory
                 (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/shell/model"));
             templateShell.SetActive(false);
             templateShell.AddComponent<ShellCasing>();
-
             shellPool = ObjectPool.CreateObjectPool(templateShell, 50, true, true);
         }
 
-
+        void SetupBullet()
+        {
+            bulletInfo = BulletInfo.bullets[bulletType];
+            if (bulletType != "def")
+            {
+                //use values from bullets.cfg if not the Part Module defaults are used
+                caliber = bulletInfo.caliber;
+                bulletVelocity = bulletInfo.bulletVelocity;
+                bulletMass = bulletInfo.bulletMass;
+                bulletDragTypeName = bulletInfo.bulletDragTypeName;
+                cannonShellHeat = bulletInfo.blastHeat;
+                cannonShellPower = bulletInfo.blastHeat;
+                cannonShellRadius = bulletInfo.blastRadius;      
+            }
+            ParseBulletDragType();
+        }
         #endregion
 
-        // RMB info in editor
+        #region RMB Info
+
+        
         public override string GetInfo()
         {
             StringBuilder output = new StringBuilder();
@@ -2238,5 +2273,7 @@ namespace BDArmory
             return output.ToString();
         }
 
+
+        #endregion
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Parts;
