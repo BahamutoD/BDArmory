@@ -12,6 +12,7 @@ using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
 using BDArmory.Core;
+using BDArmory.Core.Enum;
 
 namespace BDArmory
 {
@@ -576,13 +577,13 @@ namespace BDArmory
 
                     if (airDetonation)
                     {
-                        ExplosionFx.CreateExplosion(hit.point, GetExplosivePower(), explModelPath, explSoundPath, false, caliber);
+                        ExplosionFx.CreateExplosion(hit.point, GetExplosivePower(), explModelPath, explSoundPath, BlastProfile.Expanded, false, caliber);
                     }
                     else
                     {
                         ExplosionFx.CreateExplosion(hit.point - (ray.direction * 0.1f),
                                                     GetExplosivePower(),
-                                                    explModelPath, explSoundPath, false, caliber, null, direction: currentVelocity);
+                                                    explModelPath, explSoundPath,BlastProfile.Concentrate, false, caliber, null, direction: currentVelocity);
                     }
 
                     KillBullet();

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
@@ -746,7 +747,10 @@ namespace BDArmory.Parts
 		    DetonationDistanceState = DetonationDistanceStates.NotSafe;
             MissileState = MissileStates.Drop;
 		    part.crashTolerance = 9999;
-		    StartCoroutine(MissileRoutine());
+
+		    SetBlastProfile();
+
+            StartCoroutine(MissileRoutine());
 		}
 
 		IEnumerator DecoupleRoutine()
@@ -1790,10 +1794,18 @@ namespace BDArmory.Parts
 		        vessel.FindPartModulesImplementing<BDExplosivePart>()
 		            .ForEach(explosivePart => explosivePart.DetonateIfPossible());
 		    }
-		    else
+		    else //TODO: Remove this backguard compatibility
 		    {
 		        Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
-		        ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true,0, part);
+
+		        if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
+		        {
+		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, BlastProfile.Expanded, true, 0, part);
+                }
+		        else
+		        {
+		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, BlastProfile.Concentrate, true, 0, part);
+                }
             }
 		    if (part != null) part.Destroy();
 

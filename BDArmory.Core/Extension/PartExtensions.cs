@@ -22,25 +22,21 @@ namespace BDArmory.Core.Extension
         }
 
         public static void AddExplosiveDamage(this Part p,
-                                               float explosiveDamage,
-                                               float DMG_MULTIPLIER,
-                                               float EXP_DMG_MOD_MISSILE,
-                                               float EXP_DMG_MOD_BALLISTIC,                                               
+                                               float explosiveDamage,                                               
                                                float caliber,
                                                bool isMissile)
         {
-
             float damage_ = 0f;
             //////////////////////////////////////////////////////////
             // Explosive Hitpoints
             //////////////////////////////////////////////////////////
             if (isMissile)
             {
-                damage_ = (DMG_MULTIPLIER / 100) * EXP_DMG_MOD_MISSILE * explosiveDamage;
+                damage_ = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_MISSILE * explosiveDamage;
             }
             else
             {
-                damage_ = (DMG_MULTIPLIER / 100) * EXP_DMG_MOD_BALLISTIC * explosiveDamage;
+                damage_ = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_BALLISTIC * explosiveDamage;
             }               
 
             //////////////////////////////////////////////////////////

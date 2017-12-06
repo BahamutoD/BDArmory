@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
@@ -1058,7 +1059,7 @@ namespace BDArmory
             BDArmorySetup.numberOfParticleEmitters--;
 
             ExplosionFx.CreateExplosion(pos, BlastPhysicsUtils.CalculateExplosiveMass(blastRadius),
-                explModelPath, explSoundPath,true);
+                explModelPath, explSoundPath, BlastProfile.Concentrate, true);
 
             IEnumerator<KSPParticleEmitter> emitter = pEmitters.AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())

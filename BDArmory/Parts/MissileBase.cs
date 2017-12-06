@@ -9,6 +9,7 @@ using BDArmory.UI;
 using UnityEngine;
 using System.Text;
 using BDArmory.Core;
+using BDArmory.Core.Enum;
 
 namespace BDArmory.Parts
 {
@@ -964,6 +965,20 @@ namespace BDArmory.Parts
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: DetonationDistance = : " + DetonationDistance);
+            }
+        }
+
+        protected void SetBlastProfile()
+        {
+            if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
+            {
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart =>
+                    explosivePart.BlastProfile = BlastProfile.Expanded);
+            }
+            else
+            {
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart =>
+                    explosivePart.BlastProfile = BlastProfile.Concentrate);
             }
         }
     }

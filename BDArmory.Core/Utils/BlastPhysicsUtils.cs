@@ -1,4 +1,5 @@
 ﻿using System;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Module;
 using UnityEngine;
@@ -7,9 +8,23 @@ namespace BDArmory.Core.Utils
 {
     public static class BlastPhysicsUtils
     {
+        // This values represent percentage of the blast radius where we consider that the damage happens.
+        private const float BlastProfileConcentrate = 0.10f;
+        private const float BlastProfileExpanded = 0.40f;
 
-        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range, float damageMultiplier)
+
+        public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range, BlastProfile blastProfile)
         {
+            float blastProfilevalue;
+
+            if (blastProfile == BlastProfile.Concentrate)
+            {
+                blastProfilevalue = BlastProfileConcentrate;
+            }
+            else
+            {
+                blastProfilevalue = BlastProfileExpanded;
+            }
 
             float clampedDistanceToHit = ClampRange(explosiveMass, distanceToHit);
 
@@ -21,7 +36,7 @@ namespace BDArmory.Core.Utils
             double totalDamage = pressurePerMs * 2;
 
             //Calculation impulse
-            float effectiveDistance = Mathf.Clamp(range * 0.15f - distanceToHit , range * 0.01f, range * 0.15f);
+            float effectiveDistance = Mathf.Clamp(range * blastProfilevalue - distanceToHit , range * 0.01f, range * blastProfilevalue);
 
             float effectivePartArea = CalculateEffectiveBlastAreaToPart(effectiveDistance, part);
 
@@ -114,59 +129,6 @@ namespace BDArmory.Core.Utils
             return ii;
         }
 
-
-        private static double  CalculatePositivePhaseDuration(double scaledDistance, float explosiveCharge)
-        {
-            double t = Math.Log(scaledDistance) / Math.Log(10);
-            double cubeRootOfChargeWeight = Math.Pow(explosiveCharge, 1f/3f);
-            double ppd = 0;
-            if (scaledDistance <= 0.178)
-            {
-                return CalculatePositivePhaseDuration(0.179, explosiveCharge);
-            }
-            else if (scaledDistance > 0.178 && scaledDistance <= 1.01)
-            {
-                double U = 1.92946154068 + 5.25099193925 * t;
-                ppd = -0.614227603559 + 0.130143717675 * U +
-                      0.134872511954 * Math.Pow(U, 2) +
-                      0.0391574276906 * Math.Pow(U, 3) -
-                      0.00475933664702 * Math.Pow(U, 4) -
-                      0.00428144598008 * Math.Pow(U, 5);
-
-            }
-            //else if (scaledDistance > 1.01 && scaledDistance <= 2.78)
-            //{
-            //    double U = 2.12492525216 + 9.2996288611 * t;
-            //    ppd = 0.315409245784 - 0.0297944268976 * U +
-            //          0.030632954288 * Math.Pow(U, 2) +
-            //          0.0183405574086 * Math.Pow(U, 3) -
-            //          0.0173964666211 * Math.Pow(U, 4) -
-            //          0.00106321963633 * Math.Pow(U, 5) +
-            //          0.00562060030977 * Math.Pow(U, 6) +
-            //          0.0001618217499 * Math.Pow(U, 7) -
-            //          0.0006860188944 * Math.Pow(U, 8);
-
-            //}
-            else if (scaledDistance > 1.01 && scaledDistance <= 40.0)
-            {
-                double U = -3.53626218091 + 3.46349745571 * t;
-                ppd = 0.686906642409 + 0.0933035304009 * U -
-                      0.0005849420883 * Math.Pow(U, 2) -
-                      0.00226884995013 * Math.Pow(U, 3) -
-                      0.00295908591505 * Math.Pow(U, 4) +
-                      0.00148029868929 * Math.Pow(U, 5);
-
-            }
-            else if(scaledDistance > 40.0)
-            {
-                return CalculatePositivePhaseDuration(39.9, explosiveCharge);
-            }
-
-           double fppd = Math.Pow(10, ppd);
-           fppd = fppd * cubeRootOfChargeWeight;
-            Debug.Log("scaledDistance = " + scaledDistance + "; ppd = " + ppd+ ";fppd = "+fppd);
-            return fppd;
-        }
         /// <summary>
         /// Calculate newtons from the pressure in kPa and the surface on Square meters
         /// </summary>

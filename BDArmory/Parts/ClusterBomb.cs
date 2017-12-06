@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
@@ -289,7 +290,7 @@ namespace BDArmory.Parts
         void Detonate(Vector3 pos)
         {
             ExplosionFx.CreateExplosion(pos, blastForce,
-                subExplModelPath, subExplSoundPath,true);
+                subExplModelPath, subExplSoundPath,BlastProfile.Expanded,true);
             Destroy(gameObject); //destroy bullet on collision
         }
     }
