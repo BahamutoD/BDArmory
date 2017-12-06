@@ -967,19 +967,5 @@ namespace BDArmory.Parts
                 Debug.Log("[BDArmory]: DetonationDistance = : " + DetonationDistance);
             }
         }
-
-        protected void SetBlastProfile()
-        {
-            if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
-            {
-                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart =>
-                    explosivePart.BlastProfile = BlastProfile.Expanded);
-            }
-            else
-            {
-                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart =>
-                    explosivePart.BlastProfile = BlastProfile.Concentrate);
-            }
-        }
     }
 }

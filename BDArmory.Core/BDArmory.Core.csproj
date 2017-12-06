@@ -36,7 +36,6 @@
     <Compile Include="BuildingDamage.cs" />
     <Compile Include="Dependencies.cs" />
     <Compile Include="Enum\DamageOperation.cs" />
-    <Compile Include="Enum\BlastProfile.cs" />
     <Compile Include="Extension\PartExtensions.cs" />
     <Compile Include="Events\DamageEventArgs.cs" />
     <Compile Include="Extension\VesselExtensions.cs" />

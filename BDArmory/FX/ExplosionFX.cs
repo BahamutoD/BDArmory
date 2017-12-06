@@ -39,8 +39,6 @@ namespace BDArmory.FX
 
         private float particlesMaxEnergy;
 
-        public BlastProfile BlastProfile { get; set; }
-
         private void Start()
         {
             StartTime = Time.time;
@@ -310,7 +308,7 @@ namespace BDArmory.FX
                 {
                     BlastInfo blastInfo =
                         BlastPhysicsUtils.CalculatePartBlastEffects(part, realDistance,
-                            part.vessel.totalMass * 1000f, Power, Range, BlastProfile);
+                            part.vessel.totalMass * 1000f, Power, Range);
 
                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     {
@@ -321,7 +319,6 @@ namespace BDArmory.FX
                             " TotalPressure: {" + blastInfo.TotalPressure + "}," +
                             " Damage: {" + blastInfo.Damage + "}," +
                             " EffectiveArea: {" + blastInfo.EffectivePartArea + "}," +
-                            " PercentageOfPartAffected: {" +Math.Round(blastInfo.PercentageOfPartAffected) + "}," +
                             " Positive Phase duration: {" + blastInfo.PositivePhaseDuration + "}," +
                             " Vessel mass: {" + Math.Round(part.vessel.totalMass * 1000f) + "}," +
                             " TimeIndex: {" + TimeIndex + "}," +
@@ -370,7 +367,7 @@ namespace BDArmory.FX
             }
         }        
 
-        public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, BlastProfile blastProfile, bool isMissile = true,float caliber = 0, Part explosivePart = null, Vector3 direction = default(Vector3))
+        public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true,float caliber = 0, Part explosivePart = null, Vector3 direction = default(Vector3))
         {
             var go = GameDatabase.Instance.GetModel(explModelPath);
             var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
@@ -390,7 +387,6 @@ namespace BDArmory.FX
             eFx.Caliber = caliber;
             eFx.ExplosivePart = explosivePart;
             eFx.Direction = direction;
-            eFx.BlastProfile = blastProfile;
 
             if (tntMassEquivalent <= 5)
             {

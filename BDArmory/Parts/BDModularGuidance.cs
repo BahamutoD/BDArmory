@@ -748,8 +748,6 @@ namespace BDArmory.Parts
 
                 Misc.Misc.RefreshAssociatedWindows(part);
 
-                SetBlastProfile();
-
                 if (StageToTriggerOnProximity == 0)
                 {
                      ArmingExplosive();

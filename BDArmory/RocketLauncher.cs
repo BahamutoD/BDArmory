@@ -1059,7 +1059,7 @@ namespace BDArmory
             BDArmorySetup.numberOfParticleEmitters--;
 
             ExplosionFx.CreateExplosion(pos, BlastPhysicsUtils.CalculateExplosiveMass(blastRadius),
-                explModelPath, explSoundPath, BlastProfile.Concentrate, true);
+                explModelPath, explSoundPath, true);
 
             IEnumerator<KSPParticleEmitter> emitter = pEmitters.AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())

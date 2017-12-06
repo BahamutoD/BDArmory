@@ -41,8 +41,6 @@ namespace BDArmory.Parts
 
 	    public bool Armed { get; set; } = true;
 
-	    public BlastProfile BlastProfile { get; set; } = BlastProfile.Expanded;
-
         private double previousMass = -1;
 		
 		bool hasDetonated;
@@ -88,7 +86,7 @@ namespace BDArmory.Parts
 			if(!hasDetonated && Armed && part.vessel.speed > 10)
 			{
 			    ExplosionFx.CreateExplosion(part.transform.position, tntMass,
-			        "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", BlastProfile, true, 0, part);
+			        "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part);
                 hasDetonated = true;
 			}
 		}
@@ -97,7 +95,7 @@ namespace BDArmory.Parts
 	    {
 	        part.Destroy();
             ExplosionFx.CreateExplosion(part.transform.position, tntMass,
-	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", BlastProfile,true, 0, part);
+	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true, 0, part);
 
 	      
         }

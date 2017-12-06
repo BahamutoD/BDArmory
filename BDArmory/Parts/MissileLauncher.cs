@@ -748,8 +748,6 @@ namespace BDArmory.Parts
             MissileState = MissileStates.Drop;
 		    part.crashTolerance = 9999;
 
-		    SetBlastProfile();
-
             StartCoroutine(MissileRoutine());
 		}
 
@@ -1800,11 +1798,11 @@ namespace BDArmory.Parts
 
 		        if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
 		        {
-		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, BlastProfile.Expanded, true, 0, part);
+		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true, 0, part);
                 }
 		        else
 		        {
-		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, BlastProfile.Concentrate, true, 0, part);
+		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true, 0, part);
                 }
             }
 		    if (part != null) part.Destroy();
