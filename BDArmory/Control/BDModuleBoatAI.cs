@@ -15,6 +15,8 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
+		AIUtils.MomentumController yawController = new AIUtils.MomentumController();
+
 		float[] yawDerivatives = new float[7] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
 		float[] pitchDerivatives = new float[2];
 		float[] rollDerivatives = new float[4] { 0.05f, 0, 0, 0 };
@@ -140,7 +142,7 @@ namespace BDArmory.Control
 				while (dodgeVector == null && vs.MoveNext())
 				{
 					if (vs.Current == null || vs.Current == vessel) continue;
-					if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader.vessel == vessel) continue;
+					if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
 					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
 				}
 				vs.Dispose();
@@ -272,7 +274,11 @@ namespace BDArmory.Control
 			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
 			float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
 
-			SetYaw(s, yawAngle);
+			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
+			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, upDir));
+			
+			s.yaw = yawController.Update(orientation, yawAngle, vessel.horizontalSrfSpeed * 10 > CruiseSpeed);
+
 			PitchControl(s, pitchAngle);
 			RollControl(s, yawAngle, drift);
 
@@ -300,18 +306,18 @@ namespace BDArmory.Control
 				if (Mathf.Abs(d1) < yawDerivatives[6] - timeSmall * Mathf.Abs(d2) / 2)
 				{
 					timeToZero = 2 * Mathf.Sqrt((Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2)) / yawDerivatives[1]);
-					DebugLine("Triangle yaw.");
+					//DebugLine("Triangle yaw.");
 					
 				}
 				else
 				{
 					timeToZero = yawDerivatives[5] + (Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2) - yawDerivatives[6]) / yawDerivatives[0];
-					DebugLine("Trapezoid yaw.");
+					//DebugLine("Trapezoid yaw.");
 				}
 				float angleChangeTillStop = Mathf.Abs(d1) * timeToZero * 2 + timeSmall * d2 * d2 / 3; // if I'm not missing anything, the first term should be divided by two, not multiplied
 				                                                                                      // but since this works better, I'm probably missing something
 
-				DebugLine("timeToZero " + timeToZero + " angleToStop " + angleChangeTillStop + " timeSmall " + timeSmall);
+				//DebugLine("timeToZero " + timeToZero + " angleToStop " + angleChangeTillStop + " timeSmall " + timeSmall);
 
 				if (float.IsNaN(angleChangeTillStop))
 					s.yaw = -Mathf.Sign(d1); // if timeSmall is more than area, cancel momentum
@@ -326,7 +332,7 @@ namespace BDArmory.Control
 				//DebugLine("straightforward, turn the oppposite way");
 			}
 
-			DebugLine("d2 " + d2 + " yawDer1 " + yawDerivatives[1] + " yawDer6 " + yawDerivatives[6] + " d1 " + d1 + " or " + orientation + " yawDer2 " + yawDerivatives[2] + " yawDer3 " + yawDerivatives[3]);
+			//DebugLine("d2 " + d2 + " yawDer1 " + yawDerivatives[1] + " yawDer6 " + yawDerivatives[6] + " d1 " + d1 + " or " + orientation + " yawDer2 " + yawDerivatives[2] + " yawDer3 " + yawDerivatives[3]);
 
 			// update derivatives
 			const float decayFactor = 0.997f;
