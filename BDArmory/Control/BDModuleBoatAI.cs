@@ -15,7 +15,7 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
-		AIUtils.MomentumController yawController = new AIUtils.MomentumController();
+		AIUtils.MomentumController yawController;
 
 		float[] yawDerivatives = new float[7] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
 		float[] pitchDerivatives = new float[2];
@@ -88,6 +88,13 @@ namespace BDArmory.Control
 		#endregion
 
 		#region Unity events
+
+		protected override void Start()
+		{
+			base.Start();
+
+			yawController = new AIUtils.MomentumController();
+		}
 
 		protected override void OnGUI()
 		{

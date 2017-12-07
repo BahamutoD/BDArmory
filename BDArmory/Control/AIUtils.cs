@@ -107,10 +107,12 @@ namespace BDArmory.Control
 			/// How fast maximum calculated derivatives decay. Increase this if orientation wobbles too much, however it reduces immediacy of response. (valid values are between 0 and 1)
 			/// </summary>
 			public float DecayFactor { get; set; } = 0.997f;
+			public float UpdatePErrorThreshold { get; set; } = 4f;
 
 			private float previousOrientation = 0.001f;
 			private float previousFirstDerivative = 0.001f;
 			private float previousSecondDerivative = 0.001f;
+			private float previousError = 20f;
 
 			public float MaxSecondDerivative { get; private set; } = 1f;
 			public float MaxThirdDerivative { get; private set; } = 1f;
@@ -165,7 +167,7 @@ namespace BDArmory.Control
 				}
 
 				// update derivatives
-				if (updateMax) // so we don't get ridiculous 180 degree derivatives when accelerating from backwards drift
+				if (updateMax && Mathf.Abs(previousError) > UpdatePErrorThreshold)
 				{
 					if (Mathf.Abs(d2) > MaxSecondDerivative) MaxSecondDerivative = Mathf.Abs(d2);
 					else MaxSecondDerivative *= DecayFactor;
@@ -177,6 +179,7 @@ namespace BDArmory.Control
 				previousOrientation = currentOrientation;
 				previousFirstDerivative = d1;
 				previousSecondDerivative = d2;
+				previousError = error;
 
 				return controlInput;
 			}
