@@ -88,7 +88,7 @@ namespace BDArmory.Parts
                 for (int i = 0; i < localAnchors.Length; i++)
                 {
                     BDGUIUtils.DrawTextureOnWorldPos(parentTransform.TransformPoint(localAnchors[i]),
-                        BDArmorySettings.Instance.greenDotTexture, new Vector2(6, 6), 0);
+                        BDArmorySetup.Instance.greenDotTexture, new Vector2(6, 6), 0);
                 }
             }
         }

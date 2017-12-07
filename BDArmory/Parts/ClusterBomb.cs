@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
@@ -121,9 +122,9 @@ namespace BDArmory.Parts
                 subScript.enabled = true;
                 subScript.deployed = true;
                 subScript.sourceVessel = missileLauncher.SourceVessel;
-                subScript.blastForce = missileLauncher.blastPower;
+                subScript.blastForce = missileLauncher.GetTntMass();
                 subScript.blastHeat = missileLauncher.blastHeat;
-                subScript.blastRadius = missileLauncher.blastRadius;
+                subScript.blastRadius = missileLauncher.GetBlastRadius();
                 subScript.subExplModelPath = subExplModelPath;
                 subScript.subExplSoundPath = subExplSoundPath;
                 sub.Current.AddComponent<KSPForceApplier>();
@@ -148,7 +149,7 @@ namespace BDArmory.Parts
             part.explosionPotential = 0;
             missileLauncher.HasFired = false;
 
-            part.SetDamage(part.maxTemp*2);
+            part.Destroy();
         }
 
 
@@ -229,7 +230,7 @@ namespace BDArmory.Parts
 
                 //    float destroyChance = (rb.mass / hitPart.crashTolerance) *
                 //                              (rb.velocity - hit.rigidbody.velocity).magnitude * 8000;
-                //    if (BDArmorySettings.INSTAKILL)
+                //    if (BDArmorySetup.INSTAKILL)
                 //    {
                 //        destroyChance = 100;
                 //    }
@@ -246,34 +247,38 @@ namespace BDArmory.Parts
 
                 if (Physics.Raycast(ray, out hit, dist, 688129))
                 {
-                    Part hitPart = null;
-                    try
-                    {
-                        KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
-                        hitPart = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
-                    }
-                    catch (NullReferenceException)
-                    {
-                    }
+                    //Part hitPart = null;
+                    //try
+                    //{
+                    //    hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                    //}
+                    //catch (NullReferenceException)
+                    //{
+                    //}
 
-                    if (hitPart != null)
-                    {
-                        float destroyChance = (rb.mass/hitPart.crashTolerance)*
-                                              (rb.velocity - hit.rigidbody.velocity).magnitude*8000;
-                        if (BDArmorySettings.INSTAKILL)
-                        {
-                            destroyChance = 100;
-                        }
-                        Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
-                        if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
-                        {
-                            hitPart.SetDamage(hitPart.maxTemp*2);
-                        }
-                    }
-                    if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
-                    {
-                        Detonate(hit.point);
-                    }
+                    //if (hitPart != null)
+                    //{
+                    //    float destroyChance = (rb.mass/hitPart.crashTolerance)*
+                    //                          (rb.velocity - hit.rigidbody.velocity).magnitude*8000;
+                    //    if (BDArmorySetup.INSTAKILL)
+                    //    {
+                    //        destroyChance = 100;
+                    //    }
+                    //    Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
+                    //    if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
+                    //    {
+                    //        hitPart.SetDamage(hitPart.maxTemp + 100);
+                    //    }
+                    //}
+                    //if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
+                    //{
+                    //    Detonate(hit.point);
+                    //}
+
+
+                    //Simplyfing cluster point. One hit, one explosion.No auto part destruction
+
+                    Detonate(hit.point);
                 }
                 else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
                 {
@@ -284,8 +289,8 @@ namespace BDArmory.Parts
 
         void Detonate(Vector3 pos)
         {
-            ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, FlightGlobals.getUpAxis(),
-                subExplModelPath, subExplSoundPath);
+            ExplosionFx.CreateExplosion(pos, blastForce,
+                subExplModelPath, subExplSoundPath,true);
             Destroy(gameObject); //destroy bullet on collision
         }
     }

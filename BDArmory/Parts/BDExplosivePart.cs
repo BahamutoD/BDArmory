@@ -1,25 +1,24 @@
 using System;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
+using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory.Parts
 {
 	public class BDExplosivePart : PartModule
 	{
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius"),
-            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
-        public float blastRadius = 50;
-
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Power"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "TNT mass equivalent"),
         UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
-        public float blastPower = 25;
+        public float tntMass = 1;
 
-        [KSPField]
-		public float blastHeat = -1;
+	    [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius"),
+	     UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
+	    public float blastRadius = 10;
 
+      
         [KSPAction("Arm")]
         public void ArmAG(KSPActionParam param)
         {
@@ -70,37 +69,42 @@ namespace BDArmory.Parts
 
 	    private void CalculateBlast()
 	    {
-	        if (!part.Resources.Contains("HighExplosive")) return;
+	        if (part.Resources.Contains("HighExplosive"))
+	        {
+	            if (part.Resources["HighExplosive"].amount == previousMass) return;
 
-            if (part.Resources["HighExplosive"].amount == previousMass) return;
-           
-	        double explosiveMass = part.Resources["HighExplosive"].amount;   
+	            tntMass = (float) (part.Resources["HighExplosive"].amount * part.Resources["HighExplosive"].info.density * 1000) * 1.5f;
+      
+	            previousMass = part.Resources["HighExplosive"].amount;
+            }
 
-	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
-            blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
-
-            previousMass = part.Resources["HighExplosive"].amount;
-	    }
+	        blastRadius = BlastPhysicsUtils.CalculateBlastRange(tntMass);
+        }
 		
 		public void DetonateIfPossible()
 		{
 			if(!hasDetonated && Armed && part.vessel.speed > 10)
-			{   
-			   Detonate();
-               hasDetonated = true;
+			{
+			    ExplosionFx.CreateExplosion(part.transform.position, tntMass,
+			        "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part);
+                hasDetonated = true;
 			}
 		}
 
 	    private void Detonate()
 	    {
-	        if (part != null)
-	        {
-                part.SetDamage(part.maxTemp*2);
-	        }
-	        Vector3 position = part.vessel.CoM;
-	        ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(),
-	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
+	        part.Destroy();
+            ExplosionFx.CreateExplosion(part.transform.position, tntMass,
+	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true, 0, part);
+
+	      
+        }
+
+	    public float GetBlastRadius()
+	    {
+	        CalculateBlast();
+	        return blastRadius;
 	    }
-    }
+	}
 }
 

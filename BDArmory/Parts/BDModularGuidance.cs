@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Radar;
@@ -131,6 +132,11 @@ namespace BDArmory.Parts
                     AutoDestruction();
                 } 
             }
+        }
+
+        void Update()
+        {
+            CheckDetonationState();
         }
 
         private void CheckNextStage()
@@ -310,11 +316,6 @@ namespace BDArmory.Parts
 
             activeRadarRange = ActiveRadarRange;
 
-            if (this.DetonationDistance == -1)
-            {
-                this.DetonationDistance = GetBlastRadius();
-            }
-
 
             //TODO: BDModularGuidance should be configurable?
             heatThreshold = 50;
@@ -398,25 +399,15 @@ namespace BDArmory.Parts
             }
             else
             {
-                detonationDistance.maxValue = 500;
+                detonationDistance.maxValue = 100;
 
-                detonationDistance.stepIncrement = 10;
+                detonationDistance.stepIncrement = 1;
             }
         }
 
         private void OnStaticRangeUpdated(BaseField baseField, object o)
         {
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
-        }
-
-        private void DisablingExplosives()
-        {
-            vessel.FindPartModulesImplementing<BDExplosivePart>().Where( exp => exp != null && exp ).Select(exp => exp.Armed = false);
-        }
-
-        private void ArmingExplosive()
-        {
-            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = true);
         }
 
         private void UpdateTargetingMode(TargetingModes newTargetingMode)
@@ -487,9 +478,6 @@ namespace BDArmory.Parts
             }
            
         }        
-
-        private  Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
-        private Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
 
         private Vector3 AAMGuidance()
         {
@@ -707,24 +695,29 @@ namespace BDArmory.Parts
         #region KSP ACTIONS
         [KSPAction("Fire Missile")]
         public void AgFire(KSPActionParam param)
-        {
-            FireMissile();
+        {            
+            FireMissile();        
         }
 
         #endregion
 
         #region KSP EVENTS
-
+        [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
+        public void GuiFire()
+        {
+            FireMissile();
+        }
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire Missile", active = true)]
         public override void FireMissile()
         {
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null &&
+                BDArmorySetup.Instance.ActiveWeaponManager.vessel == vessel)
+            {
+                BDArmorySetup.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
+            }
+
             if (!HasFired)
             {
-                if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                {
-                     BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
-                }                   
-
                 GameEvents.onPartDie.Add(PartDie);
                 BDATargetManager.FiredMissiles.Add(this);
 
@@ -761,6 +754,11 @@ namespace BDArmory.Parts
                 }
                
                 HasFired = true;
+                DetonationDistanceState = DetonationDistanceStates.NotSafe;
+            }
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null)
+            {
+                BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
             }
         }
 
@@ -829,8 +827,8 @@ namespace BDArmory.Parts
                 ((ModuleAnchoredDecoupler) _targetDecoupler).Decouple();
             }
 
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null)
+                BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
      
@@ -860,7 +858,7 @@ namespace BDArmory.Parts
             while (vesselPart.MoveNext())
             {
                 if (vesselPart.Current == null) continue;
-                vesselPart.Current.SetDamage(vesselPart.Current.maxTemp * 2);
+                vesselPart.Current.Destroy();
             }
             vesselPart.Dispose();
         }

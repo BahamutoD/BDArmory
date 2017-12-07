@@ -6,6 +6,7 @@ using BDArmory.Shaders;
 using BDArmory.UI;
 using System;
 using System.Collections.Generic;
+using BDArmory.Core;
 using UnityEngine;
 
 namespace BDArmory.Radar

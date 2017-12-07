@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using BDArmory.Core;
 using UniLinq;
 
 namespace BDArmory.UI
@@ -23,7 +24,7 @@ namespace BDArmory.UI
 
             ConfigNode settings = fileNode.GetNode("BDAWindows");
 
-            IEnumerator<FieldInfo> field = typeof(BDArmorySettings).GetFields().AsEnumerable().GetEnumerator();
+            IEnumerator<FieldInfo> field = typeof(BDArmorySetup).GetFields().AsEnumerable().GetEnumerator();
             while (field.MoveNext())
             {
                 if (field.Current == null) continue;
@@ -42,14 +43,14 @@ namespace BDArmory.UI
 
             ConfigNode settings = fileNode.GetNode("BDAWindows");
 
-            IEnumerator<FieldInfo> field = typeof(BDArmorySettings).GetFields().AsEnumerable().GetEnumerator();
+            IEnumerator<FieldInfo> field = typeof(BDArmorySetup).GetFields().AsEnumerable().GetEnumerator();
             while (field.MoveNext())
             {
                 if (field.Current == null) continue;
                 if (!field.Current.IsDefined(typeof(BDAWindowSettingsField), false)) continue;
                 if (!settings.HasValue(field.Current.Name)) continue;
 
-                object parsedValue = BDArmorySettings.ParseValue(field.Current.FieldType, settings.GetValue(field.Current.Name));
+                object parsedValue = BDAPersistantSettingsField.ParseValue(field.Current.FieldType, settings.GetValue(field.Current.Name));
                 if (parsedValue != null)
                 {
                     field.Current.SetValue(null, parsedValue);
