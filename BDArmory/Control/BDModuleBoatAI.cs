@@ -15,8 +15,6 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
-		AIUtils.MomentumController yawController;
-
 		float[] yawDerivatives = new float[7] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
 		float[] pitchDerivatives = new float[2];
 		float[] rollDerivatives = new float[4] { 0.05f, 0, 0, 0 };
@@ -46,6 +44,14 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Bank angle"),
 			UI_FloatRange(minValue = -45f, maxValue = 45f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float BankAngle = 0;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
+			UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
+		public float steerMult = 6;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"),
+			UI_FloatRange(minValue = 1f, maxValue = 8f, stepIncrement = 0.1f, scene = UI_Scene.All)]
+		public float steerDamping = 3;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
 			UI_Toggle(enabledText = "Powered", disabledText = "Passive")]
@@ -88,13 +94,6 @@ namespace BDArmory.Control
 		#endregion
 
 		#region Unity events
-
-		protected override void Start()
-		{
-			base.Start();
-
-			yawController = new AIUtils.MomentumController();
-		}
 
 		protected override void OnGUI()
 		{
@@ -277,171 +276,23 @@ namespace BDArmory.Control
 				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad
 					* (DriveCarefully ? Mathf.Clamp01((MaxSpeed - (float)vessel.srfSpeed) / (MaxSpeed - CruiseSpeed)) : 1), 0);
 
-			float yawAngle = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
+			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
 			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
 			float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
 
-			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
-			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, upDir));
-			
-			s.yaw = yawController.Update(orientation, yawAngle, vessel.horizontalSrfSpeed * 10 > CruiseSpeed);
-
-			PitchControl(s, pitchAngle);
-			RollControl(s, yawAngle, drift);
-
-			if (DriveCarefully && Mathf.Abs(yawAngle) + Mathf.Abs(drift) > 5)
-				targetVelocity = Mathf.Clamp(targetVelocity, 0, CruiseSpeed);
-		}
-
-		void SetYaw(FlightCtrlState s, float angle)
-		{
-			var north = VectorUtils.GetNorthVector(vesselTransform.position, vessel.mainBody);
-			float orientation = VectorUtils.SignedAngle(north, vesselTransform.up, Vector3.Cross(north, upDir));
-			float d1 = (orientation - yawDerivatives[2]); //first derivative per update
-			if (Mathf.Abs(d1) > 180) d1 -= 360 * Mathf.Sign(d1); // angles
-			d1 = d1 / Time.deltaTime; // normalize to seconds? that probably is seconds
-			float d2 = d1 - yawDerivatives[3]; //second derivative
-			float d3 = d2 - yawDerivatives[4]; //third derivative
-
-			// calculate for how many frames we'd have to apply our current change in momentum to halt our momentum exactly when facing the target direction
-			// if we have more frames left, continue yawing in the same direction, otherwise apply counterforce in the opposite direction
-
-			if (angle * d1 < 0)
-			{
-				float timeToZero = 0; // not including timeSmall
-				float timeSmall = d2 / yawDerivatives[1] * Mathf.Sign(d1);
-				if (Mathf.Abs(d1) < yawDerivatives[6] - timeSmall * Mathf.Abs(d2) / 2)
-				{
-					timeToZero = 2 * Mathf.Sqrt((Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2)) / yawDerivatives[1]);
-					//DebugLine("Triangle yaw.");
-					
-				}
-				else
-				{
-					timeToZero = yawDerivatives[5] + (Mathf.Abs(d1) + timeSmall * Mathf.Abs(d2) - yawDerivatives[6]) / yawDerivatives[0];
-					//DebugLine("Trapezoid yaw.");
-				}
-				float angleChangeTillStop = Mathf.Abs(d1) * timeToZero * 2 + timeSmall * d2 * d2 / 3; // if I'm not missing anything, the first term should be divided by two, not multiplied
-				                                                                                      // but since this works better, I'm probably missing something
-
-				//DebugLine("timeToZero " + timeToZero + " angleToStop " + angleChangeTillStop + " timeSmall " + timeSmall);
-
-				if (float.IsNaN(angleChangeTillStop))
-					s.yaw = -Mathf.Sign(d1); // if timeSmall is more than area, cancel momentum
-				else if (angleChangeTillStop >= Mathf.Abs(angle))
-					s.yaw = -Mathf.Sign(angle);
-				else
-					s.yaw = Mathf.Sign(angle);
-			}
-			else
-			{
-				s.yaw = Mathf.Sign(angle); // if we're turning in the opposite side of the want we one, stop that
-				//DebugLine("straightforward, turn the oppposite way");
-			}
-
-			//DebugLine("d2 " + d2 + " yawDer1 " + yawDerivatives[1] + " yawDer6 " + yawDerivatives[6] + " d1 " + d1 + " or " + orientation + " yawDer2 " + yawDerivatives[2] + " yawDer3 " + yawDerivatives[3]);
-
-			// update derivatives
-			const float decayFactor = 0.997f;
-			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed) // so we don't get ridiculous 180 degree derivatives when accelerating from backwards drift
-			{
-				if (Mathf.Abs(d2) > yawDerivatives[0]) yawDerivatives[0] = Mathf.Abs(d2);
-				else yawDerivatives[0] *= decayFactor;
-				if (Mathf.Abs(d3) > yawDerivatives[1]) yawDerivatives[1] = Mathf.Abs(d3);
-				else yawDerivatives[1] *= decayFactor;
-				yawDerivatives[5] = yawDerivatives[0] / yawDerivatives[1] * 2; //time to full change
-				yawDerivatives[6] = yawDerivatives[0] * yawDerivatives[5] / 2; //triangle 2 (x2)
-			}
-
-			yawDerivatives[2] = orientation;
-			yawDerivatives[3] = d1;
-			yawDerivatives[4] = d2;
-
-			DebugLine("YawAngle " + angle + " maxD2 " + yawDerivatives[0] + " maxD3 " + yawDerivatives[1]);
-		}
-
-		void PitchControl(FlightCtrlState s, float angle)
-		{
 			float pitch = 90 - Vector3.Angle(vesselTransform.up, upDir);
-			float error = angle - pitch;
-			float change = pitch - pitchDerivatives[1];
-			float targetChange = Mathf.Clamp(error / 512, -0.01f, 0.01f);
+			float pitchError = pitchAngle - pitch;
 
-			float pitchOrder = Mathf.Clamp(pitchDerivatives[0] + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) * 0.02f, -1, 1); // very basic - change pitch input slowly until we're at the right pitch
+			float bank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
+			float rollError = drift / MaxDrift * BankAngle - bank;
 
-			if (float.IsNaN(pitchOrder) || vessel.horizontalSrfSpeed < CruiseSpeed / 10) pitchOrder = 0;
+			Vector3 localAngVel = vessel.angularVelocity;
+			s.roll = steerMult * 0.0015f * rollError - .10f * steerDamping * -localAngVel.y;
+			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
+			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
 
-			pitchDerivatives[0] = pitchOrder;
-			pitchDerivatives[1] = pitch;
-
-			s.pitch = pitchOrder;
-			//DebugLine(pitch+"PitchAngle " + angle.ToString() + " factor3 " + Mathf.Clamp(targetChange - change, -0.1f, 0.1f) + " retainedOrder " + pitchDerivatives[0] + "change" + change);
-		}
-
-		void RollControl(FlightCtrlState s, float yawAngle, float drift)
-		{
-			// we're gonna do this really simply (same way a person would do it):
-			// if we're turning and over the bank angle, panic and apply max input to roll 
-			// otherwise let SAS keep it stable
-			// since this is a ship, center of drag should pretty much always be below the center of mass, so the physics of turning will work to roll ship outwards, so only considering it one way
-
-			const float errorMargin = 4f; // this is how much deviation is still considered stable
-
-			if (vessel.horizontalSrfSpeed * 10 < CruiseSpeed) return;
-
-			float currentBank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
-			float rollMomentum = currentBank - rollDerivatives[2];
-			//DebugLine("calculated drift " + drift + " bank " + currentBank + " bank limit " + BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift));
-
-			if (Mathf.Abs(yawAngle) < errorMargin && Mathf.Abs(drift) < errorMargin)
-			{
-				//stable state
-				if (rollDerivatives[1] * currentBank > 0) //if overcorrected 
-				{
-					rollDerivatives[0] *= 0.5f;
-					debugString.Append("Overcorrecting, reducing factor: ");
-				}
-				else if (rollDerivatives[1] * currentBank < 0 && rollMomentum * currentBank > 0 && Mathf.Abs(rollMomentum) > Mathf.Abs(rollDerivatives[3])) //if undercorrected
-				{
-					rollDerivatives[0] /= 0.99f;
-					debugString.Append("Undercorrecting, increasing factor: ");
-				}
-					
-				if (Mathf.Abs(currentBank) > errorMargin)
-				{
-					s.roll = -currentBank * rollDerivatives[0];
-					rollDerivatives[1] = Mathf.Sign(-currentBank);
-					DebugLine("Reverting roll: " + -currentBank * rollDerivatives[0] + " factor " + rollDerivatives[0]);
-					return;
-				}
-			}
-			else
-			{
-				rollDerivatives[1] = 0;
-				if (BankAngle > 0)
-				{
-					if (currentBank * drift > 0 || Mathf.Abs(currentBank) < BankAngle * Mathf.Clamp01(Mathf.Abs(drift) / MaxDrift))
-					{
-						s.roll = -Math.Sign(drift);
-						DebugLine("Increasing roll: " + -Math.Sign(drift));
-						return;
-					}
-				}
-				else
-				{
-					if (currentBank * drift > 0 && -Mathf.Abs(currentBank) < BankAngle)
-					{
-						s.roll = -Math.Sign(drift);
-						DebugLine("Reducing roll: " + -Math.Sign(drift));
-						return;
-					}
-				}
-			}
-
-			rollDerivatives[2] = BankAngle;
-			rollDerivatives[3] = rollMomentum;
-
-			DebugLine("SAS roll control");
+			if (DriveCarefully && Mathf.Abs(yawError) + Mathf.Abs(drift) > 5)
+				targetVelocity = Mathf.Clamp(targetVelocity, 0, CruiseSpeed);
 		}
 
 		#endregion
