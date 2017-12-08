@@ -21,6 +21,11 @@ namespace BDArmory.FX
         public static ObjectPool decalPool_small;
         public static ObjectPool decalPool_large;
         public static int maxPoolSize = 200;
+        public static Dictionary<Vessel,List<float>> PartsOnFire = new Dictionary<Vessel, List<float>>(); 
+
+        private const int MaxFiresPerVessel = 2;
+        private const float FireLifeTimeInSeconds = 3f;
+
 
         public static void SetupShellPool()
         {
@@ -44,7 +49,6 @@ namespace BDArmory.FX
         public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float pentrationfactor)
         {
             ObjectPool decalPool_;
-            bool hasFuel_ = hitPart.HasFuel();
 
             if (caliber >= 90f)
             {
@@ -64,7 +68,10 @@ namespace BDArmory.FX
                 decalFront.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
                 decalFront.SetActive(true);
 
-                if(hasFuel_) DecalEmitters.AttachFlames(hit, hitPart);
+                if (CanFlamesBeAttached(hitPart))
+                {
+                    DecalEmitters.AttachFlames(hit, hitPart);
+                }
             }
             //back hole if fully penetrated
             if (pentrationfactor > 1)
@@ -78,6 +85,34 @@ namespace BDArmory.FX
                     decalBack.SetActive(true);
                 }
             }
+        }
+
+        private static bool CanFlamesBeAttached(Part hitPart)
+        {
+            if (!hitPart.HasFuel())
+            {
+                return false;
+            }
+            if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
+            {
+                var firesOnVessel = PartsOnFire[hitPart.vessel];
+
+                firesOnVessel.Where(x => (Time.time - x) > FireLifeTimeInSeconds).Select(x => firesOnVessel.Remove(x));
+                return false;
+            }
+
+            if (!PartsOnFire.ContainsKey(hitPart.vessel))
+            {
+                List<float> firesList = new List<float> {Time.time};
+
+                PartsOnFire.Add(hitPart.vessel, firesList);
+            }
+            else
+            {
+               PartsOnFire[hitPart.vessel].Add(Time.time);
+            }
+
+            return true;
         }
 
         void Start()
