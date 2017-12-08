@@ -84,6 +84,8 @@ namespace BDArmory.Control
 <b>Max drift</b> - maximum allowed angle between facing and velocity vector
 <b>Moving pitch</b> - the pitch level to maintain when moving at cruise speed
 <b>Bank angle</b> - the limit on roll when turning, positive rolls into turns
+<b>Steer Factor</b> - higher will make the AI apply more control input for the same desired rotation
+<b>Bank angle</b> - higher will make the AI apply more control input when it wants to stop rotation
 <b>Steering</b> - can the ship turn with engines off
 <b>Turning</b> - ""Careful"" will restrict yaw input when above cruise speed and instead slow down first
 <b>Attack vector</b> - does the ship attack from the front or the sides
