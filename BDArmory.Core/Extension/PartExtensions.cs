@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
-using System.Net;
-using BDArmory.Core.Module;
 using BDArmory.Core.Services;
+using BDArmory.Core.Utils;
 using UniLinq;
 using UnityEngine;
 
@@ -79,7 +78,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage_, 2));
+            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+ p.name+": " + Math.Round(damage_, 2));
 
         }
 
@@ -126,14 +125,34 @@ namespace BDArmory.Core.Extension
 
             if (p.HasArmor())
             {
-                double armorMass_ = p.GetArmorThickness();
-                double armorPCT_ = p.GetArmorPercentage();
-                
-                //Armor limits Damage
-                damage_ = damage_ - (damage_ * armorPCT_);
+                float armorMass_ = (float) p.GetArmorThickness();
+                float armorPCT_ = Mathf.Clamp(p.GetArmorPercentage() * 100f,1f,100f);
+                //float damageReduction = 0f;
 
-                //penalty for low caliber rounds,not if armor is very low
-                if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
+                //Armor limits Damage
+                //damage_ = damage_ - (damage_ * armorPCT_) * 1.25f;
+                //damageReduction = (Mathf.Clamp((float)Math.Log10(armorPCT_), 1f, 100f) + 5f);
+
+                if (BDAMath.Between(armorMass_, 1f, 49f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.455f;
+                }  
+                else if (BDAMath.Between(armorMass_, 50f, 100f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.465f;
+                }
+                else if (BDAMath.Between(armorMass_, 101f, 200f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.475f;
+                }
+                else if (BDAMath.Between(armorMass_, 201f, 500f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.485f;
+                }
+
+
+                    //penalty for low caliber rounds,not if armor is very low
+                    if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
             }
             
 
@@ -180,7 +199,7 @@ namespace BDArmory.Core.Extension
         public static void ReduceArmor(this Part p, double massToReduce)
         {
             if (!p.HasArmor()) return;
-            massToReduce = Math.Max(0.10,Math.Round(massToReduce, 2));
+            massToReduce = Math.Max(0.10, Math.Round(massToReduce, 2));
             Dependencies.Get<DamageService>().ReduceArmor_svc(p, (float) massToReduce );
             Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
         }

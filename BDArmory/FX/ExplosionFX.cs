@@ -234,7 +234,7 @@ namespace BDArmory.FX
                 pe.Dispose();
             }
 
-            if (ExplosionEvents.Count == 0 && TimeIndex > Math.Max(MaxTime,particlesMaxEnergy))
+            if (ExplosionEvents.Count == 0 && TimeIndex > Math.Max(MaxTime, particlesMaxEnergy))
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
@@ -413,7 +413,7 @@ namespace BDArmory.FX
             //////////////////////////////////////////////////////////
             if (rb == null) return;
             rb.AddForceAtPosition(force , position, ForceMode.VelocityChange);
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)            
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
         }
     }
