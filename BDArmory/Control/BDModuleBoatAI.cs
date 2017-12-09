@@ -18,6 +18,10 @@ namespace BDArmory.Control
 
 		int collisionDetectionTicker = 0;
 		Vector3? dodgeVector;
+		float weaveAdjustment = 0;
+		float weaveDirection = 1;
+		const float weaveLimit = 10;
+		const float weaveFactor = 2.5f;
 
 		Vector3 upDir;
 
@@ -92,7 +96,7 @@ namespace BDArmory.Control
 		}
 		#endregion
 
-		#region Unity events
+		#region events
 
 		protected override void OnGUI()
 		{
@@ -109,6 +113,7 @@ namespace BDArmory.Control
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + targetDirection * 10f, 2, Color.blue);
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right), 2, Color.green);
 		}
+
 		#endregion
 
 		#region Actual AI Pilot
@@ -121,18 +126,17 @@ namespace BDArmory.Control
 			// if we're not in water, cut throttle and panic
 			if (!vessel.Splashed) return;
 
-
 			targetVelocity = 0;
 			targetDirection = vesselTransform.up;
 			upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
-			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE
-				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange));
-
+			// pilot logic figures out what we're supposed to be doing, and sets the base state
 			PilotLogic();
+			// situational awareness modifies the base as best as it can
+			Tactical();
 
-			AttitudeControl(s);
-			AdjustThrottle(targetVelocity);
+			AttitudeControl(s); // move according to our targets
+			AdjustThrottle(targetVelocity); // set throttle according to our targets and movement
 		}
 
 		void PilotLogic()
@@ -151,7 +155,6 @@ namespace BDArmory.Control
 					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
 				}
 				vs.Dispose();
-				if (dodgeVector != null) DebugLine(dodgeVector.ToString());
 			}
 			else
 				collisionDetectionTicker--;
@@ -163,9 +166,6 @@ namespace BDArmory.Control
 				SetStatus($"Avoiding Collision");
 				return;
 			}
-
-			// Possible Improvement: check for incoming fire and try to dodge
-			// though ships are probably too slow for that, generally, so for now just try to keep moving
 
 			// check for enemy targets and engage
 			// not checking for guard mode, because if guard mode is off now you can select a target manually and if it is of opposing team, the AI will try to engage while you can man the turrets
@@ -251,6 +251,28 @@ namespace BDArmory.Control
 			targetDirection = vesselTransform.up;
 		}
 
+		void Tactical()
+		{
+			// enable RCS if we're in combat
+			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE
+				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange) || weaponManager.underFire || weaponManager.missileIsIncoming);
+
+			// if weaponManager thinks we're under fire, do the evasive dance
+			if (weaponManager.underFire || weaponManager.missileIsIncoming)
+			{
+				targetVelocity = MaxSpeed;
+				if (weaponManager.underFire || weaponManager.incomingMissileDistance < 2500)
+				{
+					if (Mathf.Abs(weaveAdjustment) + Time.deltaTime * weaveFactor > weaveLimit) weaveDirection *= -1;
+					weaveAdjustment += weaveFactor * weaveDirection * Time.deltaTime;
+				}
+				else
+				{
+					weaveAdjustment = 0;
+				}
+			}
+		}
+
 		void AdjustThrottle(float targetSpeed)
 		{
 			targetVelocity = Mathf.Clamp(targetVelocity, 0, MaxSpeed);
@@ -275,7 +297,7 @@ namespace BDArmory.Control
 				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad
 					* (DriveCarefully ? Mathf.Clamp01((MaxSpeed - (float)vessel.srfSpeed) / (MaxSpeed - CruiseSpeed)) : 1), 0);
 
-			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right);
+			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + weaveAdjustment;
 			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
 			float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
 
