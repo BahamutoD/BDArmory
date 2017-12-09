@@ -43,6 +43,8 @@ namespace BDArmory.Control
 		/// <returns>vector of location relative to your commandLeader</returns>
 		public static Vector3d GetLocalFormationPosition(this IBDAIControl ai, int index)
 		{
+			if (ai.commandLeader == null) return Vector3d.zero;
+
 			float indexF = (float)index;
 			indexF++;
 

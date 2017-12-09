@@ -15,10 +15,6 @@ namespace BDArmory.Control
 		Vector3d targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
-		float[] yawDerivatives = new float[7] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
-		float[] pitchDerivatives = new float[2];
-		float[] rollDerivatives = new float[4] { 0.05f, 0, 0, 0 };
-
 		int collisionDetectionTicker = 0;
 		Vector3? dodgeVector;
 
@@ -59,7 +55,7 @@ namespace BDArmory.Control
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Turning"),
 			UI_Toggle(enabledText = "Careful", disabledText = "Reckless")]
-		public bool DriveCarefully = true;
+		public bool DriveCarefully = false;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Attack vector"),
 			UI_Toggle(enabledText = "Broadside", disabledText = "Bow")]
@@ -361,7 +357,7 @@ namespace BDArmory.Control
 
 		Vector3d GetFormationPosition()
 		{
-			return commandLeader.vessel.ReferenceTransform.TransformPoint(this.GetLocalFormationPosition(commandFollowIndex));
+			return commandLeader.vessel.CoM + Quaternion.LookRotation(commandLeader.vessel.up, upDir) * this.GetLocalFormationPosition(commandFollowIndex);
 		}
 		#endregion
 	}
