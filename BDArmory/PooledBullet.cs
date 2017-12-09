@@ -264,7 +264,8 @@ namespace BDArmory
 
                 float dist = currentVelocity.magnitude * Time.deltaTime;
                 Ray ray = new Ray(currPosition, currentVelocity);
-                var hits = Physics.RaycastAll(ray, dist, 557057);
+                //var hits = Physics.RaycastAll(ray, dist, 557057);
+                var hits = Physics.RaycastAll(ray, dist, 688129);
                 if (hits.Length > 0)
                 {
                     var orderedHits = hits.OrderBy(x => x.distance);
@@ -294,7 +295,7 @@ namespace BDArmory
                             {
                                 hitPart = hitEVA.part;
                                 ApplyDamage(hitPart, hit, 1, 1);
-                                return;
+                                break;
                             }
 
                             if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
