@@ -97,7 +97,7 @@ namespace BDArmory.Core.Extension
 
         }
 
-        public static void AddDamage_Ballistic(this Part p,
+        public static void AddBallisticDamage(this Part p,
                                                float mass,
                                                float caliber,
                                                float multiplier,
@@ -148,19 +148,19 @@ namespace BDArmory.Core.Extension
 
                 if (BDAMath.Between(armorMass_, 1f, 49f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.455f;
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.465f;
                 }  
                 else if (BDAMath.Between(armorMass_, 50f, 100f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.465f;
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.475f;
                 }
                 else if (BDAMath.Between(armorMass_, 101f, 200f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.475f;
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.485f;
                 }
                 else if (BDAMath.Between(armorMass_, 201f, 500f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.485f;
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.500f;
                 }
 
 
@@ -350,9 +350,12 @@ namespace BDArmory.Core.Extension
 
         public static bool IgnoreDecal(this Part part)
         {
-            if(part.Modules.Contains("FSplanePropellerSpinner") ||
-               part.Modules.Contains("ModuleWheelBase") ||
-               part.Modules.Contains("KSPWheelBase"))
+            if(
+                part.Modules.Contains("FSplanePropellerSpinner") ||
+                part.Modules.Contains("ModuleWheelBase") ||
+                part.Modules.Contains("KSPWheelBase") ||
+                part.gameObject.GetComponentUpwards<KerbalEVA>()
+               )
             {
                 return true;
             }

@@ -294,6 +294,7 @@ namespace BDArmory
                             if (hitEVA != null)
                             {
                                 hitPart = hitEVA.part;
+                                impactVelocity = currentVelocity.magnitude + dragVelocity;
                                 ApplyDamage(hitPart, hit, 1, 1);
                                 break;
                             }
@@ -451,7 +452,7 @@ namespace BDArmory
                 BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, hasRichocheted, caliber,penetrationfactor);
             }
 
-            hitPart.AddDamage_Ballistic(bulletMass, caliber, multiplier, penetrationfactor,
+            hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
                                         bulletDmgMult,impactVelocity, explosive);
         }
 
