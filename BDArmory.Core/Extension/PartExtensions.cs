@@ -17,6 +17,7 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round(damage, 2);
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
+
             Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
 
         }
@@ -79,8 +80,11 @@ namespace BDArmory.Core.Extension
             //////////////////////////////////////////////////////////
 
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage_, 2));
 
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: Explosive Hitpoints Applied to " + p.name + ": " + Math.Round(damage_, 2));
+            }
         }
 
         public static void AddDamage_Ballistic(this Part p,
@@ -141,20 +145,12 @@ namespace BDArmory.Core.Extension
             // Do The Hitpoints
             //////////////////////////////////////////////////////////
             Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage_);
-            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage_, 2));
-        }
 
-
-        public static void AddForceToPart(Rigidbody rb, Vector3 force, Vector3 position,ForceMode mode)
-        {
-
-            //////////////////////////////////////////////////////////
-            // Add The force to part
-            //////////////////////////////////////////////////////////
-
-            rb.AddForceAtPosition(force, position, mode);
-            Debug.Log("[BDArmory]: Force Applied : " + Math.Round(force.magnitude,2));
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                 Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
+                 Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage_, 2));
+            }  
         }
 
         public static void Destroy(this Part p)
@@ -182,7 +178,11 @@ namespace BDArmory.Core.Extension
             if (!p.HasArmor()) return;
             massToReduce = Math.Max(0.10,Math.Round(massToReduce, 2));
             Dependencies.Get<DamageService>().ReduceArmor_svc(p, (float) massToReduce );
-            Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                  Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
+            }       
         }
         
         public static double GetArmorThickness(this Part p)
@@ -292,53 +292,5 @@ namespace BDArmory.Core.Extension
             return hasFuel;
 
         }
-
-        //public static float GetPartExternalScaleModifier(this Part part)
-        //{
-        //    double defaultScale = 1.0f;
-        //    double currentScale = 1.0f;
-        //    float rescaleFactor;
-
-        //    if (part.Modules.Contains("TweakScale"))
-        //    {
-        //        PartModule pM = part.Modules["TweakScale"];
-        //        if (pM.Fields.GetValue("currentScale") != null)
-        //        {
-        //            try
-        //            {
-        //                defaultScale = pM.Fields.GetValue<float>("defaultScale");
-        //                currentScale = pM.Fields.GetValue<float>("currentScale");
-        //            }
-        //            catch
-        //            {
-
-        //            }
-        //            rescaleFactor = (float)(currentScale / defaultScale);
-        //            return (float)(currentScale / defaultScale);
-        //        }
-        //    }
-        //    return 1.0f;
-        //}
-
-        //public static float GetVolumeWithArmor(this Part part, float Armor_)
-        //{
-        //    var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
-        //    return (boundsSize.x + (Armor_/1000)) * boundsSize.y * boundsSize.z;
-        //}
-
-        //public static float GetArmorMass(this Part part)
-        //{
-        //    // Density of Steel = 8050 kg/m^3 
-        //    // Mass = D x V
-
-        //    float originalVolume = GetVolume(part);
-        //    float withArmorVolume = GetVolumeWithArmor(part,(float) GetArmorThickness(part));
-        //    float armorVolume = withArmorVolume - originalVolume;
-
-        //    float armorMass = armorVolume * 8050f;
-
-        //    return armorMass;
-
-        //}
     }
 }
