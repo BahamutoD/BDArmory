@@ -413,8 +413,10 @@ namespace BDArmory.FX
             //////////////////////////////////////////////////////////
             if (rb == null) return;
             rb.AddForceAtPosition(force , position, ForceMode.VelocityChange);
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)            
-                Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                 Debug.Log("[BDArmory]: Force Applied | Explosive : " + Math.Round(force.magnitude, 2));
+            }   
         }
     }
 

@@ -70,7 +70,7 @@ namespace BDArmory.FX
 
                 if (CanFlamesBeAttached(hitPart))
                 {
-                    DecalEmitters.AttachFlames(hit, hitPart);
+                   AttachFlames(hit, hitPart);
                 }
             }
             //back hole if fully penetrated
@@ -241,6 +241,31 @@ namespace BDArmory.FX
                 }
             }
             pe.Dispose();
+        }
+
+        public static void AttachFlames(RaycastHit hit, Part hitPart)
+        {
+            var modelUrl = "BDArmory/FX/FlameEffect2/model";
+
+            var flameObject =
+                (GameObject)
+                Instantiate(
+                    GameDatabase.Instance.GetModel(modelUrl),
+                    hit.point + new Vector3(0.25f, 0f, 0f),
+                    Quaternion.identity);
+
+            flameObject.SetActive(true);
+            flameObject.transform.SetParent(hitPart.transform);
+            flameObject.AddComponent<DecalEmitterScript>();
+
+            foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
+            {
+                if (!pe.useWorldSpace) continue;
+
+                var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();
+                //gpe.Part = hitPart.Target;
+                gpe.Emit = true;
+            }
         }
     }
 }

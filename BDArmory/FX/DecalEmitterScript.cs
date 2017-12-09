@@ -17,16 +17,6 @@ namespace BDArmory.FX
 
         public void Start()
         {
-            foreach (var otherFlame in DecalEmitters.FlameObjects)
-            {
-                if (
-                    !((gameObject.transform.position - otherFlame.transform.position).sqrMagnitude
-                      < _maxCombineDistance * _maxCombineDistance)) continue;
-
-                Destroy(gameObject);
-                return;
-            }
-
             foreach (var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 var color = pe.material.color;
@@ -38,11 +28,15 @@ namespace BDArmory.FX
                 _highestEnergy = pe.maxEnergy;
                 EffectBehaviour.AddParticleEmitter(pe);
             }
-            DecalEmitters.FlameObjects.Add(gameObject);
         }
 
         public void FixedUpdate()//pe is particle emitter
         {
+            if (_destroyTimerStart != 0 && Time.time - _destroyTimerStart > _highestEnergy)
+            {
+                Destroy(gameObject);
+            }
+
             foreach (var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 var shrinkRate = pe.gameObject.name.Contains("smoke") ? _shrinkRateSmoke : _shrinkRateFlame;
@@ -60,11 +54,6 @@ namespace BDArmory.FX
                     lightComponent.intensity = Random.Range(0f, pe.maxSize / 6);
                 }
             }
-
-            if (_destroyTimerStart != 0 && Time.time - _destroyTimerStart > _highestEnergy)
-            {
-                Destroy(gameObject);
-            }
         }
 
         private void OnDestroy()
@@ -72,11 +61,6 @@ namespace BDArmory.FX
             foreach (var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 EffectBehaviour.RemoveParticleEmitter(pe);
-            }
-
-            if (DecalEmitters.FlameObjects.Contains(gameObject))
-            {
-                DecalEmitters.FlameObjects.Remove(gameObject);
             }
         }
     }
