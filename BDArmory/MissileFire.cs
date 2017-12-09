@@ -163,10 +163,10 @@ namespace BDArmory
         void ParseRippleOptions()
         {
             rippleDictionary = new Dictionary<string, RippleOption>();
-            Debug.Log("[BDArmory]: Parsing ripple options");
+            //Debug.Log("[BDArmory]: Parsing ripple options");
             if (!string.IsNullOrEmpty(rippleData))
             {
-                Debug.Log("[BDArmory]: Ripple data: " + rippleData);
+                //Debug.Log("[BDArmory]: Ripple data: " + rippleData);
                 try
                 {
                     IEnumerator<string> weapon = rippleData.Split(new char[] {';'}).AsEnumerable().GetEnumerator(); ;
@@ -185,13 +185,13 @@ namespace BDArmory
                 }
                 catch (Exception)
                 {
-                    Debug.Log("[BDArmory]: Ripple data was invalid.");
+                    //Debug.Log("[BDArmory]: Ripple data was invalid.");
                     rippleData = string.Empty;
                 }
             }
             else
             {
-                Debug.Log("[BDArmory]: Ripple data is empty.");
+                //Debug.Log("[BDArmory]: Ripple data is empty.");
             }
 
             if (vessel)

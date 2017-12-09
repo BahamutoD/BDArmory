@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
-using System.Net;
-using BDArmory.Core.Module;
 using BDArmory.Core.Services;
+using BDArmory.Core.Utils;
 using UniLinq;
 using UnityEngine;
 
@@ -16,8 +15,17 @@ namespace BDArmory.Core.Extension
             // Basic Add Hitpoints for compatibility
             //////////////////////////////////////////////////////////
             damage = (float)Math.Round(damage, 2);
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
-            Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
+
+            if (p.GetComponent<KerbalEVA>() != null)
+            {
+                ApplyHitPoints(p.GetComponent<KerbalEVA>(), damage);
+            }
+            else
+            {
+                Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                    Debug.Log("[BDArmory]: Standard Hitpoints Applied : " + damage);
+            }
 
         }
 
@@ -75,25 +83,29 @@ namespace BDArmory.Core.Extension
             }
 
             //////////////////////////////////////////////////////////
-            // Do The Hitpoints
+            //   Apply Hitpoints
             //////////////////////////////////////////////////////////
 
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
-            Debug.Log("[BDArmory]: Explosive Hitpoints Applied to "+p.name+": " + Math.Round(damage_, 2));
+            if (p.GetComponent<KerbalEVA>() != null)
+            {
+                ApplyHitPoints(p.GetComponent<KerbalEVA>(), (float)damage_);
+            }
+            else
+            {
+                ApplyHitPoints(p, damage_);
+            }
 
         }
 
-        public static void AddDamage_Ballistic(this Part p,
+        public static void AddBallisticDamage(this Part p,
                                                float mass,
                                                float caliber,
                                                float multiplier,
-                                               float penetrationfactor,
-                                               float DMG_MULTIPLIER,
+                                               float penetrationfactor,                                               
                                                float bulletDmgMult,
                                                float impactVelocity,
                                                bool explosive)
-        {
-            
+        {          
 
             //////////////////////////////////////////////////////////
             // Basic Kinetic Formula
@@ -102,7 +114,7 @@ namespace BDArmory.Core.Extension
             //1e-4 constant for adjusting MegaJoules for gameplay
 
             double damage_ = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
-                            * (DMG_MULTIPLIER / 100) * bulletDmgMult
+                            * (BDArmorySettings.DMG_MULTIPLIER / 100) * bulletDmgMult
                             * 1e-4f);
 
             //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
@@ -126,25 +138,99 @@ namespace BDArmory.Core.Extension
 
             if (p.HasArmor())
             {
-                double armorMass_ = p.GetArmorThickness();
-                double armorPCT_ = p.GetArmorPercentage();
-                
+                float armorMass_ = (float) p.GetArmorThickness();
+                float armorPCT_ = Mathf.Clamp(p.GetArmorPercentage() * 100f,1f,100f);
+                //float damageReduction = 0f;
+
                 //Armor limits Damage
-                damage_ = damage_ - (damage_ * armorPCT_);
+                //damage_ = damage_ - (damage_ * armorPCT_) * 1.25f;
+                //damageReduction = (Mathf.Clamp((float)Math.Log10(armorPCT_), 1f, 100f) + 5f);
 
-                //penalty for low caliber rounds,not if armor is very low
-                if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
+                if (BDAMath.Between(armorMass_, 1f, 49f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.465f;
+                }  
+                else if (BDAMath.Between(armorMass_, 50f, 100f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.475f;
+                }
+                else if (BDAMath.Between(armorMass_, 101f, 200f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.485f;
+                }
+                else if (BDAMath.Between(armorMass_, 201f, 500f))
+                {
+                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.500f;
+                }
+
+
+                    //penalty for low caliber rounds,not if armor is very low
+                    if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
             }
-            
+
 
             //////////////////////////////////////////////////////////
-            // Do The Hitpoints
+            //   Apply Hitpoints
             //////////////////////////////////////////////////////////
-            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, (float)damage_);
-            Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: "+ impactVelocity +" penetrationfactor: " + penetrationfactor);
-            Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage_, 2));
+
+            if (p.GetComponent<KerbalEVA>() != null)
+            {
+                ApplyHitPoints(p.GetComponent<KerbalEVA>(), (float)damage_);
+            }
+            else
+            {
+                ApplyHitPoints(p, (float)damage_, caliber, mass, mass, impactVelocity, penetrationfactor);
+            }           
+            
+                
         }
 
+        /// <summary>
+        /// Ballistic Hitpoint Damage
+        /// </summary>
+        public static void ApplyHitPoints(Part p, float damage_ ,float caliber,float mass, float multiplier, float impactVelocity,float penetrationfactor)
+        {
+
+            //////////////////////////////////////////////////////////
+            // Apply HitPoints Ballistic
+            //////////////////////////////////////////////////////////
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage_);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log("[BDArmory]: mass: " + mass + " caliber: " + caliber + " multiplier: " + multiplier + " velocity: " + impactVelocity + " penetrationfactor: " + penetrationfactor);
+                Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage_, 2));
+            }
+
+        }
+
+        /// <summary>
+        /// Explosive Hitpoint Damage
+        /// </summary>
+        public static void ApplyHitPoints(Part p, float damage)
+        {
+            //////////////////////////////////////////////////////////
+            // Apply Hitpoints / Explosive
+            //////////////////////////////////////////////////////////
+
+            Dependencies.Get<DamageService>().AddDamageToPart_svc(p, damage);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: Explosive Hitpoints Applied to " + p.name + ": " + Math.Round(damage, 2));
+        }
+
+        /// <summary>
+        /// Kerbal Hitpoint Damage
+        /// </summary>
+        public static void ApplyHitPoints(KerbalEVA kerbal, float damage)
+        {
+            //////////////////////////////////////////////////////////
+            // Apply Hitpoints / Kerbal
+            //////////////////////////////////////////////////////////
+
+            Dependencies.Get<DamageService>().AddDamageToKerbal_svc(kerbal, damage);
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: Hitpoints Applied to " + kerbal.name + ": " + Math.Round(damage, 2));
+
+        }
 
         public static void AddForceToPart(Rigidbody rb, Vector3 force, Vector3 position,ForceMode mode)
         {
@@ -180,9 +266,13 @@ namespace BDArmory.Core.Extension
         public static void ReduceArmor(this Part p, double massToReduce)
         {
             if (!p.HasArmor()) return;
-            massToReduce = Math.Max(0.10,Math.Round(massToReduce, 2));
+            massToReduce = Math.Max(0.10, Math.Round(massToReduce, 2));
             Dependencies.Get<DamageService>().ReduceArmor_svc(p, (float) massToReduce );
-            Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                  Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
+            }       
         }
         
         public static double GetArmorThickness(this Part p)
@@ -263,9 +353,12 @@ namespace BDArmory.Core.Extension
 
         public static bool IgnoreDecal(this Part part)
         {
-            if(part.Modules.Contains("FSplanePropellerSpinner") ||
-               part.Modules.Contains("ModuleWheelBase") ||
-               part.Modules.Contains("KSPWheelBase"))
+            if(
+                part.Modules.Contains("FSplanePropellerSpinner") ||
+                part.Modules.Contains("ModuleWheelBase") ||
+                part.Modules.Contains("KSPWheelBase") ||
+                part.gameObject.GetComponentUpwards<KerbalEVA>()
+               )
             {
                 return true;
             }
@@ -292,53 +385,5 @@ namespace BDArmory.Core.Extension
             return hasFuel;
 
         }
-
-        //public static float GetPartExternalScaleModifier(this Part part)
-        //{
-        //    double defaultScale = 1.0f;
-        //    double currentScale = 1.0f;
-        //    float rescaleFactor;
-
-        //    if (part.Modules.Contains("TweakScale"))
-        //    {
-        //        PartModule pM = part.Modules["TweakScale"];
-        //        if (pM.Fields.GetValue("currentScale") != null)
-        //        {
-        //            try
-        //            {
-        //                defaultScale = pM.Fields.GetValue<float>("defaultScale");
-        //                currentScale = pM.Fields.GetValue<float>("currentScale");
-        //            }
-        //            catch
-        //            {
-
-        //            }
-        //            rescaleFactor = (float)(currentScale / defaultScale);
-        //            return (float)(currentScale / defaultScale);
-        //        }
-        //    }
-        //    return 1.0f;
-        //}
-
-        //public static float GetVolumeWithArmor(this Part part, float Armor_)
-        //{
-        //    var boundsSize = PartGeometryUtil.MergeBounds(part.GetRendererBounds(), part.transform).size;
-        //    return (boundsSize.x + (Armor_/1000)) * boundsSize.y * boundsSize.z;
-        //}
-
-        //public static float GetArmorMass(this Part part)
-        //{
-        //    // Density of Steel = 8050 kg/m^3 
-        //    // Mass = D x V
-
-        //    float originalVolume = GetVolume(part);
-        //    float withArmorVolume = GetVolumeWithArmor(part,(float) GetArmorThickness(part));
-        //    float armorVolume = withArmorVolume - originalVolume;
-
-        //    float armorMass = armorVolume * 8050f;
-
-        //    return armorMass;
-
-        //}
     }
 }
