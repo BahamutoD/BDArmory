@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
+using BDArmory.Core;
 using UnityEngine;
 
 namespace BDArmory.Control

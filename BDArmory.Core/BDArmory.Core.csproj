@@ -19,7 +19,6 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -28,22 +27,28 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BDAPersistantSettingsField.cs" />
     <Compile Include="Bootstrapper.cs" />
+    <Compile Include="BuildingDamage.cs" />
     <Compile Include="Dependencies.cs" />
     <Compile Include="Enum\DamageOperation.cs" />
     <Compile Include="Extension\PartExtensions.cs" />
     <Compile Include="Events\DamageEventArgs.cs" />
     <Compile Include="Extension\VesselExtensions.cs" />
+    <Compile Include="Module\HitpointTracker.cs" />
     <Compile Include="Services\DamageService.cs" />
     <Compile Include="Interface\INotificableService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\NotificableService.cs" />
-    <Compile Include="Services\TemperatureDamageService.cs" />
+    <Compile Include="Services\ModuleDamageService.cs" />
+    <Compile Include="BDArmorySettings.cs" />
+    <Compile Include="Utils\BlastPhysicsUtils.cs" />
+    <Compile Include="Utils\BulletPhysics.cs" />
+    <Compile Include="Utils\DebugUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">

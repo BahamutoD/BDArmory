@@ -5,6 +5,7 @@ using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
+using BDArmory.Core;
 
 namespace BDArmory.Control
 {
@@ -178,6 +179,7 @@ namespace BDArmory.Control
 		double commandSpeed;
 		Vector3d commandHeading;
 
+        float finalMaxSteer = 1;
 
 		protected override void Start()
 		{
@@ -227,10 +229,8 @@ namespace BDArmory.Control
 				}
 			}
 		}
+		
 
-
-
-		float finalMaxSteer = 1;
 		protected override void AutoPilot(FlightCtrlState s)
 		{
 			finalMaxSteer = maxSteer;
@@ -248,7 +248,7 @@ namespace BDArmory.Control
 			useVelRollTarget = false;
 
 
-			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0||BDArmorySettings.PEACE_MODE))
+			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0 || BDArmorySettings.PEACE_MODE))
 			{
 				//s.mainThrottle = 0;
 				//vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
@@ -453,7 +453,6 @@ namespace BDArmory.Control
                 FlyExtend(s, lastTargetPosition);
 			}
 		}
-
 
 		bool FlyAvoidCollision(FlightCtrlState s)
 		{
@@ -710,8 +709,6 @@ namespace BDArmory.Control
 			}
 		}
 
-
-
 		void RegainEnergy(FlightCtrlState s, Vector3 direction)
 		{
             debugString.Append($"Regaining energy");
@@ -743,7 +740,6 @@ namespace BDArmory.Control
             return Mathf.Clamp01(limiter);
 		}
 
-		//test
 		Vector3 prevTargetDir;
 		bool useVelRollTarget;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)

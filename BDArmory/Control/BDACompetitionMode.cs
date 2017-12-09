@@ -71,10 +71,10 @@ namespace BDArmory.Control
         {
             competitionStarting = true;
             competitionStatus = "Competition: Pilots are taking off.";
-            Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>> pilots =
-                new Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>();
-            pilots.Add(BDArmorySettings.BDATeams.A, new List<IBDAIControl>());
-            pilots.Add(BDArmorySettings.BDATeams.B, new List<IBDAIControl>());
+            Dictionary<BDArmorySetup.BDATeams, List<IBDAIControl>> pilots =
+                new Dictionary<BDArmorySetup.BDATeams, List<IBDAIControl>>();
+            pilots.Add(BDArmorySetup.BDATeams.A, new List<IBDAIControl>());
+            pilots.Add(BDArmorySetup.BDATeams.B, new List<IBDAIControl>());
             List<Vessel>.Enumerator loadedVessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedVessels.MoveNext())
             {
@@ -102,7 +102,7 @@ namespace BDArmory.Control
             //clear target database so pilots don't attack yet
             BDATargetManager.ClearDatabase();
 
-            if (pilots[BDArmorySettings.BDATeams.A].Count == 0 || pilots[BDArmorySettings.BDATeams.B].Count == 0)
+            if (pilots[BDArmorySetup.BDATeams.A].Count == 0 || pilots[BDArmorySetup.BDATeams.B].Count == 0)
             {
                 Debug.Log("[BDArmory]: Unable to start competition mode - one or more teams is empty");
                 competitionStatus = "Competition: Failed!  One or more teams is empty.";
@@ -111,8 +111,8 @@ namespace BDArmory.Control
                 yield break;
             }
 
-            IBDAIControl aLeader = pilots[BDArmorySettings.BDATeams.A][0];
-            IBDAIControl bLeader = pilots[BDArmorySettings.BDATeams.B][0];
+            IBDAIControl aLeader = pilots[BDArmorySetup.BDATeams.A][0];
+            IBDAIControl bLeader = pilots[BDArmorySetup.BDATeams.B][0];
 
             aLeader.weaponManager.wingCommander.CommandAllFollow();
             bLeader.weaponManager.wingCommander.CommandAllFollow();
@@ -163,7 +163,7 @@ namespace BDArmory.Control
                 }
                 else
                 {
-                    Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>.KeyCollection.Enumerator keys = pilots.Keys.GetEnumerator();
+                    Dictionary<BDArmorySetup.BDATeams, List<IBDAIControl>>.KeyCollection.Enumerator keys = pilots.Keys.GetEnumerator();
                     while (keys.MoveNext())
                     {
                         List<IBDAIControl>.Enumerator ePilots = pilots[keys.Current].GetEnumerator();
@@ -187,7 +187,7 @@ namespace BDArmory.Control
             }
 
             //start the match
-            Dictionary<BDArmorySettings.BDATeams, List<IBDAIControl>>.KeyCollection.Enumerator pKeys = pilots.Keys.GetEnumerator();
+            Dictionary<BDArmorySetup.BDATeams, List<IBDAIControl>>.KeyCollection.Enumerator pKeys = pilots.Keys.GetEnumerator();
             while (pKeys.MoveNext())
             {
                 List<IBDAIControl>.Enumerator pPilots = pilots[pKeys.Current].GetEnumerator();
@@ -202,7 +202,7 @@ namespace BDArmory.Control
                     }
 
                     //report all vessels
-                    if (BDATargetManager.BoolToTeam(pPilots.Current.weaponManager.team) == BDArmorySettings.BDATeams.B)
+                    if (BDATargetManager.BoolToTeam(pPilots.Current.weaponManager.team) == BDArmorySetup.BDATeams.B)
                     {
                         BDATargetManager.ReportVessel(pPilots.Current.vessel, aLeader.weaponManager);
                     }

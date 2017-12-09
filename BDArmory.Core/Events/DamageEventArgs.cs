@@ -8,7 +8,8 @@ namespace BDArmory.Core.Events
     {
         public int VesselId { get; set; }
         public int PartId { get; set; }
-        public double Damage { get; set; }
+        public float Damage { get; set; }
+        public float Armor { get; set; }
         public DamageOperation Operation { get; set; }
     }
 }

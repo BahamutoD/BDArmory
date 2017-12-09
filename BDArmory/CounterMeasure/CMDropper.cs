@@ -6,6 +6,7 @@ using UniLinq;
 using UnityEngine;
 using System.Text;
 using System;
+using BDArmory.Core;
 
 namespace BDArmory.CounterMeasure
 {
@@ -86,7 +87,7 @@ namespace BDArmory.CounterMeasure
                 audioSource.spatialBlend = 1;
 
                 UpdateVolume();
-                BDArmorySettings.OnVolumeChange += UpdateVolume;
+                BDArmorySetup.OnVolumeChange += UpdateVolume;
             }
         }
 
@@ -100,7 +101,7 @@ namespace BDArmory.CounterMeasure
 
         void OnDestroy()
         {
-            BDArmorySettings.OnVolumeChange -= UpdateVolume;
+            BDArmorySetup.OnVolumeChange -= UpdateVolume;
         }
 
         public override void OnUpdate()

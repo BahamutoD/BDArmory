@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
+using BDArmory.Core;
 using UnityEngine;
 using System.Text;
 
@@ -196,7 +197,7 @@ namespace BDArmory.Control
 			}
 		}
 
-		protected virtual void OnToggleTeam(MissileFire mf, BDArmorySettings.BDATeams team)
+		protected virtual void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
 		{
 			if (mf.vessel == vessel || (commandLeader && commandLeader.vessel == mf.vessel))
 			{
