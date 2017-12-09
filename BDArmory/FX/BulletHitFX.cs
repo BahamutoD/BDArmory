@@ -21,6 +21,10 @@ namespace BDArmory.FX
         public static ObjectPool decalPool_small;
         public static ObjectPool decalPool_large;
         public static int maxPoolSize = 200;
+        public static Dictionary<Vessel,List<float>> PartsOnFire = new Dictionary<Vessel, List<float>>(); 
+
+        private const int MaxFiresPerVessel = 2;
+        private const float FireLifeTimeInSeconds = 3f;
 
         public static void SetupShellPool()
         {
@@ -44,7 +48,6 @@ namespace BDArmory.FX
         public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float pentrationfactor)
         {
             ObjectPool decalPool_;
-            bool hasFuel_ = hitPart.HasFuel();
 
             if (caliber >= 90f)
             {
@@ -64,7 +67,10 @@ namespace BDArmory.FX
                 decalFront.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
                 decalFront.SetActive(true);
 
-                if(hasFuel_) DecalEmitters.AttachFlames(hit, hitPart);
+                if (CanFlamesBeAttached(hitPart))
+                {
+                   AttachFlames(hit, hitPart);
+                }
             }
             //back hole if fully penetrated
             if (pentrationfactor > 1)
@@ -80,6 +86,34 @@ namespace BDArmory.FX
             }
         }
 
+        private static bool CanFlamesBeAttached(Part hitPart)
+        {
+            if (!hitPart.HasFuel())
+            {
+                return false;
+            }
+            if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
+            {
+                var firesOnVessel = PartsOnFire[hitPart.vessel];
+
+                firesOnVessel.Where(x => (Time.time - x) > FireLifeTimeInSeconds).Select(x => firesOnVessel.Remove(x));
+                return false;
+            }
+
+            if (!PartsOnFire.ContainsKey(hitPart.vessel))
+            {
+                List<float> firesList = new List<float> {Time.time};
+
+                PartsOnFire.Add(hitPart.vessel, firesList);
+            }
+            else
+            {
+               PartsOnFire[hitPart.vessel].Add(Time.time);
+            }
+
+            return true;
+        }
+
         void Start()
         {
             if (decalPool_large == null || decalPool_small == null)
@@ -87,6 +121,7 @@ namespace BDArmory.FX
 
             startTime = Time.time;
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
+
             IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
             while (pe.MoveNext())
             {
@@ -136,7 +171,11 @@ namespace BDArmory.FX
 
         void Update()
         {
-            if (Time.time - startTime > 0.03f)
+            if (Time.time - startTime > 2f)
+            {
+                Destroy(gameObject);
+            }
+            else if (Time.time - startTime > 0.03f)
             {
                 IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
                 while (pe.MoveNext())
@@ -146,21 +185,6 @@ namespace BDArmory.FX
                 }
                 pe.Dispose();
             }
-
-            if (Time.time - startTime > 2f)
-            {
-                Destroy(gameObject);
-            }
-        }
-
-        System.Collections.IEnumerator DisableBullet(GameObject bulletPool)
-        {
-            yield return new WaitForSeconds(30f);
-            if (bulletPool != null)
-            {
-                bulletPool.SetActive(false);
-            }
-
         }
 
         public static void CreateBulletHit(Part hitPart,Vector3 position, RaycastHit hit, Vector3 normalDirection,
@@ -206,6 +230,31 @@ namespace BDArmory.FX
                 }
             }
             pe.Dispose();
+        }
+
+        public static void AttachFlames(RaycastHit hit, Part hitPart)
+        {
+            var modelUrl = "BDArmory/FX/FlameEffect2/model";
+
+            var flameObject =
+                (GameObject)
+                Instantiate(
+                    GameDatabase.Instance.GetModel(modelUrl),
+                    hit.point + new Vector3(0.25f, 0f, 0f),
+                    Quaternion.identity);
+
+            flameObject.SetActive(true);
+            flameObject.transform.SetParent(hitPart.transform);
+            flameObject.AddComponent<DecalEmitterScript>();
+
+            foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
+            {
+                if (!pe.useWorldSpace) continue;
+
+                var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();
+                //gpe.Part = hitPart.Target;
+                gpe.Emit = true;
+            }
         }
     }
 }
