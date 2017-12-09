@@ -643,10 +643,19 @@ namespace BDArmory
 
         public void UpdateWidth(Camera c, float resizeFactor)
         {
+            if (c == null)
+            {
+                return;
+            }
+            if (bulletTrail == null)
+            {
+                return;
+            }
             if (!gameObject.activeInHierarchy)
             {
                 return;
             }
+
 
             float fov = c.fieldOfView;
             float factor = (fov / 60) * resizeFactor *
