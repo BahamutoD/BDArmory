@@ -540,7 +540,7 @@ namespace BDArmory
                 return;
             }
 
-            int rocketsLeft = (int) Math.Floor(rocketResource.amount);
+            int rocketsLeft = (int)Math.Floor(rocketResource.amount);
 
             if (rocketsLeft >= 1)
             {

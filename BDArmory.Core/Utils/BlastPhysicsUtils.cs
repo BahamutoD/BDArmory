@@ -48,7 +48,7 @@ namespace BDArmory.Core.Utils
 
         private static float ClampRange (float explosiveCharge , float distanceToHit)
         {
-            float cubeRootOfChargeWeight = (float) Math.Pow(explosiveCharge, 1f / 3f);
+            float cubeRootOfChargeWeight = (float)Math.Pow(explosiveCharge, 1f / 3f);
 
             if (distanceToHit < 0.0674f * cubeRootOfChargeWeight)
             {
@@ -118,7 +118,7 @@ namespace BDArmory.Core.Utils
         /// <returns>explosive range in meters </returns>
         public static float CalculateExplosiveMass(float range)
         {
-            return (float) Math.Pow((range / 14.8f), 3);
+            return (float)Math.Pow((range / 14.8f), 3);
         }
 
     }

@@ -53,6 +53,22 @@ namespace BDArmory.Core.Services
             });
         }
 
+        public override void AddDamageToKerbal_svc(KerbalEVA kerbal, float damage)
+        {
+            var damageModule = kerbal.part.Modules.GetModule<HitpointTracker>();
+
+            damageModule.AddDamageToKerbal(kerbal,damage);
+
+            PublishEvent(new DamageEventArgs()
+            {
+                VesselId = kerbal.part.vessel.GetInstanceID(),
+                PartId = kerbal.part.GetInstanceID(),
+                Damage = damage,
+                Operation = DamageOperation.Add
+            });
+
+        }
+
         public override float GetPartDamage_svc(Part p)
         {
             return p.Modules.GetModule<HitpointTracker>().Hitpoints;
