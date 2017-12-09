@@ -146,26 +146,20 @@ namespace BDArmory.Core.Extension
                 //damage_ = damage_ - (damage_ * armorPCT_) * 1.25f;
                 //damageReduction = (Mathf.Clamp((float)Math.Log10(armorPCT_), 1f, 100f) + 5f);
 
-                if (BDAMath.Between(armorMass_, 1f, 49f))
+                if (BDAMath.Between(armorMass_, 100f, 200f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.465f;
+                    damage_ *= 0.215f;
                 }  
-                else if (BDAMath.Between(armorMass_, 50f, 100f))
+                else if (BDAMath.Between(armorMass_, 200f, 400f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.475f;
+                    damage_ *= 0.205f;
                 }
-                else if (BDAMath.Between(armorMass_, 101f, 200f))
+                else if (BDAMath.Between(armorMass_, 400f, 500f))
                 {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.485f;
+                    damage_ *= 0.200f;
                 }
-                else if (BDAMath.Between(armorMass_, 201f, 500f))
-                {
-                    damage_ = damage_ - (damage_ * armorPCT_ / 100f) * 1.500f;
-                }
-
-
                     //penalty for low caliber rounds,not if armor is very low
-                    if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
+                    //if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
             }
 
 
