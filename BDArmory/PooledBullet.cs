@@ -200,7 +200,7 @@ namespace BDArmory
             }
         }
 
-        void Update()
+        void FixedUpdate()
         {
             float distanceFromStart = Vector3.Distance(transform.position, startPosition);
             if (!gameObject.activeInHierarchy)
@@ -209,7 +209,7 @@ namespace BDArmory
             }
 
             //calculate flight time for drag purposes
-            flightTimeElapsed += Time.deltaTime;
+            flightTimeElapsed += Time.fixedDeltaTime;
 
             //Drag types currently only affect Impactvelocity 
             //Numerical Integration is currently Broken
@@ -230,7 +230,7 @@ namespace BDArmory
 
                 bulletTrail.SetPosition(0,
                     transform.position +
-                    (currentVelocity * tracerDeltaFactor * 0.25f * Time.deltaTime));
+                    (currentVelocity * tracerDeltaFactor * 0.25f * Time.fixedDeltaTime));
             }
             else
             {
@@ -262,7 +262,7 @@ namespace BDArmory
                 hasRichocheted = false;
                 penTicker = 0;
 
-                float dist = currentVelocity.magnitude * Time.deltaTime;
+                float dist = currentVelocity.magnitude * Time.fixedDeltaTime;
                 Ray ray = new Ray(currPosition, currentVelocity);
                 //var hits = Physics.RaycastAll(ray, dist, 557057);
                 var hits = Physics.RaycastAll(ray, dist, 688129);
@@ -351,7 +351,7 @@ namespace BDArmory
                                 {
                                     prevPosition = currPosition;
                                     //move bullet            
-                                    transform.position += (currentVelocity * Time.deltaTime) / 3;
+                                    transform.position += (currentVelocity * Time.fixedDeltaTime) / 3;
 
                                     ExplosiveDetonation(hitPart, hit, ray);
                                     hasDetonated = true;
@@ -437,7 +437,7 @@ namespace BDArmory
                 currentVelocity += gravity_ * TimeWarp.deltaTime;
             }
 
-            transform.position += currentVelocity * Time.deltaTime;
+            transform.position += currentVelocity * Time.fixedDeltaTime;
         }
 
         private void ApplyDamage(Part hitPart, RaycastHit hit, float multiplier, float penetrationfactor)
@@ -525,7 +525,7 @@ namespace BDArmory
                 //updating impact velocity
                 //impactVelocity = currentVelocity.magnitude;
 
-                flightTimeElapsed -= Time.deltaTime;
+                flightTimeElapsed -= Time.fixedDeltaTime;
                 prevPosition = transform.position;
             }
             else
