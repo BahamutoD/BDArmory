@@ -10,7 +10,7 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
         [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;                 //TODO: remove all references to this so it can be deprecated!
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
-        [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;            //CAN BE CONFIGURED, BUT HAS NO ACTUAL EFFECT ANYWHERE. SUGGEST TO REMOVE.
+        [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;  //CAN BE CONFIGURED, BUT HAS NO ACTUAL EFFECT ANYWHERE. SUGGEST TO REMOVE.
         [BDAPersistantSettingsField] public static bool INFINITE_AMMO;
         [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LINES;
         [BDAPersistantSettingsField] public static bool DRAW_DEBUG_LABELS;
@@ -37,7 +37,7 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;                  //DEPRECATED, NOT USED ANYWHERE!
 
         [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100f;
-        [BDAPersistantSettingsField] public static float HITPOINT_MULTIPLIER = 1f;
+        [BDAPersistantSettingsField] public static float HITPOINT_MULTIPLIER = 2.0f;
         [BDAPersistantSettingsField] public static float EXP_DMG_MOD_BALLISTIC;
         [BDAPersistantSettingsField] public static float EXP_DMG_MOD_MISSILE;
         [BDAPersistantSettingsField] public static float EXP_IMP_MOD;

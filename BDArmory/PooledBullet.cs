@@ -277,17 +277,26 @@ namespace BDArmory
 
                             RaycastHit hit = hitsEnu.Current;
                             Part hitPart = null;
+                            KerbalEVA hitEVA = null;
 
                             try
                             {
                                 hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                                hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                             }
                             catch (NullReferenceException)
                             {
                                 Debug.Log("[BDArmory]:NullReferenceException for Hit");
                                 return;
                             }
-                            //if (hit.collider.name.Contains("runway")) return;
+
+                            if (hitEVA != null)
+                            {
+                                hitPart = hitEVA.part;
+                                ApplyDamage(hitPart, hit, 1, 1);
+                                return;
+                            }
+
                             if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
 
                             float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
@@ -442,9 +451,7 @@ namespace BDArmory
             }
 
             hitPart.AddDamage_Ballistic(bulletMass, caliber, multiplier, penetrationfactor,
-                                        BDArmorySettings.DMG_MULTIPLIER, bulletDmgMult,
-                                        impactVelocity, explosive);
-
+                                        bulletDmgMult,impactVelocity, explosive);
         }
 
         private void CalculateDragNumericalIntegration()
