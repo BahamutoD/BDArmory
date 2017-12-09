@@ -268,8 +268,11 @@ namespace BDArmory.Core.Extension
             if (!p.HasArmor()) return;
             massToReduce = Math.Max(0.10, Math.Round(massToReduce, 2));
             Dependencies.Get<DamageService>().ReduceArmor_svc(p, (float) massToReduce );
+
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
+            {
+                  Debug.Log("[BDArmory]: Armor Removed : " + massToReduce);
+            }       
         }
         
         public static double GetArmorThickness(this Part p)

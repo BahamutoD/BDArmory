@@ -125,6 +125,19 @@ namespace BDArmory.Parts
 
         void EnsureVesselJammer()
         {
+            if (vesselJammer == null)
+            {
+                return;
+            }
+            if (vesselJammer.vessel == null)
+            {
+                return;
+            }
+            if (vessel == null)
+            {
+                return;
+            }
+
             if (!vesselJammer || vesselJammer.vessel != vessel)
             {
                 vesselJammer = vessel.gameObject.GetComponent<VesselECMJInfo>();
