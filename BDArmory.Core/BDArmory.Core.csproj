@@ -40,6 +40,7 @@
     <Compile Include="Events\DamageEventArgs.cs" />
     <Compile Include="Extension\VesselExtensions.cs" />
     <Compile Include="Module\HitpointTracker.cs" />
+    <Compile Include="PerformanceLogger.cs" />
     <Compile Include="Services\DamageService.cs" />
     <Compile Include="Interface\INotificableService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
