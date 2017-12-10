@@ -26,6 +26,8 @@ namespace BDArmory.FX
         private const int MaxFiresPerVessel = 2;
         private const float FireLifeTimeInSeconds = 3f;
 
+        private bool disabled = false;
+
         public static void SetupShellPool()
         {
 
@@ -171,19 +173,23 @@ namespace BDArmory.FX
 
         void Update()
         {
-            if (Time.time - startTime > 2f)
+            using (new PerformanceLogger("BulletHitFX.Update"))
             {
-                Destroy(gameObject);
-            }
-            else if (Time.time - startTime > 0.03f)
-            {
-                IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
-                while (pe.MoveNext())
+                if (!disabled && Time.time - startTime > 0.03f)
                 {
-                    if (pe.Current == null) continue;
-                    pe.Current.emit = false;
+                    IEnumerator<KSPParticleEmitter> pe = pEmitters.AsEnumerable().GetEnumerator();
+                    while (pe.MoveNext())
+                    {
+                        if (pe.Current == null) continue;
+                        pe.Current.emit = false;
+                    }
+                    pe.Dispose();
+                    disabled = true;
                 }
-                pe.Dispose();
+                if (Time.time - startTime > 2f)
+                {
+                    Destroy(gameObject);
+                }
             }
         }
 
