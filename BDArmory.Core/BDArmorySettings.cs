@@ -41,5 +41,6 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static float EXP_DMG_MOD_BALLISTIC;
         [BDAPersistantSettingsField] public static float EXP_DMG_MOD_MISSILE;
         [BDAPersistantSettingsField] public static float EXP_IMP_MOD;
+        [BDAPersistantSettingsField] public static bool PERFORMANCE_LOGGING = false;
     }
 }
