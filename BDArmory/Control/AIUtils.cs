@@ -17,7 +17,7 @@ namespace BDArmory.Control
 		/// <param name="v">vessel to be extrapolated</param>
 		/// <param name="time">after this time</param>
 		/// <returns>Vector3 extrapolated position</returns>
-		public static Vector3 PredictPosition(Vessel v, float time)
+		public static Vector3 PredictPosition(this Vessel v, float time)
 		{
 			Vector3 pos = v.CoM;
 			pos += v.Velocity() * time;
