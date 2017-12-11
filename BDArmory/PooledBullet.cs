@@ -263,8 +263,7 @@ namespace BDArmory
                 penTicker = 0;
 
                 float dist = currentVelocity.magnitude * Time.fixedDeltaTime;
-                Ray ray = new Ray(currPosition, currentVelocity);
-                //var hits = Physics.RaycastAll(ray, dist, 557057);
+                Ray ray = new Ray(currPosition, currentVelocity);                
                 var hits = Physics.RaycastAll(ray, dist, 688129);
                 if (hits.Length > 0)
                 {
@@ -387,16 +386,13 @@ namespace BDArmory
                             }
 
                             /////////////////////////////////////////////////////////////////////////////////
-                            //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
+                            // penetrated after a few ticks
                             /////////////////////////////////////////////////////////////////////////////////
-
-                            //explosive bullet conditions
-                            //air detonation
+                             
                             //penetrating explosive
                             //richochets
 
-                            if ((explosive && airDetonation && distanceFromStart > detonationRange) ||
-                                (penTicker >= 2 && explosive) || (hasRichocheted && explosive))
+                            if ((penTicker >= 2 && explosive) || (hasRichocheted && explosive))
                             {
                                 //detonate
                                 ExplosiveDetonation(hitPart, hit, ray, airDetonation);
@@ -422,9 +418,21 @@ namespace BDArmory
                 }
             }
 
-            ///////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////
+            //Flak Explosion (air detonation/proximity fuse)
+            //////////////////////////////////////////////////
+
+            if ((explosive && airDetonation && (distanceFromStart > detonationRange))) //|| Vector3.Distance(currPosition,)) 
+            {
+                //detonate
+                ExplosionFx.CreateExplosion(currPosition, tntMass, explModelPath, explSoundPath, false, caliber,null,currentVelocity);
+                KillBullet();
+                return;
+            }
+
+            //////////////////////////////////////////////////
             //Bullet Translation
-            ///////////////////////////////////////////////////////////////////////                     
+            //////////////////////////////////////////////////
 
             prevPosition = currPosition;
             //move bullet
