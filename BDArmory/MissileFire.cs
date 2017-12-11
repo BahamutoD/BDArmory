@@ -2299,7 +2299,7 @@ namespace BDArmory
                         if (CurrentMissile.part.airstreamShields.Contains(bay.Current))
                         {
                             ModuleAnimateGeneric anim = bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
-							if (anim == null) continue;
+                            if (anim == null) continue;
 
                             string toggleOption = anim.Events["Toggle"].guiName;
                             if (toggleOption == "Open")
@@ -2315,7 +2315,7 @@ namespace BDArmory
                         {
                             ModuleAnimateGeneric anim =
                                 bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
-							if (anim == null) continue;
+                            if (anim == null) continue;
 
                             string toggleOption = anim.Events["Toggle"].guiName;
                             if (toggleOption == "Close")
@@ -2336,10 +2336,10 @@ namespace BDArmory
                     {
                         if (bay.Current == null) continue;
                         ModuleAnimateGeneric anim =
-							bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
-						if (anim == null) continue;
+                            bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
+                        if (anim == null) continue;
 
-						string toggleOption = anim.Events["Toggle"].guiName;
+                        string toggleOption = anim.Events["Toggle"].guiName;
                         if (toggleOption == "Close")
                         {
                             if (anim)
@@ -2358,9 +2358,9 @@ namespace BDArmory
                 {
                     if (bay.Current == null) continue;
                     ModuleAnimateGeneric anim = bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
-					if (anim == null) continue;
+                    if (anim == null) continue;
 
-					string toggleOption = anim.Events["Toggle"].guiName;
+                    string toggleOption = anim.Events["Toggle"].guiName;
                     if (toggleOption == "Close")
                     {
                         if (anim)
