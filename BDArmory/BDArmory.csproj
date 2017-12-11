@@ -79,7 +79,6 @@
     <Compile Include="Control\BDGenericAIBase.cs" />
     <Compile Include="Control\BDModuleBoatAI.cs" />
     <Compile Include="Control\IBDAIControl.cs" />
-    <Compile Include="FX\DecalEmitters.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
