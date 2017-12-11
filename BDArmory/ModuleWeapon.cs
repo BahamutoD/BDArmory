@@ -11,6 +11,7 @@ using BDArmory.UI;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
+using BDArmory.Core.Utils;
 
 namespace BDArmory
 {
@@ -395,7 +396,7 @@ namespace BDArmory
 
         [KSPField]
         public float maxAirDetonationRange = 3500;
-        float detonationRange = 2000;
+        float detonationRange = 10f;
         [KSPField]
         public bool airDetonationTiming = true;
 
@@ -1130,6 +1131,8 @@ namespace BDArmory
                                 pBullet.radius = cannonShellRadius;
                                 pBullet.airDetonation = airDetonation;
                                 pBullet.detonationRange = detonationRange;
+                                pBullet.maxAirDetonationRange = maxAirDetonationRange;
+
                             }
                             else
                             {
@@ -1143,6 +1146,7 @@ namespace BDArmory
                                 pBullet.radius = bulletInfo.blastRadius;
                                 pBullet.airDetonation = airDetonation;
                                 pBullet.detonationRange = detonationRange;
+                                pBullet.maxAirDetonationRange = maxAirDetonationRange;
                             }
 
                         }
@@ -1640,11 +1644,12 @@ namespace BDArmory
                 {
                     if (targetAcquired && airDetonationTiming)
                     {
-                        detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
+                        //detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
+                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) * 1.500f;
                     }
                     else
                     {
-                        detonationRange = defaultDetonationRange;
+                        //detonationRange = defaultDetonationRange;
                     }
                 }
             }

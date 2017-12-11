@@ -33,7 +33,6 @@ namespace BDArmory.Parts
         {
             return missileType;
         }
-
        
 
         [KSPField]
@@ -121,9 +120,7 @@ namespace BDArmory.Parts
 
         public enum MissileStates { Idle, Drop, Boost, Cruise, PostThrust }
 
-        public enum DetonationDistanceStates {NotSafe, Cruising, CheckingProximity,
-            Detonate
-        }
+        public enum DetonationDistanceStates {NotSafe, Cruising, CheckingProximity, Detonate}
 
         public enum TargetingModes { None, Radar, Heat, Laser, Gps, AntiRad }
 
@@ -150,6 +147,7 @@ namespace BDArmory.Parts
         public float TimeIndex => Time.time - TimeFired;
 
         public TargetingModes TargetingMode { get; set; }
+
         public TargetingModes TargetingModeTerminal { get; set; }
 
         public float TimeToImpact { get; set; }
@@ -217,10 +215,10 @@ namespace BDArmory.Parts
         protected StringBuilder debugString = new StringBuilder();
 
         private float _throttle = 1f;
-        
+        private float _originalDistance = float.MinValue;
+        private Vector3 _startPoint;
 
-        
-        
+
         public string GetSubLabel()
         {
             if (Enum.GetName(typeof(TargetingModes), TargetingMode) == "None")
@@ -736,9 +734,6 @@ namespace BDArmory.Parts
             }
         }
 
-
-        private  float _originalDistance = float.MinValue;
-        private  Vector3 _startPoint;
         protected Vector3 CalculateAGMBallisticGuidance(MissileBase missile, Vector3 targetPosition)
         {
             //set up
@@ -825,7 +820,6 @@ namespace BDArmory.Parts
             }
             return agmTarget;
         }
-
 
         private double CalculateFreeFallTime()
         {
@@ -926,7 +920,7 @@ namespace BDArmory.Parts
                       
                                 if (partHit?.vessel == vessel) continue;
 
-                                Debug.Log("[BDArmory]: Missile proximity sphere hit . distance overlap = " + optimalDistance + "| Part name = " + partHit.name);
+                                Debug.Log("[BDArmory]: Missile proximity sphere hit | Distance overlap = " + optimalDistance + "| Part name = " + partHit.name);
 
                                 //We found a hit a different vessel than ours
                                 DetonationDistanceState =   DetonationDistanceStates.Detonate;
