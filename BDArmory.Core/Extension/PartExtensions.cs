@@ -45,41 +45,27 @@ namespace BDArmory.Core.Extension
             else
             {
                 damage_ = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_BALLISTIC * explosiveDamage;
-            }               
-
-            //////////////////////////////////////////////////////////
-            //   Caliber Adjustments
-            //////////////////////////////////////////////////////////
-
-            if (caliber < 50 && !isMissile)
-            {
-                damage_ *= 0.0335f;
             }
-                                  
+
+            /////////////////////////////////
+            // Caliber Adjustments
+            /////////////////////////////////
+
+            //if (caliber < 50 && !isMissile)
+            //{
+            //    damage_ *= 0.0335f;
+            //}
+
             //////////////////////////////////////////////////////////
             //   Armor Reduction factors
             //////////////////////////////////////////////////////////
 
             if (p.HasArmor())
             {
-                float armorReduction = 0;
-                damage_ = damage_ - ((damage_ * p.GetArmorPercentage()) / 10);
+                float armorMass_ = p.GetArmorThickness();
+                float damageReduction = DamageReduction(armorMass_, damage_, isMissile, caliber);
 
-                if (!isMissile)
-                {
-                    if (caliber < 50)
-                    {
-                        damage_ /= 100; //penalty for low-mid caliber HE rounds hitting armor panels
-                    }
-                    armorReduction = damage_ / 2;
-                }
-                else
-                {
-                    armorReduction = damage_ / 8;
-                }
-
-                p.ReduceArmor(armorReduction);
-
+                damage_ = damageReduction;
             }
 
             //////////////////////////////////////////////////////////
@@ -113,7 +99,7 @@ namespace BDArmory.Core.Extension
             //Hitpoints mult for scaling in settings
             //1e-4 constant for adjusting MegaJoules for gameplay
 
-            double damage_ = ((0.5f * (mass * Math.Pow(impactVelocity, 2)))
+            float damage_ = ((0.5f * (mass * Mathf.Pow(impactVelocity, 2)))
                             * (BDArmorySettings.DMG_MULTIPLIER / 100) * bulletDmgMult
                             * 1e-4f);
 
@@ -126,43 +112,21 @@ namespace BDArmory.Core.Extension
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
             {
-               damage_ *= 12f;
+               damage_ *= 15f;
             }
 
-            //As armor is decreased level of damage should increase
-            //Ideally this would be logarithmic but my math is lacking right now... 
-                
-            //damage /= Mathf.Max(1,(float) armorPCT_ * 100);
-            //double damage_d = (Mathf.Clamp((float)Math.Log10(armorPCT_),10f,100f) + 5f) * damage;
-            //damage = (float)damage_d;
+            //////////////////////////////////////////////////////////
+            //   Armor Reduction factors
+            //////////////////////////////////////////////////////////
 
             if (p.HasArmor())
             {
-                float armorMass_ = (float) p.GetArmorThickness();
-                float armorPCT_ = Mathf.Clamp(p.GetArmorPercentage() * 100f,1f,100f);
-                //float damageReduction = 0f;
+                float armorMass_ =  p.GetArmorThickness();                
+                float damageReduction = DamageReduction(armorMass_, damage_, false, caliber);
 
-                //Armor limits Damage
-                //damage_ = damage_ - (damage_ * armorPCT_) * 1.25f;
-                //damageReduction = (Mathf.Clamp((float)Math.Log10(armorPCT_), 1f, 100f) + 5f);
-
-                if (BDAMath.Between(armorMass_, 100f, 200f))
-                {
-                    damage_ *= 0.215f;
-                }  
-                else if (BDAMath.Between(armorMass_, 200f, 400f))
-                {
-                    damage_ *= 0.205f;
-                }
-                else if (BDAMath.Between(armorMass_, 400f, 500f))
-                {
-                    damage_ *= 0.200f;
-                }
-                    //penalty for low caliber rounds,not if armor is very low
-                    //if (caliber <= 30f && armorMass_ >= 25d) damage_ *= 0.625f;
+                damage_ = damageReduction;
             }
-
-
+            
             //////////////////////////////////////////////////////////
             //   Apply Hitpoints
             //////////////////////////////////////////////////////////
@@ -173,8 +137,8 @@ namespace BDArmory.Core.Extension
             }
             else
             {
-                ApplyHitPoints(p, (float)damage_, caliber, mass, mass, impactVelocity, penetrationfactor);
-            }           
+                ApplyHitPoints(p, damage_, caliber, mass, mass, impactVelocity, penetrationfactor);
+            }       
             
                 
         }
@@ -269,9 +233,9 @@ namespace BDArmory.Core.Extension
             }       
         }
         
-        public static double GetArmorThickness(this Part p)
+        public static float GetArmorThickness(this Part p)
         {
-            if (p == null) return 0d;        
+            if (p == null) return 0f;        
             return Dependencies.Get<DamageService>().GetPartArmor_svc(p);
         }
 
@@ -378,6 +342,53 @@ namespace BDArmory.Core.Extension
             }
             return hasFuel;
 
+        }
+
+        public static float DamageReduction(float armor, float damage,bool isMissile,float caliber = 0)
+        {           
+
+            if (isMissile)
+            {
+                if (BDAMath.Between(armor, 100f, 200f))
+                {
+                    damage *= 0.90f;
+                }
+                else if (BDAMath.Between(armor, 200f, 400f))
+                {
+                    damage *= 0.85f;
+                }
+                else if (BDAMath.Between(armor, 400f, 500f))
+                {
+                    damage *= 0.80f;
+                }
+
+            }
+            else
+            {
+                if (BDAMath.Between(armor, 100f, 200f))
+                {
+                    damage *= 0.200f;
+                }
+                else if (BDAMath.Between(armor, 200f, 400f))
+                {
+                    damage *= 0.250f;
+                }
+                else if (BDAMath.Between(armor, 400f, 500f))
+                {
+                    damage *= 0.300f;
+                }
+
+                /////////////////////////////////
+                // Caliber Adjustments
+                /////////////////////////////////
+
+                if (caliber < 20f)
+                {
+                    damage *= 0.625f;
+                }
+            }
+
+            return damage;
         }
     }
 }
