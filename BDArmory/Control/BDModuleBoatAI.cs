@@ -20,7 +20,7 @@ namespace BDArmory.Control
 		float weaveAdjustment = 0;
 		float weaveDirection = 1;
 		const float weaveLimit = 10;
-		const float weaveFactor = 2.5f;
+		const float weaveFactor = 3.5f;
 
 		Vector3 upDir;
 
@@ -72,6 +72,8 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
 			UI_FloatRange(minValue = 1000f, maxValue = 8000f, stepIncrement = 500f, scene = UI_Scene.All)]
 		public float MaxEngagementRange = 4000;
+
+		const float AttackAngleAtMaxRange = 30f;
 		#endregion
 
 		#region RMB info in editor
@@ -173,15 +175,15 @@ namespace BDArmory.Control
 				Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
 				float distance = vecToTarget.magnitude;
 				// lead the target a bit, where 950f is a ballpark estimate of the average bullet velocity (gau 983, vulcan 950, .50 860)
-				vecToTarget = AIUtils.PredictPosition(targetVessel, distance / 950f) - vessel.CoM;  
+				vecToTarget = targetVessel.PredictPosition(distance / 950f) - vessel.CoM;  
 
 				if (BroadsideAttack)
 				{
 					Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
 					sideVector *= Mathf.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // pick a side for attack
-					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(90 / MaxDrift, 0, 10)) + 1) / 2 : // direct to target to 45 degrees if over maxrange
+					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(90 / MaxDrift, 0, 10)) + 1) * AttackAngleAtMaxRange / 90 : // direct to target to attackAngle degrees if over maxrange
 						(distance <= MinEngagementRange ? 1.5f - distance / (MinEngagementRange * 2) : // 90 to 135 degrees if closer than minrange
-						(MaxEngagementRange - distance) / ((MaxEngagementRange - MinEngagementRange) * 2) + 0.5f); // 45 to 90 degrees from maxrange to minrange 
+						(MaxEngagementRange - distance) / (MaxEngagementRange - MinEngagementRange) * (1 - AttackAngleAtMaxRange / 90)+ AttackAngleAtMaxRange / 90); // attackAngle to 90 degrees from maxrange to minrange 
 					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
 					targetVelocity = MaxSpeed;
 					DebugLine("Broadside attack angle " + sidestep);
@@ -270,6 +272,11 @@ namespace BDArmory.Control
 					weaveAdjustment = 0;
 				}
 			}
+			else
+			{
+				weaveAdjustment = 0;
+			}
+			//DebugLine("underFire " + weaponManager.underFire + " weaveAdjustment " + weaveAdjustment);
 		}
 
 		void AdjustThrottle(float targetSpeed)
@@ -336,8 +343,8 @@ namespace BDArmory.Control
 			float time = Mathf.Min(0.5f, maxTime);
 			while (time < maxTime)
 			{
-				Vector3 tPos = AIUtils.PredictPosition(v, time);
-				Vector3 myPos = AIUtils.PredictPosition(vessel, time);
+				Vector3 tPos = v.PredictPosition(time);
+				Vector3 myPos = vessel.PredictPosition(time);
 				if (Vector3.SqrMagnitude(tPos - myPos) < 2500f)
 				{
 					return Vector3.Dot(tPos - myPos, vesselTransform.right) > 0 ? -vesselTransform.right : vesselTransform.right;
@@ -356,7 +363,7 @@ namespace BDArmory.Control
 			while (time < maxTime)
 			{
 				const float minDepth = 10f;
-				Vector3 testVector = AIUtils.PredictPosition(vessel, time) - vessel.CoM;
+				Vector3 testVector = vessel.PredictPosition(time) - vessel.CoM;
 				Vector3 sideVector = Vector3.Cross(testVector, upDir).normalized * (float)vessel.srfSpeed;
 				// unrolled loop, because I am lazy
 				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector * 2, sideVector, 0.03f, 0), vessel.mainBody) > -minDepth)
