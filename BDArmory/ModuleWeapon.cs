@@ -1645,7 +1645,7 @@ namespace BDArmory
                     if (targetAcquired && airDetonationTiming)
                     {
                         //detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
-                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) * 1.500f;
+                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) * 1.75f;
                     }
                     else
                     {
