@@ -186,7 +186,7 @@ namespace BDArmory.Core.Module
                 hitpoints = areaCalculation * density * hitpointMultiplier;
                 hitpoints = Mathf.Round(hitpoints/500) * 500;
 
-                if (hitpoints <= 0) hitpoints = 500;
+                if (hitpoints <= 0) hitpoints = 500;                
             }
             else
             {
@@ -194,10 +194,13 @@ namespace BDArmory.Core.Module
                 Armor = 2;
             }
 
+            //override based on part configuration for custom parts
             if (maxHitPoints != 0)
             {
                 hitpoints = maxHitPoints;
             }
+
+            
             if (hitpoints <= 0) hitpoints = 500;
             return hitpoints;
         }

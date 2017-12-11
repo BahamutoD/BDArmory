@@ -69,7 +69,8 @@ namespace BDArmory
 
         Vector3 startPosition;
         public bool airDetonation = false;
-        public float detonationRange = 3500;
+        public float detonationRange = 5f;
+        public float maxAirDetonationRange = 3500f;
         float randomWidthScale = 1;
         LineRenderer bulletTrail;
         Vector3 sourceOriginalV;
@@ -263,8 +264,7 @@ namespace BDArmory
                 penTicker = 0;
 
                 float dist = currentVelocity.magnitude * Time.fixedDeltaTime;
-                Ray ray = new Ray(currPosition, currentVelocity);
-                //var hits = Physics.RaycastAll(ray, dist, 557057);
+                Ray ray = new Ray(currPosition, currentVelocity);                
                 var hits = Physics.RaycastAll(ray, dist, 688129);
                 if (hits.Length > 0)
                 {
@@ -387,16 +387,13 @@ namespace BDArmory
                             }
 
                             /////////////////////////////////////////////////////////////////////////////////
-                            //Flak Explosion (air detonation/proximity fuse) or penetrated after a few ticks
+                            // penetrated after a few ticks
                             /////////////////////////////////////////////////////////////////////////////////
-
-                            //explosive bullet conditions
-                            //air detonation
+                             
                             //penetrating explosive
                             //richochets
 
-                            if ((explosive && airDetonation && distanceFromStart > detonationRange) ||
-                                (penTicker >= 2 && explosive) || (hasRichocheted && explosive))
+                            if ((penTicker >= 2 && explosive) || (hasRichocheted && explosive))
                             {
                                 //detonate
                                 ExplosiveDetonation(hitPart, hit, ray, airDetonation);
@@ -416,15 +413,36 @@ namespace BDArmory
                             }
                             //we need to stop the loop if the bullet has stopped,richochet or detonated
                             if (!hasPenetrated || hasRichocheted || hasDetonated) break;
-                            //end While
-                        }
-                    }
-                }
+
+                        }//end While
+                    }//end enumerator
+                }//end if hits
+            }// end if collision
+
+            //////////////////////////////////////////////////
+            //Flak Explosion (air detonation/proximity fuse)
+            //////////////////////////////////////////////////
+
+            if (ProximityAirDetonation(distanceFromStart))
+            {
+                //detonate
+                ExplosionFx.CreateExplosion(currPosition, tntMass, explModelPath, explSoundPath, false, caliber, null, currentVelocity);
+                KillBullet();
+
+                return;
             }
 
-            ///////////////////////////////////////////////////////////////////////
+            //if ((explosive && airDetonation && (distanceFromStart > detonationRange))) //|| Vector3.Distance(currPosition,)) 
+            //{
+            //    //detonate
+            //    ExplosionFx.CreateExplosion(currPosition, tntMass, explModelPath, explSoundPath, false, caliber,null,currentVelocity);
+            //    KillBullet();
+            //    return;
+            //}
+
+            //////////////////////////////////////////////////
             //Bullet Translation
-            ///////////////////////////////////////////////////////////////////////                     
+            //////////////////////////////////////////////////
 
             prevPosition = currPosition;
             //move bullet
@@ -439,6 +457,46 @@ namespace BDArmory
 
             transform.position += currentVelocity * Time.fixedDeltaTime;
         }
+
+        private bool ProximityAirDetonation(float distanceFromStart)
+        {
+            bool detonate = false;
+
+            if (distanceFromStart <= 500f) return false;
+
+            if (explosive && airDetonation)
+            {
+                if(distanceFromStart > maxAirDetonationRange)
+                {
+                    return detonate = true;
+                }
+
+                using (var hitsEnu = Physics.OverlapSphere(transform.position, detonationRange, 557057).AsEnumerable().GetEnumerator())
+                {
+                    while (hitsEnu.MoveNext())
+                    {
+                        if (hitsEnu.Current == null) continue;
+
+                        try
+                        {
+                            Part partHit = hitsEnu.Current.GetComponentInParent<Part>();
+                            if (partHit?.vessel == sourceVessel) continue;
+
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                Debug.Log("[BDArmory]: Bullet proximity sphere hit | Distance overlap = " + detonationRange + "| Part name = " + partHit.name);
+
+                           return detonate = true;
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                    }
+                }
+
+            }
+            return detonate;
+          }
 
         private void ApplyDamage(Part hitPart, RaycastHit hit, float multiplier, float penetrationfactor)
         {

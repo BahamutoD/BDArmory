@@ -200,8 +200,6 @@ namespace BDArmory.Radar
             get { return radarLockTrackCurve.maxTime; }
         }
 
-
-
         //linked vessels
         private List<VesselRadarData> linkedToVessels;
         public List<ModuleRadar> availableRadarLinks;
