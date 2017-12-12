@@ -41,22 +41,22 @@ namespace BDArmory.Control
 		/// </summary>
 		/// <param name="index">index of formation position</param>
 		/// <returns>vector of location relative to your commandLeader</returns>
-		public static Vector3d GetLocalFormationPosition(this IBDAIControl ai, int index)
+		public static Vector3 GetLocalFormationPosition(this IBDAIControl ai, int index)
 		{
-			if (ai.commandLeader == null) return Vector3d.zero;
+			if (ai.commandLeader == null) return Vector3.zero;
 
 			float indexF = (float)index;
 			indexF++;
 
-			double rightSign = indexF % 2 == 0 ? -1 : 1;
-			double positionFactor = Math.Ceiling(indexF / 2);
-			double spread = ai.commandLeader.spread;
-			double lag = ai.commandLeader.lag;
+			float rightSign = indexF % 2 == 0 ? -1 : 1;
+			float positionFactor = Mathf.Ceil(indexF / 2);
+			float spread = ai.commandLeader.spread;
+			float lag = ai.commandLeader.lag;
 
-			double right = rightSign * positionFactor * spread;
-			double back = positionFactor * lag * -1;
+			float right = rightSign * positionFactor * spread;
+			float back = positionFactor * lag * -1;
 
-			return new Vector3d(right, back, 0);
+			return new Vector3(right, back, 0);
 		}
 	}
 }

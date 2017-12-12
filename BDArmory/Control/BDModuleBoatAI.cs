@@ -13,7 +13,7 @@ namespace BDArmory.Control
 		
 		Vessel extendingTarget = null;
 
-		Vector3d targetDirection;
+		Vector3 targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
 		int collisionDetectionTicker = 0;
@@ -58,10 +58,6 @@ namespace BDArmory.Control
 			UI_Toggle(enabledText = "Powered", disabledText = "Passive")]
 		public bool PoweredSteering = true;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Turning"),
-			UI_Toggle(enabledText = "Careful", disabledText = "Reckless")]
-		public bool DriveCarefully = false;
-
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Attack vector"),
 			UI_Toggle(enabledText = "Broadside", disabledText = "Bow")]
 		public bool BroadsideAttack = true;
@@ -90,7 +86,6 @@ namespace BDArmory.Control
 <b>Steer Factor</b> - higher will make the AI apply more control input for the same desired rotation
 <b>Bank angle</b> - higher will make the AI apply more control input when it wants to stop rotation
 <b>Steering</b> - can the ship turn with engines off
-<b>Turning</b> - ""Careful"" will restrict yaw input when above cruise speed and instead slow down first
 <b>Attack vector</b> - does the ship attack from the front or the sides
 <b>Min engagement range</b> - AI will try to move away from oponents if closer than this range
 <b>Max engagement range</b> - AI will prioritize getting closer over attacking when beyond this range
@@ -163,7 +158,7 @@ namespace BDArmory.Control
 			// avoid collisions if any are found
 			if (dodgeVector != null)
 			{
-				targetVelocity = DriveCarefully ? CruiseSpeed : MaxSpeed;
+				targetVelocity = PoweredSteering ? MaxSpeed : CruiseSpeed;
 				targetDirection = (Vector3)dodgeVector;
 				SetStatus($"Avoiding Collision");
 				return;
@@ -301,8 +296,7 @@ namespace BDArmory.Control
 			
 			// limit "aoa" if we're moving
 			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
-				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad
-					* (DriveCarefully ? Mathf.Clamp01((MaxSpeed - (float)vessel.srfSpeed) / (MaxSpeed - CruiseSpeed)) : 1), 0);
+				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad, 0);
 
 			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + weaveAdjustment;
 			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
@@ -318,9 +312,6 @@ namespace BDArmory.Control
 			s.roll = steerMult * 0.0015f * rollError - .10f * steerDamping * -localAngVel.y;
 			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
 			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
-
-			if (DriveCarefully && Mathf.Abs(yawError) + Mathf.Abs(drift) > 5)
-				targetVelocity = Mathf.Clamp(targetVelocity, 0, CruiseSpeed);
 		}
 
 		#endregion
@@ -385,7 +376,7 @@ namespace BDArmory.Control
 
 		#region WingCommander
 
-		Vector3d GetFormationPosition()
+		Vector3 GetFormationPosition()
 		{
 			return commandLeader.vessel.CoM + Quaternion.LookRotation(commandLeader.vessel.up, upDir) * this.GetLocalFormationPosition(commandFollowIndex);
 		}
