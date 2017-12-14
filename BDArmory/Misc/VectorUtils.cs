@@ -89,6 +89,44 @@ namespace BDArmory.Misc
 			return new Vector3d(lat,longi,alt);
 		}
 
+		/// <summary>
+		/// Calculates the coordinates of a point a certain distance away in a specified direction.
+		/// </summary>
+		/// <param name="start">Starting point coordinates, in Lat,Long,Alt form</param>
+		/// <param name="body">The body on which the movement is happening</param>
+		/// <param name="bearing">Bearing to move in, in degrees, where 0 is north and 90 is east</param>
+		/// <param name="distance">Distance to move, in meters</param>
+		/// <returns>Ending point coordinates, in Lat,Long,Alt form</returns>
+		public static Vector3 GeoCoordinateOffset(Vector3 start, CelestialBody body, float bearing, float distance)
+		{
+			//https://stackoverflow.com/questions/2637023/how-to-calculate-the-latlng-of-a-point-a-certain-distance-away-from-another
+			float lat1 = start.x * Mathf.Deg2Rad;
+			float lon1 = start.y * Mathf.Deg2Rad;
+			bearing *= Mathf.Deg2Rad;
+			distance /= ((float)body.Radius + start.z);
+
+			float lat2 = Mathf.Asin(Mathf.Sin(lat1) * Mathf.Cos(distance) + Mathf.Cos(lat1) * Mathf.Sin(distance) * Mathf.Cos(bearing));
+			float lon2 = lon1 + Mathf.Atan2(Mathf.Sin(bearing) * Mathf.Sin(distance) * Mathf.Cos(lat1), Mathf.Cos(distance) - Mathf.Sin(lat1) * Mathf.Sin(lat2));
+
+			return new Vector3(lat2 * Mathf.Rad2Deg, lon2 * Mathf.Rad2Deg, start.z);
+		}
+
+		/// <summary>
+		/// Calculate the bearing going from one point to another
+		/// </summary>
+		/// <param name="start">Starting point coordinates, in Lat,Long,Alt form</param>
+		/// <param name="destination">Destination point coordinates, in Lat,Long,Alt form</param>
+		/// <returns>Bearing when looking at destination from start, in degrees, where 0 is north and 90 is east</returns>
+		public static float GeoForwardAzimuth(Vector3 start, Vector3 destination)
+		{
+			//http://www.movable-type.co.uk/scripts/latlong.html
+			float lat1 = start.x * Mathf.Deg2Rad;
+			float lon1 = start.y * Mathf.Deg2Rad;
+			float lat2 = destination.x * Mathf.Deg2Rad;
+			float lon2 = destination.y * Mathf.Deg2Rad;
+			return Mathf.Atan2(Mathf.Sin(lon2 - lon1) * Mathf.Cos(lat2), Mathf.Cos(lat1) * Mathf.Sin(lat2) - Mathf.Sin(lat1) * Mathf.Cos(lat2) * Mathf.Cos(lon2 - lon1)) * Mathf.Rad2Deg;
+		}
+
 		public static Vector3 RotatePointAround(Vector3 pointToRotate, Vector3 pivotPoint, Vector3 axis, float angle)
 		{
 			Vector3 line = pointToRotate-pivotPoint;
