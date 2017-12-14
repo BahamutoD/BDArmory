@@ -133,7 +133,7 @@ namespace BDArmory.Core.Module
                 UI_FloatRange armorField = (UI_FloatRange)Fields["Armor"].uiControlFlight;
                 //Once started the max value of the field should be the initial one
                 armorField.maxValue = Armor;
-                this.part.RefreshAssociatedWindows();
+                part.RefreshAssociatedWindows();
             }         
         }
 

@@ -119,7 +119,7 @@
     <Compile Include="Misc\VectorUtils.cs" />
     <Compile Include="ModuleWeapon.cs" />
     <Compile Include="Misc\ObjectPool.cs" />
-    <Compile Include="PooledBullet.cs" />
+    <Compile Include="Bullets\PooledBullet.cs" />
     <Compile Include="FX\CameraBulletRenderer.cs" />
     <Compile Include="Shaders\BDAShaderLoader.cs" />
     <Compile Include="Misc\IBDWeapon.cs" />
