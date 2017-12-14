@@ -578,9 +578,7 @@ namespace BDArmory.Parts
         private void FromBlastPowerToTNTMass()
         {
             blastPower = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
-        }
-
-     
+        }     
 
         void OnCollisionEnter(Collision col)
 		{
@@ -863,8 +861,7 @@ namespace BDArmory.Parts
             
                 //Timed detonation
                 if (isTimed && TimeIndex > detonationTime)
-				{
-					//part.temperature = part.maxTemp+100; //This is already done in DetonateIfPossible()
+				{					
                     Detonate();
 				}
 			}
@@ -1773,6 +1770,7 @@ namespace BDArmory.Parts
 		public override void Detonate()
 		{
 		    if (HasExploded || !HasFired) return;
+            if (!isArmed()) return;  
 
             Debug.Log("[BDArmory]: Detonate Triggered");
 
