@@ -127,6 +127,25 @@ namespace BDArmory.Misc
 			return Mathf.Atan2(Mathf.Sin(lon2 - lon1) * Mathf.Cos(lat2), Mathf.Cos(lat1) * Mathf.Sin(lat2) - Mathf.Sin(lat1) * Mathf.Cos(lat2) * Mathf.Cos(lon2 - lon1)) * Mathf.Rad2Deg;
 		}
 
+		/// <summary>
+		/// Calculate the distance from one point to another on a globe
+		/// </summary>
+		/// <param name="start">Starting point coordinates, in Lat,Long,Alt form</param>
+		/// <param name="destination">Destination point coordinates, in Lat,Long,Alt form</param>
+		/// <param name="body">The body on which the distance is calculated</param>
+		/// <returns>distance between the two points</returns>
+		public static float GeoDistance(Vector3 start, Vector3 destination, CelestialBody body)
+		{
+			//http://www.movable-type.co.uk/scripts/latlong.html
+			float lat1 = start.x * Mathf.Deg2Rad;
+			float lat2 = destination.x * Mathf.Deg2Rad;
+			float dlat = lat2 - lat1;
+			float dlon = (destination.y - start.y) * Mathf.Deg2Rad;
+			float a = Mathf.Sin(dlat / 2) * Mathf.Sin(dlat / 2) + Mathf.Cos(lat1) * Mathf.Cos(lat2) * Mathf.Sin(dlon / 2) * Mathf.Sin(dlon / 2);
+			float distance = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a)) * (float)body.Radius;
+			return Mathf.Sqrt(distance * distance + (destination.z - start.z) * (destination.z - start.z));
+		}
+
 		public static Vector3 RotatePointAround(Vector3 pointToRotate, Vector3 pivotPoint, Vector3 axis, float angle)
 		{
 			Vector3 line = pointToRotate-pivotPoint;
