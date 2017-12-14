@@ -251,6 +251,18 @@ namespace BDArmory.Parts
             vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = true);
         }
 
+        public bool isArmed()
+        {
+            if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
+            {
+                return vessel.GetComponent<BDExplosivePart>().Armed;
+            }
+            else
+            {
+                return true; //for reverse compatibility if part does not have BDExplosivePart
+            }
+        }
+
         public abstract void Detonate();
 
         public abstract Vector3 GetForwardTransform();
