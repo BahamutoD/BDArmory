@@ -2300,7 +2300,8 @@ namespace BDArmory
                         if (bay.Current == null) continue;
                         if (CurrentMissile.part.airstreamShields.Contains(bay.Current))
                         {
-                            ModuleAnimateGeneric anim = (ModuleAnimateGeneric)bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex);
+                            ModuleAnimateGeneric anim = bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
+                            if (anim == null) continue;
 
                             string toggleOption = anim.Events["Toggle"].guiName;
                             if (toggleOption == "Open")
@@ -2315,7 +2316,8 @@ namespace BDArmory
                         else
                         {
                             ModuleAnimateGeneric anim =
-                                (ModuleAnimateGeneric)bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex);
+                                bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
+                            if (anim == null) continue;
 
                             string toggleOption = anim.Events["Toggle"].guiName;
                             if (toggleOption == "Close")
@@ -2336,7 +2338,9 @@ namespace BDArmory
                     {
                         if (bay.Current == null) continue;
                         ModuleAnimateGeneric anim =
-                            (ModuleAnimateGeneric)bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex);
+                            bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
+                        if (anim == null) continue;
+
                         string toggleOption = anim.Events["Toggle"].guiName;
                         if (toggleOption == "Close")
                         {
@@ -2355,7 +2359,9 @@ namespace BDArmory
                 while (bay.MoveNext())
                 {
                     if (bay.Current == null) continue;
-                    ModuleAnimateGeneric anim = (ModuleAnimateGeneric)bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex);
+                    ModuleAnimateGeneric anim = bay.Current.part.Modules.GetModule(bay.Current.DeployModuleIndex) as ModuleAnimateGeneric;
+                    if (anim == null) continue;
+
                     string toggleOption = anim.Events["Toggle"].guiName;
                     if (toggleOption == "Close")
                     {

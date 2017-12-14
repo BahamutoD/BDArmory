@@ -5,14 +5,13 @@ using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using BDArmory.UI;
-using System;
 using System.Collections.Generic;
 using BDArmory.Core;
 using UnityEngine;
 
 namespace BDArmory.Radar
 {
-	public static class RadarUtils
+    public static class RadarUtils
 	{
         private static bool rcsSetupCompleted = false;
         private static int radarResolution = 128;

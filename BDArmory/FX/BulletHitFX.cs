@@ -23,8 +23,8 @@ namespace BDArmory.FX
         public static int maxPoolSize = 200;
         public static Dictionary<Vessel,List<float>> PartsOnFire = new Dictionary<Vessel, List<float>>(); 
 
-        private const int MaxFiresPerVessel = 2;
-        private const float FireLifeTimeInSeconds = 3f;
+        public static int MaxFiresPerVessel = 3;
+        public static float FireLifeTimeInSeconds = 5f;
 
         private bool disabled = false;
 
@@ -94,6 +94,13 @@ namespace BDArmory.FX
             {
                 return false;
             }
+
+            if (hitPart.vessel.LandedOrSplashed)
+            {
+                MaxFiresPerVessel = 5;
+                FireLifeTimeInSeconds = 20f;
+            }
+
             if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
             {
                 var firesOnVessel = PartsOnFire[hitPart.vessel];
@@ -228,11 +235,11 @@ namespace BDArmory.FX
               
                 if (pe.Current.gameObject.name == "sparks")
                 {
-                    pe.Current.force = (4.49f*FlightGlobals.getGeeForceAtPosition(position));
+                    pe.Current.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
                 }
                 else if (pe.Current.gameObject.name == "smoke")
                 {
-                    pe.Current.force = (1.49f*FlightGlobals.getGeeForceAtPosition(position));
+                    pe.Current.force = (1.49f * FlightGlobals.getGeeForceAtPosition(position));
                 }
             }
             pe.Dispose();

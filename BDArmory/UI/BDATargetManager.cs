@@ -17,26 +17,15 @@ namespace BDArmory.UI
 	public class BDATargetManager : MonoBehaviour
 	{
 		public static Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>> TargetDatabase;
-
 		public static Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>> GPSTargets;
-
 		public static List<ModuleTargetingCamera> ActiveLasers;
-
 		public static List<IBDWeapon> FiredMissiles;
-
 		public static List<DestructibleBuilding> LoadedBuildings;
-
 		public static List<Vessel> LoadedVessels;
-
 		public static BDATargetManager Instance;
-
-
 
         private StringBuilder debugString = new StringBuilder();
         private float updateTimer = 0;
-
-        //public static float heatScore;        //TODO: remove!
-        //public static float flareScore;         //TODO: remove!
 
         public static bool hasAddedButton;
 
@@ -100,7 +89,6 @@ namespace BDArmory.UI
 			StartCoroutine(ToolbarButtonRoutine());
 
 		}
-
 
 		void AddBuilding(DestructibleBuilding b)
 		{
@@ -187,8 +175,6 @@ namespace BDArmory.UI
 
 		}
 
-
-		//Laser point stuff
 		public static void RegisterLaserPoint(ModuleTargetingCamera cam)
 		{
 			if(ActiveLasers.Contains(cam))
@@ -227,7 +213,6 @@ namespace BDArmory.UI
 	    {
             return GetModuleTargeting(parentOnly, ml.GetForwardTransform(), ml.MissileReferenceTransform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
         }
-
 
         private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Vector3 missilePosition, Vector3 position, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
 	    {
@@ -279,7 +264,6 @@ namespace BDArmory.UI
             return true;
         }
 
-
         /// <summary>
         /// The the heat signature of a vessel (for Heat/IR targeting).
         /// Returns the heat of the hottest part of the vessel
@@ -301,7 +285,6 @@ namespace BDArmory.UI
 
             return heatScore;
         }
-
 
         /// <summary>
         /// Find a flare within acceptable thermal range that will "decoy" for the passed heatsignature
@@ -334,9 +317,7 @@ namespace BDArmory.UI
 
             return flareTarget;
         }
-
-
-        //public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
+                
         public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null, bool favorGroundTargets = false)
         {
             float minMass = 0.05f;  //otherwise the RAMs have trouble shooting down incoming missiles
@@ -411,8 +392,7 @@ namespace BDArmory.UI
             //else return the target:
             return finalData;
 		}
-
-
+        
 		void UpdateDebugLabels()
 		{
             debugString.Length = 0;
@@ -482,10 +462,7 @@ namespace BDArmory.UI
             debugString.Append(Environment.NewLine);
         }
 
-
-
-
-		//gps stuff
+		
 		void SaveGPSTargets(ConfigNode saveNode)
 		{
 			string saveTitle = HighLogic.CurrentGame.Title;
@@ -543,9 +520,7 @@ namespace BDArmory.UI
 				fileNode.Save("GameData/BDArmory/gpsTargets.cfg");
 				Debug.Log("[BDArmory]: ==== Saved BDA GPS Targets ====");
 			}
-		}
-
-	
+		}	
 
 		void LoadGPSTargets(ConfigNode saveNode)
 		{
@@ -683,13 +658,6 @@ namespace BDArmory.UI
 				}
 			}
 		}
-
-
-
-
-
-
-
 
 		//Legacy target managing stuff
 
@@ -976,7 +944,8 @@ namespace BDArmory.UI
 					}
 					else
 					{
-						Debug.LogWarning("checking target missile -  doesn't have missile module");
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.LogWarning("checking target missile -  doesn't have missile module");
 					}
 
 
@@ -1057,7 +1026,6 @@ namespace BDArmory.UI
             return true;
         }
 
-
 		void OnGUI()
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS)	
@@ -1065,8 +1033,6 @@ namespace BDArmory.UI
 				GUI.Label(new Rect(600,100,600,600), debugString.ToString());	
 			}
 		}
-
-
 
 	}
 }
