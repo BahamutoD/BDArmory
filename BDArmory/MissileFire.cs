@@ -4239,51 +4239,51 @@ namespace BDArmory
         }
 
 
-		// moved from pilot AI, as it does not really do anything AI related?
-		bool GetLaunchAuthorization(Vessel targetV, MissileFire mf)
-		{
-			bool launchAuthorized = false;
-			Vector3 target = targetV.transform.position;
-			MissileBase missile = mf.CurrentMissile;
-			if (missile != null)
-			{
-				if (!targetV.LandedOrSplashed)
-				{
-					target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
-				}
+        // moved from pilot AI, as it does not really do anything AI related?
+        bool GetLaunchAuthorization(Vessel targetV, MissileFire mf)
+        {
+            bool launchAuthorized = false;
+            Vector3 target = targetV.transform.position;
+            MissileBase missile = mf.CurrentMissile;
+            if (missile != null)
+            {
+                if (!targetV.LandedOrSplashed)
+                {
+                    target = MissileGuidance.GetAirToAirFireSolution(missile, targetV);
+                }
 
-				float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
+                float boresightFactor = targetV.LandedOrSplashed ? 0.75f : 0.35f;
 
-				//if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
+                //if(missile.TargetingMode == MissileBase.TargetingModes.Gps) maxOffBoresight = 45;
 
-				float fTime = 2f;
-				Vector3 futurePos = target + (targetV.Velocity() * fTime);
-				Vector3 myFuturePos = vessel.ReferenceTransform.position + (vessel.Velocity() * fTime);
-				bool fDot = Vector3.Dot(vessel.ReferenceTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
+                float fTime = 2f;
+                Vector3 futurePos = target + (targetV.Velocity() * fTime);
+                Vector3 myFuturePos = vessel.ReferenceTransform.position + (vessel.Velocity() * fTime);
+                bool fDot = Vector3.Dot(vessel.ReferenceTransform.up, futurePos - myFuturePos) > 0; //check target won't likely be behind me soon
 
-				if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < missile.maxOffBoresight * boresightFactor)
-				{
-					launchAuthorized = true;
-				}
+                if (fDot && Vector3.Angle(missile.GetForwardTransform(), target - missile.transform.position) < missile.maxOffBoresight * boresightFactor)
+                {
+                    launchAuthorized = true;
+                }
 
-			}
+            }
 
-			return launchAuthorized;
-		}
+            return launchAuthorized;
+        }
 
-		/// <summary>
-		/// Check if AI is online and can target the current guardTarget with direct fire weapons
-		/// </summary>
-		/// <returns>true if AI might fire</returns>
-		bool AIMightDirectFire()
-		{
-			return (AI == null || !AI.pilotEnabled || !AI.CanEngage() || !guardTarget || !AI.IsValidFixedWeaponTarget(guardTarget));
-		}
+        /// <summary>
+        /// Check if AI is online and can target the current guardTarget with direct fire weapons
+        /// </summary>
+        /// <returns>true if AI might fire</returns>
+        bool AIMightDirectFire()
+        {
+            return (AI == null || !AI.pilotEnabled || !AI.CanEngage() || !guardTarget || !AI.IsValidFixedWeaponTarget(guardTarget));
+        }
 
-		#endregion
+        #endregion
 
-		#region Turret
-		int CheckTurret(float distance)
+        #region Turret
+        int CheckTurret(float distance)
         {
             if (weaponIndex == 0 || selectedWeapon == null ||
                 !(selectedWeapon.GetWeaponClass() == WeaponClasses.Gun ||
