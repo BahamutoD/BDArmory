@@ -1770,7 +1770,6 @@ namespace BDArmory.Parts
 		public override void Detonate()
 		{
 		    if (HasExploded || !HasFired) return;
-            if (!isArmed()) return;  
 
             Debug.Log("[BDArmory]: Detonate Triggered");
 
