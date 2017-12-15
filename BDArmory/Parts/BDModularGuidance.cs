@@ -163,6 +163,9 @@ namespace BDArmory.Parts
             while (child.MoveNext())
             {
                 if (child.Current == null) continue;
+
+                DisablingExplosives(child.Current);
+
                 IEnumerator<PartResource> resource = child.Current.Resources.GetEnumerator();
                 while (resource.MoveNext())
                 {
@@ -189,6 +192,9 @@ namespace BDArmory.Parts
             while (child.MoveNext())
             {
                 if (child.Current == null) continue;
+
+                ArmingExplosive(child.Current);
+
                 IEnumerator<PartResource> resource = child.Current.Resources.GetEnumerator();
                 while (resource.MoveNext())
                 {
@@ -362,7 +368,6 @@ namespace BDArmory.Parts
                 Events["SwitchTargetingMode"].guiActiveEditor = false;
                 Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
-                DisablingExplosives();
 
             }
 
@@ -748,11 +753,6 @@ namespace BDArmory.Parts
 
                 Misc.Misc.RefreshAssociatedWindows(part);
 
-                if (StageToTriggerOnProximity == 0)
-                {
-                     ArmingExplosive();
-                }
-               
                 HasFired = true;
                 DetonationDistanceState = DetonationDistanceStates.NotSafe;
             }
@@ -870,8 +870,6 @@ namespace BDArmory.Parts
 
                 if (StageToTriggerOnProximity != 0)
                 {
-                    ArmingExplosive();
-
                     vessel.ActionGroups.ToggleGroup(
                         (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
                 }

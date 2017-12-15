@@ -241,14 +241,27 @@ namespace BDArmory.Parts
 
         protected abstract void PartDie(Part p);
 
-        protected void DisablingExplosives()
+
+        protected void DisablingExplosives(Part p)
         {
-            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = false);
+            if (p == null) return;
+
+            var explosive = p.FindModuleImplementing<BDExplosivePart>();
+            if (explosive != null)
+            {
+                p.FindModuleImplementing<BDExplosivePart>().Armed = false;
+            }
         }
 
-        protected void ArmingExplosive()
+        protected void ArmingExplosive(Part p)
         {
-            vessel.FindPartModulesImplementing<BDExplosivePart>().Where(exp => exp != null && exp).Select(exp => exp.Armed = true);
+            if (p == null) return;
+
+            var explosive = p.FindModuleImplementing<BDExplosivePart>();
+            if (explosive != null)
+            {
+                p.FindModuleImplementing<BDExplosivePart>().Armed = true;
+            }
         }
 
         public bool isArmed()

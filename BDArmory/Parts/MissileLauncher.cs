@@ -349,7 +349,18 @@ namespace BDArmory.Parts
 
 			if(HighLogic.LoadedSceneIsFlight)
 			{
-				MissileReferenceTransform = part.FindModelTransform("missileTransform");
+			    //TODO: Backward compatibility wordaround
+			    if (part.FindModuleImplementing<BDExplosivePart>() == null)
+			    {
+			        FromBlastPowerToTNTMass();
+			    }
+			    else
+			    {
+			        //New Explosive module
+                    DisablingExplosives(part);
+			    }
+
+                MissileReferenceTransform = part.FindModelTransform("missileTransform");
 				if(!MissileReferenceTransform)
 				{
 					MissileReferenceTransform = part.partTransform;
@@ -502,12 +513,6 @@ namespace BDArmory.Parts
 					KillRCS();
 				}
 				SetupAudio();
-
-                //TODO: Backward compatibility wordaround
-			    if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count == 0) //New Explosive module
-			    {
-			        FromBlastPowerToTNTMass();
-                }
 			}
 
 			if(GuidanceMode != GuidanceModes.Cruise)
@@ -666,7 +671,7 @@ namespace BDArmory.Parts
 		{
 		    if (HasFired) return;
 
-		    ArmingExplosive();
+            ArmingExplosive(this.part);
             HasFired = true;
 
             Debug.Log("[BDArmory]: Missile Fired! " + vessel.vesselName);
@@ -1785,23 +1790,15 @@ namespace BDArmory.Parts
 				
 		    if(SourceVessel==null) SourceVessel = vessel;
 
-		    if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
+		    if (part.FindModuleImplementing<BDExplosivePart>() != null)
 		    {
-		        vessel.FindPartModulesImplementing<BDExplosivePart>()
-		            .ForEach(explosivePart => explosivePart.DetonateIfPossible());
+		        part.FindModuleImplementing<BDExplosivePart>().DetonateIfPossible();
 		    }
 		    else //TODO: Remove this backguard compatibility
 		    {
 		        Vector3 position = transform.position;//+rigidbody.velocity*Time.fixedDeltaTime;
 
-		        if (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)
-		        {
-		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true, 0, part);
-                }
-		        else
-		        {
-		            ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true, 0, part);
-                }
+		        ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true, 0, part);
             }
 		    if (part != null) part.Destroy();
 

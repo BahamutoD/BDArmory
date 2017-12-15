@@ -97,7 +97,6 @@ namespace BDArmory.Parts
             ExplosionFx.CreateExplosion(part.transform.position, tntMass,
 	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true, 0, part);
 
-	      
         }
 
 	    public float GetBlastRadius()
