@@ -253,7 +253,7 @@ namespace BDArmory.Parts
             }
         }
 
-        protected void ArmingExplosive(Part p)
+        protected void SetupExplosive(Part p)
         {
             if (p == null) return;
 
@@ -261,18 +261,10 @@ namespace BDArmory.Parts
             if (explosive != null)
             {
                 p.FindModuleImplementing<BDExplosivePart>().Armed = true;
-            }
-        }
-
-        public bool isArmed()
-        {
-            if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
-            {
-                return vessel.GetComponent<BDExplosivePart>().Armed;
-            }
-            else
-            {
-                return true; //for reverse compatibility if part does not have BDExplosivePart
+                if (GuidanceMode == GuidanceModes.AGM || GuidanceMode == GuidanceModes.AGMBallistic)
+                {
+                    p.FindModuleImplementing<BDExplosivePart>().Shaped = true;
+                }
             }
         }
 

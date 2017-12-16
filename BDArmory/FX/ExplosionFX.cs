@@ -372,7 +372,16 @@ namespace BDArmory.FX
             var go = GameDatabase.Instance.GetModel(explModelPath);
             var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
 
-            Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
+            Quaternion rotation;
+            if (direction == default(Vector3))
+            {
+                rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
+            }
+            else
+            {
+                rotation = Quaternion.LookRotation(direction);
+            }
+
             GameObject newExplosion = (GameObject) Instantiate(go, position, rotation);
             ExplosionFx eFx = newExplosion.AddComponent<ExplosionFx>();
             eFx.ExSound = soundClip;

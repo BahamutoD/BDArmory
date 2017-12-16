@@ -671,7 +671,7 @@ namespace BDArmory.Parts
 		{
 		    if (HasFired) return;
 
-            ArmingExplosive(this.part);
+            SetupExplosive(this.part);
             HasFired = true;
 
             Debug.Log("[BDArmory]: Missile Fired! " + vessel.vesselName);
@@ -1770,7 +1770,6 @@ namespace BDArmory.Parts
 		public override void Detonate()
 		{
 		    if (HasExploded || !HasFired) return;
-            if (!isArmed()) return;  
 
             Debug.Log("[BDArmory]: Detonate Triggered");
 
