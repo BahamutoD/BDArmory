@@ -193,7 +193,7 @@ namespace BDArmory.Parts
             {
                 if (child.Current == null) continue;
 
-                ArmingExplosive(child.Current);
+                SetupExplosive(child.Current);
 
                 IEnumerator<PartResource> resource = child.Current.Resources.GetEnumerator();
                 while (resource.MoveNext())
