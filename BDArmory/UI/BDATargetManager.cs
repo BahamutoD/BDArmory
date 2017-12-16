@@ -57,7 +57,6 @@ namespace BDArmory.UI
 			GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
 			GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 
-
 			GameEvents.onVesselLoaded.Remove(AddVessel);
 			GameEvents.onVesselGoOnRails.Remove(RemoveVessel);
 			GameEvents.onVesselGoOffRails.Remove(AddVessel);

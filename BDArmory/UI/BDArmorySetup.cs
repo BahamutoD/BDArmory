@@ -1134,7 +1134,7 @@ namespace BDArmory.UI
         bool validGPSName = true;
 
         //GPS window
-        void GPSWindow()
+        public void GPSWindow()
         {
             GUI.Box(WindowRectGps, GUIContent.none, HighLogic.Skin.box);
             gpsEntryCount = 0;
@@ -1252,11 +1252,8 @@ namespace BDArmory.UI
                 BDATargetManager.GPSTargets[myTeam].RemoveAt(indexToRemove);
             }
 
-            //gpsWindowRect.x = toolbarWindowRect.x;
-            //gpsWindowRect.y = toolbarWindowRect.y + toolbarWindowRect.height;
             WindowRectGps.height = (2*gpsBorder) + (gpsEntryCount*gpsEntryHeight);
         }
-
 
         Rect SLineRect(float line)
         {
