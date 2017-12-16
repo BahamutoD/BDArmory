@@ -22,7 +22,7 @@ namespace BDArmory.Core
             ExplodingPartsQueue.Clear();
         }
 
-        public void FixedUpdate()
+        public void Update()
         {
             if (ExplodingPartsQueue.Count == 0) return;
 
