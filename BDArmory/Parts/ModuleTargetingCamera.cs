@@ -43,7 +43,7 @@ namespace BDArmory.Parts
 
 		[KSPField]
 		public string zoomFOVs = "40,15,3,1";
-		float[] zoomFovs;// = new float[]{40,15,3,1f};
+		float[] zoomFovs; 
 
 		[KSPField(isPersistant = true)]
 		public int currentFovIndex;
@@ -288,8 +288,6 @@ namespace BDArmory.Parts
 			}
 		}
 
-
-
 		public override void OnStart (StartState state)
 		{
 			base.OnStart (state);
@@ -422,7 +420,6 @@ namespace BDArmory.Parts
 			}
 
 		}
-
 
 		void Update()
 		{
@@ -626,8 +623,7 @@ namespace BDArmory.Parts
 				SlewCamera(slewInput);
 			}
 			slewInput = Vector2.zero;
-		}
-		
+		}		
 
 		void UpdateSlewRate()
 		{
@@ -1130,7 +1126,6 @@ namespace BDArmory.Parts
 				}
 			}
 		}
-
 
 		void RefreshWindowSize()
 		{
