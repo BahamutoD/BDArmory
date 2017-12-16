@@ -96,12 +96,6 @@ namespace BDArmory.Parts
             UI_FloatRange(minValue = 2f, maxValue = 30f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
         public float detonationTime = 2;
 
-        [KSPEvent(guiActive = true, guiName = "GPS Target", active = true)]
-        public void assignGPSTarget()
-        {
-            
-        }
-
         [KSPField]
         public float activeRadarRange = 6000;
 
@@ -241,7 +235,6 @@ namespace BDArmory.Parts
 
         protected abstract void PartDie(Part p);
 
-
         protected void DisablingExplosives(Part p)
         {
             if (p == null) return;
@@ -288,11 +281,56 @@ namespace BDArmory.Parts
 				info.MissileBaseModule = this;
         }
 
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "GPS Target", active = true, name = "GPSTarget")]
+        public void assignGPSTarget()
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+                PickGPSTarget();
+        }
+
+        [KSPField(isPersistant = true)]
+        public bool gpsSet = false;
+
+        [KSPField(isPersistant = true)]
+        public Vector3 assignedGPSCoords;
+
+        [KSPField(isPersistant = true,guiName = "GPS Target")]
+        public string gpsTargetName = "";
+
+        void PickGPSTarget()
+        {
+            //BDArmorySetup.BDATeams myTeam = BDATargetManager.BoolToTeam(BDArmorySetup.Instance.ActiveWeaponManager.team);
+            //List<GPSTargetInfo>.Enumerator gpsTarget =
+            //    BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(BDArmorySetup.Instance.ActiveWeaponManager.team)].GetEnumerator();
+            //while (gpsTarget.MoveNext())
+            //{
+            //    Debug.Log("[BDArmory]: Target: " + gpsTarget.Current.name);
+            //}
+            //gpsTarget.Dispose();
+            //BDArmorySetup.Instance.GPSWindow();
+            gpsSet = true;
+            Fields["gpsTargetName"].guiActive = true;
+            gpsTargetName = BDArmorySetup.Instance.ActiveWeaponManager.designatedGPSInfo.name;
+            assignedGPSCoords = BDArmorySetup.Instance.ActiveWeaponManager.designatedGPSCoords;
+
+        }
+
         protected void UpdateGPSTarget()
         {
+            Vector3 gpsTargetCoords_;
+
+            if (gpsSet && assignedGPSCoords != null)
+            {
+                gpsTargetCoords_ = assignedGPSCoords;
+            }
+            else
+            {
+                gpsTargetCoords_ = targetGPSCoords;
+            }
+
             if (TargetAcquired)
             {
-                TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody);
+                TargetPosition = VectorUtils.GetWorldSurfacePostion(gpsTargetCoords_, vessel.mainBody);
                 TargetVelocity = Vector3.zero;
                 TargetAcceleration = Vector3.zero;
             }

@@ -1,6 +1,5 @@
 using BDArmory.Core;
 using BDArmory.Shaders;
-using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory.Parts

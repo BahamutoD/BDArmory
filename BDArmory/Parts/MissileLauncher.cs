@@ -3,13 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core;
-using BDArmory.Core.Enum;
+using BDArmory.UI;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.Radar;
-using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
 
@@ -232,6 +231,9 @@ namespace BDArmory.Parts
 
 
         public GPSTargetInfo designatedGPSInfo;
+
+        float[] rcsFiredTimes;
+        KSPParticleEmitter[] rcsTransforms;
 
         #endregion
 
@@ -518,8 +520,15 @@ namespace BDArmory.Parts
 			if(GuidanceMode != GuidanceModes.Cruise)
 			{
 				Fields["cruiseAltitude"].guiActive = false;
-				Fields["cruiseAltitude"].guiActiveEditor = false;
-			}
+                Fields["cruiseAltitude"].guiActiveEditor = false;
+
+            }
+
+            if (GuidanceMode == GuidanceModes.Cruise && BDArmorySettings.ADVANCED_EDIT)
+            {
+                //Fields["GPS Target"].guiActive = true;
+                //Fields["GPS Target"].guiActiveEditor = true;
+            }
 
             if (GuidanceMode != GuidanceModes.AGM)
             {
@@ -1145,20 +1154,17 @@ namespace BDArmory.Parts
                                 RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.Torpedo, 2f);
                             else
                                 RadarWarningReceiver.PingRWR(new Ray(transform.position, radarTarget.predictedPosition - transform.position), 45, RadarWarningReceiver.RWRThreatTypes.MissileLaunch, 2f);
-
-                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                 
                                 Debug.Log("[BDArmory][Terminal Guidance]: Pitbull! Radar missileBase has gone active.  Radar sig strength: " + radarTarget.signalStrength.ToString("0.0") + " - target: "+radarTarget.vessel.name);
                         }
                         else
                         {
-                            TargetAcquired = true;
-                            //TargetPosition = transform.position + (startDirection * 500);
+                            TargetAcquired = true;                            
                             TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody); //putting back the GPS target if no radar target found
                             TargetVelocity = Vector3.zero;
                             TargetAcceleration = Vector3.zero;
                             targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);                            
-                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory][Terminal Guidance]: Missile radar could not acquire a target lock");                            
+                            Debug.Log("[BDArmory][Terminal Guidance]: Missile radar could not acquire a target lock - Defaulting to GPS Target");                            
                             
                         }
                         break;
@@ -1558,7 +1564,7 @@ namespace BDArmory.Parts
 			Vector3 cruiseTarget = Vector3.zero;
 			float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-			if(terminalManeuvering && distanceSqr < 4500*4500)
+			if(terminalManeuvering && distanceSqr < terminalGuidanceDistance * terminalGuidanceDistance)
 			{
 				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, cruiseAltitude);
                 debugString.Append($"Terminal Maneuvers");
@@ -1726,7 +1732,6 @@ namespace BDArmory.Parts
 			aeroTorque = MissileGuidance.DoAeroForces(this, targetPosition, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, maxAoA);
 		}
 
-
         void AGMBallisticGuidance()
 		{
             DoAero(CalculateAGMBallisticGuidance(this,TargetPosition));
@@ -1850,8 +1855,6 @@ namespace BDArmory.Parts
             wpm.Dispose();
 		}
 
-		float[] rcsFiredTimes;
-		KSPParticleEmitter[] rcsTransforms;
 		void SetupRCS()
 		{
 			rcsFiredTimes = new float[]{0,0,0,0};
@@ -2043,7 +2046,6 @@ namespace BDArmory.Parts
             }
         }
 
-
         private string GetBrevityCode()
         {
             //torpedo: determine subtype
@@ -2107,7 +2109,6 @@ namespace BDArmory.Parts
             // default:
             return "Unguided";
         }
-
 
         // RMB info in editor
         public override string GetInfo()
