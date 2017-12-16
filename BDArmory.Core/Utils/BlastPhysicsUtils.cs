@@ -26,7 +26,7 @@ namespace BDArmory.Core.Utils
 
             float effectivePartArea = part.GetArea() * 0.33f;
 
-            float positivePhase = Mathf.Clamp(distanceToHit, 0.5f, 5f);
+            float positivePhase = 5;
 
             double force = CalculateForce(maxPressurePerMs, effectivePartArea, positivePhase);
 
