@@ -875,8 +875,8 @@ namespace BDArmory
             explodeScale /= 100;
             part.explosionPotential = explodeScale;
 
-            part.explode();
-            
+
+            PartExploderSystem.AddPartToExplode(part);        
         }
 
         private float GetExplosivePower()
