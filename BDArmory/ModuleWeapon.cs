@@ -394,8 +394,7 @@ namespace BDArmory
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
          UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
-        public float
-            defaultDetonationRange = 3500;
+        public float defaultDetonationRange = 3500;
 
         [KSPField]
         public float maxAirDetonationRange = 3500;
@@ -1135,6 +1134,7 @@ namespace BDArmory
                                 pBullet.airDetonation = airDetonation;
                                 pBullet.detonationRange = detonationRange;
                                 pBullet.maxAirDetonationRange = maxAirDetonationRange;
+                                pBullet.defaultDetonationRange = defaultDetonationRange;
                                 pBullet.proximityDetonation = proximityDetonation;
 
                             }
@@ -1153,6 +1153,7 @@ namespace BDArmory
                                 pBullet.airDetonation = airDetonation;
                                 pBullet.detonationRange = detonationRange;
                                 pBullet.maxAirDetonationRange = maxAirDetonationRange;
+                                pBullet.defaultDetonationRange = defaultDetonationRange;
                                 pBullet.proximityDetonation = proximityDetonation;
                             }
 
