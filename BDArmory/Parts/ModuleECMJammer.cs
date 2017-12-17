@@ -126,6 +126,7 @@ namespace BDArmory.Parts
 
         void EnsureVesselJammer()
         {
+            /*
             if (vesselJammer == null)
             {
                 return;
@@ -138,6 +139,7 @@ namespace BDArmory.Parts
             {
                 return;
             }
+            */
 
             if (!vesselJammer || vesselJammer.vessel != vessel)
             {
