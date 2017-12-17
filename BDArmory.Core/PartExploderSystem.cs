@@ -12,7 +12,7 @@ namespace BDArmory.Core
         {
             if (p != null && !ExplodingPartsQueue.Contains(p))
             {
-                ExplodingPartsQueue.Enqueue(p);
+                ExplodingPartsQueue.Enqueue(p);                
             }
         }
 

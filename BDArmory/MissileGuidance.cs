@@ -3,7 +3,6 @@ using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Parts;
-using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory
@@ -288,7 +287,6 @@ namespace BDArmory
             float currentRadarAlt = GetRadarAltitude(missileVessel);
             float distanceSqr =
                 (targetPosition - (missileVessel.transform.position - (currentRadarAlt*upDirection))).sqrMagnitude;
-
 
             Vector3 planarDirectionToTarget =
                 Vector3.ProjectOnPlane(targetPosition - missileVessel.transform.position, upDirection).normalized;
