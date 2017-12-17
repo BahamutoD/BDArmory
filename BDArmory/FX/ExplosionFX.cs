@@ -177,7 +177,7 @@ namespace BDArmory.FX
                 return true;
             }
 
-            return Vector3.Angle(hit.point - Position, direction) < 100f;
+            return Vector3.Angle(direction, (hit.point - Position).normalized) < 100f;
         }
         /// <summary>
         /// This method will calculate if there is valid line of sight between the explosion origin and the specific Part
