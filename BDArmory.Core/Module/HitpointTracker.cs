@@ -207,9 +207,9 @@ namespace BDArmory.Core.Module
 
         public void DestroyPart()
         {
-            part.temperature = part.maxTemp * 2;
             if(part.mass <= 2f) part.explosionPotential *= 0.85f;
-            part.explode();
+
+            PartExploderSystem.AddPartToExplode(part);      
         }
 
         public float GetMaxArmor()
@@ -253,8 +253,9 @@ namespace BDArmory.Core.Module
             Hitpoints += damage;
 
             if (Hitpoints <= 0)
-            {                
-                kerbal.part.explode(); // oh the humanity!
+            {
+                // oh the humanity!
+                PartExploderSystem.AddPartToExplode(kerbal.part);    
             }
         }
 
