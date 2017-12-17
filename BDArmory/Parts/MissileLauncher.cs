@@ -301,7 +301,7 @@ namespace BDArmory.Parts
                 weaponClass = WeaponClasses.Missile;
             }
 		}
-        
+
 		public override void OnStart(StartState state)
 		{
 
@@ -1114,8 +1114,6 @@ namespace BDArmory.Parts
 
                     case TargetingModes.Radar:
                         // pretend we have an active radar seeker for ground targets:
-                        //radarTarget = vesselRadarData.lockedTargetData.targetData;
-                        //vrd = vesselRadarData;
 
                         TargetSignatureData[] scannedTargets = new TargetSignatureData[5];
                         TargetSignatureData.ResetTSDArray(ref scannedTargets);
@@ -1160,7 +1158,7 @@ namespace BDArmory.Parts
                         else
                         {
                             TargetAcquired = true;                            
-                            TargetPosition = VectorUtils.GetWorldSurfacePostion(targetGPSCoords, vessel.mainBody); //putting back the GPS target if no radar target found
+                            TargetPosition = VectorUtils.GetWorldSurfacePostion(UpdateGPSTarget(), vessel.mainBody); //putting back the GPS target if no radar target found
                             TargetVelocity = Vector3.zero;
                             TargetAcceleration = Vector3.zero;
                             targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);                            

@@ -122,7 +122,7 @@ namespace BDArmory.Core.Extension
             if (p.HasArmor())
             {
                 float armorMass_ =  p.GetArmorThickness();                
-                float damageReduction = DamageReduction(armorMass_, damage_, false, caliber);
+                float damageReduction = DamageReduction(armorMass_, damage_, false, caliber,penetrationfactor);
 
                 damage_ = damageReduction;
             }
@@ -344,7 +344,7 @@ namespace BDArmory.Core.Extension
 
         }
 
-        public static float DamageReduction(float armor, float damage,bool isMissile,float caliber = 0)
+        public static float DamageReduction(float armor, float damage,bool isMissile,float caliber = 0, float penetrationfactor = 0)
         {           
 
             if (isMissile)
@@ -363,7 +363,8 @@ namespace BDArmory.Core.Extension
                 }
 
             }
-            else
+
+            if(!isMissile && penetrationfactor <= 0.999f)
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {
@@ -377,15 +378,15 @@ namespace BDArmory.Core.Extension
                 {
                     damage *= 0.300f;
                 }
+            }
 
-                /////////////////////////////////
-                // Caliber Adjustments
-                /////////////////////////////////
+            /////////////////////////////////
+            // Caliber Adjustments
+            /////////////////////////////////
 
-                if (caliber < 20f)
-                {
-                    damage *= 0.625f;
-                }
+            if (caliber < 20f && caliber != 0)
+            {
+                damage *= 0.625f;
             }
 
             return damage;

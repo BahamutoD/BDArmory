@@ -32,8 +32,7 @@ namespace BDArmory.Parts
         public string GetMissileType()
         {
             return missileType;
-        }
-       
+        }       
 
         [KSPField]
         public string missileType = "missile";
@@ -291,23 +290,13 @@ namespace BDArmory.Parts
 
         void PickGPSTarget()
         {
-            //BDArmorySetup.BDATeams myTeam = BDATargetManager.BoolToTeam(BDArmorySetup.Instance.ActiveWeaponManager.team);
-            //List<GPSTargetInfo>.Enumerator gpsTarget =
-            //    BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(BDArmorySetup.Instance.ActiveWeaponManager.team)].GetEnumerator();
-            //while (gpsTarget.MoveNext())
-            //{
-            //    Debug.Log("[BDArmory]: Target: " + gpsTarget.Current.name);
-            //}
-            //gpsTarget.Dispose();
-            //BDArmorySetup.Instance.GPSWindow();
             gpsSet = true;
             Fields["gpsTargetName"].guiActive = true;
             gpsTargetName = BDArmorySetup.Instance.ActiveWeaponManager.designatedGPSInfo.name;
             assignedGPSCoords = BDArmorySetup.Instance.ActiveWeaponManager.designatedGPSCoords;
-
         }
 
-        protected void UpdateGPSTarget()
+        public Vector3d UpdateGPSTarget()
         {
             Vector3 gpsTargetCoords_;
 
@@ -330,6 +319,8 @@ namespace BDArmory.Parts
             {
                 guidanceActive = false;
             }
+
+            return gpsTargetCoords_;
         }
 
         protected void UpdateHeatTarget()
