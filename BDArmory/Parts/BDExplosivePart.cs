@@ -89,7 +89,7 @@ namespace BDArmory.Parts
 
 			    if (Shaped)
 			    {
-			        direction = vessel.Velocity();
+			        direction = (part.transform.position + part.rb.velocity * Time.deltaTime).normalized;
 			    }
 			    ExplosionFx.CreateExplosion(part.transform.position, tntMass,
 			        "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part, direction);
