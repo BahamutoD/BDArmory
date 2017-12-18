@@ -594,7 +594,7 @@ namespace BDArmory.Parts
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 Debug.Log("[BDArmory]: Missile Collided");
 
-            if (col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
+            if (TimeIndex > 1 && col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
             {
                 ContactPoint contact = col.contacts[0];
                 Quaternion rot = Quaternion.FromToRotation(Vector3.up, contact.normal);
@@ -904,7 +904,9 @@ namespace BDArmory.Parts
                 if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)                
                 {
                     Debug.Log("[BDArmory]: Missile has missed!");
-                    if (vessel.altitude >= maxAltitude && maxAltitude != 0f) Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
+
+                    if (vessel.altitude >= maxAltitude && maxAltitude != 0f)
+                        Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
 
                     HasMissed = true;
                     guidanceActive = false;

@@ -220,6 +220,7 @@ namespace BDArmory.Core.Module
         {
             return FireFX;
         }
+
         public void SetDamage(float partdamage)
         {
             Hitpoints -= partdamage;
