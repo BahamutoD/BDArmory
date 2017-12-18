@@ -24,29 +24,23 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public bool ArmorSet;
 
-        [KSPField]
+        [KSPField(isPersistant = true)]
         public string ExplodeMode = "Never";
+
+        [KSPField(isPersistant = true)]
+        public bool FireFX = true;
+
+        [KSPField(isPersistant = true)]
+        public float FireFXLifeTimeInSeconds = 5f;
 
         #endregion
 
         private readonly float hitpointMultiplier = BDArmorySettings.HITPOINT_MULTIPLIER;
 
+        private float previousHitpoints;
         private Part _prefabPart;
         private bool _setupRun = false;
         private bool _firstSetup = true;
-
-        ////////////////////////////////////////
-        // Temp Diagnostic Fields
-        ////////////////////////////////////////
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
-        //public float PartVolume = 0;
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume Armor")]
-        //public float PartVolumeWArmor = 0;
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Armor Mass")]
-        //public float ArmorMass = 0;
 
         protected virtual void Setup()
         {
@@ -79,7 +73,7 @@ namespace BDArmory.Core.Module
             }
         }
 
-        private float previousHitpoints;
+        
 
         protected virtual void SetupPrefab()
         {
@@ -222,8 +216,12 @@ namespace BDArmory.Core.Module
         {
             UI_ProgressBar hitpointField = (UI_ProgressBar) Fields["Hitpoints"].uiControlEditor;
             return hitpointField.maxValue;
-        }        
+        }
 
+        public bool GetFireFX()
+        {
+            return FireFX;
+        }
         public void SetDamage(float partdamage)
         {
             Hitpoints -= partdamage;

@@ -25,7 +25,7 @@ namespace BDArmory.FX
 
         public static int MaxFiresPerVessel = 3;
         public static float FireLifeTimeInSeconds = 5f;
-
+        
         private bool disabled = false;
 
         public static void SetupShellPool()
@@ -98,7 +98,7 @@ namespace BDArmory.FX
             if (hitPart.vessel.LandedOrSplashed)
             {
                 MaxFiresPerVessel = 5;
-                FireLifeTimeInSeconds = 20f;
+                FireLifeTimeInSeconds = 30f;
             }
 
             if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
@@ -245,6 +245,7 @@ namespace BDArmory.FX
             pe.Dispose();
         }
 
+
         public static void AttachFlames(RaycastHit hit, Part hitPart)
         {
             var modelUrl = "BDArmory/FX/FlameEffect2/model";
@@ -260,12 +261,44 @@ namespace BDArmory.FX
             flameObject.transform.SetParent(hitPart.transform);
             flameObject.AddComponent<DecalEmitterScript>();
 
+            if(hitPart.GetFireFX())
+            {
+                DecalEmitterScript.shrinkRateFlame = 0.25f;
+                DecalEmitterScript.shrinkRateSmoke = 0.55f;
+            }             
+
             foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 if (!pe.useWorldSpace) continue;
 
                 var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();
                 //gpe.Part = hitPart.Target;
+                gpe.Emit = true;
+            }
+        }
+
+        public static void AttachFlames(Vector3 contactPoint, Part hitPart)
+        {
+            var modelUrl = "BDArmory/FX/FlameEffect2/model";
+
+            var flameObject =
+                (GameObject)
+                Instantiate(
+                    GameDatabase.Instance.GetModel(modelUrl),
+                    contactPoint,
+                    Quaternion.identity);
+
+            flameObject.SetActive(true);
+            flameObject.transform.SetParent(hitPart.transform);
+            flameObject.AddComponent<DecalEmitterScript>();
+
+            DecalEmitterScript.shrinkRateFlame = 0.25f;
+            DecalEmitterScript.shrinkRateSmoke = 0.55f;
+
+            foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
+            {
+                if (!pe.useWorldSpace) continue;
+                var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();                
                 gpe.Emit = true;
             }
         }

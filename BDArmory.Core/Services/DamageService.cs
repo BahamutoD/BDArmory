@@ -23,5 +23,9 @@ namespace BDArmory.Core.Services
         public abstract void DestroyPart_svc(Part p);
 
         public abstract string GetExplodeMode_svc(Part p);
+
+        public abstract bool HasFireFX_svc(Part p);
+
+        public abstract float GetFireFXTimeOut(Part p);
     }
 }

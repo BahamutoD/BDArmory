@@ -592,8 +592,17 @@ namespace BDArmory.Parts
         void OnCollisionEnter(Collision col)
 		{
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                Debug.Log("[BDArmory]: Something Collided: " + col.ToString());
-            if (HasExploded || !HasFired) return;            
+                Debug.Log("[BDArmory]: Missile Collided");
+
+            if (col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
+            {
+                ContactPoint contact = col.contacts[0];
+                Quaternion rot = Quaternion.FromToRotation(Vector3.up, contact.normal);
+                Vector3 pos = contact.point;
+                BulletHitFX.AttachFlames(pos, col.collider.gameObject.GetComponentInParent<Part>());
+            }
+
+            if (HasExploded || !HasFired) return;
 
             if (TimeIndex > 1 && this.part.vessel.Velocity().magnitude > 10f)
             {
@@ -758,7 +767,7 @@ namespace BDArmory.Parts
 		    vesselReferenceTransform = refObject.transform;
 		    DetonationDistanceState = DetonationDistanceStates.NotSafe;
             MissileState = MissileStates.Drop;
-		    part.crashTolerance = 9999;
+		    part.crashTolerance = 9999; //to combat stresses of launch, missle generate a lot of G Force
 
             StartCoroutine(MissileRoutine());
 		}
@@ -1113,8 +1122,8 @@ namespace BDArmory.Parts
                         break;
 
                     case TargetingModes.Radar:
-                        // pretend we have an active radar seeker for ground targets:
 
+                        // pretend we have an active radar seeker for ground targets:
                         TargetSignatureData[] scannedTargets = new TargetSignatureData[5];
                         TargetSignatureData.ResetTSDArray(ref scannedTargets);
                         Ray ray = new Ray(transform.position, TargetPosition - GetForwardTransform());
@@ -1608,9 +1617,7 @@ namespace BDArmory.Parts
 
 				lookUpDirection = new Vector3(lookUpDirection.x, 0, 0);
 				lookUpDirection += 10*Vector3.up;
-				//Debug.Log ("lookUpDirection: "+lookUpDirection);
-
-
+                
 				rotationTransform.localRotation = Quaternion.Lerp(rotationTransform.localRotation, Quaternion.LookRotation(Vector3.forward, lookUpDirection), 0.04f);
 				Quaternion finalRotation = rotationTransform.rotation;
 				transform.rotation = originalRotation;
@@ -1618,8 +1625,7 @@ namespace BDArmory.Parts
 
 				vesselReferenceTransform.rotation = Quaternion.LookRotation(-rotationTransform.up, rotationTransform.forward);
 			}
-
-			//aeroTorque = MissileGuidance.DoAeroForces(this, cruiseTarget, liftArea, controlAuthority * steerMult, aeroTorque, finalMaxTorque, limitAoA); 
+			
 			DoAero(cruiseTarget);
 			CheckMiss();
 

@@ -4,11 +4,12 @@ namespace BDArmory.FX
 {
     public class DecalEmitterScript : MonoBehaviour
     {
-        private readonly float _maxCombineDistance = 0.6f;
+        //public static float _maxCombineDistance = 0.6f;
 
-        private readonly float _shrinkRateFlame = 2.25f;
+        public static float shrinkRateFlame = 2.0f;
 
-        private readonly float _shrinkRateSmoke = 2.25f;
+        public static float shrinkRateSmoke = 2.25f;
+
         private GameObject _destroyer;
 
         private float _destroyTimerStart;
@@ -39,7 +40,7 @@ namespace BDArmory.FX
 
             foreach (var pe in gameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
-                var shrinkRate = pe.gameObject.name.Contains("smoke") ? _shrinkRateSmoke : _shrinkRateFlame;
+                var shrinkRate = pe.gameObject.name.Contains("smoke") ? shrinkRateSmoke : shrinkRateFlame;
                 pe.maxSize = Mathf.MoveTowards(pe.maxSize, 0, shrinkRate * Time.fixedDeltaTime);
                 pe.minSize = Mathf.MoveTowards(pe.minSize, 0, shrinkRate * Time.fixedDeltaTime);
                 if (pe.maxSize < 0.1f && pe.gameObject == _destroyer && _destroyTimerStart == 0)
