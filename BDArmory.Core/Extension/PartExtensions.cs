@@ -211,6 +211,16 @@ namespace BDArmory.Core.Extension
             return p.GetArmorThickness() > 15f;
         }
 
+        public static bool GetFireFX(this Part p)
+        {
+            return Dependencies.Get<DamageService>().HasFireFX_svc(p);
+        }
+
+        public static float GetFireFXTimeOut(this Part p)
+        {
+            return Dependencies.Get<DamageService>().GetFireFXTimeOut(p);
+        }
+
         public static float Damage(this Part p)
          {		
              return Dependencies.Get<DamageService>().GetPartDamage_svc(p);		
@@ -351,11 +361,11 @@ namespace BDArmory.Core.Extension
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {
-                    damage *= 0.90f;
+                    damage *= 0.95f;
                 }
                 else if (BDAMath.Between(armor, 200f, 400f))
                 {
-                    damage *= 0.85f;
+                    damage *= 0.875f;
                 }
                 else if (BDAMath.Between(armor, 400f, 500f))
                 {
@@ -368,7 +378,7 @@ namespace BDArmory.Core.Extension
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {
-                    damage *= 0.200f;
+                    damage *= 0.300f;
                 }
                 else if (BDAMath.Between(armor, 200f, 400f))
                 {
@@ -376,7 +386,7 @@ namespace BDArmory.Core.Extension
                 }
                 else if (BDAMath.Between(armor, 400f, 500f))
                 {
-                    damage *= 0.300f;
+                    damage *= 0.200f;
                 }
             }
 

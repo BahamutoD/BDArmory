@@ -953,7 +953,6 @@ namespace BDArmory.Parts
                   
                     float optimalDistance = (float) (DetonationDistance + missileDistancePerFrame.magnitude);
 
-
                     using (var hitsEnu = Physics.OverlapSphere(vessel.CoM, optimalDistance, 557057).AsEnumerable().GetEnumerator())
                     {
                         while (hitsEnu.MoveNext())
