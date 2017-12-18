@@ -122,7 +122,7 @@ namespace BDArmory.Core.Extension
             if (p.HasArmor())
             {
                 float armorMass_ =  p.GetArmorThickness();                
-                float damageReduction = DamageReduction(armorMass_, damage_, false, caliber);
+                float damageReduction = DamageReduction(armorMass_, damage_, false, caliber,penetrationfactor);
 
                 damage_ = damageReduction;
             }
@@ -209,6 +209,16 @@ namespace BDArmory.Core.Extension
         public static bool HasArmor(this Part p)
         {
             return p.GetArmorThickness() > 15f;
+        }
+
+        public static bool GetFireFX(this Part p)
+        {
+            return Dependencies.Get<DamageService>().HasFireFX_svc(p);
+        }
+
+        public static float GetFireFXTimeOut(this Part p)
+        {
+            return Dependencies.Get<DamageService>().GetFireFXTimeOut(p);
         }
 
         public static float Damage(this Part p)
@@ -344,18 +354,18 @@ namespace BDArmory.Core.Extension
 
         }
 
-        public static float DamageReduction(float armor, float damage,bool isMissile,float caliber = 0)
+        public static float DamageReduction(float armor, float damage,bool isMissile,float caliber = 0, float penetrationfactor = 0)
         {           
 
             if (isMissile)
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {
-                    damage *= 0.90f;
+                    damage *= 0.95f;
                 }
                 else if (BDAMath.Between(armor, 200f, 400f))
                 {
-                    damage *= 0.85f;
+                    damage *= 0.875f;
                 }
                 else if (BDAMath.Between(armor, 400f, 500f))
                 {
@@ -363,11 +373,12 @@ namespace BDArmory.Core.Extension
                 }
 
             }
-            else
+
+            if(!isMissile && penetrationfactor <= 0.999f)
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {
-                    damage *= 0.200f;
+                    damage *= 0.300f;
                 }
                 else if (BDAMath.Between(armor, 200f, 400f))
                 {
@@ -375,17 +386,17 @@ namespace BDArmory.Core.Extension
                 }
                 else if (BDAMath.Between(armor, 400f, 500f))
                 {
-                    damage *= 0.300f;
+                    damage *= 0.200f;
                 }
+            }
 
-                /////////////////////////////////
-                // Caliber Adjustments
-                /////////////////////////////////
+            /////////////////////////////////
+            // Caliber Adjustments
+            /////////////////////////////////
 
-                if (caliber < 20f)
-                {
-                    damage *= 0.625f;
-                }
+            if (caliber < 20f && caliber != 0)
+            {
+                damage *= 0.625f;
             }
 
             return damage;

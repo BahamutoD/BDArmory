@@ -162,11 +162,14 @@ namespace BDArmory
 
                 if (vessel != null)
                 {
+                    // chaff check
                     decoyFactor = (1f - RadarUtils.GetVesselChaffFactor(vessel));
+
                     if (decoyFactor > 0f)
                     {
-                        decoyFactor *= UnityEngine.Random.Range(10f, 100f);
-                        posDistortion = Vector3.Cross(UnityEngine.Random.insideUnitSphere, vessel.transform.up) * decoyFactor;      //cross product: if deflection direction directly forward or aft, effect is smaller than if deflection laterally
+                        // with ecm on better chaff effectiveness due to higher modifiedSignature
+                        // higher speed -> missile decoyed further "behind" where the chaff drops (also means that for head-on engagements chaff is most like less effective!)
+                        posDistortion = (vessel.GetSrfVelocity() * -1f * Mathf.Clamp(decoyFactor * decoyFactor, 0f, 0.5f)) + (UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(targetInfo.radarModifiedSignature, targetInfo.radarModifiedSignature * targetInfo.radarModifiedSignature) * decoyFactor);
                     }
                 }
 

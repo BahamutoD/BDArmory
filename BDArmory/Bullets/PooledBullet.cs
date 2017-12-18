@@ -4,15 +4,12 @@ using System.Linq;
 using BDArmory.Armor;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Module;
-using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
-using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
 using BDArmory.Core;
-using BDArmory.Core.Enum;
 
 namespace BDArmory
 {
@@ -69,7 +66,9 @@ namespace BDArmory
 
         Vector3 startPosition;
         public bool airDetonation = false;
+        public bool proximityDetonation = false;
         public float detonationRange = 5f;
+        public float defaultDetonationRange = 3500f;
         public float maxAirDetonationRange = 3500f;
         float randomWidthScale = 1;
         LineRenderer bulletTrail;
@@ -466,34 +465,36 @@ namespace BDArmory
 
             if (explosive && airDetonation)
             {
-                if(distanceFromStart > maxAirDetonationRange)
+                if(distanceFromStart > maxAirDetonationRange || distanceFromStart > defaultDetonationRange)
                 {
                     return detonate = true;
                 }
 
-                using (var hitsEnu = Physics.OverlapSphere(transform.position, detonationRange, 557057).AsEnumerable().GetEnumerator())
+                if (proximityDetonation)
                 {
-                    while (hitsEnu.MoveNext())
+                    using (var hitsEnu = Physics.OverlapSphere(transform.position, detonationRange, 557057).AsEnumerable().GetEnumerator())
                     {
-                        if (hitsEnu.Current == null) continue;
-
-                        try
+                        while (hitsEnu.MoveNext())
                         {
-                            Part partHit = hitsEnu.Current.GetComponentInParent<Part>();
-                            if (partHit?.vessel == sourceVessel) continue;
+                            if (hitsEnu.Current == null) continue;
 
-                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                                Debug.Log("[BDArmory]: Bullet proximity sphere hit | Distance overlap = " + detonationRange + "| Part name = " + partHit.name);
+                            try
+                            {
+                                Part partHit = hitsEnu.Current.GetComponentInParent<Part>();
+                                if (partHit?.vessel == sourceVessel) continue;
 
-                           return detonate = true;
-                        }
-                        catch
-                        {
-                            // ignored
+                                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                                    Debug.Log("[BDArmory]: Bullet proximity sphere hit | Distance overlap = " + detonationRange + "| Part name = " + partHit.name);
+
+                                return detonate = true;
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
                         }
                     }
                 }
-
             }
             return detonate;
           }
@@ -875,8 +876,8 @@ namespace BDArmory
             explodeScale /= 100;
             part.explosionPotential = explodeScale;
 
-            part.explode();
-            
+
+            PartExploderSystem.AddPartToExplode(part);        
         }
 
         private float GetExplosivePower()

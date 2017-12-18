@@ -11,7 +11,9 @@ namespace BDArmory.Parts
         {
             get
             {
-                if (!FlightGlobals.currentMainBody) return Vector3d.zero;
+                if (!FlightGlobals.currentMainBody)
+                    return Vector3d.zero;
+
                 return VectorUtils.GetWorldSurfacePostion(gpsCoordinates, FlightGlobals.currentMainBody);
             }
         }

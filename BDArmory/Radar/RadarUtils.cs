@@ -534,6 +534,14 @@ namespace BDArmory.Radar
                 if (loadedvessels.Current == null) continue;
                 if (!loadedvessels.Current.loaded) continue;
 
+                // IFF code check to prevent friendly lock-on (neutral vessel without a weaponmanager WILL be lockable!)
+                MissileFire wm = loadedvessels.Current.FindPartModuleImplementing<MissileFire>();
+                if (wm != null)
+                {
+                    if (missile.Team == wm.team)
+                        continue;
+                }                
+
                 // ignore self, ignore behind ray
                 Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
                 if (((vectorToTarget).sqrMagnitude < RADAR_IGNORE_DISTANCE_SQR) ||

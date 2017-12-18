@@ -54,9 +54,8 @@ namespace BDArmory.Control
 
 		Vector3 upDirection = Vector3.up;
 
-
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Alt."),
-			UI_FloatRange(minValue = 500f, maxValue = 8500f, stepIncrement = 25f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 500f, maxValue = 15000f, stepIncrement = 25f, scene = UI_Scene.All)]
 		public float defaultAltitude = 1500;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Altitude"),
@@ -155,18 +154,19 @@ namespace BDArmory.Control
 			private set { maxLiftAcceleration = value; }
 		}
 
-
 		float turningTimer;
 		float evasiveTimer;
 		Vector3 lastTargetPosition;
 
 		LineRenderer lr;
 		Vector3 flyingToPosition;
+        Vector3 rollTarget;
+        Vector3 angVelRollTarget;
 
 		//speed controller
 		bool useAB = true;
 		bool useBrakes = true;
-		bool regainEnergy;
+		bool regainEnergy = false;
 
 		//collision detection
 		int collisionDetectionTicker;
@@ -176,6 +176,7 @@ namespace BDArmory.Control
 		//wing command
 		bool useRollHint;
 		private Vector3d debugFollowPosition;
+
 		double commandSpeed;
 		Vector3d commandHeading;
 
@@ -718,8 +719,9 @@ namespace BDArmory.Control
             steerMode = SteerModes.Aiming;
 			Vector3 planarDirection = Vector3.ProjectOnPlane(direction, upDirection);
 			float angle = (Mathf.Clamp(MissileGuidance.GetRadarAltitude(vessel) - minAltitude, 0, 1500) / 1500) * 90;
-			angle = Mathf.Clamp(angle, 0, 55) * Mathf.Deg2Rad;
-			Vector3 targetDirection = Vector3.RotateTowards(planarDirection, -upDirection, angle, 0);
+			angle = Mathf.Clamp(angle, 0, 55) * Mathf.Deg2Rad;                     
+
+            Vector3 targetDirection = Vector3.RotateTowards(planarDirection, -upDirection, angle, 0);
 			targetDirection = Vector3.RotateTowards(vessel.Velocity(), targetDirection, 15f * Mathf.Deg2Rad, 0).normalized;
 
 			AdjustThrottle(maxSpeed, false);
@@ -905,10 +907,6 @@ namespace BDArmory.Control
 			s.yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
 			s.pitch = Mathf.Clamp(steerPitch, Mathf.Min(-finalMaxSteer, -0.2f), finalMaxSteer);
 		}
-
-		Vector3 rollTarget;
-		Vector3 angVelRollTarget;
-
 
 		void FlyExtend(FlightCtrlState s, Vector3 tPosition)
 		{
@@ -1174,7 +1172,7 @@ namespace BDArmory.Control
 			float terrainDiff = MissileGuidance.GetRaycastRadarAltitude(forwardPoint) - radarAlt;
 			terrainDiff = Mathf.Max(terrainDiff, 0);
 
-			float rise = Mathf.Clamp((float)vessel.srfSpeed * 0.3f, 5, 100);
+			float rise = Mathf.Clamp((float)vessel.srfSpeed * 0.215f, 5, 100);
 
 			if(radarAlt > 70)
 			{
@@ -1486,7 +1484,6 @@ namespace BDArmory.Control
 		{
 			return position - (MissileGuidance.GetRaycastRadarAltitude(position) * upDirection);
 		}
-
 
 		Vector3 FlightPosition(Vector3 targetPosition, float minAlt)
 		{

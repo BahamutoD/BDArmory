@@ -3797,11 +3797,8 @@ namespace BDArmory
 
             }
             else if (ml.TargetingMode == MissileBase.TargetingModes.Radar && vesselRadarData && vesselRadarData.locked)//&& radar && radar.lockedTarget.exists)
-            {
-
-                //ml.radarTarget = radar.lockedTarget;
+            {                
                 ml.radarTarget = vesselRadarData.lockedTargetData.targetData;
-
                 ml.vrd = vesselRadarData;
                 vesselRadarData.LastMissile = ml;
             }

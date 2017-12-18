@@ -177,7 +177,7 @@ namespace BDArmory.FX
                 return true;
             }
 
-            return Vector3.Angle(hit.point - Position, direction) < 100f;
+            return Vector3.Angle(direction, (hit.point - Position).normalized) < 100f;
         }
         /// <summary>
         /// This method will calculate if there is valid line of sight between the explosion origin and the specific Part
@@ -372,7 +372,16 @@ namespace BDArmory.FX
             var go = GameDatabase.Instance.GetModel(explModelPath);
             var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
 
-            Quaternion rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
+            Quaternion rotation;
+            if (direction == default(Vector3))
+            {
+                rotation = Quaternion.LookRotation(VectorUtils.GetUpDirection(position));
+            }
+            else
+            {
+                rotation = Quaternion.LookRotation(direction);
+            }
+
             GameObject newExplosion = (GameObject) Instantiate(go, position, rotation);
             ExplosionFx eFx = newExplosion.AddComponent<ExplosionFx>();
             eFx.ExSound = soundClip;

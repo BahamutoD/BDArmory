@@ -24,29 +24,23 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public bool ArmorSet;
 
-        [KSPField]
+        [KSPField(isPersistant = true)]
         public string ExplodeMode = "Never";
+
+        [KSPField(isPersistant = true)]
+        public bool FireFX = true;
+
+        [KSPField(isPersistant = true)]
+        public float FireFXLifeTimeInSeconds = 5f;
 
         #endregion
 
         private readonly float hitpointMultiplier = BDArmorySettings.HITPOINT_MULTIPLIER;
 
+        private float previousHitpoints;
         private Part _prefabPart;
         private bool _setupRun = false;
         private bool _firstSetup = true;
-
-        ////////////////////////////////////////
-        // Temp Diagnostic Fields
-        ////////////////////////////////////////
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume")]
-        //public float PartVolume = 0;
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Part Volume Armor")]
-        //public float PartVolumeWArmor = 0;
-
-        //[KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false, guiName = "Armor Mass")]
-        //public float ArmorMass = 0;
 
         protected virtual void Setup()
         {
@@ -77,9 +71,7 @@ namespace BDArmory.Core.Module
                 else
                     enabled = false;
             }
-        }
-
-        private float previousHitpoints;
+        }        
 
         protected virtual void SetupPrefab()
         {
@@ -133,7 +125,7 @@ namespace BDArmory.Core.Module
                 UI_FloatRange armorField = (UI_FloatRange)Fields["Armor"].uiControlFlight;
                 //Once started the max value of the field should be the initial one
                 armorField.maxValue = Armor;
-                this.part.RefreshAssociatedWindows();
+                part.RefreshAssociatedWindows();
             }         
         }
 
@@ -207,9 +199,9 @@ namespace BDArmory.Core.Module
 
         public void DestroyPart()
         {
-            part.temperature = part.maxTemp * 2;
             if(part.mass <= 2f) part.explosionPotential *= 0.85f;
-            part.explode();
+
+            PartExploderSystem.AddPartToExplode(part);      
         }
 
         public float GetMaxArmor()
@@ -222,7 +214,12 @@ namespace BDArmory.Core.Module
         {
             UI_ProgressBar hitpointField = (UI_ProgressBar) Fields["Hitpoints"].uiControlEditor;
             return hitpointField.maxValue;
-        }        
+        }
+
+        public bool GetFireFX()
+        {
+            return FireFX;
+        }
 
         public void SetDamage(float partdamage)
         {
@@ -253,8 +250,9 @@ namespace BDArmory.Core.Module
             Hitpoints += damage;
 
             if (Hitpoints <= 0)
-            {                
-                kerbal.part.explode(); // oh the humanity!
+            {
+                // oh the humanity!
+                PartExploderSystem.AddPartToExplode(kerbal.part);    
             }
         }
 

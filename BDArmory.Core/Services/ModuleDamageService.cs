@@ -100,6 +100,16 @@ namespace BDArmory.Core.Services
             return p.Modules.GetModule<HitpointTracker>().ExplodeMode;
         }
 
-           
+        public override bool HasFireFX_svc(Part p)
+        {
+            return p.Modules.GetModule<HitpointTracker>().GetFireFX();
+        }
+
+        public override float GetFireFXTimeOut(Part p)
+        {
+            return p.Modules.GetModule<HitpointTracker>().FireFXLifeTimeInSeconds;
+        }
+
+
     }
 }

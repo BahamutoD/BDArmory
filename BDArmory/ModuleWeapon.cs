@@ -389,10 +389,12 @@ namespace BDArmory
         [KSPField]
         public bool airDetonation = false;
 
+        [KSPField]
+        public bool proximityDetonation = false;
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
          UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
-        public float
-            defaultDetonationRange = 3500;
+        public float defaultDetonationRange = 3500;
 
         [KSPField]
         public float maxAirDetonationRange = 3500;
@@ -1132,6 +1134,8 @@ namespace BDArmory
                                 pBullet.airDetonation = airDetonation;
                                 pBullet.detonationRange = detonationRange;
                                 pBullet.maxAirDetonationRange = maxAirDetonationRange;
+                                pBullet.defaultDetonationRange = defaultDetonationRange;
+                                pBullet.proximityDetonation = proximityDetonation;
 
                             }
                             else
@@ -1140,13 +1144,17 @@ namespace BDArmory
                                 pBullet.bulletType = PooledBullet.PooledBulletTypes.Explosive;                                
                                 pBullet.explModelPath = explModelPath;
                                 pBullet.explSoundPath = explSoundPath;
+
                                 pBullet.tntMass = bulletInfo.tntMass;
                                 pBullet.blastPower = bulletInfo.blastPower;
                                 pBullet.blastHeat = bulletInfo.blastHeat;
                                 pBullet.radius = bulletInfo.blastRadius;
+
                                 pBullet.airDetonation = airDetonation;
                                 pBullet.detonationRange = detonationRange;
                                 pBullet.maxAirDetonationRange = maxAirDetonationRange;
+                                pBullet.defaultDetonationRange = defaultDetonationRange;
+                                pBullet.proximityDetonation = proximityDetonation;
                             }
 
                         }
@@ -1645,7 +1653,7 @@ namespace BDArmory
                     if (targetAcquired && airDetonationTiming)
                     {
                         //detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
-                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) * 1.75f;
+                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) ;
                     }
                     else
                     {
@@ -1656,7 +1664,7 @@ namespace BDArmory
 
             if (airDetonation)
             {
-                detonationRange *= UnityEngine.Random.Range(0.97f, 1.03f);
+                detonationRange *= UnityEngine.Random.Range(0.96f, 1.04f);
             }
 
             finalAimTarget = finalTarget;
