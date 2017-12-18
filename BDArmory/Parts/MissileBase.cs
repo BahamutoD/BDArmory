@@ -10,6 +10,7 @@ using UnityEngine;
 using System.Text;
 using BDArmory.Core;
 using BDArmory.Core.Enum;
+using BDArmory.FX;
 
 namespace BDArmory.Parts
 {
@@ -1005,6 +1006,28 @@ namespace BDArmory.Parts
             {
                 Debug.Log("[BDArmory]: DetonationDistance = : " + DetonationDistance);
             }
+        }
+
+        protected void CollisionEnter(Collision col)
+        {
+            if (HasExploded || !HasFired) return;
+            if(DetonationDistanceState != DetonationDistanceStates.CheckingProximity) return;
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                Debug.Log("[BDArmory]: Missile Collided");
+
+            if (col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
+            {
+                ContactPoint contact = col.contacts[0];
+                Vector3 pos = contact.point;
+                BulletHitFX.AttachFlames(pos, col.collider.gameObject.GetComponentInParent<Part>());
+            }
+
+          
+
+
+            Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
+            Detonate();
         }
     }
 }
