@@ -591,25 +591,7 @@ namespace BDArmory.Parts
 
         void OnCollisionEnter(Collision col)
 		{
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                Debug.Log("[BDArmory]: Missile Collided");
-
-            if (col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
-            {
-                ContactPoint contact = col.contacts[0];
-                Quaternion rot = Quaternion.FromToRotation(Vector3.up, contact.normal);
-                Vector3 pos = contact.point;
-                BulletHitFX.AttachFlames(pos, col.collider.gameObject.GetComponentInParent<Part>());
-            }
-
-            if (HasExploded || !HasFired) return;                       
-
-            if (TimeIndex > 1 && this.part.vessel.Velocity().magnitude > 10f)
-            {
-                Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
-                Detonate();
-            }
-            
+            base.CollisionEnter(col);      
         }        
         
 		void SetupAudio()

@@ -99,11 +99,13 @@ namespace BDArmory.Parts
 
 	    private void Detonate()
 	    {
-	        part.Destroy();
-            ExplosionFx.CreateExplosion(part.transform.position, tntMass,
-	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1",true, 0, part);
-
-        }
+	        if (!hasDetonated && Armed)
+	        {
+	            part.Destroy();
+	            ExplosionFx.CreateExplosion(part.transform.position, tntMass,
+	                "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part);
+	        }
+	    }
 
 	    public float GetBlastRadius()
 	    {
