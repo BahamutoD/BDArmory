@@ -886,7 +886,9 @@ namespace BDArmory.Parts
                 if (Vector3.Dot(TargetPosition - transform.position, transform.forward) < 0 || noProgress)                
                 {
                     Debug.Log("[BDArmory]: Missile has missed!");
-                    if (vessel.altitude >= maxAltitude && maxAltitude != 0f) Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
+
+                    if (vessel.altitude >= maxAltitude && maxAltitude != 0f)
+                        Debug.Log("[BDArmory]: CheckMiss trigged by MaxAltitude");
 
                     HasMissed = true;
                     guidanceActive = false;
