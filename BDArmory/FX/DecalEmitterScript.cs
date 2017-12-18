@@ -31,7 +31,7 @@ namespace BDArmory.FX
             }
         }
 
-        public void FixedUpdate()//pe is particle emitter
+        public void FixedUpdate()
         {
             if (_destroyTimerStart != 0 && Time.time - _destroyTimerStart > _highestEnergy)
             {
@@ -43,6 +43,7 @@ namespace BDArmory.FX
                 var shrinkRate = pe.gameObject.name.Contains("smoke") ? shrinkRateSmoke : shrinkRateFlame;
                 pe.maxSize = Mathf.MoveTowards(pe.maxSize, 0, shrinkRate * Time.fixedDeltaTime);
                 pe.minSize = Mathf.MoveTowards(pe.minSize, 0, shrinkRate * Time.fixedDeltaTime);
+
                 if (pe.maxSize < 0.1f && pe.gameObject == _destroyer && _destroyTimerStart == 0)
                 {
                     _destroyTimerStart = Time.time;

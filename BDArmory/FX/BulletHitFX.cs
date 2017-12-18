@@ -71,7 +71,7 @@ namespace BDArmory.FX
 
                 if (CanFlamesBeAttached(hitPart))
                 {
-                   AttachFlames(hit, hitPart);
+                   AttachFlames(hit, hitPart, caliber);
                 }
             }
             //back hole if fully penetrated
@@ -98,7 +98,7 @@ namespace BDArmory.FX
             if (hitPart.vessel.LandedOrSplashed)
             {
                 MaxFiresPerVessel = 5;
-                FireLifeTimeInSeconds = 30f;
+                FireLifeTimeInSeconds = 60f;
             }
 
             if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
@@ -246,7 +246,7 @@ namespace BDArmory.FX
         }
 
 
-        public static void AttachFlames(RaycastHit hit, Part hitPart)
+        public static void AttachFlames(RaycastHit hit, Part hitPart, float caliber)
         {
             var modelUrl = "BDArmory/FX/FlameEffect2/model";
 
@@ -261,18 +261,16 @@ namespace BDArmory.FX
             flameObject.transform.SetParent(hitPart.transform);
             flameObject.AddComponent<DecalEmitterScript>();
 
-            if(hitPart.GetFireFX())
+            if(hitPart.vessel.LandedOrSplashed && hitPart.GetFireFX() && caliber >= 100f)
             {
                 DecalEmitterScript.shrinkRateFlame = 0.25f;
-                DecalEmitterScript.shrinkRateSmoke = 0.55f;
+                DecalEmitterScript.shrinkRateSmoke = 0.125f;
             }             
 
             foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 if (!pe.useWorldSpace) continue;
-
                 var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();
-                //gpe.Part = hitPart.Target;
                 gpe.Emit = true;
             }
         }
@@ -293,7 +291,7 @@ namespace BDArmory.FX
             flameObject.AddComponent<DecalEmitterScript>();
 
             DecalEmitterScript.shrinkRateFlame = 0.25f;
-            DecalEmitterScript.shrinkRateSmoke = 0.55f;
+            DecalEmitterScript.shrinkRateSmoke = 0.125f;
 
             foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {

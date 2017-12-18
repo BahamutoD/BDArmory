@@ -602,7 +602,7 @@ namespace BDArmory.Parts
                 BulletHitFX.AttachFlames(pos, col.collider.gameObject.GetComponentInParent<Part>());
             }
 
-            if (HasExploded || !HasFired) return;
+            if (HasExploded || !HasFired) return;                       
 
             if (TimeIndex > 1 && this.part.vessel.Velocity().magnitude > 10f)
             {
