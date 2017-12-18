@@ -28,7 +28,7 @@ namespace BDArmory.Core.Module
         public string ExplodeMode = "Never";
 
         [KSPField(isPersistant = true)]
-        public bool FireFX = false;
+        public bool FireFX = true;
 
         [KSPField(isPersistant = true)]
         public float FireFXLifeTimeInSeconds = 5f;
@@ -71,9 +71,7 @@ namespace BDArmory.Core.Module
                 else
                     enabled = false;
             }
-        }
-
-        
+        }        
 
         protected virtual void SetupPrefab()
         {

@@ -47,7 +47,7 @@ namespace BDArmory.FX
             
         }
 
-        public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float pentrationfactor)
+        public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float penetrationfactor)
         {
             ObjectPool decalPool_;
 
@@ -69,13 +69,9 @@ namespace BDArmory.FX
                 decalFront.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
                 decalFront.SetActive(true);
 
-                if (CanFlamesBeAttached(hitPart))
-                {
-                   AttachFlames(hit, hitPart, caliber);
-                }
             }
             //back hole if fully penetrated
-            if (pentrationfactor > 1)
+            if (penetrationfactor >= 1)
             {
                 GameObject decalBack = decalPool_.GetPooledObject();
                 if (decalBack != null && hitPart != null)
@@ -85,15 +81,18 @@ namespace BDArmory.FX
                     decalBack.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
                     decalBack.SetActive(true);
                 }
+
+                if (CanFlamesBeAttached(hitPart))
+                {
+                    AttachFlames(hit, hitPart, caliber);
+                }
             }
         }
 
         private static bool CanFlamesBeAttached(Part hitPart)
         {
             if (!hitPart.HasFuel())
-            {
-                return false;
-            }
+                return false;            
 
             if (hitPart.vessel.LandedOrSplashed)
             {
