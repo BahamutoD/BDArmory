@@ -765,7 +765,6 @@ namespace BDArmory
                 {
                     if (showReloadMeter)
                     {
-                        // Was commented by BahamutoD during 1.1 compatibility refactor.  wonder why. uncommenting to see the effect.  This would fix Git issue #39.
                         UpdateReloadMeter();
                     }
                     else
@@ -1570,24 +1569,16 @@ namespace BDArmory
                     0);
                 Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
                 RaycastHit hit;
-                //KerbalEVA hitEVA = null;
-                //if (Physics.Raycast(ray, out hit, maxTargetingRange, 2228224))
-                //{
-                //    targetPosition = hit.point;
 
-                //    hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
-                //    if (hitEVA && hitEVA.part.vessel && hitEVA.part.vessel == vessel)
-                //    {
-                //        targetPosition = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
-                //    }
-                //}
                 if (Physics.Raycast(ray, out hit, maxTargetingRange, 688129))
                 {
                     targetPosition = hit.point;
 
                     //aim through self vessel if occluding mouseray
+
                     KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                     Part p = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
+
                     if (p && p.vessel && p.vessel == vessel)
                     {
                         targetPosition = ray.direction * maxTargetingRange +
@@ -1625,8 +1616,8 @@ namespace BDArmory
                         targetVelocity - vessel.Velocity(), bulletVelocity);
                     if (time2 > 0) time = time2;
                     finalTarget += (targetVelocity - vessel.Velocity()) * time;
+                    
                     //target vessel relative velocity compensation
-
                     Vector3 acceleration = targetAcceleration;
                     finalTarget += (0.5f * acceleration * time * time); //target acceleration
                 }
@@ -1651,8 +1642,7 @@ namespace BDArmory
                 if (airDetonation)
                 {
                     if (targetAcquired && airDetonationTiming)
-                    {
-                        //detonationRange = Mathf.Clamp(targetLeadDistance, 500, maxAirDetonationRange) - 25f;
+                    {                       
                         detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) ;
                     }
                     else
