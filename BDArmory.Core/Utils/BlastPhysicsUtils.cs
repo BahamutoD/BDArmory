@@ -24,11 +24,14 @@ namespace BDArmory.Core.Utils
 
             double totalDamage = (maxPressurePerMs + minPressurePerMs);// * 2 / 2 ;
 
-            float effectivePartArea = part.GetArea() * 0.33f;
+            float effectivePartArea = part.GetArea() * 0.4f;
 
             float positivePhase = 5;
 
-            double force = CalculateForce(maxPressurePerMs, effectivePartArea, positivePhase);
+            double maxforce = CalculateForce(maxPressurePerMs, effectivePartArea, positivePhase);
+            double minforce = CalculateForce(minPressurePerMs, effectivePartArea, positivePhase);
+
+            double force = (maxforce + minforce) /2f;
 
             float acceleration = (float) (force / vesselMass);
 
