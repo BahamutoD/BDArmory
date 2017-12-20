@@ -999,7 +999,8 @@ namespace BDArmory.Parts
                 }
                 else
                 {
-                    DetonationDistance = GetBlastRadius() * 0.05f;
+                    //DetonationDistance = GetBlastRadius() * 0.05f;
+                    DetonationDistance = 0f;
                 }
             }
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -1010,22 +1011,20 @@ namespace BDArmory.Parts
 
         protected void CollisionEnter(Collision col)
         {
-            if (HasExploded || !HasFired) return;
-            if(DetonationDistanceState != DetonationDistanceStates.CheckingProximity) return;
-
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 Debug.Log("[BDArmory]: Missile Collided");
 
-            if (col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
+            if (TimeIndex > 2 && HasFired && col.collider.gameObject.GetComponentInParent<Part>().GetFireFX())
             {
                 ContactPoint contact = col.contacts[0];
                 Vector3 pos = contact.point;
                 BulletHitFX.AttachFlames(pos, col.collider.gameObject.GetComponentInParent<Part>());
             }
 
-          
+            if (HasExploded || !HasFired) return;
 
-
+            if (DetonationDistanceState != DetonationDistanceStates.CheckingProximity) return;    
+            
             Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
             Detonate();
         }

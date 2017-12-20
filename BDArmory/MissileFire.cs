@@ -1108,6 +1108,7 @@ namespace BDArmory
                                                             guardTarget.transform.position).sqrMagnitude > 20*20))) continue;
                             tgp.Current.EnableCamera();
                             yield return StartCoroutine(tgp.Current.PointToPositionRoutine(guardTarget.CoM));
+                            //yield return StartCoroutine(tgp.Current.PointToPositionRoutine(TargetInfo.TargetCOMDispersion(guardTarget)));
                             if (!tgp.Current) continue;
                             if (tgp.Current.groundStabilized && guardTarget &&
                                 (tgp.Current.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < 20*20)
@@ -2910,7 +2911,6 @@ namespace BDArmory
                         Debug.Log("[BDArmory]: " + vessel.vesselName + " is engaging an override target with " + selectedWeapon);
                     }
                     overrideTimer = 15f;
-                    //overrideTarget = null;
                     return;
                 }
                 else if (BDArmorySettings.DRAW_DEBUG_LABELS)

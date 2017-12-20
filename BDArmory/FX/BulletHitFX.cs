@@ -96,8 +96,8 @@ namespace BDArmory.FX
 
             if (hitPart.vessel.LandedOrSplashed)
             {
-                MaxFiresPerVessel = 5;
-                FireLifeTimeInSeconds = 60f;
+                MaxFiresPerVessel = 8;
+                FireLifeTimeInSeconds = 90f;
             }
 
             if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
@@ -276,6 +276,8 @@ namespace BDArmory.FX
 
         public static void AttachFlames(Vector3 contactPoint, Part hitPart)
         {
+            if (!CanFlamesBeAttached(hitPart)) return;
+
             var modelUrl = "BDArmory/FX/FlameEffect2/model";
 
             var flameObject =
@@ -289,7 +291,7 @@ namespace BDArmory.FX
             flameObject.transform.SetParent(hitPart.transform);
             flameObject.AddComponent<DecalEmitterScript>();
 
-            DecalEmitterScript.shrinkRateFlame = 0.25f;
+            DecalEmitterScript.shrinkRateFlame = 0.125f;
             DecalEmitterScript.shrinkRateSmoke = 0.125f;
 
             foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())

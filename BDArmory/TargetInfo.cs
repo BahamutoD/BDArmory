@@ -307,6 +307,25 @@ namespace BDArmory
                     StartCoroutine(UpdateRCSDelayed());
             }
         }
+
+        public static Vector3 TargetCOMDispersion(Vessel v)
+        {
+            Vector3 TargetCOM_ = new Vector3(0,0);
+            ShipConstruct sc = new ShipConstruct("ship", "temp ship", v.parts[0]);
+
+            Vector3 size = ShipConstruction.CalculateCraftSize(sc);
+
+            float dispersionMax = size.y;
+
+            //float dispersionMax = 100f;
+
+            float dispersion = Random.Range(0, dispersionMax);
+
+            TargetCOM_ = v.CoM + new Vector3(0,dispersion);
+
+            return TargetCOM_;
+        }
 	}
 }
 
+;
