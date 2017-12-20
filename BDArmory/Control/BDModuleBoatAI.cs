@@ -25,6 +25,8 @@ namespace BDArmory.Control
 
 		Vector3 upDir;
 
+		AIUtils.TraversabilityMatrix pathingMatrix;
+
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
 			UI_FloatRange(minValue = 5f, maxValue = 200f, stepIncrement = 1f, scene = UI_Scene.All)]
@@ -95,6 +97,14 @@ namespace BDArmory.Control
 
 		#region events
 
+		public override void ActivatePilot()
+		{
+			base.ActivatePilot();
+
+			pathingMatrix = new AIUtils.TraversabilityMatrix(VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+				vessel.mainBody, AIUtils.VehicleMovementType.Water, 5);
+		}
+
 		protected override void OnGUI()
 		{
 			base.OnGUI();
@@ -109,6 +119,8 @@ namespace BDArmory.Control
 
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + targetDirection * 10f, 2, Color.blue);
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right), 2, Color.green);
+
+			pathingMatrix.DrawMatrix();
 		}
 
 		#endregion
@@ -120,17 +132,18 @@ namespace BDArmory.Control
 			if (!vessel.Autopilot.Enabled)
 				vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
-			// if we're not in water, cut throttle and panic
-			if (!vessel.Splashed) return;
-
 			targetVelocity = 0;
 			targetDirection = vesselTransform.up;
 			upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
-			// pilot logic figures out what we're supposed to be doing, and sets the base state
-			PilotLogic();
-			// situational awareness modifies the base as best as it can
-			Tactical();
+			// check if we should be panicking
+			if (!PanicModes())
+			{
+				// pilot logic figures out what we're supposed to be doing, and sets the base state
+				PilotLogic();
+				// situational awareness modifies the base as best as it can
+				Tactical();
+			}
 
 			AttitudeControl(s); // move according to our targets
 			AdjustThrottle(targetVelocity); // set throttle according to our targets and movement
@@ -142,6 +155,9 @@ namespace BDArmory.Control
 			if (collisionDetectionTicker == 0)
 			{
 				collisionDetectionTicker = 20;
+
+				pathingMatrix.RecenterGrid(VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody));
+
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
 				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
 				List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
@@ -273,6 +289,24 @@ namespace BDArmory.Control
 				weaveAdjustment = 0;
 			}
 			//DebugLine("underFire " + weaponManager.underFire + " weaveAdjustment " + weaveAdjustment);
+		}
+
+		bool PanicModes()
+		{
+			if (!vessel.LandedOrSplashed)
+			{
+				targetVelocity = 0;
+				targetDirection = Vector3.ProjectOnPlane(vessel.srf_velocity, upDir);
+				SetStatus("Airtime!");
+				return true;
+			}
+			else if (vessel.Landed)
+			{
+				targetVelocity = 0;
+				SetStatus("Stranded");
+				return true;
+			}
+			return false;
 		}
 
 		void AdjustThrottle(float targetSpeed)
