@@ -91,6 +91,7 @@ namespace BDArmory.Control
 			VehicleMovementType movementType;
 
 			Vector3 lastCenter;
+			Coords lastCenterCoords;
 
 			/// <summary>
 			/// Create a new traversability matrix.
@@ -111,8 +112,9 @@ namespace BDArmory.Control
 
 			private void createGrid(Vector3 origin)
 			{
-				this.origin = origin;
+				this.origin = VectorUtils.WorldPositionToGeoCoords(origin, body);
 				lastCenter = origin;
+				lastCenterCoords = new Coords(0, 0);
 				grid = new Dictionary<Coords, Cell>();
 
 				BuildGrid(-DefaultSize, -DefaultSize, DefaultSize, DefaultSize);
@@ -121,6 +123,8 @@ namespace BDArmory.Control
 			// create cells in grid
 			private void BuildGrid(int minX, int minY, int maxX, int maxY)
 			{
+				if (minX > maxX || minY > maxY) return;
+
 				var altDict = new Dictionary<Coords, float>();
 				altDict[new Coords(minX, minY)] = altAtGeo(gridToGeo(minX - 0.5f, minY - 0.5f));
 				for (int x = minX; x <= maxX; x++)
@@ -146,10 +150,10 @@ namespace BDArmory.Control
 			// calculate location on grid
 			private float[] getGridLocation(Vector3 geoPoint)
 			{
-				var distance = VectorUtils.GeoDistance(origin, geoPoint, body);
+				var distance = VectorUtils.GeoDistance(origin, geoPoint, body) / GridSize;
 				var bearing = VectorUtils.GeoForwardAzimuth(origin, geoPoint) * Mathf.Deg2Rad;
-				var x = distance * Mathf.Sin(bearing);
-				var y = distance * Mathf.Cos(bearing);
+				var x = distance * Mathf.Cos(bearing);
+				var y = distance * Mathf.Sin(bearing);
 				return new float[2] { x, y };
 			}
 
@@ -160,18 +164,28 @@ namespace BDArmory.Control
 			/// Should be called when the vessel moves. Will either extend grid to ensure coverage of surrounding are,
 			/// or rebuild the grid with the new center if the covered distance is large enough to cause distortion.
 			/// </summary>
-			/// <param name="point">new center in world coordinate format</param>
+			/// <param name="point">new center (world position)</param>
 			public void RecenterGrid(Vector3 point)
 			{
-				Debug.Log("recenter at at " + point.ToString() + ", distance2 " + (point - lastCenter).sqrMagnitude);
 				if ((point - lastCenter).sqrMagnitude < GridSize * GridSize) return;
-				if (VectorUtils.GeoDistance(origin, point, body) > rebuildDistance)
+
+				var geoPoint = VectorUtils.WorldPositionToGeoCoords(point, body);
+				if (VectorUtils.GeoDistance(origin, geoPoint, body) > rebuildDistance)
 					createGrid(point);
 				else
 				{
-					var recenter = getGridCell(getGridLocation(point));
-					BuildGrid(recenter.X - DefaultSize, recenter.Y - DefaultSize, recenter.X + DefaultSize, recenter.Y + DefaultSize);
+					Coords recenter = getGridCell(getGridLocation(geoPoint));
+
+					if (recenter.X > lastCenterCoords.X)
+						BuildGrid(lastCenterCoords.X + DefaultSize + 1, recenter.Y - DefaultSize, recenter.X + DefaultSize, recenter.Y + DefaultSize);
+					else if (recenter.X < lastCenterCoords.X)
+						BuildGrid(recenter.X - DefaultSize, recenter.Y - DefaultSize, lastCenterCoords.X - DefaultSize - 1, recenter.Y + DefaultSize);
+					if (recenter.Y > lastCenterCoords.Y)
+						BuildGrid(recenter.X - DefaultSize, lastCenterCoords.Y + DefaultSize + 1, recenter.X + DefaultSize, recenter.Y + DefaultSize);
+					else if (recenter.Y < lastCenterCoords.Y)
+						BuildGrid(recenter.X - DefaultSize, recenter.Y - DefaultSize, recenter.X + DefaultSize, lastCenterCoords.Y - DefaultSize - 1);
 					lastCenter = point;
+					lastCenterCoords = recenter;
 				}
 			}
 
@@ -201,10 +215,12 @@ namespace BDArmory.Control
 					GeoPos = geoPos;
 					GeoPos.z = (float)body.TerrainAltitude(Lat, Lon);
 					Traversible = traversible;
+					WorldPos = VectorUtils.GetWorldSurfacePostion(GeoPos, body);
 				}
 
-				public Coords Coords;
-				public Vector3 GeoPos;
+				public readonly Coords Coords;
+				public readonly Vector3 GeoPos;
+				public readonly Vector3 WorldPos;
 				public bool Traversible;
 
 				public int X => Coords.X;
@@ -217,8 +233,8 @@ namespace BDArmory.Control
 			// because int[] does not produce proper hashes
 			private class Coords
 			{
-				public int X;
-				public int Y;
+				public readonly int X;
+				public readonly int Y;
 
 				public Coords(int x, int y)
 				{
@@ -231,6 +247,7 @@ namespace BDArmory.Control
 				public static bool operator ==(Coords left, Coords right) => object.Equals(left, right);
 				public static bool operator !=(Coords left, Coords right) => !object.Equals(left, right);
 				public override int GetHashCode() => X.GetHashCode() * 1009 + Y.GetHashCode();
+				public override string ToString() => $"[{X}, {Y}]";
 			}
 
 			private bool CheckTraversibility(float[] cornerAlts, VehicleMovementType movementType, float maxAngle)
@@ -271,108 +288,10 @@ namespace BDArmory.Control
 
 			public void DrawMatrix()
 			{
+				Vector3 upVec = VectorUtils.GetUpDirection(lastCenter);
 				foreach (var kvp in grid)
 				{
-					Vector3 worldPos = VectorUtils.GetWorldSurfacePostion(kvp.Value.GeoPos, body);
-					Vector3 upVec = VectorUtils.GetUpDirection(worldPos);
-					BDGUIUtils.DrawLineBetweenWorldPositions(worldPos, worldPos + upVec * 5, 3, kvp.Value.Traversible ? Color.green : Color.red);
-				}
-			}
-		}
-
-		public static List<Vector3> Pathfind(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType = VehicleMovementType.Land)
-		{
-			Vector3 startGeo = VectorUtils.WorldPositionToGeoCoords(start, body);
-			Vector3 endGeo = VectorUtils.WorldPositionToGeoCoords(end, body);
-
-			GeoGrid grid = new GeoGrid(startGeo, endGeo, body, vehicleType);
-
-			// pathfind over the grid
-
-			// eliminate unnecessary waypoints
-
-
-			throw new NotImplementedException();
-		}
-
-		private class GeoGrid
-		{
-			const float gridSize = 200;
-			const int outerGridPoints = (int)(10000 / gridSize);
-
-			public GeoGrid(Vector3 startGeo, Vector3 endGeo, CelestialBody body, VehicleMovementType vehicleType)
-			{
-				float geoDistance = VectorUtils.GeoDistance(startGeo, endGeo, body);
-				innerGridPoints = (int)Mathf.Ceil(geoDistance / gridSize);
-
-				gridWidth = outerGridPoints * 2 + 1;
-				gridLength = gridWidth + innerGridPoints;
-				grid = new GridPoint[gridLength][];
-
-				float gridStartBearing = VectorUtils.GeoForwardAzimuth(startGeo, endGeo);
-
-				for (int i = 0; i < gridLength; i++)
-				{
-					grid[i] = new GridPoint[gridWidth];
-					grid[i][outerGridPoints] = new GridPoint(i, outerGridPoints,
-						VectorUtils.GeoCoordinateOffset(startGeo, body, gridStartBearing, gridSize * (i - outerGridPoints)),
-						vehicleType, body);
-					float localBearing = VectorUtils.GeoForwardAzimuth(startGeo, grid[i][outerGridPoints].GeoPos);
-				}
-			}
-
-			private GridPoint[][] grid;
-			private int gridLength;
-			private int gridWidth;
-			private int innerGridPoints;
-
-			public GridPoint StartPoint => grid[outerGridPoints][outerGridPoints];
-			public GridPoint EndPoint => grid[outerGridPoints + innerGridPoints][outerGridPoints];
-
-			public class GridPoint
-			{
-				public GridPoint(int x, int y, Vector3 geoPos, VehicleMovementType movementType, CelestialBody body)
-				{
-					Coords = new int[2] { x, y };
-					GeoPos = geoPos;
-					GeoPos.z = (float)body.TerrainAltitude(Lat, Lon);
-					switch (movementType)
-					{
-						case VehicleMovementType.Amphibious:
-							Traversible = true;
-							break;
-						case VehicleMovementType.Land:
-							Traversible = body.TerrainAltitude(Lat, Lon, true) > 0;
-							break;
-						case VehicleMovementType.Water:
-							Traversible = body.TerrainAltitude(Lat, Lon, true) < -5;
-							break;
-						case VehicleMovementType.Stationary:
-						default:
-							Traversible = false;
-							break;
-					}
-					Body = body;
-				}
-
-				public int[] Coords;
-				public Vector3 GeoPos;
-				public bool Traversible;
-				public CelestialBody Body;
-
-				public int X => Coords[0];
-				public int Y => Coords[1];
-				public float Lat => GeoPos.x;
-				public float Lon => GeoPos.y;
-				public float Alt => GeoPos.z;
-
-				private Dictionary<int[], float> distanceTo = new Dictionary<int[], float>();
-
-				public float DistanceTo(GridPoint gridPoint)
-				{
-					if (!distanceTo.ContainsKey(gridPoint.Coords))
-						distanceTo[gridPoint.Coords] = VectorUtils.GeoDistance(GeoPos, gridPoint.GeoPos, Body);
-					return distanceTo[gridPoint.Coords];
+					BDGUIUtils.DrawLineBetweenWorldPositions(kvp.Value.WorldPos, kvp.Value.WorldPos + upVec * 5, 3, kvp.Value.Traversible ? Color.green : Color.red);
 				}
 			}
 		}

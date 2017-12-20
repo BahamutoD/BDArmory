@@ -193,7 +193,7 @@ namespace BDArmory.Control
 			if (!pilotEnabled || !vessel.isActiveVessel) return;
 			if (BDArmorySettings.DRAW_DEBUG_LABELS)
 			{
-				GUI.Label(new Rect(200, Screen.height - 200, 400, 400), vessel.name + ":" + debugString.ToString());
+				GUI.Label(new Rect(200, Screen.height - 200, 400, 400), $"{vessel.name}: {debugString.ToString()}");
 			}
 		}
 

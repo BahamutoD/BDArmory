@@ -101,8 +101,7 @@ namespace BDArmory.Control
 		{
 			base.ActivatePilot();
 
-			pathingMatrix = new AIUtils.TraversabilityMatrix(VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-				vessel.mainBody, AIUtils.VehicleMovementType.Water, 5);
+			pathingMatrix = new AIUtils.TraversabilityMatrix(vessel.CoM, vessel.mainBody, AIUtils.VehicleMovementType.Water, 5);
 		}
 
 		protected override void OnGUI()
@@ -156,18 +155,18 @@ namespace BDArmory.Control
 			{
 				collisionDetectionTicker = 20;
 
-				pathingMatrix.RecenterGrid(VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody));
+				pathingMatrix.RecenterGrid(vessel.CoM);
 
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
 				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
-				List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
-				while (dodgeVector == null && vs.MoveNext())
+
+				foreach (Vessel vs in BDATargetManager.LoadedVessels)
 				{
-					if (vs.Current == null || vs.Current == vessel) continue;
-					if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
-					dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
+					if (vs == null || vs == vessel) continue;
+					if (!vs.Splashed || vs.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
+					dodgeVector = PredictCollisionWithVessel(vs, 5f * predictMult, 0.5f);
+					if (dodgeVector != null) break;
 				}
-				vs.Dispose();
 			}
 			else
 				collisionDetectionTicker--;
@@ -198,7 +197,7 @@ namespace BDArmory.Control
 						(MaxEngagementRange - distance) / (MaxEngagementRange - MinEngagementRange) * (1 - AttackAngleAtMaxRange / 90)+ AttackAngleAtMaxRange / 90); // attackAngle to 90 degrees from maxrange to minrange 
 					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
 					targetVelocity = MaxSpeed;
-					DebugLine("Broadside attack angle " + sidestep);
+					DebugLine($"Broadside attack angle {sidestep}");
 				}
 				else // just point at target and go
 				{
@@ -288,7 +287,7 @@ namespace BDArmory.Control
 			{
 				weaveAdjustment = 0;
 			}
-			//DebugLine("underFire " + weaponManager.underFire + " weaveAdjustment " + weaveAdjustment);
+			//DebugLine($"underFire {weaponManager.underFire} weaveAdjustment {weaveAdjustment}");
 		}
 
 		bool PanicModes()
@@ -319,7 +318,7 @@ namespace BDArmory.Control
 				DebugLine("Target velocity NaN, set to CruiseSpeed.");
 			}
 			else
-				DebugLine("Target velocity: " + targetVelocity);
+				DebugLine($"Target velocity: {targetVelocity}");
 
 			speedController.targetSpeed = targetSpeed;
 		}
