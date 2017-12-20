@@ -999,7 +999,8 @@ namespace BDArmory.Parts
                 }
                 else
                 {
-                    DetonationDistance = GetBlastRadius() * 0.05f;
+                    //DetonationDistance = GetBlastRadius() * 0.05f;
+                    DetonationDistance = 0f;
                 }
             }
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
