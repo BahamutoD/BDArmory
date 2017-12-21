@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
-using System.Text;
 
 namespace BDArmory.Control
 {
@@ -69,12 +67,18 @@ namespace BDArmory.Control
 		}
 
 		/// <summary>
+		/// Minimum depth for water ships to consider the terrain safe.
+		/// </summary>
+		public const float MinDepth = -10f;
+
+		/// <summary>
 		/// A grid approximation for a spherical body for AI pathing purposes.
 		/// </summary>
 		public class TraversabilityMatrix
 		{
 			// edge of each grid cell
 			public const float GridSize = 200;
+			private const float GridDiagonal = GridSize * 1.414213562373f;
 
 			// default grid size in each direction
 			const int DefaultSize = (int)(4000 / GridSize);
@@ -104,7 +108,7 @@ namespace BDArmory.Control
 			{
 				this.body = body;
 				this.maxSlopeAngle = maxSlopeAngle;
-				rebuildDistance = Mathf.Max(Mathf.Asin(MaxDistortion) * (float)body.Radius, GridSize * 4);
+				rebuildDistance = Mathf.Clamp(Mathf.Asin(MaxDistortion) * (float)body.Radius, GridSize * 4, GridSize * DefaultSize * 10);
 				movementType = vehicleType;
 
 				createGrid(start);
@@ -115,6 +119,7 @@ namespace BDArmory.Control
 				this.origin = VectorUtils.WorldPositionToGeoCoords(origin, body);
 				lastCenter = origin;
 				lastCenterCoords = new Coords(0, 0);
+
 				grid = new Dictionary<Coords, Cell>();
 
 				BuildGrid(-DefaultSize, -DefaultSize, DefaultSize, DefaultSize);
@@ -136,14 +141,34 @@ namespace BDArmory.Control
 					for (int x = minX; x <= maxX; x++)
 					{
 						altDict[new Coords(x + 1, y + 1)] = altAtGeo(gridToGeo(x + 0.5f, y + 0.5f));
-						if (grid.ContainsKey(new Coords(x, y))) continue;
-						grid[new Coords( x, y )] = new Cell(x, y, gridToGeo(x, y),
-							CheckTraversibility(new float[4] {
+						var coords = new Coords(x, y);
+						if (grid.ContainsKey(coords)) continue;
+						grid[coords] = new Cell(coords, gridToGeo(x, y),
+							CheckTraversability(new float[4] {
 								altDict[new Coords( x, y )], altDict[new Coords( x+1, y )],
 								altDict[new Coords( x, y+1 )], altDict[new Coords( x+1, y+1 )]
 							}, movementType, maxSlopeAngle),
 							body);
 					}
+				}
+			}
+
+			/// <summary>
+			/// Check all debris on the ground, and mark those squares impassable.
+			/// </summary>
+			private void includeDebris()
+			{
+				foreach (Vessel vs in BDATargetManager.LoadedVessels)
+				{
+					if ((vs == null || vs.vesselType != VesselType.Debris || !vs.LandedOrSplashed
+						|| vs.mainBody.GetAltitude(vs.CoM) < MinDepth)) continue;
+
+					Cell cell;
+					Coords coords = getGridCell(vs.CoM);
+					if (grid.TryGetValue(coords, out cell))
+						cell.Traversible = false;
+					else
+						grid[coords] = new Cell(coords, gridToGeo(coords), false, body);
 				}
 			}
 
@@ -158,14 +183,17 @@ namespace BDArmory.Control
 			}
 
 			// round grid coordinates to get cell
-			private Coords getGridCell(float[] gridLocation) => new Coords(Mathf.RoundToInt(gridLocation[0]), Mathf.RoundToInt(gridLocation[1]));
-			
+			private Coords getGridCell(float[] gridLocation) 
+				=> new Coords(Mathf.RoundToInt(gridLocation[0]), Mathf.RoundToInt(gridLocation[1]));
+			private Coords getGridCell(Vector3 worldPosition) 
+				=> getGridCell(getGridLocation(VectorUtils.WorldPositionToGeoCoords(worldPosition, body)));
+
 			/// <summary>
 			/// Should be called when the vessel moves. Will either extend grid to ensure coverage of surrounding are,
 			/// or rebuild the grid with the new center if the covered distance is large enough to cause distortion.
 			/// </summary>
 			/// <param name="point">new center (world position)</param>
-			public void RecenterGrid(Vector3 point)
+			public void Recenter(Vector3 point)
 			{
 				if ((point - lastCenter).sqrMagnitude < GridSize * GridSize) return;
 
@@ -199,19 +227,28 @@ namespace BDArmory.Control
 				throw new NotImplementedException();
 			}
 
+			private float gridDistance(Coords point, Coords other)
+			{
+				float dX = Mathf.Abs(point.X - other.X);
+				float dY = Mathf.Abs(point.Y - other.Y);
+				return GridDiagonal * Mathf.Min(dX, dY) + GridSize * Mathf.Abs(dX - dY);
+			}
+
 			// positive y towards north, positive x towards east
 			Vector3 gridToGeo(float x, float y)
 			{
 				if (x == 0 && y == 0) return origin;
 				return VectorUtils.GeoCoordinateOffset(origin, body, Mathf.Atan2(y, x) * Mathf.Rad2Deg, Mathf.Sqrt(x * x + y * y) * GridSize);
 			}
+			Vector3 gridToGeo(Coords coords) => gridToGeo(coords.X, coords.Y);
+
 			float altAtGeo(Vector3 geo) => (float)body.TerrainAltitude(geo.x, geo.y, true);
 
 			private class Cell
 			{
-				public Cell(int x, int y, Vector3 geoPos, bool traversible, CelestialBody body)
+				public Cell(Coords coords, Vector3 geoPos, bool traversible, CelestialBody body)
 				{
-					Coords = new Coords(x, y);
+					Coords = coords;
 					GeoPos = geoPos;
 					GeoPos.z = (float)body.TerrainAltitude(Lat, Lon);
 					Traversible = traversible;
@@ -231,7 +268,7 @@ namespace BDArmory.Control
 			}
 
 			// because int[] does not produce proper hashes
-			private class Coords
+			private struct Coords
 			{
 				public readonly int X;
 				public readonly int Y;
@@ -242,18 +279,24 @@ namespace BDArmory.Control
 					Y = y;
 				}
 
-				public bool Equals(Coords other) => (X == other?.X && Y == other?.Y);
-				public override bool Equals(object obj) => Equals(obj as Coords);
+				public bool Equals(Coords other)
+				{
+					if (other == null) return false;
+					return (X == other.X && Y == other.Y);
+				}
+				public override bool Equals(object obj)
+				{
+					if (!(obj is Coords)) return false;
+					return Equals((Coords)obj);
+				}
 				public static bool operator ==(Coords left, Coords right) => object.Equals(left, right);
 				public static bool operator !=(Coords left, Coords right) => !object.Equals(left, right);
 				public override int GetHashCode() => X.GetHashCode() * 1009 + Y.GetHashCode();
 				public override string ToString() => $"[{X}, {Y}]";
 			}
 
-			private bool CheckTraversibility(float[] cornerAlts, VehicleMovementType movementType, float maxAngle)
+			private bool CheckTraversability(float[] cornerAlts, VehicleMovementType movementType, float maxAngle)
 			{
-				const float minDepth = 10f;
-
 				for (int i = 0; i < 4; i++)
 				{
 					// check if we have the correct surface on all corners (land/water)
@@ -265,7 +308,7 @@ namespace BDArmory.Control
 							if (cornerAlts[i] < 0) return false;
 							break;
 						case VehicleMovementType.Water:
-							if (cornerAlts[i] > -minDepth) return false;
+							if (cornerAlts[i] > MinDepth) return false;
 							break;
 						case VehicleMovementType.Stationary:
 						default:
@@ -286,7 +329,7 @@ namespace BDArmory.Control
 				return true;
 			}
 
-			public void DrawMatrix()
+			public void DrawDebug()
 			{
 				Vector3 upVec = VectorUtils.GetUpDirection(lastCenter);
 				foreach (var kvp in grid)

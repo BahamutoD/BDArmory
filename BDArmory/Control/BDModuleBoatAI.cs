@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using BDArmory.Misc;
+﻿using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
 using UnityEngine;
@@ -119,7 +117,7 @@ namespace BDArmory.Control
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + targetDirection * 10f, 2, Color.blue);
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right), 2, Color.green);
 
-			pathingMatrix.DrawMatrix();
+			pathingMatrix.DrawDebug();
 		}
 
 		#endregion
@@ -140,7 +138,7 @@ namespace BDArmory.Control
 			{
 				// pilot logic figures out what we're supposed to be doing, and sets the base state
 				PilotLogic();
-				// situational awareness modifies the base as best as it can
+				// situational awareness modifies the base as best as it can (evasive mainly)
 				Tactical();
 			}
 
@@ -155,7 +153,7 @@ namespace BDArmory.Control
 			{
 				collisionDetectionTicker = 20;
 
-				pathingMatrix.RecenterGrid(vessel.CoM);
+				pathingMatrix.Recenter(vessel.CoM);
 
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
 				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);

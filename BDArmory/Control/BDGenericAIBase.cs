@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
