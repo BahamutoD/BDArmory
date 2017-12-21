@@ -24,7 +24,7 @@ namespace BDArmory.Core.Utils
 
             double totalDamage = (maxPressurePerMs + minPressurePerMs);// * 2 / 2 ;
 
-            float effectivePartArea = part.GetArea() * 0.4f;
+            float effectivePartArea = CalculateEffectiveBlastAreaToPart(range, part);
 
             float positivePhase = 5;
 
@@ -38,11 +38,33 @@ namespace BDArmory.Core.Utils
             // Calculation of damage
 
             float finalDamage = (float) totalDamage;
+
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                Debug.Log(
+                    "[BDArmory]: Blast Debug data: {" + part.name + "}, " +
+                    " clampedMinDistanceToHit: {" + clampedMinDistanceToHit + "}," +
+                    " clampedMaxDistanceToHit: {" + clampedMaxDistanceToHit + "}," +
+                    " minScaledDistance: {" + minScaledDistance + "}," +
+                    " maxScaledDistance: {" + maxScaledDistance + "}," +
+                    " minPressurePerMs: {" + minPressurePerMs + "}," +
+                    " maxPressurePerMs: {" + maxPressurePerMs + "}," +
+                    " totalDamage: {" + totalDamage + "}," +
+                    " finalDamage: {" + finalDamage + "},");
+            }
          
             return new BlastInfo() { TotalPressure = maxPressurePerMs, EffectivePartArea = effectivePartArea, PositivePhaseDuration = positivePhase,  VelocityChange = acceleration , Damage = finalDamage };
         }
 
- 
+
+        private static float CalculateEffectiveBlastAreaToPart(float range, Part part)
+        {
+            float circularArea = Mathf.PI * range * range;
+
+            return Mathf.Clamp(circularArea, 0f, part.GetArea() * 0.40f);
+        }
+
+
         private static double CalculateScaledDistance(float explosiveCharge, float distanceToHit)
         {
             return (distanceToHit / Math.Pow(explosiveCharge, 1f / 3f));
@@ -53,11 +75,7 @@ namespace BDArmory.Core.Utils
         {
             float cubeRootOfChargeWeight = (float)Math.Pow(explosiveCharge, 1f / 3f);
 
-            if (distanceToHit < 0.0674f * cubeRootOfChargeWeight)
-            {
-                return 0.0674f * cubeRootOfChargeWeight;
-            }
-                return distanceToHit;    
+            return Mathf.Clamp(distanceToHit, 0.0674f * cubeRootOfChargeWeight, distanceToHit);
         }
 
         private static double CalculateIncidentImpulse(double scaledDistance, float explosiveCharge)
