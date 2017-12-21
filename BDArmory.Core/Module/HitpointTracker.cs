@@ -138,7 +138,7 @@ namespace BDArmory.Core.Module
         {
             if (HighLogic.LoadedSceneIsEditor && _firstSetup)
             {
-                SetupPrefab();
+                //SetupPrefab();
             }
         }
 
