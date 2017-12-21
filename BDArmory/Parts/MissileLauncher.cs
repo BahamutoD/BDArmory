@@ -522,12 +522,9 @@ namespace BDArmory.Parts
 				Fields["cruiseAltitude"].guiActive = false;
                 Fields["cruiseAltitude"].guiActiveEditor = false;
 
-            }
-
-            if (GuidanceMode == GuidanceModes.Cruise && BDArmorySettings.ADVANCED_EDIT)
-            {
-                //Fields["GPS Target"].guiActive = true;
+                //Actions["GPS Target"].active = false;
                 //Fields["GPS Target"].guiActiveEditor = true;
+
             }
 
             if (GuidanceMode != GuidanceModes.AGM)

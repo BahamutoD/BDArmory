@@ -34,7 +34,7 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static float IVA_LOWPASS_FREQ = 2500;
         [BDAPersistantSettingsField] public static bool PEACE_MODE = false;
         [BDAPersistantSettingsField] public static bool IGNORE_TERRAIN_CHECK = false;
-        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false;                  //DEPRECATED, NOT USED ANYWHERE!
+        [BDAPersistantSettingsField] public static bool ADVANCED_EDIT = false; //Used for debug fields not nomrally shown to regular users
 
         [BDAPersistantSettingsField] public static float DMG_MULTIPLIER = 100f;
         [BDAPersistantSettingsField] public static float HITPOINT_MULTIPLIER = 2.0f;
