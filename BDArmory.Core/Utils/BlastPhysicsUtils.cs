@@ -13,15 +13,21 @@ namespace BDArmory.Core.Utils
         public static BlastInfo CalculatePartBlastEffects(Part part, float distanceToHit, double vesselMass,  float explosiveMass, float range)
         {
             float clampedMinDistanceToHit = ClampRange(explosiveMass, distanceToHit);
-            float clampedMaxDistanceToHit = ClampRange(explosiveMass, distanceToHit + part.GetAverageBoundSize());
 
+            var minPressureDistance = distanceToHit + part.GetAverageBoundSize();
+
+            double minPressurePerMs = 0;
+
+            if (minPressureDistance <= range)
+            {
+                 float clampedMaxDistanceToHit = ClampRange(explosiveMass, minPressureDistance);
+                 double maxScaledDistance = CalculateScaledDistance(explosiveMass, clampedMaxDistanceToHit);
+                 minPressurePerMs = CalculateIncidentImpulse(maxScaledDistance, explosiveMass);
+            }
+          
             double minScaledDistance = CalculateScaledDistance(explosiveMass, clampedMinDistanceToHit);
-            double maxScaledDistance = CalculateScaledDistance(explosiveMass, clampedMaxDistanceToHit);
-
             double maxPressurePerMs = CalculateIncidentImpulse(minScaledDistance, explosiveMass);
-            double minPressurePerMs = CalculateIncidentImpulse(maxScaledDistance, explosiveMass);
-
-
+          
             double totalDamage = (maxPressurePerMs + minPressurePerMs);// * 2 / 2 ;
 
             float effectivePartArea = CalculateEffectiveBlastAreaToPart(range, part);
@@ -44,9 +50,8 @@ namespace BDArmory.Core.Utils
                 Debug.Log(
                     "[BDArmory]: Blast Debug data: {" + part.name + "}, " +
                     " clampedMinDistanceToHit: {" + clampedMinDistanceToHit + "}," +
-                    " clampedMaxDistanceToHit: {" + clampedMaxDistanceToHit + "}," +
+                    " minPressureDistance: {" + minPressureDistance + "}," +
                     " minScaledDistance: {" + minScaledDistance + "}," +
-                    " maxScaledDistance: {" + maxScaledDistance + "}," +
                     " minPressurePerMs: {" + minPressurePerMs + "}," +
                     " maxPressurePerMs: {" + maxPressurePerMs + "}," +
                     " totalDamage: {" + totalDamage + "}," +
@@ -75,7 +80,7 @@ namespace BDArmory.Core.Utils
         {
             float cubeRootOfChargeWeight = (float)Math.Pow(explosiveCharge, 1f / 3f);
 
-            return Mathf.Clamp(distanceToHit, 0.0674f * cubeRootOfChargeWeight, distanceToHit);
+            return Mathf.Clamp(distanceToHit, 0.0674f * cubeRootOfChargeWeight, 40f * cubeRootOfChargeWeight);
         }
 
         private static double CalculateIncidentImpulse(double scaledDistance, float explosiveCharge)
