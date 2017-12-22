@@ -30,19 +30,19 @@ namespace BDArmory.Control
 
 		protected Vessel targetVessel;
 
-		protected Vector3d assignedPosition;
-
-		public Vector3d assignedPositionGeo
+		protected Vector3d assignedPositionGeo
 		{
 			get
 			{
-				return VectorUtils.GetWorldSurfacePostion(assignedPosition, vessel.mainBody);
+				return VectorUtils.WorldPositionToGeoCoords(assignedPositionWorld, vessel.mainBody);
 			}
-			protected set
+			set
 			{
-				assignedPosition = VectorUtils.WorldPositionToGeoCoords(value, vessel.mainBody);
+				assignedPositionWorld = VectorUtils.GetWorldSurfacePostion(value, vessel.mainBody);
 			}
 		}
+
+		public Vector3d assignedPositionWorld { get; protected set; }
 
 		//wing commander
 		public ModuleWingCommander commandLeader { get; protected set; }
@@ -51,7 +51,7 @@ namespace BDArmory.Control
 		protected int commandFollowIndex;
 
 		public PilotCommands currentCommand => command;
-		public Vector3d commandGPS => assignedPosition;
+		public Vector3d commandGPS => assignedPositionGeo;
 
 		#endregion
 
@@ -108,7 +108,7 @@ namespace BDArmory.Control
 			GameEvents.onVesselDestroy.Remove(RemoveAutopilot);
 			GameEvents.onVesselDestroy.Add(RemoveAutopilot);
 
-			assignedPositionGeo = vessel.ReferenceTransform.position;
+			assignedPositionWorld = vessel.ReferenceTransform.position;
 
 			RefreshPartWindow();
 		}
@@ -289,7 +289,7 @@ namespace BDArmory.Control
 			Debug.Log(vessel.vesselName + " was released from command.");
 			command = PilotCommands.Free;
 
-			assignedPositionGeo = vesselTransform.position;
+			assignedPositionWorld = vesselTransform.position;
 		}
 
 		public virtual void CommandFollow(ModuleWingCommander leader, int followerIndex)
@@ -314,7 +314,7 @@ namespace BDArmory.Control
 			if (!pilotEnabled) return;
 
 			Debug.Log(vessel.vesselName + " was commanded to go to.");
-			assignedPosition = gpsCoords;
+			assignedPositionGeo = gpsCoords;
 			command = PilotCommands.FlyTo;
 		}
 
@@ -323,7 +323,7 @@ namespace BDArmory.Control
 			if (!pilotEnabled) return;
 
 			Debug.Log(vessel.vesselName + " was commanded to attack.");
-			assignedPosition = gpsCoords;
+			assignedPositionGeo = gpsCoords;
 			command = PilotCommands.Attack;
 		}
 

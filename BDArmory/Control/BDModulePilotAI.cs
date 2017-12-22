@@ -442,7 +442,7 @@ namespace BDArmory.Control
 				if(!extending)
 				{
 					currentStatus = "Orbiting";
-					FlyOrbit(s, assignedPosition, 2000, idleSpeed, true);
+					FlyOrbit(s, assignedPositionGeo, 2000, idleSpeed, true);
 				}
 			}
 
@@ -1160,7 +1160,7 @@ namespace BDArmory.Control
 
             if (vessel.LandedOrSplashed && vessel.srfSpeed < takeOffSpeed)
 			{
-				assignedPosition = VectorUtils.WorldPositionToGeoCoords(vessel.transform.position, vessel.mainBody);
+				assignedPositionWorld = vessel.transform.position;
 				return;
 			}
 
@@ -1595,12 +1595,12 @@ namespace BDArmory.Control
 			else if(command == PilotCommands.FlyTo)
 			{
 				currentStatus = "Fly To";
-				FlyOrbit(s, assignedPosition, 2500, idleSpeed, true);
+				FlyOrbit(s, assignedPositionGeo, 2500, idleSpeed, true);
 			}
 			else if(command == PilotCommands.Attack)
 			{
 				currentStatus = "Attack";
-				FlyOrbit(s, assignedPosition, 4500, maxSpeed, true);
+				FlyOrbit(s, assignedPositionGeo, 4500, maxSpeed, true);
 			}
 		}
 

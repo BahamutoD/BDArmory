@@ -1,4 +1,5 @@
-﻿using BDArmory.Misc;
+﻿using System.Collections.Generic;
+using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace BDArmory.Control
 		Vector3 upDir;
 
 		AIUtils.TraversabilityMatrix pathingMatrix;
+		List<Vector3> waypoints = null;
 
 		//settings
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
@@ -70,6 +72,8 @@ namespace BDArmory.Control
 			UI_FloatRange(minValue = 1000f, maxValue = 8000f, stepIncrement = 500f, scene = UI_Scene.All)]
 		public float MaxEngagementRange = 4000;
 
+		const float maxSlopeAngle = 5f;
+
 		const float AttackAngleAtMaxRange = 30f;
 		#endregion
 
@@ -99,7 +103,7 @@ namespace BDArmory.Control
 		{
 			base.ActivatePilot();
 
-			pathingMatrix = new AIUtils.TraversabilityMatrix(vessel.CoM, vessel.mainBody, AIUtils.VehicleMovementType.Water, 5);
+			pathingMatrix = new AIUtils.TraversabilityMatrix();
 		}
 
 		protected override void OnGUI()
@@ -111,13 +115,13 @@ namespace BDArmory.Control
 			if (!BDArmorySettings.DRAW_DEBUG_LINES) return;
 			if (command == PilotCommands.Follow)
 			{
-				BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, assignedPositionGeo, 2, Color.red);
+				BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, assignedPositionWorld, 2, Color.red);
 			}
 
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + targetDirection * 10f, 2, Color.blue);
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right), 2, Color.green);
 
-			pathingMatrix.DrawDebug();
+			pathingMatrix.DrawDebug(vessel.CoM, waypoints);
 		}
 
 		#endregion
@@ -152,8 +156,7 @@ namespace BDArmory.Control
 			if (collisionDetectionTicker == 0)
 			{
 				collisionDetectionTicker = 20;
-
-				pathingMatrix.Recenter(vessel.CoM);
+				waypoints = pathingMatrix.Pathfind(vessel.CoM, assignedPositionWorld, vessel.mainBody, AIUtils.VehicleMovementType.Water, maxSlopeAngle);
 
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
 				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
@@ -248,7 +251,7 @@ namespace BDArmory.Control
 			// goto
 
 			const float targetRadius = 400f;
-			targetDirection = Vector3.ProjectOnPlane(assignedPositionGeo - vesselTransform.position, upDir);
+			targetDirection = Vector3.ProjectOnPlane(assignedPositionWorld - vesselTransform.position, upDir);
 			if (targetDirection.sqrMagnitude > targetRadius * targetRadius)
 			{
 				targetVelocity = Mathf.Clamp(((float)targetDirection.magnitude - targetRadius / 2) / 5f, 0, command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed);
