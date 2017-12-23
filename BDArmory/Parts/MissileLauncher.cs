@@ -1253,9 +1253,8 @@ namespace BDArmory.Parts
 				    if (gpe.Current == null) continue;
 					if(!vessel.InVacuum() && Throttle > 0)
 					{
-						gpe.Current.emit = true;
-                        //gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
-                        gpe.Current.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
+						gpe.Current.emit = true;                        
+                        gpe.Current.pEmitter.worldVelocity = 2 * ParticleTurbulence.flareTurbulence;
 					}
 					else
 					{
@@ -1303,9 +1302,10 @@ namespace BDArmory.Parts
 
 			if(string.IsNullOrEmpty(boostTransformName))
 			{
-				boostEmitters = pEmitters;
-				boostGaplessEmitters = gaplessEmitters;
+                boostEmitters = pEmitters;                
+                boostGaplessEmitters = gaplessEmitters;
 			}
+
 		    List<KSPParticleEmitter>.Enumerator emitter = boostEmitters.GetEnumerator();
 			while(emitter.MoveNext())
 			{
@@ -1380,6 +1380,7 @@ namespace BDArmory.Parts
 					audioSource.Stop();
 				}
 			    audioSource.volume = Throttle;
+                
                 //particleFx
                 List<KSPParticleEmitter>.Enumerator emitter = pEmitters.GetEnumerator();
 			    while (emitter.MoveNext())
@@ -1400,9 +1401,8 @@ namespace BDArmory.Parts
 				{
 				    if (gpe.Current == null) continue;
                         gpe.Current.pEmitter.maxSize = Mathf.Clamp01(Throttle / Mathf.Clamp((float)vessel.atmDensity, 0.2f, 1f));
-                        gpe.Current.emit = true;
-                        //gpe.pEmitter.worldVelocity = ParticleTurbulence.Turbulence;
-					    gpe.Current.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence;
+                        gpe.Current.emit = true;                       
+					    gpe.Current.pEmitter.worldVelocity = 2 * ParticleTurbulence.flareTurbulence;
 				}
                 gpe.Dispose();
 

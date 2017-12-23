@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
-using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
-using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
+using BDArmory.Core;
+using System;
 
 namespace BDArmory.Parts
 {
@@ -18,32 +17,36 @@ namespace BDArmory.Parts
 
         bool deployed;
 
-        [KSPField(isPersistant = false)] public string subExplModelPath = "BDArmory/Models/explosion/explosion";
+        [KSPField(isPersistant = false)]
+        public string subExplModelPath = "BDArmory/Models/explosion/explosion";
 
-        [KSPField(isPersistant = false)] public string subExplSoundPath = "BDArmory/Sounds/subExplode";
-
-
-        [KSPField(isPersistant = false)] public float deployDelay = 2.5f;
-
-
+        [KSPField(isPersistant = false)]
+        public string subExplSoundPath = "BDArmory/Sounds/subExplode";
+        
+        [KSPField(isPersistant = false)]
+        public float deployDelay = 2.5f;
+        
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Deploy Altitude"),
-         UI_FloatRange(minValue = 100f, maxValue = 1000f, stepIncrement = 10f, scene = UI_Scene.Editor)] public float
-            deployAltitude = 400;
+         UI_FloatRange(minValue = 100f, maxValue = 1000f, stepIncrement = 10f, scene = UI_Scene.Editor)]
+        public float deployAltitude = 400;
 
-        [KSPField(isPersistant = false)] public float submunitionMaxSpeed = 10;
-
-
-        [KSPField(isPersistant = false)] public bool swapCollidersOnDeploy = true;
+        [KSPField(isPersistant = false)]
+        public float submunitionMaxSpeed = 10;
+        
+        [KSPField(isPersistant = false)]
+        public bool swapCollidersOnDeploy = true;
 
 
         public override void OnStart(StartState state)
         {
             submunitions = new List<GameObject>();
             IEnumerator<Transform> sub = part.FindModelTransforms("submunition").AsEnumerable().GetEnumerator();
+
             while (sub.MoveNext())
             {
                 if (sub.Current == null) continue;
                 submunitions.Add(sub.Current.gameObject);
+
                 if (HighLogic.LoadedSceneIsFlight)
                 {
                     Rigidbody subRb = sub.Current.gameObject.GetComponent<Rigidbody>();
@@ -51,8 +54,10 @@ namespace BDArmory.Parts
                     {
                         subRb = sub.Current.gameObject.AddComponent<Rigidbody>();
                     }
-                    subRb.isKinematic = true;
-                    subRb.mass = part.mass/part.FindModelTransforms("submunition").Length;
+
+                    subRb.isKinematic = true;                            
+                    subRb.mass = part.mass / part.FindModelTransforms("submunition").Length;                    
+
                 }
                 sub.Current.gameObject.SetActive(false);
             }
@@ -75,13 +80,14 @@ namespace BDArmory.Parts
             }
             fairing.Dispose();
 
-            missileLauncher = part.GetComponent<MissileLauncher>();
-            //missileLauncher.deployTime = deployDelay;
+            missileLauncher = part.GetComponent<MissileLauncher>();            
         }
 
         public override void OnFixedUpdate()
         {
-            if (missileLauncher != null && missileLauncher.HasFired && missileLauncher.TimeIndex > deployDelay && !deployed && AltitudeTrigger())
+            if (missileLauncher != null && missileLauncher.HasFired &&
+                missileLauncher.TimeIndex > deployDelay && 
+                !deployed && AltitudeTrigger())
             {
                 DeploySubmunitions();
             }
@@ -90,7 +96,7 @@ namespace BDArmory.Parts
         void DeploySubmunitions()
         {
             missileLauncher.sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/flare"));
-            FXMonger.Explode(part, transform.position + part.rb.velocity*Time.fixedDeltaTime, 0.1f);
+            FXMonger.Explode(part, transform.position + part.rb.velocity * Time.fixedDeltaTime, 0.1f);
 
             deployed = true;
             if (swapCollidersOnDeploy)
@@ -105,7 +111,7 @@ namespace BDArmory.Parts
             }
 
             missileLauncher.sfAudioSource.priority = 999;
-            //missileLauncher.explosionSize = 3;
+            
             List<GameObject>.Enumerator sub = submunitions.GetEnumerator();
             while (sub.MoveNext())
             {
@@ -144,6 +150,7 @@ namespace BDArmory.Parts
                 fairingScript.deployed = true;
                 fairingScript.sourceVessel = vessel;
             }
+
             fairing.Dispose();
 
             part.explosionPotential = 0;
@@ -161,7 +168,6 @@ namespace BDArmory.Parts
             return (radarAlt < deployAltitude || asl < deployAltitude) && vessel.verticalSpeed < 0;
         }
     }
-
 
     public class Submunition : MonoBehaviour
     {
@@ -189,109 +195,94 @@ namespace BDArmory.Parts
             rb = GetComponent<Rigidbody>();
         }
 
+        void OnCollisionEnter(Collision col)
+        {
+            ContactPoint contact = col.contacts[0];
+            Vector3 pos = contact.point;
+            ExplosionFx.CreateExplosion(pos, blastForce, subExplModelPath, subExplSoundPath, true);
+        }
+
         void FixedUpdate()
         {
             if (deployed)
             {
-                if (Time.time - startTime > 30)
+                if (deployed)
                 {
-                    Destroy(gameObject);
-                    return;
-                }
+                    if (Time.time - startTime > 30)
+                    {
+                        Destroy(gameObject);
+                        return;
+                    }
 
-                //floatingOrigin fix
-                if (sourceVessel != null &&
-                    ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
-                {
-                    transform.position = sourceVessel.transform.position + relativePos +
-                                         (rb.velocity*Time.fixedDeltaTime);
-                }
-                if (sourceVessel != null) relativePos = transform.position - sourceVessel.transform.position;
-                //
+                    //floatingOrigin fix
+                    if (sourceVessel != null &&
+                        ((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800 * 800)
+                    {
+                        transform.position = sourceVessel.transform.position + relativePos +
+                                             (rb.velocity * Time.fixedDeltaTime);
+                    }
+                    if (sourceVessel != null) relativePos = transform.position - sourceVessel.transform.position;
+                    //
 
-                currPosition = transform.position;
-                float dist = (currPosition - prevPosition).magnitude;
-                Ray ray = new Ray(prevPosition, currPosition - prevPosition);
-                RaycastHit hit;
-                //if (Physics.Raycast(ray, out hit, dist, 2228224))
-                //{
-                //    try
-                //    {
-                //        hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
-                //        if (hitEVA != null)
-                //            Debug.Log("[BDArmory]:Hit on kerbal confirmed!");
-                //    }
-                //    catch (NullReferenceException)
-                //    {
-                //        Debug.Log("[BDArmory]:Whoops ran amok of the exception handler");
-                //    }
+                    currPosition = transform.position;
+                    float dist = (currPosition - prevPosition).magnitude;
+                    Ray ray = new Ray(prevPosition, currPosition - prevPosition);
+                    RaycastHit hit;
 
-                //    Part hitPart = hitEVA.part;
+                    if (Physics.Raycast(ray, out hit, dist, 688129))
+                    {
+                        Part hitPart = null;
+                        try
+                        {
+                            hitPart = hit.collider.gameObject.GetComponentInParent<Part>();                            
+                        }
+                        catch (NullReferenceException)
+                        {
+                            Debug.Log("[BDArmory]:NullReferenceException for Submunition Hit");
+                            return;
+                        }
 
-                //    float destroyChance = (rb.mass / hitPart.crashTolerance) *
-                //                              (rb.velocity - hit.rigidbody.velocity).magnitude * 8000;
-                //    if (BDArmorySetup.INSTAKILL)
-                //    {
-                //        destroyChance = 100;
-                //    }
-                //    Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
-                //    if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
-                //    {
-                //        hitPart.SetDamage(hitPart.maxTemp + 100);
-                //    }
-                //    if (hitPart.vessel != sourceVessel)
-                //    {
-                //        Detonate(hit.point);
-                //    }
-                //}
+                        if (hitPart?.vessel == sourceVessel) return;
 
-                if (Physics.Raycast(ray, out hit, dist, 688129))
-                {
-                    //Part hitPart = null;
-                    //try
-                    //{
-                    //    hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                    //}
-                    //catch (NullReferenceException)
-                    //{
-                    //}
-
-                    //if (hitPart != null)
-                    //{
-                    //    float destroyChance = (rb.mass/hitPart.crashTolerance)*
-                    //                          (rb.velocity - hit.rigidbody.velocity).magnitude*8000;
-                    //    if (BDArmorySetup.INSTAKILL)
-                    //    {
-                    //        destroyChance = 100;
-                    //    }
-                    //    Debug.Log("[BDArmory]: Hit part: " + hitPart.name + ", chance of destroy: " + destroyChance);
-                    //    if (UnityEngine.Random.Range(0f, 100f) < destroyChance)
-                    //    {
-                    //        hitPart.SetDamage(hitPart.maxTemp + 100);
-                    //    }
-                    //}
-                    //if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
-                    //{
-                    //    Detonate(hit.point);
-                    //}
-
-
-                    //Simplyfing cluster point. One hit, one explosion.No auto part destruction
-
-                    Detonate(hit.point);
-                }
-                else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
-                {
-                    Detonate(currPosition);
+                        if (hitPart != null || CheckBuildingHit(hit))
+                        {
+                            Detonate(hit.point);
+                        }
+                        else if (hitPart == null)
+                        {
+                            Detonate(currPosition);
+                        }
+                        
+                    }
+                    else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
+                    {
+                        Detonate(currPosition);
+                    }
                 }
             }
         }
 
         void Detonate(Vector3 pos)
         {
-            ExplosionFx.CreateExplosion(pos, blastForce,
-                subExplModelPath, subExplSoundPath,true);
-            Destroy(gameObject); //destroy bullet on collision
+            ExplosionFx.CreateExplosion(pos, blastForce, subExplModelPath, subExplSoundPath,true);
+            Destroy(gameObject); 
+        }
+
+        private bool CheckBuildingHit(RaycastHit hit)
+        {
+            DestructibleBuilding building = null;
+            try
+            {
+                building = hit.collider.gameObject.GetComponentUpwards<DestructibleBuilding>();
+            }
+            catch (Exception) { }
+
+            if (building != null && building.IsIntact)
+            {
+                return true;
+            }
+            return false;
+
         }
     }
 

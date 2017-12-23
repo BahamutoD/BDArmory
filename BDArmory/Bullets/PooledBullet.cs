@@ -286,7 +286,7 @@ namespace BDArmory
                             }
                             catch (NullReferenceException)
                             {
-                                Debug.Log("[BDArmory]:NullReferenceException for Hit");
+                                Debug.Log("[BDArmory]:NullReferenceException for Ballistic Hit");
                                 return;
                             }
 
@@ -431,20 +431,12 @@ namespace BDArmory
                 return;
             }
 
-            //if ((explosive && airDetonation && (distanceFromStart > detonationRange))) //|| Vector3.Distance(currPosition,)) 
-            //{
-            //    //detonate
-            //    ExplosionFx.CreateExplosion(currPosition, tntMass, explModelPath, explSoundPath, false, caliber,null,currentVelocity);
-            //    KillBullet();
-            //    return;
-            //}
-
             //////////////////////////////////////////////////
-            //Bullet Translation
+            //Bullet Translation 
             //////////////////////////////////////////////////
 
             prevPosition = currPosition;
-            //move bullet
+            
 
             if (bulletDrop && FlightGlobals.RefFrameIsRotating)
             {
@@ -454,6 +446,7 @@ namespace BDArmory
                 currentVelocity += gravity_ * TimeWarp.deltaTime;
             }
 
+            //move bullet
             transform.position += currentVelocity * Time.fixedDeltaTime;
         }
 
