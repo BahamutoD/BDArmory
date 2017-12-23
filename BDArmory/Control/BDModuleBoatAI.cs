@@ -161,13 +161,14 @@ namespace BDArmory.Control
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
 				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
 
-				foreach (Vessel vs in BDATargetManager.LoadedVessels)
-				{
-					if (vs == null || vs == vessel) continue;
-					if (!vs.Splashed || vs.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
-					dodgeVector = PredictCollisionWithVessel(vs, 5f * predictMult, 0.5f);
-					if (dodgeVector != null) break;
-				}
+				using (var vs = BDATargetManager.LoadedVessels.GetEnumerator())
+					while (vs.MoveNext())
+					{
+						if (vs.Current == null || vs.Current == vessel) continue;
+						if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
+						dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
+						if (dodgeVector != null) break;
+					}
 			}
 			else
 				collisionDetectionTicker--;

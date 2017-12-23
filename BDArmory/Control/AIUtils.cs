@@ -137,17 +137,18 @@ namespace BDArmory.Control
 					visited.Add(current);
 					float currentNodeScore = nodes[current];
 
-					foreach (var adj in adjacent)
-					{
-						Cell neighbour = getCellAt(current.Coords + adj.Key);
-						if (!neighbour.Traversable || visited.Contains(neighbour)) continue;
-						float value;
-						if (candidates.TryGetValue(neighbour, out value) && currentNodeScore + adj.Value >= value)
-							continue;
-						nodes[neighbour] = currentNodeScore + adj.Value;
-						backtrace[neighbour] = current;
-						candidates[neighbour] = currentNodeScore + adj.Value + gridDistance(neighbour.Coords, endCoords);
-					}
+					using (var adj = adjacent.GetEnumerator())
+						while (adj.MoveNext())
+						{
+							Cell neighbour = getCellAt(current.Coords + adj.Current.Key);
+							if (!neighbour.Traversable || visited.Contains(neighbour)) continue;
+							float value;
+							if (candidates.TryGetValue(neighbour, out value) && currentNodeScore + adj.Current.Value >= value)
+								continue;
+							nodes[neighbour] = currentNodeScore + adj.Current.Value;
+							backtrace[neighbour] = current;
+							candidates[neighbour] = currentNodeScore + adj.Current.Value + gridDistance(neighbour.Coords, endCoords);
+						}
 				}
 
 				var path = new List<Vector3>();
@@ -194,18 +195,19 @@ namespace BDArmory.Control
 			/// </summary>
 			private void includeDebris()
 			{
-				foreach (Vessel vs in BDATargetManager.LoadedVessels)
-				{
-					if ((vs == null || vs.vesselType != VesselType.Debris || !vs.LandedOrSplashed
-						|| vs.mainBody.GetAltitude(vs.CoM) < MinDepth)) continue;
+				using (var vs = BDATargetManager.LoadedVessels.GetEnumerator())
+					while (vs.MoveNext())
+					{
+						if ((vs.Current == null || vs.Current.vesselType != VesselType.Debris || vs.Current.IsControllable || !vs.Current.LandedOrSplashed
+							|| vs.Current.mainBody.GetAltitude(vs.Current.CoM) < MinDepth)) continue;
 
-					Cell cell;
-					Coords coords = getGridCoord(vs.CoM);
-					if (grid.TryGetValue(coords, out cell))
-						cell.Traversable = false;
-					else
-						grid[coords] = new Cell(coords, gridToGeo(coords), false, body);
-				}
+						Cell cell;
+						Coords coords = getGridCoord(vs.Current.CoM);
+						if (grid.TryGetValue(coords, out cell))
+							cell.Traversable = false;
+						else
+							grid[coords] = new Cell(coords, gridToGeo(coords), false, body);
+					}
 			}
 
 			private bool directPath(Coords origin, Coords target)
@@ -372,19 +374,21 @@ namespace BDArmory.Control
 			public void DrawDebug(Vector3 currentWorldPos, List<Vector3> waypoints = null)
 			{
 				Vector3 upVec = VectorUtils.GetUpDirection(currentWorldPos) * 5;
-				foreach (var kvp in grid)
-				{
-					BDGUIUtils.DrawLineBetweenWorldPositions(kvp.Value.WorldPos, kvp.Value.WorldPos + upVec, 3,
-						kvp.Value.Traversable ? Color.green : Color.red);
-				}
+				using (var kvp = grid.GetEnumerator())
+					while (kvp.MoveNext())
+					{
+						BDGUIUtils.DrawLineBetweenWorldPositions(kvp.Current.Value.WorldPos, kvp.Current.Value.WorldPos + upVec, 3,
+							kvp.Current.Value.Traversable ? Color.green : Color.red);
+					}
 				if (waypoints != null)
 				{
 					var previous = currentWorldPos;
-					foreach (var wp in waypoints)
-					{
-						BDGUIUtils.DrawLineBetweenWorldPositions(previous + upVec, wp + upVec, 2, Color.blue);
-						previous = wp;
-					}
+					using (var wp = waypoints.GetEnumerator())
+						while (wp.MoveNext())
+						{
+							BDGUIUtils.DrawLineBetweenWorldPositions(previous + upVec, wp.Current + upVec, 2, Color.blue);
+							previous = wp.Current;
+						}
 				}
 			}
 		}
