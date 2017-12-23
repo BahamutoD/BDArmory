@@ -123,26 +123,27 @@ namespace BDArmory
 
             sourceOriginalV = sourceVessel.Velocity();
 
-            if (!lightFlash)
+            if (lightFlash == null || !gameObject.GetComponent<Light>())
             {
-                lightFlash = gameObject.AddComponent<Light>();
+                lightFlash = gameObject.AddOrGetComponent<Light>();
                 lightFlash.type = LightType.Point;
                 lightFlash.range = 8;
                 lightFlash.intensity = 1;
+                lightFlash.color = lightColor;
+                lightFlash.enabled = true;
             }
-            lightFlash.color = lightColor;
-            lightFlash.enabled = true;
-
 
             //tracer setup
-            if (!bulletTrail)
+            if (bulletTrail == null || !gameObject.GetComponent<LineRenderer>())
             {
-                bulletTrail = gameObject.AddComponent<LineRenderer>();
+                bulletTrail = gameObject.AddOrGetComponent<LineRenderer>();
             }
+
             if (!wasInitiated)
             {
                 bulletTrail.SetVertexCount(2);
             }
+
             bulletTrail.SetPosition(0, transform.position);
             bulletTrail.SetPosition(1, transform.position);
 
@@ -227,10 +228,9 @@ namespace BDArmory
 
             if (tracerLength == 0)
             {
-
                 bulletTrail.SetPosition(0,
                     transform.position +
-                    (currentVelocity * tracerDeltaFactor * 0.25f * Time.fixedDeltaTime));
+                    (currentVelocity * tracerDeltaFactor * 0.45f * Time.fixedDeltaTime));
             }
             else
             {
