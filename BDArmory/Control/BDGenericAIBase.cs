@@ -30,19 +30,19 @@ namespace BDArmory.Control
 
 		protected Vessel targetVessel;
 
-		protected Vector3d assignedPositionGeo
+		protected Vector3d assignedPositionGeo { get; set; }
+
+		public Vector3d assignedPositionWorld
 		{
 			get
 			{
-				return VectorUtils.WorldPositionToGeoCoords(assignedPositionWorld, vessel.mainBody);
+				return VectorUtils.GetWorldSurfacePostion(assignedPositionGeo, vessel.mainBody);
 			}
-			set
+			protected set
 			{
-				assignedPositionWorld = VectorUtils.GetWorldSurfacePostion(value, vessel.mainBody);
+				assignedPositionGeo = VectorUtils.WorldPositionToGeoCoords(value, vessel.mainBody);
 			}
 		}
-
-		public Vector3d assignedPositionWorld { get; protected set; }
 
 		//wing commander
 		public ModuleWingCommander commandLeader { get; protected set; }
