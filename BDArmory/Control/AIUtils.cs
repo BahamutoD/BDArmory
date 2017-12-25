@@ -78,6 +78,8 @@ namespace BDArmory.Control
 		{
 			// edge of each grid cell
 			const float GridSizeDefault = 400f;
+			const float GiveUpHeuristic = 3;
+			const float RetraceReluctance = 1.01f;
 			float GridSize;
 			float GridDiagonal;
 
@@ -110,8 +112,10 @@ namespace BDArmory.Control
 				Coords endCoords = getGridCoord(end);
 				float initialDistance = gridDistance(startCoords, endCoords);
 
-				SortedDictionary<CellValue, float> candidates = new SortedDictionary<CellValue, float>(new CellValueComparer())
-				{ [new CellValue(getCellAt(startCoords), initialDistance)] = initialDistance};
+				SortedDictionary<CellValue, float> sortedCandidates = new SortedDictionary<CellValue, float>(new CellValueComparer())
+				{ [new CellValue(getCellAt(startCoords), initialDistance)] = initialDistance}; //openSet and fScore
+				Dictionary<Cell, float> candidates = new Dictionary<Cell, float>
+				{ [getCellAt(startCoords)] = initialDistance }; // secondary dictionary to sortedCandidates for faster lookup
 
 				Dictionary<Cell, float> nodes = new Dictionary<Cell, float> //gScore
 				{ [getCellAt(startCoords)] = 0 };
@@ -121,7 +125,7 @@ namespace BDArmory.Control
 
 				Cell current = null;
 				float currentFScore = 0;
-				KeyValuePair<Cell, float> best = new KeyValuePair<Cell, float>(getCellAt(startCoords), initialDistance * 2);
+				KeyValuePair<Cell, float> best = new KeyValuePair<Cell, float>(getCellAt(startCoords), initialDistance * GiveUpHeuristic);
 
 				List<KeyValuePair<Coords, float>> adjacent = new List<KeyValuePair<Coords, float>>(8)
 				{
@@ -138,13 +142,14 @@ namespace BDArmory.Control
 
 				while (candidates.Count > 0)
 				{
-					// find the best candidate
-					using (var e = candidates.GetEnumerator())
+					// take the best candidate - since now we use SortedDict, it's the first one
+					using (var e = sortedCandidates.GetEnumerator())
 					{
 						e.MoveNext();
 						current = e.Current.Key.Cell;
 						currentFScore = e.Current.Key.Value;
-						candidates.Remove(e.Current.Key);
+						candidates.Remove(e.Current.Key.Cell);
+						sortedCandidates.Remove(e.Current.Key);
 					}
 					// stop if we found our destination
 					if (current.Coords == endCoords)
@@ -164,21 +169,21 @@ namespace BDArmory.Control
 							Cell neighbour = getCellAt(current.Coords + adj.Current.Key);
 							if (!neighbour.Traversable || visited.Contains(neighbour)) continue;
 							float value;
-							var keyProp = new CellValue(neighbour, 0);
-							if (candidates.TryGetValue(keyProp, out value))
+							if (candidates.TryGetValue(neighbour, out value))
 							{
 								if (currentNodeScore + adj.Current.Value >= value)
 									continue;
 								else
-									candidates.Remove(keyProp);
+									sortedCandidates.Remove(new CellValue(neighbour, 0)); //we'll reinsert with the adjusted value, so it's sorted properly
 							}
 							nodes[neighbour] = currentNodeScore + adj.Current.Value;
 							backtrace[neighbour] = current;
 							float remainingDistanceEstimate = gridDistance(neighbour.Coords, endCoords);
-							float fScoreEstimate = currentNodeScore + adj.Current.Value + remainingDistanceEstimate;
-							candidates[new CellValue(neighbour, fScoreEstimate)] = fScoreEstimate;
-							if ((fScoreEstimate + remainingDistanceEstimate) < best.Value)
-								best = new KeyValuePair<Cell, float>(neighbour, fScoreEstimate + remainingDistanceEstimate);
+							float fScoreEstimate = currentNodeScore + adj.Current.Value + remainingDistanceEstimate * RetraceReluctance;
+							sortedCandidates[new CellValue(neighbour, fScoreEstimate)] = fScoreEstimate;
+							candidates[neighbour] = fScoreEstimate;
+							if ((fScoreEstimate + remainingDistanceEstimate * (GiveUpHeuristic - 1)) < best.Value)
+								best = new KeyValuePair<Cell, float>(neighbour, fScoreEstimate + remainingDistanceEstimate * (GiveUpHeuristic - 1));
 						}
 				}
 
