@@ -77,13 +77,14 @@ namespace BDArmory.Control
 		public class TraversabilityMatrix
 		{
 			// edge of each grid cell
-			public const float GridSize = 200;
-			private const float GridDiagonal = GridSize * 1.414213562373f;
+			const float GridSizeDefault = 400f;
+			float GridSize;
+			float GridDiagonal;
 
 			// how much the gird can get distorted before it is rebuilt instead of expanded
 			const float MaxDistortion = 0.02f;
 
-			Dictionary<Coords, Cell> grid;
+			Dictionary<Coords, Cell> grid = new Dictionary<Coords, Cell>();
 			Dictionary<Coords, float> cornerAlts;
 
 			float rebuildDistance;
@@ -102,13 +103,15 @@ namespace BDArmory.Control
 			/// <param name="maxSlopeAngle">The highest slope angle (in degrees) the vessel can traverse in a straight line</param>
 			public List<Vector3> Pathfind(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
 			{
-				checkGrid(start, body, vehicleType, maxSlopeAngle);
+				checkGrid(start, body, vehicleType, maxSlopeAngle, 
+					Mathf.Clamp(VectorUtils.GeoDistance(start, end, body) / 20, GridSizeDefault, GridSizeDefault * 5));
 
 				Coords startCoords = getGridCoord(start);
 				Coords endCoords = getGridCoord(end);
+				float initialDistance = gridDistance(startCoords, endCoords);
 
-				Dictionary<Cell, float> candidates = new Dictionary<Cell, float> //fScore and openSet
-				{ [getCellAt(startCoords)] = gridDistance(startCoords, endCoords) };
+				SortedDictionary<CellValue, float> candidates = new SortedDictionary<CellValue, float>(new CellValueComparer())
+				{ [new CellValue(getCellAt(startCoords), initialDistance)] = initialDistance};
 
 				Dictionary<Cell, float> nodes = new Dictionary<Cell, float> //gScore
 				{ [getCellAt(startCoords)] = 0 };
@@ -117,6 +120,21 @@ namespace BDArmory.Control
 				HashSet<Cell> visited = new HashSet<Cell>();
 
 				Cell current = null;
+				float currentFScore = 0;
+				KeyValuePair<Cell, float> best = new KeyValuePair<Cell, float>(getCellAt(startCoords), initialDistance * 2);
+
+				List<KeyValuePair<Coords, float>> adjacent = new List<KeyValuePair<Coords, float>>(8)
+				{
+					new KeyValuePair<Coords, float>(new Coords(0, 1), GridSize),
+					new KeyValuePair<Coords, float>(new Coords(1, 0), GridSize),
+					new KeyValuePair<Coords, float>(new Coords(0, -1), GridSize),
+					new KeyValuePair<Coords, float>(new Coords(-1, 0), GridSize),
+					new KeyValuePair<Coords, float>(new Coords(1, 1), GridDiagonal),
+					new KeyValuePair<Coords, float>(new Coords(1, -1), GridDiagonal),
+					new KeyValuePair<Coords, float>(new Coords(-1, -1), GridDiagonal),
+					new KeyValuePair<Coords, float>(new Coords(-1, 1), GridDiagonal),
+				};
+
 
 				while (candidates.Count > 0)
 				{
@@ -124,16 +142,19 @@ namespace BDArmory.Control
 					using (var e = candidates.GetEnumerator())
 					{
 						e.MoveNext();
-						var min = e.Current;
-						while (e.MoveNext())
-							if (e.Current.Value < min.Value)
-								min = e.Current;
-						current = min.Key;
+						current = e.Current.Key.Cell;
+						currentFScore = e.Current.Key.Value;
+						candidates.Remove(e.Current.Key);
 					}
 					// stop if we found our destination
-					if (current.Coords == endCoords) break;
+					if (current.Coords == endCoords)
+						break;
+					if (currentFScore > best.Value)
+					{
+						current = best.Key;
+						break;
+					}
 
-					candidates.Remove(current);
 					visited.Add(current);
 					float currentNodeScore = nodes[current];
 
@@ -143,11 +164,21 @@ namespace BDArmory.Control
 							Cell neighbour = getCellAt(current.Coords + adj.Current.Key);
 							if (!neighbour.Traversable || visited.Contains(neighbour)) continue;
 							float value;
-							if (candidates.TryGetValue(neighbour, out value) && currentNodeScore + adj.Current.Value >= value)
-								continue;
+							var keyProp = new CellValue(neighbour, 0);
+							if (candidates.TryGetValue(keyProp, out value))
+							{
+								if (currentNodeScore + adj.Current.Value >= value)
+									continue;
+								else
+									candidates.Remove(keyProp);
+							}
 							nodes[neighbour] = currentNodeScore + adj.Current.Value;
 							backtrace[neighbour] = current;
-							candidates[neighbour] = currentNodeScore + adj.Current.Value + gridDistance(neighbour.Coords, endCoords);
+							float remainingDistanceEstimate = gridDistance(neighbour.Coords, endCoords);
+							float fScoreEstimate = currentNodeScore + adj.Current.Value + remainingDistanceEstimate;
+							candidates[new CellValue(neighbour, fScoreEstimate)] = fScoreEstimate;
+							if ((fScoreEstimate + remainingDistanceEstimate) < best.Value)
+								best = new KeyValuePair<Cell, float>(neighbour, fScoreEstimate + remainingDistanceEstimate);
 						}
 				}
 
@@ -162,11 +193,13 @@ namespace BDArmory.Control
 				return path;
 			}
 
-			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
 			{
-				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance ||
+				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance || Mathf.Abs(gridSize-GridSize) > 100 ||
 					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle)
 				{
+					GridSize = gridSize;
+					GridDiagonal = gridSize * Mathf.Sqrt(2);
 					this.body = body;
 					this.maxSlopeAngle = maxSlopeAngle;
 					rebuildDistance = Mathf.Clamp(Mathf.Asin(MaxDistortion) * (float)body.Radius, GridSize * 4, GridSize * 256);
@@ -255,18 +288,19 @@ namespace BDArmory.Control
 
 			private class Cell
 			{
-				public Cell(Coords coords, Vector3 geoPos, bool traversible, CelestialBody body)
+				public Cell(Coords coords, Vector3 geoPos, bool traversable, CelestialBody body)
 				{
 					Coords = coords;
 					GeoPos = geoPos;
 					GeoPos.z = (float)body.TerrainAltitude(GeoPos.x, GeoPos.y);
-					Traversable = traversible;
-					WorldPos = VectorUtils.GetWorldSurfacePostion(GeoPos, body);
+					Traversable = traversable;
+					this.body = body;
 				}
 
+				private CelestialBody body;
 				public readonly Coords Coords;
 				public readonly Vector3 GeoPos;
-				public readonly Vector3 WorldPos;
+				public Vector3 WorldPos => VectorUtils.GetWorldSurfacePostion(GeoPos, body);
 				public bool Traversable;
 
 				public int X => Coords.X;
@@ -278,6 +312,36 @@ namespace BDArmory.Control
 				public override bool Equals(object obj) => Equals(obj as Cell);
 				public static bool operator ==(Cell left, Cell right) => object.Equals(left, right);
 				public static bool operator !=(Cell left, Cell right) => !object.Equals(left, right);
+			}
+
+			private struct CellValue
+			{
+				public CellValue(Cell cell, float value)
+				{
+					Cell = cell;
+					Value = value;
+				}
+				public readonly Cell Cell;
+				public readonly float Value;
+				public override int GetHashCode() => Cell.Coords.GetHashCode();
+			}
+
+			private class CellValueComparer : IComparer<CellValue>
+			{
+				/// <summary>
+				/// This a very specific implementation for pathfinding to make use of the sorted dictionary.
+				/// It is non-commutative and not order-invariant.
+				/// But that is exactly how we want it right now.
+				/// </summary>
+				/// <returns>Lies and misinformation of the best kind.</returns>
+				public int Compare(CellValue x, CellValue y)
+				{
+					if (x.Cell.Equals(y.Cell))
+						return 0;
+					if (x.Value > y.Value)
+						return 1;
+					return -1;
+				}
 			}
 
 			// because int[] does not produce proper hashes
@@ -308,10 +372,6 @@ namespace BDArmory.Control
 				public override int GetHashCode() => X.GetHashCode() * 1009 + Y.GetHashCode();
 				public override string ToString() => $"[{X}, {Y}]";
 			}
-
-			private Dictionary<Coords, float> adjacent = new Dictionary<Coords, float>
-			{[new Coords(0, 1)] = GridSize, [new Coords(1, 0)] = GridSize, [new Coords(0, -1)] = GridSize, [new Coords(-1, 0)] = GridSize,
-				[new Coords(1, 1)] = GridDiagonal, [new Coords(1, -1)] = GridDiagonal, [new Coords(-1, -1)] = GridDiagonal, [new Coords(-1, 1)] = GridDiagonal};
 
 			private float getCornerAlt(int x, int y) => getCornerAlt(new Coords(x, y));
 			private float getCornerAlt(Coords coords)
