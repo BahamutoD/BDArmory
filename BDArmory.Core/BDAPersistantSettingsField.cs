@@ -76,6 +76,10 @@ namespace BDArmory.Core
             {
                 return Single.Parse(value);
             }
+            else if (type == typeof(int))
+            {
+                return int.Parse(value);
+            }
             else if (type == typeof(Single))
             {
                 return Single.Parse(value);

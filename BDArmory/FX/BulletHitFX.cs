@@ -88,7 +88,7 @@ namespace BDArmory.FX
                 }
             }
         }
-
+        
         private static bool CanFlamesBeAttached(Part hitPart)
         {
             if (!hitPart.HasFuel())
@@ -96,8 +96,8 @@ namespace BDArmory.FX
 
             if (hitPart.vessel.LandedOrSplashed)
             {
-                MaxFiresPerVessel = 8;
-                FireLifeTimeInSeconds = 90f;
+                MaxFiresPerVessel = BDArmorySettings.MAX_FIRES_PER_VESSEL;
+                FireLifeTimeInSeconds = BDArmorySettings.FIRELIFETIME_IN_SECONDS;
             }
 
             if (PartsOnFire.ContainsKey(hitPart.vessel) && PartsOnFire[hitPart.vessel].Count >= MaxFiresPerVessel)
@@ -203,7 +203,9 @@ namespace BDArmory.FX
                                             bool ricochet,float caliber,float penetrationfactor)
         {
             
-            if (decalPool_large == null || decalPool_small == null) SetupShellPool();
+            if (decalPool_large == null || decalPool_small == null)
+                SetupShellPool();
+
             GameObject go;
 
             if (caliber <= 30)

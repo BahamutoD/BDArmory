@@ -35,9 +35,11 @@ namespace BDArmory.Core.Extension
                                                bool isMissile)
         {
             float damage_ = 0f;
+
             //////////////////////////////////////////////////////////
             // Explosive Hitpoints
             //////////////////////////////////////////////////////////
+
             if (isMissile)
             {
                 damage_ = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_MISSILE * explosiveDamage;
@@ -46,15 +48,6 @@ namespace BDArmory.Core.Extension
             {
                 damage_ = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_BALLISTIC * explosiveDamage;
             }
-
-            /////////////////////////////////
-            // Caliber Adjustments
-            /////////////////////////////////
-
-            //if (caliber < 50 && !isMissile)
-            //{
-            //    damage_ *= 0.0335f;
-            //}
 
             //////////////////////////////////////////////////////////
             //   Armor Reduction factors
@@ -107,7 +100,7 @@ namespace BDArmory.Core.Extension
             if (explosive) damage_ *= 0.725f;
             
             //penetration multipliers   
-            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.75f);
+            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.85f);
 
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
@@ -374,7 +367,7 @@ namespace BDArmory.Core.Extension
 
             }
 
-            if(!isMissile && penetrationfactor <= 0.999f)
+            if(!isMissile && !(penetrationfactor >= 1f))
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {

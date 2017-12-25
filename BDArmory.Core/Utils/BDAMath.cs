@@ -1,6 +1,4 @@
-﻿
-
-namespace BDArmory.Core.Utils
+﻿namespace BDArmory.Core.Utils
 {
     public static class BDAMath
     {
@@ -28,7 +26,7 @@ namespace BDArmory.Core.Utils
             return probs.Length - 1;
         }
 
-        public static bool Between(this float num, float lower, float upper, bool inclusive = false)
+        public static bool Between(this float num, float lower, float upper, bool inclusive = true)
         {
             return inclusive
                 ? lower <= num && num <= upper
