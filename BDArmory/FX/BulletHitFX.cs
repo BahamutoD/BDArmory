@@ -203,7 +203,9 @@ namespace BDArmory.FX
                                             bool ricochet,float caliber,float penetrationfactor)
         {
             
-            if (decalPool_large == null || decalPool_small == null) SetupShellPool();
+            if (decalPool_large == null || decalPool_small == null)
+                SetupShellPool();
+
             GameObject go;
 
             if (caliber <= 30)

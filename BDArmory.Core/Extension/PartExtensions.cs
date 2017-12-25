@@ -100,7 +100,7 @@ namespace BDArmory.Core.Extension
             if (explosive) damage_ *= 0.725f;
             
             //penetration multipliers   
-            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.75f);
+            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.85f);
 
             //Caliber Adjustments for Gameplay balance
             if (caliber <= 30f) 
