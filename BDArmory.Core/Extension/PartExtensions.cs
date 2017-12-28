@@ -412,14 +412,12 @@ namespace BDArmory.Core.Extension
         {
             if (part.GetComponent<ModuleEngines>() != null && part.GetDamagePercentatge() <= 0.35f)
             {
-                //DamageFX.SetEngineDamage(part);
                 part.gameObject.AddOrGetComponent<DamageFX>();
                 DamageFX.engineDamaged = true;
             }
 
             if (part.GetComponent<ModuleLiftingSurface>() != null && part.GetDamagePercentatge() <= 0.35f)
             {
-                //DamageFX.SetWingDamage(part);
                 //part.gameObject.AddOrGetComponent<DamageFX>();
             }
 

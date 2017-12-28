@@ -18,7 +18,10 @@ namespace BDArmory.Core.Extension
                 float probability = Utils.BDAMath.RangedProbability(new[] { 50f, 25f, 20f, 2f });
                 if (probability >= 3)
                 {
-                    gameObject.GetComponent<ModuleEngines>().flameout = true; 
+                    ModuleEngines engine = gameObject.GetComponent<ModuleEngines>();
+                    engine.flameout = true;
+                    engine.heatProduction *= 1.05f;
+                    engine.maxThrust *= 0.825f;
                 }
             }
         }
@@ -30,7 +33,7 @@ namespace BDArmory.Core.Extension
             engine = part.GetComponent<ModuleEngines>();
             engine.flameout = true;
             engine.heatProduction *= 1.0125f;
-            engine.maxThrust *= 0.825f;
+            engine.maxThrust *= 0.825f;            
         }
 
         public static void SetWingDamage(Part part)

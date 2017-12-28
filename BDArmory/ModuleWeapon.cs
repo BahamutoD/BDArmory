@@ -262,6 +262,7 @@ namespace BDArmory
         public float bulletDragArea = 1.209675e-5f;
 
         private BulletInfo bulletInfo;
+
         [KSPField]
         public string bulletType = "def";
 
@@ -286,18 +287,20 @@ namespace BDArmory
 
         [KSPField]
         public string weaponType = "ballistic";
-        //ballistic(normal bullets), cannon(explosive bullets), or laser
+        //ballistic, cannon or laser
 
         [KSPField]
         public float laserDamage = 10000; //base damage/second of lasers
 
         //cannon shell specfications
+        //TODO: deprectated, moved to bullet config
         [KSPField]
         public float cannonShellRadius = 30; //max radius of explosion forces/damage
         [KSPField]
         public float cannonShellPower = 8; //explosion's impulse force
         [KSPField]
         public float cannonShellHeat = -1; //if non-negative, heat damage
+
 
         //projectile graphics
         [KSPField]
