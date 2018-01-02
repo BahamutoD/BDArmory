@@ -5,6 +5,7 @@ using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.UI;
 using UnityEngine;
+using BDArmory.Core;
 
 namespace BDArmory.Parts
 {
@@ -18,6 +19,12 @@ namespace BDArmory.Parts
 	     UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
 	    public float blastRadius = 10;
 
+	    [KSPField]
+	    public string explModelPath = "BDArmory/Models/explosion/explosion";
+
+	    [KSPField]
+	    public string explSoundPath = "BDArmory/Sounds/explode1";
+
         [KSPAction("Arm")]
         public void ArmAG(KSPActionParam param)
         {
@@ -28,9 +35,7 @@ namespace BDArmory.Parts
 		public void DetonateAG(KSPActionParam param)
 		{
 		    Detonate();
-		}
-
-        
+		}        
 
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Detonate", active = true)]
 	    public void DetonateEvent()
@@ -52,14 +57,25 @@ namespace BDArmory.Parts
 		        part.OnJustAboutToBeDestroyed += DetonateIfPossible;
                 part.force_activate();
 		    }
-		    
-		    CalculateBlast();
+
+            if (BDArmorySettings.ADVANCED_EDIT)
+            {
+                //Fields["tntMass"].guiActiveEditor = true;               
+
+                //((UI_FloatRange)Fields["tntMass"].uiControlEditor).minValue = 0f;
+                //((UI_FloatRange)Fields["tntMass"].uiControlEditor).maxValue = 3000f;
+                //((UI_FloatRange)Fields["tntMass"].uiControlEditor).stepIncrement = 5f;
+            }
+
+            CalculateBlast();
 		}
 
         public void Update()
         {
             if (HighLogic.LoadedSceneIsEditor)
+            {
                 OnUpdateEditor();
+            }
         }
 
 	    private void OnUpdateEditor()
@@ -92,7 +108,7 @@ namespace BDArmory.Parts
 			        direction = (part.transform.position + part.rb.velocity * Time.deltaTime).normalized;
 			    }
 			    ExplosionFx.CreateExplosion(part.transform.position, tntMass,
-			        "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part, direction);
+			        explModelPath, explSoundPath, true, 0, part, direction);
                 hasDetonated = true;
 			}
 		}
@@ -103,7 +119,7 @@ namespace BDArmory.Parts
 	        {
 	            part.Destroy();
 	            ExplosionFx.CreateExplosion(part.transform.position, tntMass,
-	                "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1", true, 0, part);
+	                explModelPath, explSoundPath, true, 0, part);
 	        }
 	    }
 

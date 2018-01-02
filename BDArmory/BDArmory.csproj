@@ -81,6 +81,7 @@
     <Compile Include="Control\IBDAIControl.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
+    <Compile Include="FX\MissileFX.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\CFEnable.cs" />

@@ -275,11 +275,11 @@ namespace BDArmory.FX
             {
                 var distanceFactor = Mathf.Clamp01((Range - eventToExecute.Distance) / Range);
                 float damageToBuilding = (BDArmorySettings.DMG_MULTIPLIER / 100) * BDArmorySettings.EXP_DMG_MOD_BALLISTIC * Power * distanceFactor;
+
                 damageToBuilding *= 2f;
-                //if (damageToBuilding > building.impactMomentumThreshold * 0.85f)
-               // {
+
                 building.AddDamage(damageToBuilding);
-                //}
+
                 if (building.Damage  > building.impactMomentumThreshold)
                 {
                     building.Demolish();

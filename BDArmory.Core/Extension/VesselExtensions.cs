@@ -39,7 +39,8 @@ namespace BDArmory.Core.Extension
             }
             catch
             {
-                return v.srf_velocity;
+                //return v.srf_velocity;
+                return new Vector3d(0, 0, 0);
             }
         }
 
