@@ -78,8 +78,8 @@ namespace BDArmory.Control
 		{
 			// edge of each grid cell
 			const float GridSizeDefault = 400f;
-			const float GiveUpHeuristic = 3;
-			const float RetraceReluctance = 1.01f;
+			const float GiveUpHeuristicMultiplier = 3;
+			const float RetraceReluctanceMultiplier = 1.01f;
 			float GridSize;
 			float GridDiagonal;
 
@@ -113,7 +113,7 @@ namespace BDArmory.Control
 				float initialDistance = gridDistance(startCoords, endCoords);
 
 				SortedDictionary<CellValue, float> sortedCandidates = new SortedDictionary<CellValue, float>(new CellValueComparer())
-				{ [new CellValue(getCellAt(startCoords), initialDistance)] = initialDistance}; //openSet and fScore
+				{ [new CellValue(getCellAt(startCoords), initialDistance)] = 0}; //(openSet and fScore), gScore
 				Dictionary<Cell, float> candidates = new Dictionary<Cell, float>
 				{ [getCellAt(startCoords)] = initialDistance }; // secondary dictionary to sortedCandidates for faster lookup
 
@@ -125,7 +125,7 @@ namespace BDArmory.Control
 
 				Cell current = null;
 				float currentFScore = 0;
-				KeyValuePair<Cell, float> best = new KeyValuePair<Cell, float>(getCellAt(startCoords), initialDistance * GiveUpHeuristic);
+				KeyValuePair<Cell, float> best = new KeyValuePair<Cell, float>(getCellAt(startCoords), initialDistance * GiveUpHeuristicMultiplier);
 
 				List<KeyValuePair<Coords, float>> adjacent = new List<KeyValuePair<Coords, float>>(8)
 				{
@@ -174,16 +174,16 @@ namespace BDArmory.Control
 								if (currentNodeScore + adj.Current.Value >= value)
 									continue;
 								else
-									sortedCandidates.Remove(new CellValue(neighbour, 0)); //we'll reinsert with the adjusted value, so it's sorted properly
+									sortedCandidates.Remove(new CellValue(neighbour, value)); //we'll reinsert with the adjusted value, so it's sorted properly
 							}
 							nodes[neighbour] = currentNodeScore + adj.Current.Value;
 							backtrace[neighbour] = current;
 							float remainingDistanceEstimate = gridDistance(neighbour.Coords, endCoords);
-							float fScoreEstimate = currentNodeScore + adj.Current.Value + remainingDistanceEstimate * RetraceReluctance;
-							sortedCandidates[new CellValue(neighbour, fScoreEstimate)] = fScoreEstimate;
-							candidates[neighbour] = fScoreEstimate;
-							if ((fScoreEstimate + remainingDistanceEstimate * (GiveUpHeuristic - 1)) < best.Value)
-								best = new KeyValuePair<Cell, float>(neighbour, fScoreEstimate + remainingDistanceEstimate * (GiveUpHeuristic - 1));
+							float fScoreEstimate = currentNodeScore + adj.Current.Value + remainingDistanceEstimate * RetraceReluctanceMultiplier;
+							sortedCandidates[new CellValue(neighbour, fScoreEstimate)] = currentNodeScore + adj.Current.Value;
+							candidates[neighbour] = currentNodeScore + adj.Current.Value;
+							if ((fScoreEstimate + remainingDistanceEstimate * (GiveUpHeuristicMultiplier - 1)) < best.Value)
+								best = new KeyValuePair<Cell, float>(neighbour, fScoreEstimate + remainingDistanceEstimate * (GiveUpHeuristicMultiplier - 1));
 						}
 				}
 
@@ -200,6 +200,8 @@ namespace BDArmory.Control
 
 			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
 			{
+				origin = VectorUtils.WorldPositionToGeoCoords(origin, body);
+				Debug.Log($"{rebuildDistance}, {this.origin}, {origin}, {VectorUtils.GeoDistance(this.origin, origin, body)}");
 				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance || Mathf.Abs(gridSize-GridSize) > 100 ||
 					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle)
 				{
@@ -209,7 +211,7 @@ namespace BDArmory.Control
 					this.maxSlopeAngle = maxSlopeAngle;
 					rebuildDistance = Mathf.Clamp(Mathf.Asin(MaxDistortion) * (float)body.Radius, GridSize * 4, GridSize * 256);
 					movementType = vehicleType;
-					this.origin = VectorUtils.WorldPositionToGeoCoords(origin, body);
+					this.origin = origin;
 					grid = new Dictionary<Coords, Cell>();
 					cornerAlts = new Dictionary<Coords, float>();
 				}
@@ -438,7 +440,7 @@ namespace BDArmory.Control
 
 			public void DrawDebug(Vector3 currentWorldPos, List<Vector3> waypoints = null)
 			{
-				Vector3 upVec = VectorUtils.GetUpDirection(currentWorldPos) * 5;
+				Vector3 upVec = VectorUtils.GetUpDirection(currentWorldPos) * 10;
 				using (var kvp = grid.GetEnumerator())
 					while (kvp.MoveNext())
 					{
