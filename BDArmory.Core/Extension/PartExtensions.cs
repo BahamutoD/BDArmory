@@ -327,12 +327,13 @@ namespace BDArmory.Core.Extension
 
         public static bool IgnoreDecal(this Part part)
         {
-            if(
+            if (
                 part.Modules.Contains("FSplanePropellerSpinner") ||
                 part.Modules.Contains("ModuleWheelBase") ||
                 part.Modules.Contains("KSPWheelBase") ||
-                part.gameObject.GetComponentUpwards<KerbalEVA>()
-               )
+                part.gameObject.GetComponentUpwards<KerbalEVA>()||
+                part.Modules.Contains("ModuleDCKShields")
+                )
             {
                 return true;
             }
