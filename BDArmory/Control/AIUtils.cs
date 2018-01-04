@@ -198,6 +198,26 @@ namespace BDArmory.Control
 				return path;
 			}
 
+			/// <summary>
+			/// Check if line is traversible. Due to implementation specifics, it is advised not to use this if the start point is not the position of the vessel.
+			/// </summary>
+			public bool TraversibleStraightLine(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+			{
+				checkGrid(start, body, vehicleType, maxSlopeAngle);
+				return TraversibleStraightLine(start, end);
+			}
+
+			public bool TraversibleStraightLine(Vector3 start, Vector3 end)
+			{
+				float[] location = getGridLocation(VectorUtils.WorldPositionToGeoCoords(start, body));
+				float[] endPos = getGridLocation(VectorUtils.WorldPositionToGeoCoords(end, body));
+
+				float dx = endPos[0] - location[0];
+				float dy = endPos[1] - location[1];
+
+				return true;
+			}
+
 			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
 			{
 				origin = VectorUtils.WorldPositionToGeoCoords(origin, body);

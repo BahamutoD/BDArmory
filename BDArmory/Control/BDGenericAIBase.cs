@@ -216,7 +216,7 @@ namespace BDArmory.Control
 
 		protected void GetGuardTarget()
 		{
-			if (weaponManager == null || weaponManager.vessel == vessel)
+			if (weaponManager == null || weaponManager.vessel != vessel)
 				UpdateWeaponManager();
 			if (weaponManager != null && weaponManager.vessel == vessel)
 			{
