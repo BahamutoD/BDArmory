@@ -253,7 +253,7 @@ namespace BDArmory
         public float bulletVelocity = 1030; //velocity in meters/second
 
         [KSPField]
-        public string bulletDragTypeName = "AnalyticEstimate";
+        public string bulletDragTypeName = "NumericalIntegration";
         public BulletDragTypes bulletDragType;
 
         //drag area of the bullet in m^2; equal to Cd * A with A being the frontal area of the bullet; as a first approximation, take Cd to be 0.3
@@ -1089,9 +1089,8 @@ namespace BDArmory
 
                         //firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
                         firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
-                        pBullet.currentVelocity = part.rb.velocity + firedVelocity;
+                        pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
 
-                        pBullet.initialSpeed = bulletVelocity;
                         pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
                         pBullet.projectileColor = projectileColorC;

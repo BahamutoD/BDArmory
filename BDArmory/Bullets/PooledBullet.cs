@@ -72,7 +72,6 @@ namespace BDArmory
         public float maxAirDetonationRange = 3500f;
         float randomWidthScale = 1;
         LineRenderer bulletTrail;
-        Vector3 sourceOriginalV;
         public float maxDistance;
         Light lightFlash;
         bool wasInitiated;
@@ -103,6 +102,8 @@ namespace BDArmory
         {
 
             startPosition = transform.position;
+            initialSpeed = currentVelocity.magnitude; // this is the velocity used for drag estimations (only), use total velocity, not muzzle velocity
+
             collisionEnabled = false;
 
             if (!wasInitiated)
@@ -120,8 +121,6 @@ namespace BDArmory
             }
 
             prevPosition = gameObject.transform.position;
-
-            sourceOriginalV = sourceVessel.Velocity();
 
             if (lightFlash == null || !gameObject.GetComponent<Light>())
             {
@@ -172,7 +171,7 @@ namespace BDArmory
             StartCoroutine(FrameDelayedRoutine());
         }
 
-        void OnDestory()
+        void OnDestroy()
         {
             StopCoroutine(FrameDelayedRoutine());
         }
@@ -203,6 +202,14 @@ namespace BDArmory
 
         void FixedUpdate()
         {
+            //floating origin and velocity offloading corrections
+            if (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero())
+            {
+                transform.position -= FloatingOrigin.OffsetNonKrakensbane;
+                startPosition -= FloatingOrigin.OffsetNonKrakensbane;
+                //prevPosition += FloatingOrigin.OffsetNonKrakensbane; // looks like this variable is not used anywhere
+            }
+
             float distanceFromStart = Vector3.Distance(transform.position, startPosition);
             if (!gameObject.activeInHierarchy)
             {
@@ -212,8 +219,6 @@ namespace BDArmory
             //calculate flight time for drag purposes
             flightTimeElapsed += Time.fixedDeltaTime;
 
-            //Drag types currently only affect Impactvelocity 
-            //Numerical Integration is currently Broken
             switch (dragType)
             {
                 case BulletDragTypes.None:
@@ -235,7 +240,7 @@ namespace BDArmory
             else
             {
                 bulletTrail.SetPosition(0,
-                    transform.position + ((currentVelocity - sourceOriginalV).normalized * tracerLength));
+                    transform.position + (currentVelocity.normalized * tracerLength));
             }
 
             if (fadeColor)
@@ -293,14 +298,21 @@ namespace BDArmory
                             if (hitEVA != null)
                             {
                                 hitPart = hitEVA.part;
-                                impactVelocity = currentVelocity.magnitude + dragVelocity;
+                                // relative velocity
+                                impactVelocity = (currentVelocity - ((hitPart?.rb?.velocity ?? Vector3.zero) + Krakensbane.GetFrameVelocityV3f())).magnitude;
                                 ApplyDamage(hitPart, hit, 1, 1);
                                 break;
                             }
 
                             if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
 
-                            float hitAngle = Vector3.Angle(currentVelocity, -hit.normal);
+                            Vector3 impactVector = currentVelocity;
+                            if (hitPart?.rb != null)
+                                // using relative velocity vector instead of just bullet velocity
+                                // since KSP vessels might move faster than bullets
+                                impactVector = (currentVelocity - (hitPart.rb.velocity + Krakensbane.GetFrameVelocityV3f()));
+
+                            float hitAngle = Vector3.Angle(impactVector, -hit.normal);
 
                             if (CheckGroundHit(hitPart, hit))
                             {
@@ -319,7 +331,7 @@ namespace BDArmory
 
                             //Standard Pipeline Hitpoints, Armor and Explosives
 
-                            impactVelocity = currentVelocity.magnitude + dragVelocity;
+                            impactVelocity = impactVector.magnitude;
                             float anglemultiplier = (float)Math.Cos(Math.PI * hitAngle / 180.0);
 
                             float penetrationFactor = CalculateArmorPenetration(hitPart, anglemultiplier, hit);
@@ -363,16 +375,13 @@ namespace BDArmory
 
                                 if (hitPart.rb != null)
                                 {
-                                    Vector3 finalVelocityVector = hitPart.rb.velocity - currentVelocity;
-                                    float finalVelocityMagnitude = finalVelocityVector.magnitude;
-
-                                    float forceAverageMagnitude = finalVelocityMagnitude * finalVelocityMagnitude *
+                                    float forceAverageMagnitude = impactVelocity * impactVelocity *
                                                           (1f / hit.distance) * (bulletMass - tntMass);
 
                                     float accelerationMagnitude =
                                         forceAverageMagnitude / (hitPart.vessel.GetTotalMass() * 1000);
 
-                                    hitPart?.rb.AddForceAtPosition(-finalVelocityVector.normalized * accelerationMagnitude, hit.point, ForceMode.Acceleration);
+                                    hitPart?.rb.AddForceAtPosition(impactVector.normalized * accelerationMagnitude, hit.point, ForceMode.Acceleration);
 
                                     if (BDArmorySettings.DRAW_DEBUG_LABELS)
                                         Debug.Log("[BDArmory]: Force Applied " + Math.Round(accelerationMagnitude, 2) + "| Vessel mass in kgs=" + hitPart.vessel.GetTotalMass() * 1000 + "| bullet effective mass =" + (bulletMass - tntMass));
@@ -518,8 +527,6 @@ namespace BDArmory
             dragAcc /= ballisticCoefficient;
 
             currentVelocity -= dragAcc * TimeWarp.deltaTime;
-            //numerical integration; using Euler is silly, but let's go with it anyway
-
         }
 
         private void CalculateDragAnalyticEstimate()
@@ -536,8 +543,10 @@ namespace BDArmory
             //the above number should be negative...
             //impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
 
-            dragVelocity = analyticDragVelAdjustment;
+            // since this is getting called every update anyway, might as well update the actual velocity
+            currentVelocity += currentVelocity.normalized * (analyticDragVelAdjustment - dragVelocity);
 
+            dragVelocity = analyticDragVelAdjustment;
         }
 
         private float CalculateArmorPenetration(Part hitPart, float anglemultiplier, RaycastHit hit)
