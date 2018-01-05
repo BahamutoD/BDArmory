@@ -298,11 +298,11 @@ namespace BDArmory
                             if (hitEVA != null)
                             {
                                 hitPart = hitEVA.part;
-								// relative velocity, separate from the below statement, because the hitpart might be assigned only above
-								if (hitPart?.rb != null)
-									impactVelocity = (currentVelocity - (hitPart.rb.velocity + Krakensbane.GetFrameVelocityV3f())).magnitude;
-								else
-									impactVelocity = currentVelocity.magnitude;
+                                // relative velocity, separate from the below statement, because the hitpart might be assigned only above
+                                if (hitPart?.rb != null)
+                                    impactVelocity = (currentVelocity - (hitPart.rb.velocity + Krakensbane.GetFrameVelocityV3f())).magnitude;
+                                else
+                                    impactVelocity = currentVelocity.magnitude;
                                 ApplyDamage(hitPart, hit, 1, 1);
                                 break;
                             }
