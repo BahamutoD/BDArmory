@@ -207,7 +207,7 @@ namespace BDArmory
             {
                 transform.position -= FloatingOrigin.OffsetNonKrakensbane;
                 startPosition -= FloatingOrigin.OffsetNonKrakensbane;
-                //prevPosition += FloatingOrigin.OffsetNonKrakensbane; // looks like this variable is not used anywhere
+                //prevPosition -= FloatingOrigin.OffsetNonKrakensbane; // looks like this variable is not used anywhere
             }
 
             float distanceFromStart = Vector3.Distance(transform.position, startPosition);
