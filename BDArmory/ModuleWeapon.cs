@@ -1092,9 +1092,8 @@ namespace BDArmory
 
                         //firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
                         firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
-                        pBullet.currentVelocity = part.rb.velocity + firedVelocity;
+                        pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
 
-                        pBullet.initialSpeed = bulletVelocity;
                         pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
                         pBullet.projectileColor = projectileColorC;
