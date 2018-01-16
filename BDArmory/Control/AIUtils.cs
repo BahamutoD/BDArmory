@@ -187,15 +187,49 @@ namespace BDArmory.Control
 						}
 				}
 
-				var path = new List<Vector3>();
+				var path = new List<Cell>();
 				while(current.Coords != startCoords)
 				{
-					path.Add(current.WorldPos);
+					path.Add(current);
 					current = backtrace[current];
 				}
 				path.Reverse();
 
-				return path;
+                if (path.Count > 2)
+                {
+                    var newPath = new List<Cell>();
+                    newPath.Add(path[0]);
+                    for (int i = 1; i < path.Count - 1; ++i)
+                    {
+                        if (path[i].Coords - path[i - 1].Coords != path[i + 1].Coords - path[1].Coords)
+                            newPath.Add(path[i]);
+                    }
+                    newPath.Add(path[path.Count - 1]);
+                    path = newPath;
+                }
+
+                var pathReduced = new List<Vector3>();
+                Coords waypoint = startCoords;
+                for (int i = 1; i < path.Count; ++i)
+                {
+                    if(!straightPath(waypoint.X, waypoint.Y, path[i].X, path[i].Y))
+                    {
+                        pathReduced.Add(path[i - 1].WorldPos);
+                        waypoint = path[i - 1].Coords;
+                    }
+                }
+
+                if (path.Count == 0)
+                {
+                    if(startCoords == endCoords)
+                        pathReduced.Add(end);
+                }
+                else if (path[path.Count - 1].Coords == endCoords)
+                    pathReduced.Add(end);
+                else
+                    pathReduced.Add(path[path.Count - 1].WorldPos);
+
+				return pathReduced;
 			}
 
 			/// <summary>
@@ -212,10 +246,7 @@ namespace BDArmory.Control
 				float[] location = getGridLocation(VectorUtils.WorldPositionToGeoCoords(start, body));
 				float[] endPos = getGridLocation(VectorUtils.WorldPositionToGeoCoords(end, body));
 
-				float dx = endPos[0] - location[0];
-				float dy = endPos[1] - location[1];
-
-				return true;
+				return straightPath(location[0], location[1], endPos[0], endPos[1]);
 			}
 
 			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
@@ -270,14 +301,33 @@ namespace BDArmory.Control
 					}
 			}
 
-			private bool directPath(Coords origin, Coords target)
+			private bool straightPath(float originX, float originY, float destX, float destY)
 			{
-				int x = origin.X;
-				int y = origin.Y;
-				int dX = Math.Sign(target.X - x);
-				int dY = Math.Sign(target.Y - y);
-				float ratio = dX / dY;
+				float dX = (destX - originX);
+				float dY = (destY - originY);
+                int dirX = Math.Sign(dX);
+                int dirY = Math.Sign(dY);
+				float ratio = Mathf.Abs(dX / dY);
+                int sX = Mathf.RoundToInt(originX);
+                int sY = Mathf.RoundToInt(originY);
 
+                int xP = 0;
+                int yP = 0;
+                float xO = originX - sX;
+                float xT = Mathf.Abs(dX);
+                float yO = originY - sY;
+                float yT = Mathf.Abs(dY);
+
+                while (xP < xT || yP < yT)
+                {
+                    if (xP < xT && (yP >= yT || (xP + xO) <= (yP + yO) * ratio))
+                        ++xP;
+                    else
+                        ++yP;
+
+                    if (!getCellAt(sX + xP * dirX, sY + yP * dirY).Traversable)
+                        return false;
+                }
 
 				return true;
 			}
@@ -396,7 +446,8 @@ namespace BDArmory.Control
 				public static bool operator ==(Coords left, Coords right) => object.Equals(left, right);
 				public static bool operator !=(Coords left, Coords right) => !object.Equals(left, right);
 				public static Coords operator +(Coords left, Coords right) => new Coords(left.X + right.X, left.Y + right.Y);
-				public override int GetHashCode() => X.GetHashCode() * 1009 + Y.GetHashCode();
+                public static Coords operator -(Coords left, Coords right) => new Coords(left.X - right.X, left.Y - right.Y);
+                public override int GetHashCode() => X.GetHashCode() * 1009 + Y.GetHashCode();
 				public override string ToString() => $"[{X}, {Y}]";
 			}
 
