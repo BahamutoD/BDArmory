@@ -1,8 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
 using UnityEngine;
+
+/* TODO for surface vehicles:
+ * update colission detection - probably use pathing matrix + vehicles
+ * update yaw control to also steer the wheels
+ * update / implement new speed control to use wheel power
+ * make pathfinding asynchronous
+ * think about LOS detection
+*/
 
 namespace BDArmory.Control
 {
@@ -27,7 +36,13 @@ namespace BDArmory.Control
 		AIUtils.TraversabilityMatrix pathingMatrix;
 		List<Vector3> waypoints = null;
 
-		//settings
+        //settings
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Vehicle type"),
+            UI_ChooseOption(options = new string[3] { "Land", "Amphibious", "Water" })]
+        public string SurfaceTypeName = "Land";
+        public AIUtils.VehicleMovementType SurfaceType 
+            => (AIUtils.VehicleMovementType)Enum.Parse(typeof(AIUtils.VehicleMovementType), SurfaceTypeName);
+
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
 			UI_FloatRange(minValue = 5f, maxValue = 200f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float CruiseSpeed = 40;
@@ -156,16 +171,16 @@ namespace BDArmory.Control
 			if (collisionDetectionTicker == 0)
 			{
 				collisionDetectionTicker = 20;
-				waypoints = pathingMatrix.Pathfind(vessel.CoM, assignedPositionWorld, vessel.mainBody, AIUtils.VehicleMovementType.Water, maxSlopeAngle);
+				waypoints = pathingMatrix.Pathfind(vessel.CoM, assignedPositionWorld, vessel.mainBody, SurfaceType, maxSlopeAngle);
 
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
-				dodgeVector = PredictRunningAshore(10f * predictMult, 2f);
+                dodgeVector = null; //PredictRunningAshore(10f * predictMult, 2f); FIX THIS
 
 				using (var vs = BDATargetManager.LoadedVessels.GetEnumerator())
 					while (vs.MoveNext())
 					{
 						if (vs.Current == null || vs.Current == vessel) continue;
-						if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
+						if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue; //FIX THIS TOO
 						dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
 						if (dodgeVector != null) break;
 					}
@@ -301,13 +316,19 @@ namespace BDArmory.Control
 				SetStatus("Airtime!");
 				return true;
 			}
-			else if (vessel.Landed)
+			else if (vessel.Landed && (SurfaceType & AIUtils.VehicleMovementType.Land) == 0)
 			{
 				targetVelocity = 0;
 				SetStatus("Stranded");
 				return true;
 			}
-			return false;
+            else if (vessel.Splashed && (SurfaceType & AIUtils.VehicleMovementType.Water) == 0)
+            {
+                targetVelocity = 0;
+                SetStatus("Floating");
+                return true;
+            }
+            return false;
 		}
 
 		void AdjustThrottle(float targetSpeed)
@@ -327,6 +348,8 @@ namespace BDArmory.Control
 
 		void AttitudeControl(FlightCtrlState s)
 		{
+            const float terrainOffset = 5;
+
 			Vector3 yawTarget = Vector3.ProjectOnPlane(targetDirection, upDir);
 			
 			// limit "aoa" if we're moving
@@ -334,14 +357,26 @@ namespace BDArmory.Control
 				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad, 0);
 
 			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + weaveAdjustment;
-			float pitchAngle = TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
-			float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
+
+            Vector3 baseForward = vessel.transform.up * terrainOffset;
+            float basePitch = Mathf.Atan2(
+                AIUtils.GetTerrainAltitude(vessel.CoM + baseForward, vessel.mainBody, false)
+                - AIUtils.GetTerrainAltitude(vessel.CoM - baseForward, vessel.mainBody, false),
+                terrainOffset * 2) * Mathf.Rad2Deg;
+            float pitchAngle = basePitch + TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
+
+            float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
 
 			float pitch = 90 - Vector3.Angle(vesselTransform.up, upDir);
 			float pitchError = pitchAngle - pitch;
 
-			float bank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
-			float rollError = drift / MaxDrift * BankAngle - bank;
+            Vector3 baseLateral = vessel.transform.right * terrainOffset;
+            float baseRoll = Mathf.Atan2(
+                AIUtils.GetTerrainAltitude(vessel.CoM + baseLateral, vessel.mainBody, false)
+                - AIUtils.GetTerrainAltitude(vessel.CoM - baseLateral, vessel.mainBody, false),
+                terrainOffset * 2) * Mathf.Rad2Deg;
+            float bank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
+			float rollError = baseRoll + drift / MaxDrift * BankAngle - bank;
 
 			Vector3 localAngVel = vessel.angularVelocity;
 			s.roll = steerMult * 0.0015f * rollError - .10f * steerDamping * -localAngVel.y;
@@ -355,11 +390,22 @@ namespace BDArmory.Control
 
 		public override bool CanEngage()
 		{
-			if (!vessel.Splashed) DebugLine(vessel.vesselName + " cannot engage: boat not in water");
-			return vessel.Splashed;
+            if (vessel.Splashed && (SurfaceType & AIUtils.VehicleMovementType.Water) == 0)
+                DebugLine(vessel.vesselName + " cannot engage: boat not in water");
+            else if (vessel.Landed && (SurfaceType & AIUtils.VehicleMovementType.Land) == 0)
+                DebugLine(vessel.vesselName + " cannot engage: vehicle not on land");
+            else if (!vessel.LandedOrSplashed)
+                DebugLine(vessel.vesselName + " cannot engage: vessel not on surface");
+            else
+                return true;
+            return false;
 		}
 
-		public override bool IsValidFixedWeaponTarget(Vessel target) => (target?.Splashed ?? false) && !BroadsideAttack; //valid if splashed and using bow fire
+		public override bool IsValidFixedWeaponTarget(Vessel target) 
+            => !BroadsideAttack &&
+            (((target?.Splashed ?? false) && (SurfaceType & AIUtils.VehicleMovementType.Water) != 0) 
+            || ((target?.Landed ?? false) && (SurfaceType & AIUtils.VehicleMovementType.Land) != 0))
+            ; //valid if can traverse the same medium and using bow fire
 
 		/// <returns>null if no collision, dodge vector if one detected</returns>
 		Vector3? PredictCollisionWithVessel(Vessel v, float maxTime, float interval)
