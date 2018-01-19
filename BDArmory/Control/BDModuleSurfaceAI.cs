@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace BDArmory.Control
 {
-	public class BDModuleBoatAI : BDGenericAIBase, IBDAIControl
+	public class BDModuleSurfaceAI : BDGenericAIBase, IBDAIControl
 	{
 		#region Declarations
 		
@@ -70,8 +70,8 @@ namespace BDArmory.Control
 			UI_FloatRange(minValue = 1f, maxValue = 8f, stepIncrement = 0.1f, scene = UI_Scene.All)]
 		public float steerDamping = 3;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
-			UI_Toggle(enabledText = "Powered", disabledText = "Passive")]
+		//[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
+		//	UI_Toggle(enabledText = "Powered", disabledText = "Passive")]
 		public bool PoweredSteering = true;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Attack vector"),
@@ -96,6 +96,7 @@ namespace BDArmory.Control
 		{
 			return @"
 <b>Available settings</b>:
+<b>Vehicle type</b> - can this vessel operate on land/sea/both
 <b>Cruise speed</b> - the default speed at which it is safe to maneuver
 <b>Max speed</b> - the maximum combat speed
 <b>Max drift</b> - maximum allowed angle between facing and velocity vector
@@ -103,8 +104,7 @@ namespace BDArmory.Control
 <b>Bank angle</b> - the limit on roll when turning, positive rolls into turns
 <b>Steer Factor</b> - higher will make the AI apply more control input for the same desired rotation
 <b>Bank angle</b> - higher will make the AI apply more control input when it wants to stop rotation
-<b>Steering</b> - can the ship turn with engines off
-<b>Attack vector</b> - does the ship attack from the front or the sides
+<b>Attack vector</b> - does the vessel attack from the front or the sides
 <b>Min engagement range</b> - AI will try to move away from oponents if closer than this range
 <b>Max engagement range</b> - AI will prioritize getting closer over attacking when beyond this range
 ";
@@ -236,6 +236,7 @@ namespace BDArmory.Control
 						&& extendingTarget != null && targetVessel != null && extendingTarget == targetVessel))) 
 					{
 						extendingTarget = targetVessel;
+                        // not sure if this part is very smart, potential for improvement
 						targetDirection = -vecToTarget; //extend
 						targetVelocity = MaxSpeed;
 						SetStatus($"Extending");
