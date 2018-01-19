@@ -7,7 +7,6 @@ using UnityEngine;
 
 /* TODO for surface vehicles:
  * update colission detection - probably use pathing matrix + vehicles
- * update / implement new speed control to use wheel power
  * make pathfinding asynchronous
  * think about LOS detection
 */
@@ -34,6 +33,7 @@ namespace BDArmory.Control
 
 		AIUtils.TraversabilityMatrix pathingMatrix;
 		List<Vector3> waypoints = null;
+        private BDLandSpeedControl motorControl;
 
         //settings
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Vehicle type"),
@@ -118,9 +118,23 @@ namespace BDArmory.Control
 			base.ActivatePilot();
 
 			pathingMatrix = new AIUtils.TraversabilityMatrix();
-		}
 
-		protected override void OnGUI()
+            if (!motorControl)
+            {
+                motorControl = gameObject.AddComponent<BDLandSpeedControl>();
+                motorControl.vessel = vessel;
+            }
+            motorControl.Activate();
+        }
+
+        public override void DeactivatePilot()
+        {
+            base.DeactivatePilot();
+
+            motorControl.Deactivate();
+        }
+
+        protected override void OnGUI()
 		{
 			base.OnGUI();
 
@@ -343,6 +357,7 @@ namespace BDArmory.Control
 				DebugLine($"Target velocity: {targetVelocity}");
 
 			speedController.targetSpeed = targetSpeed;
+            motorControl.targetSpeed = targetSpeed;
 		}
 
 		void AttitudeControl(FlightCtrlState s)
@@ -381,7 +396,7 @@ namespace BDArmory.Control
 			s.roll = steerMult * 0.0015f * rollError - .10f * steerDamping * -localAngVel.y;
 			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
 			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
-            s.wheelSteer = -((0.005f * steerMult * yawError) - (steerDamping * 0.05f * -localAngVel.z));
+            s.wheelSteer = -((0.003f * steerMult * yawError) - (steerDamping * 0.1f * -localAngVel.z));
 		}
 
 		#endregion

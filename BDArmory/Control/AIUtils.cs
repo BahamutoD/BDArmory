@@ -250,7 +250,6 @@ namespace BDArmory.Control
 			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
 			{
 				origin = VectorUtils.WorldPositionToGeoCoords(origin, body);
-				Debug.Log($"{rebuildDistance}, {this.origin}, {origin}, {VectorUtils.GeoDistance(this.origin, origin, body)}");
 				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance || Mathf.Abs(gridSize-GridSize) > 100 ||
 					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle)
 				{

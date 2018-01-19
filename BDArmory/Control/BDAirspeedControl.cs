@@ -204,4 +204,106 @@ namespace BDArmory.Control
             return possibleAccel;
         }
     }
+
+    public class BDLandSpeedControl : MonoBehaviour
+    {
+        public float targetSpeed;
+        public Vessel vessel;
+
+        private float lastThrottle;
+        private float lastTargetSpeed;
+        private float maxAccel;
+        private float avResponse;
+        private float impliedDrag;
+
+        public void Activate()
+        {
+            vessel.OnFlyByWire -= SpeedControl;
+            vessel.OnFlyByWire += SpeedControl;
+            maxTorque();
+            calculatePower();
+        }
+
+        public void Deactivate()
+        {
+            vessel.OnFlyByWire -= SpeedControl;
+        }
+
+        void SpeedControl(FlightCtrlState s)
+        {
+            if (!vessel.Landed)
+                s.wheelThrottle = 0;
+            else if (targetSpeed == 0)
+            {
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                s.wheelThrottle = 0;
+            }
+            else
+            {
+                if (targetSpeed != lastTargetSpeed)
+                {
+                    lastTargetSpeed = targetSpeed;
+                    calculatePower();
+                }
+                if (maxAccel == 0)
+                {
+                    s.wheelThrottle = 0;
+                    return;
+                }
+
+                impliedDrag = (impliedDrag * 3 + Vector3.Dot(vessel.acceleration, vessel.transform.up) - maxAccel * lastThrottle) / 4;
+                float throttle = ((targetSpeed - (float)vessel.srfSpeed) * avResponse / 3 - impliedDrag) / maxAccel;
+                lastThrottle = Mathf.Clamp(throttle, -1, 1);
+                s.wheelThrottle = lastThrottle;
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, throttle < -5f);
+                Debug.Log(throttle.ToString());
+            }
+        }
+
+        void calculatePower()
+        {
+            // this will fail for non-decreasing curves, but most will probably be decreasing
+            float power = 0;
+            float response = 0;
+            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotor>().GetEnumerator())
+                while (m.MoveNext())
+                {
+                    if (m.Current.state <= 0) continue;
+                    var singlePower = m.Current.torqueCurve.Evaluate(targetSpeed);
+                    power += singlePower;
+                    response += m.Current.driveResponse * singlePower;
+                    // disable traction control while we're at it
+                    //m.Current.tractionControlScale = 0;
+                    //m.Current.autoTorque = false;
+                }
+            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotorSteering>().GetEnumerator())
+                while (m.MoveNext())
+                {
+                    if (m.Current.state <= 0) continue;
+                    var singlePower = m.Current.torqueCurve.Evaluate(targetSpeed);
+                    power += singlePower;
+                    response += m.Current.driveResponse * singlePower;
+                    //m.Current.tractionControlScale = 0;
+                    //m.Current.autoTorque = false;
+                }
+            maxAccel = power / (float)vessel.totalMass;
+            avResponse = response / power;
+        }
+
+        void maxTorque()
+        {
+            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotor>().GetEnumerator())
+                while (m.MoveNext())
+                {
+                    m.Current.autoTorque = false;
+                    m.Current.tractionControlScale = 0;
+                }
+            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotorSteering>().GetEnumerator())
+                while (m.MoveNext())
+                {
+                    m.Current.autoTorque = false;
+                    m.Current.tractionControlScale = 0;
+                }
+        }
+    }
 }
