@@ -168,8 +168,7 @@ namespace BDArmory.Control
 						{
 							Cell neighbour = getCellAt(current.Coords + adj.Current.Key);
 							if (!neighbour.Traversable || visited.Contains(neighbour)) continue;
-							float value;
-							if (candidates.TryGetValue(neighbour, out value))
+							if (candidates.TryGetValue(neighbour, out float value))
 							{
 								if (currentNodeScore + adj.Current.Value >= value)
 									continue;
@@ -197,8 +196,7 @@ namespace BDArmory.Control
 
                 if (path.Count > 2)
                 {
-                    var newPath = new List<Cell>();
-                    newPath.Add(path[0]);
+                    var newPath = new List<Cell>() { path[0] };
                     for (int i = 1; i < path.Count - 1; ++i)
                     {
                         if (path[i].Coords - path[i - 1].Coords != path[i + 1].Coords - path[1].Coords)
@@ -272,8 +270,7 @@ namespace BDArmory.Control
 			private Cell getCellAt(int x, int y) => getCellAt(new Coords(x, y));
 			private Cell getCellAt(Coords coords)
 			{
-				Cell cell;
-				if (!grid.TryGetValue(coords, out cell))
+				if (!grid.TryGetValue(coords, out Cell cell))
 				{
 					cell = new Cell(coords, gridToGeo(coords), CheckTraversability(coords), body);
 					grid[coords] = cell;
@@ -292,9 +289,8 @@ namespace BDArmory.Control
 						if ((vs.Current == null || vs.Current.vesselType != VesselType.Debris || vs.Current.IsControllable || !vs.Current.LandedOrSplashed
 							|| vs.Current.mainBody.GetAltitude(vs.Current.CoM) < MinDepth)) continue;
 
-						Cell cell;
 						Coords coords = getGridCoord(vs.Current.CoM);
-						if (grid.TryGetValue(coords, out cell))
+						if (grid.TryGetValue(coords, out Cell cell))
 							cell.Traversable = false;
 						else
 							grid[coords] = new Cell(coords, gridToGeo(coords), false, body);
@@ -454,8 +450,7 @@ namespace BDArmory.Control
 			private float getCornerAlt(int x, int y) => getCornerAlt(new Coords(x, y));
 			private float getCornerAlt(Coords coords)
 			{
-				float alt;
-				if (!cornerAlts.TryGetValue(coords, out alt))
+				if (!cornerAlts.TryGetValue(coords, out float alt))
 				{
 					var geo = gridToGeo(coords.X - 0.5f, coords.Y - 0.5f);
 					alt = (float)body.TerrainAltitude(geo.x, geo.y, true);
