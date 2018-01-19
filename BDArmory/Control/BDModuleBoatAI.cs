@@ -7,7 +7,6 @@ using UnityEngine;
 
 /* TODO for surface vehicles:
  * update colission detection - probably use pathing matrix + vehicles
- * update yaw control to also steer the wheels
  * update / implement new speed control to use wheel power
  * make pathfinding asynchronous
  * think about LOS detection
@@ -382,6 +381,7 @@ namespace BDArmory.Control
 			s.roll = steerMult * 0.0015f * rollError - .10f * steerDamping * -localAngVel.y;
 			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
 			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
+            s.wheelSteer = -((0.005f * steerMult * yawError) - (steerDamping * 0.05f * -localAngVel.z));
 		}
 
 		#endregion
