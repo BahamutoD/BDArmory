@@ -26,6 +26,7 @@ namespace BDArmory.Control
 		/// </summary>
 		/// <param name="target">Vessel to be checked</param>
 		/// <returns>true if the AI thinks it might eventually fire on the target with direct fire weapons, false otherwise</returns>
+        /// <remarks>Guard mode uses this to check if fixed weapons are viable when selecting weapons.</remarks>
 		bool IsValidFixedWeaponTarget(Vessel target);
 
 		/// <summary>
@@ -33,6 +34,7 @@ namespace BDArmory.Control
 		/// E.g. dogfight competition mode checks this before starting the competition.
 		/// </summary>
 		/// <returns>true if AI is ready for combat</returns>
+        /// <remarks>Mainly use this to check for obvious user errors such as forgetting to stage engines.</remarks>
 		bool CanEngage();
 
 		#region WingCommander

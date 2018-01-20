@@ -209,10 +209,10 @@ namespace BDArmory.Control
     {
         public float targetSpeed;
         public Vessel vessel;
+        public float MaxAccel { get; private set; }
 
         private float lastThrottle;
         private float lastTargetSpeed;
-        private float maxAccel;
         private float avResponse;
         private float impliedDrag;
 

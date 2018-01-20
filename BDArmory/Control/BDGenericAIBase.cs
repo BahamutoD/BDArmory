@@ -234,7 +234,7 @@ namespace BDArmory.Control
 		}
 
 		/// <summary>
-		/// If guard mode is set but not target is selected, pick something
+		/// If guard mode is set but no target is selected, pick something
 		/// </summary>
 		protected virtual void GetGuardNonTarget()
 		{
