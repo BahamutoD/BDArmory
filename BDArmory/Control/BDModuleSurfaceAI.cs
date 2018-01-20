@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
@@ -32,6 +34,7 @@ namespace BDArmory.Control
 		Vector3 upDir;
 
 		AIUtils.TraversabilityMatrix pathingMatrix;
+        AIUtils.TraversabilityMatrix colissionMatrix;
 		List<Vector3> waypoints = null;
         private BDLandSpeedControl motorControl;
 
@@ -118,6 +121,7 @@ namespace BDArmory.Control
 			base.ActivatePilot();
 
 			pathingMatrix = new AIUtils.TraversabilityMatrix();
+            colissionMatrix = new AIUtils.TraversabilityMatrix();
 
             if (!motorControl)
             {
@@ -193,7 +197,9 @@ namespace BDArmory.Control
 					while (vs.MoveNext())
 					{
 						if (vs.Current == null || vs.Current == vessel) continue;
-						if (!vs.Current.Splashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue; //FIX THIS TOO
+						if (!vs.Current.LandedOrSplashed || (vs.Current.vesselType == VesselType.Debris && !vs.Current.IsControllable) 
+                            || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel)
+                            continue;
 						dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
 						if (dodgeVector != null) break;
 					}
@@ -472,6 +478,20 @@ namespace BDArmory.Control
 			}
 			return null;
 		}
+
+        private IEnumerator PathfindThreadCoroutine(Vector3 destination)
+        {
+            List<Vector3> wp = new List<Vector3>();
+            bool complete = false;
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                wp = pathingMatrix.Pathfind(vessel.CoM, destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
+                complete = true;
+            });
+            while (!complete)
+                yield return new WaitForFixedUpdate();
+            waypoints = wp;
+        }
 
 		#endregion
 
