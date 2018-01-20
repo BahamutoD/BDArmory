@@ -521,7 +521,8 @@ namespace BDArmory.Control
 
 		bool PredictCollisionWithVessel(Vessel v, float maxTime, float interval, out Vector3 badDirection)
 		{
-			if(v == weaponManager.incomingMissileVessel) //evasive will handle avoiding missiles
+			if(v == weaponManager.incomingMissileVessel
+                || v.rootPart.FindModuleImplementing<MissileBase>() != null) //evasive will handle avoiding missiles
 			{
 				badDirection = Vector3.zero;
 				return false;

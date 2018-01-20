@@ -429,7 +429,9 @@ namespace BDArmory.Control
 		Vector3? PredictCollisionWithVessel(Vessel v, float maxTime, float interval)
 		{
 			//evasive will handle avoiding missiles
-			if (v == weaponManager.incomingMissileVessel) return null;
+			if (v == weaponManager.incomingMissileVessel 
+                || v.rootPart.FindModuleImplementing<Parts.MissileBase>() != null)
+                return null;
 
 			float time = Mathf.Min(0.5f, maxTime);
 			while (time < maxTime)

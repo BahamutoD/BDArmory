@@ -245,14 +245,14 @@ namespace BDArmory.Control
                     lastTargetSpeed = targetSpeed;
                     calculatePower();
                 }
-                if (maxAccel == 0)
+                if (MaxAccel == 0)
                 {
                     s.wheelThrottle = 0;
                     return;
                 }
 
-                impliedDrag = (impliedDrag * 3 + Vector3.Dot(vessel.acceleration, vessel.transform.up) - maxAccel * lastThrottle) / 4;
-                float throttle = ((targetSpeed - (float)vessel.srfSpeed) * avResponse / 3 - impliedDrag) / maxAccel;
+                impliedDrag = (impliedDrag * 3 + Vector3.Dot(vessel.acceleration, vessel.transform.up) - MaxAccel * lastThrottle) / 4;
+                float throttle = ((targetSpeed - (float)vessel.srfSpeed) * avResponse / 3 - impliedDrag) / MaxAccel;
                 lastThrottle = Mathf.Clamp(throttle, -1, 1);
                 s.wheelThrottle = lastThrottle;
                 vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, throttle < -5f);
@@ -286,7 +286,7 @@ namespace BDArmory.Control
                     //m.Current.tractionControlScale = 0;
                     //m.Current.autoTorque = false;
                 }
-            maxAccel = power / (float)vessel.totalMass;
+            MaxAccel = power / (float)vessel.totalMass;
             avResponse = response / power;
         }
 
