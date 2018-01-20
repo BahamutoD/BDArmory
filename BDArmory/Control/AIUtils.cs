@@ -98,12 +98,13 @@ namespace BDArmory.Control
 			/// <summary>
 			/// Create a new traversability matrix.
 			/// </summary>
-			/// <param name="start">Origin point, world position</param>
-			/// <param name="end">Destination point, world position</param>
+			/// <param name="start">Origin point, in Lat,Long,Alt form</param>
+			/// <param name="end">Destination point, in Lat,Long,Alt form</param>
 			/// <param name="body">Body on which the grid is created</param>
 			/// <param name="vehicleType">Movement type of the vehicle (surface/land)</param>
 			/// <param name="maxSlopeAngle">The highest slope angle (in degrees) the vessel can traverse in a straight line</param>
-			public List<Vector3> Pathfind(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+			/// <returns>List of geo coordinate vectors of waypoints to traverse in straight lines to reach the destination</returns>
+            public List<Vector3> Pathfind(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
 			{
 				checkGrid(start, body, vehicleType, maxSlopeAngle, 
 					Mathf.Clamp(VectorUtils.GeoDistance(start, end, body) / 20, GridSizeDefault, GridSizeDefault * 5));
@@ -212,7 +213,7 @@ namespace BDArmory.Control
                 {
                     if(!straightPath(waypoint.X, waypoint.Y, path[i].X, path[i].Y))
                     {
-                        pathReduced.Add(path[i - 1].WorldPos);
+                        pathReduced.Add(path[i - 1].GeoPos);
                         waypoint = path[i - 1].Coords;
                     }
                 }
@@ -225,7 +226,7 @@ namespace BDArmory.Control
                 else if (path[path.Count - 1].Coords == endCoords)
                     pathReduced.Add(end);
                 else
-                    pathReduced.Add(path[path.Count - 1].WorldPos);
+                    pathReduced.Add(path[path.Count - 1].GeoPos);
 
 				return pathReduced;
 			}
@@ -233,7 +234,9 @@ namespace BDArmory.Control
 			/// <summary>
 			/// Check if line is traversible. Due to implementation specifics, it is advised not to use this if the start point is not the position of the vessel.
 			/// </summary>
-			public bool TraversibleStraightLine(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+			/// <param name="start">start point in Lat,Long,Alt form</param>
+			/// <param name="end">end point, in Lat,Long,Alt form</param>
+            public bool TraversibleStraightLine(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
 			{
 				checkGrid(start, body, vehicleType, maxSlopeAngle);
 				return TraversibleStraightLine(start, end);
@@ -241,15 +244,14 @@ namespace BDArmory.Control
 
 			public bool TraversibleStraightLine(Vector3 start, Vector3 end)
 			{
-				float[] location = getGridLocation(VectorUtils.WorldPositionToGeoCoords(start, body));
-				float[] endPos = getGridLocation(VectorUtils.WorldPositionToGeoCoords(end, body));
+				float[] location = getGridLocation(start);
+				float[] endPos = getGridLocation(end);
 
 				return straightPath(location[0], location[1], endPos[0], endPos[1]);
 			}
 
 			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
 			{
-				origin = VectorUtils.WorldPositionToGeoCoords(origin, body);
 				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance || Mathf.Abs(gridSize-GridSize) > 100 ||
 					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle)
 				{
@@ -340,8 +342,8 @@ namespace BDArmory.Control
 			// round grid coordinates to get cell
 			private Coords getGridCoord(float[] gridLocation)
 				=> new Coords(Mathf.RoundToInt(gridLocation[0]), Mathf.RoundToInt(gridLocation[1]));
-			private Coords getGridCoord(Vector3 worldPosition)
-				=> getGridCoord(getGridLocation(VectorUtils.WorldPositionToGeoCoords(worldPosition, body)));
+			private Coords getGridCoord(Vector3 geoPosition)
+				=> getGridCoord(getGridLocation(geoPosition));
 
 			private float gridDistance(Coords point, Coords other)
 			{
