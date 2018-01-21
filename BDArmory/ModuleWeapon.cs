@@ -1626,9 +1626,9 @@ namespace BDArmory
                 else if (vessel.altitude < 6000)
                 {
                     float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        -part.rb.velocity, bulletVelocity);
+                        -(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()), bulletVelocity);
                     if (time2 > 0) time = time2;
-                    finalTarget += (-part.rb.velocity * (time + Time.fixedDeltaTime));
+                    finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * (time + Time.fixedDeltaTime));
                     //this vessel velocity compensation against stationary
                 }
                 Vector3 up = (finalTarget - vessel.mainBody.transform.position).normalized;
