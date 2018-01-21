@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.UI;
@@ -290,7 +291,7 @@ namespace BDArmory.Control
 						if ((vs.Current == null || vs.Current.vesselType != VesselType.Debris || vs.Current.IsControllable || !vs.Current.LandedOrSplashed
 							|| vs.Current.mainBody.GetAltitude(vs.Current.CoM) < MinDepth)) continue;
 
-						Coords coords = getGridCoord(vs.Current.CoM);
+						Coords coords = getGridCoord(VectorUtils.WorldPositionToGeoCoords(vs.Current.CoM, body));
 						if (grid.TryGetValue(coords, out Cell cell))
 							cell.Traversable = false;
 						else
@@ -508,20 +509,22 @@ namespace BDArmory.Control
 			public void DrawDebug(Vector3 currentWorldPos, List<Vector3> waypoints = null)
 			{
 				Vector3 upVec = VectorUtils.GetUpDirection(currentWorldPos) * 10;
-				using (var kvp = grid.GetEnumerator())
-					while (kvp.MoveNext())
-					{
-						BDGUIUtils.DrawLineBetweenWorldPositions(kvp.Current.Value.WorldPos, kvp.Current.Value.WorldPos + upVec, 3,
-							kvp.Current.Value.Traversable ? Color.green : Color.red);
-					}
+                if (BDArmorySettings.DISPLAY_PATHING_GRID)
+                    using (var kvp = grid.GetEnumerator())
+					    while (kvp.MoveNext())
+					    {
+						    BDGUIUtils.DrawLineBetweenWorldPositions(kvp.Current.Value.WorldPos, kvp.Current.Value.WorldPos + upVec, 3,
+							    kvp.Current.Value.Traversable ? Color.green : Color.red);
+					    }
 				if (waypoints != null)
 				{
 					var previous = currentWorldPos;
 					using (var wp = waypoints.GetEnumerator())
 						while (wp.MoveNext())
 						{
-							BDGUIUtils.DrawLineBetweenWorldPositions(previous + upVec, wp.Current + upVec, 2, Color.blue);
-							previous = wp.Current;
+                            var c = VectorUtils.GetWorldSurfacePostion(wp.Current, body);
+							BDGUIUtils.DrawLineBetweenWorldPositions(previous + upVec, c + upVec, 2, Color.cyan);
+							previous = c;
 						}
 				}
 			}

@@ -30,7 +30,7 @@ namespace BDArmory.Control
 
 		protected Vessel targetVessel;
 
-		protected Vector3d assignedPositionGeo { get; set; }
+		protected virtual Vector3d assignedPositionGeo { get; set; }
 
 		public Vector3d assignedPositionWorld
 		{
@@ -51,7 +51,7 @@ namespace BDArmory.Control
 		protected int commandFollowIndex;
 
 		public PilotCommands currentCommand => command;
-		public Vector3d commandGPS => assignedPositionGeo;
+		public virtual Vector3d commandGPS => assignedPositionGeo;
 
 		#endregion
 

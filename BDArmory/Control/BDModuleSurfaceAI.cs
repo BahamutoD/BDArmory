@@ -9,7 +9,6 @@ using UnityEngine;
 
 /* TODO for surface vehicles:
  * update colission detection - probably use pathing matrix + vehicles
- * make pathfinding asynchronous
  * think about LOS detection
 */
 
@@ -33,9 +32,27 @@ namespace BDArmory.Control
 
 		Vector3 upDir;
 
-		AIUtils.TraversabilityMatrix pathingMatrix;
         AIUtils.TraversabilityMatrix colissionMatrix;
-		List<Vector3> waypoints = null;
+        AIUtils.TraversabilityMatrix pathingMatrix;
+        Coroutine pathfindingRoutine;
+        List<Vector3> waypoints = new List<Vector3>();
+
+        protected override Vector3d assignedPositionGeo
+        {
+            get { return intermediatePositionGeo; }
+            set
+            {
+                finalPositionGeo = value;
+                intermediatePositionGeo = value;
+                if (pathfindingRoutine != null)
+                    StopCoroutine(pathfindingRoutine);
+                pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(value));
+            }
+        }
+        Vector3d finalPositionGeo;
+        Vector3d intermediatePositionGeo;
+        public override Vector3d commandGPS => finalPositionGeo;
+
         private BDLandSpeedControl motorControl;
 
         //settings
@@ -153,7 +170,8 @@ namespace BDArmory.Control
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + targetDirection * 10f, 2, Color.blue);
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right), 2, Color.green);
 
-			pathingMatrix.DrawDebug(vessel.CoM, waypoints);
+            if (pathfindingRoutine == null)
+			    pathingMatrix.DrawDebug(vessel.CoM, waypoints);
 		}
 
 		#endregion
@@ -188,7 +206,6 @@ namespace BDArmory.Control
 			if (collisionDetectionTicker == 0)
 			{
 				collisionDetectionTicker = 20;
-				waypoints = pathingMatrix.Pathfind(vessel.CoM, assignedPositionWorld, vessel.mainBody, SurfaceType, maxSlopeAngle);
 
 				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
                 dodgeVector = null; //PredictRunningAshore(10f * predictMult, 2f); FIX THIS
@@ -296,6 +313,7 @@ namespace BDArmory.Control
 				return;
 			}
 
+            cycleWaypoint();
 			SetStatus($"Not doing anything in particular");
 			targetDirection = vesselTransform.up;
 		}
@@ -485,12 +503,25 @@ namespace BDArmory.Control
             bool complete = false;
             ThreadPool.QueueUserWorkItem(o =>
             {
-                wp = pathingMatrix.Pathfind(vessel.CoM, destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
+                wp = pathingMatrix.Pathfind(
+                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody), 
+                    destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
                 complete = true;
             });
             while (!complete)
                 yield return new WaitForFixedUpdate();
             waypoints = wp;
+            intermediatePositionGeo = waypoints[0];
+            pathfindingRoutine = null;
+        }
+
+        void cycleWaypoint()
+        {
+            if (waypoints.Count > 1)
+            {
+                waypoints.RemoveAt(0);
+                intermediatePositionGeo = waypoints[0];
+            }
         }
 
 		#endregion
