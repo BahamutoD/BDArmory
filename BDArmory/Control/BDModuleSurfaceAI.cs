@@ -19,6 +19,8 @@ namespace BDArmory.Control
 		#region Declarations
 		
 		Vessel extendingTarget = null;
+        Vessel bypassTarget = null;
+        Vector3 bypassTargetPos;
 
 		Vector3 targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
@@ -29,13 +31,14 @@ namespace BDArmory.Control
 		float weaveDirection = 1;
 		const float weaveLimit = 10;
 		const float weaveFactor = 3.5f;
+        int sideSlipDirection = 0;
 
 		Vector3 upDir;
 
-        AIUtils.TraversabilityMatrix colissionMatrix;
         AIUtils.TraversabilityMatrix pathingMatrix;
         Coroutine pathfindingRoutine;
         List<Vector3> waypoints = new List<Vector3>();
+        bool leftPath = false;
 
         protected override Vector3d assignedPositionGeo
         {
@@ -43,10 +46,7 @@ namespace BDArmory.Control
             set
             {
                 finalPositionGeo = value;
-                intermediatePositionGeo = value;
-                if (pathfindingRoutine != null)
-                    StopCoroutine(pathfindingRoutine);
-                pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(value));
+                leftPath = true;
             }
         }
         Vector3d finalPositionGeo;
@@ -75,7 +75,7 @@ namespace BDArmory.Control
 		public float MaxDrift = 30;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Moving pitch"),
-			UI_FloatRange(minValue = -45f, maxValue = 45f, stepIncrement = 1f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = -10f, maxValue = 10f, stepIncrement = .1f, scene = UI_Scene.All)]
 		public float TargetPitch = 0;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Bank angle"),
@@ -83,11 +83,11 @@ namespace BDArmory.Control
 		public float BankAngle = 0;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"),
-			UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 0.2f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
 		public float steerMult = 6;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Damping"),
-			UI_FloatRange(minValue = 1f, maxValue = 8f, stepIncrement = 0.1f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 0.1f, maxValue = 10f, stepIncrement = .1f, scene = UI_Scene.All)]
 		public float steerDamping = 3;
 
 		//[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"),
@@ -138,7 +138,6 @@ namespace BDArmory.Control
 			base.ActivatePilot();
 
 			pathingMatrix = new AIUtils.TraversabilityMatrix();
-            colissionMatrix = new AIUtils.TraversabilityMatrix();
 
             if (!motorControl)
             {
@@ -146,6 +145,9 @@ namespace BDArmory.Control
                 motorControl.vessel = vessel;
             }
             motorControl.Activate();
+
+            if (BroadsideAttack)
+                sideSlipDirection = UnityEngine.Random.Range(0, 2) > 1 ? 1 : -1;
         }
 
         public override void DeactivatePilot()
@@ -200,121 +202,164 @@ namespace BDArmory.Control
 			AdjustThrottle(targetVelocity); // set throttle according to our targets and movement
 		}
 
-		void PilotLogic()
-		{
-			// check for collisions, but not every frame
-			if (collisionDetectionTicker == 0)
-			{
-				collisionDetectionTicker = 20;
+        void PilotLogic()
+        {
+            // check for collisions, but not every frame
+            if (collisionDetectionTicker == 0)
+            {
+                collisionDetectionTicker = 20;
+                float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
 
-				float predictMult = Mathf.Clamp(10 / MaxDrift, 1, 10);
-                dodgeVector = null; //PredictRunningAshore(10f * predictMult, 2f); FIX THIS
+                dodgeVector = null;
 
-				using (var vs = BDATargetManager.LoadedVessels.GetEnumerator())
-					while (vs.MoveNext())
-					{
-						if (vs.Current == null || vs.Current == vessel) continue;
-						if (!vs.Current.LandedOrSplashed || (vs.Current.vesselType == VesselType.Debris && !vs.Current.IsControllable) 
-                            || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel)
+                using (var vs = BDATargetManager.LoadedVessels.GetEnumerator())
+                    while (vs.MoveNext())
+                    {
+                        if (vs.Current == null || vs.Current == vessel) continue;
+                        if (!vs.Current.LandedOrSplashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel)
                             continue;
-						dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
-						if (dodgeVector != null) break;
-					}
-			}
-			else
-				collisionDetectionTicker--;
-			// avoid collisions if any are found
-			if (dodgeVector != null)
-			{
-				targetVelocity = PoweredSteering ? MaxSpeed : CruiseSpeed;
-				targetDirection = (Vector3)dodgeVector;
-				SetStatus($"Avoiding Collision");
-				return;
-			}
+                        dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
+                        if (dodgeVector != null) break;
+                    }
+            }
+            else
+                collisionDetectionTicker--;
 
-			// check for enemy targets and engage
-			// not checking for guard mode, because if guard mode is off now you can select a target manually and if it is of opposing team, the AI will try to engage while you can man the turrets
-			if (weaponManager && targetVessel != null && !BDArmorySettings.PEACE_MODE)
-			{
-				Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
-				float distance = vecToTarget.magnitude;
-				// lead the target a bit, where 950f is a ballpark estimate of the average bullet velocity (gau 983, vulcan 950, .50 860)
-				vecToTarget = targetVessel.PredictPosition(distance / 950f) - vessel.CoM;  
+            // avoid collisions if any are found
+            if (dodgeVector != null)
+            {
+                targetVelocity = PoweredSteering ? MaxSpeed : CruiseSpeed;
+                targetDirection = (Vector3)dodgeVector;
+                SetStatus($"Avoiding Collision");
+                leftPath = true;
+                return;
+            }
 
-				if (BroadsideAttack)
-				{
-					Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
-					sideVector *= Mathf.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // pick a side for attack
-					float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(90 / MaxDrift, 0, 10)) + 1) * AttackAngleAtMaxRange / 90 : // direct to target to attackAngle degrees if over maxrange
-						(distance <= MinEngagementRange ? 1.5f - distance / (MinEngagementRange * 2) : // 90 to 135 degrees if closer than minrange
-						(MaxEngagementRange - distance) / (MaxEngagementRange - MinEngagementRange) * (1 - AttackAngleAtMaxRange / 90)+ AttackAngleAtMaxRange / 90); // attackAngle to 90 degrees from maxrange to minrange 
-					targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
-					targetVelocity = MaxSpeed;
-					DebugLine($"Broadside attack angle {sidestep}");
-				}
-				else // just point at target and go
-				{
-					if ((targetVessel.horizontalSrfSpeed < 10 || Vector3.Dot(Vector3.ProjectOnPlane(targetVessel.srf_vel_direction, upDir), vessel.up) < 0) //if target is stationary or we're facing in opposite directions
-						&& (distance < MinEngagementRange || (distance < (MinEngagementRange*3 + MaxEngagementRange) / 4 //and too close together
-						&& extendingTarget != null && targetVessel != null && extendingTarget == targetVessel))) 
-					{
-						extendingTarget = targetVessel;
-                        // not sure if this part is very smart, potential for improvement
-						targetDirection = -vecToTarget; //extend
-						targetVelocity = MaxSpeed;
-						SetStatus($"Extending");
-						return;
-					}
-					else
-					{
-						extendingTarget = null;
-						targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
-						if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0; // if facing away from target
-						else if (distance >= MaxEngagementRange || distance <= MinEngagementRange) targetVelocity = MaxSpeed;
-						else targetVelocity = CruiseSpeed + (MaxSpeed - CruiseSpeed) * (distance - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange); //slow down if inside engagement range to extend shooting opportunities
-						targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed); // maintain a bit of speed if using powered steering
-					}
-				}
-				SetStatus($"Engaging target");
-				return;
-			}
-			
-			// follow
-			if (command == PilotCommands.Follow)
-			{
-				Vector3 targetPosition = GetFormationPosition();
-				Vector3 targetDistance = targetPosition - vesselTransform.position;
-				if (Vector3.Dot(targetDistance, vesselTransform.up) < 0
-					&& Vector3.ProjectOnPlane(targetDistance, upDir).sqrMagnitude < 250f * 250f
-					&& Vector3.Angle(vesselTransform.up, commandLeader.vessel.srf_velocity) < 0.8f)
-				{
-					targetVelocity = (float)(commandLeader.vessel.horizontalSrfSpeed - (vesselTransform.position - targetPosition).magnitude / 15);
-					targetDirection = Vector3.RotateTowards(Vector3.ProjectOnPlane(commandLeader.vessel.srf_vel_direction, upDir), targetDistance, 0.2f, 0);
-				}
-				else
-				{
-					targetVelocity = (float)(commandLeader.vessel.horizontalSrfSpeed + (vesselTransform.position - targetPosition).magnitude / 15);
-					targetDirection = Vector3.ProjectOnPlane(targetDistance, upDir);
-				}
-				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
-				SetStatus($"Following");
-				return;
-			}
+            // if bypass target is no longer relevant, remove it
+            if (bypassTarget != null && bypassTarget != targetVessel && bypassTarget != commandLeader.vessel)
+            {
+                bypassTarget = null;
+                if (pathfindingRoutine != null)
+                {
+                    StopCoroutine(pathfindingRoutine);
+                    pathfindingRoutine = null;
+                }
+
+            }
+
+            if (bypassTarget == null)
+            {
+                // check for enemy targets and engage
+                // not checking for guard mode, because if guard mode is off now you can select a target manually and if it is of opposing team, the AI will try to engage while you can man the turrets
+                if (weaponManager && targetVessel != null && !BDArmorySettings.PEACE_MODE)
+                {
+                    leftPath = true;
+                    if (collisionDetectionTicker == 5)
+                        checkBypass(targetVessel);
+
+                    Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
+                    float distance = vecToTarget.magnitude;
+                    // lead the target a bit, where 950f is a ballpark estimate of the average bullet velocity (gau 983, vulcan 950, .50 860)
+                    vecToTarget = targetVessel.PredictPosition(distance / 950f) - vessel.CoM;
+
+                    if (BroadsideAttack)
+                    {
+                        Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
+                        if (collisionDetectionTicker == 10 && PredictRunningAshore(10, 2))
+                            sideSlipDirection = -Math.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // switch sides if we're running ashore
+                        sideVector *= sideSlipDirection;
+
+                        float sidestep = distance >= MaxEngagementRange ? Mathf.Clamp01((MaxEngagementRange - distance) / (CruiseSpeed * Mathf.Clamp(90 / MaxDrift, 0, 10)) + 1) * AttackAngleAtMaxRange / 90 : // direct to target to attackAngle degrees if over maxrange
+                            (distance <= MinEngagementRange ? 1.5f - distance / (MinEngagementRange * 2) : // 90 to 135 degrees if closer than minrange
+                            (MaxEngagementRange - distance) / (MaxEngagementRange - MinEngagementRange) * (1 - AttackAngleAtMaxRange / 90) + AttackAngleAtMaxRange / 90); // attackAngle to 90 degrees from maxrange to minrange 
+                        targetDirection = Vector3.LerpUnclamped(vecToTarget.normalized, sideVector.normalized, sidestep); // interpolate between the side vector and target direction vector based on sidestep
+                        targetVelocity = MaxSpeed;
+                        DebugLine($"Broadside attack angle {sidestep}");
+                    }
+                    else // just point at target and go
+                    {
+                        if ((targetVessel.horizontalSrfSpeed < 10 || Vector3.Dot(Vector3.ProjectOnPlane(targetVessel.srf_vel_direction, upDir), vessel.up) < 0) //if target is stationary or we're facing in opposite directions
+                            && (distance < MinEngagementRange || (distance < (MinEngagementRange * 3 + MaxEngagementRange) / 4 //and too close together
+                            && extendingTarget != null && targetVessel != null && extendingTarget == targetVessel)))
+                        {
+                            extendingTarget = targetVessel;
+                            // not sure if this part is very smart, potential for improvement
+                            targetDirection = -vecToTarget; //extend
+                            targetVelocity = MaxSpeed;
+                            SetStatus($"Extending");
+                            return;
+                        }
+                        else
+                        {
+                            extendingTarget = null;
+                            targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
+                            if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0; // if facing away from target
+                            else if (distance >= MaxEngagementRange || distance <= MinEngagementRange) targetVelocity = MaxSpeed;
+                            else targetVelocity = CruiseSpeed + (MaxSpeed - CruiseSpeed) * (distance - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange); //slow down if inside engagement range to extend shooting opportunities
+                            targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed); // maintain a bit of speed if using powered steering
+                        }
+                    }
+                    SetStatus($"Engaging target");
+                    return;
+                }
+
+                // follow
+                if (command == PilotCommands.Follow)
+                {
+                    leftPath = true;
+                    if (collisionDetectionTicker == 5)
+                        checkBypass(commandLeader.vessel);
+
+                    Vector3 targetPosition = GetFormationPosition();
+                    Vector3 targetDistance = targetPosition - vesselTransform.position;
+                    if (Vector3.Dot(targetDistance, vesselTransform.up) < 0
+                        && Vector3.ProjectOnPlane(targetDistance, upDir).sqrMagnitude < 250f * 250f
+                        && Vector3.Angle(vesselTransform.up, commandLeader.vessel.srf_velocity) < 0.8f)
+                    {
+                        targetDirection = Vector3.RotateTowards(Vector3.ProjectOnPlane(commandLeader.vessel.srf_vel_direction, upDir), targetDistance, 0.2f, 0);
+                    }
+                    else
+                    {
+                        targetDirection = Vector3.ProjectOnPlane(targetDistance, upDir);
+                    }
+                    targetVelocity = (float)(commandLeader.vessel.horizontalSrfSpeed + (vesselTransform.position - targetPosition).magnitude / 15);
+                    if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
+                    SetStatus($"Following");
+                    return;
+                }
+            }
 
 			// goto
+            if (leftPath && bypassTarget == null)
+            {
+                intermediatePositionGeo = finalPositionGeo;
+                if (pathfindingRoutine != null)
+                    StopCoroutine(pathfindingRoutine);
+                pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(finalPositionGeo));
+                leftPath = false;
+            }
 
 			const float targetRadius = 400f;
 			targetDirection = Vector3.ProjectOnPlane(assignedPositionWorld - vesselTransform.position, upDir);
-			if (targetDirection.sqrMagnitude > targetRadius * targetRadius)
+
+            if (targetDirection.sqrMagnitude > targetRadius * targetRadius)
 			{
-				targetVelocity = Mathf.Clamp(((float)targetDirection.magnitude - targetRadius / 2) / 5f, 0, command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed);
+                if (bypassTarget != null)
+                    targetVelocity = MaxSpeed;
+                else if (waypoints.Count > 1)
+                    targetVelocity = command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed;
+                else
+                    targetVelocity = Mathf.Clamp((targetDirection.magnitude - targetRadius / 2) / 5f, 
+                    0, command == PilotCommands.Attack ? MaxSpeed : CruiseSpeed);
+
 				if (Vector3.Dot(targetDirection, vesselTransform.up) < 0 && !PoweredSteering) targetVelocity = 0;
-				SetStatus($"Moving");
+				SetStatus(bypassTarget ? "Repositioning" : "Moving");
 				return;
 			}
 
             cycleWaypoint();
-			SetStatus($"Not doing anything in particular");
+
+            SetStatus($"Not doing anything in particular");
 			targetDirection = vesselTransform.up;
 		}
 
@@ -473,29 +518,71 @@ namespace BDArmory.Control
 			return null;
 		}
 
-		/// <returns>null if no collision, dodge vector if one detected</returns>
-		Vector3? PredictRunningAshore(float maxTime, float interval)
+		/// <returns>false if no collision, true if one detected</returns>
+		bool PredictRunningAshore(float maxTime, float interval)
 		{
-			float time = Mathf.Min(0.5f, maxTime);
+            const float minDepth = 10f;
+            float time = Mathf.Min(0.5f, maxTime);
 			while (time < maxTime)
 			{
-				const float minDepth = 10f;
-				Vector3 testVector = vessel.PredictPosition(time) - vessel.CoM;
-				Vector3 sideVector = Vector3.Cross(testVector, upDir).normalized * (float)vessel.srfSpeed;
-				// unrolled loop, because I am lazy
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector * 2, sideVector, 0.03f, 0), vessel.mainBody) > -minDepth)
-					return -sideVector;
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + Vector3.RotateTowards(testVector * 2, -sideVector, 0.03f, 0), vessel.mainBody) > -minDepth)
-					return sideVector;
-				if (AIUtils.GetTerrainAltitude(vessel.CoM + sideVector + Vector3.RotateTowards(testVector, sideVector, 0.15f, 0), vessel.mainBody) > -minDepth)
-					return -sideVector;
-				if (AIUtils.GetTerrainAltitude(vessel.CoM - sideVector + Vector3.RotateTowards(testVector, -sideVector, 0.15f, 0), vessel.mainBody) > -minDepth)
-					return sideVector;
-
+				if (AIUtils.GetTerrainAltitude(vessel.PredictPosition(time), vessel.mainBody) > -minDepth)
+					return true;
 				time = Mathf.MoveTowards(time, maxTime, interval);
 			}
-			return null;
+			return false;
 		}
+
+        void checkBypass(Vessel target)
+        {
+            if (pathfindingRoutine == null)
+                pathfindingRoutine = StartCoroutine(BypassCheckThreadCoroutine(target));
+        }
+
+        private IEnumerator BypassCheckThreadCoroutine(Vessel target)
+        {
+            // first just check if we can go straight
+            bool complete = false;
+            bool traversible = false;
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                traversible = pathingMatrix.TraversibleStraightLine(
+                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                    VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                    vessel.mainBody, SurfaceType, maxSlopeAngle);
+                complete = true;
+            });
+            while (!complete)
+                yield return new WaitForFixedUpdate();
+
+            // if we can, that's it
+            if (traversible)
+            {
+                pathfindingRoutine = null;
+                yield break;
+            }
+
+            // otherwise find a path to our location
+            complete = false;
+            bypassTarget = target;
+            bypassTargetPos = target.CoM;
+            List<Vector3> wp = new List<Vector3>();
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                wp = pathingMatrix.Pathfind(
+                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                    VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody), 
+                    vessel.mainBody, SurfaceType, maxSlopeAngle);
+                complete = true;
+            });
+            while (!complete)
+                yield return new WaitForFixedUpdate();
+
+            // remove the last waypoint, because we'll be engaging then, as we'll have a straight path
+            wp.RemoveAt(wp.Count - 1);
+            waypoints = wp;
+            intermediatePositionGeo = waypoints[0];
+            pathfindingRoutine = null;
+        }
 
         private IEnumerator PathfindThreadCoroutine(Vector3 destination)
         {
@@ -521,6 +608,17 @@ namespace BDArmory.Control
             {
                 waypoints.RemoveAt(0);
                 intermediatePositionGeo = waypoints[0];
+            }
+            else if (bypassTarget != null)
+            {
+                if (pathfindingRoutine != null)
+                    // return the position of bypass target if waypoints are being calculated
+                    intermediatePositionGeo = VectorUtils.WorldPositionToGeoCoords(bypassTarget.CoM, vessel.mainBody);
+                else
+                {
+                    bypassTarget = null;
+                    leftPath = true;
+                }
             }
         }
 

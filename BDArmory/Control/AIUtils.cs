@@ -235,18 +235,18 @@ namespace BDArmory.Control
 			/// <summary>
 			/// Check if line is traversible. Due to implementation specifics, it is advised not to use this if the start point is not the position of the vessel.
 			/// </summary>
-			/// <param name="start">start point in Lat,Long,Alt form</param>
-			/// <param name="end">end point, in Lat,Long,Alt form</param>
-            public bool TraversibleStraightLine(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+			/// <param name="startGeo">start point in Lat,Long,Alt form</param>
+			/// <param name="endGeo">end point, in Lat,Long,Alt form</param>
+            public bool TraversibleStraightLine(Vector3 startGeo, Vector3 endGeo, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
 			{
-				checkGrid(start, body, vehicleType, maxSlopeAngle);
-				return TraversibleStraightLine(start, end);
+				checkGrid(startGeo, body, vehicleType, maxSlopeAngle);
+				return TraversibleStraightLine(startGeo, endGeo);
 			}
 
-			public bool TraversibleStraightLine(Vector3 start, Vector3 end)
+			public bool TraversibleStraightLine(Vector3 startGeo, Vector3 endGeo)
 			{
-				float[] location = getGridLocation(start);
-				float[] endPos = getGridLocation(end);
+				float[] location = getGridLocation(startGeo);
+				float[] endPos = getGridLocation(endGeo);
 
 				return straightPath(location[0], location[1], endPos[0], endPos[1]);
 			}
