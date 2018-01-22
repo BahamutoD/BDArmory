@@ -236,7 +236,8 @@ namespace BDArmory.Control
             }
 
             // if bypass target is no longer relevant, remove it
-            if (bypassTarget != null && bypassTarget != targetVessel && bypassTarget != commandLeader.vessel)
+            if (bypassTarget != null && ((bypassTarget != targetVessel && bypassTarget != commandLeader?.vessel) 
+                || (bypassTargetPos - bypassTarget.CoM).sqrMagnitude > 500000))
             {
                 bypassTarget = null;
                 if (pathfindingRoutine != null)
