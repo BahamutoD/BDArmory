@@ -318,22 +318,21 @@ namespace BDArmory.Control
 				float dY = (destY - originY);
                 int dirX = Math.Sign(dX);
                 int dirY = Math.Sign(dY);
-				float ratio = Mathf.Abs(dX / dY);
                 int sX = Mathf.RoundToInt(originX);
                 int sY = Mathf.RoundToInt(originY);
 
                 int xP = 0;
                 int yP = 0;
-                float xO = originX - sX;
                 float xT = Mathf.Abs(dX);
-                float yO = originY - sY;
                 float yT = Mathf.Abs(dY);
 
                 while (xP < xT || yP < yT)
                 {
-                    if (xP < xT && (yP >= yT || (xP + xO) <= (yP + yO) * ratio))
+                    float ratio = Mathf.Abs((dX - xP) / (dY - yP));
+
+                    if (ratio > 0.49)
                         ++xP;
-                    else
+                    if (ratio < 2.04)
                         ++yP;
 
                     if (!getCellAt(sX + xP * dirX, sY + yP * dirY).Traversable)
