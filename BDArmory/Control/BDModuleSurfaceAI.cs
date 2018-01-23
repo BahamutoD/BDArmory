@@ -237,7 +237,7 @@ namespace BDArmory.Control
 
             // if bypass target is no longer relevant, remove it
             if (bypassTarget != null && ((bypassTarget != targetVessel && bypassTarget != commandLeader?.vessel) 
-                || (bypassTargetPos - bypassTarget.CoM).sqrMagnitude > 500000))
+                || (VectorUtils.GetWorldSurfacePostion(bypassTargetPos, vessel.mainBody) - bypassTarget.CoM).sqrMagnitude > 500000))
             {
                 bypassTarget = null;
                 if (pathfindingRoutine != null)
@@ -565,7 +565,7 @@ namespace BDArmory.Control
             // otherwise find a path to our location
             complete = false;
             bypassTarget = target;
-            bypassTargetPos = target.CoM;
+            bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
             List<Vector3> wp = new List<Vector3>();
             ThreadPool.QueueUserWorkItem(o =>
             {
