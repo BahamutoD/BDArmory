@@ -3585,7 +3585,9 @@ namespace BDArmory
         public bool CanSeeTarget(TargetInfo target)
         {
             // fix cheating: we can see a target IF we either have a visual on it, OR it has been detected on radar/sonar
-            if (Time.time - target.detectedTime < targetScanInterval)
+            // but to prevent AI from spazzing out, limit lowest interval to 5, as that's about the time a 360 scanAngle completes a sweep
+            // i.e. let's have at least some object permanence :)
+            if (Time.time - target.detectedTime < Mathf.Max(targetScanInterval, 5))
                 return true;
 
             // can we get a visual sight of the target?
