@@ -39,6 +39,7 @@ namespace BDArmory.Control
         Coroutine pathfindingRoutine;
         List<Vector3> waypoints = new List<Vector3>();
         bool leftPath = false;
+        bool repathRequest = false;
 
         protected override Vector3d assignedPositionGeo
         {
@@ -233,6 +234,20 @@ namespace BDArmory.Control
                 SetStatus($"Avoiding Collision");
                 leftPath = true;
                 return;
+            }
+
+            if (repathRequest)
+            {
+                // restart the whole pathfinding thing (thread error handling)
+                repathRequest = false;
+                leftPath = true;
+                if (pathfindingRoutine != null)
+                {
+                    StopCoroutine(pathfindingRoutine);
+                    pathfindingRoutine = null;
+                }
+                pathingMatrix = new AIUtils.TraversabilityMatrix();
+                collisionDetectionTicker = 6;
             }
 
             // if bypass target is no longer relevant, remove it
@@ -546,11 +561,23 @@ namespace BDArmory.Control
             bool traversable = false;
             ThreadPool.QueueUserWorkItem(o =>
             {
-                traversable = pathingMatrix.TraversableStraightLine(
-                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                    VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                    vessel.mainBody, SurfaceType, maxSlopeAngle);
-                complete = true;
+                try
+                {
+                    traversable = pathingMatrix.TraversableStraightLine(
+                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                        vessel.mainBody, SurfaceType, maxSlopeAngle);
+                }
+                catch
+                {
+                    Debug.Log("Threaded pathfinding threw an error, this happens occasionally when restarting the pilot module. We handled the error, but if this happens in the ordinary course of running the AI, let us know.");
+                    traversable = true;
+                    repathRequest = true;
+                }
+                finally
+                {
+                    complete = true;
+                }
             });
             while (!complete)
                 yield return new WaitForFixedUpdate();
@@ -569,11 +596,24 @@ namespace BDArmory.Control
             List<Vector3> wp = new List<Vector3>();
             ThreadPool.QueueUserWorkItem(o =>
             {
-                wp = pathingMatrix.Pathfind(
-                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                    VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody), 
-                    vessel.mainBody, SurfaceType, maxSlopeAngle);
-                complete = true;
+                try
+                {
+                    wp = pathingMatrix.Pathfind(
+                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                        vessel.mainBody, SurfaceType, maxSlopeAngle);
+                }
+                catch
+                {
+                    Debug.Log("Threaded pathfinding threw an error, this happens occasionally when restarting the pilot module. We handled the error, but if this happens in the ordinary course of running the AI, let us know.");
+                    repathRequest = true;
+                    wp = new List<Vector3> { VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody), Vector3.zero };
+                }
+                finally
+                {
+                    complete = true;
+                }
+
             });
             while (!complete)
                 yield return new WaitForFixedUpdate();
@@ -591,10 +631,22 @@ namespace BDArmory.Control
             bool complete = false;
             ThreadPool.QueueUserWorkItem(o =>
             {
-                wp = pathingMatrix.Pathfind(
-                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody), 
-                    destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
-                complete = true;
+                try
+                {
+                    wp = pathingMatrix.Pathfind(
+                                       VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                                       destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
+                }
+                catch
+                {
+                    Debug.Log("Threaded pathfinding threw an error, this happens occasionally when restarting the pilot module. We handled the error, but if this happens in the ordinary course of running the AI, let us know.");
+                    repathRequest = true;
+                    wp = new List<Vector3> { VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody) };
+                }
+                finally
+                {
+                    complete = true;
+                }
             });
             while (!complete)
                 yield return new WaitForFixedUpdate();
