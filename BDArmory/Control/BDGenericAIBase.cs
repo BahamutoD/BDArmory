@@ -16,6 +16,7 @@ namespace BDArmory.Control
 		#region declarations
 		[KSPField(isPersistant = true)]
 		public bool pilotEnabled { get; protected set; }
+        protected Vessel activeVessel;
 
 		public MissileFire weaponManager { get; protected set; }
 
@@ -94,8 +95,10 @@ namespace BDArmory.Control
 		public virtual void ActivatePilot()
 		{
 			pilotEnabled = true;
-			vessel.OnFlyByWire -= autoPilot;
-			vessel.OnFlyByWire += autoPilot;
+            if (activeVessel)
+                activeVessel.OnFlyByWire -= autoPilot;
+            activeVessel = vessel;
+            activeVessel.OnFlyByWire += autoPilot;
 
 			if (!speedController)
 			{
@@ -116,7 +119,8 @@ namespace BDArmory.Control
 		public virtual void DeactivatePilot()
 		{
 			pilotEnabled = false;
-			vessel.OnFlyByWire -= autoPilot;
+            if (activeVessel)
+                activeVessel.OnFlyByWire -= autoPilot;
 			RefreshPartWindow();
 
 			if (speedController)
@@ -173,8 +177,10 @@ namespace BDArmory.Control
 			{
 				part.OnJustAboutToBeDestroyed += DeactivatePilot;
 				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
+                GameEvents.onVesselWasModified.Add(onVesselWasModified);
 				MissileFire.OnToggleTeam += OnToggleTeam;
 
+                activeVessel = vessel;
 				UpdateWeaponManager();
 
 				if (pilotEnabled)
@@ -207,6 +213,28 @@ namespace BDArmory.Control
 				ReleaseCommand();
 			}
 		}
+
+        protected virtual void onVesselWasModified(Vessel v)
+        {
+            if (v != activeVessel)
+                return;
+
+            if (vessel != activeVessel)
+            {
+                if (activeVessel)
+                    activeVessel.OnJustAboutToBeDestroyed -= DeactivatePilot;
+                if (vessel)
+                    vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
+                if (weaponManager != null && weaponManager.vessel == activeVessel)
+                {
+                    if (this.Equals(weaponManager.AI))
+                        weaponManager.AI = null;
+                    UpdateWeaponManager();
+                }
+            }
+
+            activeVessel = vessel;
+        }
 
 		#endregion
 
