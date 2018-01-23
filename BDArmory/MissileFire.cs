@@ -287,6 +287,9 @@ namespace BDArmory
         //jammers
         public List<ModuleECMJammer> jammers = new List<ModuleECMJammer>();
 
+        //other modules
+        public List<IBDWMModule> wmModules = new List<IBDWMModule>();
+
         //wingcommander
         public ModuleWingCommander wingCommander;
 
@@ -2864,6 +2867,7 @@ namespace BDArmory
 
             jammers = vessel.FindPartModulesImplementing<ModuleECMJammer>();
             targetingPods = vessel.FindPartModulesImplementing<ModuleTargetingCamera>();
+            wmModules = vessel.FindPartModulesImplementing<IBDWMModule>();
         }
 
         #endregion

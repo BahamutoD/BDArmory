@@ -11,7 +11,7 @@ namespace BDArmory.Control
 	/// A base class for implementing AI.
 	/// Note: You do not have to use it, it is just for convenience, all the game cares about is that you implement the IBDAIControl interface.
 	/// </summary>
-	public abstract class BDGenericAIBase : PartModule, IBDAIControl
+	public abstract class BDGenericAIBase : PartModule, IBDAIControl, IBDWMModule
 	{
 		#region declarations
 		[KSPField(isPersistant = true)]
@@ -159,11 +159,15 @@ namespace BDArmory.Control
 
 		[KSPAction("Toggle Pilot")]
 		public void AGTogglePilot(KSPActionParam param) => TogglePilot();
-		#endregion
 
-		#region events
+        public virtual string Name { get; } = "AI Control";
+        public bool Enabled => pilotEnabled;
+        public void Toggle() => TogglePilot();
+        #endregion
 
-		protected virtual void Start()
+        #region events
+
+        protected virtual void Start()
 		{
 			if (HighLogic.LoadedSceneIsFlight)
 			{
