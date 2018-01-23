@@ -233,17 +233,17 @@ namespace BDArmory.Control
 			}
 
 			/// <summary>
-			/// Check if line is traversible. Due to implementation specifics, it is advised not to use this if the start point is not the position of the vessel.
+			/// Check if line is traversable. Due to implementation specifics, it is advised not to use this if the start point is not the position of the vessel.
 			/// </summary>
 			/// <param name="startGeo">start point in Lat,Long,Alt form</param>
 			/// <param name="endGeo">end point, in Lat,Long,Alt form</param>
-            public bool TraversibleStraightLine(Vector3 startGeo, Vector3 endGeo, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+            public bool TraversableStraightLine(Vector3 startGeo, Vector3 endGeo, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
 			{
 				checkGrid(startGeo, body, vehicleType, maxSlopeAngle);
-				return TraversibleStraightLine(startGeo, endGeo);
+				return TraversableStraightLine(startGeo, endGeo);
 			}
 
-			public bool TraversibleStraightLine(Vector3 startGeo, Vector3 endGeo)
+			public bool TraversableStraightLine(Vector3 startGeo, Vector3 endGeo)
 			{
 				float[] location = getGridLocation(startGeo);
 				float[] endPos = getGridLocation(endGeo);
@@ -291,11 +291,24 @@ namespace BDArmory.Control
 						if ((vs.Current == null || vs.Current.vesselType != VesselType.Debris || vs.Current.IsControllable || !vs.Current.LandedOrSplashed
 							|| vs.Current.mainBody.GetAltitude(vs.Current.CoM) < MinDepth)) continue;
 
-						Coords coords = getGridCoord(VectorUtils.WorldPositionToGeoCoords(vs.Current.CoM, body));
-						if (grid.TryGetValue(coords, out Cell cell))
-							cell.Traversable = false;
-						else
-							grid[coords] = new Cell(coords, gridToGeo(coords), false, body);
+						var debrisPos = getGridLocation(VectorUtils.WorldPositionToGeoCoords(vs.Current.CoM, body));
+                        var coordArray = new List<Coords>
+                        {
+                            new Coords(Mathf.CeilToInt(debrisPos[0]), Mathf.CeilToInt(debrisPos[1])),
+                            new Coords(Mathf.CeilToInt(debrisPos[0]), Mathf.FloorToInt(debrisPos[1])),
+                            new Coords(Mathf.FloorToInt(debrisPos[0]), Mathf.CeilToInt(debrisPos[1])),
+                            new Coords(Mathf.FloorToInt(debrisPos[0]), Mathf.FloorToInt(debrisPos[1])),
+                        };
+                        using (var coords = coordArray.GetEnumerator())
+                        {
+                            while (coords.MoveNext())
+                            {
+                                if (grid.TryGetValue(coords.Current, out Cell cell))
+                                    cell.Traversable = false;
+                                else
+                                    grid[coords.Current] = new Cell(coords.Current, gridToGeo(coords.Current), false, body);
+                            }
+                        }
 					}
 			}
 

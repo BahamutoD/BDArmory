@@ -543,10 +543,10 @@ namespace BDArmory.Control
         {
             // first just check if we can go straight
             bool complete = false;
-            bool traversible = false;
+            bool traversable = false;
             ThreadPool.QueueUserWorkItem(o =>
             {
-                traversible = pathingMatrix.TraversibleStraightLine(
+                traversable = pathingMatrix.TraversableStraightLine(
                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                     VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
                     vessel.mainBody, SurfaceType, maxSlopeAngle);
@@ -556,7 +556,7 @@ namespace BDArmory.Control
                 yield return new WaitForFixedUpdate();
 
             // if we can, that's it
-            if (traversible)
+            if (traversable)
             {
                 pathfindingRoutine = null;
                 yield break;
