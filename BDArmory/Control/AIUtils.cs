@@ -328,7 +328,7 @@ namespace BDArmory.Control
 
                 while (xP < xT || yP < yT)
                 {
-                    float ratio = Mathf.Abs((xT - xP) / (yT - yP));
+                    float ratio = Mathf.Abs(Mathf.Max(xT - xP, 0) / Mathf.Max(yT - yP, 0));
 
                     if (ratio > 0.49)
                         ++xP;
