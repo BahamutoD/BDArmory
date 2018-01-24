@@ -466,7 +466,7 @@ namespace BDArmory.Control
 			float rollError = baseRoll + drift / MaxDrift * BankAngle - bank;
 
 			Vector3 localAngVel = vessel.angularVelocity;
-			s.roll = steerMult * 0.0015f * rollError - .10f * steerDamping * -localAngVel.y;
+			s.roll = steerMult * 0.003f * rollError - .2f * steerDamping * -localAngVel.y;
 			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
 			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
             s.wheelSteer = -((0.003f * steerMult * yawError) - (steerDamping * 0.1f * -localAngVel.z));
