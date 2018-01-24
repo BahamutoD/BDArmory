@@ -149,6 +149,7 @@ namespace BDArmory.Control
 
             if (BroadsideAttack)
                 sideSlipDirection = UnityEngine.Random.Range(0, 2) > 1 ? 1 : -1;
+            repathRequest = true;
         }
 
         public override void DeactivatePilot()
@@ -248,6 +249,7 @@ namespace BDArmory.Control
                     pathfindingRoutine = null;
                 }
                 pathingMatrix = new AIUtils.TraversabilityMatrix();
+                bypassTarget = null;
                 collisionDetectionTicker = 6;
             }
 
@@ -569,7 +571,8 @@ namespace BDArmory.Control
                         VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                         VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
                         vessel.mainBody, SurfaceType, maxSlopeAngle);
-                    waypoints.RemoveAt(waypoints.Count - 1);
+                    if (waypoints.Count > 1 && VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
+                        waypoints.RemoveAt(waypoints.Count - 1);
                     intermediatePositionGeo = waypoints[0];
                 }
             }
@@ -640,7 +643,8 @@ namespace BDArmory.Control
                 yield return new WaitForFixedUpdate();
 
             // remove the last waypoint, because we'll be engaging then, as we'll have a straight path
-            wp.RemoveAt(wp.Count - 1);
+            if (wp.Count > 1 && VectorUtils.GeoDistance(wp[wp.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
+                wp.RemoveAt(wp.Count - 1);
             waypoints = wp;
             intermediatePositionGeo = waypoints[0];
             pathfindingRoutine = null;
