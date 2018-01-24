@@ -571,9 +571,12 @@ namespace BDArmory.Control
                         VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                         VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
                         vessel.mainBody, SurfaceType, maxSlopeAngle);
-                    if (waypoints.Count > 1 && VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
+                    if (VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
                         waypoints.RemoveAt(waypoints.Count - 1);
-                    intermediatePositionGeo = waypoints[0];
+                    if (waypoints.Count > 0)
+                        intermediatePositionGeo = waypoints[0];
+                    else
+                        bypassTarget = null;
                 }
             }
         }
@@ -643,10 +646,13 @@ namespace BDArmory.Control
                 yield return new WaitForFixedUpdate();
 
             // remove the last waypoint, because we'll be engaging then, as we'll have a straight path
-            if (wp.Count > 1 && VectorUtils.GeoDistance(wp[wp.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
+            if (VectorUtils.GeoDistance(wp[wp.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
                 wp.RemoveAt(wp.Count - 1);
             waypoints = wp;
-            intermediatePositionGeo = waypoints[0];
+            if (waypoints.Count > 0)
+                intermediatePositionGeo = waypoints[0];
+            else
+                bypassTarget = null;
             pathfindingRoutine = null;
         }
 
