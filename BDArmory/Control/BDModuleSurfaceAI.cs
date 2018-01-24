@@ -61,7 +61,11 @@ namespace BDArmory.Control
         public AIUtils.VehicleMovementType SurfaceType 
             => (AIUtils.VehicleMovementType)Enum.Parse(typeof(AIUtils.VehicleMovementType), SurfaceTypeName);
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max slope angle"),
+            UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
+        float maxSlopeAngle = 10f;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
 			UI_FloatRange(minValue = 5f, maxValue = 200f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float CruiseSpeed = 40;
 
@@ -98,14 +102,12 @@ namespace BDArmory.Control
 		public bool BroadsideAttack = true;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min engagement range"),
-			UI_FloatRange(minValue = 200f, maxValue = 6000f, stepIncrement = 200f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 100f, maxValue = 6000f, stepIncrement = 100f, scene = UI_Scene.All)]
 		public float MinEngagementRange = 1000;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
-			UI_FloatRange(minValue = 1000f, maxValue = 8000f, stepIncrement = 500f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 500f, maxValue = 8000f, stepIncrement = 100f, scene = UI_Scene.All)]
 		public float MaxEngagementRange = 4000;
-
-		const float maxSlopeAngle = 5f;
 
 		const float AttackAngleAtMaxRange = 30f;
 		#endregion
@@ -116,6 +118,7 @@ namespace BDArmory.Control
 			return @"
 <b>Available settings</b>:
 <b>Vehicle type</b> - can this vessel operate on land/sea/both
+<b>Max slope angle</b> - what is the steepest slope this vessel can negotiate
 <b>Cruise speed</b> - the default speed at which it is safe to maneuver
 <b>Max speed</b> - the maximum combat speed
 <b>Max drift</b> - maximum allowed angle between facing and velocity vector
@@ -427,7 +430,8 @@ namespace BDArmory.Control
 
 			speedController.targetSpeed = targetSpeed;
             motorControl.targetSpeed = targetSpeed;
-		}
+            speedController.useBrakes = speedController.debugThrust > 0 || motorControl.MaxAccel == 0;
+        }
 
 		void AttitudeControl(FlightCtrlState s)
 		{

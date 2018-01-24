@@ -57,7 +57,8 @@ namespace BDArmory.Control
         {
             if (targetSpeed == 0)
             {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                if (useBrakes)
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
                 s.mainThrottle = 0;
                 return;
             }
@@ -95,13 +96,16 @@ namespace BDArmory.Control
             s.mainThrottle = Mathf.Clamp01(requestThrottle);
 
             //use brakes if overspeeding too much
-            if (requestThrottle < -0.5f)
+            if (useBrakes)
             {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-            }
-            else
-            {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
+                if (requestThrottle < -0.5f)
+                {
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                }
+                else
+                {
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
+                }
             }
         }
 
@@ -247,7 +251,8 @@ namespace BDArmory.Control
                 }
                 if (MaxAccel == 0)
                 {
-                    s.wheelThrottle = 0;
+                    s.wheelThrottle = 1;
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
                     return;
                 }
 
