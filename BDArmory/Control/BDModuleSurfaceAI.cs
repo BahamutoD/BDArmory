@@ -155,7 +155,8 @@ namespace BDArmory.Control
         {
             base.DeactivatePilot();
 
-            motorControl.Deactivate();
+            if (motorControl)
+                motorControl.Deactivate();
         }
 
         protected override void OnGUI()
@@ -351,7 +352,7 @@ namespace BDArmory.Control
                 intermediatePositionGeo = finalPositionGeo;
                 if (pathfindingRoutine != null)
                     StopCoroutine(pathfindingRoutine);
-                pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(finalPositionGeo));
+                Pathfind(finalPositionGeo);
                 leftPath = false;
             }
 
@@ -550,8 +551,28 @@ namespace BDArmory.Control
 
         void checkBypass(Vessel target)
         {
-            if (pathfindingRoutine == null)
-                pathfindingRoutine = StartCoroutine(BypassCheckThreadCoroutine(target));
+            if (BDArmorySettings.USE_THREADED_PATHFINDING)
+            {
+                if (pathfindingRoutine == null)
+                    pathfindingRoutine = StartCoroutine(BypassCheckThreadCoroutine(target));
+            }
+            else
+            {
+                if(!pathingMatrix.TraversableStraightLine(
+                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                        vessel.mainBody, SurfaceType, maxSlopeAngle))
+                {
+                    bypassTarget = target;
+                    bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
+                    waypoints = pathingMatrix.Pathfind(
+                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                        vessel.mainBody, SurfaceType, maxSlopeAngle);
+                    waypoints.RemoveAt(waypoints.Count - 1);
+                    intermediatePositionGeo = waypoints[0];
+                }
+            }
         }
 
         private IEnumerator BypassCheckThreadCoroutine(Vessel target)
@@ -623,6 +644,19 @@ namespace BDArmory.Control
             waypoints = wp;
             intermediatePositionGeo = waypoints[0];
             pathfindingRoutine = null;
+        }
+
+        private void Pathfind(Vector3 destination)
+        {
+            if(BDArmorySettings.USE_THREADED_PATHFINDING)
+                pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(finalPositionGeo));
+            else
+            {
+                waypoints = pathingMatrix.Pathfind(
+                                       VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                                       destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
+                intermediatePositionGeo = waypoints[0];
+            }
         }
 
         private IEnumerator PathfindThreadCoroutine(Vector3 destination)
