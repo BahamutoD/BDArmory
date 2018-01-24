@@ -26,7 +26,6 @@ namespace BDArmory.Control
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
 		int collisionDetectionTicker = 0;
-        AIUtils.TraversabilityMatrix collisionMatrix;
 		Vector3? dodgeVector;
 		float weaveAdjustment = 0;
 		float weaveDirection = 1;
@@ -37,10 +36,8 @@ namespace BDArmory.Control
 		Vector3 upDir;
 
         AIUtils.TraversabilityMatrix pathingMatrix;
-        Coroutine pathfindingRoutine;
         List<Vector3> waypoints = new List<Vector3>();
         bool leftPath = false;
-        bool repathRequest = false;
 
         protected override Vector3d assignedPositionGeo
         {
@@ -140,7 +137,6 @@ namespace BDArmory.Control
 			base.ActivatePilot();
 
 			pathingMatrix = new AIUtils.TraversabilityMatrix();
-            collisionMatrix = BDArmorySettings.USE_EXPERIMENTAL_THREADING_ROUTINES ? new AIUtils.TraversabilityMatrix() : pathingMatrix;
 
             if (!motorControl)
             {
@@ -151,7 +147,10 @@ namespace BDArmory.Control
 
             if (BroadsideAttack)
                 sideSlipDirection = UnityEngine.Random.Range(0, 2) > 1 ? 1 : -1;
-            repathRequest = true;
+
+            leftPath = true;
+            bypassTarget = null;
+            collisionDetectionTicker = 6;
         }
 
         public override void DeactivatePilot()
@@ -177,8 +176,7 @@ namespace BDArmory.Control
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + targetDirection * 10f, 2, Color.blue);
 			BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right), 2, Color.green);
 
-            if (pathfindingRoutine == null)
-			    pathingMatrix.DrawDebug(vessel.CoM, waypoints);
+			pathingMatrix.DrawDebug(vessel.CoM, waypoints);
 		}
 
 		#endregion
@@ -240,32 +238,11 @@ namespace BDArmory.Control
                 return;
             }
 
-            if (repathRequest)
-            {
-                // restart the whole pathfinding thing (thread error handling)
-                repathRequest = false;
-                leftPath = true;
-                if (pathfindingRoutine != null)
-                {
-                    StopCoroutine(pathfindingRoutine);
-                    pathfindingRoutine = null;
-                }
-                pathingMatrix = new AIUtils.TraversabilityMatrix();
-                bypassTarget = null;
-                collisionDetectionTicker = 6;
-            }
-
             // if bypass target is no longer relevant, remove it
             if (bypassTarget != null && ((bypassTarget != targetVessel && bypassTarget != commandLeader?.vessel) 
                 || (VectorUtils.GetWorldSurfacePostion(bypassTargetPos, vessel.mainBody) - bypassTarget.CoM).sqrMagnitude > 500000))
             {
                 bypassTarget = null;
-                if (pathfindingRoutine != null)
-                {
-                    StopCoroutine(pathfindingRoutine);
-                    pathfindingRoutine = null;
-                }
-
             }
 
             if (bypassTarget == null)
@@ -286,13 +263,13 @@ namespace BDArmory.Control
                     if (BroadsideAttack)
                     {
                         if (collisionDetectionTicker == 10)
-                            Debug.Log(collisionMatrix.TraversableStraightLine(
+                            Debug.Log(pathingMatrix.TraversableStraightLine(
                                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                                     VectorUtils.WorldPositionToGeoCoords(vessel.PredictPosition(10), vessel.mainBody),
                                     vessel.mainBody, SurfaceType, maxSlopeAngle));
                             Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
                         if (collisionDetectionTicker == 10 
-                                && collisionMatrix.TraversableStraightLine(
+                                && pathingMatrix.TraversableStraightLine(
                                         VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                                         VectorUtils.WorldPositionToGeoCoords(vessel.PredictPosition(10), vessel.mainBody),
                                         vessel.mainBody, SurfaceType, maxSlopeAngle))
@@ -362,9 +339,6 @@ namespace BDArmory.Control
 			// goto
             if (leftPath && bypassTarget == null)
             {
-                intermediatePositionGeo = finalPositionGeo;
-                if (pathfindingRoutine != null)
-                    StopCoroutine(pathfindingRoutine);
                 Pathfind(finalPositionGeo);
                 leftPath = false;
             }
@@ -550,150 +524,32 @@ namespace BDArmory.Control
 
         void checkBypass(Vessel target)
         {
-            if (BDArmorySettings.USE_EXPERIMENTAL_THREADING_ROUTINES)
+            if(!pathingMatrix.TraversableStraightLine(
+                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                    VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                    vessel.mainBody, SurfaceType, maxSlopeAngle))
             {
-                if (pathfindingRoutine == null)
-                    pathfindingRoutine = StartCoroutine(BypassCheckThreadCoroutine(target));
-            }
-            else
-            {
-                if(!pathingMatrix.TraversableStraightLine(
-                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                        vessel.mainBody, SurfaceType, maxSlopeAngle))
-                {
-                    bypassTarget = target;
-                    bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
-                    waypoints = pathingMatrix.Pathfind(
-                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                        vessel.mainBody, SurfaceType, maxSlopeAngle);
-                    if (VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
-                        waypoints.RemoveAt(waypoints.Count - 1);
-                    if (waypoints.Count > 0)
-                        intermediatePositionGeo = waypoints[0];
-                    else
-                        bypassTarget = null;
-                }
+                bypassTarget = target;
+                bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
+                waypoints = pathingMatrix.Pathfind(
+                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                    VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
+                    vessel.mainBody, SurfaceType, maxSlopeAngle);
+                if (VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
+                    waypoints.RemoveAt(waypoints.Count - 1);
+                if (waypoints.Count > 0)
+                    intermediatePositionGeo = waypoints[0];
+                else
+                    bypassTarget = null;
             }
         }
-
-        private IEnumerator BypassCheckThreadCoroutine(Vessel target)
-        {
-            // first just check if we can go straight
-            bool complete = false;
-            bool traversable = false;
-            ThreadPool.QueueUserWorkItem(o =>
-            {
-                try
-                {
-                    traversable = pathingMatrix.TraversableStraightLine(
-                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                        vessel.mainBody, SurfaceType, maxSlopeAngle);
-                }
-                catch
-                {
-                    Debug.Log("Threaded pathfinding threw an error, this happens occasionally when restarting the pilot module. We handled the error, but if this happens in the ordinary course of running the AI, let us know.");
-                    traversable = true;
-                    repathRequest = true;
-                }
-                finally
-                {
-                    complete = true;
-                }
-            });
-            while (!complete)
-                yield return new WaitForFixedUpdate();
-
-            // if we can, that's it
-            if (traversable)
-            {
-                pathfindingRoutine = null;
-                yield break;
-            }
-
-            // otherwise find a path to our location
-            complete = false;
-            bypassTarget = target;
-            bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
-            List<Vector3> wp = new List<Vector3>();
-            ThreadPool.QueueUserWorkItem(o =>
-            {
-                try
-                {
-                    wp = pathingMatrix.Pathfind(
-                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                        VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                        vessel.mainBody, SurfaceType, maxSlopeAngle);
-                }
-                catch
-                {
-                    Debug.Log("Threaded pathfinding threw an error, this happens occasionally when restarting the pilot module. We handled the error, but if this happens in the ordinary course of running the AI, let us know.");
-                    repathRequest = true;
-                    wp = new List<Vector3> { VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody), Vector3.zero };
-                }
-                finally
-                {
-                    complete = true;
-                }
-
-            });
-            while (!complete)
-                yield return new WaitForFixedUpdate();
-
-            // remove the last waypoint, because we'll be engaging then, as we'll have a straight path
-            if (VectorUtils.GeoDistance(wp[wp.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
-                wp.RemoveAt(wp.Count - 1);
-            waypoints = wp;
-            if (waypoints.Count > 0)
-                intermediatePositionGeo = waypoints[0];
-            else
-                bypassTarget = null;
-            pathfindingRoutine = null;
-        }
-
+        
         private void Pathfind(Vector3 destination)
         {
-            if(BDArmorySettings.USE_EXPERIMENTAL_THREADING_ROUTINES)
-                pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(finalPositionGeo));
-            else
-            {
-                waypoints = pathingMatrix.Pathfind(
-                                       VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                                       destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
-                intermediatePositionGeo = waypoints[0];
-            }
-        }
-
-        private IEnumerator PathfindThreadCoroutine(Vector3 destination)
-        {
-            List<Vector3> wp = new List<Vector3>();
-            bool complete = false;
-            ThreadPool.QueueUserWorkItem(o =>
-            {
-                try
-                {
-                    wp = pathingMatrix.Pathfind(
-                                       VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                                       destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
-                }
-                catch
-                {
-                    Debug.Log("Threaded pathfinding threw an error, this happens occasionally when restarting the pilot module. We handled the error, but if this happens in the ordinary course of running the AI, let us know.");
-                    repathRequest = true;
-                    wp = new List<Vector3> { VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody) };
-                }
-                finally
-                {
-                    complete = true;
-                }
-            });
-            while (!complete)
-                yield return new WaitForFixedUpdate();
-            waypoints = wp;
+            waypoints = pathingMatrix.Pathfind(
+                                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                                    destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
             intermediatePositionGeo = waypoints[0];
-            pathfindingRoutine = null;
         }
 
         void cycleWaypoint()
@@ -705,14 +561,8 @@ namespace BDArmory.Control
             }
             else if (bypassTarget != null)
             {
-                if (pathfindingRoutine != null)
-                    // return the position of bypass target if waypoints are being calculated
-                    intermediatePositionGeo = VectorUtils.WorldPositionToGeoCoords(bypassTarget.CoM, vessel.mainBody);
-                else
-                {
-                    bypassTarget = null;
-                    leftPath = true;
-                }
+                bypassTarget = null;
+                leftPath = true;
             }
         }
 
