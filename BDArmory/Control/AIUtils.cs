@@ -254,12 +254,12 @@ namespace BDArmory.Control
 			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
 			{
 				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance || Mathf.Abs(gridSize-GridSize) > 100 ||
-					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle)
+					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle * Mathf.Deg2Rad)
 				{
 					GridSize = gridSize;
 					GridDiagonal = gridSize * Mathf.Sqrt(2);
 					this.body = body;
-					this.maxSlopeAngle = maxSlopeAngle;
+					this.maxSlopeAngle = maxSlopeAngle * Mathf.Deg2Rad;
 					rebuildDistance = Mathf.Clamp(Mathf.Asin(MaxDistortion) * (float)body.Radius, GridSize * 4, GridSize * 256);
 					movementType = vehicleType;
 					this.origin = origin;
@@ -516,7 +516,7 @@ namespace BDArmory.Control
 
 				return true;
 			}
-			bool checkSlope(float alt1, float alt2, float length) => Mathf.Abs(Mathf.Sin((alt1 - alt2) / length)) > maxSlopeAngle;
+			bool checkSlope(float alt1, float alt2, float length) => Mathf.Abs(Mathf.Atan2(alt1 - alt2, length)) > maxSlopeAngle;
 
 			public void DrawDebug(Vector3 currentWorldPos, List<Vector3> waypoints = null)
 			{

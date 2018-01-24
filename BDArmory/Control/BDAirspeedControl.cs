@@ -261,7 +261,6 @@ namespace BDArmory.Control
                 lastThrottle = Mathf.Clamp(throttle, -1, 1);
                 s.wheelThrottle = lastThrottle;
                 vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, throttle < -5f);
-                Debug.Log(throttle.ToString());
             }
         }
 
@@ -277,9 +276,6 @@ namespace BDArmory.Control
                     var singlePower = m.Current.torqueCurve.Evaluate(targetSpeed);
                     power += singlePower;
                     response += m.Current.driveResponse * singlePower;
-                    // disable traction control while we're at it
-                    //m.Current.tractionControlScale = 0;
-                    //m.Current.autoTorque = false;
                 }
             using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotorSteering>().GetEnumerator())
                 while (m.MoveNext())
@@ -288,8 +284,6 @@ namespace BDArmory.Control
                     var singlePower = m.Current.torqueCurve.Evaluate(targetSpeed);
                     power += singlePower;
                     response += m.Current.driveResponse * singlePower;
-                    //m.Current.tractionControlScale = 0;
-                    //m.Current.autoTorque = false;
                 }
             MaxAccel = power / (float)vessel.totalMass;
             avResponse = response / power;
@@ -301,13 +295,11 @@ namespace BDArmory.Control
                 while (m.MoveNext())
                 {
                     m.Current.autoTorque = false;
-                    m.Current.tractionControlScale = 0;
                 }
             using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotorSteering>().GetEnumerator())
                 while (m.MoveNext())
                 {
                     m.Current.autoTorque = false;
-                    m.Current.tractionControlScale = 0;
                 }
         }
     }
