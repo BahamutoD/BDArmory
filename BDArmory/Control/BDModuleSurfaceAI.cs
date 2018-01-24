@@ -26,6 +26,7 @@ namespace BDArmory.Control
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
 
 		int collisionDetectionTicker = 0;
+        AIUtils.TraversabilityMatrix collisionMatrix;
 		Vector3? dodgeVector;
 		float weaveAdjustment = 0;
 		float weaveDirection = 1;
@@ -139,6 +140,7 @@ namespace BDArmory.Control
 			base.ActivatePilot();
 
 			pathingMatrix = new AIUtils.TraversabilityMatrix();
+            collisionMatrix = BDArmorySettings.USE_EXPERIMENTAL_THREADING_ROUTINES ? new AIUtils.TraversabilityMatrix() : pathingMatrix;
 
             if (!motorControl)
             {
@@ -283,8 +285,17 @@ namespace BDArmory.Control
 
                     if (BroadsideAttack)
                     {
-                        Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
-                        if (collisionDetectionTicker == 10 && PredictRunningAshore(10, 2))
+                        if (collisionDetectionTicker == 10)
+                            Debug.Log(collisionMatrix.TraversableStraightLine(
+                                    VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                                    VectorUtils.WorldPositionToGeoCoords(vessel.PredictPosition(10), vessel.mainBody),
+                                    vessel.mainBody, SurfaceType, maxSlopeAngle));
+                            Vector3 sideVector = Vector3.Cross(vecToTarget, upDir); //find a vector perpendicular to direction to target
+                        if (collisionDetectionTicker == 10 
+                                && collisionMatrix.TraversableStraightLine(
+                                        VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
+                                        VectorUtils.WorldPositionToGeoCoords(vessel.PredictPosition(10), vessel.mainBody),
+                                        vessel.mainBody, SurfaceType, maxSlopeAngle))
                             sideSlipDirection = -Math.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // switch sides if we're running ashore
                         sideVector *= sideSlipDirection;
 
@@ -358,7 +369,7 @@ namespace BDArmory.Control
                 leftPath = false;
             }
 
-			const float targetRadius = 400f;
+			const float targetRadius = 250f;
 			targetDirection = Vector3.ProjectOnPlane(assignedPositionWorld - vesselTransform.position, upDir);
 
             if (targetDirection.sqrMagnitude > targetRadius * targetRadius)
@@ -537,23 +548,9 @@ namespace BDArmory.Control
 			return null;
 		}
 
-		/// <returns>false if no collision, true if one detected</returns>
-		bool PredictRunningAshore(float maxTime, float interval)
-		{
-            const float minDepth = 10f;
-            float time = Mathf.Min(0.5f, maxTime);
-			while (time < maxTime)
-			{
-				if (AIUtils.GetTerrainAltitude(vessel.PredictPosition(time), vessel.mainBody) > -minDepth)
-					return true;
-				time = Mathf.MoveTowards(time, maxTime, interval);
-			}
-			return false;
-		}
-
         void checkBypass(Vessel target)
         {
-            if (BDArmorySettings.USE_THREADED_PATHFINDING)
+            if (BDArmorySettings.USE_EXPERIMENTAL_THREADING_ROUTINES)
             {
                 if (pathfindingRoutine == null)
                     pathfindingRoutine = StartCoroutine(BypassCheckThreadCoroutine(target));
@@ -658,7 +655,7 @@ namespace BDArmory.Control
 
         private void Pathfind(Vector3 destination)
         {
-            if(BDArmorySettings.USE_THREADED_PATHFINDING)
+            if(BDArmorySettings.USE_EXPERIMENTAL_THREADING_ROUTINES)
                 pathfindingRoutine = StartCoroutine(PathfindThreadCoroutine(finalPositionGeo));
             else
             {
