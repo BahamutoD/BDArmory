@@ -7,11 +7,6 @@ using BDArmory.UI;
 using BDArmory.Core;
 using UnityEngine;
 
-/* TODO for surface vehicles:
- * update colission detection - probably use pathing matrix + vehicles
- * think about LOS detection
-*/
-
 namespace BDArmory.Control
 {
 	public class BDModuleSurfaceAI : BDGenericAIBase, IBDAIControl
@@ -102,7 +97,7 @@ namespace BDArmory.Control
 		public bool BroadsideAttack = true;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min engagement range"),
-			UI_FloatRange(minValue = 100f, maxValue = 6000f, stepIncrement = 100f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 0f, maxValue = 6000f, stepIncrement = 100f, scene = UI_Scene.All)]
 		public float MinEngagementRange = 1000;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
@@ -444,6 +439,7 @@ namespace BDArmory.Control
 				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad, 0);
 
 			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + weaveAdjustment;
+            DebugLine($"yaw target: {yawTarget}, yaw error: {yawError}");
 
             Vector3 baseForward = vessel.transform.up * terrainOffset;
             float basePitch = Mathf.Atan2(
@@ -451,6 +447,7 @@ namespace BDArmory.Control
                 - AIUtils.GetTerrainAltitude(vessel.CoM - baseForward, vessel.mainBody, false),
                 terrainOffset * 2) * Mathf.Rad2Deg;
             float pitchAngle = basePitch + TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
+            DebugLine($"terrain fw slope: {basePitch}, target pitch: {pitchAngle}");
 
             float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
 
@@ -463,9 +460,11 @@ namespace BDArmory.Control
                 - AIUtils.GetTerrainAltitude(vessel.CoM - baseLateral, vessel.mainBody, false),
                 terrainOffset * 2) * Mathf.Rad2Deg;
             float bank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
-			float rollError = baseRoll + drift / MaxDrift * BankAngle - bank;
+			float targetRoll = baseRoll + drift / MaxDrift * BankAngle;
+			float rollError = targetRoll - bank;
+            DebugLine($"terrain sideways slope: {baseRoll}, target roll: {targetRoll}");
 
-			Vector3 localAngVel = vessel.angularVelocity;
+            Vector3 localAngVel = vessel.angularVelocity;
 			s.roll = steerMult * 0.003f * rollError - .2f * steerDamping * -localAngVel.y;
 			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
 			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
