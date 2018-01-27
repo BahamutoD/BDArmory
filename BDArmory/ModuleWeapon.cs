@@ -1091,9 +1091,7 @@ namespace BDArmory
 
 
                         //firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
-                        // Not adding krakensbane here, because the fixedUpdate of the bullet won't run this cycle
-                        // and the world will move. So we don't compensate because the other end of the compensation won't be running either.
-                        firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
+                        firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
                         pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
 
                         pBullet.sourceVessel = vessel;
