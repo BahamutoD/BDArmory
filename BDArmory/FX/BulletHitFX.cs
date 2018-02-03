@@ -246,7 +246,6 @@ namespace BDArmory.FX
             pe.Dispose();
         }
 
-
         public static void AttachFlames(RaycastHit hit, Part hitPart, float caliber)
         {
             var modelUrl = "BDArmory/FX/FlameEffect2/model";
