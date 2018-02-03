@@ -19,6 +19,7 @@ namespace BDArmory.Control
 
 		Vector3 targetDirection;
 		float targetVelocity; // the velocity the ship should target, not the velocity of its target
+        bool aimingMode = false;
 
 		int collisionDetectionTicker = 0;
 		Vector3? dodgeVector;
@@ -147,6 +148,7 @@ namespace BDArmory.Control
                 sideSlipDirection = UnityEngine.Random.Range(0, 2) > 1 ? 1 : -1;
 
             leftPath = true;
+            extendingTarget = null;
             bypassTarget = null;
             collisionDetectionTicker = 6;
         }
@@ -188,6 +190,7 @@ namespace BDArmory.Control
 
 			targetVelocity = 0;
 			targetDirection = vesselTransform.up;
+            aimingMode = false;
 			upDir = VectorUtils.GetUpDirection(vesselTransform.position);
 
 			// check if we should be panicking
@@ -293,9 +296,34 @@ namespace BDArmory.Control
                         {
                             extendingTarget = null;
                             targetDirection = Vector3.ProjectOnPlane(vecToTarget, upDir);
-                            if (Vector3.Dot(targetDirection, vesselTransform.up) < 0) targetVelocity = PoweredSteering ? MaxSpeed : 0; // if facing away from target
-                            else if (distance >= MaxEngagementRange || distance <= MinEngagementRange) targetVelocity = MaxSpeed;
-                            else targetVelocity = CruiseSpeed / 2 + (MaxSpeed - CruiseSpeed / 2) * (distance - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange); //slow down if inside engagement range to extend shooting opportunities
+                            if (Vector3.Dot(targetDirection, vesselTransform.up) < 0)
+                                targetVelocity = PoweredSteering ? MaxSpeed : 0; // if facing away from target
+                            else if (distance >= MaxEngagementRange || distance <= MinEngagementRange)
+                                targetVelocity = MaxSpeed;
+                            else
+                            {
+                                targetVelocity = CruiseSpeed / 10 + (MaxSpeed - CruiseSpeed / 10) * (distance - MinEngagementRange) / (MaxEngagementRange - MinEngagementRange); //slow down if inside engagement range to extend shooting opportunities
+                                switch (weaponManager?.selectedWeapon?.GetWeaponClass())
+                                {
+                                    case WeaponClasses.Gun:
+                                    case WeaponClasses.DefenseLaser:
+                                        var gun = (ModuleWeapon)weaponManager.selectedWeapon;
+                                        if ((gun.yawRange == 0 || gun.maxPitch == gun.minPitch) && gun.FiringSolutionVector != null)
+                                        {
+                                            aimingMode = true;
+                                            targetDirection = (Vector3)gun.FiringSolutionVector;
+                                        }
+                                        break;
+                                    case WeaponClasses.Rocket:
+                                        var rocket = (RocketLauncher)weaponManager.selectedWeapon;
+                                        if (rocket.yawRange == 0 || rocket.maxPitch == rocket.minPitch)
+                                        {
+                                            aimingMode = true;
+                                            targetDirection = (Vector3)rocket.FiringSolutionVector;
+                                        }
+                                        break;
+                                }
+                            }
                             targetVelocity = Mathf.Clamp(targetVelocity, PoweredSteering ? CruiseSpeed / 5 : 0, MaxSpeed); // maintain a bit of speed if using powered steering
                         }
                     }
@@ -432,13 +460,13 @@ namespace BDArmory.Control
 		{
             const float terrainOffset = 5;
 
-			Vector3 yawTarget = Vector3.ProjectOnPlane(targetDirection, upDir);
-			
-			// limit "aoa" if we're moving
-			if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
+			Vector3 yawTarget = Vector3.ProjectOnPlane(targetDirection, vesselTransform.forward);
+
+            // limit "aoa" if we're moving
+            if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
 				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad, 0);
 
-			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + weaveAdjustment;
+			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + (aimingMode ? 0 : weaveAdjustment);
             DebugLine($"yaw target: {yawTarget}, yaw error: {yawError}");
 
             Vector3 baseForward = vessel.transform.up * terrainOffset;
@@ -447,9 +475,10 @@ namespace BDArmory.Control
                 - AIUtils.GetTerrainAltitude(vessel.CoM - baseForward, vessel.mainBody, false),
                 terrainOffset * 2) * Mathf.Rad2Deg;
             float pitchAngle = basePitch + TargetPitch * Mathf.Clamp01((float)vessel.horizontalSrfSpeed / CruiseSpeed);
+            if (aimingMode)
+                pitchAngle = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(targetDirection, vesselTransform.right), -vesselTransform.forward);
             DebugLine($"terrain fw slope: {basePitch}, target pitch: {pitchAngle}");
 
-            float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
 
 			float pitch = 90 - Vector3.Angle(vesselTransform.up, upDir);
 			float pitchError = pitchAngle - pitch;
@@ -459,8 +488,9 @@ namespace BDArmory.Control
                 AIUtils.GetTerrainAltitude(vessel.CoM + baseLateral, vessel.mainBody, false)
                 - AIUtils.GetTerrainAltitude(vessel.CoM - baseLateral, vessel.mainBody, false),
                 terrainOffset * 2) * Mathf.Rad2Deg;
+            float drift = VectorUtils.SignedAngle(vesselTransform.up, Vector3.ProjectOnPlane(vessel.GetSrfVelocity(), upDir), vesselTransform.right);
             float bank = VectorUtils.SignedAngle(-vesselTransform.forward, upDir, -vesselTransform.right);
-			float targetRoll = baseRoll + drift / MaxDrift * BankAngle;
+			float targetRoll = baseRoll + BankAngle * Mathf.Clamp01(drift / MaxDrift) * Mathf.Clamp01((float)vessel.srfSpeed / CruiseSpeed);
 			float rollError = targetRoll - bank;
             DebugLine($"terrain sideways slope: {baseRoll}, target roll: {targetRoll}");
 

@@ -94,6 +94,8 @@ namespace BDArmory
         public Vessel legacyTargetVessel;
         bool targetAcquired;
 
+        public Vector3? FiringSolutionVector => finalAimTarget.IsZero() ? (Vector3?)null : (finalAimTarget - fireTransforms[0].position).normalized;
+
         public bool recentlyFiring //used by guard to know if it should evaid this
         {
             get { return Time.time - timeFired < 1; }
