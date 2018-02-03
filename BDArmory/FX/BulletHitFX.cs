@@ -91,7 +91,7 @@ namespace BDArmory.FX
         
         private static bool CanFlamesBeAttached(Part hitPart)
         {
-            if (!hitPart.HasFuel())
+            if (!hitPart.vessel.LandedOrSplashed || !hitPart.HasFuel()) //removing FX from flight for now due to performance issues
                 return false;            
 
             if (hitPart.vessel.LandedOrSplashed)
@@ -245,7 +245,6 @@ namespace BDArmory.FX
             }
             pe.Dispose();
         }
-
 
         public static void AttachFlames(RaycastHit hit, Part hitPart, float caliber)
         {
