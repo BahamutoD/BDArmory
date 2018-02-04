@@ -109,6 +109,12 @@ namespace BDArmory.Parts
          UI_FloatRange(minValue = 0.5f, maxValue = 1.5f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
         public float BallisticOverShootFactor = 0.7f;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"), UI_FloatRange(minValue = 100f, maxValue = 20000f, stepIncrement = 100f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float CruiseAltitude = 500;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"), UI_FloatRange(minValue = 100f, maxValue = 2000f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float CruiseSpeed = 300;
+
         [KSPField]
         public float missileRadarCrossSection = RadarUtils.RCS_MISSILES;            // radar cross section of this missile for detection purposes
 
@@ -206,7 +212,7 @@ namespace BDArmory.Parts
         private float lastRWRPing = 0;
         private bool radarLOALSearching = false;
         protected bool checkMiss = false;
-        protected StringBuilder debugString = new StringBuilder();
+        public StringBuilder debugString = new StringBuilder();
 
         private float _throttle = 1f;
         private float _originalDistance = float.MinValue;

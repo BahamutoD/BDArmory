@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BDArmory.Core;
 using BDArmory.Core.Extension;
+using BDArmory.Guidances;
 using BDArmory.Misc;
 using BDArmory.Radar;
 using BDArmory.UI;
@@ -37,8 +38,7 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
         public string WeaponName;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"), UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float CruiseAltitude = 500;
+       
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
         public string GuidanceLabel = "AGM/STS";
@@ -336,6 +336,8 @@ namespace BDArmory.Parts
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory]: OnStart missile " + shortName + ": setting default locktrackcurve with maxrange/minrcs: " + activeRadarLockTrackCurve.maxTime + "/" + RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
             }
+
+            this._cruiseGuidance = new CruiseGuidance(this);
         }
 
         private void SetupsFields()
@@ -537,28 +539,29 @@ namespace BDArmory.Parts
             return agmTarget;
         }
 
+        private CruiseGuidance _cruiseGuidance;
         private Vector3 CruiseGuidance()
         {
-            Vector3 cruiseTarget = Vector3.zero;
-            float distanceSqr = (TargetPosition - vessel.CoM).sqrMagnitude;
+            //Vector3 cruiseTarget = Vector3.zero;
+            //float distanceSqr = (TargetPosition - vessel.CoM).sqrMagnitude;
 
-            if (distanceSqr < 4500*4500)
-            {
-                cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-                debugString.Append("Descending On Target");
-                debugString.Append(Environment.NewLine);
-            }
-            else
-            {
-                cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-                debugString.Append("Cruising");
-                debugString.Append(Environment.NewLine);
-            }
+            //if (distanceSqr < 4500*4500)
+            //{
+            //    cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+            //    debugString.Append("Descending On Target");
+            //    debugString.Append(Environment.NewLine);
+            //}
+            //else
+            //{
+            //    cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
+            //    debugString.Append("Cruising");
+            //    debugString.Append(Environment.NewLine);
+            //}
 
-            debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
-            debugString.Append(Environment.NewLine);
+            //debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
+            //debugString.Append(Environment.NewLine);
 
-            return cruiseTarget;
+            return this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
         }
 
         private void CheckMiss(Vector3 targetPosition)

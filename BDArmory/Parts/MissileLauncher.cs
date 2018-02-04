@@ -115,10 +115,6 @@ namespace BDArmory.Parts
 		[KSPField]
 		public float rndAngVel = 0;
 		
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"),
-		 UI_FloatRange(minValue = 100, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]
-		public float cruiseAltitude = 800;
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Altitude"),
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float maxAltitude = 0f;
@@ -519,8 +515,8 @@ namespace BDArmory.Parts
 
 			if(GuidanceMode != GuidanceModes.Cruise)
 			{
-				Fields["cruiseAltitude"].guiActive = false;
-                Fields["cruiseAltitude"].guiActiveEditor = false;
+				Fields["CruiseAltitude"].guiActive = false;
+                Fields["CruiseAltitude"].guiActiveEditor = false;
 
                 //Actions["GPS Target"].active = false;
                 //Fields["GPS Target"].guiActiveEditor = true;
@@ -1554,7 +1550,7 @@ namespace BDArmory.Parts
 
 			if(terminalManeuvering && distanceSqr < terminalGuidanceDistance * terminalGuidanceDistance)
 			{
-				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, cruiseAltitude);
+				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, CruiseAltitude);
                 debugString.Append($"Terminal Maneuvers");
                 debugString.Append(Environment.NewLine);
             }
@@ -1573,7 +1569,7 @@ namespace BDArmory.Parts
                 }
 				else
 				{
-					cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, cruiseAltitude);
+					cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
                     debugString.Append($"Cruising");
                     debugString.Append(Environment.NewLine);
                 }
