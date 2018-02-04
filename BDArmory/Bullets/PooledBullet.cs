@@ -750,7 +750,7 @@ namespace BDArmory
         bool RicochetScenery(float hitAngle)
         {
             float reflectRandom = UnityEngine.Random.Range(-75f, 90f);
-            if (reflectRandom > 90 - hitAngle)
+            if (reflectRandom > 90 - hitAngle && caliber <= 30f)
             {
                 return true;
             }
