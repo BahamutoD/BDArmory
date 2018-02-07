@@ -757,7 +757,7 @@ namespace BDArmory.Parts
             }
         }
 
-        protected void DrawDebugLine(Vector3 start, Vector3 end)
+        public void DrawDebugLine(Vector3 start, Vector3 end)
         {
             if (BDArmorySettings.DRAW_DEBUG_LINES)
             {
