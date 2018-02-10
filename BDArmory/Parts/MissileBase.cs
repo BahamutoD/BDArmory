@@ -11,6 +11,7 @@ using System.Text;
 using BDArmory.Core;
 using BDArmory.Core.Enum;
 using BDArmory.FX;
+using BDArmory.Guidances;
 
 namespace BDArmory.Parts
 {
@@ -162,6 +163,9 @@ namespace BDArmory.Parts
 
         protected Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
         protected Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
+
+
+        protected CruiseGuidance _cruiseGuidance;
 
         public float Throttle
         {

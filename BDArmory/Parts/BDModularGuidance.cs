@@ -539,7 +539,7 @@ namespace BDArmory.Parts
             return agmTarget;
         }
 
-        private CruiseGuidance _cruiseGuidance;
+      
         private Vector3 CruiseGuidance()
         {
             //Vector3 cruiseTarget = Vector3.zero;

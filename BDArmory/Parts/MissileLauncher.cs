@@ -7,6 +7,7 @@ using BDArmory.UI;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
+using BDArmory.Guidances;
 using BDArmory.Misc;
 using BDArmory.Radar;
 using UniLinq;
@@ -560,12 +561,12 @@ namespace BDArmory.Parts
 			}
 
 		    SetInitialDetonationDistance();
+		    this._cruiseGuidance = new CruiseGuidance(this);
 
-		
 
 
             // fill activeRadarLockTrackCurve with default values if not set by part config:
-                if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
+            if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
             {
                 activeRadarLockTrackCurve.Add(0f, 0f);
                 activeRadarLockTrackCurve.Add(activeRadarRange, RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);           // TODO: tune & balance constants!
@@ -1031,7 +1032,7 @@ namespace BDArmory.Parts
                     }
                     else if (GuidanceMode == GuidanceModes.Cruise)
                     {
-                        CruiseGuidance();
+                        this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
                     }
                     else if (GuidanceMode == GuidanceModes.SLW)
                     {
