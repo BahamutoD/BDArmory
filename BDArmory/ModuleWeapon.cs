@@ -1084,13 +1084,10 @@ namespace BDArmory
                         pBullet.maxDistance = Mathf.Max(maxTargetingRange, maxEffectiveDistance); //limit distance to weapons maxeffective distance
 
                         timeFired = Time.time;
-
-                        //Vector3 firedVelocity = fireTransform.rotation * new Vector3(randomZ,randomY,bulletVelocity).normalized * bulletVelocity;
+                        
                         Vector3 firedVelocity =
                             VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
-
-
-                        //firedBullet.transform.position -= firedVelocity * Time.fixedDeltaTime;
+                        
                         firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
                         pBullet.currentVelocity = part.rb.velocity + firedVelocity;
 
@@ -1211,9 +1208,11 @@ namespace BDArmory
         private bool FireLaser()
         {
             float maxDistance = BDArmorySettings.PHYSICS_RANGE;
-            if (BDArmorySettings.PHYSICS_RANGE == 0) maxDistance = 2500;
+            if (BDArmorySettings.PHYSICS_RANGE == 0)
+                maxDistance = 2500;
 
             float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
+
             if (!pointingAtSelf && !Misc.Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated &&
                 (part.RequestResource(ammoName, chargeAmount) >= chargeAmount || BDArmorySettings.INFINITE_AMMO))
             {
@@ -1227,8 +1226,7 @@ namespace BDArmory
                 {
                     Transform tf = fireTransforms[i];
 
-                    LineRenderer lr = laserRenderers[i];
-                    //lr.SetPosition(0, tf.position + (part.rb.velocity*Time.fixedDeltaTime));
+                    LineRenderer lr = laserRenderers[i];                    
 
                     Vector3 rayDirection = tf.forward;
 
@@ -1264,58 +1262,15 @@ namespace BDArmory
                     Ray ray = new Ray(tf.position, rayDirection);
                     lr.useWorldSpace = false;
                     lr.SetPosition(0, Vector3.zero);
-                    RaycastHit hit;
-                    //KerbalEVA hitEVA = null;
-                    //if (Physics.Raycast(ray, out hit, maxDistance, 2228224))
-                    //{
-                    //    lr.useWorldSpace = true;
-                    //    laserPoint = hit.point + physStepFix;
-
-                    //    //lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
-                    //    lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
-                    //    lr.SetPosition(1, laserPoint);
-
-
-                    //    if (Time.time - timeFired > 6 / 120 && BDArmorySetup.BULLET_HITS)
-                    //    {
-                    //        BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
-                    //    }
-
-                    //    try
-                    //    {
-                    //        hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
-                    //        if (hitEVA != null)
-                    //            Debug.Log("[BDArmory]:Hit on kerbal confirmed!");
-                    //    }
-                    //    catch (NullReferenceException)
-                    //    {
-                    //        Debug.Log("[BDArmory]:Whoops ran amok of the exception handler");
-                    //    }
-
-                    //    if (hitEVA != null)
-                    //    {
-                    //        Part p = hitEVA.part;
-                    //        if (p && p.vessel && p.vessel != vessel)
-                    //        {
-                    //            float distance = hit.distance;
-                    //            //Scales down the damage based on the increased surface area of the area being hit by the laser. Think flashlight on a wall.
-                    //            p.AddDamage(laserDamage / (1 + Mathf.PI * Mathf.Pow(tanAngle * distance, 2)) *
-                    //                             TimeWarp.fixedDeltaTime);
-
-                    //            if (BDArmorySetup.INSTAKILL) p.AddDamage(p.maxTemp);
-                    //        }
-                    //    }
-                    //}
+                    RaycastHit hit;                    
                     
                     if (Physics.Raycast(ray, out hit, maxDistance, 9076737))
                     {
                         lr.useWorldSpace = true;
                         laserPoint = hit.point + physStepFix;
-
-                        //lr.SetPosition(1, lr.transform.InverseTransformPoint(laserPoint));
+                        
                         lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
-                        lr.SetPosition(1, laserPoint);                   
-
+                        lr.SetPosition(1, laserPoint);  
 
                         KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                         Part p = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
@@ -1371,8 +1326,7 @@ namespace BDArmory
                 laserColor.a = laserColor.a / 2;
                 laserRenderers[i].material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
                 laserRenderers[i].material.SetColor("_TintColor", laserColor);
-                laserRenderers[i].material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser",
-                    false);
+                laserRenderers[i].material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser", false);
                 laserRenderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; //= false;
                 laserRenderers[i].receiveShadows = false;
                 laserRenderers[i].SetWidth(tracerStartWidth, tracerEndWidth);
@@ -1608,6 +1562,7 @@ namespace BDArmory
             Vector3 originalTarget = targetPosition;
             targetDistance = Vector3.Distance(finalTarget, transform.position);
             targetLeadDistance = targetDistance;
+
             if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
             {
                 float gAccel = (float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude;
@@ -1646,7 +1601,7 @@ namespace BDArmory
                 {
                     if (targetAcquired && airDetonationTiming)
                     {                       
-                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) ;
+                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass);
                     }
                     else
                     {
