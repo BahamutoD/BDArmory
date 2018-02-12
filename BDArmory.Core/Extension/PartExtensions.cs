@@ -152,7 +152,7 @@ namespace BDArmory.Core.Extension
                 Debug.Log("[BDArmory]: Ballistic Hitpoints Applied : " + Math.Round(damage_, 2));
             }
 
-            CheckDamageFX(p);
+            //CheckDamageFX(p);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace BDArmory.Core.Extension
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 Debug.Log("[BDArmory]: Explosive Hitpoints Applied to " + p.name + ": " + Math.Round(damage, 2));
 
-            CheckDamageFX(p);
+            //CheckDamageFX(p);
         }
 
         /// <summary>

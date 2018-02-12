@@ -353,7 +353,8 @@ namespace BDArmory
                 }
             }
         }
-                
+
+        public bool underAttack;
         public bool underFire;
         Coroutine ufRoutine;
 
@@ -1089,6 +1090,14 @@ namespace BDArmory
             yield return new WaitForSeconds(3);
             underFire = false;
         }
+
+        IEnumerator UnderAttackRoutine()
+        {
+            underAttack = true;
+            yield return new WaitForSeconds(3);
+            underAttack = false;
+        }
+
 
         IEnumerator GuardTurretRoutine()
         {
@@ -4072,6 +4081,8 @@ namespace BDArmory
 
             if (results.foundHeatMissile)
             {
+                StartCoroutine(UnderAttackRoutine());
+
                 if (!isFlaring)
                 {
                     StartCoroutine(FlareRoutine(2.5f));
@@ -4092,6 +4103,8 @@ namespace BDArmory
 
             if (results.foundRadarMissile)
             {
+                StartCoroutine(UnderAttackRoutine());
+
                 FireChaff();
                 FireECM();
 
@@ -4110,6 +4123,8 @@ namespace BDArmory
 
             if (results.foundAGM)
             {
+                StartCoroutine(UnderAttackRoutine());
+
                 //do smoke CM here.
                 if (targetMissiles && guardTarget == null)
                 {
@@ -4122,6 +4137,8 @@ namespace BDArmory
 
             if (results.firingAtMe)
             {
+                StartCoroutine(UnderAttackRoutine());
+
                 incomingThreatPosition = results.threatPosition;
                 if (ufRoutine != null)
                 {
