@@ -937,8 +937,8 @@ namespace BDArmory.Radar
                                 {
 									if(!weapon.Current.recentlyFiring) continue;
 									if(Vector3.Dot(weapon.Current.fireTransforms[0].forward, vesselDirection) > 0) continue;
-
-									if(Vector3.Angle(weapon.Current.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
+                                    vesselDistance = Mathf.Sqrt(vesselDistance);
+                                    if (Vector3.Angle(weapon.Current.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
 									{
 										results.firingAtMe = true;
 										results.threatPosition = weapon.Current.vessel.transform.position;
