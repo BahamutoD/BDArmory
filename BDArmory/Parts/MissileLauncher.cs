@@ -1789,7 +1789,7 @@ namespace BDArmory.Parts
 
 		        ExplosionFx.CreateExplosion(position, blastPower, explModelPath, explSoundPath, true, 0, part);
             }
-		    if (part != null) part.Destroy();
+		    
 
             List<BDAGaplessParticleEmitter>.Enumerator e = gaplessEmitters.GetEnumerator();
             while (e.MoveNext())
@@ -1803,7 +1803,13 @@ namespace BDArmory.Parts
 		        }
 		    }
             e.Dispose();
-		}
+
+            if (part != null)
+            {
+                part.Destroy();
+                part.explode();
+            }
+        }
 
 	    public override Vector3 GetForwardTransform()
 	    {
