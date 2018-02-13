@@ -217,7 +217,7 @@ namespace BDArmory.FX
                 go = GameDatabase.Instance.GetModel("BDArmory/FX/PenFX");
             }
 
-            if(caliber !=0 && !hitPart.IgnoreDecal())
+            if( (hitPart != null) && caliber !=0 && !hitPart.IgnoreDecal())
             {
                 SpawnDecal(hit,hitPart,caliber,penetrationfactor); //No bullet decals for laser or ricochet
             }
