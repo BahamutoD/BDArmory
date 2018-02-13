@@ -109,7 +109,7 @@ namespace BDArmory.Guidances
 
             var pendingDistance = _originalDistance - surfaceDistanceVector.magnitude;
 
-            CalculatePerSecondData();
+            GetTelemetryData();
 
 
             switch (GuidanceState)
@@ -155,16 +155,16 @@ namespace BDArmory.Guidances
             return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
         }
 
-        private void CalculatePerSecondData()
+        private void GetTelemetryData()
         {
-            if (Time.time - _lastDataRead < 1f)
+            if (Time.time - _lastDataRead < 0.1f)
                 return;
             _lastDataRead = Time.time;
 
-            _verticalAcceleration = _missile.vessel.verticalSpeed - _lastVerticalSpeed;
+            _verticalAcceleration = (_missile.vessel.verticalSpeed - _lastVerticalSpeed)* 10f;
             _lastVerticalSpeed = _missile.vessel.verticalSpeed;
 
-            _horizontalAcceleration = _missile.vessel.horizontalSrfSpeed - _lastHorizontalSpeed;
+            _horizontalAcceleration = (_missile.vessel.horizontalSrfSpeed - _lastHorizontalSpeed)*10;
             _lastHorizontalSpeed = _missile.vessel.horizontalSrfSpeed;
         }
 
@@ -189,7 +189,7 @@ namespace BDArmory.Guidances
 
         private void UpdatePitch(double missileAltitude)
         {
-            if (Time.time - _lastPitchTimeDecision > 1f)
+            if (Time.time - _lastPitchTimeDecision > 0.1f)
             {
                 MakeDecisionAboutPitch(_missile, missileAltitude);
                 _lastPitchTimeDecision = Time.time;
@@ -232,10 +232,10 @@ namespace BDArmory.Guidances
             switch (ThrottleDecision)
             {
                 case ThrottleDecision.Increase:
-                    missile.Throttle = Mathf.Clamp(missile.Throttle + 0.01f, 0.01f, 1f);
+                    missile.Throttle = Mathf.Clamp(missile.Throttle + 0.001f, 0.001f, 1f);
                     break;
                 case ThrottleDecision.Decrease:
-                    missile.Throttle = Mathf.Clamp(missile.Throttle - 0.01f, 0.01f, 1f);
+                    missile.Throttle = Mathf.Clamp(missile.Throttle - 0.001f, 0.001f, 1f);
                     break;
                 case ThrottleDecision.Hold:
                     break;
@@ -246,17 +246,16 @@ namespace BDArmory.Guidances
 
         private void MakeDecisionAboutPitch(MissileBase missile, double missileAltitude)
         {
-            const double maxVerticalSpeed = 20d;
 
             _futureAltitude = CalculateFutureAltitude(missileAltitude);
 
             PitchDecision futureDecision;
 
-            if (_futureAltitude < missile.CruiseAltitude)
+            if (_futureAltitude < missile.CruiseAltitude || missileAltitude < missile.CruiseAltitude)
             {
                 futureDecision = PitchDecision.Ascent;
             }
-            else if (_futureAltitude > missile.CruiseAltitude)
+            else if (_futureAltitude > missile.CruiseAltitude || missileAltitude > missile.CruiseAltitude)
             {
                 futureDecision = PitchDecision.Descent;
             }
@@ -265,31 +264,15 @@ namespace BDArmory.Guidances
                 futureDecision = PitchDecision.Hold;
             }
         
-
-            if (PitchDecision == PitchDecision.Ascent && PitchDecision == futureDecision)
-            {
-                if (_missile.vessel.verticalSpeed > maxVerticalSpeed)
-                {
-                    futureDecision = PitchDecision.Hold;
-                }
-            }
-            else if (PitchDecision == PitchDecision.Descent && PitchDecision == futureDecision)
-            {
-                if (_missile.vessel.verticalSpeed < -maxVerticalSpeed)
-                {
-                    futureDecision = PitchDecision.Hold;
-                }
-            }
-
             PitchDecision = futureDecision;
 
             switch (PitchDecision)
             {
                 case PitchDecision.Ascent:
-                    _pitchAngle = Mathf.Clamp(_pitchAngle + 0.2f, -2.5f, 2.5f);
+                    _pitchAngle = Mathf.Clamp(_pitchAngle + 0.05f, -2.5f, 2.5f);
                     break;
                 case PitchDecision.Descent:
-                    _pitchAngle = Mathf.Clamp(_pitchAngle - 0.2f, -2.5f, 2.5f);
+                    _pitchAngle = Mathf.Clamp(_pitchAngle - 0.025f, -2.5f, 2.5f);
                     break;
                 case PitchDecision.Hold:
                     break;
