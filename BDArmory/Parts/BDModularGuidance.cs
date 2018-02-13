@@ -67,6 +67,10 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerMult = 10;
 
+        private Vector3 initialMissileRollPlane;
+        private Vector3 initialMissileForward;
+
+        private float rollError;
         #endregion
 
         public TransformAxisVectors ForwardTransformAxis { get; set; }
@@ -109,6 +113,7 @@ namespace BDArmory.Parts
             {
                 Fields["CruiseAltitude"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseSpeed"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
             }
             if (Fields["BallisticOverShootFactor"] != null)
             {
@@ -125,7 +130,9 @@ namespace BDArmory.Parts
                 UpdateGuidance();
                 CheckDetonationDistance();
                 CheckDelayedFired();
-                CheckNextStage();            
+                CheckNextStage();
+
+               
 
                 if (isTimed && TimeIndex > detonationTime)
                 {
@@ -361,12 +368,14 @@ namespace BDArmory.Parts
                 WeaponNameWindow.OnActionGroupEditorOpened.Add(OnActionGroupEditorOpened);
                 WeaponNameWindow.OnActionGroupEditorClosed.Add(OnActionGroupEditorClosed);
                 Fields["CruiseAltitude"].guiActiveEditor = true;
+                Fields["CruiseSpeed"].guiActiveEditor = false;
                 Events["SwitchTargetingMode"].guiActiveEditor = true;
                 Events["SwitchGuidanceMode"].guiActiveEditor = true;
             }
             else
             {
                 Fields["CruiseAltitude"].guiActiveEditor = false;
+                Fields["CruiseSpeed"].guiActiveEditor = false;
                 Events["SwitchTargetingMode"].guiActiveEditor = false;
                 Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
@@ -615,19 +624,40 @@ namespace BDArmory.Parts
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.Velocity(), -vessel.transform.forward);
                     Vector3 targetDirection = _velocityTransform.InverseTransformPoint(newTargetPosition).normalized;
-                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
+                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15 * Mathf.Deg2Rad, 0);
 
                     Vector3 localAngVel = vessel.angularVelocity;
-                    float steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
-                    float steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
+                    float steerYaw = SteerMult * targetDirection.x - SteerDamping * -localAngVel.z;
+                    float steerPitch = SteerMult * targetDirection.y - SteerDamping * -localAngVel.x;
 
                     s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
                     s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
+                    s.roll = GetRoll();
                 }
+
+                //Calculate rolling
+              
 
                 s.mainThrottle = Throttle;
             }
-           
+
+        }
+
+        private float GetRoll()
+        {
+            Vector3 rollA = this.initialMissileForward;
+            Vector3 rollB = Vector3.ProjectOnPlane(vessel.transform.forward, this.initialMissileRollPlane).normalized;
+
+            var angle = Vector3.Angle(rollA, rollB);
+
+            var crossErrorAngle = Vector3.Cross(rollA, rollB);
+
+            if (crossErrorAngle.y < 0)
+            {
+                angle = angle * -1;
+            }
+
+            return angle * (1f / -180f); 
         }
 
         private Vector3 BallisticGuidance()
@@ -743,6 +773,9 @@ namespace BDArmory.Parts
                 Jettison();
                 AddTargetInfoToVessel();
 
+                
+                this.initialMissileRollPlane = this.vessel.transform.up;
+                this.initialMissileForward = this.vessel.transform.forward;
                 vessel.vesselName = GetShortName();
                 vessel.vesselType = VesselType.Plane;
 
