@@ -1,3 +1,4 @@
+using System;
 using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
@@ -188,9 +189,9 @@ namespace BDArmory
             float yawOffset = Mathf.Abs(yawError);
             float targetYawAngle = Mathf.Clamp((currentYaw + yawError + 180f) % 360f - 180f, -yawRange / 2, yawRange / 2); // clamped target yaw
 
+            float pitchError = (float)Vector3d.Angle(pitchComponent, yawNormal) - (float)Vector3d.Angle(referenceTransform.forward, yawNormal);
             float currentPitch = -((pitchTransform.localEulerAngles.x + 180f) % 360f - 180f); // from current rotation transform
-            float realPitch = 90f - (float)Vector3d.Angle(yawNormal, referenceTransform.forward);
-            float targetPitchAngle = 90f - (float)Vector3d.Angle(yawNormal, pitchComponent) + (realPitch - currentPitch); // simple angle from yaw normal
+            float targetPitchAngle = currentPitch - pitchError;
             float pitchOffset = Mathf.Abs(targetPitchAngle - currentPitch);
             targetPitchAngle = Mathf.Clamp(targetPitchAngle, minPitch, maxPitch); // clamp pitch
 
