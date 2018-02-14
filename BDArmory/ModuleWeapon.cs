@@ -1587,9 +1587,9 @@ namespace BDArmory
                     finalTarget += (-part.rb.velocity * (time + Time.fixedDeltaTime));
                     //this vessel velocity compensation against stationary
                 }
-                Vector3 up = (finalTarget - vessel.mainBody.transform.position).normalized;
+                Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
                 if (bulletDrop && vessel.srfSpeed < 750)
-                    finalTarget += (0.5f * gAccel * time * time * up); //gravity compensation
+                    finalTarget += (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
 
                 targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
 
