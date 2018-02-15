@@ -311,7 +311,8 @@ namespace BDArmory.Control
                                         if ((gun.yawRange == 0 || gun.maxPitch == gun.minPitch) && gun.FiringSolutionVector != null)
                                         {
                                             aimingMode = true;
-                                            targetDirection = (Vector3)gun.FiringSolutionVector;
+                                            if (Vector3.Angle((Vector3)gun.FiringSolutionVector, vessel.transform.up) < 20)
+                                                targetDirection = (Vector3)gun.FiringSolutionVector;
                                         }
                                         break;
                                     case WeaponClasses.Rocket:
@@ -319,7 +320,8 @@ namespace BDArmory.Control
                                         if (rocket.yawRange == 0 || rocket.maxPitch == rocket.minPitch)
                                         {
                                             aimingMode = true;
-                                            targetDirection = (Vector3)rocket.FiringSolutionVector;
+                                            if (Vector3.Angle((Vector3)rocket.FiringSolutionVector, vessel.transform.up) < 20)
+                                                targetDirection = (Vector3)rocket.FiringSolutionVector;
                                         }
                                         break;
                                 }
@@ -496,9 +498,9 @@ namespace BDArmory.Control
 
             Vector3 localAngVel = vessel.angularVelocity;
 			s.roll = steerMult * 0.003f * rollError - .2f * steerDamping * -localAngVel.y;
-			s.pitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
-			s.yaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
-            s.wheelSteer = -((0.003f * steerMult * yawError) - (steerDamping * 0.1f * -localAngVel.z));
+            s.pitch = ((aimingMode ? 0.02f : 0.015f) * steerMult * pitchError) - (steerDamping * -localAngVel.x);
+			s.yaw = ((aimingMode ? 0.007f : 0.005f) * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
+            s.wheelSteer = -(((aimingMode? 0.005f : 0.003f) * steerMult * yawError) - (steerDamping * 0.1f * -localAngVel.z));
 		}
 
 		#endregion
