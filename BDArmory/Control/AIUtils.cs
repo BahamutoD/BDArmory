@@ -219,10 +219,13 @@ namespace BDArmory.Control
                     }
                 }
 
+                // if not path found
                 if (path.Count == 0)
                 {
-                    if(startCoords == endCoords)
+                    if (startCoords == endCoords)
                         pathReduced.Add(end);
+                    else
+                        pathReduced.Add(start);
                 }
                 else if (path[path.Count - 1].Coords == endCoords)
                     pathReduced.Add(end);
