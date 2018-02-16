@@ -1089,11 +1089,10 @@ namespace BDArmory
                         
                         Vector3 firedVelocity =
                             VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
-                        
-                        firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
-                        pBullet.currentVelocity = part.rb.velocity + firedVelocity;
 
-                        pBullet.initialSpeed = bulletVelocity;
+                        firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
+                        pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
+
                         pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
                         pBullet.projectileColor = projectileColorC;
@@ -1591,9 +1590,9 @@ namespace BDArmory
                     else if (vessel.altitude < 6000)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            -part.rb.velocity, effectiveVelocity);
+                            -(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()), effectiveVelocity);
                         if (time2 > 0) time = time2;
-                        finalTarget += (-part.rb.velocity * (time + Time.fixedDeltaTime));
+                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * (time + Time.fixedDeltaTime));
                         //this vessel velocity compensation against stationary
                     }
                     Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
@@ -1726,8 +1725,8 @@ namespace BDArmory
                 {
                     float simDeltaTime = 0.155f;
 
-                    Vector3 simVelocity = part.rb.velocity + (bulletVelocity * fireTransform.forward);
-                    Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
+                    Vector3 simVelocity = part.rb.velocity + Krakensbane.GetFrameVelocityV3f() + (bulletVelocity * fireTransform.forward);
+                    Vector3 simCurrPos = fireTransform.position + ((part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime);
                     Vector3 simPrevPos = simCurrPos;
                     Vector3 simStartPos = simCurrPos;
                     bool simulating = true;

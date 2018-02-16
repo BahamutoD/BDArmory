@@ -230,6 +230,15 @@ namespace BDArmory.Control
 				}
 			}
 		}
+
+		void FixedUpdate()
+		{
+			//floating origin and velocity offloading corrections
+			if (lastTargetPosition != null && (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero()))
+			{
+				lastTargetPosition -= FloatingOrigin.OffsetNonKrakensbane;
+			}
+		}
 		
 
 		protected override void AutoPilot(FlightCtrlState s)
@@ -781,10 +790,7 @@ namespace BDArmory.Control
 			targetPosition = vessel.transform.position + (currTargetDir * 100);
 
 
-			if(BDArmorySettings.DRAW_DEBUG_LINES)
-			{
-				flyingToPosition = targetPosition;
-			}
+			flyingToPosition = targetPosition;
 
 			//test poststall
 			float AoA = Vector3.Angle(vessel.ReferenceTransform.up, vessel.Velocity());
