@@ -474,7 +474,9 @@ namespace BDArmory.Control
 				SetStatus("Airtime!");
 				return true;
 			}
-			else if (vessel.Landed && (SurfaceType & AIUtils.VehicleMovementType.Land) == 0)
+			else if (vessel.Landed 
+                && !vessel.Splashed // I'm looking at you, Kerbal Konstructs. (When launching directly into water, KK seems to set both vessel.Landed and vessel.Splashed to true.)
+                && (SurfaceType & AIUtils.VehicleMovementType.Land) == 0)
 			{
 				targetVelocity = 0;
 				SetStatus("Stranded");
