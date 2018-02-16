@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
@@ -25,8 +25,8 @@ namespace BDArmory.Control
 		Vector3? dodgeVector;
 		float weaveAdjustment = 0;
 		float weaveDirection = 1;
-		const float weaveLimit = 10;
-		const float weaveFactor = 3.5f;
+		const float weaveLimit = 15;
+		const float weaveFactor = 6.5f;
         int sideSlipDirection = 0;
 
 		Vector3 upDir;
@@ -58,15 +58,15 @@ namespace BDArmory.Control
             => (AIUtils.VehicleMovementType)Enum.Parse(typeof(AIUtils.VehicleMovementType), SurfaceTypeName);
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max slope angle"),
-            UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
-        float maxSlopeAngle = 10f;
+            UI_FloatRange(minValue = 1f, maxValue = 30f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public float MaxSlopeAngle = 10f;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"),
-			UI_FloatRange(minValue = 5f, maxValue = 200f, stepIncrement = 1f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 5f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float CruiseSpeed = 20;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max speed"),
-			UI_FloatRange(minValue = 5f, maxValue = 300f, stepIncrement = 1f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 5f, maxValue = 80f, stepIncrement = 1f, scene = UI_Scene.All)]
 		public float MaxSpeed = 30;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max drift"),
@@ -104,13 +104,31 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
 			UI_FloatRange(minValue = 500f, maxValue = 8000f, stepIncrement = 100f, scene = UI_Scene.All)]
 		public float MaxEngagementRange = 4000;
+        
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Goes up to ", advancedTweakable = true),
+            UI_Toggle(enabledText = "eleven", disabledText = "ten", scene = UI_Scene.All), ]
+        public bool UpToEleven = false;
+        bool toEleven = false;
 
-		const float AttackAngleAtMaxRange = 30f;
+        const float AttackAngleAtMaxRange = 30f;
+
+        Dictionary<string, float> altMaxValues = new Dictionary<string, float>
+        {
+            { nameof(MaxSlopeAngle), 90f },
+            { nameof(CruiseSpeed), 300f },
+            { nameof(MaxSpeed), 400f },
+            { nameof(steerMult), 200f },
+            { nameof(steerDamping), 100f },
+            { nameof(MinEngagementRange), 30000f },
+            { nameof(MaxEngagementRange), 20000f },
+        };
 		#endregion
 
 		#region RMB info in editor
 		public override string GetInfo()
 		{
+            // known bug - the game caches the RMB info, changing the variable after checking the info
+            // does not update the info. :( No idea how to force an update.
 			return @"
 <b>Available settings</b>:
 <b>Vehicle type</b> - can this vessel operate on land/sea/both
@@ -125,7 +143,9 @@ namespace BDArmory.Control
 <b>Attack vector</b> - does the vessel attack from the front or the sides
 <b>Min engagement range</b> - AI will try to move away from oponents if closer than this range
 <b>Max engagement range</b> - AI will prioritize getting closer over attacking when beyond this range
-";
+" + (GameSettings.ADVANCED_TWEAKABLES ?
+@"<b>Goes up to</b> - Increases variable limits, no direct effect on behaviour
+" : "");
 		}
 		#endregion
 
@@ -161,6 +181,33 @@ namespace BDArmory.Control
                 motorControl.Deactivate();
         }
 
+        void Update()
+        {
+            // switch up the alt values if up to eleven is toggled
+            if (UpToEleven != toEleven)
+            {
+                using (var s = altMaxValues.Keys.ToList().GetEnumerator())
+                    while (s.MoveNext())
+                    {
+                        UI_FloatRange euic = (UI_FloatRange)
+                            (HighLogic.LoadedSceneIsFlight ? Fields[s.Current].uiControlFlight : Fields[s.Current].uiControlEditor);
+                        float tempValue = euic.maxValue;
+                        euic.maxValue = altMaxValues[s.Current];
+                        altMaxValues[s.Current] = tempValue;
+                        // change the value back to what it is now after fixed update, because changing the max value will clamp it down
+                        // using reflection here, don't look at me like that, this does not run often
+                        StartCoroutine(setVar(s.Current, (float)typeof(BDModuleSurfaceAI).GetField(s.Current).GetValue(this)));
+                    }
+                toEleven = UpToEleven;
+            }
+        }
+
+        IEnumerator setVar(string name, float value)
+        {
+            yield return new WaitForFixedUpdate();
+            typeof(BDModuleSurfaceAI).GetField(name).SetValue(this, value);
+        }
+
         protected override void OnGUI()
 		{
 			base.OnGUI();
@@ -192,6 +239,7 @@ namespace BDArmory.Control
 			targetDirection = vesselTransform.up;
             aimingMode = false;
 			upDir = VectorUtils.GetUpDirection(vesselTransform.position);
+            DebugLine("");
 
 			// check if we should be panicking
 			if (!PanicModes())
@@ -268,7 +316,7 @@ namespace BDArmory.Control
                                 && !pathingMatrix.TraversableStraightLine(
                                         VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                                         VectorUtils.WorldPositionToGeoCoords(vessel.PredictPosition(10), vessel.mainBody),
-                                        vessel.mainBody, SurfaceType, maxSlopeAngle))
+                                        vessel.mainBody, SurfaceType, MaxSlopeAngle))
                             sideSlipDirection = -Math.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // switch sides if we're running ashore
                         sideVector *= sideSlipDirection;
 
@@ -414,7 +462,7 @@ namespace BDArmory.Control
 			{
 				weaveAdjustment = 0;
 			}
-			//DebugLine($"underFire {weaponManager.underFire} weaveAdjustment {weaveAdjustment}");
+			DebugLine($"underFire {weaponManager.underFire}, weaveAdjustment {weaveAdjustment}");
 		}
 
 		bool PanicModes()
@@ -465,11 +513,16 @@ namespace BDArmory.Control
 			Vector3 yawTarget = Vector3.ProjectOnPlane(targetDirection, vesselTransform.forward);
 
             // limit "aoa" if we're moving
+            float driftMult = 1;
             if (vessel.horizontalSrfSpeed * 10 > CruiseSpeed)
-				yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad, 0);
+            {
+                driftMult = Mathf.Max(Vector3.Angle(vessel.srf_velocity, yawTarget) / MaxDrift, 1);
+                yawTarget = Vector3.RotateTowards(vessel.srf_velocity, yawTarget, MaxDrift * Mathf.Deg2Rad, 0);
+            }
 
-			float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + (aimingMode ? 0 : weaveAdjustment);
+            float yawError = VectorUtils.SignedAngle(vesselTransform.up, yawTarget, vesselTransform.right) + (aimingMode ? 0 : weaveAdjustment);
             DebugLine($"yaw target: {yawTarget}, yaw error: {yawError}");
+            DebugLine($"drift multiplier: {driftMult}");
 
             Vector3 baseForward = vessel.transform.up * terrainOffset;
             float basePitch = Mathf.Atan2(
@@ -497,9 +550,9 @@ namespace BDArmory.Control
             DebugLine($"terrain sideways slope: {baseRoll}, target roll: {targetRoll}");
 
             Vector3 localAngVel = vessel.angularVelocity;
-			s.roll = steerMult * 0.003f * rollError - .2f * steerDamping * -localAngVel.y;
+			s.roll = steerMult * 0.006f * rollError - 0.4f * steerDamping * -localAngVel.y;
             s.pitch = ((aimingMode ? 0.02f : 0.015f) * steerMult * pitchError) - (steerDamping * -localAngVel.x);
-			s.yaw = ((aimingMode ? 0.007f : 0.005f) * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
+			s.yaw = (((aimingMode ? 0.007f : 0.005f) * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z)) * driftMult;
             s.wheelSteer = -(((aimingMode? 0.005f : 0.003f) * steerMult * yawError) - (steerDamping * 0.1f * -localAngVel.z));
 		}
 
@@ -515,6 +568,8 @@ namespace BDArmory.Control
                 DebugLine(vessel.vesselName + " cannot engage: vehicle not on land");
             else if (!vessel.LandedOrSplashed)
                 DebugLine(vessel.vesselName + " cannot engage: vessel not on surface");
+            // the motorControl part fails sometimes, and guard mode then decides not to select a weapon
+            // figure out what is wrong with motor control before uncommenting :D
             //else if (speedController.debugThrust + (motorControl?.MaxAccel ?? 0) <= 0)
             //    DebugLine(vessel.vesselName + " cannot engage: no engine power");
             else
@@ -557,14 +612,14 @@ namespace BDArmory.Control
             if(!pathingMatrix.TraversableStraightLine(
                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                     VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                    vessel.mainBody, SurfaceType, maxSlopeAngle))
+                    vessel.mainBody, SurfaceType, MaxSlopeAngle))
             {
                 bypassTarget = target;
                 bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
                 waypoints = pathingMatrix.Pathfind(
                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                     VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                    vessel.mainBody, SurfaceType, maxSlopeAngle);
+                    vessel.mainBody, SurfaceType, MaxSlopeAngle);
                 if (VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
                     waypoints.RemoveAt(waypoints.Count - 1);
                 if (waypoints.Count > 0)
@@ -578,7 +633,7 @@ namespace BDArmory.Control
         {
             waypoints = pathingMatrix.Pathfind(
                                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                                    destination, vessel.mainBody, SurfaceType, maxSlopeAngle);
+                                    destination, vessel.mainBody, SurfaceType, MaxSlopeAngle);
             intermediatePositionGeo = waypoints[0];
         }
 
