@@ -515,6 +515,8 @@ namespace BDArmory.Control
                 DebugLine(vessel.vesselName + " cannot engage: vehicle not on land");
             else if (!vessel.LandedOrSplashed)
                 DebugLine(vessel.vesselName + " cannot engage: vessel not on surface");
+            // the motorControl part fails sometimes, and guard mode then decides not to select a weapon
+            // figure out what is wrong with motor control before uncommenting :D
             //else if (speedController.debugThrust + (motorControl?.MaxAccel ?? 0) <= 0)
             //    DebugLine(vessel.vesselName + " cannot engage: no engine power");
             else
