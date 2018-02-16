@@ -119,8 +119,8 @@ namespace BDArmory.Control
             { nameof(MaxSpeed), 400f },
             { nameof(steerMult), 200f },
             { nameof(steerDamping), 100f },
-            { nameof(MinEngagementRange), 30000f },
-            { nameof(MaxEngagementRange), 20000f },
+            { nameof(MinEngagementRange), 20000f },
+            { nameof(MaxEngagementRange), 30000f },
         };
 		#endregion
 
