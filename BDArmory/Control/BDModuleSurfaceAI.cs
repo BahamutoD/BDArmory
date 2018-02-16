@@ -119,8 +119,8 @@ namespace BDArmory.Control
             { nameof(MaxSpeed), 400f },
             { nameof(steerMult), 200f },
             { nameof(steerDamping), 100f },
-            { nameof(MinEngagementRange), 30000f },
-            { nameof(MaxEngagementRange), 20000f },
+            { nameof(MinEngagementRange), 20000f },
+            { nameof(MaxEngagementRange), 30000f },
         };
 		#endregion
 
@@ -474,7 +474,9 @@ namespace BDArmory.Control
 				SetStatus("Airtime!");
 				return true;
 			}
-			else if (vessel.Landed && (SurfaceType & AIUtils.VehicleMovementType.Land) == 0)
+			else if (vessel.Landed 
+                && !vessel.Splashed // I'm looking at you, Kerbal Konstructs. (When launching directly into water, KK seems to set both vessel.Landed and vessel.Splashed to true.)
+                && (SurfaceType & AIUtils.VehicleMovementType.Land) == 0)
 			{
 				targetVelocity = 0;
 				SetStatus("Stranded");
