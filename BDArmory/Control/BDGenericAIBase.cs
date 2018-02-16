@@ -14,8 +14,10 @@ namespace BDArmory.Control
 	public abstract class BDGenericAIBase : PartModule, IBDAIControl, IBDWMModule
 	{
 		#region declarations
-		[KSPField(isPersistant = true)]
-		public bool pilotEnabled { get; protected set; }
+		public bool pilotEnabled => pilotOn;
+        // separate private field for pilot On, because properties cannot be KSPFields
+        [KSPField(isPersistant = true)]
+        public bool pilotOn;
         protected Vessel activeVessel;
 
 		public MissileFire weaponManager { get; protected set; }
@@ -94,7 +96,7 @@ namespace BDArmory.Control
 
 		public virtual void ActivatePilot()
 		{
-			pilotEnabled = true;
+			pilotOn = true;
             if (activeVessel)
                 activeVessel.OnFlyByWire -= autoPilot;
             activeVessel = vessel;
@@ -118,7 +120,7 @@ namespace BDArmory.Control
 
 		public virtual void DeactivatePilot()
 		{
-			pilotEnabled = false;
+			pilotOn = false;
             if (activeVessel)
                 activeVessel.OnFlyByWire -= autoPilot;
 			RefreshPartWindow();
