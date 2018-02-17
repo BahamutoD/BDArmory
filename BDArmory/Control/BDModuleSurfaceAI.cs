@@ -306,8 +306,11 @@ namespace BDArmory.Control
 
                     Vector3 vecToTarget = targetVessel.CoM - vessel.CoM;
                     float distance = vecToTarget.magnitude;
-                    // lead the target a bit, where 950f is a ballpark estimate of the average bullet velocity (gau 983, vulcan 950, .50 860)
-                    vecToTarget = targetVessel.PredictPosition(distance / 950f) - vessel.CoM;
+                    // lead the target a bit, where 1km/s is a ballpark estimate of the average bullet velocity
+                    float shotSpeed = 1000f;
+                    if (weaponManager?.selectedWeapon is ModuleWeapon wep)
+                        shotSpeed = wep.bulletVelocity;
+                    vecToTarget = targetVessel.PredictPosition(distance / shotSpeed) - vessel.CoM;
 
                     if (BroadsideAttack)
                     {
