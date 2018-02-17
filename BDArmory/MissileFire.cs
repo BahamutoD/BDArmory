@@ -744,6 +744,8 @@ namespace BDArmory
                     break;
                 }
                 aipilot.Dispose();
+
+                RefreshModules();
             }
         }
 
@@ -762,13 +764,13 @@ namespace BDArmory
                     if (BDArmorySettings.DRAW_DEBUG_LABELS) Debug.Log("[BDArmory]: Error OnPartDie: " + e.Message);
                 }                
             }
-            RefreshTargetingModules();
+            RefreshModules();
             UpdateList();
         }
 
         void OnVesselCreate(Vessel v)
         {
-            RefreshTargetingModules();
+            RefreshModules();
         }
 
         void OnPartJointBreak(PartJoint j, float breakForce)
@@ -780,7 +782,7 @@ namespace BDArmory
 
             if ((j.Parent && j.Parent.vessel == vessel) || (j.Child && j.Child.vessel == vessel))
             {
-                RefreshTargetingModules();
+                RefreshModules();
                 UpdateList();
             }
         }
@@ -2849,7 +2851,7 @@ namespace BDArmory
             return true;
         }
 
-        void RefreshTargetingModules()
+        void RefreshModules()
         {
             List<ModuleRadar>.Enumerator rad = radars.GetEnumerator();
             while (rad.MoveNext())
