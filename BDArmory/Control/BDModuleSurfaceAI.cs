@@ -505,6 +505,7 @@ namespace BDArmory.Control
 			}
 			else
 				DebugLine($"Target velocity: {targetVelocity}");
+            DebugLine($"engine thrust: {speedController.debugThrust}, wheel power: {motorControl.MaxAccel}");
 
 			speedController.targetSpeed = targetSpeed;
             motorControl.targetSpeed = targetSpeed;
