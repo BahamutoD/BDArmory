@@ -11,7 +11,7 @@ namespace BDArmory
     {
         public static Vector3 GetAirToGroundTarget(Vector3 targetPosition, Vessel missileVessel, float descentRatio)
         {
-            Vector3 upDirection = missileVessel.upAxis;
+            Vector3 upDirection = VectorUtils.GetUpDirection(missileVessel.CoM);
             //-FlightGlobals.getGeeForceAtPosition(targetPosition).normalized;
             Vector3 surfacePos = missileVessel.transform.position +
                                  Vector3.Project(targetPosition - missileVessel.transform.position, upDirection);
@@ -28,10 +28,13 @@ namespace BDArmory
                 return missileVessel.transform.position + (5*missileVessel.transform.forward) + (1*upDirection);
             }
 
-            Vector3 finalTarget = targetPosition +
-                                  (Mathf.Clamp(
-                                       (distanceToTarget - ((float) missileVessel.srfSpeed*descentRatio))*0.22f, 0, (float)missileVessel.altitude)*
-                                   upDirection);
+            float altitudeClamp = Mathf.Clamp(
+                (distanceToTarget - ((float) missileVessel.srfSpeed * descentRatio)) * 0.22f, 0,
+                (float) missileVessel.altitude);
+            
+            Debug.Log("AGM altitudeClamp =" + altitudeClamp);
+
+            Vector3 finalTarget = targetPosition + (altitudeClamp * upDirection.normalized);
 
 
             //Debug.Log("Using agm trajectory. " + Time.time);

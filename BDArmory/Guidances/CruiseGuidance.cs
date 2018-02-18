@@ -48,6 +48,7 @@ namespace BDArmory.Guidances
         private double _lastVerticalSpeed;
 
         private double _verticalAcceleration;
+        private bool terminalBallistic;
 
         public CruiseGuidance(MissileBase missile)
         {
@@ -62,18 +63,10 @@ namespace BDArmory.Guidances
         public Vector3 CalculateCruiseGuidance(Vector3 targetPosition)
         {
             //set up
-            if (_originalDistance == 0)
-            {
-                _startPoint = _missile.vessel.CoM;
-                _originalDistance = Vector3.Distance(targetPosition, _missile.vessel.CoM);
-
-                //calculating expected apogee bases on isosceles triangle
-            }
             if (_missile.TimeIndex < 1)
                 return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
 
             var upDirection = VectorUtils.GetUpDirection(_missile.vessel.CoM);
-
 
             var planarDirectionToTarget =
                 Vector3.ProjectOnPlane(targetPosition - _missile.vessel.CoM, upDirection).normalized;
@@ -104,11 +97,6 @@ namespace BDArmory.Guidances
             _missile.debugString.Append("verticalAcceleration=" + _verticalAcceleration);
             _missile.debugString.Append(Environment.NewLine);
 
-            var surfaceDistanceVector = Vector3
-                .Project(_missile.vessel.CoM - _startPoint, (targetPosition - _startPoint).normalized);
-
-            var pendingDistance = _originalDistance - surfaceDistanceVector.magnitude;
-
             GetTelemetryData();
 
 
@@ -125,13 +113,13 @@ namespace BDArmory.Guidances
                         break;
                     }
 
-                    CheckIfTerminal(pendingDistance);
+                    CheckIfTerminal(missileAltitude, targetPosition,upDirection);
 
                     return _missile.vessel.CoM + (planarDirectionToTarget.normalized + upDirection.normalized) * 10f;
 
                 case GuidanceState.Cruising:
 
-                    CheckIfTerminal(pendingDistance);
+                    CheckIfTerminal(missileAltitude, targetPosition, upDirection);
                     //Altitude control
                     UpdatePitch(missileAltitude);
                     UpdateThrottle();
@@ -143,57 +131,110 @@ namespace BDArmory.Guidances
                     _missile.debugString.Append($"Descending");
                     _missile.debugString.Append(Environment.NewLine);
 
-                    _missile.Throttle = Mathf.Clamp((float) (_missile.vessel.atmDensity * 10f), 0.01f, 1f);
+                    if (this.terminalBallistic)
+                    {
+                        _missile.Throttle = 0;
+                        return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
+                    }
+                    else
+                    {
+                        _missile.Throttle = Mathf.Clamp((float) (_missile.vessel.atmDensity * 10f), 0.01f, 1f);
 
-                    if (_missile is BDModularGuidance)
-                        if (_missile.vessel.InVacuum())
-                            return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
+                        if (_missile is BDModularGuidance)
+                            if (_missile.vessel.InVacuum())
+                                return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
 
-                    return MissileGuidance.GetAirToGroundTarget(targetPosition, _missile.vessel, 1.85f);
+                        float descentRatio = GetProperDescentRatio(missileAltitude);
+
+                        return MissileGuidance.GetAirToGroundTarget(targetPosition, _missile.vessel, descentRatio);
+                    }
+
+                  
             }
 
             return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
         }
+        private double CalculateFreeFallTime(double missileAltitude)
+        {
+            double vi = -_missile.vessel.verticalSpeed;
+            double a = 9.80665f;
+            double d = missileAltitude;
+
+            double time1 = (-vi + Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+            double time2 = (-vi - Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
+
+
+            return Math.Max(time1, time2);
+        }
+
+        private float GetProperDescentRatio(double missileAltitude)
+        {
+            float altitudePercentage = Mathf.Clamp01((float) (missileAltitude / 1000f));
+
+            return Mathf.Lerp(-1f, 1.85f, altitudePercentage);
+
+        }
 
         private void GetTelemetryData()
         {
-            if (Time.time - _lastDataRead < 0.1f)
-                return;
             _lastDataRead = Time.time;
 
-            _verticalAcceleration = (_missile.vessel.verticalSpeed - _lastVerticalSpeed)* 10f;
+            _verticalAcceleration = (_missile.vessel.verticalSpeed - _lastVerticalSpeed);
             _lastVerticalSpeed = _missile.vessel.verticalSpeed;
 
-            _horizontalAcceleration = (_missile.vessel.horizontalSrfSpeed - _lastHorizontalSpeed)*10;
+            _horizontalAcceleration = (_missile.vessel.horizontalSrfSpeed - _lastHorizontalSpeed);
             _lastHorizontalSpeed = _missile.vessel.horizontalSrfSpeed;
         }
 
-        private bool CheckIfTerminal(double pendingDistance)
+        private bool CheckIfTerminal(double altitude, Vector3 targetPosition, Vector3 upDirection)
         {
-            if (pendingDistance / _missile.vessel.horizontalSrfSpeed < 20f)
+            if (altitude < 100f)
             {
-                GuidanceState = GuidanceState.Terminal;
-                return true;
+                Vector3 surfacePos = this._missile.vessel.transform.position +
+                                     Vector3.Project(targetPosition - this._missile.vessel.transform.position, -upDirection);
+
+                float distanceToTarget = Vector3.Distance(surfacePos, targetPosition);
+
+                _missile.debugString.Append($"Distance to target" + distanceToTarget);
+                _missile.debugString.Append(Environment.NewLine);
+                double freefallTime = CalculateFreeFallTime(altitude);
+
+                _missile.debugString.Append($"freefallTime" + freefallTime);
+                _missile.debugString.Append(Environment.NewLine);
+
+                if (distanceToTarget < (freefallTime * _missile.vessel.horizontalSrfSpeed))
+                {
+                    GuidanceState = GuidanceState.Terminal;
+                    this.terminalBallistic = true;
+                    return true;
+                }
+                return false;
             }
-            return false;
+            else
+            {
+                 float distance = Vector3.Distance(targetPosition, _missile.vessel.CoM);
+
+                if (distance <= (2 * Mathf.Sqrt(2f) * altitude))
+                {
+                    GuidanceState = GuidanceState.Terminal;
+
+                    this.terminalBallistic = false;
+
+                    return true;
+                }
+                return false;
+            }
+           
         }
 
         private void UpdateThrottle()
         {
-            if (Time.time - _lastThrottleTimeDecision > 0.1f)
-            {
-                MakeDecisionAboutThrottle(_missile);
-                _lastThrottleTimeDecision = Time.time;
-            }
+           MakeDecisionAboutThrottle(_missile);
         }
 
         private void UpdatePitch(double missileAltitude)
         {
-            if (Time.time - _lastPitchTimeDecision > 0.1f)
-            {
-                MakeDecisionAboutPitch(_missile, missileAltitude);
-                _lastPitchTimeDecision = Time.time;
-            }
+            MakeDecisionAboutPitch(_missile, missileAltitude);         
         }
 
         private double GetCurrentAltitude(Vessel missileVessel, Vector3 planarDirectionToTarget, Vector3 upDirection)
@@ -232,10 +273,10 @@ namespace BDArmory.Guidances
             switch (ThrottleDecision)
             {
                 case ThrottleDecision.Increase:
-                    missile.Throttle = Mathf.Clamp(missile.Throttle + 0.001f, 0.001f, 1f);
+                    missile.Throttle = Mathf.Clamp(missile.Throttle + 0.001f, 0, 1f);
                     break;
                 case ThrottleDecision.Decrease:
-                    missile.Throttle = Mathf.Clamp(missile.Throttle - 0.001f, 0.001f, 1f);
+                    missile.Throttle = Mathf.Clamp(missile.Throttle - 0.001f, 0, 1f);
                     break;
                 case ThrottleDecision.Hold:
                     break;
@@ -269,10 +310,10 @@ namespace BDArmory.Guidances
             switch (PitchDecision)
             {
                 case PitchDecision.Ascent:
-                    _pitchAngle = Mathf.Clamp(_pitchAngle + 0.05f, -2.5f, 2.5f);
+                    _pitchAngle = Mathf.Clamp(_pitchAngle + 0.0055f, -1.5f, 1.5f);
                     break;
                 case PitchDecision.Descent:
-                    _pitchAngle = Mathf.Clamp(_pitchAngle - 0.025f, -2.5f, 2.5f);
+                    _pitchAngle = Mathf.Clamp(_pitchAngle - 0.0025f, -1.5f, 1.5f);
                     break;
                 case PitchDecision.Hold:
                     break;
@@ -280,16 +321,16 @@ namespace BDArmory.Guidances
         }
 
 
-        private double CalculateFutureAltitude(double currentAltitude, float futureTime = 5f)
+        private double CalculateFutureAltitude(double currentAltitude, float futureTime=2.5f)
         {
             return currentAltitude + _missile.vessel.verticalSpeed * futureTime +
-                   0.5f * _verticalAcceleration * Math.Pow(futureTime, 2);
+                   0.5f * (_verticalAcceleration/Time.fixedDeltaTime) * Math.Pow(futureTime, 2);
         }
 
 
         private double CalculateFutureSpeed(float futureTime = 5f)
         {
-            return _missile.vessel.horizontalSrfSpeed + _horizontalAcceleration * futureTime;
+            return _missile.vessel.horizontalSrfSpeed + (_horizontalAcceleration / Time.fixedDeltaTime) * futureTime;
         }
 
         private bool MissileWillReachAltitude(double currentAltitude)

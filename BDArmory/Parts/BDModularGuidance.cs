@@ -113,7 +113,10 @@ namespace BDArmory.Parts
             {
                 Fields["CruiseAltitude"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseSpeed"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseSpeed"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseAltitudeRange"].guiActive = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseAltitudeRange"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
             }
             if (Fields["BallisticOverShootFactor"] != null)
             {

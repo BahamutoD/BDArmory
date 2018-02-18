@@ -1038,5 +1038,27 @@ namespace BDArmory.Parts
             Debug.Log("[BDArmory]: Missile Collided - Triggering Detonation");
             Detonate();
         }
+
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Change to Low Altitude Range", active = true)]
+        public void CruiseAltitudeRange()
+        {
+            if (Events["CruiseAltitudeRange"].guiName == "Change to Low Altitude Range")
+            {
+                Events["CruiseAltitudeRange"].guiName = "Change to High Altitude Range";
+                UI_FloatRange armorFieldFlight = (UI_FloatRange) Fields["CruiseAltitude"].uiControlFlight;
+                armorFieldFlight.maxValue = 500f;
+                armorFieldFlight.minValue = 5f;
+                armorFieldFlight.stepIncrement = 5f;
+            }
+            else
+            {
+                Events["CruiseAltitudeRange"].guiName = "Change to Low Altitude Range";
+                UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["CruiseAltitude"].uiControlFlight;
+                armorFieldFlight.maxValue = 25000f;
+                armorFieldFlight.minValue = 500;
+                armorFieldFlight.stepIncrement = 500f;
+            }
+            this.part.RefreshAssociatedWindows();
+        }
     }
 }

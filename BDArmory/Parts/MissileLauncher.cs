@@ -516,11 +516,12 @@ namespace BDArmory.Parts
 
 			if(GuidanceMode != GuidanceModes.Cruise)
 			{
-				Fields["CruiseAltitude"].guiActive = false;
-                Fields["CruiseAltitude"].guiActiveEditor = false;
-
-                //Actions["GPS Target"].active = false;
-                //Fields["GPS Target"].guiActiveEditor = true;
+			    Fields["CruiseAltitude"].guiActive = false;
+			    Fields["CruiseAltitude"].guiActiveEditor = false;
+                Fields["CruiseSpeed"].guiActive = false;
+                Fields["CruiseSpeed"].guiActiveEditor = false;
+                Fields["CruiseAltitudeRange"].guiActive = false;
+                Fields["CruiseAltitudeRange"].guiActiveEditor = false;
 
             }
 
@@ -1032,7 +1033,7 @@ namespace BDArmory.Parts
                     }
                     else if (GuidanceMode == GuidanceModes.Cruise)
                     {
-                        this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
+                        CruiseGuidance();
                     }
                     else if (GuidanceMode == GuidanceModes.SLW)
                     {
@@ -1181,7 +1182,10 @@ namespace BDArmory.Parts
 
 			if(currentThrust * Throttle > 0)
 			{
-				part.rb.AddRelativeForce(currentThrust * Throttle * Vector3.forward);
+			    debugString.Append("Missile thrust=" + currentThrust * Throttle);
+			    debugString.Append(Environment.NewLine);
+
+                part.rb.AddRelativeForce(currentThrust * Throttle * Vector3.forward);
 			}
 		}
 
@@ -1547,41 +1551,10 @@ namespace BDArmory.Parts
 		void CruiseGuidance()
 		{
 			Vector3 cruiseTarget = Vector3.zero;
-			float distanceSqr = (TargetPosition - transform.position).sqrMagnitude;
 
-			if(terminalManeuvering && distanceSqr < terminalGuidanceDistance * terminalGuidanceDistance)
-			{
-				cruiseTarget = MissileGuidance.GetTerminalManeuveringTarget(TargetPosition, vessel, CruiseAltitude);
-                debugString.Append($"Terminal Maneuvers");
-                debugString.Append(Environment.NewLine);
-            }
-			else
-			{
-                float agmThreshDistSqr = 2500 * 2500;
-				if(distanceSqr < agmThreshDistSqr)
-				{
-					if(!MissileGuidance.GetBallisticGuidanceTarget(TargetPosition, vessel, true, out cruiseTarget))
-					{
-						cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, agmDescentRatio);
-					}
-				
-                    debugString.Append($"Descending On Target");
-                    debugString.Append(Environment.NewLine);
-                }
-				else
-				{
-					cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-                    debugString.Append($"Cruising");
-                    debugString.Append(Environment.NewLine);
-                }
-			}
-					
-			//float clampedSpeed = Mathf.Clamp((float)vessel.srfSpeed, 1, 1000);
-			//float limitAoA = Mathf.Clamp(3500 / clampedSpeed, 5, maxAoA);
+		    cruiseTarget = this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
 
-			//debugString += "\n limitAoA: "+limitAoA.ToString("0.0");
-
-			Vector3 upDirection = VectorUtils.GetUpDirection(transform.position);
+            Vector3 upDirection = VectorUtils.GetUpDirection(transform.position);
 
 			//axial rotation
 			if(rotationTransform)
@@ -1602,13 +1575,9 @@ namespace BDArmory.Parts
 				rotationTransform.rotation = finalRotation;
 
 				vesselReferenceTransform.rotation = Quaternion.LookRotation(-rotationTransform.up, rotationTransform.forward);
-			}
-			
+			}		
 			DoAero(cruiseTarget);
 			CheckMiss();
-
-			debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
-            debugString.Append(Environment.NewLine);
 		}
 
 		void AAMGuidance()
