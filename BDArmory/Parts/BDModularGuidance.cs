@@ -115,9 +115,10 @@ namespace BDArmory.Parts
                 Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseSpeed"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseSpeed"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
-                Fields["CruiseAltitudeRange"].guiActive = GuidanceMode == GuidanceModes.Cruise;
-                Fields["CruiseAltitudeRange"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Events["CruiseAltitudeRange"].guiActive = GuidanceMode == GuidanceModes.Cruise;
+                Events["CruiseAltitudeRange"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
             }
+
             if (Fields["BallisticOverShootFactor"] != null)
             {
                 Fields["BallisticOverShootFactor"].guiActive = GuidanceMode == GuidanceModes.AGMBallistic;
@@ -134,9 +135,7 @@ namespace BDArmory.Parts
                 CheckDetonationDistance();
                 CheckDelayedFired();
                 CheckNextStage();
-
-               
-
+     
                 if (isTimed && TimeIndex > detonationTime)
                 {
                     AutoDestruction();
