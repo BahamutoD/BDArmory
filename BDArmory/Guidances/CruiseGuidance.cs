@@ -133,7 +133,7 @@ namespace BDArmory.Guidances
 
                     if (this.terminalBallistic)
                     {
-                        _missile.Throttle = 0;
+                        UpdateThrottle();
                         return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
                     }
                     else

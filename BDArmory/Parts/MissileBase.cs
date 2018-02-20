@@ -1045,18 +1045,19 @@ namespace BDArmory.Parts
             if (Events["CruiseAltitudeRange"].guiName == "Change to Low Altitude Range")
             {
                 Events["CruiseAltitudeRange"].guiName = "Change to High Altitude Range";
-                UI_FloatRange armorFieldFlight = (UI_FloatRange) Fields["CruiseAltitude"].uiControlFlight;
-                armorFieldFlight.maxValue = 500f;
-                armorFieldFlight.minValue = 5f;
-                armorFieldFlight.stepIncrement = 5f;
+
+                UI_FloatRange cruiseAltitudField = (UI_FloatRange) Fields["CruiseAltitude"].uiControlEditor;
+                cruiseAltitudField.maxValue = 500f;
+                cruiseAltitudField.minValue = 5f;
+                cruiseAltitudField.stepIncrement = 5f;
             }
             else
             {
                 Events["CruiseAltitudeRange"].guiName = "Change to Low Altitude Range";
-                UI_FloatRange armorFieldFlight = (UI_FloatRange)Fields["CruiseAltitude"].uiControlFlight;
-                armorFieldFlight.maxValue = 25000f;
-                armorFieldFlight.minValue = 500;
-                armorFieldFlight.stepIncrement = 500f;
+                UI_FloatRange cruiseAltitudField = (UI_FloatRange)Fields["CruiseAltitude"].uiControlEditor;
+                cruiseAltitudField.maxValue = 25000f;
+                cruiseAltitudField.minValue = 500;
+                cruiseAltitudField.stepIncrement = 500f;
             }
             this.part.RefreshAssociatedWindows();
         }

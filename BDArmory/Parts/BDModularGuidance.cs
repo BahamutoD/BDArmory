@@ -44,7 +44,7 @@ namespace BDArmory.Parts
         public string GuidanceLabel = "AGM/STS";
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
-        private string _targetingLabel = TargetingModes.None.ToString();
+        private string _targetingLabel = TargetingModes.Radar.ToString();
 
         [KSPField(isPersistant = true)]
         public int GuidanceIndex = 2;
