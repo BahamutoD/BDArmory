@@ -50,6 +50,9 @@ namespace BDArmory.Guidances
         private double _verticalAcceleration;
         private bool terminalBallistic;
 
+        private Vector3 planarDirectionToTarget;
+        private Vector3 upDirection;
+
         public CruiseGuidance(MissileBase missile)
         {
             _missile = missile;
@@ -66,9 +69,9 @@ namespace BDArmory.Guidances
             if (_missile.TimeIndex < 1)
                 return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
 
-            var upDirection = VectorUtils.GetUpDirection(_missile.vessel.CoM);
+            upDirection = VectorUtils.GetUpDirection(_missile.vessel.CoM);
 
-            var planarDirectionToTarget =
+            planarDirectionToTarget =
                 Vector3.ProjectOnPlane(targetPosition - _missile.vessel.CoM, upDirection).normalized;
 
             // Ascending
@@ -241,13 +244,23 @@ namespace BDArmory.Guidances
         {
             var currentRadarAlt = MissileGuidance.GetRadarAltitude(missileVessel);
             var tRayDirection = planarDirectionToTarget * 10 - 10 * upDirection;
-            var terrainRay = new Ray(missileVessel.transform.position, tRayDirection);
+            return CalculateAltitude(missileVessel.CoM, upDirection, currentRadarAlt, tRayDirection);
+        }
+        private double GetCurrentAltitudeAtPosition(Vector3 position, Vector3 planarDirectionToTarget, Vector3 upDirection)
+        {
+            var currentRadarAlt = MissileGuidance.GetRadarAltitudeAtPos(position);
+            var tRayDirection = planarDirectionToTarget * 10 - 10 * upDirection;
+            return CalculateAltitude(position, upDirection, currentRadarAlt, tRayDirection);
+        }
+        private static double CalculateAltitude(Vector3 position, Vector3 upDirection, float currentRadarAlt, Vector3 tRayDirection)
+        {
+            var terrainRay = new Ray(position, tRayDirection);
             RaycastHit rayHit;
 
             if (Physics.Raycast(terrainRay, out rayHit, 30000, (1 << 15) | (1 << 17)))
             {
                 var detectedAlt =
-                    Vector3.Project(rayHit.point - missileVessel.transform.position, upDirection).magnitude;
+                    Vector3.Project(rayHit.point - position, upDirection).magnitude;
 
                 return Mathf.Min(detectedAlt, currentRadarAlt);
             }
@@ -288,7 +301,7 @@ namespace BDArmory.Guidances
         private void MakeDecisionAboutPitch(MissileBase missile, double missileAltitude)
         {
 
-            _futureAltitude = CalculateFutureAltitude(missileAltitude);
+            _futureAltitude = CalculateFutureAltitude();
 
             PitchDecision futureDecision;
 
@@ -321,16 +334,18 @@ namespace BDArmory.Guidances
         }
 
 
-        private double CalculateFutureAltitude(double currentAltitude, float futureTime=2.5f)
+        private double CalculateFutureAltitude()
         {
-            return currentAltitude + _missile.vessel.verticalSpeed * futureTime +
-                   0.5f * (_verticalAcceleration/Time.fixedDeltaTime) * Math.Pow(futureTime, 2);
+            Vector3 futurePosition = _missile.vessel.CoM + _missile.vessel.Velocity()*_missile.CruisePredictionTime
+                + 0.5f * _missile.vessel.acceleration_immediate *Math.Pow(_missile.CruisePredictionTime, 2);
+
+            return GetCurrentAltitudeAtPosition(futurePosition,planarDirectionToTarget, upDirection);
         }
 
 
-        private double CalculateFutureSpeed(float futureTime = 5f)
+        private double CalculateFutureSpeed()
         {
-            return _missile.vessel.horizontalSrfSpeed + (_horizontalAcceleration / Time.fixedDeltaTime) * futureTime;
+            return _missile.vessel.horizontalSrfSpeed + (_horizontalAcceleration / Time.fixedDeltaTime) * _missile.CruisePredictionTime;
         }
 
         private bool MissileWillReachAltitude(double currentAltitude)

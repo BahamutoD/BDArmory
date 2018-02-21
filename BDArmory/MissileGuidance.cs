@@ -462,6 +462,18 @@ namespace BDArmory
             return radarAlt;
         }
 
+        public static float GetRadarAltitudeAtPos(Vector3 position)
+        {
+            double latitudeAtPos = FlightGlobals.currentMainBody.GetLatitude(position);
+            double longitudeAtPos = FlightGlobals.currentMainBody.GetLongitude(position);
+
+            float radarAlt = Mathf.Clamp(
+                (float) (FlightGlobals.currentMainBody.GetAltitude(position) -
+                         FlightGlobals.currentMainBody.TerrainAltitude(latitudeAtPos, longitudeAtPos)), 0,
+                (float) FlightGlobals.currentMainBody.GetAltitude(position));
+            return radarAlt;
+        }
+
         public static float GetRaycastRadarAltitude(Vector3 position)
         {
             Vector3 upDirection = -FlightGlobals.getGeeForceAtPosition(position).normalized;

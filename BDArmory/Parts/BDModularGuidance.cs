@@ -111,12 +111,14 @@ namespace BDArmory.Parts
 
             if (Fields["CruiseAltitude"] != null)
             {
+                CruiseAltitudeRange();
                 Fields["CruiseAltitude"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseSpeed"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseSpeed"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
                 Events["CruiseAltitudeRange"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Events["CruiseAltitudeRange"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruisePredictionTime"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
             }
 
             if (Fields["BallisticOverShootFactor"] != null)
@@ -345,6 +347,7 @@ namespace BDArmory.Parts
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory]: OnStart missile " + shortName + ": setting default locktrackcurve with maxrange/minrcs: " + activeRadarLockTrackCurve.maxTime + "/" + RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
             }
+           
 
             this._cruiseGuidance = new CruiseGuidance(this);
         }

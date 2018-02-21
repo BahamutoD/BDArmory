@@ -516,12 +516,14 @@ namespace BDArmory.Parts
 
 			if(GuidanceMode != GuidanceModes.Cruise)
 			{
-			    Fields["CruiseAltitude"].guiActive = false;
+			    CruiseAltitudeRange();
+                Fields["CruiseAltitude"].guiActive = false;
 			    Fields["CruiseAltitude"].guiActiveEditor = false;
                 Fields["CruiseSpeed"].guiActive = false;
                 Fields["CruiseSpeed"].guiActiveEditor = false;
                 Fields["CruiseAltitudeRange"].guiActive = false;
                 Fields["CruiseAltitudeRange"].guiActiveEditor = false;
+			    Fields["CruisePredictionTime"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
 
             }
 

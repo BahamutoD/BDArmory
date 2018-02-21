@@ -110,11 +110,14 @@ namespace BDArmory.Parts
          UI_FloatRange(minValue = 0.5f, maxValue = 1.5f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
         public float BallisticOverShootFactor = 0.7f;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"), UI_FloatRange(minValue = 10f, maxValue = 20000f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"), UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float CruiseAltitude = 500;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"), UI_FloatRange(minValue = 100f, maxValue = 2000f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float CruiseSpeed = 300;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise prediction time"), UI_FloatRange(minValue = 1f, maxValue = 10f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public float CruisePredictionTime = 5;
 
         [KSPField]
         public float missileRadarCrossSection = RadarUtils.RCS_MISSILES;            // radar cross section of this missile for detection purposes
@@ -1048,7 +1051,7 @@ namespace BDArmory.Parts
 
                 UI_FloatRange cruiseAltitudField = (UI_FloatRange) Fields["CruiseAltitude"].uiControlEditor;
                 cruiseAltitudField.maxValue = 500f;
-                cruiseAltitudField.minValue = 5f;
+                cruiseAltitudField.minValue = 1f;
                 cruiseAltitudField.stepIncrement = 5f;
             }
             else
