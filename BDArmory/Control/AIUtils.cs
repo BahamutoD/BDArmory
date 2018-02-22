@@ -105,9 +105,9 @@ namespace BDArmory.Control
 			/// <param name="vehicleType">Movement type of the vehicle (surface/land)</param>
 			/// <param name="maxSlopeAngle">The highest slope angle (in degrees) the vessel can traverse in a straight line</param>
 			/// <returns>List of geo coordinate vectors of waypoints to traverse in straight lines to reach the destination</returns>
-            public List<Vector3> Pathfind(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+            public List<Vector3> Pathfind(Vector3 start, Vector3 end, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float minObstacleMass)
 			{
-				checkGrid(start, body, vehicleType, maxSlopeAngle, 
+				checkGrid(start, body, vehicleType, maxSlopeAngle, minObstacleMass,
 					Mathf.Clamp(VectorUtils.GeoDistance(start, end, body) / 20, GridSizeDefault, GridSizeDefault * 5));
 
 				Coords startCoords = getGridCoord(start);
@@ -240,9 +240,9 @@ namespace BDArmory.Control
 			/// </summary>
 			/// <param name="startGeo">start point in Lat,Long,Alt form</param>
 			/// <param name="endGeo">end point, in Lat,Long,Alt form</param>
-            public bool TraversableStraightLine(Vector3 startGeo, Vector3 endGeo, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle)
+            public bool TraversableStraightLine(Vector3 startGeo, Vector3 endGeo, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float minObstacleMass)
 			{
-				checkGrid(startGeo, body, vehicleType, maxSlopeAngle);
+				checkGrid(startGeo, body, vehicleType, maxSlopeAngle, minObstacleMass);
 				return TraversableStraightLine(startGeo, endGeo);
 			}
 
@@ -254,7 +254,7 @@ namespace BDArmory.Control
 				return straightPath(location[0], location[1], endPos[0], endPos[1]);
 			}
 
-			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float gridSize = GridSizeDefault)
+			private void checkGrid(Vector3 origin, CelestialBody body, VehicleMovementType vehicleType, float maxSlopeAngle, float minMass, float gridSize = GridSizeDefault)
 			{
 				if (grid == null || VectorUtils.GeoDistance(this.origin, origin, body) > rebuildDistance || Mathf.Abs(gridSize-GridSize) > 100 ||
 					this.body != body || movementType != vehicleType || this.maxSlopeAngle != maxSlopeAngle * Mathf.Deg2Rad)
@@ -269,7 +269,7 @@ namespace BDArmory.Control
 					grid = new Dictionary<Coords, Cell>();
 					cornerAlts = new Dictionary<Coords, float>();
 				}
-				includeDebris();
+				includeDebris(minMass);
 			}
 
 			private Cell getCellAt(int x, int y) => getCellAt(new Coords(x, y));
@@ -286,13 +286,13 @@ namespace BDArmory.Control
 			/// <summary>
 			/// Check all debris on the ground, and mark those squares impassable.
 			/// </summary>
-			private void includeDebris()
+			private void includeDebris(float minMass)
 			{
 				using (var vs = BDATargetManager.LoadedVessels.GetEnumerator())
 					while (vs.MoveNext())
 					{
 						if ((vs.Current == null || vs.Current.vesselType != VesselType.Debris || vs.Current.IsControllable || !vs.Current.LandedOrSplashed
-							|| vs.Current.mainBody.GetAltitude(vs.Current.CoM) < MinDepth)) continue;
+							|| vs.Current.mainBody.GetAltitude(vs.Current.CoM) < MinDepth || vs.Current.GetTotalMass() < minMass)) continue;
 
 						var debrisPos = getGridLocation(VectorUtils.WorldPositionToGeoCoords(vs.Current.CoM, body));
                         var coordArray = new List<Coords>

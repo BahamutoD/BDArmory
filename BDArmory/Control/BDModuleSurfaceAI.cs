@@ -7,6 +7,11 @@ using BDArmory.UI;
 using BDArmory.Core;
 using UnityEngine;
 
+/*
+ * TODO:
+ * Rewrite wheel control to use an adaptive controller rather than power estimation
+ */
+
 namespace BDArmory.Control
 {
 	public class BDModuleSurfaceAI : BDGenericAIBase, IBDAIControl
@@ -104,7 +109,15 @@ namespace BDArmory.Control
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max engagement range"),
 			UI_FloatRange(minValue = 500f, maxValue = 8000f, stepIncrement = 100f, scene = UI_Scene.All)]
 		public float MaxEngagementRange = 4000;
-        
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "RCS active"),
+            UI_Toggle(enabledText = "Maneuvers", disabledText = "Combat", scene = UI_Scene.All),]
+        public bool ManeuverRCS = false;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min obstacle mass", advancedTweakable = true),
+            UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.All),]
+        public float AvoidMass = 0f;
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Goes up to ", advancedTweakable = true),
             UI_Toggle(enabledText = "eleven", disabledText = "ten", scene = UI_Scene.All), ]
         public bool UpToEleven = false;
@@ -121,6 +134,7 @@ namespace BDArmory.Control
             { nameof(steerDamping), 100f },
             { nameof(MinEngagementRange), 20000f },
             { nameof(MaxEngagementRange), 30000f },
+            { nameof(AvoidMass), 1000000f },
         };
 		#endregion
 
@@ -143,8 +157,10 @@ namespace BDArmory.Control
 <b>Attack vector</b> - does the vessel attack from the front or the sides
 <b>Min engagement range</b> - AI will try to move away from oponents if closer than this range
 <b>Max engagement range</b> - AI will prioritize getting closer over attacking when beyond this range
+<b>RCS active</b> - Use RCS during any maneuvers, or only in combat
 " + (GameSettings.ADVANCED_TWEAKABLES ?
-@"<b>Goes up to</b> - Increases variable limits, no direct effect on behaviour
+@"<b>Min obstacle mass</b> - Obstacles of a lower mass than this will be ignored instead of avoided
+<b> Goes up to</b> - Increases variable limits, no direct effect on behaviour
 " : "");
 		}
 		#endregion
@@ -268,7 +284,8 @@ namespace BDArmory.Control
                     while (vs.MoveNext())
                     {
                         if (vs.Current == null || vs.Current == vessel) continue;
-                        if (!vs.Current.LandedOrSplashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel)
+                        if (!vs.Current.LandedOrSplashed || vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel
+                            || vs.Current.GetTotalMass() < AvoidMass)
                             continue;
                         dodgeVector = PredictCollisionWithVessel(vs.Current, 5f * predictMult, 0.5f);
                         if (dodgeVector != null) break;
@@ -319,7 +336,7 @@ namespace BDArmory.Control
                                 && !pathingMatrix.TraversableStraightLine(
                                         VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                                         VectorUtils.WorldPositionToGeoCoords(vessel.PredictPosition(10), vessel.mainBody),
-                                        vessel.mainBody, SurfaceType, MaxSlopeAngle))
+                                        vessel.mainBody, SurfaceType, MaxSlopeAngle, AvoidMass))
                             sideSlipDirection = -Math.Sign(Vector3.Dot(vesselTransform.up, sideVector)); // switch sides if we're running ashore
                         sideVector *= sideSlipDirection;
 
@@ -445,7 +462,8 @@ namespace BDArmory.Control
 		{
 			// enable RCS if we're in combat
 			vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, weaponManager && targetVessel && !BDArmorySettings.PEACE_MODE
-				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange) || weaponManager.underFire || weaponManager.missileIsIncoming);
+				&& (weaponManager.selectedWeapon != null || (vessel.CoM - targetVessel.CoM).sqrMagnitude < MaxEngagementRange * MaxEngagementRange) 
+                || weaponManager.underFire || weaponManager.missileIsIncoming);
 
 			// if weaponManager thinks we're under fire, do the evasive dance
 			if (weaponManager.underFire || weaponManager.missileIsIncoming)
@@ -560,7 +578,10 @@ namespace BDArmory.Control
             s.pitch = ((aimingMode ? 0.02f : 0.015f) * steerMult * pitchError) - (steerDamping * -localAngVel.x);
 			s.yaw = (((aimingMode ? 0.007f : 0.005f) * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z)) * driftMult;
             s.wheelSteer = -(((aimingMode? 0.005f : 0.003f) * steerMult * yawError) - (steerDamping * 0.1f * -localAngVel.z));
-		}
+
+            if (ManeuverRCS && (Mathf.Abs(s.roll) >= 1 || Mathf.Abs(s.pitch) >= 1 || Mathf.Abs(s.yaw) >= 1))
+                vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+        }
 
 		#endregion
 
@@ -618,14 +639,14 @@ namespace BDArmory.Control
             if(!pathingMatrix.TraversableStraightLine(
                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                     VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                    vessel.mainBody, SurfaceType, MaxSlopeAngle))
+                    vessel.mainBody, SurfaceType, MaxSlopeAngle, AvoidMass))
             {
                 bypassTarget = target;
                 bypassTargetPos = VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody);
                 waypoints = pathingMatrix.Pathfind(
                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
                     VectorUtils.WorldPositionToGeoCoords(target.CoM, vessel.mainBody),
-                    vessel.mainBody, SurfaceType, MaxSlopeAngle);
+                    vessel.mainBody, SurfaceType, MaxSlopeAngle, AvoidMass);
                 if (VectorUtils.GeoDistance(waypoints[waypoints.Count - 1], bypassTargetPos, vessel.mainBody) < 200)
                     waypoints.RemoveAt(waypoints.Count - 1);
                 if (waypoints.Count > 0)
@@ -639,7 +660,7 @@ namespace BDArmory.Control
         {
             waypoints = pathingMatrix.Pathfind(
                                     VectorUtils.WorldPositionToGeoCoords(vessel.CoM, vessel.mainBody),
-                                    destination, vessel.mainBody, SurfaceType, MaxSlopeAngle);
+                                    destination, vessel.mainBody, SurfaceType, MaxSlopeAngle, AvoidMass);
             intermediatePositionGeo = waypoints[0];
         }
 
