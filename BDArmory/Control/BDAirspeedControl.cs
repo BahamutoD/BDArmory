@@ -215,57 +215,20 @@ namespace BDArmory.Control
     {
         public float targetSpeed;
         public Vessel vessel;
-        public float MaxAccel { get; private set; }
+        public bool preventNegativeZeroPoint = false;
 
         private float lastThrottle;
-        private float lastTargetSpeed;
-        private float stockPower;
-        private float stockResponse;
-        private float avResponse;
-        private float impliedDrag;
+        public float zeroPoint { get; private set; }
 
-        // circuitous way to interact with KSPWheel using reflection
-        private int kspwheelTorqueCheckCountdown;
-        private bool kspwheelLoaded;
-        private float kspwheelPower;
-        private MethodInfo findKSPWBaseModule;
-        private PropertyInfo kspwWheelState;
-        private FieldInfo kspwTorqueOutput;
-
-        public void Start()
-        {
-            // Check if KSPWheel is loaded. Get the useful stuff from it if it is.
-            using (var assemblies = ((IEnumerable<Assembly>)AppDomain.CurrentDomain.GetAssemblies()).GetEnumerator())
-                while (assemblies.MoveNext())
-                {
-                    if (assemblies.Current.GetName().Name == "KSPWheel")
-                    {
-                        Type kspWheelMotor = assemblies.Current.GetType("KSPWheel.KSPWheelMotor");
-                        Type kspWheelBase = assemblies.Current.GetType("KSPWheel.KSPWheelBase");
-
-                        if (kspWheelBase == null || kspWheelMotor == null)
-                            {
-                                Debug.Log("KSPWheel found, but some modules are not present. AI may use KSPWheel based assets improperly.");
-                                break;
-                            }
-                        else
-                            kspwheelLoaded = true;
-
-                        findKSPWBaseModule = typeof(Part).GetMethod("FindModuleImplementing").MakeGenericMethod(kspWheelBase);
-                        kspwWheelState = kspWheelBase.GetProperty("wheelState");
-                        kspwTorqueOutput = kspWheelMotor.GetField("torqueOutput");
-
-                        break;
-                    }
-                }
-        }
+        private const float gain = 0.5f;
+        private const float zeroMult = 0.02f;
 
         public void Activate()
         {
             vessel.OnFlyByWire -= SpeedControl;
             vessel.OnFlyByWire += SpeedControl;
-            maxTorque();
-            calculatePower();
+            zeroPoint = 0;
+            lastThrottle = 0;
         }
 
         public void Deactivate()
@@ -275,7 +238,7 @@ namespace BDArmory.Control
 
         void SpeedControl(FlightCtrlState s)
         {
-            if (!vessel.Landed)
+            if (!vessel.LandedOrSplashed)
                 s.wheelThrottle = 0;
             else if (targetSpeed == 0)
             {
@@ -284,91 +247,13 @@ namespace BDArmory.Control
             }
             else
             {
-                if (targetSpeed != lastTargetSpeed)
-                {
-                    lastTargetSpeed = targetSpeed;
-                    calculatePower();
-                }
-                else if (--kspwheelTorqueCheckCountdown <= 0)
-                {
-                    calculateKSPWheelPower();
-                    kspwheelTorqueCheckCountdown = 12;
-                }
-
-                if (MaxAccel == 0)
-                {
-                    s.wheelThrottle = 1;
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
-                    return;
-                }
-
-                impliedDrag = (impliedDrag * 3 + Vector3.Dot(vessel.acceleration, vessel.transform.up) - MaxAccel * lastThrottle) / 4;
-                float throttle = ((targetSpeed - (float)vessel.srfSpeed) * avResponse / 3 - impliedDrag) / MaxAccel;
+                float throttle = zeroPoint + (targetSpeed - (float)vessel.srfSpeed) * gain;
                 lastThrottle = Mathf.Clamp(throttle, -1, 1);
+                zeroPoint = (zeroPoint + lastThrottle * zeroMult) * (1 - zeroMult) ;
+                if (preventNegativeZeroPoint && zeroPoint < 0) zeroPoint = 0;
                 s.wheelThrottle = lastThrottle;
                 vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, throttle < -5f);
             }
-        }
-
-        void calculatePower()
-        {
-            // this will fail for non-decreasing curves, but most will probably be decreasing
-            stockPower = 0;
-            stockResponse = 0;
-            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotor>().GetEnumerator())
-                while (m.MoveNext())
-                {
-                    if (m.Current.state <= 0) continue;
-                    var singlePower = m.Current.torqueCurve.Evaluate(targetSpeed);
-                    stockPower  += singlePower;
-                    stockResponse += m.Current.driveResponse * singlePower;
-                }
-            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotorSteering>().GetEnumerator())
-                while (m.MoveNext())
-                {
-                    if (m.Current.state <= 0) continue;
-                    var singlePower = m.Current.torqueCurve.Evaluate(targetSpeed);
-                    stockPower += singlePower;
-                    stockResponse += m.Current.driveResponse * singlePower;
-                }
-
-            calculateKSPWheelPower();
-        }
-
-        void calculateKSPWheelPower()
-        {
-            kspwheelPower = 0;
-
-            // if KSPWheel is loaded, check for KSPWheel wheels too
-            // since I could not figure out a way to estimate torque, just taking the current one
-            if (kspwheelLoaded)
-                using (var m = vessel.FindPartModulesImplementing<PartModule>().GetEnumerator())
-                    while (m.MoveNext())
-                    {
-                        if (!(m.Current.moduleName == "KSPWheelMotor" || m.Current.moduleName == "KSPWheelTracks")) continue;
-                        if ((int)kspwWheelState.GetValue(findKSPWBaseModule.Invoke(m.Current.part, null), null) != 2) continue; // check is wheel is not broken or retracted
-                        kspwheelPower = Mathf.Abs((float)kspwTorqueOutput.GetValue(m.Current));
-                    }
-
-            if (lastThrottle > 0)
-                kspwheelPower /= lastThrottle;
-
-            MaxAccel = (stockPower + kspwheelPower) / (float)vessel.totalMass;
-            avResponse = (stockResponse + kspwheelPower) / (stockPower + kspwheelPower);
-        }
-
-        void maxTorque()
-        {
-            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotor>().GetEnumerator())
-                while (m.MoveNext())
-                {
-                    m.Current.autoTorque = false;
-                }
-            using (var m = vessel.FindPartModulesImplementing<ModuleWheels.ModuleWheelMotorSteering>().GetEnumerator())
-                while (m.MoveNext())
-                {
-                    m.Current.autoTorque = false;
-                }
         }
     }
 }

@@ -7,11 +7,6 @@ using BDArmory.UI;
 using BDArmory.Core;
 using UnityEngine;
 
-/*
- * TODO:
- * Rewrite wheel control to use an adaptive controller rather than power estimation
- */
-
 namespace BDArmory.Control
 {
 	public class BDModuleSurfaceAI : BDGenericAIBase, IBDAIControl
@@ -523,11 +518,10 @@ namespace BDArmory.Control
 			}
 			else
 				DebugLine($"Target velocity: {targetVelocity}");
-            DebugLine($"engine thrust: {speedController.debugThrust}, wheel power: {motorControl.MaxAccel}");
+            DebugLine($"engine thrust: {speedController.debugThrust}, motor zero: {motorControl.zeroPoint}");
 
-			speedController.targetSpeed = targetSpeed;
-            motorControl.targetSpeed = targetSpeed;
-            speedController.useBrakes = speedController.debugThrust > 0 || motorControl.MaxAccel == 0;
+            speedController.targetSpeed = motorControl.targetSpeed = targetSpeed;
+            speedController.useBrakes = motorControl.preventNegativeZeroPoint = speedController.debugThrust > 0;
         }
 
 		void AttitudeControl(FlightCtrlState s)
