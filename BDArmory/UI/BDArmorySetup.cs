@@ -119,6 +119,7 @@ namespace BDArmory.UI
         GUIStyle targetModeStyle;
         GUIStyle targetModeStyleSelected;
         GUIStyle redErrorStyle;
+        GUIStyle redErrorShadowStyle;
 
         public enum BDATeams
         {
@@ -364,7 +365,9 @@ namespace BDArmory.UI
             redErrorStyle.fontStyle = FontStyle.Bold;
             redErrorStyle.fontSize = 22;
             redErrorStyle.alignment = TextAnchor.UpperCenter;
-            Rect cLabelRect = new Rect(0, Screen.height / 6, Screen.width, 100);
+
+            redErrorShadowStyle = new GUIStyle(redErrorStyle);
+            redErrorShadowStyle.normal.textColor = new Color(0, 0, 0, 0.75f);
             //
 
             using (var a = AppDomain.CurrentDomain.GetAssemblies().ToList().GetEnumerator())
@@ -648,9 +651,12 @@ namespace BDArmory.UI
                     // big error messages for missing dependencies
                     if (!ModuleManagerLoaded || !PhysicsRangeExtenderLoaded)
                     {
+                        string message = (ModuleManagerLoaded ? "Physics Range Extender" : "Module Manager")
+                            + " is missing. BDA will not work properly.";
+                        GUI.Label(new Rect(0 + 2, Screen.height / 6 + 2, Screen.width, 100),
+                            message, redErrorShadowStyle);
                         GUI.Label(new Rect(0, Screen.height / 6, Screen.width, 100),
-                            (ModuleManagerLoaded ? "Physics Range Extender" : "Module Manager")
-                            + " is missing. BDA will not work properly.", redErrorStyle);
+                            message , redErrorStyle);
                     }
                 }
             }
