@@ -1529,11 +1529,7 @@ namespace BDArmory
             //AI control
             if (aiControlled && !slaved)
             {
-                if (legacyTargetVessel)
-                {
-                    targetPosition += legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
-                }
-                else if (!targetAcquired)
+                if (!targetAcquired)
                 {
                     autoFire = false;
                     return;
@@ -1998,7 +1994,6 @@ namespace BDArmory
                     targetPosition = legacyTargetVessel.CoM;
                     targetVelocity = legacyTargetVessel.Velocity();
                     targetAcceleration = legacyTargetVessel.acceleration;
-                    targetPosition += targetVelocity * Time.fixedDeltaTime;
                     targetAcquired = true;
                     return;
                 }
