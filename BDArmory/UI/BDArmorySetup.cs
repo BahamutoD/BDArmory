@@ -373,13 +373,10 @@ namespace BDArmory.UI
             using (var a = AppDomain.CurrentDomain.GetAssemblies().ToList().GetEnumerator())
                 while (a.MoveNext())
                 {
-                    Debug.Log($"assembly: {a.Current.FullName}");
-
                     string name = a.Current.FullName.Split(new char[1] { ',' })[0];
                     switch (name)
                     {
                         case "ModuleManager":
-                            Debug.Log("ModuleManager found");
                             ModuleManagerLoaded = true;
                             break;
                         case "PhysicsRangeExtender":
