@@ -557,14 +557,13 @@ namespace BDArmory.UI
 
         void GetWeaponManager()
         {
-            List<MissileFire>.Enumerator mf = FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-            while (mf.MoveNext())
-            {
-                if (mf.Current == null) continue;
-                ActiveWeaponManager = mf.Current;
-                return;
-            }
-            mf.Dispose();
+            using (List<MissileFire>.Enumerator mf = FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                while (mf.MoveNext())
+                {
+                    if (mf.Current == null) continue;
+                    ActiveWeaponManager = mf.Current;
+                    return;
+                }
             ActiveWeaponManager = null;
             return;
         }
