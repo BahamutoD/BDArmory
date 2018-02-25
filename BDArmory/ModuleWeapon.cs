@@ -205,15 +205,15 @@ namespace BDArmory
             return string.Empty;
         }
 
-#if DEBUG
+        #if DEBUG
         Vector3 relVelAdj;
         Vector3 accAdj;
         Vector3 gravAdj;
-#endif
+        #endif
 
-#endregion
+        #endregion
 
-#region KSPFields
+        #region KSPFields
 
         [KSPField]
         public string shortName = string.Empty;
@@ -454,9 +454,9 @@ namespace BDArmory
             //Debug.Log("incrementing ripple index to: " + weaponManager.gunRippleIndex);
         }
         
-#endregion
+        #endregion
 
-#region KSPActions
+        #region KSPActions
 
         [KSPAction("Toggle Weapon")]
         public void AGToggle(KSPActionParam param)
@@ -514,9 +514,9 @@ namespace BDArmory
             yield break;
         }
 
-#endregion
+        #endregion
 
-#region KSP Events
+        #region KSP Events
 
         public override void OnStart(StartState state)
         {
@@ -931,7 +931,7 @@ namespace BDArmory
                 DrawAlignmentIndicator();
             }
 
-#if DEBUG
+            #if DEBUG
             if (weaponState == WeaponStates.Enabled && vessel && !vessel.packed && !MapView.MapIsEnabled)
             {
                 BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.right * 3, targetPosition - transform.right * 3, 2, Color.cyan);
@@ -946,12 +946,12 @@ namespace BDArmory
                 BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.up * 4, finalAimTarget - transform.up * 4, 2, Color.cyan);
                 BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.forward * 4, finalAimTarget - transform.forward * 4, 2, Color.cyan);
             }
-#endif
+            #endif
         }
 
-#endregion
+        #endregion
 
-#region Fire
+        #region Fire
 
         private void Fire()
         {
@@ -1454,9 +1454,9 @@ namespace BDArmory
         }
 
 
-#endregion
+        #endregion
 
-#region Audio
+        #region Audio
 
         void UpdateVolume()
         {
@@ -1520,9 +1520,9 @@ namespace BDArmory
         }
              
 
-#endregion
+        #endregion
 
-#region Targeting
+        #region Targeting
 
         void Aim()
         {
@@ -1601,10 +1601,10 @@ namespace BDArmory
                             targetVelocity - vessel.Velocity(), effectiveVelocity);
                         if (time2 > 0) time = time2;
                         finalTarget += (targetVelocity - vessel.Velocity()) * time;
-#if DEBUG
+                        #if DEBUG
                         relVelAdj = (targetVelocity - vessel.Velocity()) * time;
                         var vc = finalTarget;
-#endif
+                        #endif
 
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
@@ -1613,9 +1613,9 @@ namespace BDArmory
                                 * time * time);
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
-#if DEBUG
+                        #if DEBUG
                         accAdj = (finalTarget - vc);
-#endif
+                        #endif
                     }
                     else if (vessel.altitude < 6000)
                     {
@@ -1628,17 +1628,17 @@ namespace BDArmory
                     Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
                     if (bulletDrop)
                     {
-#if DEBUG
+                        #if DEBUG
                         var vc = finalTarget;
-#endif
+                        #endif
                         float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
                         + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
                         Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
                         effectiveVelocity = bulletVelocity * (float)Vector3d.Dot(intermediateTarget.normalized, finalTarget.normalized);
                         finalTarget = intermediateTarget;
-#if DEBUG
+                        #if DEBUG
                         gravAdj = (finalTarget - vc);
-#endif
+                        #endif
                     }
                     else break;
                 }
@@ -1903,9 +1903,9 @@ namespace BDArmory
         }
 
 
-#endregion
+        #endregion
 
-#region Updates
+        #region Updates
         void UpdateHeat()
         {
             heat = Mathf.Clamp(heat - heatLoss * TimeWarp.fixedDeltaTime, 0, Mathf.Infinity);
@@ -2178,9 +2178,9 @@ namespace BDArmory
             }
         }
 
-#endregion
+        #endregion
 
-#region Bullets
+        #region Bullets
 
         void ParseBulletDragType()
         {
@@ -2235,9 +2235,9 @@ namespace BDArmory
             }
             ParseBulletDragType();
         }
-#endregion
+        #endregion
 
-#region RMB Info
+        #region RMB Info
 
         
         public override string GetInfo()
@@ -2287,6 +2287,6 @@ namespace BDArmory
         }
 
 
-#endregion
+        #endregion
     }
 }
