@@ -237,12 +237,12 @@ namespace BDArmory
             {
                 bulletTrail.SetPosition(0,
                     transform.position +
-                    (currentVelocity * tracerDeltaFactor * 0.45f * Time.fixedDeltaTime));
+                    ((currentVelocity - FlightGlobals.ActiveVessel.Velocity()) * tracerDeltaFactor * 0.45f * Time.fixedDeltaTime));
             }
             else
             {
                 bulletTrail.SetPosition(0,
-                    transform.position + (currentVelocity.normalized * tracerLength));
+                    transform.position + ((currentVelocity - FlightGlobals.ActiveVessel.Velocity()).normalized * tracerLength));
             }
 
             if (fadeColor)
