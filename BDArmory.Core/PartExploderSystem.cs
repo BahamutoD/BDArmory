@@ -12,7 +12,7 @@ namespace BDArmory.Core
         {
             if (p != null && !ExplodingPartsQueue.Contains(p))
             {
-                ExplodingPartsQueue.Enqueue(p);                
+                ExplodingPartsQueue.Enqueue(p);
             }
         }
 
@@ -24,14 +24,21 @@ namespace BDArmory.Core
 
         public void Update()
         {
+            var timeNow = Time.time;
             if (ExplodingPartsQueue.Count == 0) return;
 
-            Part part = ExplodingPartsQueue.Dequeue();
-
-            if (part != null)
+            do
             {
-                part.explode();
-            }
+                Part part = ExplodingPartsQueue.Dequeue();
+
+                if (part != null)
+                {
+                    part.explode();
+                }
+
+            } while (Time.time - timeNow < Time.deltaTime && ExplodingPartsQueue.Count > 0);
+
+
         }
     }
 }
