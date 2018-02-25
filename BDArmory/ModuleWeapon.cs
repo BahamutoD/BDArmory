@@ -932,7 +932,7 @@ namespace BDArmory
             }
 
             #if DEBUG
-            if (weaponState == WeaponStates.Enabled && vessel && !vessel.packed && !MapView.MapIsEnabled)
+            if (BDArmorySettings.DRAW_DEBUG_LINES && weaponState == WeaponStates.Enabled && vessel && !vessel.packed && !MapView.MapIsEnabled)
             {
                 BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.right * 3, targetPosition - transform.right * 3, 2, Color.cyan);
                 BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.up * 3, targetPosition - transform.up * 3, 2, Color.cyan);
