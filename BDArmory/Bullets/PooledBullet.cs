@@ -72,7 +72,7 @@ namespace BDArmory
         public float maxAirDetonationRange = 3500f;
         float randomWidthScale = 1;
         LineRenderer bulletTrail;
-        public float maxDistance;
+        public float timeToLiveUntil;
         Light lightFlash;
         bool wasInitiated;
         public Vector3 currentVelocity;
@@ -255,7 +255,7 @@ namespace BDArmory
 
             currPosition = gameObject.transform.position;
 
-            if (distanceFromStart > maxDistance)//kill bullet if it goes past the max allowed distance
+            if (Time.time > timeToLiveUntil) //kill bullet when TTL ends
             {
                 KillBullet();
                 return;

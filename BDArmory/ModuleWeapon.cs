@@ -1081,7 +1081,8 @@ namespace BDArmory
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
 
                         pBullet.flightTimeElapsed = 0;
-                        pBullet.maxDistance = Mathf.Max(maxTargetingRange, maxEffectiveDistance); //limit distance to weapons maxeffective distance
+                        // measure bullet lifetime in time rather than in distance, because distances get very relative in orbit
+                        pBullet.timeToLiveUntil = Mathf.Max(maxTargetingRange, maxEffectiveDistance) / bulletVelocity * 1.1f + Time.time;
 
                         timeFired = Time.time;
                         
