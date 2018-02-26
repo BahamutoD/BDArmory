@@ -1605,8 +1605,10 @@ namespace BDArmory
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
                             finalTarget += (0.5f * (targetAcceleration
+                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition((0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
-                                * time * time);
+                                * time * (time + Time.fixedDeltaTime * 1.5f)))) / 2) 
+                                * time * (time + Time.fixedDeltaTime * 1.5f)); // estimation within estimation
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
                         #if DEBUG
