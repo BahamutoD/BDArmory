@@ -1585,7 +1585,7 @@ namespace BDArmory
             {
                 float effectiveVelocity = bulletVelocity;
 
-                int iterations = 4;
+                int iterations = 3;
                 while (--iterations >= 0)
                 {
                     float time = targetDistance / (effectiveVelocity);
@@ -1607,7 +1607,7 @@ namespace BDArmory
                             finalTarget += (0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) * (1 + Time.fixedDeltaTime) - FlightGlobals.getGeeForceAtPosition((0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) * (1 + Time.fixedDeltaTime) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
-                                * (time - Time.fixedDeltaTime) * (time - Time.fixedDeltaTime * 1.5f)))) / 2) 
+                                * (time - Time.fixedDeltaTime) * (time - Time.fixedDeltaTime * 1.5f)))) / 2)
                                 * (time - Time.fixedDeltaTime) * (time - Time.fixedDeltaTime * 1.5f)); // estimation within estimation
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
@@ -1632,7 +1632,7 @@ namespace BDArmory
                         float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
                         + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
                         Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
-                        effectiveVelocity = bulletVelocity * (float)Vector3d.Dot(intermediateTarget.normalized, finalTarget.normalized);
+                        effectiveVelocity = bulletVelocity * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
                         finalTarget = intermediateTarget;
                         #if DEBUG
                         gravAdj = (finalTarget - vc);
