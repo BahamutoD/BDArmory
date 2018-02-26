@@ -71,6 +71,7 @@ namespace BDArmory.Parts
         private Vector3 initialMissileForward;
 
         private float rollError;
+
         #endregion
 
         public TransformAxisVectors ForwardTransformAxis { get; set; }
@@ -506,9 +507,7 @@ namespace BDArmory.Parts
             if (TargetAcquired)
             {
                 float timeToImpact;
-                aamTarget = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, previousTargetVelocity, TargetAcceleration, vessel, previousMissileVelocity, out timeToImpact);
-                previousTargetVelocity = TargetVelocity;
-                previousMissileVelocity = vessel.Velocity();
+                aamTarget = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact);
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
@@ -657,12 +656,12 @@ namespace BDArmory.Parts
 
             var crossErrorAngle = Vector3.Cross(rollA, rollB);
 
-            if (crossErrorAngle.y < 0)
+            if (crossErrorAngle.y > 0)
             {
                 angle = angle * -1;
             }
 
-            return angle * (1f / -180f); 
+            return angle * (1f / -180f);
         }
 
         private Vector3 BallisticGuidance()

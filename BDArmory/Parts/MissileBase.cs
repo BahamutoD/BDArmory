@@ -164,10 +164,6 @@ namespace BDArmory.Parts
 
         public bool HasExploded { get; set; } = false;
 
-        protected Vector3 previousTargetVelocity { get; set; } = Vector3.zero;
-        protected Vector3 previousMissileVelocity { get; set; } = Vector3.zero;
-
-
         protected CruiseGuidance _cruiseGuidance;
 
         public float Throttle

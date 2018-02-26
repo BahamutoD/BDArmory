@@ -143,42 +143,34 @@ namespace BDArmory
             return targetPosition + (targetVelocity * leadTime);
         }
 
-        public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity,
-            Vector3 previousTargetVelocity, Vector3 targetAcceleration, Vessel missileVessel,
-            Vector3 previousMissileVelocity, out float timeToImpact)
+        public static Vector3 GetAirToAirTargetModular(Vector3 targetPosition, Vector3 targetVelocity, Vector3 targetAcceleration, Vessel missileVessel,out float timeToImpact)
         {
 
             float targetDistance = Vector3.Distance(targetPosition, missileVessel.CoM);
-            Vector3 effectiveTargetAcceleration = targetAcceleration;
-            Vector3d effectiveMissileAcceleration = missileVessel.acceleration;
+
             float leadTime = 0;
-            if (previousTargetVelocity != Vector3.zero && previousMissileVelocity != Vector3.zero)
-            {
-                effectiveTargetAcceleration = targetVelocity - previousTargetVelocity;
-                effectiveMissileAcceleration = (float) missileVessel.srfSpeed * missileVessel.Velocity().normalized -
-                                               previousMissileVelocity;
-            }
+          
 
             //Basic lead time calculation
             Vector3 currVel = ((float) missileVessel.srfSpeed * missileVessel.Velocity().normalized);
             timeToImpact = (float)(1 / ((targetVelocity - currVel).magnitude / targetDistance));
             leadTime = Mathf.Clamp(timeToImpact, 0f, 8f);
 
-            if (timeToImpact < 2)
+            if (timeToImpact < 1)
             {
                 float accuTimeToImpact = 0;
                 if (CalculateAccurateTimeToImpact(targetDistance, targetVelocity, missileVessel,
-                    effectiveMissileAcceleration, effectiveTargetAcceleration, out accuTimeToImpact))
+                    missileVessel.acceleration_immediate, targetAcceleration, out accuTimeToImpact))
                 {
                     timeToImpact = accuTimeToImpact;
                     return targetPosition + (targetVelocity * accuTimeToImpact) +
-                           effectiveTargetAcceleration * 0.5f * Mathf.Pow(accuTimeToImpact, 2);
+                           targetAcceleration * 0.5f * Mathf.Pow(accuTimeToImpact, 2);
                 }
               
                 return targetPosition + (targetVelocity * leadTime);
                 
             }
-            if (timeToImpact < 20)
+            if (timeToImpact < 10)
             {
                 return targetPosition + (targetVelocity * leadTime);
             }
