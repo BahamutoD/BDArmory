@@ -18,7 +18,7 @@ namespace BDArmory
     public class ModuleWeapon : EngageableWeapon, IBDWeapon
     {
         #region Declarations
-
+        Vector3 tspd;
         #region Variables
 
         #endregion
@@ -1585,7 +1585,7 @@ namespace BDArmory
             {
                 float effectiveVelocity = bulletVelocity;
 
-                int iterations = 3;
+                int iterations = 4;
                 while (--iterations >= 0)
                 {
                     float time = targetDistance / (effectiveVelocity);
@@ -1605,7 +1605,13 @@ namespace BDArmory
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
                                 * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
-
+                        Debug.Log($"taccel: {targetAcceleration.magnitude}, gravAdj: {(FlightGlobals.getGeeForceAtPosition(targetPosition) - avGrav).magnitude}, grav: {FlightGlobals.getGeeForceAtPosition(targetPosition).magnitude}");
+                        Debug.Log($"vfc: {FloatingOrigin.fetch.velForContinuous}, kra: {(Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}, flo: {FloatingOrigin.Offset.magnitude}, flnk: {FloatingOrigin.OffsetNonKrakensbane.magnitude}");
+                        Debug.Log($"vda: {((weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero) - tspd).magnitude}, vai: {weaponManager?.currentTarget.Vessel.acceleration_immediate.magnitude}, vsa: {weaponManager?.currentTarget.Vessel.specificAcceleration}, vga: {weaponManager?.currentTarget.Vessel.graviticAcceleration.magnitude}");
+                        Debug.Log($"kagc: {Vector3.Dot(FlightGlobals.getGeeForceAtPosition(targetPosition).normalized, (Krakensbane.GetLastCorrection() / Time.fixedDeltaTime))}");
+                        tspd = weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero;
+                        Vessel v = weaponManager?.currentTarget.Vessel;
+                        Debug.Log($"vov: {v.GetObtVelocity().magnitude}, vsv: {v.GetSrfVelocity().magnitude}, vrbv: {v.rb_velocity.magnitude}, vsve: {v.srf_velocity.magnitude}, vv: {v.velocityD.magnitude}");
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
                             finalTarget += (0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
@@ -1635,11 +1641,12 @@ namespace BDArmory
                         Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
 
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
-                        effectiveVelocity = bulletVelocity 
-                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized)
-                            + (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time;
-
+                        effectiveVelocity = bulletVelocity
+                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
+                        effectiveVelocity += (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time;
                         finalTarget = intermediateTarget;
+                        Debug.Log($"iteration {iterations}, effVel {effectiveVelocity}");
+
                         #if DEBUG
                         gravAdj = (finalTarget - vc);
                         #endif
