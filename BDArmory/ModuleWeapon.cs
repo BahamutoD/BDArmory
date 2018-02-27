@@ -1602,13 +1602,14 @@ namespace BDArmory
                         var vc = finalTarget;
                         #endif
 
+                        var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
+                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
+                                * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
+
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
-                            finalTarget += (0.5f * (targetAcceleration
-                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition((0.5f * (targetAcceleration
-                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
-                                * time * (time - Time.fixedDeltaTime / 2)))) / 2)
-                                * time * (time - Time.fixedDeltaTime / 2)); // estimation within estimation
+                            finalTarget += (0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
+                                * time * (time - Time.fixedDeltaTime / 2));
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
                         #if DEBUG
@@ -1632,7 +1633,12 @@ namespace BDArmory
                         float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
                         + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
                         Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
-                        effectiveVelocity = bulletVelocity * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
+
+                        var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
+                        effectiveVelocity = bulletVelocity 
+                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized)
+                            + (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time;
+
                         finalTarget = intermediateTarget;
                         #if DEBUG
                         gravAdj = (finalTarget - vc);
