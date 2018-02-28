@@ -18,7 +18,7 @@ namespace BDArmory
     public class ModuleWeapon : EngageableWeapon, IBDWeapon
     {
         #region Declarations
-        Vector3 tspd;
+        Vector3 targetVelocityPrevious;
         #region Variables
 
         #endregion
@@ -788,6 +788,7 @@ namespace BDArmory
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
                     UpdateTargetVessel();
+                    targetAcceleration = targetVelocity - targetVelocityPrevious;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -1594,30 +1595,24 @@ namespace BDArmory
                     if (targetAcquired)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            targetVelocity - vessel.Velocity(), effectiveVelocity);
+                            targetVelocity - vessel.GetSrfVelocity(), effectiveVelocity);
                         if (time2 > 0) time = time2;
-                        finalTarget += (targetVelocity - vessel.Velocity()) * time;
+                        finalTarget += (targetVelocity - vessel.GetSrfVelocity()) * time;
                         #if DEBUG
-                        relVelAdj = (targetVelocity - vessel.Velocity()) * time;
+                        relVelAdj = (targetVelocity - vessel.GetSrfVelocity()) * time;
                         var vc = finalTarget;
                         #endif
 
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
                                 * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
-                        Debug.Log($"taccel: {targetAcceleration.magnitude}, gravAdj: {(FlightGlobals.getGeeForceAtPosition(targetPosition) - avGrav).magnitude}, grav: {FlightGlobals.getGeeForceAtPosition(targetPosition).magnitude}");
-                        Debug.Log($"vfc: {FloatingOrigin.fetch.velForContinuous}, kra: {(Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}, flo: {FloatingOrigin.Offset.magnitude}, flnk: {FloatingOrigin.OffsetNonKrakensbane.magnitude}");
-                        Debug.Log($"vda: {((weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero) - tspd).magnitude / Time.fixedDeltaTime}, vai: {weaponManager?.currentTarget.Vessel.acceleration_immediate.magnitude}, vsa: {weaponManager?.currentTarget.Vessel.specificAcceleration}, vga: {weaponManager?.currentTarget.Vessel.graviticAcceleration.magnitude}");
-                        Debug.Log($"kagc: {Vector3.Dot(FlightGlobals.getGeeForceAtPosition(targetPosition).normalized, (Krakensbane.GetLastCorrection() / Time.fixedDeltaTime))}");
                         Vessel v = weaponManager?.currentTarget.Vessel;
-                        Debug.Log($"vov: {v.GetObtVelocity().magnitude}, vsv: {v.GetSrfVelocity().magnitude}, vrbv: {v.rb_velocity.magnitude}, vsve: {v.srf_velocity.magnitude}, vv: {v.velocityD.magnitude}");
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
-                            finalTarget += (0.5f * (((weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero) - tspd) / Time.fixedDeltaTime - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
+                            finalTarget += (0.5f * (targetAcceleration / Time.fixedDeltaTime - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
                                 * time * (time - Time.fixedDeltaTime / 2));
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
-                        tspd = weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero;
 
                         #if DEBUG
                         accAdj = (finalTarget - vc);
@@ -1656,7 +1651,6 @@ namespace BDArmory
                 }
 
                 targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
-
                 fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
 
 
@@ -2002,14 +1996,15 @@ namespace BDArmory
 
             if (weaponManager)
             {
+                targetVelocityPrevious = targetVelocity;
+
                 //legacy or visual range guard targeting
                 if (aiControlled && weaponManager && legacyTargetVessel &&
                     (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
                      (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.Velocity();
-                    targetAcceleration = legacyTargetVessel.acceleration;
+                    targetVelocity = legacyTargetVessel.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 
                     targetAcquired = true;
                     return;
                 }
@@ -2019,7 +2014,6 @@ namespace BDArmory
                     slaved = true;
                     targetPosition = weaponManager.slavedPosition + (3 * weaponManager.slavedVelocity * Time.fixedDeltaTime);
                     targetVelocity = weaponManager.slavedVelocity;
-                    targetAcceleration = weaponManager.slavedAcceleration;
                     targetAcquired = true;
                     return;
                 }
@@ -2031,10 +2025,9 @@ namespace BDArmory
                     targetPosition = targetData.predictedPosition + (3 * targetVelocity * Time.fixedDeltaTime);
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.vessel.Velocity();
-                        targetPosition = targetData.vessel.CoM + (targetVelocity * Time.fixedDeltaTime);
+                        targetVelocity = targetData.vessel.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 
+                        targetPosition = targetData.vessel.CoM;
                     }
-                    targetAcceleration = targetData.acceleration;
                     targetAcquired = true;
                     return;
                 }
@@ -2048,8 +2041,6 @@ namespace BDArmory
 
                         if (atprWasAcquired)
                         {
-                            targetVelocity += targetAcceleration * Time.fixedDeltaTime;
-                            targetPosition += targetVelocity * Time.fixedDeltaTime;
                             targetAcquired = true;
                             atprAcquired = true;
                         }
@@ -2079,8 +2070,7 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.Velocity();
-                        targetAcceleration = tgt.acceleration;
+                        targetVelocity = tgt.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 
                     }
                 }
             }
