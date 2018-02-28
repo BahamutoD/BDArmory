@@ -1607,17 +1607,18 @@ namespace BDArmory
                                 * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
                         Debug.Log($"taccel: {targetAcceleration.magnitude}, gravAdj: {(FlightGlobals.getGeeForceAtPosition(targetPosition) - avGrav).magnitude}, grav: {FlightGlobals.getGeeForceAtPosition(targetPosition).magnitude}");
                         Debug.Log($"vfc: {FloatingOrigin.fetch.velForContinuous}, kra: {(Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}, flo: {FloatingOrigin.Offset.magnitude}, flnk: {FloatingOrigin.OffsetNonKrakensbane.magnitude}");
-                        Debug.Log($"vda: {((weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero) - tspd).magnitude}, vai: {weaponManager?.currentTarget.Vessel.acceleration_immediate.magnitude}, vsa: {weaponManager?.currentTarget.Vessel.specificAcceleration}, vga: {weaponManager?.currentTarget.Vessel.graviticAcceleration.magnitude}");
+                        Debug.Log($"vda: {((weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero) - tspd).magnitude / Time.fixedDeltaTime}, vai: {weaponManager?.currentTarget.Vessel.acceleration_immediate.magnitude}, vsa: {weaponManager?.currentTarget.Vessel.specificAcceleration}, vga: {weaponManager?.currentTarget.Vessel.graviticAcceleration.magnitude}");
                         Debug.Log($"kagc: {Vector3.Dot(FlightGlobals.getGeeForceAtPosition(targetPosition).normalized, (Krakensbane.GetLastCorrection() / Time.fixedDeltaTime))}");
-                        tspd = weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero;
                         Vessel v = weaponManager?.currentTarget.Vessel;
                         Debug.Log($"vov: {v.GetObtVelocity().magnitude}, vsv: {v.GetSrfVelocity().magnitude}, vrbv: {v.rb_velocity.magnitude}, vsve: {v.srf_velocity.magnitude}, vv: {v.velocityD.magnitude}");
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
-                            finalTarget += (0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
+                            finalTarget += (0.5f * (((weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero) - tspd) / Time.fixedDeltaTime - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
                                 * time * (time - Time.fixedDeltaTime / 2));
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
+                        tspd = weaponManager?.currentTarget.Vessel.GetSrfVelocity() ?? Vector3.zero;
+
                         #if DEBUG
                         accAdj = (finalTarget - vc);
                         #endif
