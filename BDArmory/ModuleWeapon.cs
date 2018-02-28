@@ -1606,7 +1606,7 @@ namespace BDArmory
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
                                 * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
-                        Vessel v = weaponManager?.currentTarget.Vessel;
+                        
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
                             finalTarget += (0.5f * (targetAcceleration / Time.fixedDeltaTime - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
@@ -1641,7 +1641,6 @@ namespace BDArmory
                             * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
                         effectiveVelocity += (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time;
                         finalTarget = intermediateTarget;
-                        Debug.Log($"iteration {iterations}, effVel {effectiveVelocity}");
 
                         #if DEBUG
                         gravAdj = (finalTarget - vc);
@@ -2012,8 +2011,8 @@ namespace BDArmory
                 if (weaponManager.slavingTurrets && turret)
                 {
                     slaved = true;
-                    targetPosition = weaponManager.slavedPosition + (3 * weaponManager.slavedVelocity * Time.fixedDeltaTime);
-                    targetVelocity = weaponManager.slavedVelocity;
+                    targetPosition = weaponManager.slavedPosition;
+                    targetVelocity = weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity;
                     targetAcquired = true;
                     return;
                 }
@@ -2021,8 +2020,8 @@ namespace BDArmory
                 if (weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
                 {
                     TargetSignatureData targetData = weaponManager.vesselRadarData.lockedTargetData.targetData;
-                    targetVelocity = targetData.velocity;
-                    targetPosition = targetData.predictedPosition + (3 * targetVelocity * Time.fixedDeltaTime);
+                    targetVelocity = targetData.vessel?.GetSrfVelocity() ?? targetData.velocity;
+                    targetPosition = targetData.predictedPosition;
                     if (targetData.vessel)
                     {
                         targetVelocity = targetData.vessel.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 

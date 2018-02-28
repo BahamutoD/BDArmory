@@ -336,6 +336,7 @@ namespace BDArmory
         public Vector3 slavedPosition;
         public Vector3 slavedVelocity;
         public Vector3 slavedAcceleration;
+        public TargetSignatureData slavedTarget;
 
 		//current weapon ref
 		public MissileBase CurrentMissile;
