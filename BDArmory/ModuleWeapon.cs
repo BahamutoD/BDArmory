@@ -788,7 +788,8 @@ namespace BDArmory
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
                     UpdateTargetVessel();
-                    targetAcceleration = targetVelocity - targetVelocityPrevious;
+                    targetPosition += (targetVelocity - vessel.GetSrfVelocity()) * Time.fixedDeltaTime;
+                    targetAcceleration = (targetVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -1603,14 +1604,13 @@ namespace BDArmory
                         var vc = finalTarget;
                         #endif
 
-                        var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
+                        var avAccel = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
                                 * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
                         
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
-                            finalTarget += (0.5f * (targetAcceleration / Time.fixedDeltaTime - FlightGlobals.getGeeForceAtPosition(targetPosition) + avGrav)
-                                * time * (time - Time.fixedDeltaTime / 2));
+                            finalTarget += 0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avAccel) * time * time;
                         else
                             finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
 
@@ -1646,8 +1646,10 @@ namespace BDArmory
                         gravAdj = (finalTarget - vc);
                         #endif
                     }
-                    else break;
                 }
+                //Debug.Log($"ccam: {targetAcceleration.magnitude}, cca: {(Vector3d)targetAcceleration}, kba: {Krakensbane.GetLastCorrection()/Time.fixedDeltaTime}, cos: {Vector3.Dot(targetAcceleration.normalized, Krakensbane.GetLastCorrection().normalized)}, diff: {(targetAcceleration + Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}");
+                //targetAcceleration = weaponManager.currentTarget.Vessel.acceleration;
+                //Debug.Log($"dcam: {targetAcceleration.magnitude}, dca: {(Vector3d)targetAcceleration}, kba: {Krakensbane.GetLastCorrection() / Time.fixedDeltaTime}, cos: {Vector3.Dot(targetAcceleration.normalized, Krakensbane.GetLastCorrection().normalized)}, diff: {(targetAcceleration + Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}");
 
                 targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
                 fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
