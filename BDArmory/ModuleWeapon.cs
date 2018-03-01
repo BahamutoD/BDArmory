@@ -18,7 +18,7 @@ namespace BDArmory
     public class ModuleWeapon : EngageableWeapon, IBDWeapon
     {
         #region Declarations
-        Vector3 targetVelocityPrevious;
+
         #region Variables
 
         #endregion
@@ -88,7 +88,8 @@ namespace BDArmory
         private float targetDistance;
         private Vector3 targetPosition;
         private Vector3 targetVelocity;
-        private Vector3 targetAcceleration;
+        private Vector3 targetAcceleration; // should always be surface-based, not sure why, but that's the way it is
+        private Vector3 targetVelocityPrevious; // for acceleration calculation, so also should always be srfVelocity, even when in orbit
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
         public Vessel legacyTargetVessel;
@@ -788,8 +789,7 @@ namespace BDArmory
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
                     UpdateTargetVessel();
-                    targetPosition += (targetVelocity - vessel.GetSrfVelocity()) * Time.fixedDeltaTime;
-                    targetAcceleration = (targetVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
+                    targetPosition += (targetVelocity - vessel.Velocity()) * Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -1596,11 +1596,11 @@ namespace BDArmory
                     if (targetAcquired)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            targetVelocity - vessel.GetSrfVelocity(), effectiveVelocity);
+                            targetVelocity - vessel.Velocity(), effectiveVelocity);
                         if (time2 > 0) time = time2;
-                        finalTarget += (targetVelocity - vessel.GetSrfVelocity()) * time;
+                        finalTarget += (targetVelocity - vessel.Velocity()) * time;
                         #if DEBUG
-                        relVelAdj = (targetVelocity - vessel.GetSrfVelocity()) * time;
+                        relVelAdj = (targetVelocity - vessel.Velocity()) * time;
                         var vc = finalTarget;
                         #endif
 
@@ -2005,7 +2005,8 @@ namespace BDArmory
                      (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 
+                    targetVelocity = legacyTargetVessel.Velocity();
+                    updateAcceleration(legacyTargetVessel.GetSrfVelocity());
                     targetAcquired = true;
                     return;
                 }
@@ -2014,7 +2015,8 @@ namespace BDArmory
                 {
                     slaved = true;
                     targetPosition = weaponManager.slavedPosition;
-                    targetVelocity = weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity;
+                    targetVelocity = weaponManager.slavedVelocity;
+                    updateAcceleration(weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedAcceleration);
                     targetAcquired = true;
                     return;
                 }
@@ -2022,12 +2024,14 @@ namespace BDArmory
                 if (weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
                 {
                     TargetSignatureData targetData = weaponManager.vesselRadarData.lockedTargetData.targetData;
-                    targetVelocity = targetData.vessel?.GetSrfVelocity() ?? targetData.velocity;
+                    targetVelocity = targetData.velocity;
                     targetPosition = targetData.predictedPosition;
+                    targetAcceleration = targetData.acceleration;
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.vessel.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 
+                        targetVelocity = targetData.velocity;
                         targetPosition = targetData.vessel.CoM;
+                        updateAcceleration(targetData.vessel?.GetSrfVelocity() ?? targetData.acceleration);
                     }
                     targetAcquired = true;
                     return;
@@ -2071,10 +2075,17 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.GetSrfVelocity(); // this should be srf velocity, even for orbital engagements 
+                        targetVelocity = tgt.Velocity();
+                        updateAcceleration(tgt.GetSrfVelocity());
                     }
                 }
             }
+        }
+
+        void updateAcceleration(Vector3 currentSrfVelocity)
+        {
+            targetAcceleration = (currentSrfVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
+            targetVelocityPrevious = currentSrfVelocity;
         }
 
         void UpdateGUIWeaponState()
