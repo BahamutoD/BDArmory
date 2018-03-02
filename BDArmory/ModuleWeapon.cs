@@ -1643,7 +1643,7 @@ namespace BDArmory
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
                         effectiveVelocity = bulletVelocity
                             * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
-                        effectiveVelocity += (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time;
+                        // effectiveVelocity += (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time / 2;
                         finalTarget = intermediateTarget;
 
                         #if DEBUG
