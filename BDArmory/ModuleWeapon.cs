@@ -1593,9 +1593,9 @@ namespace BDArmory
                 int iterations = 4;
                 while (--iterations >= 0)
                 {
-                    float time = targetDistance / (effectiveVelocity);
+                    float time = targetDistance / effectiveVelocity;
                     finalTarget = targetPosition;
-                    Debug.Log($"iteration: {iterations}, effVel: {effectiveVelocity}, time: {time}");
+                    
                     if (targetAcquired)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
@@ -1606,14 +1606,15 @@ namespace BDArmory
                         relVelAdj = relativeVelocity * time;
                         var vc = finalTarget;
                         #endif
-
-                        var avAccel = (FlightGlobals.getGeeForceAtPosition(finalTarget + (0.5f * (targetAcceleration
-                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
-                                * time * (time - Time.fixedDeltaTime / 2))) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
                         
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
+                        {
+                            var avAccel = (FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (targetAcceleration
+                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
+                                * time * time) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
                             finalTarget += 0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avAccel) * time * time;
+                        }
                         else
                             finalTarget += 0.5f * targetAcceleration * time * time; //target acceleration
 
@@ -1650,13 +1651,9 @@ namespace BDArmory
                         #endif
                     }
                 }
-                //Debug.Log($"ccam: {targetAcceleration.magnitude}, cca: {(Vector3d)targetAcceleration}, kba: {Krakensbane.GetLastCorrection()/Time.fixedDeltaTime}, cos: {Vector3.Dot(targetAcceleration.normalized, Krakensbane.GetLastCorrection().normalized)}, diff: {(targetAcceleration + Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}");
-                //targetAcceleration = weaponManager.currentTarget.Vessel.acceleration;
-                //Debug.Log($"dcam: {targetAcceleration.magnitude}, dca: {(Vector3d)targetAcceleration}, kba: {Krakensbane.GetLastCorrection() / Time.fixedDeltaTime}, cos: {Vector3.Dot(targetAcceleration.normalized, Krakensbane.GetLastCorrection().normalized)}, diff: {(targetAcceleration + Krakensbane.GetLastCorrection() / Time.fixedDeltaTime).magnitude}");
 
                 targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
                 fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
-
 
                 //airdetonation
                 if (airDetonation)
