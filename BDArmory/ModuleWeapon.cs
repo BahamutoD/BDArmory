@@ -87,8 +87,10 @@ namespace BDArmory
         //used by AI to lead moving targets
         private float targetDistance;
         private Vector3 targetPosition;
-        private Vector3 targetVelocity;
-        private Vector3 targetAcceleration;
+        private Vector3 targetVelocity;  // should always be surface-based, not sure why, but that's the way it is
+        private Vector3 targetAcceleration; // should always be surface-based, not sure why, but that's the way it is
+        private Vector3 targetVelocityPrevious; // for acceleration calculation, so also should always be srfVelocity, even when in orbit
+        private Vector3 relativeVelocity;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
         public Vessel legacyTargetVessel;
@@ -205,12 +207,18 @@ namespace BDArmory
         public string GetMissileType()
         {
             return string.Empty;
-        } 
-                
+        }
+
+        #if DEBUG
+        Vector3 relVelAdj;
+        Vector3 accAdj;
+        Vector3 gravAdj;
+        #endif
+
         #endregion
 
         #region KSPFields
-                
+
         [KSPField]
         public string shortName = string.Empty;
                 
@@ -784,6 +792,9 @@ namespace BDArmory
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
                     UpdateTargetVessel();
+                    updateAcceleration(targetVelocity);
+                    relativeVelocity = targetVelocity - vessel.GetSrfVelocity();
+                    targetPosition += relativeVelocity * Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -864,7 +875,7 @@ namespace BDArmory
         void OnGUI()
         {
             if (weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel &&
-                BDArmorySettings.DRAW_AIMERS && !aiControlled & !MapView.MapIsEnabled && !pointingAtSelf)
+                BDArmorySettings.DRAW_AIMERS && !aiControlled && !MapView.MapIsEnabled && !pointingAtSelf)
             {
                 float size = 30;
 
@@ -927,6 +938,22 @@ namespace BDArmory
                 DrawAlignmentIndicator();
             }
 
+            #if DEBUG
+            if (BDArmorySettings.DRAW_DEBUG_LINES && weaponState == WeaponStates.Enabled && vessel && !vessel.packed && !MapView.MapIsEnabled)
+            {
+                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.right * 3, targetPosition - transform.right * 3, 2, Color.cyan);
+                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.up * 3, targetPosition - transform.up * 3, 2, Color.cyan);
+                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.forward * 3, targetPosition - transform.forward * 3, 2, Color.cyan);
+
+                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition, targetPosition + relVelAdj, 2, Color.green);
+                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + relVelAdj, targetPosition + relVelAdj + accAdj, 2, Color.magenta);
+                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + relVelAdj + accAdj, targetPosition + relVelAdj + accAdj + gravAdj, 2, Color.yellow);
+
+                BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.right * 4, finalAimTarget - transform.right * 4, 2, Color.cyan);
+                BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.up * 4, finalAimTarget - transform.up * 4, 2, Color.cyan);
+                BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.forward * 4, finalAimTarget - transform.forward * 4, 2, Color.cyan);
+            }
+            #endif
         }
 
         #endregion
@@ -1083,7 +1110,8 @@ namespace BDArmory
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
 
                         pBullet.flightTimeElapsed = 0;
-                        pBullet.maxDistance = Mathf.Max(maxTargetingRange, maxEffectiveDistance); //limit distance to weapons maxeffective distance
+                        // measure bullet lifetime in time rather than in distance, because distances get very relative in orbit
+                        pBullet.timeToLiveUntil = Mathf.Max(maxTargetingRange, maxEffectiveDistance) / bulletVelocity * 1.1f + Time.time;
 
                         timeFired = Time.time;
                         
@@ -1508,11 +1536,7 @@ namespace BDArmory
             //AI control
             if (aiControlled && !slaved)
             {
-                if (legacyTargetVessel)
-                {
-                    targetPosition += legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
-                }
-                else if (!targetAcquired)
+                if (!targetAcquired)
                 {
                     autoFire = false;
                     return;
@@ -1566,49 +1590,74 @@ namespace BDArmory
 
             if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
             {
-                float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
-                    + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
                 float effectiveVelocity = bulletVelocity;
 
                 int iterations = 4;
                 while (--iterations >= 0)
                 {
-                    float time = targetDistance / (effectiveVelocity);
+                    float time = targetDistance / effectiveVelocity;
                     finalTarget = targetPosition;
-
+                    
                     if (targetAcquired)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            targetVelocity - vessel.Velocity(), effectiveVelocity);
+                            relativeVelocity, effectiveVelocity);
                         if (time2 > 0) time = time2;
-                        finalTarget += (targetVelocity - vessel.Velocity()) * time;
-
+                        finalTarget += relativeVelocity * time;
+                        #if DEBUG
+                        relVelAdj = relativeVelocity * time;
+                        var vc = finalTarget;
+                        #endif
+                        
                         //target vessel relative velocity compensation
-                        Vector3 acceleration = targetAcceleration;
-                        finalTarget += (0.5f * acceleration * time * time); //target acceleration
+                        if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
+                        {
+                            var avAccel = (FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (targetAcceleration
+                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
+                                * time * time) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
+                            finalTarget += 0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avAccel) * time * time;
+                        }
+                        else
+                            finalTarget += 0.5f * targetAcceleration * time * time; //target acceleration
+
+                        #if DEBUG
+                        accAdj = (finalTarget - vc);
+                        #endif
                     }
                     else if (vessel.altitude < 6000)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
                             -(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()), effectiveVelocity);
                         if (time2 > 0) time = time2;
-                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * (time + Time.fixedDeltaTime));
+                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * time);
                         //this vessel velocity compensation against stationary
                     }
                     Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
                     if (bulletDrop)
                     {
+                        #if DEBUG
+                        var vc = finalTarget;
+                        #endif
+                        float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
+                        + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
                         Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
-                        effectiveVelocity = bulletVelocity * (float)Vector3d.Dot(intermediateTarget.normalized, finalTarget.normalized);
+
+                        var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
+                        effectiveVelocity = bulletVelocity
+                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
+                        // effectiveVelocity += (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time / 2;
                         finalTarget = intermediateTarget;
+
+                        #if DEBUG
+                        gravAdj = (finalTarget - vc);
+                        #endif
                     }
                     else break;
+
                 }
 
                 targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
-
                 fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
-
 
                 //airdetonation
                 if (airDetonation)
@@ -1958,9 +2007,7 @@ namespace BDArmory
                      (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.Velocity();
-                    targetAcceleration = legacyTargetVessel.acceleration;
-                    targetPosition += targetVelocity * Time.fixedDeltaTime;
+                    targetVelocity = legacyTargetVessel.GetSrfVelocity();
                     targetAcquired = true;
                     return;
                 }
@@ -1968,9 +2015,8 @@ namespace BDArmory
                 if (weaponManager.slavingTurrets && turret)
                 {
                     slaved = true;
-                    targetPosition = weaponManager.slavedPosition + (3 * weaponManager.slavedVelocity * Time.fixedDeltaTime);
-                    targetVelocity = weaponManager.slavedVelocity;
-                    targetAcceleration = weaponManager.slavedAcceleration;
+                    targetPosition = weaponManager.slavedPosition;
+                    targetVelocity = weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity;
                     targetAcquired = true;
                     return;
                 }
@@ -1979,13 +2025,13 @@ namespace BDArmory
                 {
                     TargetSignatureData targetData = weaponManager.vesselRadarData.lockedTargetData.targetData;
                     targetVelocity = targetData.velocity;
-                    targetPosition = targetData.predictedPosition + (3 * targetVelocity * Time.fixedDeltaTime);
+                    targetPosition = targetData.predictedPosition;
+                    targetAcceleration = targetData.acceleration;
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.vessel.Velocity();
-                        targetPosition = targetData.vessel.CoM + (targetVelocity * Time.fixedDeltaTime);
+                        targetVelocity = targetData.vessel?.GetSrfVelocity() ?? targetData.velocity;
+                        targetPosition = targetData.vessel.CoM;
                     }
-                    targetAcceleration = targetData.acceleration;
                     targetAcquired = true;
                     return;
                 }
@@ -1999,8 +2045,6 @@ namespace BDArmory
 
                         if (atprWasAcquired)
                         {
-                            targetVelocity += targetAcceleration * Time.fixedDeltaTime;
-                            targetPosition += targetVelocity * Time.fixedDeltaTime;
                             targetAcquired = true;
                             atprAcquired = true;
                         }
@@ -2030,11 +2074,16 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.Velocity();
-                        targetAcceleration = tgt.acceleration;
+                        targetVelocity = tgt.GetSrfVelocity();
                     }
                 }
             }
+        }
+
+        void updateAcceleration(Vector3 targetSrfVelocity)
+        {
+            targetAcceleration = (targetSrfVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
+            targetVelocityPrevious = targetSrfVelocity;
         }
 
         void UpdateGUIWeaponState()
