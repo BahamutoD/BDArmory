@@ -87,9 +87,10 @@ namespace BDArmory
         //used by AI to lead moving targets
         private float targetDistance;
         private Vector3 targetPosition;
-        private Vector3 targetVelocity;
+        private Vector3 targetVelocity;  // should always be surface-based, not sure why, but that's the way it is
         private Vector3 targetAcceleration; // should always be surface-based, not sure why, but that's the way it is
         private Vector3 targetVelocityPrevious; // for acceleration calculation, so also should always be srfVelocity, even when in orbit
+        private Vector3 relativeVelocity;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
         public Vessel legacyTargetVessel;
@@ -789,6 +790,9 @@ namespace BDArmory
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
                     UpdateTargetVessel();
+                    updateAcceleration(targetVelocity);
+                    relativeVelocity = targetVelocity - vessel.GetSrfVelocity();
+                    targetPosition += relativeVelocity * Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -1595,11 +1599,11 @@ namespace BDArmory
                     if (targetAcquired)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            targetVelocity - vessel.Velocity(), effectiveVelocity);
+                            relativeVelocity, effectiveVelocity);
                         if (time2 > 0) time = time2;
-                        finalTarget += (targetVelocity - vessel.Velocity()) * time;
+                        finalTarget += relativeVelocity * time;
                         #if DEBUG
-                        relVelAdj = (targetVelocity - vessel.Velocity()) * time;
+                        relVelAdj = relativeVelocity * time;
                         var vc = finalTarget;
                         #endif
 
@@ -2002,9 +2006,7 @@ namespace BDArmory
                      (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.Velocity();
-                    updateAcceleration(legacyTargetVessel.GetSrfVelocity());
-                    //targetAcceleration = legacyTargetVessel.acceleration;
+                    targetVelocity = legacyTargetVessel.GetSrfVelocity();
                     targetAcquired = true;
                     return;
                 }
@@ -2013,9 +2015,7 @@ namespace BDArmory
                 {
                     slaved = true;
                     targetPosition = weaponManager.slavedPosition;
-                    targetVelocity = weaponManager.slavedVelocity;
-                    updateAcceleration(weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity);
-                    //targetAcceleration = weaponManager.slavedAcceleration;
+                    targetVelocity = weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity;
                     targetAcquired = true;
                     return;
                 }
@@ -2028,10 +2028,8 @@ namespace BDArmory
                     targetAcceleration = targetData.acceleration;
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.velocity;
+                        targetVelocity = targetData.vessel?.GetSrfVelocity() ?? targetData.velocity;
                         targetPosition = targetData.vessel.CoM;
-                        updateAcceleration(targetData.vessel?.GetSrfVelocity() ?? targetData.velocity);
-                        //targetAcceleration = targetData.acceleration;
                     }
                     targetAcquired = true;
                     return;
@@ -2075,9 +2073,7 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.Velocity();
-                        updateAcceleration(tgt.GetSrfVelocity());
-                        //targetAcceleration = tgt.acceleration;
+                        targetVelocity = tgt.GetSrfVelocity();
                     }
                 }
             }
