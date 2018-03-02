@@ -1259,32 +1259,14 @@ namespace BDArmory
 
                     Vector3 targetDirection = Vector3.zero; //autoTrack enhancer
                     Vector3 targetDirectionLR = tf.forward;
-                    Vector3 physStepFix = Vector3.zero;
 
-
-                    if (legacyTargetVessel != null && legacyTargetVessel.loaded)
+                    if (((legacyTargetVessel != null && legacyTargetVessel.loaded) || slaved) 
+                        && Vector3.Angle(rayDirection, targetDirection) < 1)
                     {
-                        physStepFix = legacyTargetVessel.Velocity() * Time.fixedDeltaTime;
-                        targetDirection = (legacyTargetVessel.CoM + physStepFix) - tf.position;
-
-
-                        if (Vector3.Angle(rayDirection, targetDirection) < 1)
-                        {
-                            rayDirection = targetDirection;
-                            targetDirectionLR = legacyTargetVessel.CoM + (2 * physStepFix) - tf.position;
-                        }
-                    }
-                    else if (slaved)
-                    {
-                        //physStepFix = (targetVelocity)*Time.fixedDeltaTime;
-                        physStepFix = Vector3.zero;
-                        targetDirection = (targetPosition + physStepFix) - tf.position;
-
-
+                        targetDirection = targetPosition + relativeVelocity * Time.fixedDeltaTime - tf.position;
                         rayDirection = targetDirection;
-                        targetDirectionLR = targetDirection + physStepFix;
+                        targetDirectionLR = targetDirection;
                     }
-
 
                     Ray ray = new Ray(tf.position, rayDirection);
                     lr.useWorldSpace = false;
@@ -1294,7 +1276,7 @@ namespace BDArmory
                     if (Physics.Raycast(ray, out hit, maxDistance, 9076737))
                     {
                         lr.useWorldSpace = true;
-                        laserPoint = hit.point + physStepFix;
+                        laserPoint = hit.point + (targetVelocity - Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
                         
                         lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
                         lr.SetPosition(1, laserPoint);  
