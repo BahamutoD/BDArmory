@@ -789,7 +789,6 @@ namespace BDArmory
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
                     UpdateTargetVessel();
-                    targetPosition += (targetVelocity - vessel.Velocity()) * Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -1592,7 +1591,7 @@ namespace BDArmory
                 {
                     float time = targetDistance / (effectiveVelocity);
                     finalTarget = targetPosition;
-
+                    Debug.Log($"iteration: {iterations}, effVel: {effectiveVelocity}, time: {time}");
                     if (targetAcquired)
                     {
                         float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
@@ -1612,7 +1611,7 @@ namespace BDArmory
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
                             finalTarget += 0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avAccel) * time * time;
                         else
-                            finalTarget += (0.5f * targetAcceleration * time * time); //target acceleration
+                            finalTarget += 0.5f * targetAcceleration * time * time; //target acceleration
 
                         #if DEBUG
                         accAdj = (finalTarget - vc);
@@ -1997,8 +1996,6 @@ namespace BDArmory
 
             if (weaponManager)
             {
-                targetVelocityPrevious = targetVelocity;
-
                 //legacy or visual range guard targeting
                 if (aiControlled && weaponManager && legacyTargetVessel &&
                     (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
@@ -2007,6 +2004,7 @@ namespace BDArmory
                     targetPosition = legacyTargetVessel.CoM;
                     targetVelocity = legacyTargetVessel.Velocity();
                     updateAcceleration(legacyTargetVessel.GetSrfVelocity());
+                    //targetAcceleration = legacyTargetVessel.acceleration;
                     targetAcquired = true;
                     return;
                 }
@@ -2016,7 +2014,8 @@ namespace BDArmory
                     slaved = true;
                     targetPosition = weaponManager.slavedPosition;
                     targetVelocity = weaponManager.slavedVelocity;
-                    updateAcceleration(weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedAcceleration);
+                    updateAcceleration(weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity);
+                    //targetAcceleration = weaponManager.slavedAcceleration;
                     targetAcquired = true;
                     return;
                 }
@@ -2031,7 +2030,8 @@ namespace BDArmory
                     {
                         targetVelocity = targetData.velocity;
                         targetPosition = targetData.vessel.CoM;
-                        updateAcceleration(targetData.vessel?.GetSrfVelocity() ?? targetData.acceleration);
+                        updateAcceleration(targetData.vessel?.GetSrfVelocity() ?? targetData.velocity);
+                        //targetAcceleration = targetData.acceleration;
                     }
                     targetAcquired = true;
                     return;
@@ -2077,15 +2077,16 @@ namespace BDArmory
                         targetPosition = tgt.CoM;
                         targetVelocity = tgt.Velocity();
                         updateAcceleration(tgt.GetSrfVelocity());
+                        //targetAcceleration = tgt.acceleration;
                     }
                 }
             }
         }
 
-        void updateAcceleration(Vector3 currentSrfVelocity)
+        void updateAcceleration(Vector3 targetSrfVelocity)
         {
-            targetAcceleration = (currentSrfVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
-            targetVelocityPrevious = currentSrfVelocity;
+            targetAcceleration = (targetSrfVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
+            targetVelocityPrevious = targetSrfVelocity;
         }
 
         void UpdateGUIWeaponState()
