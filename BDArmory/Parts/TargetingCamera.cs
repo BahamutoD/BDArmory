@@ -1,9 +1,10 @@
-using BDArmory.UI;
+using System.Collections.Generic;
+using BDArmory.Core;
 using UnityEngine;
 
 namespace BDArmory.Parts
 {
-	public class TargetingCamera : MonoBehaviour
+    public class TargetingCamera : MonoBehaviour
 	{
 		public static TargetingCamera Instance;
 		public static bool ReadyForUse;
@@ -95,20 +96,22 @@ namespace BDArmory.Parts
 			}
 
 			bool moduleFound = false;
-			foreach(ModuleTargetingCamera mtc in v.FindPartModulesImplementing<ModuleTargetingCamera>())
-			{
-				Debug.Log ("[BDArmory] : Vessel switched to vessel with targeting camera.  Refreshing camera state.");
+            List<ModuleTargetingCamera>.Enumerator mtc = v.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
+            while (mtc.MoveNext())
+            {
+                Debug.Log ("[BDArmory] : Vessel switched to vessel with targeting camera.  Refreshing camera state.");
 
-				if(mtc.cameraEnabled)
+				if(mtc.Current.cameraEnabled)
 				{
-					mtc.DelayedEnable();
+					mtc.Current.DelayedEnable();
 				}
 				else
 				{
-					mtc.DisableCamera();
+					mtc.Current.DisableCamera();
 				}
 				moduleFound = true;
 			}
+            mtc.Dispose();
 
 			if(!moduleFound)
 			{
@@ -301,8 +304,6 @@ namespace BDArmory.Parts
 			nvLight.enabled = false;
 		}
 
-
-
 		private Camera FindCamera(string cameraName)
 		{
 			foreach(Camera cam in Camera.allCameras)
@@ -316,12 +317,11 @@ namespace BDArmory.Parts
 			return null;
 		}
 
-
-
 		void OnDestroy()
 		{
 			ReadyForUse = false;
-		}
+            GameEvents.onVesselChange.Remove(VesselChange);
+        }
 
 		public static bool IsTGPCamera(Camera c)
 		{

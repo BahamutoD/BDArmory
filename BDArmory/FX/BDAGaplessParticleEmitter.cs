@@ -6,18 +6,12 @@ namespace BDArmory.FX
     public class BDAGaplessParticleEmitter : MonoBehaviour
     {
         public KSPParticleEmitter pEmitter;
-
         private float maxDistance = 0.6f;
-
         public bool emit = false;
-
         public Part part = null;
-
         public Rigidbody rb;
-
         Vector3 internalVelocity;
         Vector3 lastPos;
-
         bool useInternalV;
 
         Vector3 velocity
@@ -67,7 +61,7 @@ namespace BDArmory.FX
             if (emit)
             {
                 maxDistance = Mathf.Clamp((pEmitter.minSize/3), 0.3f, 5f) +
-                              (Mathf.Clamp((BDArmorySettings.numberOfParticleEmitters - 1), 0, 20)*0.07f);
+                              (Mathf.Clamp((BDArmorySetup.numberOfParticleEmitters - 1), 0, 20)*0.07f);
 
                 Vector3 originalLocalPosition = gameObject.transform.localPosition;
                 Vector3 originalPosition = gameObject.transform.position;

@@ -1,24 +1,29 @@
 using System;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
+using BDArmory.UI;
 using UnityEngine;
+using BDArmory.Core;
 
 namespace BDArmory.Parts
 {
 	public class BDExplosivePart : PartModule
 	{
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius"),
-            UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
-        public float blastRadius = 50;
-
-
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Blast Power"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "TNT mass equivalent"),
         UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
-        public float blastPower = 25;
+        public float tntMass = 1;
 
-        [KSPField]
-		public float blastHeat = -1;
+	    [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius"),
+	     UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
+	    public float blastRadius = 10;
+
+	    [KSPField]
+	    public string explModelPath = "BDArmory/Models/explosion/explosion";
+
+	    [KSPField]
+	    public string explSoundPath = "BDArmory/Sounds/explode1";
 
         [KSPAction("Arm")]
         public void ArmAG(KSPActionParam param)
@@ -30,9 +35,7 @@ namespace BDArmory.Parts
 		public void DetonateAG(KSPActionParam param)
 		{
 		    Detonate();
-		}
-
-        
+		}        
 
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Detonate", active = true)]
 	    public void DetonateEvent()
@@ -41,8 +44,9 @@ namespace BDArmory.Parts
         }
 
 	    public bool Armed { get; set; } = true;
+	    public bool Shaped { get; set; } = false;
 
-        private double previousMass = -1;
+	    private double previousMass = -1;
 		
 		bool hasDetonated;
 		
@@ -53,14 +57,25 @@ namespace BDArmory.Parts
 		        part.OnJustAboutToBeDestroyed += DetonateIfPossible;
                 part.force_activate();
 		    }
-		    
-		    CalculateBlast();
+
+            if (BDArmorySettings.ADVANCED_EDIT)
+            {
+                //Fields["tntMass"].guiActiveEditor = true;               
+
+                //((UI_FloatRange)Fields["tntMass"].uiControlEditor).minValue = 0f;
+                //((UI_FloatRange)Fields["tntMass"].uiControlEditor).maxValue = 3000f;
+                //((UI_FloatRange)Fields["tntMass"].uiControlEditor).stepIncrement = 5f;
+            }
+
+            CalculateBlast();
 		}
 
         public void Update()
         {
             if (HighLogic.LoadedSceneIsEditor)
+            {
                 OnUpdateEditor();
+            }
         }
 
 	    private void OnUpdateEditor()
@@ -70,37 +85,49 @@ namespace BDArmory.Parts
 
 	    private void CalculateBlast()
 	    {
-	        if (!part.Resources.Contains("HighExplosive")) return;
+	        if (part.Resources.Contains("HighExplosive"))
+	        {
+	            if (part.Resources["HighExplosive"].amount == previousMass) return;
 
-            if (part.Resources["HighExplosive"].amount == previousMass) return;
-           
-	        double explosiveMass = part.Resources["HighExplosive"].amount;   
+	            tntMass = (float) (part.Resources["HighExplosive"].amount * part.Resources["HighExplosive"].info.density * 1000) * 1.5f;
+      
+	            previousMass = part.Resources["HighExplosive"].amount;
+            }
 
-	        blastPower = (float)Math.Round(explosiveMass / 1.5f, 0);
-            blastRadius = (float) (15 * Math.Pow(blastPower, (1.0 / 3.0)));
-
-            previousMass = part.Resources["HighExplosive"].amount;
-	    }
+	        blastRadius = BlastPhysicsUtils.CalculateBlastRange(tntMass);
+        }
 		
 		public void DetonateIfPossible()
 		{
 			if(!hasDetonated && Armed && part.vessel.speed > 10)
-			{   
-			   Detonate();
-               hasDetonated = true;
+			{
+			    Vector3 direction = default(Vector3);
+
+			    if (Shaped)
+			    {
+			        direction = (part.transform.position + part.rb.velocity * Time.deltaTime).normalized;
+			    }
+			    ExplosionFx.CreateExplosion(part.transform.position, tntMass,
+			        explModelPath, explSoundPath, true, 0, part, direction);
+                hasDetonated = true;
 			}
 		}
 
 	    private void Detonate()
 	    {
-	        if (part != null)
+	        if (!hasDetonated && Armed)
 	        {
-                part.SetDamage(part.maxTemp + 100);
+	            part.Destroy();
+	            ExplosionFx.CreateExplosion(part.transform.position, tntMass,
+	                explModelPath, explSoundPath, true, 0, part);
 	        }
-	        Vector3 position = part.vessel.CoM;
-	        ExplosionFX.CreateExplosion(position, blastRadius, blastPower, blastHeat, vessel, FlightGlobals.getUpAxis(),
-	            "BDArmory/Models/explosion/explosionLarge", "BDArmory/Sounds/explode1");
 	    }
-    }
+
+	    public float GetBlastRadius()
+	    {
+	        CalculateBlast();
+	        return blastRadius;
+	    }
+	}
 }
 

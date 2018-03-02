@@ -5,37 +5,59 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{D86F2003-1724-4F4C-BB5A-B0109CB16F35}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>BDArmory</RootNamespace>
     <AssemblyName>BDArmory</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
+    <PlatformTarget>x86</PlatformTarget>
+    <ConsolePause>False</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;ENABLE_PROFILER</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
+    <Optimize>true</Optimize>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LocalDev\Refs\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>LocalDev\Refs\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -53,8 +75,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Armor\ArmorPenetration.cs" />
-    <Compile Include="Armor\BDArmor.cs" />
+    <Compile Include="Control\AIUtils.cs" />
+    <Compile Include="Control\BDGenericAIBase.cs" />
+    <Compile Include="Control\BDModuleSurfaceAI.cs" />
+    <Compile Include="Control\IBDAIControl.cs" />
+    <Compile Include="Bullets\AmmoSwitch.cs" />
+    <Compile Include="FX\DecalEmitterScript.cs" />
+    <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
+    <Compile Include="FX\MissileFX.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\CFEnable.cs" />
@@ -62,12 +90,13 @@
     <Compile Include="Misc\IEngageService.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
+    <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
+    <Compile Include="UI\BDArmorySetup.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
-    <Compile Include="Armor\BulletInfo.cs" />
+    <Compile Include="Bullets\BulletInfo.cs" />
     <Compile Include="Parts\MissileLauncher.cs" />
     <Compile Include="Misc\Misc.cs" />
     <Compile Include="FX\ShellCasing.cs" />
-    <Compile Include="UI\BDArmorySettings.cs" />
     <Compile Include="FX\ExplosionFX.cs" />
     <Compile Include="FX\BulletHitFX.cs" />
     <Compile Include="CounterMeasure\CMFlare.cs" />
@@ -84,6 +113,7 @@
     <Compile Include="Animation\BDAScaleByDistance.cs" />
     <Compile Include="Animation\BDALookConstraintUp.cs" />
     <Compile Include="Parts\SeismicChargeFX.cs" />
+    <Compile Include="UI\BDGUIComboBox.cs" />
     <Compile Include="UI\BDGUIUtils.cs" />
     <Compile Include="UI\BDInputUtils.cs" />
     <Compile Include="TargetInfo.cs" />
@@ -95,7 +125,7 @@
     <Compile Include="Misc\VectorUtils.cs" />
     <Compile Include="ModuleWeapon.cs" />
     <Compile Include="Misc\ObjectPool.cs" />
-    <Compile Include="PooledBullet.cs" />
+    <Compile Include="Bullets\PooledBullet.cs" />
     <Compile Include="FX\CameraBulletRenderer.cs" />
     <Compile Include="Shaders\BDAShaderLoader.cs" />
     <Compile Include="Misc\IBDWeapon.cs" />
@@ -134,7 +164,7 @@
     <Compile Include="Parts\BDRotaryRail.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Control\BDACompetitionMode.cs" />
-    <Compile Include="UI\BDAPersistantSettingsField.cs" />
+    <Compile Include="UI\IBDWMModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BDArmory.Core\BDArmory.Core.csproj">
@@ -147,7 +177,13 @@
     <EmbeddedResource Include="Shaders\UnlitBlack.shader" />
     <EmbeddedResource Include="Shaders\BulletShader.shader" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="LocalDev\Refs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\rcsShader.shader" />
+    <None Include="packages.config" />
+  </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>@echo $(Targetname)
 SET ModName=BDArmory

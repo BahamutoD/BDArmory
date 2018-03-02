@@ -29,13 +29,18 @@ namespace BDArmory.CounterMeasure
 
         public float thermal; //heat value
         float minThermal;
+        float startThermal;
 
-        float lifeTime = 6;
+        float lifeTime = 5;
 
         void OnEnable()
         {
-            thermal = BDArmorySettings.FLARE_THERMAL*UnityEngine.Random.Range(0.45f, 1.25f);
-            minThermal = thermal*0.35f;
+            // OLD:
+            //thermal = BDArmorySetup.FLARE_THERMAL*UnityEngine.Random.Range(0.45f, 1.25f);
+            // NEW: generate flare within spectrum of emitting vessel's heat signature
+            thermal = BDATargetManager.GetVesselHeatSignature(sourceVessel) * UnityEngine.Random.Range(0.65f, 1.75f);
+            startThermal = thermal;
+            minThermal = startThermal * 0.3f;
 
             if (gaplessEmitters == null || pEmitters == null)
             {
@@ -78,7 +83,7 @@ namespace BDArmory.CounterMeasure
             }
             pEmitter.Dispose();
 
-            BDArmorySettings.numberOfParticleEmitters++;
+            BDArmorySetup.numberOfParticleEmitters++;
 
 
             if (lights == null)
@@ -99,7 +104,7 @@ namespace BDArmory.CounterMeasure
             //gameObject.AddComponent<KSPForceApplier>().drag = 0.4f;
 
 
-            BDArmorySettings.Flares.Add(this);
+            BDArmorySetup.Flares.Add(this);            
 
             if (sourceVessel != null)
             {
@@ -167,7 +172,7 @@ namespace BDArmory.CounterMeasure
 
             //thermal decay
             thermal = Mathf.MoveTowards(thermal, minThermal,
-                ((BDArmorySettings.FLARE_THERMAL - minThermal)/lifeTime)*Time.fixedDeltaTime);
+                ((thermal - minThermal)/lifeTime)*Time.fixedDeltaTime);
 
 
             //floatingOrigin fix
@@ -186,7 +191,7 @@ namespace BDArmory.CounterMeasure
             if (Time.time - startTime > lifeTime) //stop emitting after lifeTime seconds
             {
                 alive = false;
-                BDArmorySettings.Flares.Remove(this);
+                BDArmorySetup.Flares.Remove(this);
 
                 List<KSPParticleEmitter>.Enumerator pe = pEmitters.GetEnumerator();
                 while (pe.MoveNext())
@@ -216,7 +221,7 @@ namespace BDArmory.CounterMeasure
 
             if (Time.time - startTime > lifeTime + 11) //disable object after x seconds
             {
-                BDArmorySettings.numberOfParticleEmitters--;
+                BDArmorySetup.numberOfParticleEmitters--;
                 gameObject.SetActive(false);
                 return;
             }

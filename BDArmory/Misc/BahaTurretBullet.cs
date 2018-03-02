@@ -4,6 +4,7 @@ using BDArmory.FX;
 using BDArmory.UI;
 using UnityEngine;
 
+/*
 namespace BDArmory.Misc
 {
 	/// <summary>
@@ -68,8 +69,8 @@ namespace BDArmory.Misc
 		{
 			startPosition = transform.position;
 
-			float maxLimit = Mathf.Clamp(BDArmorySettings.MAX_BULLET_RANGE, 0, 8000);
-			maxDistance = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, maxLimit);
+			float maxLimit = Mathf.Clamp(BDArmorySetup.MAX_BULLET_RANGE, 0, 8000);
+			maxDistance = Mathf.Clamp(BDArmorySetup.PHYSICS_RANGE, 2500, maxLimit);
 			projectileColor.a = projectileColor.a/2;
 			startColor.a = startColor.a/2;
 			
@@ -158,7 +159,98 @@ namespace BDArmory.Misc
 				
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
 				RaycastHit hit;
-				if(Physics.Raycast(ray, out hit, dist, 557057))
+                //KerbalEVA hitEVA = null;
+                //if (Physics.Raycast(ray, out hit, dist, 2228224))
+                //{
+                //    bool penetrated = true;
+                //    try
+                //    {
+                //        hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                //        if (hitEVA != null)
+                //            Debug.Log("[BDArmory]:Hit on kerbal confirmed!");
+                //    }
+                //    catch (NullReferenceException)
+                //    {
+                //        Debug.Log("[BDArmory]:Whoops ran amok of the exception handler");
+                //    }
+
+                //    if (hitEVA != null)
+                //    {
+                //        float hitAngle = Vector3.Angle(rb.velocity, -hit.normal);
+                //        if (hitEVA.part != null) //see if it will ricochet of the part
+                //        {
+                //            penetrated = !RicochetOnPart(hitEVA.part, hitAngle);
+                //        }
+
+                //        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //        /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
+                //        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+                //        float heatDamage = (rb.mass / hitEVA.part.crashTolerance) * rb.velocity.magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
+
+                //        //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance and mass
+                //        if (!penetrated)
+                //        {
+                //            heatDamage = heatDamage / 8;
+                //        }
+                //        if (BDArmorySetup.INSTAKILL)
+                //        //instakill support, will be removed once mod becomes officially MP
+                //        {
+                //            heatDamage = (float)hitEVA.part.maxTemp + 100;
+                //            //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
+                //        }
+                //        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                //            Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
+
+                //        if (hitEVA.part.vessel != sourceVessel)
+                //        {
+                //            hitEVA.part.AddDamage(heatDamage);
+                //        }
+
+                //        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //        /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE END////////////////////////////////////////////////////////////////
+                //        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                //        if (hitEVA.part.vessel != sourceVessel)
+                //        {
+                //            if (!penetrated && !hasBounced)
+                //            {
+                //                //ricochet
+                //                hasBounced = true;
+                //                if BDArmorySettings.BULLET_HITS)
+                //                {
+                //                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
+                //                }
+
+                //                transform.position = hit.point;
+                //                rb.velocity = Vector3.Reflect(rb.velocity, hit.normal);
+                //                rb.velocity = hitAngle / 150 * rb.velocity * 0.75f;
+
+                //                Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
+
+                //                rb.velocity = Vector3.RotateTowards(rb.velocity, randomDirection, UnityEngine.Random.Range(0f, 5f) * Mathf.Deg2Rad, 0);
+                //            }
+                //            else
+                //            {
+                //                if BDArmorySettings.BULLET_HITS)
+                //                {
+                //                    BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
+                //                }
+
+                //                if (bulletType == BulletTypes.Explosive)
+                //                {
+                //                    ExplosionFX.CreateExplosion(hit.point, radius, blastPower, -1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+                //                }
+
+                //                Destroy(gameObject); //destroy bullet on collision
+                //            }
+                //        }
+                //    }
+                //}
+
+                if (Physics.Raycast(ray, out hit, dist, 9076737))
 				{
 					bool penetrated = true;
 
@@ -171,7 +263,8 @@ namespace BDArmory.Misc
 
 					Part hitPart =  null;   //determine when bullet collides with a target
 					try{
-						hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                        KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+						hitPart = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
 					}catch(NullReferenceException){}
 
 					float hitAngle = Vector3.Angle(rb.velocity, -hit.normal);
@@ -196,18 +289,18 @@ namespace BDArmory.Misc
 						{
 							heatDamage = heatDamage/8;
 						}
-						if(BDArmorySettings.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
+						if(BDArmorySetup.INSTAKILL)  //instakill support, will be removed once mod becomes officially MP
 						{
                             heatDamage = (float)hitPart.maxTemp + 100; //make heat damage equal to the part's max temperture, effectively instakilling any part it hits
 						}
-                        if (BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
+                        if (BDArmorySetup.BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: Hit! damage applied: " + heatDamage); //debugging stuff
 
                         if (hitPart.mass <= 0.01)   //if part mass is below 0.01, instakill it and do minor collateral (anti-exploit and to keep people from abusing near massless or massless crap as armor)
                         {
                             if (hitPart.vessel != sourceVessel)
                             {
                                 //make heat damage equal to the part's max temperture, and add 500 extra heat damage which should do minor collateral to teh surrounding parts
-                                hitPart.AddDamage(hitPart.maxTemp + 500);
+                                hitPart.Destroy();
                             }
                         }
                         else    //apply damage normally if no special case present
@@ -240,7 +333,7 @@ namespace BDArmory.Misc
 						{
 							hitBuilding.Demolish();
 						}
-						if(BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Damage: " + (damageToBuilding).ToString("0.00")+ ", total Damage: "+hitBuilding.Damage);
+						if(BDArmorySetup.BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " + (damageToBuilding).ToString("0.00")+ ", total Hitpoints: "+hitBuilding.Damage);
 					}
 					
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
@@ -249,7 +342,7 @@ namespace BDArmory.Misc
 						{
 							//ricochet
 							hasBounced = true;
-							if(BDArmorySettings.BULLET_HITS)
+							ifBDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
 							}	
@@ -264,14 +357,14 @@ namespace BDArmory.Misc
 						}
 						else
 						{
-							if(BDArmorySettings.BULLET_HITS)
+							ifBDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, false);
 							}
 
 							if(bulletType == BulletTypes.Explosive)
 							{
-								ExplosionFX.CreateExplosion(hit.point, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+								ExplosionFx.CreateExplosion(hit.point, blastPower, explModelPath, explSoundPath,false);
 							}
 
 							Destroy(gameObject); //destroy bullet on collision
@@ -283,7 +376,7 @@ namespace BDArmory.Misc
 			if(airDetonation && distanceFromStart > detonationRange)
 			{
 				//detonate
-				ExplosionFX.CreateExplosion(transform.position, radius, blastPower,-1, sourceVessel, rb.velocity.normalized, explModelPath, explSoundPath);
+				ExplosionFx.CreateExplosion(transform.position, blastPower, explModelPath, explSoundPath,false);
 				Destroy(gameObject); //destroy bullet on collision
 			}
 
@@ -319,3 +412,4 @@ namespace BDArmory.Misc
 	}
 }
 
+*/

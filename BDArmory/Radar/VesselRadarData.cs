@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.UI;
@@ -47,27 +48,27 @@ namespace BDArmory.Radar
         Vector2 pingSize = new Vector2(16, 8);
 
         Texture2D rollIndicatorTexture =
-            GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "radarRollIndicator", false);
+            GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "radarRollIndicator", false);
 
         public static Texture2D omniBgTexture =
-            GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "omniRadarTexture", false);
+            GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "omniRadarTexture", false);
 
         Texture2D radialBgTexture = GameDatabase.Instance.GetTexture(
-            BDArmorySettings.textureDir + "radialRadarTexture", false);
+            BDArmorySetup.textureDir + "radialRadarTexture", false);
 
-        Texture2D scanTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "omniRadarScanTexture",
+        Texture2D scanTexture = GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "omniRadarScanTexture",
             false);
 
-        Texture2D lockIcon = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "lockedRadarIcon", false);
+        Texture2D lockIcon = GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "lockedRadarIcon", false);
 
         Texture2D lockIconActive =
-            GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "lockedRadarIconActive", false);
+            GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "lockedRadarIconActive", false);
 
-        Texture2D radarContactIcon = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "radarContactIcon",
+        Texture2D radarContactIcon = GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "radarContactIcon",
             false);
 
         Texture2D friendlyContactIcon =
-            GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "friendlyContactIcon", false);
+            GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "friendlyContactIcon", false);
 
         float lockIconSize = 24;
         GUIStyle distanceStyle;
@@ -80,7 +81,7 @@ namespace BDArmory.Radar
         float guiInputCooldown = 0.2f;
 
         //range increments
-        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000};
+        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000,100000};
         int rangeIndex = 0;
 
         //lock cursor
@@ -199,7 +200,15 @@ namespace BDArmory.Radar
 
         void Start()
         {
-            rangeIndex = rIncrements.Length - 1;
+            rangeIndex = rIncrements.Length - 2;
+
+            //determine configured physics ranges and add a radar range level for the highest range
+            if (vessel.vesselRanges.flying.load > rIncrements[rIncrements.Length-1])
+            {
+                rIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, vessel.vesselRanges.flying.load };
+                rangeIndex--;
+            }
+
             UpdateLockedTargets();
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
@@ -282,6 +291,8 @@ namespace BDArmory.Radar
             GameEvents.onVesselDestroy.Remove(OnVesselDestroyed);
             GameEvents.onVesselCreate.Remove(OnVesselDestroyed);
             MissileFire.OnToggleTeam -= OnToggleTeam;
+            GameEvents.onGameStateSave.Remove(OnGameStateSave);
+            GameEvents.onPartDestroyed.Remove(PartDestroyed);
 
             if (weaponManager)
             {
@@ -292,7 +303,7 @@ namespace BDArmory.Radar
             }
         }
 
-        void OnToggleTeam(MissileFire wm, BDArmorySettings.BDATeams team)
+        void OnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
         {
             if (!weaponManager || !wm) return;
 
@@ -432,6 +443,7 @@ namespace BDArmory.Radar
             weaponManager.slavedPosition = lockedTarget.predictedPosition;
             weaponManager.slavedVelocity = lockedTarget.velocity;
             weaponManager.slavedAcceleration = lockedTarget.acceleration;
+            weaponManager.slavedTarget = lockedTarget;
         }
 
         void Update()
@@ -486,7 +498,7 @@ namespace BDArmory.Radar
             }
 
             drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && rCount > 0 &&
-                       vessel.isActiveVessel && BDArmorySettings.GAME_UI_ENABLED && !MapView.MapIsEnabled);
+                       vessel.isActiveVessel && BDArmorySetup.GAME_UI_ENABLED && !MapView.MapIsEnabled);
 
             if (!vessel.loaded && radarCount == 0)
             {
@@ -519,6 +531,7 @@ namespace BDArmory.Radar
             if (origIndex != rangeIndex)
             {
                 pingPositionsDirty = true;
+                UpdateRWRRange();
             }
         }
 
@@ -529,6 +542,19 @@ namespace BDArmory.Radar
             if (origIndex != rangeIndex)
             {
                 pingPositionsDirty = true;
+                UpdateRWRRange();
+            }
+        }
+
+        /// <summary>
+        /// Update the radar range also on the rwr display
+        /// </summary>
+        void UpdateRWRRange()
+        {
+            List<RadarWarningReceiver>.Enumerator rwr = vessel.FindPartModulesImplementing<RadarWarningReceiver>().GetEnumerator();
+            while (rwr.MoveNext())
+            {
+                rwr.Current.rwrDisplayRange = rIncrements[rangeIndex];
             }
         }
 
@@ -617,7 +643,7 @@ namespace BDArmory.Radar
             (
                 radar.canLock
                 && (!radar.locked || radar.currentLocks < radar.maxLocks)
-                && radarTarget.targetData.signalStrength > radar.minLockedSignalThreshold
+                && radarTarget.targetData.signalStrength > radar.radarLockTrackCurve.Evaluate((radarTarget.targetData.predictedPosition - radar.transform.position).magnitude / 1000f)
                 &&
                 (radar.omnidirectional ||
                  Vector3.Angle(radar.transform.up, radarTarget.targetData.predictedPosition - radar.transform.position) <
@@ -672,6 +698,7 @@ namespace BDArmory.Radar
         void OnGUI()
         {
             if (!drawGUI) return;
+
             for (int i = 0; i < lockedTargetIndexes.Count; i++)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -698,23 +725,23 @@ namespace BDArmory.Radar
                     if (weaponManager && lockedTarget.team == BDATargetManager.BoolToTeam(weaponManager.team))
                     {
                         BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
-                            BDArmorySettings.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
+                            BDArmorySetup.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
                     }
                     else
                     {
                         BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
-                            BDArmorySettings.Instance.openGreenSquare, new Vector2(20, 20), 0);
+                            BDArmorySetup.Instance.openGreenSquare, new Vector2(20, 20), 0);
                     }
                 }
                 else
                 {
                     BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
-                        BDArmorySettings.Instance.greenDiamondTexture, new Vector2(17, 17), 0);
+                        BDArmorySetup.Instance.greenDiamondTexture, new Vector2(17, 17), 0);
                 }
             }
 
 
-            string windowTitle = "Radar";
+            const string windowTitle = "Radar";
             radarWindowRect = GUI.Window(524141, radarWindowRect, RadarWindow, windowTitle, HighLogic.Skin.window);
             BDGUIUtils.UseMouseEventInRect(radarWindowRect);
 
@@ -727,11 +754,6 @@ namespace BDArmory.Radar
                 BDGUIUtils.UseMouseEventInRect(linkWindowRect);
             }
 
-
-            if (BDArmorySettings.DRAW_DEBUG_LABELS)
-            {
-                GUI.Label(new Rect(800, 800, 800, 800), "radarCount: " + radarCount);
-            }
         }
 
 
@@ -776,7 +798,7 @@ namespace BDArmory.Radar
                 GUIUtility.RotateAroundPivot(dAngle, radarRect.center);
                 GUI.DrawTexture(
                     new Rect(radarRect.center.x - (directionSize/2), radarRect.center.y - (directionSize/2),
-                        directionSize, directionSize), BDArmorySettings.Instance.directionTriangleIcon,
+                        directionSize, directionSize), BDArmorySetup.Instance.directionTriangleIcon,
                     ScaleMode.StretchToFill, true);
                 GUI.matrix = Matrix4x4.identity;
 
@@ -854,7 +876,7 @@ namespace BDArmory.Radar
                             (Quaternion.AngleAxis(indicatorAngle, referenceTransform.up)*referenceTransform.forward),
                             referenceTransform, radarRect, 5000, directionalFieldOfView/2);
                     GUI.DrawTexture(new Rect(scanIndicatorPos.x - 7, scanIndicatorPos.y - 10, 14, 20),
-                        BDArmorySettings.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
+                        BDArmorySetup.Instance.greenDiamondTexture, ScaleMode.StretchToFill, true);
 
                     if (!islocked || !availableRadars[i].canTrackWhileScan) continue;
                     Vector2 leftPos =
@@ -1207,7 +1229,7 @@ namespace BDArmory.Radar
                 {
                     if (v.Current == null || !v.Current.loaded || v.Current == vessel) continue;
                     if (v.Current.id.ToString() != vesselID) continue;
-                    VesselRadarData vrd = v.Current.GetComponent<VesselRadarData>();
+                    VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                     if (!vrd) continue;
                     waitingForVessels.Remove(vesselID);
                     StartCoroutine(LinkVRDWhenReady(vrd));
@@ -1264,7 +1286,7 @@ namespace BDArmory.Radar
 
         void RefreshAvailableLinks()
         {
-            if (!HighLogic.LoadedSceneIsFlight || !weaponManager || (FlightGlobals.Vessels == null))
+            if (!HighLogic.LoadedSceneIsFlight || !weaponManager || (FlightGlobals.Vessels == null) || (!FlightGlobals.ready))
             {                
                 return;
             }
@@ -1275,7 +1297,7 @@ namespace BDArmory.Radar
             {
                 if (v.Current == null || !v.Current.loaded || vessel == null || v.Current == vessel) continue;
 
-                BDArmorySettings.BDATeams team = BDArmorySettings.BDATeams.None;
+                BDArmorySetup.BDATeams team = BDArmorySetup.BDATeams.None;
                 List<MissileFire>.Enumerator mf = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                 while (mf.MoveNext())
                 {
@@ -1286,7 +1308,7 @@ namespace BDArmory.Radar
                 mf.Dispose();
 
                 if (team != BDATargetManager.BoolToTeam(weaponManager.team)) continue;
-                VesselRadarData vrd = v.Current.GetComponent<VesselRadarData>();
+                VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                 if (vrd && vrd.radarCount > 0)
                 {
                     availableExternalVRDs.Add(vrd);
@@ -1341,11 +1363,11 @@ namespace BDArmory.Radar
 
             if (rData.vessel == vessel) return;
                                     
-            if (rData.vessel.altitude < -20 && radar.rwrThreatType != 6) addContact = false; // Normal Radar Should not detect Underwater vessels
-            if (!rData.vessel.LandedOrSplashed && radar.rwrThreatType == 6) addContact = false; //Sonar should not detect Aircraft
-            if (rData.vessel.altitude < 0 && radar.rwrThreatType == 6 && vessel.Splashed) addContact = true; //Sonar only detects underwater vessels // Sonar should only work when in the water
-            if (!vessel.Splashed && radar.rwrThreatType == 6) addContact = false; // Sonar should only work when in the water
-            if (rData.vessel.Landed && radar.rwrThreatType == 6) addContact = false; //Sonar should not detect land vessels
+            if (rData.vessel.altitude < -20 && radar.rwrThreatType != (int)RadarWarningReceiver.RWRThreatTypes.Sonar) addContact = false; // Normal Radar Should not detect Underwater vessels
+            if (!rData.vessel.LandedOrSplashed && radar.rwrThreatType == (int)RadarWarningReceiver.RWRThreatTypes.Sonar) addContact = false; //Sonar should not detect Aircraft
+            if (rData.vessel.altitude < 0 && radar.rwrThreatType == (int)RadarWarningReceiver.RWRThreatTypes.Sonar && vessel.Splashed) addContact = true; //Sonar only detects underwater vessels // Sonar should only work when in the water
+            if (!vessel.Splashed && radar.rwrThreatType == (int)RadarWarningReceiver.RWRThreatTypes.Sonar) addContact = false; // Sonar should only work when in the water
+            if (rData.vessel.Landed && radar.rwrThreatType == (int)RadarWarningReceiver.RWRThreatTypes.Sonar) addContact = false; //Sonar should not detect land vessels
 
             if (addContact == false) return;
             
@@ -1607,7 +1629,7 @@ namespace BDArmory.Radar
                                     Rect targetDistanceRect = new Rect(dlzX - (targetDistIconSize/2), targetDistY,
                                         targetDistIconSize, targetDistIconSize);
                                     GUIUtility.RotateAroundPivot(90, targetDistanceRect.center);
-                                    GUI.DrawTexture(targetDistanceRect, BDArmorySettings.Instance.directionTriangleIcon,
+                                    GUI.DrawTexture(targetDistanceRect, BDArmorySetup.Instance.directionTriangleIcon,
                                         ScaleMode.StretchToFill, true);
                                     GUI.matrix = Matrix4x4.identity;
                                 }
@@ -1622,10 +1644,11 @@ namespace BDArmory.Radar
                                    displayedTargets[i].signalPersistTime)*2) - 1;
 
                     //jamming
+                    // NEW: evaluation via radarutils!
                     bool jammed = false;
-                    if (displayedTargets[i].targetData.vesselJammer &&
-                        displayedTargets[i].targetData.vesselJammer.jammerStrength >
-                        displayedTargets[i].targetData.signalStrength)
+                    float distanceToTarget = (this.vessel.transform.position - displayedTargets[i].targetData.position).sqrMagnitude;
+                    float jamDistance = RadarUtils.GetVesselECMJammingDistance(displayedTargets[i].targetData.vessel);
+                    if (displayedTargets[i].targetData.vesselJammer && jamDistance*jamDistance > distanceToTarget)
                     {
                         jammed = true;
                     }
@@ -1649,14 +1672,14 @@ namespace BDArmory.Radar
                     //draw missiles and debris as dots
                     if ((displayedTargets[i].targetData.targetInfo &&
                          displayedTargets[i].targetData.targetInfo.isMissile) ||
-                        displayedTargets[i].targetData.team == BDArmorySettings.BDATeams.None)
+                        displayedTargets[i].targetData.team == BDArmorySetup.BDATeams.None)
                     {
                         float mDotSize = 6;
                         pingRect = new Rect(pingPosition.x - (mDotSize/2), pingPosition.y - (mDotSize/2), mDotSize,
                             mDotSize);
                         Color origGUIColor = GUI.color;
                         GUI.color = Color.white - new Color(0, 0, 0, minusAlpha);
-                        GUI.DrawTexture(pingRect, BDArmorySettings.Instance.greenDotTexture, ScaleMode.StretchToFill,
+                        GUI.DrawTexture(pingRect, BDArmorySetup.Instance.greenDotTexture, ScaleMode.StretchToFill,
                             true);
                         GUI.color = origGUIColor;
                     }
@@ -1769,7 +1792,7 @@ namespace BDArmory.Radar
                                     pingPosition.y - (friendlySize/2), friendlySize, friendlySize);
                                 Color origGuiColor = GUI.color;
                                 GUI.color = iconColor - new Color(0, 0, 0, minusAlpha);
-                                GUI.DrawTexture(friendlyRect, BDArmorySettings.Instance.greenDotTexture,
+                                GUI.DrawTexture(friendlyRect, BDArmorySetup.Instance.greenDotTexture,
                                     ScaleMode.StretchToFill, true);
                                 GUI.color = origGuiColor;
                             }

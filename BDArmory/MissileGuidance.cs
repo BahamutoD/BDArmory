@@ -1,8 +1,8 @@
 using System;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Parts;
-using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory
@@ -201,16 +201,16 @@ namespace BDArmory
             Vector3d relativeVelocity = (float) missileVessel.srfSpeed * missileVessel.Velocity().normalized -
                                    targetVelocity;
             Vector3 missileFinalPosition = missileVessel.CoM;
-            float previousDistance = 0f;
-            float currentDistance;
+            float previousDistanceSqr = 0f;
+            float currentDistanceSqr;
             do
             {
 
                 missileFinalPosition += relativeVelocity * Time.fixedDeltaTime;
                 relativeVelocity += relativeAcceleration;
-                currentDistance = Vector3.Distance(missileFinalPosition, missileVessel.CoM);
+                currentDistanceSqr = (missileFinalPosition - missileVessel.CoM).sqrMagnitude;
 
-                if (currentDistance <= previousDistance)
+                if (currentDistanceSqr <= previousDistanceSqr)
                 {
                     Debug.Log("[BDArmory]: Accurate time to impact failed");
 
@@ -218,10 +218,10 @@ namespace BDArmory
                     return false;
                 }
 
-                previousDistance = currentDistance;
+                previousDistanceSqr = currentDistanceSqr;
                 iterations++;
 
-            } while (currentDistance < targetDistance);
+            } while (currentDistanceSqr < targetDistance*targetDistance);
 
             timeToImpact = Time.fixedDeltaTime * iterations;
             return true;
@@ -288,7 +288,6 @@ namespace BDArmory
             float distanceSqr =
                 (targetPosition - (missileVessel.transform.position - (currentRadarAlt*upDirection))).sqrMagnitude;
 
-
             Vector3 planarDirectionToTarget =
                 Vector3.ProjectOnPlane(targetPosition - missileVessel.transform.position, upDirection).normalized;
 
@@ -303,11 +302,12 @@ namespace BDArmory
                 Vector3 tRayDirection = (planarDirectionToTarget*10) - (10*upDirection);
                 Ray terrainRay = new Ray(missileVessel.transform.position, tRayDirection);
                 RaycastHit rayHit;
-                if (Physics.Raycast(terrainRay, out rayHit, 8000, 1 << 15))
+
+                if (Physics.Raycast(terrainRay, out rayHit, 8000, (1 << 15) | (1 << 17)))
                 {
                     float detectedAlt =
                         Vector3.Project(rayHit.point - missileVessel.transform.position, upDirection).magnitude;
-
+                
                     error = Mathf.Min(detectedAlt, currentRadarAlt) - radarAlt;
                 }
                 else
@@ -334,8 +334,8 @@ namespace BDArmory
             Vector3 planarSin = missileVessel.transform.position + planarVectorToTarget + sinOffset;
 
             Vector3 finalTarget;
-            if (Vector3.Distance(targetPosition, missileVessel.transform.position) >
-                (2500 + GetRadarAltitude(missileVessel)))
+            float finalDistance = 2500 + GetRadarAltitude(missileVessel);
+            if ((targetPosition - missileVessel.transform.position).sqrMagnitude > finalDistance*finalDistance)
             {
                 finalTarget = targetPosition;
             }
@@ -478,7 +478,7 @@ namespace BDArmory
             }
 
             RaycastHit rayHit;
-            if (Physics.Raycast(ray, out rayHit, rayDistance, 1 << 15))
+            if (Physics.Raycast(ray, out rayHit, rayDistance, (1 << 15) | (1 << 17)))
             {
                 return rayHit.distance;
             }

@@ -7,34 +7,27 @@ using BDArmory.Parts;
 using BDArmory.Radar;
 using KSP.UI.Screens;
 using UnityEngine;
+using System.Text;
+using System;
+using BDArmory.Core;
 
 namespace BDArmory.UI
 {
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class BDATargetManager : MonoBehaviour
 	{
-		public static Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>> TargetDatabase;
-
-		public static Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>> GPSTargets;
-
+		public static Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>> TargetDatabase;
+		public static Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>> GPSTargets;
 		public static List<ModuleTargetingCamera> ActiveLasers;
-
 		public static List<IBDWeapon> FiredMissiles;
-
 		public static List<DestructibleBuilding> LoadedBuildings;
-
 		public static List<Vessel> LoadedVessels;
-
 		public static BDATargetManager Instance;
 
+        private StringBuilder debugString = new StringBuilder();
+        private float updateTimer = 0;
 
-
-		string debugString = string.Empty;
-
-		public static float heatScore;
-		public static float flareScore;
-
-		public static bool hasAddedButton;
+        public static bool hasAddedButton;
 
 		void Awake()
 		{
@@ -60,10 +53,9 @@ namespace BDArmory.UI
 				GameEvents.onGameStateSave.Remove(SaveGPSTargets);
 			}
 
-			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
-			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
-
+			GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
+			GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 
 			GameEvents.onVesselLoaded.Remove(AddVessel);
 			GameEvents.onVesselGoOnRails.Remove(RemoveVessel);
@@ -75,16 +67,16 @@ namespace BDArmory.UI
 		void Start()
 		{
 			//legacy targetDatabase
-			TargetDatabase = new Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>>();
-			TargetDatabase.Add(BDArmorySettings.BDATeams.A, new List<TargetInfo>());
-			TargetDatabase.Add(BDArmorySettings.BDATeams.B, new List<TargetInfo>());
+			TargetDatabase = new Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>>();
+			TargetDatabase.Add(BDArmorySetup.BDATeams.A, new List<TargetInfo>());
+			TargetDatabase.Add(BDArmorySetup.BDATeams.B, new List<TargetInfo>());
 			StartCoroutine(CleanDatabaseRoutine());
 
 			if(GPSTargets == null)
 			{
-				GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
-				GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-				GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+				GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
+				GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
+				GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 			}
 
 			//Laser points
@@ -96,7 +88,6 @@ namespace BDArmory.UI
 			StartCoroutine(ToolbarButtonRoutine());
 
 		}
-
 
 		void AddBuilding(DestructibleBuilding b)
 		{
@@ -138,7 +129,7 @@ namespace BDArmory.UI
 			{
 				if(!hasAddedButton)
 				{
-					Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "icon", false);
+					Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "icon", false);
 					ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.FLIGHT, buttonTexture);
 					hasAddedButton = true;
 
@@ -159,27 +150,30 @@ namespace BDArmory.UI
 		}
 		public void ShowToolbarGUI()
 		{
-			BDArmorySettings.toolbarGuiEnabled = true;	
+			BDArmorySetup.toolbarGuiEnabled = true;	
 		}
 
 		public void HideToolbarGUI()
 		{
-			BDArmorySettings.toolbarGuiEnabled = false;	
+			BDArmorySetup.toolbarGuiEnabled = false;	
 		}
 		void Dummy()
 		{}
 
 		void Update()
 		{
-			if(BDArmorySettings.DRAW_DEBUG_LABELS)
+            if (BDArmorySettings.DRAW_DEBUG_LABELS && FlightGlobals.ready)
 			{
-				UpdateDebugLabels();
+                updateTimer -= Time.fixedDeltaTime;
+                if (updateTimer < 0)
+                {
+                    UpdateDebugLabels();
+                    updateTimer = 0.5f;    //next update in half a sec only
+                }
 			}
 
 		}
 
-
-		//Laser point stuff
 		public static void RegisterLaserPoint(ModuleTargetingCamera cam)
 		{
 			if(ActiveLasers.Contains(cam))
@@ -218,7 +212,6 @@ namespace BDArmory.UI
 	    {
             return GetModuleTargeting(parentOnly, ml.GetForwardTransform(), ml.MissileReferenceTransform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
         }
-
 
         private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Vector3 missilePosition, Vector3 position, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
 	    {
@@ -270,13 +263,66 @@ namespace BDArmory.UI
             return true;
         }
 
-        //public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
+        /// <summary>
+        /// The the heat signature of a vessel (for Heat/IR targeting).
+        /// Returns the heat of the hottest part of the vessel
+        /// </summary>
+        /// <param name="v">Vessel</param>
+        /// <returns>Heat signature value</returns>
+        public static float GetVesselHeatSignature(Vessel v)
+        {
+            float heatScore = 0f;
+
+            List<Part>.Enumerator part = v.Parts.GetEnumerator();
+            while (part.MoveNext())
+            {
+                if (!part.Current) continue;               
+
+                float thisScore = (float)(part.Current.thermalInternalFluxPrevious + part.Current.skinTemperature);
+                heatScore = Mathf.Max(heatScore, thisScore);
+            }
+
+            return heatScore;
+        }
+
+        /// <summary>
+        /// Find a flare within acceptable thermal range that will "decoy" for the passed heatsignature
+        /// </summary>
+        public static TargetSignatureData GetFlareTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, float heatSignature)
+        {
+            TargetSignatureData flareTarget = TargetSignatureData.noTarget;
+
+            List<CMFlare>.Enumerator flare = BDArmorySetup.Flares.GetEnumerator();
+            while (flare.MoveNext())
+            {
+                if (!flare.Current) continue;
+
+                float angle = Vector3.Angle(flare.Current.transform.position - ray.origin, ray.direction);
+                if (angle < scanRadius)
+                {
+                    float score = flare.Current.thermal * Mathf.Clamp01(15 / angle);
+
+                    score *= Mathf.Pow(1400, 2) / Mathf.Clamp((flare.Current.transform.position - ray.origin).sqrMagnitude, 90000, 36000000);
+                    score *= Mathf.Clamp(Vector3.Angle(flare.Current.transform.position - ray.origin, -VectorUtils.GetUpDirection(ray.origin)) / 90, 0.5f, 1.5f);
+
+                    // check acceptable range:
+                    // flare cannot be too cool, but also not too bright
+                    if ((score > heatSignature*0.9) && (score < heatSignature * 1.15))
+                    {
+                        flareTarget = new TargetSignatureData(flare.Current, score);
+                    }
+                }
+            }
+
+            return flareTarget;
+        }
+                
         public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null, bool favorGroundTargets = false)
         {
-			float minScore = highpassThreshold;
-            float minMass = 0.15f;  //otherwise the RAMs have trouble shooting down incoming missiles
+            float minMass = 0.05f;  //otherwise the RAMs have trouble shooting down incoming missiles
             TargetSignatureData finalData = TargetSignatureData.noTarget;
 			float finalScore = 0;
+
 			foreach(Vessel vessel in LoadedVessels)
 			{
 				if(!vessel || !vessel.loaded)
@@ -298,29 +344,24 @@ namespace BDArmory.UI
 					}
 				}
 
-				if(RadarUtils.TerrainCheck(ray.origin, vessel.transform.position))
-				{
-					continue;
-				}
 
-				float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
+                float angle = Vector3.Angle(vessel.CoM-ray.origin, ray.direction);
 				if(angle < scanRadius)
 				{
-					float score = 0;
-					foreach(Part part in vessel.Parts)
-					{
-						if(!part) continue;
-						if(!allAspect)
-						{
-							if(!Misc.Misc.CheckSightLineExactDistance(ray.origin, part.transform.position+vessel.Velocity(), Vector3.Distance(part.transform.position,ray.origin), 5, 5)) continue;
-						}
+                    if (RadarUtils.TerrainCheck(ray.origin, vessel.transform.position))
+                        continue;
 
-						float thisScore = (float)(part.thermalInternalFluxPrevious+part.skinTemperature) * (15/Mathf.Max(15,angle));
-						thisScore *= Mathf.Pow(1400,2)/Mathf.Clamp((vessel.CoM-ray.origin).sqrMagnitude, 90000, 36000000);
-						score = Mathf.Max (score, thisScore);
-					}
 
-					if(vessel.LandedOrSplashed && !favorGroundTargets)
+                    if (!allAspect)
+                    {
+                        if (!Misc.Misc.CheckSightLineExactDistance(ray.origin, vessel.CoM + vessel.Velocity(), Vector3.Distance(vessel.CoM, ray.origin), 5, 5))
+                            continue;
+                    }
+
+                    float score = GetVesselHeatSignature(vessel) * Mathf.Clamp01(15 / angle);
+                    score *= Mathf.Pow(1400, 2) / Mathf.Clamp((vessel.CoM - ray.origin).sqrMagnitude, 90000, 36000000);
+                    
+                    if (vessel.LandedOrSplashed && !favorGroundTargets)
 					{
 						score /= 4;
 					}
@@ -335,90 +376,92 @@ namespace BDArmory.UI
 				}
 			}
 
-			heatScore = finalScore;//DEBUG
-			flareScore = 0; //DEBUG
-			foreach(CMFlare flare in BDArmorySettings.Flares)
-			{
-				if(!flare) continue;
+            // see if there are flares decoying us:
+            TargetSignatureData flareData = GetFlareTarget(ray, scanRadius, highpassThreshold, allAspect, finalScore);
 
-				float angle = Vector3.Angle(flare.transform.position-ray.origin, ray.direction);
-				if(angle < scanRadius)
-				{
-					float score = flare.thermal * Mathf.Clamp01(15/angle);
-					score *= Mathf.Pow(1400,2)/Mathf.Clamp((flare.transform.position-ray.origin).sqrMagnitude, 90000, 36000000);
-
-					score *= Mathf.Clamp(Vector3.Angle(flare.transform.position-ray.origin, -VectorUtils.GetUpDirection(ray.origin))/90, 0.5f, 1.5f);
-
-					if(score > finalScore)
-					{
-						flareScore = score;//DEBUG
-						finalScore = score;
-						finalData = new TargetSignatureData(flare, score);
-					}
-				}
-			}
-
-
-
-			if(finalScore < minScore)
+			if(finalScore < highpassThreshold)
 			{
 				finalData = TargetSignatureData.noTarget;
 			}
 
-			return finalData;
+            // return matching flare
+            if (!flareData.Equals(TargetSignatureData.noTarget))
+                return flareData;
+            
+            //else return the target:
+            return finalData;
 		}
-
-
+        
 		void UpdateDebugLabels()
 		{
-			debugString = string.Empty;
-			debugString+= ("Team A's targets:");
-			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+            debugString.Length = 0;
+
+			debugString.Append($"Team A's targets:");
+            debugString.Append(Environment.NewLine);
+            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySetup.BDATeams.A])
 			{
 				if(targetInfo)
 				{
 					if(!targetInfo.Vessel)
 					{
-						debugString+= ("\n - A target with no vessel reference.");
-					}
+                        debugString.Append($"- A target with no vessel reference.");
+                        debugString.Append(Environment.NewLine);
+                    }
 					else
 					{
-						debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
-					}
+                        debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
+                        debugString.Append(Environment.NewLine);
+                    }
 				}
 				else
 				{
-					debugString+= ("\n - A null target info.");
-				}
+                    debugString.Append($"- null target info.");
+                    debugString.Append(Environment.NewLine);
+                }
 			}
-			debugString+= ("\nTeam B's targets:");
-			foreach(TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+
+            debugString.Append($"Team B's targets:");
+            debugString.Append(Environment.NewLine);
+            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySetup.BDATeams.B])
 			{
 				if(targetInfo)
 				{
 					if(!targetInfo.Vessel)
 					{
-						debugString+= ("\n - A target with no vessel reference.");
-					}
+                        debugString.Append($"- A target with no vessel reference.");
+                        debugString.Append(Environment.NewLine);
+                    }
 					else
 					{
-						debugString+= ("\n - "+targetInfo.Vessel.vesselName+", Engaged by "+targetInfo.numFriendliesEngaging);
-					}
+                        debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
+                        debugString.Append(Environment.NewLine);
+                    }
 				}
 				else
 				{
-					debugString+= ("\n - A null target info.");
-				}
+                    debugString.Append($"- null target info.");
+                    debugString.Append(Environment.NewLine);
+                }
 			}
 
-			debugString += "\n\nHeat score: "+heatScore;
-			debugString += "\nFlare score: "+flareScore;
-		}
+            debugString.Append(Environment.NewLine);
+            debugString.Append($"Heat Signature: {GetVesselHeatSignature(FlightGlobals.ActiveVessel):#####}");
+            debugString.Append(Environment.NewLine);
 
+            debugString.Append($"Radar Signature: " + RadarUtils.GetVesselRadarSignature(FlightGlobals.ActiveVessel).radarModifiedSignature);
+            debugString.Append(Environment.NewLine);
 
+            debugString.Append($"Chaff multiplier: " + RadarUtils.GetVesselChaffFactor(FlightGlobals.ActiveVessel));
+            debugString.Append(Environment.NewLine);
 
+            debugString.Append($"ECM Jammer Strength: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselECMJInfo>()?.jammerStrength);
+            debugString.Append(Environment.NewLine);
 
-		//gps stuff
+            debugString.Append($"ECM Lockbreak Strength: " + FlightGlobals.ActiveVessel.gameObject.GetComponent<VesselECMJInfo>()?.lockBreakStrength);
+            debugString.Append(Environment.NewLine);
+        }
+
+		
 		void SaveGPSTargets(ConfigNode saveNode)
 		{
 			string saveTitle = HighLogic.CurrentGame.Title;
@@ -465,7 +508,7 @@ namespace BDArmory.UI
 					gpsNode.AddValue("SaveGame", saveTitle);
 				}
 
-				if(GPSTargets[BDArmorySettings.BDATeams.A].Count == 0 && GPSTargets[BDArmorySettings.BDATeams.B].Count == 0)
+				if(GPSTargets[BDArmorySetup.BDATeams.A].Count == 0 && GPSTargets[BDArmorySetup.BDATeams.B].Count == 0)
 				{
 					//gpsNode.SetValue("Targets", string.Empty, true);
 					return;
@@ -476,9 +519,7 @@ namespace BDArmory.UI
 				fileNode.Save("GameData/BDArmory/gpsTargets.cfg");
 				Debug.Log("[BDArmory]: ==== Saved BDA GPS Targets ====");
 			}
-		}
-
-	
+		}	
 
 		void LoadGPSTargets(ConfigNode saveNode)
 		{
@@ -521,7 +562,7 @@ namespace BDArmory.UI
 		{
 			string finalString = string.Empty;
 			string aString = string.Empty;
-			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySetup.BDATeams.A])
 			{
 				aString += gpsInfo.name;
 				aString += ",";
@@ -540,7 +581,7 @@ namespace BDArmory.UI
 			finalString += ":";
 
 			string bString = string.Empty;
-			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySetup.BDATeams.B])
 			{
 				bString += gpsInfo.name;
 				bString += ",";
@@ -564,11 +605,11 @@ namespace BDArmory.UI
 		{
 			if(GPSTargets == null)
 			{
-				GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
+				GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
 			}
 			GPSTargets.Clear();
-			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 
 			if(listString == null || listString == string.Empty)
 			{
@@ -593,7 +634,7 @@ namespace BDArmory.UI
 						double longi = double.Parse(data[2]);
 						double alt = double.Parse(data[3]);
 						GPSTargetInfo newInfo = new GPSTargetInfo(new Vector3d(lat, longi, alt), name);
-						GPSTargets[BDArmorySettings.BDATeams.A].Add(newInfo);
+						GPSTargets[BDArmorySetup.BDATeams.A].Add(newInfo);
 					}
 				}
 			}
@@ -611,29 +652,22 @@ namespace BDArmory.UI
 						double longi = double.Parse(data[2]);
 						double alt = double.Parse(data[3]);
 						GPSTargetInfo newInfo = new GPSTargetInfo(new Vector3d(lat, longi, alt), name);
-						GPSTargets[BDArmorySettings.BDATeams.B].Add(newInfo);
+						GPSTargets[BDArmorySetup.BDATeams.B].Add(newInfo);
 					}
 				}
 			}
 		}
 
-
-
-
-
-
-
-
 		//Legacy target managing stuff
 
-		public static BDArmorySettings.BDATeams BoolToTeam(bool team)
+		public static BDArmorySetup.BDATeams BoolToTeam(bool team)
 		{
-			return team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			return team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 		}
 
-		public static BDArmorySettings.BDATeams OtherTeam(BDArmorySettings.BDATeams team)
+		public static BDArmorySetup.BDATeams OtherTeam(BDArmorySetup.BDATeams team)
 		{
-			return team == BDArmorySettings.BDATeams.A ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			return team == BDArmorySetup.BDATeams.A ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 		}
 
 		IEnumerator CleanDatabaseRoutine()
@@ -642,60 +676,80 @@ namespace BDArmory.UI
 			{
 				yield return new WaitForSeconds(5);
 			
-				TargetDatabase[BDArmorySettings.BDATeams.A].RemoveAll(target => target == null);
-				TargetDatabase[BDArmorySettings.BDATeams.A].RemoveAll(target => target.team == BDArmorySettings.BDATeams.A);
-				TargetDatabase[BDArmorySettings.BDATeams.A].RemoveAll(target => !target.isThreat);
+				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => target == null);
+				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => target.team == BDArmorySetup.BDATeams.A);
+				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => !target.isThreat);
 
-				TargetDatabase[BDArmorySettings.BDATeams.B].RemoveAll(target => target == null);
-				TargetDatabase[BDArmorySettings.BDATeams.B].RemoveAll(target => target.team == BDArmorySettings.BDATeams.B);
-				TargetDatabase[BDArmorySettings.BDATeams.B].RemoveAll(target => !target.isThreat);
+				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => target == null);
+				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => target.team == BDArmorySetup.BDATeams.B);
+				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => !target.isThreat);
 			}
 		}
 
-		void RemoveTarget(TargetInfo target, BDArmorySettings.BDATeams team)
+		void RemoveTarget(TargetInfo target, BDArmorySetup.BDATeams team)
 		{
 			TargetDatabase[team].Remove(target);
 		}
 
-		public static void ReportVessel(Vessel v, MissileFire reporter)
-		{
-			if(!v) return;
-			if(!reporter) return;
+        public static void ReportVessel(Vessel v, MissileFire reporter)
+        {
+            if (!v) return;
+            if (!reporter) return;
 
-			TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
-			if(!info)
-			{
-				foreach(MissileFire mf in v.FindPartModulesImplementing<MissileFire>())
-				{
-					if(mf.team != reporter.team)
-					{
-						info = v.gameObject.AddComponent<TargetInfo>();
-					}
-					return;
-				}
+            TargetInfo info = v.gameObject.GetComponent<TargetInfo>();
+            if (!info)
+            {
+                List<MissileFire>.Enumerator mf = v.FindPartModulesImplementing<MissileFire>().GetEnumerator();
+                while (mf.MoveNext())
+                {
+                    if (mf.Current == null) continue;
+                    if (mf.Current.team != reporter.team)
+                    {
+                        info = v.gameObject.AddComponent<TargetInfo>();
+                        break;
+                    }
 
-				foreach(MissileBase ml in v.FindPartModulesImplementing<MissileBase>())
-				{
-					if(ml.HasFired)
-					{
-						if(ml.Team != reporter.team)
-						{
-							info = v.gameObject.AddComponent<TargetInfo>();
-						}
-					}
+                }
+                mf.Dispose();
 
-					return;
-				}
-			}
-			else
-			{
-				info.detectedTime = Time.time;
-			}
-		}
+                List<MissileBase>.Enumerator ml = v.FindPartModulesImplementing<MissileBase>().GetEnumerator();
+                while (ml.MoveNext())
+                {
+                    if (ml.Current == null) continue;
+                    if (ml.Current.HasFired)
+                    {
+                        if (ml.Current.Team != reporter.team)
+                        {
+                            info = v.gameObject.AddComponent<TargetInfo>();
+                            break;
+                        }
+                    }
+
+                }
+                ml.Dispose();
+            }
+
+            // add target to database
+            if (info)
+            {
+                AddTarget(info);
+                info.detectedTime = Time.time;
+            }
+        }
+
+        public static void AddTarget(TargetInfo target)
+        {
+            var team = target.team;
+            if (team == BDArmorySetup.BDATeams.None) return;
+            if (!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(target))
+            {
+                BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(target);
+            }
+        }
 
 		public static void ClearDatabase()
 		{
-			foreach(BDArmorySettings.BDATeams t in TargetDatabase.Keys)
+			foreach(BDArmorySetup.BDATeams t in TargetDatabase.Keys)
 			{
 				foreach(TargetInfo target in TargetDatabase[t])
 				{
@@ -703,29 +757,31 @@ namespace BDArmory.UI
 				}
 			}
 
-			TargetDatabase[BDArmorySettings.BDATeams.A].Clear();
-			TargetDatabase[BDArmorySettings.BDATeams.B].Clear();
+			TargetDatabase[BDArmorySetup.BDATeams.A].Clear();
+			TargetDatabase[BDArmorySetup.BDATeams.B].Clear();
 		}
 
 		public static TargetInfo GetAirToAirTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target.numFriendliesEngaging >= 2) continue;
-				if(target && target.Vessel && target.isFlying && !target.isMissile)
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current.numFriendliesEngaging >= 2) continue;
+				if(target.Current && target.Current.Vessel && target.Current.isFlying && !target.Current.isMissile && target.Current.isThreat)
 				{
-                    Vector3 targetRelPos = target.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
+                    Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
                     float targetSuitability = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);       //prefer targets ahead to those behind
                     targetSuitability += 500 / (targetRelPos.magnitude + 100);
 
-                    if (finalTarget == null || (target.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
+                    if (finalTarget == null || (target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
                         finalTargetSuitability = targetSuitability;
 					}
 				}
@@ -737,7 +793,7 @@ namespace BDArmory.UI
         //this will search for an AA target that is immediately in front of the AI during an extend when it would otherwise be helpless
         public static TargetInfo GetAirToAirTargetAbortExtend(MissileFire mf, float maxDistance, float cosAngleCheck)
         {
-            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+            BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
             TargetInfo finalTarget = null;
 
             float finalTargetSuitability = 0;    //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
@@ -745,7 +801,7 @@ namespace BDArmory.UI
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
             {
-                if (target.Current == null || !target.Current.Vessel || target.Current.isLanded || target.Current.isMissile) continue;
+                if (target.Current == null || !target.Current.Vessel || target.Current.isLanded || target.Current.isMissile || !target.Current.isThreat) continue;
                 Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
 
                 float distance, dot;
@@ -770,7 +826,7 @@ namespace BDArmory.UI
         //returns the nearest friendly target
         public static TargetInfo GetClosestFriendly(MissileFire mf)
         {
-            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.A : BDArmorySetup.BDATeams.B;
             TargetInfo finalTarget = null;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
@@ -789,7 +845,7 @@ namespace BDArmory.UI
         //returns the target that owns this weapon manager
         public static TargetInfo GetTargetFromWeaponManager(MissileFire mf)
         {
-            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.A : BDArmorySetup.BDATeams.B;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
@@ -800,77 +856,86 @@ namespace BDArmory.UI
                     return target.Current;
                 }
             }
+            target.Dispose();
             return null;
         }
 
         public static TargetInfo GetClosestTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !target.Current.isMissile)
 				{
-					if(finalTarget == null || (target.IsCloser(finalTarget, mf)))
+					if(finalTarget == null || (target.Current.IsCloser(finalTarget, mf)))
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
 		public static List<TargetInfo> GetAllTargetsExcluding(List<TargetInfo> excluding, MissileFire mf)
 		{
 			List<TargetInfo> finalTargets = new List<TargetInfo>();
-			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
+			BDArmorySetup.BDATeams team = BoolToTeam(mf.team);
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !excluding.Contains(target))
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !excluding.Contains(target.Current))
 				{
-					finalTargets.Add(target);
+					finalTargets.Add(target.Current);
 				}
 			}
-
-			return finalTargets;
+            target.Dispose();
+            return finalTargets;
 		}
 
 		public static TargetInfo GetLeastEngagedTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
-			
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && !target.isMissile)
+
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !target.Current.isMissile && target.Current.isThreat)
 				{
-					if(finalTarget == null || target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
+					if(finalTarget == null || target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-		
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
 		public static TargetInfo GetMissileTarget(MissileFire mf, bool targetingMeOnly = false)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && target.isMissile && target.isThreat && mf.CanSeeTarget(target.Vessel) )
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && target.Current.isMissile && target.Current.isThreat && mf.CanSeeTarget(target.Current) )
 				{
-					if(target.MissileBaseModule)
+					if(target.Current.MissileBaseModule)
 					{
 						if(targetingMeOnly)
 						{
-							if(Vector3.SqrMagnitude(target.MissileBaseModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
+							if(Vector3.SqrMagnitude(target.Current.MissileBaseModule.TargetPosition - mf.vessel.CoM) > 60 * 60)
 							{
 								continue;
 							}
@@ -878,67 +943,72 @@ namespace BDArmory.UI
 					}
 					else
 					{
-						Debug.LogWarning("checking target missile -  doesn't have missile module");
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.LogWarning("checking target missile -  doesn't have missile module");
 					}
 
 
-					if(((finalTarget == null && target.numFriendliesEngaging < 2) || (finalTarget != null && target.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
+					if(((finalTarget == null && target.Current.numFriendliesEngaging < 2) || (finalTarget != null && target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-			
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
 		public static TargetInfo GetUnengagedMissileTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile && target.isThreat)
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && target.Current.isMissile && target.Current.isThreat)
 				{
-					if(target.numFriendliesEngaging == 0)
+					if(target.Current.numFriendliesEngaging == 0)
 					{
-						return target;
+						return target.Current;
 					}
 				}
 			}
-			
-			return null;
+            target.Dispose();
+            return null;
 		}
 
 		public static TargetInfo GetClosestMissileTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
+			BDArmorySetup.BDATeams team = BoolToTeam(mf.team);
 			TargetInfo finalTarget = null;
-			
-			foreach(TargetInfo target in TargetDatabase[team])
-			{
-				if(target && target.Vessel && mf.CanSeeTarget(target.Vessel) && target.isMissile)
+
+            List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
+            while (target.MoveNext())
+            {
+                if (target.Current == null) continue;
+                if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && target.Current.isMissile)
 				{
 					bool isHostile = false;
-					if(target.isThreat)
+					if(target.Current.isThreat)
 					{
 						isHostile = true;
 					}
 
-					if(isHostile && (finalTarget == null || target.IsCloser(finalTarget, mf)))
+					if(isHostile && (finalTarget == null || target.Current.IsCloser(finalTarget, mf)))
 					{
-						finalTarget = target;
+						finalTarget = target.Current;
 					}
 				}
 			}
-			
-			return finalTarget;
+            target.Dispose();
+            return finalTarget;
 		}
 
         //checks to see if a friendly is too close to the gun trajectory to fire them
         public static bool CheckSafeToFireGuns(MissileFire weaponManager, Vector3 aimDirection, float safeDistance, float cosUnsafeAngle)
         {
-            BDArmorySettings.BDATeams team = weaponManager.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            BDArmorySetup.BDATeams team = weaponManager.team ? BDArmorySetup.BDATeams.A : BDArmorySetup.BDATeams.B;
             List<TargetInfo>.Enumerator friendlyTarget = TargetDatabase[team].GetEnumerator();
             while (friendlyTarget.MoveNext())
             {
@@ -955,18 +1025,13 @@ namespace BDArmory.UI
             return true;
         }
 
-
 		void OnGUI()
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS)	
 			{
-				GUI.Label(new Rect(600,100,600,600), debugString);	
+				GUI.Label(new Rect(600,100,600,600), debugString.ToString());	
 			}
-
-
 		}
-
-
 
 	}
 }

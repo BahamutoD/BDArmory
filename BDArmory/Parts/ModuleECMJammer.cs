@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using BDArmory.CounterMeasure;
+using System.Text;
+using System;
 
 namespace BDArmory.Parts
 {
@@ -21,7 +23,8 @@ namespace BDArmory.Parts
 
         [KSPField] public bool rcsReduction = false;
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Enabled")] public bool jammerEnabled;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Enabled")]
+        public bool jammerEnabled = false;
 
         VesselECMJInfo vesselJammer;
 
@@ -123,6 +126,21 @@ namespace BDArmory.Parts
 
         void EnsureVesselJammer()
         {
+            /*
+            if (vesselJammer == null)
+            {
+                return;
+            }
+            if (vesselJammer.vessel == null)
+            {
+                return;
+            }
+            if (vessel == null)
+            {
+                return;
+            }
+            */
+
             if (!vesselJammer || vesselJammer.vessel != vessel)
             {
                 vesselJammer = vessel.gameObject.GetComponent<VesselECMJInfo>();
@@ -150,5 +168,39 @@ namespace BDArmory.Parts
                 DisableJammer();
             }
         }
+
+
+        // RMB info in editor
+        public override string GetInfo()
+        {
+            StringBuilder output = new StringBuilder();
+            output.Append($"EC/sec: {resourceDrain}");
+            output.Append(Environment.NewLine);
+            output.Append($"Always on: {alwaysOn}");
+            output.Append(Environment.NewLine);
+            output.Append($"RCS reduction: {rcsReduction}");
+            output.Append(Environment.NewLine);
+            if (rcsReduction)
+            {
+                output.Append($" - factor: {rcsReductionFactor}");
+                output.Append(Environment.NewLine);
+            }
+            output.Append($"Lockbreaker: {lockBreaker}");
+            output.Append(Environment.NewLine);
+            if (lockBreaker)
+            {
+                output.Append($" - strength: {lockBreakerStrength}");
+                output.Append(Environment.NewLine);
+            }
+            output.Append($"Signal strength: {jammerStrength}");
+            output.Append(Environment.NewLine);
+            output.Append($"(increases detectability!)");
+            output.Append(Environment.NewLine);
+
+
+            return output.ToString();
+        }
+
+
     }
 }

@@ -2,7 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using BDArmory.Core;
+using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
+using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
 using BDArmory.UI;
@@ -92,6 +95,9 @@ namespace BDArmory
             get { return turret ? turret.minPitch : 0; }
         }
 
+        Vector3 targetPosition;
+        public Vector3? FiringSolutionVector => targetPosition.IsZero() ? (Vector3?)null : (targetPosition - rockets[0].parent.transform.position).normalized;
+
         double lastRocketsLeft;
 
         //weapon interface
@@ -142,8 +148,8 @@ namespace BDArmory
             }
 
             part.decouple(0);
-            if (BDArmorySettings.Instance.ActiveWeaponManager != null)
-                BDArmorySettings.Instance.ActiveWeaponManager.UpdateList();
+            if (BDArmorySetup.Instance.ActiveWeaponManager != null)
+                BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
         [KSPEvent(guiActive = false, guiName = "Toggle Turret", guiActiveEditor = false)]
@@ -241,7 +247,7 @@ namespace BDArmory
             sfAudioSource.spatialBlend = 1;
 
             UpdateVolume();
-            BDArmorySettings.OnVolumeChange += UpdateVolume;
+            BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
         void UpdateVolume()
@@ -262,7 +268,7 @@ namespace BDArmory
             {
                 part.force_activate();
 
-                aimerTexture = BDArmorySettings.Instance.greenPointCircleTexture;
+                aimerTexture = BDArmorySetup.Instance.greenPointCircleTexture;
                 // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
 
 
@@ -275,7 +281,7 @@ namespace BDArmory
                 }
 
                 UpdateAudio();
-                BDArmorySettings.OnVolumeChange += UpdateAudio;
+                BDArmorySetup.OnVolumeChange += UpdateAudio;
             }
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
@@ -312,12 +318,14 @@ namespace BDArmory
                 }
             }
             SetupAudio();
+
+            blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
 
         IEnumerator DeployAnimRoutine(bool forward)
         {
             readyToFire = false;
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
 
             if (forward)
             {
@@ -349,7 +357,7 @@ namespace BDArmory
             deployAnimState.speed = 0;
 
             readyToFire = deployed;
-            BDArmorySettings.Instance.UpdateCursorState();
+            BDArmorySetup.Instance.UpdateCursorState();
         }
 
         void UpdateAudio()
@@ -362,7 +370,7 @@ namespace BDArmory
 
         void OnDestroy()
         {
-            BDArmorySettings.OnVolumeChange -= UpdateAudio;
+            BDArmorySetup.OnVolumeChange -= UpdateAudio;
         }
 
 
@@ -383,9 +391,13 @@ namespace BDArmory
 
             currentTgtRange = maxTargetingRange;
 
-            if (deployed && readyToFire && turret)
+            if (deployed && readyToFire && (turret || weaponManager?.AI?.pilotEnabled == true))
             {
                 Aim();
+            }
+            else
+            {
+                targetPosition = Vector3.zero;
             }
         }
 
@@ -432,7 +444,7 @@ namespace BDArmory
         void Aim()
         {
             mouseAiming = false;
-            if (weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode))
+            if (weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode || weaponManager.AI?.pilotEnabled == true))
             {
                 SlavedAim();
             }
@@ -447,7 +459,6 @@ namespace BDArmory
 
         void SlavedAim()
         {
-            Vector3 targetPosition;
             Vector3 targetVel;
             Vector3 targetAccel;
             if (weaponManager.slavingTurrets)
@@ -535,7 +546,7 @@ namespace BDArmory
                 return;
             }
 
-            int rocketsLeft = (int) Math.Floor(rocketResource.amount);
+            int rocketsLeft = (int)Math.Floor(rocketResource.amount);
 
             if (rocketsLeft >= 1)
             {
@@ -629,9 +640,8 @@ namespace BDArmory
                     pointPositions.Add(simCurrPos);
                     if (!mouseAiming && !slaved)
                     {
-                        if (simTime > 0.1f &&
-                            Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit,
-                                Vector3.Distance(simPrevPos, simCurrPos), 557057))
+                        if (simTime > 0.1f && Physics.Raycast(simPrevPos, simCurrPos - simPrevPos, out hit,
+                                Vector3.Distance(simPrevPos, simCurrPos), 9076737))
                         {
                             rocketPrediction = hit.point;
                             simulating = false;
@@ -699,7 +709,7 @@ namespace BDArmory
             {
                 RaycastHit hit;
                 float distance = 2500;
-                if (Physics.Raycast(transform.position, transform.forward, out hit, distance, 557057))
+                if (Physics.Raycast(transform.position, transform.forward, out hit, distance, 9076737))
                 {
                     rocketPrediction = hit.point;
                 }
@@ -776,10 +786,12 @@ namespace BDArmory
             output.Append(Environment.NewLine);
             output.Append($"Rocket Type: {rocketType}");
             output.Append(Environment.NewLine);
-            output.Append($"Max Range: {maxTargetingRange} meters");
+            output.Append($"Max Range: {maxTargetingRange} m");
             output.Append(Environment.NewLine);
 
-            output.Append($"Blast radius/force/heat: {blastRadius}/{blastForce}/{blastHeat}");
+            output.Append($"Blast radius/power/heat:");
+            output.Append(Environment.NewLine);
+            output.Append($"{blastRadius} / {blastForce} / {blastHeat}");
             output.Append(Environment.NewLine);
 
             return output.ToString();
@@ -830,7 +842,7 @@ namespace BDArmory
 
         void Start()
         {
-            BDArmorySettings.numberOfParticleEmitters++;
+            BDArmorySetup.numberOfParticleEmitters++;
 
             rb = gameObject.AddComponent<Rigidbody>();
             pEmitters = gameObject.GetComponentsInChildren<KSPParticleEmitter>();
@@ -962,26 +974,50 @@ namespace BDArmory
                 float dist = (currPosition - prevPosition).magnitude;
                 Ray ray = new Ray(prevPosition, currPosition - prevPosition);
                 RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, dist, 557057))
+                KerbalEVA hitEVA = null;
+                //if (Physics.Raycast(ray, out hit, dist, 2228224))
+                //{
+                //    try
+                //    {
+                //        hitEVA = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                //        if (hitEVA != null)
+                //            Debug.Log("[BDArmory]:Hit on kerbal confirmed!");
+                //    }
+                //    catch (NullReferenceException)
+                //    {
+                //        Debug.Log("[BDArmory]:Whoops ran amok of the exception handler");
+                //    }
+
+                //    if (hitEVA && hitEVA.part.vessel != sourceVessel)
+                //    {
+                //        Detonate(hit.point);
+                //    }
+                //}
+
+                if (!hitEVA)
                 {
-                    Part hitPart = null;
-                    try
+                    if (Physics.Raycast(ray, out hit, dist, 9076737))
                     {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
-                    }
-                    catch (NullReferenceException)
-                    {
-                    }
+                        Part hitPart = null;
+                        try
+                        {
+                            KerbalEVA eva = hit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
+                            hitPart = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
+                        }
+                        catch (NullReferenceException)
+                        {
+                        }
 
 
-                    if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
-                    {
-                        Detonate(hit.point);
+                        if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
+                        {
+                            Detonate(hit.point);
+                        }
                     }
-                }
-                else if (FlightGlobals.getAltitudeAtPos(transform.position) < 0)
-                {
-                    Detonate(transform.position);
+                    else if (FlightGlobals.getAltitudeAtPos(transform.position) < 0)
+                    {
+                        Detonate(transform.position);
+                    }
                 }
             }
             else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
@@ -1007,7 +1043,7 @@ namespace BDArmory
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
-                if (BDArmorySettings.GameIsPaused)
+                if (BDArmorySetup.GameIsPaused)
                 {
                     if (audioSource.isPlaying)
                     {
@@ -1026,10 +1062,10 @@ namespace BDArmory
 
         void Detonate(Vector3 pos)
         {
-            BDArmorySettings.numberOfParticleEmitters--;
+            BDArmorySetup.numberOfParticleEmitters--;
 
-            ExplosionFX.CreateExplosion(pos, blastRadius, blastForce, blastHeat, sourceVessel, rb.velocity.normalized,
-                explModelPath, explSoundPath);
+            ExplosionFx.CreateExplosion(pos, BlastPhysicsUtils.CalculateExplosiveMass(blastRadius),
+                explModelPath, explSoundPath, true);
 
             IEnumerator<KSPParticleEmitter> emitter = pEmitters.AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())
@@ -1059,7 +1095,7 @@ namespace BDArmory
             audioSource.clip = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/rocketLoop");
 
             UpdateVolume();
-            BDArmorySettings.OnVolumeChange += UpdateVolume;
+            BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
         void UpdateVolume()

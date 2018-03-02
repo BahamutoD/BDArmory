@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using BDArmory.UI;
 using UnityEngine;
@@ -19,10 +20,15 @@ namespace BDArmory
         private bool _showGui;
         private bool _teamSwitchDirty;
         private readonly float _titleHeight = 30;
+        private float updateTimer = 0;
 
         //gui params
         private float _windowHeight; //auto adjusting
-        private Rect _windowRect;
+        private Rect _windowRect
+        {
+            get { return BDArmorySetup.WindowRectVesselSwitcher; }
+            set { BDArmorySetup.WindowRectVesselSwitcher = value; }
+        }
         private readonly float _windowWidth = 250;
 
         private List<MissileFire> _wmgrsA;
@@ -47,23 +53,42 @@ namespace BDArmory
             GameEvents.onVesselGoOnRails.Add(VesselEventUpdate);
             MissileFire.OnToggleTeam += MissileFireOnToggleTeam;
 
-            _windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10);
-
             _ready = false;
             StartCoroutine(WaitForBdaSettings());
+
+            // TEST
+            FloatingOrigin.fetch.threshold = 20000; //20km
+            FloatingOrigin.fetch.thresholdSqr = 20000*20000; //20km
+            Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
+
+            //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySetup persisted field!
+        }
+
+        private void OnDestroy()
+        {
+                GameEvents.onVesselCreate.Remove(VesselEventUpdate);
+                GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
+                GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
+                GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
+                MissileFire.OnToggleTeam -= MissileFireOnToggleTeam;
+
+                _ready = false;
+
+            // TEST
+            Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
         }
 
         private IEnumerator WaitForBdaSettings()
         {
-            while (BDArmorySettings.Instance == null)
+            while (BDArmorySetup.Instance == null)
                 yield return null;
 
             _ready = true;
-            BDArmorySettings.Instance.hasVS = true;
+            BDArmorySetup.Instance.hasVS = true;
             _guiCheckIndex = Misc.Misc.RegisterGUIRect(new Rect());
         }
 
-        private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySettings.BDATeams team)
+        private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
         {
             if (_showGui)
                 UpdateList();
@@ -79,15 +104,21 @@ namespace BDArmory
         {
             if (_ready)
             {
-                if (BDArmorySettings.Instance.showVSGUI != _showGui)
+                if (BDArmorySetup.Instance.showVSGUI != _showGui)
                 {
-                    _showGui = BDArmorySettings.Instance.showVSGUI;
-                    if (_showGui)
+                    updateTimer -= Time.fixedDeltaTime;
+                    _showGui = BDArmorySetup.Instance.showVSGUI;
+                    if (_showGui && updateTimer < 0)
+                    {
                         UpdateList();
+                        updateTimer = 0.5f;    //next update in half a sec only
+                    }
                 }
 
                 if (_showGui)
+                {                    
                     Hotkeys();
+                }
             }
         }
 
@@ -129,9 +160,9 @@ namespace BDArmory
         {
             if (_ready)
             {
-                if (_showGui && BDArmorySettings.GAME_UI_ENABLED)
+                if (_showGui && BDArmorySetup.GAME_UI_ENABLED)
                 {
-                    _windowRect.height = _windowHeight;
+                    SetNewHeight(_windowHeight);
                     _windowRect = GUI.Window(10293444, _windowRect, ListWindow, "BDA Vessel Switcher",
                         HighLogic.Skin.window);
                     Misc.Misc.UpdateGUIRect(_windowRect, _guiCheckIndex);
@@ -151,13 +182,18 @@ namespace BDArmory
             }
         }
 
+        private void SetNewHeight(float windowHeight)
+        {
+            BDArmorySetup.WindowRectVesselSwitcher.height = windowHeight;
+        }
+
         private void ListWindow(int id)
         {
             GUI.DragWindow(new Rect(0, 0, _windowWidth - _buttonHeight - 4, _titleHeight));
             if (GUI.Button(new Rect(_windowWidth - _buttonHeight - 4, 4, _buttonHeight, _buttonHeight), "X",
                 HighLogic.Skin.button))
             {
-                BDArmorySettings.Instance.showVSGUI = false;
+                BDArmorySetup.Instance.showVSGUI = false;
                 return;
             }
             float height = 0;
@@ -191,13 +227,13 @@ namespace BDArmory
                     wma.Current.ToggleGuardMode();
 
                 //AI toggle
-                if (wma.Current.pilotAI)
+                if (wma.Current.AI != null)
                 {
-                    GUIStyle aiStyle = wma.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
+                    GUIStyle aiStyle = wma.Current.AI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
                     Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
                         _buttonHeight);
                     if (GUI.Button(aiButtonRect, "P", aiStyle))
-                        wma.Current.pilotAI.TogglePilot();
+                        wma.Current.AI.TogglePilot();
                 }
 
                 //team toggle
@@ -242,13 +278,13 @@ namespace BDArmory
                     wmb.Current.ToggleGuardMode();
 
                 //AI toggle
-                if (wmb.Current.pilotAI)
+                if (wmb.Current.AI != null)
                 {
-                    GUIStyle aiStyle = wmb.Current.pilotAI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
+                    GUIStyle aiStyle = wmb.Current.AI.pilotEnabled ? HighLogic.Skin.box : HighLogic.Skin.button;
                     Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
                         _buttonHeight);
                     if (GUI.Button(aiButtonRect, "P", aiStyle))
-                        wmb.Current.pilotAI.TogglePilot();
+                        wmb.Current.AI.TogglePilot();
                 }
 
                 //team toggle
