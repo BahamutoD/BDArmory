@@ -48,7 +48,6 @@ namespace BDArmory.Guidances
         private double _lastVerticalSpeed;
 
         private double _verticalAcceleration;
-        private bool terminalBallistic;
 
         private Vector3 planarDirectionToTarget;
         private Vector3 upDirection;
@@ -134,25 +133,23 @@ namespace BDArmory.Guidances
                     _missile.debugString.Append($"Descending");
                     _missile.debugString.Append(Environment.NewLine);
 
-                    if (this.terminalBallistic)
-                    {
-                        UpdateThrottle();
-                        return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
-                    }
-                    else
-                    {
-                        _missile.Throttle = Mathf.Clamp((float) (_missile.vessel.atmDensity * 10f), 0.01f, 1f);
 
-                        if (_missile is BDModularGuidance)
-                            if (_missile.vessel.InVacuum())
-                                return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
+                    //if (Vector3.Angle((_missile.vessel.CoM + _missile.vessel.Velocity() * 10f).normalized, (targetPosition - _missile.vessel.CoM).normalized) > 10f)
+                    //{
+                    //    _missile.Throttle = 0;
+                    //    return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
+                    //}
 
-                        float descentRatio = GetProperDescentRatio(missileAltitude);
+                    _missile.Throttle = Mathf.Clamp((float) (_missile.vessel.atmDensity * 10f), 0.01f, 1f);
 
-                        return MissileGuidance.GetAirToGroundTarget(targetPosition, _missile.vessel, descentRatio);
-                    }
+                    if (_missile is BDModularGuidance)
+                        if (_missile.vessel.InVacuum())
+                            return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
 
-                  
+                    //float descentRatio = GetProperDescentRatio(missileAltitude);
+
+                    return MissileGuidance.GetAirToGroundTarget(targetPosition, _missile.vessel, 1.85f);
+
             }
 
             return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
@@ -191,8 +188,6 @@ namespace BDArmory.Guidances
 
         private bool CheckIfTerminal(double altitude, Vector3 targetPosition, Vector3 upDirection)
         {
-            if (altitude < 100f)
-            {
                 Vector3 surfacePos = this._missile.vessel.transform.position +
                                      Vector3.Project(targetPosition - this._missile.vessel.transform.position, -upDirection);
 
@@ -208,26 +203,9 @@ namespace BDArmory.Guidances
                 if (distanceToTarget < (freefallTime * _missile.vessel.horizontalSrfSpeed))
                 {
                     GuidanceState = GuidanceState.Terminal;
-                    this.terminalBallistic = true;
                     return true;
                 }
-                return false;
-            }
-            else
-            {
-                 float distance = Vector3.Distance(targetPosition, _missile.vessel.CoM);
-
-                if (distance <= (2 * Mathf.Sqrt(2f) * altitude))
-                {
-                    GuidanceState = GuidanceState.Terminal;
-
-                    this.terminalBallistic = false;
-
-                    return true;
-                }
-                return false;
-            }
-           
+                return false;   
         }
 
         private void UpdateThrottle()

@@ -67,6 +67,10 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerMult = 10;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Roll Correction"),UI_Toggle (controlEnabled = true, enabledText = "Roll enabled", disabledText = "Roll disabled" , scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public bool RollCorrection = true;
+
+
         private Vector3 initialMissileRollPlane;
         private Vector3 initialMissileForward;
 
@@ -636,12 +640,12 @@ namespace BDArmory.Parts
 
                     s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
                     s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
-                    s.roll = GetRoll();
+
+                    if (RollCorrection)
+                    {
+                       s.roll = GetRoll();
+                    }
                 }
-
-                //Calculate rolling
-              
-
                 s.mainThrottle = Throttle;
             }
 
