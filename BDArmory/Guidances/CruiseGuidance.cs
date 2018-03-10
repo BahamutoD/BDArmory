@@ -78,7 +78,7 @@ namespace BDArmory.Guidances
             _missile.debugString.Append("State=" + GuidanceState);
             _missile.debugString.Append(Environment.NewLine);
 
-            var missileAltitude = GetCurrentAltitude(_missile.vessel, planarDirectionToTarget, upDirection);
+            var missileAltitude = GetCurrentAltitude(_missile.vessel);
             _missile.debugString.Append("Altitude=" + missileAltitude);
             _missile.debugString.Append(Environment.NewLine);
 
@@ -134,20 +134,11 @@ namespace BDArmory.Guidances
                     _missile.debugString.Append($"Descending");
                     _missile.debugString.Append(Environment.NewLine);
 
-
-                    //if (Vector3.Angle((_missile.vessel.CoM + _missile.vessel.Velocity() * 10f).normalized, (targetPosition - _missile.vessel.CoM).normalized) > 10f)
-                    //{
-                    //    _missile.Throttle = 0;
-                    //    return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
-                    //}
-
                     _missile.Throttle = Mathf.Clamp((float) (_missile.vessel.atmDensity * 10f), 0.01f, 1f);
 
                     if (_missile is BDModularGuidance)
                         if (_missile.vessel.InVacuum())
                             return _missile.vessel.CoM + _missile.vessel.Velocity() * 10;
-
-                    //float descentRatio = GetProperDescentRatio(missileAltitude);
 
                     return MissileGuidance.GetAirToGroundTarget(targetPosition, _missile.vessel, 1.85f);
 
@@ -219,31 +210,37 @@ namespace BDArmory.Guidances
             MakeDecisionAboutPitch(_missile, missileAltitude);         
         }
 
-        private double GetCurrentAltitude(Vessel missileVessel, Vector3 planarDirectionToTarget, Vector3 upDirection)
+        private double GetCurrentAltitude(Vessel missileVessel)
         {
             var currentRadarAlt = MissileGuidance.GetRadarAltitude(missileVessel);
-            var tRayDirection = planarDirectionToTarget * 10 - 10 * upDirection;
-            return CalculateAltitude(missileVessel.CoM, upDirection, currentRadarAlt, tRayDirection);
+            return currentRadarAlt;
         }
-        private double GetCurrentAltitudeAtPosition(Vector3 position, Vector3 planarDirectionToTarget, Vector3 upDirection)
+        private double GetCurrentAltitudeAtPosition(Vector3 position)
         {
             var currentRadarAlt = MissileGuidance.GetRadarAltitudeAtPos(position);
-            var tRayDirection = planarDirectionToTarget * 10 - 10 * upDirection;
-            return CalculateAltitude(position, upDirection, currentRadarAlt, tRayDirection);
-        }
-        private static double CalculateAltitude(Vector3 position, Vector3 upDirection, float currentRadarAlt, Vector3 tRayDirection)
-        {
-            var terrainRay = new Ray(position, tRayDirection);
-            RaycastHit rayHit;
 
-            if (Physics.Raycast(terrainRay, out rayHit, 30000, (1 << 15) | (1 << 17)))
-            {
-                var detectedAlt =
-                    Vector3.Project(rayHit.point - position, upDirection).magnitude;
-
-                return Mathf.Min(detectedAlt, currentRadarAlt);
-            }
             return currentRadarAlt;
+        }
+        //private static double CalculateAltitude(Vector3 position, Vector3 upDirection, float currentRadarAlt, Vector3 tRayDirection)
+        //{
+        //    var terrainRay = new Ray(position, tRayDirection);
+        //    RaycastHit rayHit;
+
+        //    if (Physics.Raycast(terrainRay, out rayHit, 30000, (1 << 15) | (1 << 17)))
+        //    {
+        //        var detectedAlt =
+        //            Vector3.Project(rayHit.point - position, upDirection).magnitude;
+
+        //        return Mathf.Min(detectedAlt, currentRadarAlt);
+        //    }
+        //    return currentRadarAlt;
+        //}
+
+        private bool CalculateFutureCollision(float predictionTime)
+        {
+            var terrainRay = new Ray(this._missile.vessel.CoM, this._missile.vessel.Velocity());
+
+            return Physics.Raycast(terrainRay, out _, (float) (this._missile.vessel.srfSpeed * predictionTime), (1 << 15) | (1 << 17));
         }
 
 
@@ -284,7 +281,12 @@ namespace BDArmory.Guidances
 
             PitchDecision futureDecision;
 
-            if (missileAltitude < 4d || CalculateFutureAltitude(1f) < 4d)
+            if (this.GuidanceState != GuidanceState.Terminal &&
+                (missileAltitude < 4d || CalculateFutureAltitude(1f) < 4d))
+            {
+                futureDecision = PitchDecision.EmergencyAscent;
+            }
+            else if (this.GuidanceState != GuidanceState.Terminal && CalculateFutureCollision(_missile.CruisePredictionTime))
             {
                 futureDecision = PitchDecision.EmergencyAscent;
             }
@@ -300,13 +302,19 @@ namespace BDArmory.Guidances
             {
                 futureDecision = PitchDecision.Hold;
             }
-        
-            PitchDecision = futureDecision;
 
-            switch (PitchDecision)
+
+            switch (futureDecision)
             {
                 case PitchDecision.EmergencyAscent:
-                    _pitchAngle = 1.5f;
+                    if (PitchDecision == futureDecision)
+                    {
+                        _pitchAngle =  Mathf.Clamp(_pitchAngle + 1f, 1.5f, 100f);
+                    }
+                    else
+                    {
+                        _pitchAngle = 1.5f;
+                    }
                     break;
                 case PitchDecision.Ascent:
                     _pitchAngle = Mathf.Clamp(_pitchAngle + 0.0055f, -1.5f, 1.5f);
@@ -318,6 +326,8 @@ namespace BDArmory.Guidances
                 case PitchDecision.Hold:
                     break;
             }
+
+            PitchDecision = futureDecision;
         }
 
 
@@ -326,7 +336,7 @@ namespace BDArmory.Guidances
             Vector3 futurePosition = _missile.vessel.CoM + _missile.vessel.Velocity()* predictionTime
                 + 0.5f * _missile.vessel.acceleration_immediate *Math.Pow(predictionTime, 2);
 
-            return GetCurrentAltitudeAtPosition(futurePosition,planarDirectionToTarget, upDirection);
+            return GetCurrentAltitudeAtPosition(futurePosition);
         }
 
 
