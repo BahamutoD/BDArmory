@@ -782,7 +782,7 @@ namespace BDArmory.Parts
                 AddTargetInfoToVessel();
 
                 
-                this.initialMissileRollPlane = this.vessel.transform.up;
+                this.initialMissileRollPlane = -this.vessel.transform.up;
                 this.initialMissileForward = this.vessel.transform.forward;
                 vessel.vesselName = GetShortName();
                 vessel.vesselType = VesselType.Plane;
