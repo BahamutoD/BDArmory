@@ -1087,11 +1087,10 @@ namespace BDArmory
                         
                         Vector3 firedVelocity =
                             VectorUtils.WeightedDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
-                        
-                        firedBullet.transform.position += part.rb.velocity * Time.fixedDeltaTime;
-                        pBullet.currentVelocity = part.rb.velocity + firedVelocity;
 
-                        pBullet.initialSpeed = bulletVelocity;
+                        firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
+                        pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
+
                         pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
                         pBullet.projectileColor = projectileColorC;
@@ -1565,31 +1564,44 @@ namespace BDArmory
 
             if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
             {
-                float gAccel = (float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude;
-                float time = targetDistance / (bulletVelocity);
+                float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
+                    + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
+                float effectiveVelocity = bulletVelocity;
 
-                if (targetAcquired)
+                int iterations = 4;
+                while (--iterations >= 0)
                 {
-                    float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        targetVelocity - vessel.Velocity(), bulletVelocity);
-                    if (time2 > 0) time = time2;
-                    finalTarget += (targetVelocity - vessel.Velocity()) * time;
-                    
-                    //target vessel relative velocity compensation
-                    Vector3 acceleration = targetAcceleration;
-                    finalTarget += (0.5f * acceleration * time * time); //target acceleration
+                    float time = targetDistance / (effectiveVelocity);
+                    finalTarget = targetPosition;
+
+                    if (targetAcquired)
+                    {
+                        float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
+                            targetVelocity - vessel.Velocity(), effectiveVelocity);
+                        if (time2 > 0) time = time2;
+                        finalTarget += (targetVelocity - vessel.Velocity()) * time;
+
+                        //target vessel relative velocity compensation
+                        Vector3 acceleration = targetAcceleration;
+                        finalTarget += (0.5f * acceleration * time * time); //target acceleration
+                    }
+                    else if (vessel.altitude < 6000)
+                    {
+                        float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
+                            -(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()), effectiveVelocity);
+                        if (time2 > 0) time = time2;
+                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * (time + Time.fixedDeltaTime));
+                        //this vessel velocity compensation against stationary
+                    }
+                    Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
+                    if (bulletDrop)
+                    {
+                        Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
+                        effectiveVelocity = bulletVelocity * (float)Vector3d.Dot(intermediateTarget.normalized, finalTarget.normalized);
+                        finalTarget = intermediateTarget;
+                    }
+                    else break;
                 }
-                else if (vessel.altitude < 6000)
-                {
-                    float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                        -part.rb.velocity, bulletVelocity);
-                    if (time2 > 0) time = time2;
-                    finalTarget += (-part.rb.velocity * (time + Time.fixedDeltaTime));
-                    //this vessel velocity compensation against stationary
-                }
-                Vector3 up = (finalTarget - vessel.mainBody.transform.position).normalized;
-                if (bulletDrop && vessel.srfSpeed < 750)
-                    finalTarget += (0.5f * gAccel * time * time * up); //gravity compensation
 
                 targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
 
@@ -1711,8 +1723,8 @@ namespace BDArmory
                 {
                     float simDeltaTime = 0.155f;
 
-                    Vector3 simVelocity = part.rb.velocity + (bulletVelocity * fireTransform.forward);
-                    Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
+                    Vector3 simVelocity = part.rb.velocity + Krakensbane.GetFrameVelocityV3f() + (bulletVelocity * fireTransform.forward);
+                    Vector3 simCurrPos = fireTransform.position + ((part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime);
                     Vector3 simPrevPos = simCurrPos;
                     Vector3 simStartPos = simCurrPos;
                     bool simulating = true;
