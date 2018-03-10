@@ -17,7 +17,8 @@ namespace BDArmory.Guidances
     {
         Ascent,
         Descent,
-        Hold
+        Hold,
+        EmergencyAscent
     }
 
     public enum ThrottleDecision
@@ -279,11 +280,15 @@ namespace BDArmory.Guidances
         private void MakeDecisionAboutPitch(MissileBase missile, double missileAltitude)
         {
 
-            _futureAltitude = CalculateFutureAltitude();
+            _futureAltitude = CalculateFutureAltitude(_missile.CruisePredictionTime);
 
             PitchDecision futureDecision;
 
-            if (_futureAltitude < missile.CruiseAltitude || missileAltitude < missile.CruiseAltitude)
+            if (missileAltitude < 4d || CalculateFutureAltitude(1f) < 4d)
+            {
+                futureDecision = PitchDecision.EmergencyAscent;
+            }
+            else if (_futureAltitude < missile.CruiseAltitude || missileAltitude < missile.CruiseAltitude)
             {
                 futureDecision = PitchDecision.Ascent;
             }
@@ -300,22 +305,26 @@ namespace BDArmory.Guidances
 
             switch (PitchDecision)
             {
+                case PitchDecision.EmergencyAscent:
+                    _pitchAngle = 1.5f;
+                    break;
                 case PitchDecision.Ascent:
                     _pitchAngle = Mathf.Clamp(_pitchAngle + 0.0055f, -1.5f, 1.5f);
                     break;
                 case PitchDecision.Descent:
                     _pitchAngle = Mathf.Clamp(_pitchAngle - 0.0025f, -1.5f, 1.5f);
                     break;
+
                 case PitchDecision.Hold:
                     break;
             }
         }
 
 
-        private double CalculateFutureAltitude()
+        private double CalculateFutureAltitude(float predictionTime)
         {
-            Vector3 futurePosition = _missile.vessel.CoM + _missile.vessel.Velocity()*_missile.CruisePredictionTime
-                + 0.5f * _missile.vessel.acceleration_immediate *Math.Pow(_missile.CruisePredictionTime, 2);
+            Vector3 futurePosition = _missile.vessel.CoM + _missile.vessel.Velocity()* predictionTime
+                + 0.5f * _missile.vessel.acceleration_immediate *Math.Pow(predictionTime, 2);
 
             return GetCurrentAltitudeAtPosition(futurePosition,planarDirectionToTarget, upDirection);
         }
