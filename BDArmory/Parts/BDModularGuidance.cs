@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BDArmory.Core;
 using BDArmory.Core.Extension;
+using BDArmory.Guidances;
 using BDArmory.Misc;
 using BDArmory.Radar;
 using BDArmory.UI;
@@ -37,14 +38,13 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
         public string WeaponName;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "CruiseAltitude"), UI_FloatRange(minValue = 50f, maxValue = 1500f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float CruiseAltitude = 500;
+       
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
         public string GuidanceLabel = "AGM/STS";
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Targeting Mode ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
-        private string _targetingLabel = TargetingModes.None.ToString();
+        private string _targetingLabel = TargetingModes.Radar.ToString();
 
         [KSPField(isPersistant = true)]
         public int GuidanceIndex = 2;
@@ -66,6 +66,15 @@ namespace BDArmory.Parts
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerMult = 10;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Roll Correction"),UI_Toggle (controlEnabled = true, enabledText = "Roll enabled", disabledText = "Roll disabled" , scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        public bool RollCorrection = true;
+
+
+        private Vector3 initialMissileRollPlane;
+        private Vector3 initialMissileForward;
+
+        private float rollError;
 
         #endregion
 
@@ -107,9 +116,16 @@ namespace BDArmory.Parts
 
             if (Fields["CruiseAltitude"] != null)
             {
+                CruiseAltitudeRange();
                 Fields["CruiseAltitude"].guiActive = GuidanceMode == GuidanceModes.Cruise;
                 Fields["CruiseAltitude"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseSpeed"].guiActive = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruiseSpeed"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Events["CruiseAltitudeRange"].guiActive = GuidanceMode == GuidanceModes.Cruise;
+                Events["CruiseAltitudeRange"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Fields["CruisePredictionTime"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
             }
+
             if (Fields["BallisticOverShootFactor"] != null)
             {
                 Fields["BallisticOverShootFactor"].guiActive = GuidanceMode == GuidanceModes.AGMBallistic;
@@ -125,8 +141,8 @@ namespace BDArmory.Parts
                 UpdateGuidance();
                 CheckDetonationDistance();
                 CheckDelayedFired();
-                CheckNextStage();            
-
+                CheckNextStage();
+     
                 if (isTimed && TimeIndex > detonationTime)
                 {
                     AutoDestruction();
@@ -336,6 +352,9 @@ namespace BDArmory.Parts
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory]: OnStart missile " + shortName + ": setting default locktrackcurve with maxrange/minrcs: " + activeRadarLockTrackCurve.maxTime + "/" + RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
             }
+           
+
+            this._cruiseGuidance = new CruiseGuidance(this);
         }
 
         private void SetupsFields()
@@ -359,12 +378,14 @@ namespace BDArmory.Parts
                 WeaponNameWindow.OnActionGroupEditorOpened.Add(OnActionGroupEditorOpened);
                 WeaponNameWindow.OnActionGroupEditorClosed.Add(OnActionGroupEditorClosed);
                 Fields["CruiseAltitude"].guiActiveEditor = true;
+                Fields["CruiseSpeed"].guiActiveEditor = false;
                 Events["SwitchTargetingMode"].guiActiveEditor = true;
                 Events["SwitchGuidanceMode"].guiActiveEditor = true;
             }
             else
             {
                 Fields["CruiseAltitude"].guiActiveEditor = false;
+                Fields["CruiseSpeed"].guiActiveEditor = false;
                 Events["SwitchTargetingMode"].guiActiveEditor = false;
                 Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
@@ -490,9 +511,7 @@ namespace BDArmory.Parts
             if (TargetAcquired)
             {
                 float timeToImpact;
-                aamTarget = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, previousTargetVelocity, TargetAcceleration, vessel, previousMissileVelocity, out timeToImpact);
-                previousTargetVelocity = TargetVelocity;
-                previousMissileVelocity = vessel.Velocity();
+                aamTarget = MissileGuidance.GetAirToAirTargetModular(TargetPosition, TargetVelocity, TargetAcceleration, vessel, out timeToImpact);
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
@@ -537,28 +556,29 @@ namespace BDArmory.Parts
             return agmTarget;
         }
 
+      
         private Vector3 CruiseGuidance()
         {
-            Vector3 cruiseTarget = Vector3.zero;
-            float distanceSqr = (TargetPosition - vessel.CoM).sqrMagnitude;
+            //Vector3 cruiseTarget = Vector3.zero;
+            //float distanceSqr = (TargetPosition - vessel.CoM).sqrMagnitude;
 
-            if (distanceSqr < 4500*4500)
-            {
-                cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-                debugString.Append("Descending On Target");
-                debugString.Append(Environment.NewLine);
-            }
-            else
-            {
-                cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-                debugString.Append("Cruising");
-                debugString.Append(Environment.NewLine);
-            }
+            //if (distanceSqr < 4500*4500)
+            //{
+            //    cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
+            //    debugString.Append("Descending On Target");
+            //    debugString.Append(Environment.NewLine);
+            //}
+            //else
+            //{
+            //    cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
+            //    debugString.Append("Cruising");
+            //    debugString.Append(Environment.NewLine);
+            //}
 
-            debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
-            debugString.Append(Environment.NewLine);
+            //debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
+            //debugString.Append(Environment.NewLine);
 
-            return cruiseTarget;
+            return this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
         }
 
         private void CheckMiss(Vector3 targetPosition)
@@ -612,19 +632,40 @@ namespace BDArmory.Parts
                 {
                     _velocityTransform.rotation = Quaternion.LookRotation(vessel.Velocity(), -vessel.transform.forward);
                     Vector3 targetDirection = _velocityTransform.InverseTransformPoint(newTargetPosition).normalized;
-                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15*Mathf.Deg2Rad, 0);
+                    targetDirection = Vector3.RotateTowards(Vector3.forward, targetDirection, 15 * Mathf.Deg2Rad, 0);
 
                     Vector3 localAngVel = vessel.angularVelocity;
-                    float steerYaw = SteerMult*targetDirection.x - SteerDamping*-localAngVel.z;
-                    float steerPitch = SteerMult*targetDirection.y - SteerDamping*-localAngVel.x;
+                    float steerYaw = SteerMult * targetDirection.x - SteerDamping * -localAngVel.z;
+                    float steerPitch = SteerMult * targetDirection.y - SteerDamping * -localAngVel.x;
 
                     s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
                     s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
-                }
 
+                    if (RollCorrection)
+                    {
+                       s.roll = GetRoll();
+                    }
+                }
                 s.mainThrottle = Throttle;
             }
-           
+
+        }
+
+        private float GetRoll()
+        {
+            Vector3 rollA = this.initialMissileForward;
+            Vector3 rollB = Vector3.ProjectOnPlane(vessel.transform.forward, this.initialMissileRollPlane).normalized;
+
+            var angle = Vector3.Angle(rollA, rollB);
+
+            var crossErrorAngle = Vector3.Cross(rollA, rollB);
+
+            if (crossErrorAngle.y > 0)
+            {
+                angle = angle * -1;
+            }
+
+            return angle * (1f / -180f);
         }
 
         private Vector3 BallisticGuidance()
@@ -740,6 +781,9 @@ namespace BDArmory.Parts
                 Jettison();
                 AddTargetInfoToVessel();
 
+                
+                this.initialMissileRollPlane = -this.vessel.transform.up;
+                this.initialMissileForward = this.vessel.transform.forward;
                 vessel.vesselName = GetShortName();
                 vessel.vesselType = VesselType.Plane;
 
