@@ -44,7 +44,7 @@ namespace BDArmory
             velocity = v.Velocity();
 
             geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
-			acceleration = v.acceleration;
+			acceleration = v.acceleration_immediate;
 			exists = true;
 			
 			signalStrength = _signalStrength;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using BDArmory.Armor;
 using BDArmory.Control;
@@ -40,6 +41,10 @@ namespace BDArmory.UI
                 return iFs;
             }
         }
+
+        //dependency checks
+        bool ModuleManagerLoaded = false;
+        bool PhysicsRangeExtenderLoaded = false;
 
         //EVENTS
         public delegate void VolumeChange();
@@ -113,6 +118,8 @@ namespace BDArmory.UI
         GUIStyle middleLeftLabelOrange;
         GUIStyle targetModeStyle;
         GUIStyle targetModeStyleSelected;
+        GUIStyle redErrorStyle;
+        GUIStyle redErrorShadowStyle;
 
         public enum BDATeams
         {
@@ -352,7 +359,31 @@ namespace BDArmory.UI
             kspTitleLabel.fontSize = HighLogic.Skin.window.fontSize;
             kspTitleLabel.fontStyle = HighLogic.Skin.window.fontStyle;
             kspTitleLabel.alignment = TextAnchor.UpperCenter;
+
+            redErrorStyle = new GUIStyle(HighLogic.Skin.label);
+            redErrorStyle.normal.textColor = Color.red;
+            redErrorStyle.fontStyle = FontStyle.Bold;
+            redErrorStyle.fontSize = 22;
+            redErrorStyle.alignment = TextAnchor.UpperCenter;
+
+            redErrorShadowStyle = new GUIStyle(redErrorStyle);
+            redErrorShadowStyle.normal.textColor = new Color(0, 0, 0, 0.75f);
             //
+
+            using (var a = AppDomain.CurrentDomain.GetAssemblies().ToList().GetEnumerator())
+                while (a.MoveNext())
+                {
+                    string name = a.Current.FullName.Split(new char[1] { ',' })[0];
+                    switch (name)
+                    {
+                        case "ModuleManager":
+                            ModuleManagerLoaded = true;
+                            break;
+                        case "PhysicsRangeExtender":
+                            PhysicsRangeExtenderLoaded = true;
+                            break;
+                    }
+                }
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -523,14 +554,13 @@ namespace BDArmory.UI
 
         void GetWeaponManager()
         {
-            List<MissileFire>.Enumerator mf = FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-            while (mf.MoveNext())
-            {
-                if (mf.Current == null) continue;
-                ActiveWeaponManager = mf.Current;
-                return;
-            }
-            mf.Dispose();
+            using (List<MissileFire>.Enumerator mf = FlightGlobals.ActiveVessel.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                while (mf.MoveNext())
+                {
+                    if (mf.Current == null) continue;
+                    ActiveWeaponManager = mf.Current;
+                    return;
+                }
             ActiveWeaponManager = null;
             return;
         }
@@ -612,6 +642,17 @@ namespace BDArmory.UI
                             BDGUIUtils.DrawTextureOnWorldPos(coord.Current.worldPos, Instance.greenDotTexture, new Vector2(8, 8), 0);
                         }
                         coord.Dispose();
+                    }
+
+                    // big error messages for missing dependencies
+                    if (!ModuleManagerLoaded || !PhysicsRangeExtenderLoaded)
+                    {
+                        string message = (ModuleManagerLoaded ? "Physics Range Extender" : "Module Manager")
+                            + " is missing. BDA will not work properly.";
+                        GUI.Label(new Rect(0 + 2, Screen.height / 6 + 2, Screen.width, 100),
+                            message, redErrorShadowStyle);
+                        GUI.Label(new Rect(0, Screen.height / 6, Screen.width, 100),
+                            message , redErrorStyle);
                     }
                 }
             }
