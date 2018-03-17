@@ -18,6 +18,7 @@
   * Kerbals can be killed again
   * Modular missiles are not usable without Guard mode #377
   * Standby Mode is being bypassed if there is an active radar on one of the teams #406
+  * Bullet trajectories and Pilot AI should no longer be affected by vessel movement and vessel switching
 
 
 v1.0.0
