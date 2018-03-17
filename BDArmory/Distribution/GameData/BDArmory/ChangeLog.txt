@@ -1,4 +1,26 @@
-﻿v1.0.0
+﻿v1.1.0
+
+* NEW FEATURES:
+
+  * Bullet decals.
+  * Damage consequences for engine damaged. #433
+
+* ENHANCEMENTS:
+
+  * New damage model: the new system uses hitpoints instead of temperature.
+  * Realism overhaul for ballistics, penetration and armor.
+  * Realism overhaul for explosive damage and forces.
+  * Improvements to Cruise Guidance.
+  * Option for Modular Missiles to correct Roll. 
+
+		- For more detail you can check the issue #307 and the Wiki https://github.com/PapaJoesSoup/BDArmory/wiki/
+* FIXES:
+  * Kerbals can be killed again
+  * Modular missiles are not usable without Guard mode #377
+  * Standby Mode is being bypassed if there is an active radar on one of the teams #406
+
+
+v1.0.0
 
 * NEW FEATURES:
 

@@ -68,7 +68,7 @@ namespace BDArmory.Parts
         public float SteerMult = 10;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Roll Correction"),UI_Toggle (controlEnabled = true, enabledText = "Roll enabled", disabledText = "Roll disabled" , scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public bool RollCorrection = true;
+        public bool RollCorrection = false;
 
 
         private Vector3 initialMissileRollPlane;
