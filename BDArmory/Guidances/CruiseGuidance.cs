@@ -239,8 +239,8 @@ namespace BDArmory.Guidances
         private bool CalculateFutureCollision(float predictionTime)
         {
             var terrainRay = new Ray(this._missile.vessel.CoM, this._missile.vessel.Velocity());
-
-            return Physics.Raycast(terrainRay, out _, (float) (this._missile.vessel.srfSpeed * predictionTime), (1 << 15) | (1 << 17));
+            RaycastHit hit;
+            return Physics.Raycast(terrainRay, out hit, (float) (this._missile.vessel.srfSpeed * predictionTime), (1 << 15) | (1 << 17));
         }
 
 
