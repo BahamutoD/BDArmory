@@ -4,13 +4,13 @@ using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using BDArmory.UI;
-using System;
 using System.Collections.Generic;
+using BDArmory.Core;
 using UnityEngine;
 
 namespace BDArmory.Radar
 {
-	public static class RadarUtils
+    public static class RadarUtils
 	{
         private static bool rcsSetupCompleted = false;
         private static int radarResolution = 128;
@@ -533,6 +533,14 @@ namespace BDArmory.Radar
                 if (loadedvessels.Current == null) continue;
                 if (!loadedvessels.Current.loaded) continue;
 
+                // IFF code check to prevent friendly lock-on (neutral vessel without a weaponmanager WILL be lockable!)
+                MissileFire wm = loadedvessels.Current.FindPartModuleImplementing<MissileFire>();
+                if (wm != null)
+                {
+                    if (missile.Team == wm.team)
+                        continue;
+                }                
+
                 // ignore self, ignore behind ray
                 Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
                 if (((vectorToTarget).sqrMagnitude < RADAR_IGNORE_DISTANCE_SQR) ||
@@ -929,8 +937,8 @@ namespace BDArmory.Radar
                                 {
 									if(!weapon.Current.recentlyFiring) continue;
 									if(Vector3.Dot(weapon.Current.fireTransforms[0].forward, vesselDirection) > 0) continue;
-
-									if(Vector3.Angle(weapon.Current.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
+                                    vesselDistance = Mathf.Sqrt(vesselDistance);
+                                    if (Vector3.Angle(weapon.Current.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
 									{
 										results.firingAtMe = true;
 										results.threatPosition = weapon.Current.vessel.transform.position;

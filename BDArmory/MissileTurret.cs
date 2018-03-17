@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Core;
 using BDArmory.Parts;
 using BDArmory.Radar;
 using UniLinq;
@@ -387,7 +388,7 @@ namespace BDArmory
             //    }
             //}
 
-            if (Physics.Raycast(ray, out hit, maxTargetingRange, 688129))
+            if (Physics.Raycast(ray, out hit, maxTargetingRange, 9076737))
             {
                 targetPosition = hit.point;
 

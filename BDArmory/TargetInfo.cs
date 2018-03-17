@@ -9,7 +9,7 @@ namespace BDArmory
 {
 	public class TargetInfo : MonoBehaviour
 	{
-		public BDArmorySettings.BDATeams team;
+		public BDArmorySetup.BDATeams team;
 		public bool isMissile;
 		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
@@ -28,8 +28,6 @@ namespace BDArmory
 		{
 			get
 			{
-                //if(!vessel) return false;
-                //return vessel.Landed;
                 if (!vessel) return false;
                 if (
                     (vessel.situation == Vessel.Situations.LANDED ||
@@ -152,7 +150,7 @@ namespace BDArmory
 
 			if(!vessel)
 			{
-				Debug.Log ("[BDArmory]: TargetInfo was added to a non-vessel");
+				//Debug.Log ("[BDArmory]: TargetInfo was added to a non-vessel");
 				Destroy (this);
 				return;
 			}
@@ -168,7 +166,7 @@ namespace BDArmory
                 }
             }
 
-			team = BDArmorySettings.BDATeams.None;
+			team = BDArmorySetup.BDATeams.None;
 			bool foundMf = false;
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
@@ -193,7 +191,7 @@ namespace BDArmory
                 ml.Dispose();
 			}
 				
-			if(team != BDArmorySettings.BDATeams.None)
+			if(team != BDArmorySetup.BDATeams.None)
 			{
                 BDATargetManager.AddTarget(this);
 			}
@@ -203,11 +201,11 @@ namespace BDArmory
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;            
 
             //add delegate to peace enable event
-            BDArmorySettings.OnPeaceEnabled += OnPeaceEnabled;
+            BDArmorySetup.OnPeaceEnabled += OnPeaceEnabled;
 
             //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
 
-            if (!isMissile && team != BDArmorySettings.BDATeams.None)
+            if (!isMissile && team != BDArmorySetup.BDATeams.None)
 			{
                 GameEvents.onVesselPartCountChanged.Add(VesselModified);
                 //massRoutine = StartCoroutine(MassRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
@@ -222,7 +220,7 @@ namespace BDArmory
 		void OnDestroy()
 		{
 			//remove delegate from peace enable event
-			BDArmorySettings.OnPeaceEnabled -= OnPeaceEnabled;
+			BDArmorySetup.OnPeaceEnabled -= OnPeaceEnabled;
             vessel.OnJustAboutToBeDestroyed -= AboutToBeDestroyed;
             GameEvents.onVesselPartCountChanged.Remove(VesselModified);
         }
@@ -245,7 +243,7 @@ namespace BDArmory
 				if((vessel.vesselType == VesselType.Debris) && (weaponManager == null))
 				{
 					RemoveFromDatabases();
-					team = BDArmorySettings.BDATeams.None;
+					team = BDArmorySetup.BDATeams.None;
 				}
 			}
 		}
@@ -297,8 +295,8 @@ namespace BDArmory
 
 		public void RemoveFromDatabases()
 		{
-			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.A].Remove(this);
-			BDATargetManager.TargetDatabase[BDArmorySettings.BDATeams.B].Remove(this);
+			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.A].Remove(this);
+			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.B].Remove(this);
 		}
 
         public void VesselModified(Vessel v)
@@ -309,6 +307,25 @@ namespace BDArmory
                     StartCoroutine(UpdateRCSDelayed());
             }
         }
+
+        public static Vector3 TargetCOMDispersion(Vessel v)
+        {
+            Vector3 TargetCOM_ = new Vector3(0,0);
+            ShipConstruct sc = new ShipConstruct("ship", "temp ship", v.parts[0]);
+
+            Vector3 size = ShipConstruction.CalculateCraftSize(sc);
+
+            float dispersionMax = size.y;
+
+            //float dispersionMax = 100f;
+
+            float dispersion = Random.Range(0, dispersionMax);
+
+            TargetCOM_ = v.CoM + new Vector3(0,dispersion);
+
+            return TargetCOM_;
+        }
 	}
 }
 
+;

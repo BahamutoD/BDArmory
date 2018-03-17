@@ -6,6 +6,7 @@ using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
+using BDArmory.Core;
 
 namespace BDArmory.Parts
 {
@@ -42,7 +43,7 @@ namespace BDArmory.Parts
 
 		[KSPField]
 		public string zoomFOVs = "40,15,3,1";
-		float[] zoomFovs;// = new float[]{40,15,3,1f};
+		float[] zoomFovs; 
 
 		[KSPField(isPersistant = true)]
 		public int currentFovIndex;
@@ -287,8 +288,6 @@ namespace BDArmory.Parts
 			}
 		}
 
-
-
 		public override void OnStart (StartState state)
 		{
 			base.OnStart (state);
@@ -421,7 +420,6 @@ namespace BDArmory.Parts
 			}
 
 		}
-
 
 		void Update()
 		{
@@ -625,8 +623,7 @@ namespace BDArmory.Parts
 				SlewCamera(slewInput);
 			}
 			slewInput = Vector2.zero;
-		}
-		
+		}		
 
 		void UpdateSlewRate()
 		{
@@ -679,7 +676,7 @@ namespace BDArmory.Parts
 
 		void OnGUI()
 		{
-			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySettings.GAME_UI_ENABLED && !delayedEnabling) 
+			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySetup.GAME_UI_ENABLED && !delayedEnabling) 
 			{
 				if (cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready) 
 				{
@@ -693,11 +690,11 @@ namespace BDArmory.Parts
 					//locked target icon
 					if(groundStabilized)
 					{
-						BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySettings.Instance.greenPointCircleTexture, new Vector3(20, 20), 0);
+						BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySetup.Instance.greenPointCircleTexture, new Vector3(20, 20), 0);
 					}
 					else
 					{
-						BDGUIUtils.DrawTextureOnWorldPos(targetPointPosition, BDArmorySettings.Instance.greenCircleTexture, new Vector3(18, 18), 0);
+						BDGUIUtils.DrawTextureOnWorldPos(targetPointPosition, BDArmorySetup.Instance.greenCircleTexture, new Vector3(18, 18), 0);
 					}
 				}
 
@@ -836,7 +833,7 @@ namespace BDArmory.Parts
 					//open square
 					float oSqrSize = (24f/512f) * camImageSize;
 					Rect oSqrRect = new Rect(imageRect.x + (camImageSize/2) - (oSqrSize/2), imageRect.y + (camImageSize/2) - (oSqrSize/2), oSqrSize, oSqrSize);
-					GUI.DrawTexture(oSqrRect, BDArmorySettings.Instance.openWhiteSquareTexture, ScaleMode.StretchToFill, true);
+					GUI.DrawTexture(oSqrRect, BDArmorySetup.Instance.openWhiteSquareTexture, ScaleMode.StretchToFill, true);
 				}
 
 				//geo data
@@ -862,7 +859,7 @@ namespace BDArmory.Parts
 				/*
 				Vector2 azielPos = TargetAzimuthElevationScreenPos(imageRect, groundTargetPosition, 4);
 				Rect azielRect = new Rect(azielPos.x, azielPos.y, 4, 4);
-				GUI.DrawTexture(azielRect, BDArmorySettings.Instance.whiteSquareTexture, ScaleMode.StretchToFill, true);
+				GUI.DrawTexture(azielRect, BDArmorySetup.Instance.whiteSquareTexture, ScaleMode.StretchToFill, true);
 				*/
 
 				//DLZ
@@ -1011,7 +1008,7 @@ namespace BDArmory.Parts
 			float hAngle = -Misc.Misc.SignedAngle(hForward, vesForward, upDirection);
 			horizY -= (hAngle/90) * (indicatorSize/2);
 			Rect horizonRect = new Rect(indicatorBorder + imageRect.x, horizY, indicatorSize, indicatorSize);
-			GUI.DrawTexture(horizonRect, BDArmorySettings.Instance.horizonIndicatorTexture, ScaleMode.StretchToFill, true);
+			GUI.DrawTexture(horizonRect, BDArmorySetup.Instance.horizonIndicatorTexture, ScaleMode.StretchToFill, true);
 
 			//roll indicator
 			Rect rollRect = new Rect(indicatorBorder+imageRect.x, imageRect.y+imageRect.height-indicatorSize-indicatorBorder, indicatorSize, indicatorSize);
@@ -1026,7 +1023,7 @@ namespace BDArmory.Parts
 			//target direction indicator
 			float angleToTarget = Misc.Misc.SignedAngle(hForward, Vector3.ProjectOnPlane(targetPointPosition-transform.position, upDirection), Vector3.Cross(upDirection, hForward));
 			GUIUtility.RotateAroundPivot(angleToTarget, rollRect.center);
-			GUI.DrawTexture(rollRect, BDArmorySettings.Instance.targetDirectionTexture, ScaleMode.StretchToFill, true);
+			GUI.DrawTexture(rollRect, BDArmorySetup.Instance.targetDirectionTexture, ScaleMode.StretchToFill, true);
 			GUI.matrix = Matrix4x4.identity;
 
 
@@ -1130,7 +1127,6 @@ namespace BDArmory.Parts
 			}
 		}
 
-
 		void RefreshWindowSize()
 		{
 			float windowWidth = camImageSize+16;
@@ -1219,7 +1215,7 @@ namespace BDArmory.Parts
 
 			RaycastHit rayHit;
 			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
-			bool raycasted = Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 688129);
+			bool raycasted = Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 9076737);
 			if(raycasted)
 			{
 				if(FlightGlobals.getAltitudeAtPos(rayHit.point) < 0)
@@ -1297,7 +1293,7 @@ namespace BDArmory.Parts
 
 			RaycastHit rayHit;
 			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
-			if(Physics.Raycast(ray, out rayHit, maxRayDistance-50, 688129))
+			if(Physics.Raycast(ray, out rayHit, maxRayDistance-50, 9076737))
 			{
 				targetPointPosition = rayHit.point;
 

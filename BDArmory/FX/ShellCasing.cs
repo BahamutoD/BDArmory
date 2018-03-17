@@ -1,3 +1,4 @@
+using BDArmory.Core;
 using BDArmory.UI;
 using UnityEngine;
 
@@ -39,10 +40,11 @@ namespace BDArmory.FX
             }
 
             //gravity
-            velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.fixedDeltaTime;
+            velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.fixedDeltaTime
+                + Krakensbane.GetLastCorrection();
 
             //drag
-            velocity -= 0.005f*velocity*atmDensity;
+            velocity -= 0.005f*(velocity + Krakensbane.GetFrameVelocityV3f())*atmDensity;
 
             transform.rotation *= Quaternion.Euler(angularVelocity*TimeWarp.fixedDeltaTime);
             transform.position += velocity*TimeWarp.deltaTime;
