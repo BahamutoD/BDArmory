@@ -2110,9 +2110,11 @@ namespace BDArmory
         // EXTRACTED METHOD FROM UpdateList()
         private void PrepareWeapons()
         {
+            if (vessel == null) return;
+
             weaponIndex = Mathf.Clamp(weaponIndex, 0, weaponArray.Length - 1);
 
-            if (selectedWeapon == null || selectedWeapon.GetPart() == null || selectedWeapon.GetPart().vessel != vessel ||
+            if (selectedWeapon == null || selectedWeapon.GetPart() == null ||(selectedWeapon.GetPart().vessel != null && selectedWeapon.GetPart().vessel != vessel) ||
                 GetWeaponName(selectedWeapon) != GetWeaponName(weaponArray[weaponIndex]))
             {
                 selectedWeapon = weaponArray[weaponIndex];
