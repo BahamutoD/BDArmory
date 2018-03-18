@@ -79,7 +79,7 @@ namespace BDArmory.Control
             }
         }
 
-        void OnToggleTeam(MissileFire mf, BDArmorySettings.BDATeams team)
+        void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
         {
             RefreshFriendlies();
             RefreshWingmen();
@@ -253,7 +253,7 @@ namespace BDArmory.Control
         void OnGUI()
         {
             if (!HighLogic.LoadedSceneIsFlight || !vessel || !vessel.isActiveVessel || vessel.packed) return;
-            if (!BDArmorySettings.GAME_UI_ENABLED) return;
+            if (!BDArmorySetup.GAME_UI_ENABLED) return;
             if (showGUI)
             {
                 if (!rectInit)
@@ -282,7 +282,7 @@ namespace BDArmory.Control
             List<GPSTargetInfo>.Enumerator comPos = commandedPositions.GetEnumerator();
             while (comPos.MoveNext())
             {
-                BDGUIUtils.DrawTextureOnWorldPos(comPos.Current.worldPos, BDArmorySettings.Instance.greenDiamondTexture,
+                BDGUIUtils.DrawTextureOnWorldPos(comPos.Current.worldPos, BDArmorySetup.Instance.greenDiamondTexture,
                     new Vector2(diamondSize, diamondSize), 0);
                 Vector2 labelPos;
                 if (!BDGUIUtils.WorldToGUIPos(comPos.Current.worldPos, out labelPos)) continue;
@@ -296,7 +296,7 @@ namespace BDArmory.Control
             Vector2 mouseDiamondPos = Input.mousePosition;
             Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize/2),
                 Screen.height - mouseDiamondPos.y - (diamondSize/2), diamondSize, diamondSize);
-            GUI.DrawTexture(mouseDiamondRect, BDArmorySettings.Instance.greenDiamondTexture,
+            GUI.DrawTexture(mouseDiamondRect, BDArmorySetup.Instance.greenDiamondTexture,
                 ScaleMode.StretchToFill, true);
         }
 
@@ -632,7 +632,7 @@ namespace BDArmory.Control
 
         void DisplayScreenMessage(string message)
         {
-            if (BDArmorySettings.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
+            if (BDArmorySetup.GAME_UI_ENABLED && vessel == FlightGlobals.ActiveVessel)
             {
                 ScreenMessages.RemoveMessage(screenMessage);
                 screenMessage.message = message;

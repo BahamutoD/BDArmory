@@ -1,3 +1,5 @@
+using System;
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UnityEngine;
@@ -23,13 +25,16 @@ namespace BDArmory
 
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Pitch"),
-         UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)] public float maxPitch;
+         UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public float maxPitch;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Min Pitch"),
-         UI_FloatRange(minValue = 1f, maxValue = 0f, stepIncrement = 1f, scene = UI_Scene.All)] public float minPitch;
+         UI_FloatRange(minValue = 1f, maxValue = 0f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public float minPitch;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Yaw Range"),
-         UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)] public float yawRange;
+         UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public float yawRange;
 
         [KSPField(isPersistant = true)] public float minPitchLimit = 400;
         [KSPField(isPersistant = true)] public float maxPitchLimit = 400;
@@ -37,9 +42,6 @@ namespace BDArmory
 
         [KSPField] public bool smoothRotation = false;
         [KSPField] public float smoothMultiplier = 10;
-
-        float pitchTargetOffset;
-        float yawTargetOffset;
 
         //sfx
         [KSPField] public string audioPath;
@@ -145,7 +147,7 @@ namespace BDArmory
             {
                 if (hasAudio)
                 {
-                    if (!BDArmorySettings.GameIsPaused && audioRotationRate > 0.05f)
+                    if (!BDArmorySetup.GameIsPaused && audioRotationRate > 0.05f)
                     {
                         if (!audioSource.isPlaying) audioSource.Play();
                     }
@@ -160,8 +162,12 @@ namespace BDArmory
             }
         }
 
-
         public void AimToTarget(Vector3 targetPosition, bool pitch = true, bool yaw = true)
+        {
+            AimInDirection(targetPosition - referenceTransform.position, pitch, yaw);
+        }
+
+        public void AimInDirection(Vector3 targetDirection, bool pitch = true, bool yaw = true)
         {
             if (!yawTransform)
             {
@@ -170,27 +176,24 @@ namespace BDArmory
 
             float deltaTime = Time.fixedDeltaTime;
 
-            Vector3 localTargetYaw =
-                yawTransform.parent.InverseTransformPoint(targetPosition - (yawTargetOffset*pitchTransform.right));
-            Vector3 targetYaw = Vector3.ProjectOnPlane(localTargetYaw, Vector3.up);
-            float targetYawAngle = VectorUtils.SignedAngle(Vector3.forward, targetYaw, Vector3.right);
-            targetYawAngle = Mathf.Clamp(targetYawAngle, -yawRange/2, yawRange/2);
+            Vector3 yawNormal = yawTransform.up;
+            Vector3 yawComponent = Vector3.ProjectOnPlane(targetDirection, yawNormal);
+            Vector3 pitchNormal = Vector3.Cross(yawComponent, yawNormal);
+            Vector3 pitchComponent = Vector3.ProjectOnPlane(targetDirection, pitchNormal);
 
-            Quaternion currYawRot = yawTransform.localRotation;
-            yawTransform.localRotation = Quaternion.Euler(0, targetYawAngle, 0);
-            Vector3 localTargetPitch =
-                pitchTransform.parent.InverseTransformPoint(targetPosition - (pitchTargetOffset*pitchTransform.up));
-            yawTransform.localRotation = currYawRot;
-            localTargetPitch.z = Mathf.Abs(localTargetPitch.z); //prevents from aiming wonky if target is behind
-            Vector3 targetPitch = Vector3.ProjectOnPlane(localTargetPitch, Vector3.right);
-            float targetPitchAngle = VectorUtils.SignedAngle(Vector3.forward, targetPitch, Vector3.up);
-            targetPitchAngle = Mathf.Clamp(targetPitchAngle, minPitch, maxPitch);
+            float currentYaw = yawTransform.localEulerAngles.y;
+            float yawError = VectorUtils.SignedAngleDP(
+                Vector3.ProjectOnPlane(referenceTransform.forward, yawNormal), 
+                yawComponent, 
+                Vector3.Cross(yawNormal, referenceTransform.forward));
+            float yawOffset = Mathf.Abs(yawError);
+            float targetYawAngle = Mathf.Clamp((currentYaw + yawError + 180f) % 360f - 180f, -yawRange / 2, yawRange / 2); // clamped target yaw
 
-            float yawOffset = Vector3.Angle(yawTransform.parent.InverseTransformDirection(yawTransform.forward),
-                targetYaw);
-            float currentYawSign = Mathf.Sign(Vector3.Dot(yawTransform.localRotation*Vector3.forward, Vector3.right));
-            float pitchOffset = Vector3.Angle(pitchTransform.parent.InverseTransformDirection(pitchTransform.forward),
-                targetPitch);
+            float pitchError = (float)Vector3d.Angle(pitchComponent, yawNormal) - (float)Vector3d.Angle(referenceTransform.forward, yawNormal);
+            float currentPitch = -((pitchTransform.localEulerAngles.x + 180f) % 360f - 180f); // from current rotation transform
+            float targetPitchAngle = currentPitch - pitchError;
+            float pitchOffset = Mathf.Abs(targetPitchAngle - currentPitch);
+            targetPitchAngle = Mathf.Clamp(targetPitchAngle, minPitch, maxPitch); // clamp pitch
 
             float linPitchMult = yawOffset > 0 ? Mathf.Clamp01((pitchOffset/yawOffset)*(yawSpeedDPS/pitchSpeedDPS)) : 1;
             float linYawMult = pitchOffset > 0 ? Mathf.Clamp01((yawOffset/pitchOffset)*(pitchSpeedDPS/yawSpeedDPS)) : 1;
@@ -211,7 +214,7 @@ namespace BDArmory
             yawSpeed *= linYawMult;
             pitchSpeed *= linPitchMult;
 
-            if (yawRange < 360 && Mathf.Abs(targetYawAngle) > 90 && currentYawSign != Mathf.Sign(targetYawAngle))
+            if (yawRange < 360 && Mathf.Abs(targetYawAngle) > 90 && Mathf.Sign(currentYaw) != Mathf.Sign(targetYawAngle))
             {
                 targetYawAngle = 5*Mathf.Sign(targetYawAngle);
             }
@@ -271,7 +274,6 @@ namespace BDArmory
             }
         }
 
-
         public bool TargetInRange(Vector3 targetPosition, float thresholdDegrees, float maxDistance)
         {
             if (!pitchTransform)
@@ -287,8 +289,6 @@ namespace BDArmory
         public void SetReferenceTransform(Transform t)
         {
             referenceTransform = t;
-            pitchTargetOffset = pitchTransform.InverseTransformPoint(referenceTransform.position).y;
-            yawTargetOffset = yawTransform.InverseTransformPoint(referenceTransform.position).x;
         }
 
         void SetupTweakables()

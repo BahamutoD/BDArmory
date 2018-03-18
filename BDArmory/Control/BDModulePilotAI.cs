@@ -6,6 +6,7 @@ using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
 using System.Text;
+using BDArmory.Core;
 
 namespace BDArmory.Control
 {
@@ -55,19 +56,16 @@ namespace BDArmory.Control
 			}
 		}
 
-
 		Vessel targetVessel;
-
 
 		Transform vesselTransform;
 
 		Vector3 upDirection = Vector3.up;
 
 		public MissileFire weaponManager;
-
-
+        
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Alt."),
-			UI_FloatRange(minValue = 500f, maxValue = 8500f, stepIncrement = 25f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 500f, maxValue = 15000f, stepIncrement = 25f, scene = UI_Scene.All)]
 		public float defaultAltitude = 1500;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Min Altitude"),
@@ -166,7 +164,6 @@ namespace BDArmory.Control
 			private set { maxLiftAcceleration = value; }
 		}
 
-
 		float turningTimer;
 		float evasiveTimer;
 		Vector3 lastTargetPosition;
@@ -175,14 +172,16 @@ namespace BDArmory.Control
 
 		LineRenderer lr;
 		Vector3 flyingToPosition;
+        Vector3 rollTarget;
+        Vector3 angVelRollTarget;
 
-		public Vector3d defaultOrbitCoords;
+        public Vector3d defaultOrbitCoords;
 
 		//speed controller
 		BDAirspeedControl speedController;
 		bool useAB = true;
 		bool useBrakes = true;
-		bool regainEnergy;
+		bool regainEnergy = false;
 
 		//collision detection
 		int collisionDetectionTicker;
@@ -200,7 +199,7 @@ namespace BDArmory.Control
 			}
 		}
 		public ModuleWingCommander commandLeader;
-		bool useRollHint;
+        bool useRollHint;
 		Vector3d commandGeoPos;
 		public Vector3d commandPosition
 		{
@@ -224,8 +223,9 @@ namespace BDArmory.Control
 		Vector3d commandHeading;
 		public string currentStatus = "Free";
 
+        float finalMaxSteer = 1;
 
-		void Start()
+        void Start()
 		{
 			if(HighLogic.LoadedSceneIsFlight)
 			{
@@ -257,7 +257,7 @@ namespace BDArmory.Control
 			MissileFire.OnToggleTeam -= OnToggleTeam;
 		}
 
-		void OnToggleTeam(MissileFire mf, BDArmorySettings.BDATeams team)
+		void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
 		{
 			if(mf.vessel == vessel || (commandLeader && commandLeader.vessel == mf.vessel))
 			{
@@ -282,7 +282,6 @@ namespace BDArmory.Control
 		{
 			TogglePilot();
 		}
-
 
 		public void ActivatePilot()
 		{
@@ -328,8 +327,6 @@ namespace BDArmory.Control
 				v.OnFlyByWire -= AutoPilot;
 			}
 		}
-
-
 
 		[KSPEvent(guiActive = true, guiName = "Toggle Pilot", active = true)]
 		public void TogglePilot()
@@ -381,9 +378,15 @@ namespace BDArmory.Control
 			}
 		}
 
-
-
-		float finalMaxSteer = 1;
+		void FixedUpdate()
+		{
+			//floating origin and velocity offloading corrections
+			if (lastTargetPosition != null && (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero()))
+			{
+				lastTargetPosition -= FloatingOrigin.OffsetNonKrakensbane;
+			}
+		}
+		
 		void AutoPilot(FlightCtrlState s)
 		{
 			if(!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
@@ -408,13 +411,14 @@ namespace BDArmory.Control
 
 
 			GetGuardTarget();
-			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.TargetDatabase[BDATargetManager.BoolToTeam(weaponManager.team)].Count == 0||BDArmorySettings.PEACE_MODE))
+			if(vessel.LandedOrSplashed && standbyMode && weaponManager && (BDATargetManager.GetClosestTarget(this.weaponManager) == null || BDArmorySettings.PEACE_MODE)) //TheDog: replaced querying of targetdatabase with actual check if a target can be detected
 			{
 				//s.mainThrottle = 0;
 				//vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
 				AdjustThrottle(0, true);
 				return;
 			}
+
 			//upDirection = -FlightGlobals.getGeeForceAtPosition(transform.position).normalized;
 			upDirection = VectorUtils.GetUpDirection(vessel.transform.position);
 			debugString.Length = 0;
@@ -622,7 +626,6 @@ namespace BDArmory.Control
                 FlyExtend(s, lastTargetPosition);
 			}
 		}
-
 
 		bool FlyAvoidCollision(FlightCtrlState s)
 		{
@@ -885,8 +888,6 @@ namespace BDArmory.Control
 			}
 		}
 
-
-
 		void RegainEnergy(FlightCtrlState s, Vector3 direction)
 		{
             debugString.Append($"Regaining energy");
@@ -895,8 +896,9 @@ namespace BDArmory.Control
             steerMode = SteerModes.Aiming;
 			Vector3 planarDirection = Vector3.ProjectOnPlane(direction, upDirection);
 			float angle = (Mathf.Clamp(MissileGuidance.GetRadarAltitude(vessel) - minAltitude, 0, 1500) / 1500) * 90;
-			angle = Mathf.Clamp(angle, 0, 55) * Mathf.Deg2Rad;
-			Vector3 targetDirection = Vector3.RotateTowards(planarDirection, -upDirection, angle, 0);
+			angle = Mathf.Clamp(angle, 0, 55) * Mathf.Deg2Rad;                     
+
+            Vector3 targetDirection = Vector3.RotateTowards(planarDirection, -upDirection, angle, 0);
 			targetDirection = Vector3.RotateTowards(vessel.Velocity(), targetDirection, 15f * Mathf.Deg2Rad, 0).normalized;
 
 			AdjustThrottle(maxSpeed, false);
@@ -918,7 +920,6 @@ namespace BDArmory.Control
             return Mathf.Clamp01(limiter);
 		}
 
-		//test
 		Vector3 prevTargetDir;
 		bool useVelRollTarget;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)
@@ -956,10 +957,7 @@ namespace BDArmory.Control
 			targetPosition = vessel.transform.position + (currTargetDir * 100);
 
 
-			if(BDArmorySettings.DRAW_DEBUG_LINES)
-			{
-				flyingToPosition = targetPosition;
-			}
+			flyingToPosition = targetPosition;
 
 			//test poststall
 			float AoA = Vector3.Angle(vessel.ReferenceTransform.up, vessel.Velocity());
@@ -1083,10 +1081,6 @@ namespace BDArmory.Control
 			s.yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
 			s.pitch = Mathf.Clamp(steerPitch, Mathf.Min(-finalMaxSteer, -0.2f), finalMaxSteer);
 		}
-
-		Vector3 rollTarget;
-		Vector3 angVelRollTarget;
-
 
 		void FlyExtend(FlightCtrlState s, Vector3 tPosition)
 		{
@@ -1352,7 +1346,7 @@ namespace BDArmory.Control
 			float terrainDiff = MissileGuidance.GetRaycastRadarAltitude(forwardPoint) - radarAlt;
 			terrainDiff = Mathf.Max(terrainDiff, 0);
 
-			float rise = Mathf.Clamp((float)vessel.srfSpeed * 0.3f, 5, 100);
+			float rise = Mathf.Clamp((float)vessel.srfSpeed * 0.215f, 5, 100);
 
 			if(radarAlt > 70)
 			{
@@ -1665,7 +1659,6 @@ namespace BDArmory.Control
 			return position - (MissileGuidance.GetRaycastRadarAltitude(position) * upDirection);
 		}
 
-
 		Vector3 FlightPosition(Vector3 targetPosition, float minAlt)
 		{
 			Vector3 forwardDirection = vesselTransform.up;
@@ -1957,7 +1950,6 @@ namespace BDArmory.Control
 
 			return new Vector3d(right, back, 0);
 		}
-
 
 		public void ReleaseCommand()
 		{

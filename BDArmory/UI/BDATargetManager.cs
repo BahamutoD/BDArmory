@@ -9,33 +9,23 @@ using KSP.UI.Screens;
 using UnityEngine;
 using System.Text;
 using System;
+using BDArmory.Core;
 
 namespace BDArmory.UI
 {
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class BDATargetManager : MonoBehaviour
 	{
-		public static Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>> TargetDatabase;
-
-		public static Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>> GPSTargets;
-
+		public static Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>> TargetDatabase;
+		public static Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>> GPSTargets;
 		public static List<ModuleTargetingCamera> ActiveLasers;
-
 		public static List<IBDWeapon> FiredMissiles;
-
 		public static List<DestructibleBuilding> LoadedBuildings;
-
 		public static List<Vessel> LoadedVessels;
-
 		public static BDATargetManager Instance;
-
-
 
         private StringBuilder debugString = new StringBuilder();
         private float updateTimer = 0;
-
-        //public static float heatScore;        //TODO: remove!
-        //public static float flareScore;         //TODO: remove!
 
         public static bool hasAddedButton;
 
@@ -63,10 +53,9 @@ namespace BDArmory.UI
 				GameEvents.onGameStateSave.Remove(SaveGPSTargets);
 			}
 
-			GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
-			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
-
+			GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
+			GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 
 			GameEvents.onVesselLoaded.Remove(AddVessel);
 			GameEvents.onVesselGoOnRails.Remove(RemoveVessel);
@@ -78,16 +67,16 @@ namespace BDArmory.UI
 		void Start()
 		{
 			//legacy targetDatabase
-			TargetDatabase = new Dictionary<BDArmorySettings.BDATeams, List<TargetInfo>>();
-			TargetDatabase.Add(BDArmorySettings.BDATeams.A, new List<TargetInfo>());
-			TargetDatabase.Add(BDArmorySettings.BDATeams.B, new List<TargetInfo>());
+			TargetDatabase = new Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>>();
+			TargetDatabase.Add(BDArmorySetup.BDATeams.A, new List<TargetInfo>());
+			TargetDatabase.Add(BDArmorySetup.BDATeams.B, new List<TargetInfo>());
 			StartCoroutine(CleanDatabaseRoutine());
 
 			if(GPSTargets == null)
 			{
-				GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
-				GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-				GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+				GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
+				GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
+				GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 			}
 
 			//Laser points
@@ -99,7 +88,6 @@ namespace BDArmory.UI
 			StartCoroutine(ToolbarButtonRoutine());
 
 		}
-
 
 		void AddBuilding(DestructibleBuilding b)
 		{
@@ -141,7 +129,7 @@ namespace BDArmory.UI
 			{
 				if(!hasAddedButton)
 				{
-					Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "icon", false);
+					Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "icon", false);
 					ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.FLIGHT, buttonTexture);
 					hasAddedButton = true;
 
@@ -162,12 +150,12 @@ namespace BDArmory.UI
 		}
 		public void ShowToolbarGUI()
 		{
-			BDArmorySettings.toolbarGuiEnabled = true;	
+			BDArmorySetup.toolbarGuiEnabled = true;	
 		}
 
 		public void HideToolbarGUI()
 		{
-			BDArmorySettings.toolbarGuiEnabled = false;	
+			BDArmorySetup.toolbarGuiEnabled = false;	
 		}
 		void Dummy()
 		{}
@@ -186,8 +174,6 @@ namespace BDArmory.UI
 
 		}
 
-
-		//Laser point stuff
 		public static void RegisterLaserPoint(ModuleTargetingCamera cam)
 		{
 			if(ActiveLasers.Contains(cam))
@@ -226,7 +212,6 @@ namespace BDArmory.UI
 	    {
             return GetModuleTargeting(parentOnly, ml.GetForwardTransform(), ml.MissileReferenceTransform.position, ml.maxOffBoresight, ml.vessel, ml.SourceVessel);
         }
-
 
         private static ModuleTargetingCamera GetModuleTargeting(bool parentOnly, Vector3 missilePosition, Vector3 position, float maxOffBoresight,Vessel vessel, Vessel sourceVessel)
 	    {
@@ -278,7 +263,6 @@ namespace BDArmory.UI
             return true;
         }
 
-
         /// <summary>
         /// The the heat signature of a vessel (for Heat/IR targeting).
         /// Returns the heat of the hottest part of the vessel
@@ -301,7 +285,6 @@ namespace BDArmory.UI
             return heatScore;
         }
 
-
         /// <summary>
         /// Find a flare within acceptable thermal range that will "decoy" for the passed heatsignature
         /// </summary>
@@ -309,7 +292,7 @@ namespace BDArmory.UI
         {
             TargetSignatureData flareTarget = TargetSignatureData.noTarget;
 
-            List<CMFlare>.Enumerator flare = BDArmorySettings.Flares.GetEnumerator();
+            List<CMFlare>.Enumerator flare = BDArmorySetup.Flares.GetEnumerator();
             while (flare.MoveNext())
             {
                 if (!flare.Current) continue;
@@ -333,9 +316,7 @@ namespace BDArmory.UI
 
             return flareTarget;
         }
-
-
-        //public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null)
+                
         public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null, bool favorGroundTargets = false)
         {
             float minMass = 0.05f;  //otherwise the RAMs have trouble shooting down incoming missiles
@@ -410,15 +391,14 @@ namespace BDArmory.UI
             //else return the target:
             return finalData;
 		}
-
-
+        
 		void UpdateDebugLabels()
 		{
             debugString.Length = 0;
 
 			debugString.Append($"Team A's targets:");
             debugString.Append(Environment.NewLine);
-            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.A])
+            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySetup.BDATeams.A])
 			{
 				if(targetInfo)
 				{
@@ -442,7 +422,7 @@ namespace BDArmory.UI
 
             debugString.Append($"Team B's targets:");
             debugString.Append(Environment.NewLine);
-            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySettings.BDATeams.B])
+            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySetup.BDATeams.B])
 			{
 				if(targetInfo)
 				{
@@ -481,10 +461,7 @@ namespace BDArmory.UI
             debugString.Append(Environment.NewLine);
         }
 
-
-
-
-		//gps stuff
+		
 		void SaveGPSTargets(ConfigNode saveNode)
 		{
 			string saveTitle = HighLogic.CurrentGame.Title;
@@ -531,7 +508,7 @@ namespace BDArmory.UI
 					gpsNode.AddValue("SaveGame", saveTitle);
 				}
 
-				if(GPSTargets[BDArmorySettings.BDATeams.A].Count == 0 && GPSTargets[BDArmorySettings.BDATeams.B].Count == 0)
+				if(GPSTargets[BDArmorySetup.BDATeams.A].Count == 0 && GPSTargets[BDArmorySetup.BDATeams.B].Count == 0)
 				{
 					//gpsNode.SetValue("Targets", string.Empty, true);
 					return;
@@ -542,9 +519,7 @@ namespace BDArmory.UI
 				fileNode.Save("GameData/BDArmory/gpsTargets.cfg");
 				Debug.Log("[BDArmory]: ==== Saved BDA GPS Targets ====");
 			}
-		}
-
-	
+		}	
 
 		void LoadGPSTargets(ConfigNode saveNode)
 		{
@@ -587,7 +562,7 @@ namespace BDArmory.UI
 		{
 			string finalString = string.Empty;
 			string aString = string.Empty;
-			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.A])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySetup.BDATeams.A])
 			{
 				aString += gpsInfo.name;
 				aString += ",";
@@ -606,7 +581,7 @@ namespace BDArmory.UI
 			finalString += ":";
 
 			string bString = string.Empty;
-			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySettings.BDATeams.B])
+			foreach(GPSTargetInfo gpsInfo in GPSTargets[BDArmorySetup.BDATeams.B])
 			{
 				bString += gpsInfo.name;
 				bString += ",";
@@ -630,11 +605,11 @@ namespace BDArmory.UI
 		{
 			if(GPSTargets == null)
 			{
-				GPSTargets = new Dictionary<BDArmorySettings.BDATeams, List<GPSTargetInfo>>();
+				GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
 			}
 			GPSTargets.Clear();
-			GPSTargets.Add(BDArmorySettings.BDATeams.A, new List<GPSTargetInfo>());
-			GPSTargets.Add(BDArmorySettings.BDATeams.B, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
+			GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
 
 			if(listString == null || listString == string.Empty)
 			{
@@ -659,7 +634,7 @@ namespace BDArmory.UI
 						double longi = double.Parse(data[2]);
 						double alt = double.Parse(data[3]);
 						GPSTargetInfo newInfo = new GPSTargetInfo(new Vector3d(lat, longi, alt), name);
-						GPSTargets[BDArmorySettings.BDATeams.A].Add(newInfo);
+						GPSTargets[BDArmorySetup.BDATeams.A].Add(newInfo);
 					}
 				}
 			}
@@ -677,29 +652,22 @@ namespace BDArmory.UI
 						double longi = double.Parse(data[2]);
 						double alt = double.Parse(data[3]);
 						GPSTargetInfo newInfo = new GPSTargetInfo(new Vector3d(lat, longi, alt), name);
-						GPSTargets[BDArmorySettings.BDATeams.B].Add(newInfo);
+						GPSTargets[BDArmorySetup.BDATeams.B].Add(newInfo);
 					}
 				}
 			}
 		}
 
-
-
-
-
-
-
-
 		//Legacy target managing stuff
 
-		public static BDArmorySettings.BDATeams BoolToTeam(bool team)
+		public static BDArmorySetup.BDATeams BoolToTeam(bool team)
 		{
-			return team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			return team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 		}
 
-		public static BDArmorySettings.BDATeams OtherTeam(BDArmorySettings.BDATeams team)
+		public static BDArmorySetup.BDATeams OtherTeam(BDArmorySetup.BDATeams team)
 		{
-			return team == BDArmorySettings.BDATeams.A ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			return team == BDArmorySetup.BDATeams.A ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 		}
 
 		IEnumerator CleanDatabaseRoutine()
@@ -708,17 +676,17 @@ namespace BDArmory.UI
 			{
 				yield return new WaitForSeconds(5);
 			
-				TargetDatabase[BDArmorySettings.BDATeams.A].RemoveAll(target => target == null);
-				TargetDatabase[BDArmorySettings.BDATeams.A].RemoveAll(target => target.team == BDArmorySettings.BDATeams.A);
-				TargetDatabase[BDArmorySettings.BDATeams.A].RemoveAll(target => !target.isThreat);
+				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => target == null);
+				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => target.team == BDArmorySetup.BDATeams.A);
+				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => !target.isThreat);
 
-				TargetDatabase[BDArmorySettings.BDATeams.B].RemoveAll(target => target == null);
-				TargetDatabase[BDArmorySettings.BDATeams.B].RemoveAll(target => target.team == BDArmorySettings.BDATeams.B);
-				TargetDatabase[BDArmorySettings.BDATeams.B].RemoveAll(target => !target.isThreat);
+				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => target == null);
+				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => target.team == BDArmorySetup.BDATeams.B);
+				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => !target.isThreat);
 			}
 		}
 
-		void RemoveTarget(TargetInfo target, BDArmorySettings.BDATeams team)
+		void RemoveTarget(TargetInfo target, BDArmorySetup.BDATeams team)
 		{
 			TargetDatabase[team].Remove(target);
 		}
@@ -772,7 +740,7 @@ namespace BDArmory.UI
         public static void AddTarget(TargetInfo target)
         {
             var team = target.team;
-            if (team == BDArmorySettings.BDATeams.None) return;
+            if (team == BDArmorySetup.BDATeams.None) return;
             if (!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(target))
             {
                 BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(target);
@@ -781,7 +749,7 @@ namespace BDArmory.UI
 
 		public static void ClearDatabase()
 		{
-			foreach(BDArmorySettings.BDATeams t in TargetDatabase.Keys)
+			foreach(BDArmorySetup.BDATeams t in TargetDatabase.Keys)
 			{
 				foreach(TargetInfo target in TargetDatabase[t])
 				{
@@ -789,13 +757,13 @@ namespace BDArmory.UI
 				}
 			}
 
-			TargetDatabase[BDArmorySettings.BDATeams.A].Clear();
-			TargetDatabase[BDArmorySettings.BDATeams.B].Clear();
+			TargetDatabase[BDArmorySetup.BDATeams.A].Clear();
+			TargetDatabase[BDArmorySetup.BDATeams.B].Clear();
 		}
 
 		public static TargetInfo GetAirToAirTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
             float finalTargetSuitability = 0;        //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
@@ -825,7 +793,7 @@ namespace BDArmory.UI
         //this will search for an AA target that is immediately in front of the AI during an extend when it would otherwise be helpless
         public static TargetInfo GetAirToAirTargetAbortExtend(MissileFire mf, float maxDistance, float cosAngleCheck)
         {
-            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+            BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
             TargetInfo finalTarget = null;
 
             float finalTargetSuitability = 0;    //this will determine how suitable the target is, based on where it is located relative to the targeting vessel and how far it is
@@ -858,7 +826,7 @@ namespace BDArmory.UI
         //returns the nearest friendly target
         public static TargetInfo GetClosestFriendly(MissileFire mf)
         {
-            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.A : BDArmorySetup.BDATeams.B;
             TargetInfo finalTarget = null;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
@@ -877,7 +845,7 @@ namespace BDArmory.UI
         //returns the target that owns this weapon manager
         public static TargetInfo GetTargetFromWeaponManager(MissileFire mf)
         {
-            BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.A : BDArmorySetup.BDATeams.B;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
@@ -894,7 +862,7 @@ namespace BDArmory.UI
 
         public static TargetInfo GetClosestTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
@@ -916,7 +884,7 @@ namespace BDArmory.UI
 		public static List<TargetInfo> GetAllTargetsExcluding(List<TargetInfo> excluding, MissileFire mf)
 		{
 			List<TargetInfo> finalTargets = new List<TargetInfo>();
-			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
+			BDArmorySetup.BDATeams team = BoolToTeam(mf.team);
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
@@ -933,7 +901,7 @@ namespace BDArmory.UI
 
 		public static TargetInfo GetLeastEngagedTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
@@ -954,7 +922,7 @@ namespace BDArmory.UI
 
 		public static TargetInfo GetMissileTarget(MissileFire mf, bool targetingMeOnly = false)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 			TargetInfo finalTarget = null;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
@@ -975,7 +943,8 @@ namespace BDArmory.UI
 					}
 					else
 					{
-						Debug.LogWarning("checking target missile -  doesn't have missile module");
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            Debug.LogWarning("checking target missile -  doesn't have missile module");
 					}
 
 
@@ -991,7 +960,7 @@ namespace BDArmory.UI
 
 		public static TargetInfo GetUnengagedMissileTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = mf.team ? BDArmorySettings.BDATeams.B : BDArmorySettings.BDATeams.A;
+			BDArmorySetup.BDATeams team = mf.team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
@@ -1011,7 +980,7 @@ namespace BDArmory.UI
 
 		public static TargetInfo GetClosestMissileTarget(MissileFire mf)
 		{
-			BDArmorySettings.BDATeams team = BoolToTeam(mf.team);
+			BDArmorySetup.BDATeams team = BoolToTeam(mf.team);
 			TargetInfo finalTarget = null;
 
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
@@ -1039,7 +1008,7 @@ namespace BDArmory.UI
         //checks to see if a friendly is too close to the gun trajectory to fire them
         public static bool CheckSafeToFireGuns(MissileFire weaponManager, Vector3 aimDirection, float safeDistance, float cosUnsafeAngle)
         {
-            BDArmorySettings.BDATeams team = weaponManager.team ? BDArmorySettings.BDATeams.A : BDArmorySettings.BDATeams.B;
+            BDArmorySetup.BDATeams team = weaponManager.team ? BDArmorySetup.BDATeams.A : BDArmorySetup.BDATeams.B;
             List<TargetInfo>.Enumerator friendlyTarget = TargetDatabase[team].GetEnumerator();
             while (friendlyTarget.MoveNext())
             {
@@ -1056,7 +1025,6 @@ namespace BDArmory.UI
             return true;
         }
 
-
 		void OnGUI()
 		{
 			if(BDArmorySettings.DRAW_DEBUG_LABELS)	
@@ -1064,8 +1032,6 @@ namespace BDArmory.UI
 				GUI.Label(new Rect(600,100,600,600), debugString.ToString());	
 			}
 		}
-
-
 
 	}
 }

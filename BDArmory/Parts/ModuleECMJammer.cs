@@ -23,7 +23,8 @@ namespace BDArmory.Parts
 
         [KSPField] public bool rcsReduction = false;
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Enabled")] public bool jammerEnabled;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Enabled")]
+        public bool jammerEnabled = false;
 
         VesselECMJInfo vesselJammer;
 
@@ -125,6 +126,21 @@ namespace BDArmory.Parts
 
         void EnsureVesselJammer()
         {
+            /*
+            if (vesselJammer == null)
+            {
+                return;
+            }
+            if (vesselJammer.vessel == null)
+            {
+                return;
+            }
+            if (vessel == null)
+            {
+                return;
+            }
+            */
+
             if (!vesselJammer || vesselJammer.vessel != vessel)
             {
                 vesselJammer = vessel.gameObject.GetComponent<VesselECMJInfo>();

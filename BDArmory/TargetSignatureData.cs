@@ -18,7 +18,7 @@ namespace BDArmory
 		public float timeAcquired;
         public float signalStrength;
 		public TargetInfo targetInfo;
-		public BDArmorySettings.BDATeams team;
+		public BDArmorySetup.BDATeams team;
 		public Vector2 pingPosition;
 		public VesselECMJInfo vesselJammer;
 		public ModuleRadar lockedByRadar;
@@ -44,7 +44,7 @@ namespace BDArmory
             velocity = v.Velocity();
 
             geoPos =  VectorUtils.WorldPositionToGeoCoords(v.CoM, v.mainBody);
-			acceleration = v.acceleration;
+			acceleration = v.acceleration_immediate;
 			exists = true;
 			
 			signalStrength = _signalStrength;
@@ -57,7 +57,7 @@ namespace BDArmory
                 targetInfo = v.gameObject.AddComponent<TargetInfo>();
             }
 
-            team = BDArmorySettings.BDATeams.None;
+            team = BDArmorySetup.BDATeams.None;
 
 			if(targetInfo)
 			{
@@ -91,7 +91,7 @@ namespace BDArmory
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			vesselJammer = null;
-			team = BDArmorySettings.BDATeams.None;
+			team = BDArmorySetup.BDATeams.None;
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;
@@ -109,7 +109,7 @@ namespace BDArmory
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			vesselJammer = null;
-			team = BDArmorySettings.BDATeams.None;
+			team = BDArmorySetup.BDATeams.None;
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;
@@ -162,11 +162,14 @@ namespace BDArmory
 
                 if (vessel != null)
                 {
+                    // chaff check
                     decoyFactor = (1f - RadarUtils.GetVesselChaffFactor(vessel));
+
                     if (decoyFactor > 0f)
                     {
-                        decoyFactor *= UnityEngine.Random.Range(10f, 100f);
-                        posDistortion = Vector3.Cross(UnityEngine.Random.insideUnitSphere, vessel.transform.up) * decoyFactor;      //cross product: if deflection direction directly forward or aft, effect is smaller than if deflection laterally
+                        // with ecm on better chaff effectiveness due to higher modifiedSignature
+                        // higher speed -> missile decoyed further "behind" where the chaff drops (also means that for head-on engagements chaff is most like less effective!)
+                        posDistortion = (vessel.GetSrfVelocity() * -1f * Mathf.Clamp(decoyFactor * decoyFactor, 0f, 0.5f)) + (UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(targetInfo.radarModifiedSignature, targetInfo.radarModifiedSignature * targetInfo.radarModifiedSignature) * decoyFactor);
                     }
                 }
 
