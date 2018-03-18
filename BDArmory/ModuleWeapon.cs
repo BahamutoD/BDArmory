@@ -87,9 +87,9 @@ namespace BDArmory
         //used by AI to lead moving targets
         private float targetDistance;
         private Vector3 targetPosition;
-        private Vector3 targetVelocity;  // should always be surface-based, not sure why, but that's the way it is
-        private Vector3 targetAcceleration; // should always be surface-based, not sure why, but that's the way it is
-        private Vector3 targetVelocityPrevious; // for acceleration calculation, so also should always be srfVelocity, even when in orbit
+        private Vector3 targetVelocity;  // local frame velocity
+        private Vector3 targetAcceleration; // local frame velocity
+        private Vector3 targetVelocityPrevious; // for acceleration calculation
         private Vector3 relativeVelocity;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
@@ -547,7 +547,7 @@ namespace BDArmory
                 Events["ToggleRipple"].guiActiveEditor = false;
                 Fields["useRippleFire"].guiActiveEditor = false;
             }
-
+            vessel.Velocity();
             if (airDetonation)
             {
                 UI_FloatRange detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
@@ -791,7 +791,7 @@ namespace BDArmory
                 {
                     UpdateTargetVessel();
                     updateAcceleration(targetVelocity);
-                    relativeVelocity = targetVelocity - vessel.GetSrfVelocity();
+                    relativeVelocity = targetVelocity - vessel.rb_velocity;
                     targetPosition += relativeVelocity * Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
@@ -1276,7 +1276,7 @@ namespace BDArmory
                     if (Physics.Raycast(ray, out hit, maxDistance, 9076737))
                     {
                         lr.useWorldSpace = true;
-                        laserPoint = hit.point + (targetVelocity - Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
+                        laserPoint = hit.point + targetVelocity * Time.fixedDeltaTime;
                         
                         lr.SetPosition(0, tf.position + (part.rb.velocity * Time.fixedDeltaTime));
                         lr.SetPosition(1, laserPoint);  
@@ -1592,13 +1592,16 @@ namespace BDArmory
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
                         {
-                            var avAccel = (FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (targetAcceleration
+                            var geeForceAtTarget = FlightGlobals.getGeeForceAtPosition(targetPosition);
+                            var finalTargetGeeForce = FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (targetAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
-                                * time * time) + FlightGlobals.getGeeForceAtPosition(targetPosition)) / 2;
-                            finalTarget += 0.5f * (targetAcceleration - FlightGlobals.getGeeForceAtPosition(targetPosition) + avAccel) * time * time;
+                                * time * time);
+                            var cosine = Vector3d.Dot(finalTargetGeeForce.normalized, geeForceAtTarget.normalized);
+                            var avGeeForce = (finalTargetGeeForce + geeForceAtTarget) / 2 / (2 * cosine * cosine - 1);
+                            finalTarget += 0.5f * (targetAcceleration - geeForceAtTarget + avGeeForce) * time * (time + Time.fixedDeltaTime);
                         }
                         else
-                            finalTarget += 0.5f * targetAcceleration * time * time; //target acceleration
+                            finalTarget += 0.5f * targetAcceleration * time * (time + Time.fixedDeltaTime); //target acceleration
 
                         #if DEBUG
                         accAdj = (finalTarget - vc);
@@ -1985,7 +1988,7 @@ namespace BDArmory
                      (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
                 {
                     targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.GetSrfVelocity();
+                    targetVelocity = legacyTargetVessel.rb_velocity;
                     targetAcquired = true;
                     return;
                 }
@@ -1994,7 +1997,7 @@ namespace BDArmory
                 {
                     slaved = true;
                     targetPosition = weaponManager.slavedPosition;
-                    targetVelocity = weaponManager.slavedTarget.vessel?.GetSrfVelocity() ?? weaponManager.slavedVelocity;
+                    targetVelocity = weaponManager.slavedTarget.vessel?.rb_velocity ?? (weaponManager.slavedVelocity - Krakensbane.GetFrameVelocityV3f());
                     targetAcquired = true;
                     return;
                 }
@@ -2002,12 +2005,12 @@ namespace BDArmory
                 if (weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
                 {
                     TargetSignatureData targetData = weaponManager.vesselRadarData.lockedTargetData.targetData;
-                    targetVelocity = targetData.velocity;
+                    targetVelocity = targetData.velocity - Krakensbane.GetFrameVelocityV3f();
                     targetPosition = targetData.predictedPosition;
                     targetAcceleration = targetData.acceleration;
                     if (targetData.vessel)
                     {
-                        targetVelocity = targetData.vessel?.GetSrfVelocity() ?? targetData.velocity;
+                        targetVelocity = targetData.vessel?.rb_velocity ?? targetVelocity;
                         targetPosition = targetData.vessel.CoM;
                     }
                     targetAcquired = true;
@@ -2052,16 +2055,16 @@ namespace BDArmory
                         targetAcquired = true;
                         atprAcquired = true;
                         targetPosition = tgt.CoM;
-                        targetVelocity = tgt.GetSrfVelocity();
+                        targetVelocity = tgt.rb_velocity;
                     }
                 }
             }
         }
 
-        void updateAcceleration(Vector3 targetSrfVelocity)
+        void updateAcceleration(Vector3 target_rb_velocity)
         {
-            targetAcceleration = (targetSrfVelocity - targetVelocityPrevious) / Time.fixedDeltaTime;
-            targetVelocityPrevious = targetSrfVelocity;
+            targetAcceleration = (target_rb_velocity - Krakensbane.GetLastCorrection() - targetVelocityPrevious) / Time.fixedDeltaTime;
+            targetVelocityPrevious = target_rb_velocity;
         }
 
         void UpdateGUIWeaponState()
