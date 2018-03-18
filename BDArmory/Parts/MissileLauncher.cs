@@ -521,9 +521,9 @@ namespace BDArmory.Parts
 			    Fields["CruiseAltitude"].guiActiveEditor = false;
                 Fields["CruiseSpeed"].guiActive = false;
                 Fields["CruiseSpeed"].guiActiveEditor = false;
-                Fields["CruiseAltitudeRange"].guiActive = false;
-                Fields["CruiseAltitudeRange"].guiActiveEditor = false;
-			    Fields["CruisePredictionTime"].guiActiveEditor = GuidanceMode == GuidanceModes.Cruise;
+                Events["CruiseAltitudeRange"].guiActive = false;
+			    Events["CruiseAltitudeRange"].guiActiveEditor = false;
+			    Fields["CruisePredictionTime"].guiActiveEditor = false;
 
             }
 
