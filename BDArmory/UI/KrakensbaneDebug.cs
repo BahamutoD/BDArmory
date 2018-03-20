@@ -25,7 +25,9 @@ namespace BDArmory.UI
                 GUI.Label(new Rect(10, 60, 400, 400),
                     $"Frame velocity: {frameVelocity.magnitude} ({frameVelocity}){Environment.NewLine}"
                     + $"Last offset {Time.time - lastShift}s ago{Environment.NewLine}"
-                    + $"Local vessel speed: {FlightGlobals.ActiveVessel.rb_velocity.magnitude}, ({FlightGlobals.ActiveVessel.rb_velocity})");
+                    + $"Local vessel speed: {FlightGlobals.ActiveVessel.rb_velocity.magnitude}, ({FlightGlobals.ActiveVessel.rb_velocity}){Environment.NewLine}"
+                    //+ $"Ref frame is {(FlightGlobals.RefFrameIsRotating ? "" : "not ")}rotating{Environment.NewLine}"
+                    );
             }
         }
     }

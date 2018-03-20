@@ -1598,10 +1598,10 @@ namespace BDArmory
                                 * time * time);
                             var cosine = Vector3d.Dot(finalTargetGeeForce.normalized, geeForceAtTarget.normalized);
                             var avGeeForce = (finalTargetGeeForce + geeForceAtTarget) / 2 / (2 * cosine * cosine - 1);
-                            finalTarget += 0.5f * (targetAcceleration - geeForceAtTarget + avGeeForce) * time * (time + Time.fixedDeltaTime);
+                            finalTarget += 0.5f * (targetAcceleration - geeForceAtTarget + avGeeForce) * time * time;
                         }
                         else
-                            finalTarget += 0.5f * targetAcceleration * time * (time + Time.fixedDeltaTime); //target acceleration
+                            finalTarget += 0.5f * targetAcceleration * time * time; //target acceleration
 
                         #if DEBUG
                         accAdj = (finalTarget - vc);
@@ -1623,7 +1623,7 @@ namespace BDArmory
                         #endif
                         float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
                         + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
-                        Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * (time - Time.fixedDeltaTime) * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
+                        Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * time * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
 
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
                         effectiveVelocity = bulletVelocity

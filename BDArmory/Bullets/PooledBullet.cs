@@ -454,7 +454,7 @@ namespace BDArmory
             prevPosition = currPosition;
             
 
-            if (bulletDrop && FlightGlobals.RefFrameIsRotating)
+            if (bulletDrop)
             {
                 // Gravity???
                 var gravity_ = FlightGlobals.getGeeForceAtPosition(transform.position);
