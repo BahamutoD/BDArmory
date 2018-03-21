@@ -794,7 +794,6 @@ namespace BDArmory
                     UpdateTargetVessel();
                     updateAcceleration(targetVelocity);
                     relativeVelocity = targetVelocity - vessel.rb_velocity;
-                    targetPosition += relativeVelocity * Time.fixedDeltaTime;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -1265,7 +1264,7 @@ namespace BDArmory
                     if (((legacyTargetVessel != null && legacyTargetVessel.loaded) || slaved) 
                         && Vector3.Angle(rayDirection, targetDirection) < 1)
                     {
-                        targetDirection = targetPosition + relativeVelocity * Time.fixedDeltaTime - tf.position;
+                        targetDirection = targetPosition + relativeVelocity * Time.fixedDeltaTime * 2 - tf.position;
                         rayDirection = targetDirection;
                         targetDirectionLR = targetDirection;
                     }
