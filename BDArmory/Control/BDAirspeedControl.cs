@@ -163,7 +163,7 @@ namespace BDArmory.Control
             while (mmes.MoveNext())
             {
                 if (mmes.Current == null) continue;
-                if (allowAfterburner && (accel < requestAccel*0.2f || targetSpeed > 300))
+                if (allowAfterburner && accel < requestAccel * 0.2f)
                 {
                     if (mmes.Current.runningPrimary)
                     {
