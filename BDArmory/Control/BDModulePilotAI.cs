@@ -505,7 +505,7 @@ namespace BDArmory.Control
                                   vesselTransform.up) > 0)) continue;
                         if (!PredictCollisionWithVessel(vs.Current, 2.5f, 0.5f, out badDirection)) continue;
 						// the 'isLeadingFormation' check was bad anyway, as releasing one member would unset it, while still having other followers, moving it here
-						if (vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader.vessel == vessel) continue;
+						if (vs.Current.FindPartModuleImplementing<IBDAIControl>()?.commandLeader?.vessel == vessel) continue;
                         avoid = true;
                         break;
                     }
