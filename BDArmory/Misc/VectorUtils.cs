@@ -80,6 +80,38 @@ namespace BDArmory.Misc
 			return Vector3.RotateTowards(direction, Vector3.ProjectOnPlane(UnityEngine.Random.onUnitSphere, direction), maxRotate, 0).normalized;
 		}
 
+        public static Vector3 GaussianDirectionDeviation(Vector3 direction, float standardDeviation)
+        {
+            return Quaternion.AngleAxis(UnityEngine.Random.Range(-180f, 180f), direction)
+                * Quaternion.AngleAxis(Gaussian() * standardDeviation, 
+                                       new Vector3(-1 / direction.x, -1 / direction.y, 2 / direction.z))  // orthogonal vector
+                * direction;
+        }
+
+        /// <returns>Random float distributed with an approximated standard normal distribution</returns>
+        /// <see>https://www.johndcook.com/blog/csharp_phi/</see>
+        /// <remarks>Note a standard normal variable is technically unbounded</remarks>
+        public static float Gaussian()
+        {
+            const float a1 = 0.254829592f;
+            const float a2 = -0.284496736f;
+            const float a3 = 1.421413741f;
+            const float a4 = -1.453152027f;
+            const float a5 = 1.061405429f;
+            const float p = 0.3275911f;
+            const float sqrt2 = 1;
+
+            float x = UnityEngine.Random.Range(-sqrt2, sqrt2);
+            int sign = Math.Sign(x);
+            x = Mathf.Abs(x);
+
+            // A&S formula 7.1.26
+            float t = 1f / (1f + p * x);
+            float y = 1f - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Mathf.Exp(-x * x);
+
+            return 0.5f * (1f + sign * y);
+        }
+
 		/// <summary>
 		/// Converts world position to Lat,Long,Alt form.
 		/// </summary>
