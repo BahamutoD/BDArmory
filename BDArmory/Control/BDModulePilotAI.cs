@@ -1520,13 +1520,13 @@ namespace BDArmory.Control
 			Vector3 projectedTargetDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
 			if(Vector3.Dot(targetDirection, forwardDirection) < 0)
 			{
-				if(Vector3.Angle(projectedTargetDirection, projectedDirection) > 165f)
+				if(Vector3.Angle(targetDirection, forwardDirection) > 165f)
 				{
 					targetPosition = vesselTransform.position + (Quaternion.AngleAxis(Mathf.Sign(Mathf.Sin((float)vessel.missionTime / 4)) * 45, upDirection) * (projectedDirection.normalized * 200));
 					targetDirection = (targetPosition - vesselTransform.position).normalized;
 				}
 
-				targetPosition = vesselTransform.position + Vector3.RotateTowards(projectedDirection, Vector3.ProjectOnPlane(targetDirection, upDirection) + upDirection * vertFactor, 45*Mathf.Deg2Rad, 0).normalized*200;
+				targetPosition = vesselTransform.position + Vector3.Cross(Vector3.Cross(forwardDirection, targetDirection), forwardDirection).normalized*200;
 			}
 			else if(steerMode != SteerModes.Aiming)
 			{
@@ -1534,7 +1534,7 @@ namespace BDArmory.Control
 				if (vertFactor < 0)
 					distance = Math.Min(distance, Math.Abs((alt - minAlt) / vertFactor));
 
-				targetPosition += upDirection * Math.Min(distance, 1000) * vertFactor * (1 - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
+				targetPosition += upDirection * Math.Min(distance, 1000) * vertFactor * Mathf.Clamp01(0.7f - Math.Abs(Vector3.Dot(projectedTargetDirection, projectedDirection)));
 			}
 
 
