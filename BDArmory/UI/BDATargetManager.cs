@@ -1015,7 +1015,7 @@ namespace BDArmory.UI
             List<TargetInfo>.Enumerator friendlyTarget = TargetDatabase[team].GetEnumerator();
             while (friendlyTarget.MoveNext())
             {
-                if (friendlyTarget.Current == null || !friendlyTarget.Current.Vessel) continue;
+                if (friendlyTarget.Current == null || !friendlyTarget.Current.Vessel || friendlyTarget.Current.weaponManager == weaponManager) continue;
                 float friendlyPosDot = Vector3.Dot(friendlyTarget.Current.position - weaponManager.vessel.CoM, aimDirection);
                 if (!(friendlyPosDot > 0)) continue;
                 float friendlyDistance = (friendlyTarget.Current.position - weaponManager.vessel.CoM).magnitude;
