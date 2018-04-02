@@ -313,6 +313,7 @@ namespace BDArmory.Radar
             radarCam.targetTexture = rcsRendering;
             RenderTexture.active = rcsRendering;
             Shader.SetGlobalVector("_LIGHTDIR", -cameraDirection);
+            Shader.SetGlobalColor("_RCSCOLOR", Color.white);
             radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
             rcsTexture.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
             rcsTexture.Apply();
