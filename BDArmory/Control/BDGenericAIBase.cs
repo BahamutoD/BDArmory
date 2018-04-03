@@ -77,7 +77,7 @@ namespace BDArmory.Control
 		// A small wrapper to make sure the autopilot does not do anything when it shouldn't
 		private void autoPilot(FlightCtrlState s)
 		{
-			if (!vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
+			if (!weaponManager || !vessel || !vessel.transform || vessel.packed || !vessel.mainBody)
 				return;
 
 			debugString.Length = 0;
