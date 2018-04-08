@@ -52,7 +52,6 @@ namespace BDArmory
         public float tracerLuminance = 1;
         public float initialSpeed;
 
-        public Vector3 prevPosition;
         public Vector3 currPosition;
 
         //explosive parameters
@@ -83,7 +82,6 @@ namespace BDArmory
         public float apBulletMod = 0;
         public float ballisticCoefficient;
         public float flightTimeElapsed;
-        bool collisionEnabled;
         public static Shader bulletShader;
         public static bool shaderInitialized;
         private float impactVelocity;
@@ -101,11 +99,8 @@ namespace BDArmory
         private Vector3[] linePositions = new Vector3[2];
         void OnEnable()
         {
-
             startPosition = transform.position;
             initialSpeed = currentVelocity.magnitude; // this is the velocity used for drag estimations (only), use total velocity, not muzzle velocity
-
-            collisionEnabled = false;
 
             if (!wasInitiated)
             {
@@ -120,8 +115,6 @@ namespace BDArmory
             {
                 currentColor = startColor;
             }
-
-            prevPosition = gameObject.transform.position;
 
             if (lightFlash == null || !gameObject.GetComponent<Light>())
             {
@@ -182,7 +175,6 @@ namespace BDArmory
         {
             yield return new WaitForFixedUpdate();
             lightFlash.enabled = false;
-            collisionEnabled = true;
         }
 
         void OnWillRenderObject()
@@ -204,19 +196,19 @@ namespace BDArmory
 
         void FixedUpdate()
         {
+            if (!gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
             //floating origin and velocity offloading corrections
             if (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero())
             {
                 transform.position -= FloatingOrigin.OffsetNonKrakensbane;
                 startPosition -= FloatingOrigin.OffsetNonKrakensbane;
-                //prevPosition -= FloatingOrigin.OffsetNonKrakensbane; // looks like this variable is not used anywhere
             }
 
             float distanceFromStart = Vector3.Distance(transform.position, startPosition);
-            if (!gameObject.activeInHierarchy)
-            {
-                return;
-            }
 
             //calculate flight time for drag purposes
             flightTimeElapsed += Time.fixedDeltaTime;
@@ -254,7 +246,7 @@ namespace BDArmory
             linePositions[1] = transform.position;
          
             bulletTrail.SetPositions(linePositions);
-            currPosition = gameObject.transform.position;
+            currPosition = transform.position;
 
             if (Time.time > timeToLiveUntil) //kill bullet when TTL ends
             {
@@ -262,7 +254,7 @@ namespace BDArmory
                 return;
             }
 
-            if (collisionEnabled)
+            // bullet collision block
             {
                 //reset our hit variables to default state
                 hasPenetrated = true;
@@ -311,7 +303,7 @@ namespace BDArmory
                                 break;
                             }
 
-                            if (hitPart?.vessel == sourceVessel) return;  //avoid autohit;                     
+                            if (hitPart?.vessel == sourceVessel) continue;  //avoid autohit;                     
 
                             Vector3 impactVector = currentVelocity;
                             if (hitPart?.rb != null)
@@ -368,7 +360,6 @@ namespace BDArmory
                                 //if (explosive && penetrationFactor < 3 || currentVelocity.magnitude <= 800f)
                                 if (explosive)
                                 {
-                                    prevPosition = currPosition;
                                     //move bullet            
                                     transform.position += (currentVelocity * Time.fixedDeltaTime) / 3;
 
@@ -447,13 +438,6 @@ namespace BDArmory
 
                 return;
             }
-
-            //////////////////////////////////////////////////
-            //Bullet Translation 
-            //////////////////////////////////////////////////
-
-            prevPosition = currPosition;
-            
 
             if (bulletDrop)
             {
@@ -595,7 +579,6 @@ namespace BDArmory
                 //impactVelocity = currentVelocity.magnitude;
 
                 flightTimeElapsed -= Time.fixedDeltaTime;
-                prevPosition = transform.position;
             }
             else
             {
