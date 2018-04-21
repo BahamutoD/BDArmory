@@ -71,13 +71,6 @@ namespace BDArmory.Parts
             base.OnStart(state);
             if (!HighLogic.LoadedSceneIsFlight) return;
             part.force_activate();
-            List<MissileFire>.Enumerator wm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-            while (wm.MoveNext())
-            {
-                if (wm.Current == null) continue;
-                wm.Current.jammers.Add(this);
-            }
-            wm.Dispose();
 
             GameEvents.onVesselCreate.Add(OnVesselCreate);
         }

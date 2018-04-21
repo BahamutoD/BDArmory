@@ -2897,6 +2897,8 @@ namespace BDArmory
 
         void RefreshModules()
         {
+            radars = vessel.FindPartModulesImplementing<ModuleRadar>();
+
             List<ModuleRadar>.Enumerator rad = radars.GetEnumerator();
             while (rad.MoveNext())
             {
@@ -2905,20 +2907,6 @@ namespace BDArmory
                 if (rad.Current.radarEnabled) rad.Current.EnableRadar();
             }
             rad.Dispose();
-
-            radars = vessel.FindPartModulesImplementing<ModuleRadar>();
-
-            List<ModuleRadar>.Enumerator nRad = radars.GetEnumerator();
-            while (nRad.MoveNext())
-            {
-                if (nRad.Current == null) continue;
-                nRad.Current.EnsureVesselRadarData();
-                if (nRad.Current.radarEnabled)
-                {
-                    nRad.Current.EnableRadar();
-                }
-            }
-            nRad.Dispose();
 
             jammers = vessel.FindPartModulesImplementing<ModuleECMJammer>();
             targetingPods = vessel.FindPartModulesImplementing<ModuleTargetingCamera>();

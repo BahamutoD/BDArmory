@@ -406,14 +406,6 @@ namespace BDArmory.Radar
                     break;
                 }
                 turr.Dispose();
-                
-                List<MissileFire>.Enumerator wm = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-                while (wm.MoveNext())
-                {
-                    if (wm.Current == null) continue;
-                    wm.Current.radars.Add(this);
-                }
-                wm.Dispose();
 
                 //GameEvents.onVesselGoOnRails.Add(OnGoOnRails);    //not needed
                 EnsureVesselRadarData();
