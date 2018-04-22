@@ -896,9 +896,9 @@ namespace BDArmory
 
                 var missileBase = firedMissiles.Current as MissileBase;
 
-                if(missileBase?.SourceVessel != this.vessel) continue;
+                if(missileBase.SourceVessel != this.vessel) continue;
 
-                if (missileBase.guidanceActive = true && !missileBase.HasMissed &&
+                if (missileBase.guidanceActive == true && !missileBase.HasMissed &&
                                                  missileBase.MissileState != MissileBase.MissileStates.PostThrust)
                 {
                     tempMissilesAway++;
