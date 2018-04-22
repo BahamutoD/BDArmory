@@ -824,6 +824,8 @@ namespace BDArmory
                     SearchForHeatTarget();
                     SearchForRadarSource();
                 }
+
+                CalculateMissilesAway();
             }
 
             UpdateTargetingAudio();
@@ -881,7 +883,31 @@ namespace BDArmory
                 }
             }
 
-        }            
+        }
+
+        private void CalculateMissilesAway()
+        {
+            int tempMissilesAway = 0;
+            List<IBDWeapon>.Enumerator firedMissiles = BDATargetManager.FiredMissiles.GetEnumerator();
+
+            while (firedMissiles.MoveNext())
+            {
+                if(firedMissiles.Current == null) continue;
+
+                var missileBase = firedMissiles.Current as MissileBase;
+
+                if(missileBase?.SourceVessel != this.vessel) continue;
+
+                if (missileBase.guidanceActive = true && !missileBase.HasMissed &&
+                                                 missileBase.MissileState != MissileBase.MissileStates.PostThrust)
+                {
+                    tempMissilesAway++;
+                }
+
+            }
+
+            this.missilesAway = tempMissilesAway;
+        }
 
         public override void OnFixedUpdate()
         {
@@ -1222,7 +1248,7 @@ namespace BDArmory
                     {
                         ((MissileLauncher)ml).FireMissileOnTarget(guardTarget);
                     }
-                    StartCoroutine(MissileAwayRoutine(ml));
+                    //StartCoroutine(MissileAwayRoutine(ml));
                     UpdateList();
                 }
                 else if (ml.TargetingMode == MissileBase.TargetingModes.Radar && vesselRadarData)
@@ -1284,7 +1310,7 @@ namespace BDArmory
                             Debug.Log("Firing on target: " + guardTarget.GetName());
                         }
                         FireCurrentMissile(true);
-                        StartCoroutine(MissileAwayRoutine(mlauncher));
+                        //StartCoroutine(MissileAwayRoutine(mlauncher));
                     }
                 }
                 else if (ml.TargetingMode == MissileBase.TargetingModes.Heat)
@@ -1378,15 +1404,16 @@ namespace BDArmory
                         }
 
                         FireCurrentMissile(true);
-                        StartCoroutine(MissileAwayRoutine(mlauncher));
+                        //StartCoroutine(MissileAwayRoutine(mlauncher));
                     }
                 }
                 else if (ml.TargetingMode == MissileBase.TargetingModes.Gps)
                 {
                     designatedGPSInfo = new GPSTargetInfo(VectorUtils.WorldPositionToGeoCoords(guardTarget.CoM, vessel.mainBody), guardTarget.vesselName.Substring(0, Mathf.Min(12, guardTarget.vesselName.Length)));
 
-                    if (FireCurrentMissile(true))
-                        StartCoroutine(MissileAwayRoutine(ml)); //NEW: try to prevent launching all missile complements at once...
+                    FireCurrentMissile(true);
+                    //if (FireCurrentMissile(true))
+                    //    StartCoroutine(MissileAwayRoutine(ml)); //NEW: try to prevent launching all missile complements at once...
 
                 }
                 else if (ml.TargetingMode == MissileBase.TargetingModes.AntiRad)
@@ -1412,7 +1439,7 @@ namespace BDArmory
                     if (ml && antiRadTargetAcquired && (antiRadiationTarget - guardTarget.CoM).sqrMagnitude < 20*20)
                     {
                         FireCurrentMissile(true);
-                        StartCoroutine(MissileAwayRoutine(ml));
+                        //StartCoroutine(MissileAwayRoutine(ml));
                     }
                 }
                 else if (ml.TargetingMode == MissileBase.TargetingModes.Laser)
@@ -1447,7 +1474,7 @@ namespace BDArmory
                     if (ml && laserPointDetected && foundCam && (foundCam.groundTargetPosition - guardTarget.CoM).sqrMagnitude < 20*20)
                     {
                         FireCurrentMissile(true);
-                        StartCoroutine(MissileAwayRoutine(ml));
+                        //StartCoroutine(MissileAwayRoutine(ml));
                     }
                     else
                     {
@@ -1593,52 +1620,66 @@ namespace BDArmory
             guardFiringMissile = false;
         }
 
-        IEnumerator MissileAwayRoutine(MissileBase ml)
-        {
-            missilesAway++;
-            float missileThrustTime = 300;
+        //IEnumerator MissileAwayRoutine(MissileBase ml)
+        //{
+        //    missilesAway++;
 
-            MissileLauncher launcher = ml as MissileLauncher;
-            if (launcher != null)
-            {
-                missileThrustTime = launcher.dropTime + launcher.cruiseTime + launcher.boostTime;
-            }
+        //    MissileLauncher launcher = ml as MissileLauncher;
+        //    if (launcher != null)
+        //    {
+        //        float timeStart = Time.time;
+        //        float timeLimit = Mathf.Max(launcher.dropTime + launcher.cruiseTime + launcher.boostTime + 4, 10);
+        //        while (ml)
+        //        {
+        //            if (ml.guidanceActive && Time.time - timeStart < timeLimit)
+        //            {
+        //                yield return null;
+        //            }
+        //            else
+        //            {
+        //                break;
+        //            }
 
-            float timeStart = Time.time;
-            float timeLimit = Mathf.Max(missileThrustTime + 4, 10);
-            while (ml)
-            {
-                if (ml.guidanceActive && Time.time - timeStart < timeLimit)
-                {
-                    yield return null;
-                }
-                else
-                {
-                    break;
-                }
+        //        }
+        //    }
+        //    else 
+        //    {
+        //        while (ml)
+        //        {
+        //            if (ml.MissileState != MissileBase.MissileStates.PostThrust)
+        //            {
+        //                yield return null;
 
-            }
-            missilesAway--;
-        }
+        //            }
+        //            else
+        //            {
+        //                break;
+        //            }
+        //        }
+        //    }
 
-        IEnumerator BombsAwayRoutine(MissileBase ml)
-        {
-            missilesAway++;
-            float timeStart = Time.time;
-            float timeLimit = 3;
-            while (ml)
-            {
-                if (Time.time - timeStart < timeLimit)
-                {
-                    yield return null;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            missilesAway--;
-        }
+           
+        //    missilesAway--;
+        //}
+
+        //IEnumerator BombsAwayRoutine(MissileBase ml)
+        //{
+        //    missilesAway++;
+        //    float timeStart = Time.time;
+        //    float timeLimit = 3;
+        //    while (ml)
+        //    {
+        //        if (Time.time - timeStart < timeLimit)
+        //        {
+        //            yield return null;
+        //        }
+        //        else
+        //        {
+        //            break;
+        //        }
+        //    }
+        //    missilesAway--;
+        //}
 
         
 
@@ -1953,7 +1994,7 @@ namespace BDArmory
                 {
                     if (ml.GetWeaponClass() == WeaponClasses.Bomb)
                     {
-                        StartCoroutine(BombsAwayRoutine(ml));
+                        //StartCoroutine(BombsAwayRoutine(ml));
                     }
                 }
                 else

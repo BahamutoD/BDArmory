@@ -136,6 +136,7 @@ namespace BDArmory.Parts
         }
         public override void OnFixedUpdate()
         {
+
             if (HasFired && !HasExploded)
             {
                 UpdateGuidance();
@@ -260,6 +261,7 @@ namespace BDArmory.Parts
 
         private bool ShouldExecuteNextStage()
         {
+           
             if (!_missileIgnited) return false;
             if (TimeIndex < 1) return false;
 

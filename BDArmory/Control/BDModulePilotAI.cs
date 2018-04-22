@@ -530,7 +530,7 @@ namespace BDArmory.Control
 
 		bool PredictCollisionWithVessel(Vessel v, float maxTime, float interval, out Vector3 badDirection)
 		{
-			if(v == weaponManager.incomingMissileVessel
+			if(vessel == null || v == null || v == weaponManager?.incomingMissileVessel
                 || v.rootPart.FindModuleImplementing<MissileBase>() != null) //evasive will handle avoiding missiles
 			{
 				badDirection = Vector3.zero;
@@ -1022,6 +1022,10 @@ namespace BDArmory.Control
 		Vector3 threatRelativePosition;
 		void Evasive(FlightCtrlState s)
 		{
+		    if (s == null) return;
+		    if (vessel == null) return;
+		    if (weaponManager == null) return;
+
 			currentStatus = "Evading";
             debugString.Append($"Evasive");
             debugString.Append(Environment.NewLine);
