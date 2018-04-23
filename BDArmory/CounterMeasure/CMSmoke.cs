@@ -6,7 +6,8 @@ namespace BDArmory.CounterMeasure
 	public class CMSmoke : MonoBehaviour
 	{
 
-		void OnEnable()
+	    public Vector3 velocity;
+        void OnEnable()
 		{
 			StartCoroutine(SmokeRoutine());
 		}
@@ -18,7 +19,31 @@ namespace BDArmory.CounterMeasure
 			gameObject.SetActive(false);
 		}
 
-		public static bool RaycastSmoke(Ray ray)
+	    void FixedUpdate()
+	    {
+	        //physics
+	        //atmospheric drag (stock)
+	        float simSpeedSquared = velocity.sqrMagnitude;
+	        Vector3 currPos = transform.position;
+	        float mass = 0.01f;
+	        float drag = 5f;
+	        Vector3 dragForce = (0.008f * mass) * drag * 0.5f * simSpeedSquared *
+	                            (float)
+	                            FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos),
+	                                FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) *
+	                            velocity.normalized;
+
+	        velocity -= (dragForce / mass) * Time.fixedDeltaTime;
+	        //
+
+	        //gravity
+	        if (FlightGlobals.RefFrameIsRotating)
+	            velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+
+	        transform.position += velocity * Time.fixedDeltaTime;
+        }
+
+	    public static bool RaycastSmoke(Ray ray)
 		{
 			if(!CMDropper.smokePool)
 			{
