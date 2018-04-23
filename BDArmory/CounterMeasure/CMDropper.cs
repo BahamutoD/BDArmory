@@ -247,6 +247,10 @@ namespace BDArmory.CounterMeasure
         {
             yield return new WaitForSeconds(0.2f);
             GameObject smokeCMObject = smokePool.GetPooledObject();
+            CMSmoke smoke = smokeCMObject.GetComponent<CMSmoke>();
+            smoke.velocity = part.rb.velocity + (ejectVelocity * transform.up) +
+                             (UnityEngine.Random.Range(-3f, 3f) * transform.forward) +
+                             (UnityEngine.Random.Range(-3f, 3f) * transform.right);
             smokeCMObject.SetActive(true);
             smokeCMObject.transform.position = ejectTransform.position + (10*ejectTransform.forward);
             float longestLife = 0;
