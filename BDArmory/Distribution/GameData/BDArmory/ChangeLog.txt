@@ -1,4 +1,10 @@
-﻿v1.2.0
+﻿v1.2.1
+* NEW FEATURES:
+  * Recompiled for KSP 1.4.3. 
+* FIXES:
+  * Fixed model path for Flare & Chaff. Issue #512.
+
+v1.2.0
 
 * NEW FEATURES:
   * Support for Unity 2017. Icons textures fixed by PapaJoe. Thanks to @SpannerMonkey for chaff/smoke models.
