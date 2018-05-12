@@ -106,11 +106,6 @@ namespace BDArmory
 		{
 			get
 			{
-				if(!vessel)
-				{
-					vessel = GetComponent<Vessel>();
-				}
-
 				return vessel;
 			}
 			set

@@ -1,4 +1,32 @@
-﻿v1.1.0
+﻿v1.2.1
+* NEW FEATURES:
+  * Recompiled for KSP 1.4.3. 
+* FIXES:
+  * Fixed model path for Flare & Chaff. Issue #512.
+
+v1.2.0
+
+* NEW FEATURES:
+  * Support for Unity 2017. Icons textures fixed by PapaJoe. Thanks to @SpannerMonkey for chaff/smoke models.
+  * Compatibility with KSP 1.4.2. 
+  * Surface AI: Yes, tank battles and ships battles are a reality now. Thanks to @Gedas for this major feature.
+  * Damage Consequences: damaged engine has reduced thrust and greater heat production. Issue #433.
+
+* ENHANCEMENTS:
+  * Cruise Guidance overhaul.
+  * Shaped explosions for AGM missiles.
+  * Chaff rebalance.
+  * New setting to disable terrain checks.
+  * New FX for missile collisions.
+  * Modular missile core - added option to control roll.
+  * HE-KV1 missile is now efficient and deadly in Space :) Thanks to Kergan.
+  * Weapons like cannons can fire up to their max range. (eg: a 20 km cannon can fire at 20 km)
+  
+* FIXES:
+  * Drag of ammo boxes reduced. Issue #498.
+  * Dozens of small fixes and rebalance!
+
+v1.1.0
 
 * NEW FEATURES:
 
