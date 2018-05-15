@@ -1171,9 +1171,10 @@ namespace BDArmory.Parts
             GUILayout.EndVertical();
 
             GUI.DragWindow();
+            BDGUIUtils.RepositionWindow(ref guiWindowRect);
         }
 
-        private static void InitializeStyles()
+    private static void InitializeStyles()
         {
             if (unchanged == null)
             {

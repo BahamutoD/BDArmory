@@ -31,7 +31,7 @@ namespace BDArmory.Radar
         }
 
         string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So","T", "T"};
-
+        public static float RwrScaleFactor = 1;
 
         public MissileFire weaponManager;
 
@@ -80,7 +80,7 @@ namespace BDArmory.Radar
             }
         }
 
-        Rect displayRect = new Rect(0, 0, 256, 256);
+        internal static Rect RwrDisplayRect = new Rect(0, 0, 256 * RwrScaleFactor, 256 * RwrScaleFactor);
 
         GUIStyle rwrIconLabelStyle;
 
@@ -124,10 +124,10 @@ namespace BDArmory.Radar
                 UpdateVolume();
                 BDArmorySetup.OnVolumeChange += UpdateVolume;
 
-                float size = displayRect.height + 20;
+                //float size = RwrDisplayRect.height + 20;
                 if (!WindowRectRWRInitialized)
                 {
-                    BDArmorySetup.WindowRectRwr = new Rect(40, Screen.height - size - 20, size, size + 20);
+                    BDArmorySetup.WindowRectRwr = new Rect(40, Screen.height - RwrDisplayRect.height, RwrDisplayRect.height + 10, RwrDisplayRect.height + 30);
                     WindowRectRWRInitialized = true;
                 }
 
@@ -201,7 +201,7 @@ namespace BDArmory.Radar
             {
                 StartCoroutine(
                     LaunchWarningRoutine(new TargetSignatureData(Vector3.zero,
-                        RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero,
+                        RadarUtils.WorldToRadar(source, referenceTransform, RwrDisplayRect, rwrDisplayRange), Vector3.zero,
                         true, (float) RWRThreatTypes.MissileLaunch)));
                 PlayWarningSound(RWRThreatTypes.MissileLaunch);
 
@@ -232,7 +232,7 @@ namespace BDArmory.Radar
                 {
                     StartCoroutine(
                         LaunchWarningRoutine(new TargetSignatureData(Vector3.zero,
-                            RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange),
+                            RadarUtils.WorldToRadar(source, referenceTransform, RwrDisplayRect, rwrDisplayRange),
                             Vector3.zero, true, (float) type)));
                     PlayWarningSound(type, (source - vessel.transform.position).sqrMagnitude);
                     return;
@@ -251,7 +251,7 @@ namespace BDArmory.Radar
                 {
                     if (pingsData[i].exists &&
                         ((Vector2) pingsData[i].position -
-                         RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange)).sqrMagnitude < 900f)    //prevent ping spam
+                         RadarUtils.WorldToRadar(source, referenceTransform, RwrDisplayRect, rwrDisplayRange)).sqrMagnitude < 900f)    //prevent ping spam
                     {
                         break;
                     }
@@ -268,7 +268,7 @@ namespace BDArmory.Radar
                         VectorUtils.GetUpDirection(transform.position));
 
                     pingsData[openIndex] = new TargetSignatureData(Vector3.zero,
-                        RadarUtils.WorldToRadar(source, referenceTransform, displayRect, rwrDisplayRange), Vector3.zero,
+                        RadarUtils.WorldToRadar(source, referenceTransform, RwrDisplayRect, rwrDisplayRange), Vector3.zero,
                         true, (float) type);    // HACK! Evil misuse of signalstrength for the treat type!
                     pingWorldPositions[openIndex] = source;
                     StartCoroutine(PingLifeRoutine(openIndex, persistTime));
@@ -332,30 +332,28 @@ namespace BDArmory.Radar
 
         void OnGUI()
         {
-            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && BDArmorySetup.GAME_UI_ENABLED &&
-                vessel.isActiveVessel && rwrEnabled)
-            {
-                if (audioSourceRepeatDelay > 0)
-                    audioSourceRepeatDelay -= Time.fixedDeltaTime;
+          if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !BDArmorySetup.GAME_UI_ENABLED ||
+              !vessel.isActiveVessel || !rwrEnabled) return;
+          if (audioSourceRepeatDelay > 0)
+            audioSourceRepeatDelay -= Time.fixedDeltaTime;
 
-                BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, RWRWindow,
-                    "Radar Warning Receiver", HighLogic.Skin.window);
-                BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectRwr);
-            }
+          BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, RWRWindow,
+            "Radar Warning Receiver", GUI.skin.window);
+          BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectRwr);
         }
 
         void RWRWindow(int windowID)
         {
             GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectRwr.width - 18, 30));
-            if (GUI.Button(new Rect(BDArmorySetup.WindowRectRwr.width - 28, 2, 26, 26), "X", HighLogic.Skin.button))
+            if (GUI.Button(new Rect(BDArmorySetup.WindowRectRwr.width - 18, 2, 16, 16), "X", GUI.skin.button))
             {
                 DisableRWR();
             }
-            GUI.BeginGroup(new Rect(10, 30, displayRect.width, displayRect.height));
-            GUI.DragWindow(displayRect);
+            GUI.BeginGroup(new Rect(5, 20, RwrDisplayRect.width, RwrDisplayRect.height));
+            GUI.DragWindow(RwrDisplayRect);
 
-            GUI.DrawTexture(displayRect, VesselRadarData.omniBgTexture, ScaleMode.StretchToFill, false);
-            float pingSize = 32;
+            GUI.DrawTexture(RwrDisplayRect, VesselRadarData.omniBgTexture, ScaleMode.StretchToFill, false);
+            float pingSize = 32 * (float) RwrScaleFactor;
 
             for (int i = 0; i < dataCount; i++)
             {
@@ -364,18 +362,16 @@ namespace BDArmory.Radar
                 Rect pingRect = new Rect(pingPosition.x - (pingSize/2), pingPosition.y - (pingSize/2), pingSize,
                     pingSize);
 
-                if (pingsData[i].exists)
-                {
-                    if (pingsData[i].signalStrength == (float)RWRThreatTypes.MissileLock) //Hack! Evil misuse of field signalstrength...
-                    {
-                        GUI.DrawTexture(pingRect, rwrMissileTexture, ScaleMode.StretchToFill, true);
-                    }
-                    else
-                    {
-                        GUI.DrawTexture(pingRect, rwrDiamondTexture, ScaleMode.StretchToFill, true);
-                        GUI.Label(pingRect, iconLabels[Mathf.RoundToInt(pingsData[i].signalStrength)], rwrIconLabelStyle); //Hack! Evil misuse of field signalstrength...
-                    }
-                }
+              if (!pingsData[i].exists) continue;
+              if (pingsData[i].signalStrength == (float)RWRThreatTypes.MissileLock) //Hack! Evil misuse of field signalstrength...
+              {
+                GUI.DrawTexture(pingRect, rwrMissileTexture, ScaleMode.StretchToFill, true);
+              }
+              else
+              {
+                GUI.DrawTexture(pingRect, rwrDiamondTexture, ScaleMode.StretchToFill, true);
+                GUI.Label(pingRect, iconLabels[Mathf.RoundToInt(pingsData[i].signalStrength)], rwrIconLabelStyle); //Hack! Evil misuse of field signalstrength...
+              }
             }
 
             List<TargetSignatureData>.Enumerator lw = launchWarnings.GetEnumerator();
@@ -390,6 +386,7 @@ namespace BDArmory.Radar
             }
             lw.Dispose();
             GUI.EndGroup();
+            BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectRwr);
         }
 
         public static void PingRWR(Vessel v, Vector3 source, RWRThreatTypes type, float persistTime)

@@ -1,4 +1,9 @@
-﻿v1.2.1
+﻿v1.2.1.1
+* NEW FEATURES:
+  * Added boundary checking to all moveable windows.  Now windows cannot be positioned off the screen.
+  * Added ability to scale Radar Warning Receiver Window.  scale persists to config file and can be changed in Settings.
+
+v1.2.1
 * NEW FEATURES:
   * Recompiled for KSP 1.4.3. 
 * FIXES:

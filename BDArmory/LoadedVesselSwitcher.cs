@@ -24,7 +24,7 @@ namespace BDArmory
 
         //gui params
         private float _windowHeight; //auto adjusting
-        private Rect _windowRect
+        internal Rect WindowRect
         {
             get { return BDArmorySetup.WindowRectVesselSwitcher; }
             set { BDArmorySetup.WindowRectVesselSwitcher = value; }
@@ -163,9 +163,9 @@ namespace BDArmory
                 if (_showGui && BDArmorySetup.GAME_UI_ENABLED)
                 {
                     SetNewHeight(_windowHeight);
-                    _windowRect = GUI.Window(10293444, _windowRect, ListWindow, "BDA Vessel Switcher",
+                    WindowRect = GUI.Window(10293444, WindowRect, ListWindow, "BDA Vessel Switcher",
                         HighLogic.Skin.window);
-                    Misc.Misc.UpdateGUIRect(_windowRect, _guiCheckIndex);
+                    Misc.Misc.UpdateGUIRect(WindowRect, _guiCheckIndex);
                 }
                 else
                 {
@@ -301,9 +301,11 @@ namespace BDArmory
             height += _margin;
 
             _windowHeight = height;
-        }
+          BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectVesselSwitcher);
 
-        private string UpdateVesselStatus(MissileFire wm, GUIStyle vButtonStyle)
+    }
+
+    private string UpdateVesselStatus(MissileFire wm, GUIStyle vButtonStyle)
         {
             string status = "";
             if (wm.vessel.LandedOrSplashed)

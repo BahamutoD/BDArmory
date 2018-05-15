@@ -23,6 +23,7 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024f;
         [BDAPersistantSettingsField] public static bool BW_TARGET_CAM = true;
         [BDAPersistantSettingsField] public static float SMOKE_DEFLECTION_FACTOR = 10f;
+        [BDAPersistantSettingsField] public static float RWR_WINDOW_SIZE = 1f;
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000f;

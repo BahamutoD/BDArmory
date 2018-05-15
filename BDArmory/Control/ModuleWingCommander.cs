@@ -374,6 +374,8 @@ namespace BDArmory.Control
             //resize window
             height += ((commandButtonLine - 1)*(buttonHeight + buttonGap));
             guiWindowRect.height = height;
+            GUI.DragWindow(guiWindowRect);
+            BDGUIUtils.RepositionWindow(ref guiWindowRect);
         }
 
         void WingmanButton(int index, out float buttonEndY)

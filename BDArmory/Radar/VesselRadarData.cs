@@ -1061,6 +1061,7 @@ namespace BDArmory.Radar
             {
                 DisableAllRadars();
             }
+            BDGUIUtils.RepositionWindow(ref radarWindowRect);
         }
 
         void LinkRadarWindow()

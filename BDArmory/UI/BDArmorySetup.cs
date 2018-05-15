@@ -1187,6 +1187,7 @@ namespace BDArmory.UI
             toolWindowHeight = Mathf.Lerp(toolWindowHeight, contentTop + (line*entryHeight) + 5, 1);
             WindowRectToolbar.height = toolWindowHeight;
             // = new Rect(toolbarWindowRect.position.x, toolbarWindowRect.position.y, toolWindowWidth, toolWindowHeight);
+            BDGUIUtils.RepositionWindow(ref WindowRectToolbar);
         }
 
         bool validGPSName = true;
@@ -1397,6 +1398,19 @@ namespace BDArmory.UI
             line++;
 
 
+            GUI.Label(SLeftRect(line), "RWR Window Scale: " + (BDArmorySettings.RWR_WINDOW_SIZE * 100).ToString("0") + "%", leftLabel);
+            float rwrSize = BDArmorySettings.RWR_WINDOW_SIZE;
+            rwrSize = GUI.HorizontalSlider(SRightRect(line), rwrSize, 0.5f, 1f);
+            if (Math.Abs(rwrSize - BDArmorySettings.RWR_WINDOW_SIZE) > 0.005f)
+            {
+              RadarWarningReceiver.RwrScaleFactor = rwrSize;
+              RadarWarningReceiver.RwrDisplayRect = new Rect(0, 0, 256 * RadarWarningReceiver.RwrScaleFactor, 256 * RadarWarningReceiver.RwrScaleFactor);
+              BDArmorySetup.WindowRectRwr = new Rect(BDArmorySetup.WindowRectRwr.x, BDArmorySetup.WindowRectRwr.y, RadarWarningReceiver.RwrDisplayRect.height + 10, RadarWarningReceiver.RwrDisplayRect.height + 25);
+      }
+      BDArmorySettings.RWR_WINDOW_SIZE = rwrSize;
+            line++;
+            line++;
+
             GUI.Label(SLeftRect(line), "Trigger Hold: " + BDArmorySettings.TRIGGER_HOLD_TIME.ToString("0.00") + "s", leftLabel);
             BDArmorySettings.TRIGGER_HOLD_TIME = GUI.HorizontalSlider(SRightRect(line), BDArmorySettings.TRIGGER_HOLD_TIME, 0.02f, 1f);
             line++;
@@ -1476,6 +1490,7 @@ namespace BDArmory.UI
             line += 1.5f;
             settingsHeight = (line*settingsLineHeight);
             WindowRectSettings.height = settingsHeight;
+            BDGUIUtils.RepositionWindow(ref WindowRectSettings);
             BDGUIUtils.UseMouseEventInRect(WindowRectSettings);
         }
 
