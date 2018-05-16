@@ -1339,8 +1339,9 @@ namespace BDArmory
                 laserRenderers[i].material.mainTexture = GameDatabase.Instance.GetTexture("BDArmory/Textures/laser", false);
                 laserRenderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; //= false;
                 laserRenderers[i].receiveShadows = false;
-                laserRenderers[i].SetWidth(tracerStartWidth, tracerEndWidth);
-                laserRenderers[i].SetVertexCount(2);
+                laserRenderers[i].startWidth = tracerStartWidth;
+                laserRenderers[i].endWidth = tracerEndWidth;
+                laserRenderers[i].positionCount = 2;
                 laserRenderers[i].SetPosition(0, Vector3.zero);
                 laserRenderers[i].SetPosition(1, Vector3.zero);
                 laserRenderers[i].useWorldSpace = false;
@@ -1817,8 +1818,9 @@ namespace BDArmory
                         if (gameObject.GetComponent<LineRenderer>() == null)
                         {
                             LineRenderer lr = gameObject.AddComponent<LineRenderer>();
-                            lr.SetWidth(.1f, .1f);
-                            lr.SetVertexCount(pointsArray.Length);
+                            lr.startWidth = .1f;
+                            lr.endWidth = .1f;
+                            lr.positionCount = pointsArray.Length;
                             for (int i = 0; i < pointsArray.Length; i++)
                             {
                                 lr.SetPosition(i, pointsArray[i]);
@@ -1828,7 +1830,7 @@ namespace BDArmory
                         {
                             LineRenderer lr = gameObject.GetComponent<LineRenderer>();
                             lr.enabled = true;
-                            lr.SetVertexCount(pointsArray.Length);
+                            lr.positionCount = pointsArray.Length;
                             for (int i = 0; i < pointsArray.Length; i++)
                             {
                                 lr.SetPosition(i, pointsArray[i]);

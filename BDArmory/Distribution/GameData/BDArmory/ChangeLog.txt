@@ -1,7 +1,9 @@
 ﻿v1.2.1.1
 * NEW FEATURES:
   * Added boundary checking to all moveable windows.  Now windows cannot be positioned off the screen.
-  * Added ability to scale Radar Warning Receiver Window.  scale persists to config file and can be changed in Settings.
+  * Added ability to scale Radar Warning Receiver Window.  Scale persists to config file and can be changed in Settings.
+  * Added ability to scale Radar Window.  Scale persists to config file and can be changed in Settings.
+  * Cleaned up obsolete and deprecated unity method calls.
 
 v1.2.1
 * NEW FEATURES:

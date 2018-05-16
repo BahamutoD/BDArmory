@@ -31,7 +31,6 @@ namespace BDArmory.Radar
         }
 
         string[] iconLabels = new string[] {"S", "F", "A", "M", "M", "D","So","T", "T"};
-        public static float RwrScaleFactor = 1;
 
         public MissileFire weaponManager;
 
@@ -58,7 +57,11 @@ namespace BDArmory.Radar
 
         const int dataCount = 10;
 
-        public float rwrDisplayRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
+        internal float rwrDisplayRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
+        internal static float RwrScaleFactor = 1;
+        internal static float RwrSize = 256;
+        internal static float BorderSize = 10;
+        internal static float HeaderSize = 15;
 
         public TargetSignatureData[] pingsData;
         public Vector3[] pingWorldPositions;
@@ -80,7 +83,7 @@ namespace BDArmory.Radar
             }
         }
 
-        internal static Rect RwrDisplayRect = new Rect(0, 0, 256 * RwrScaleFactor, 256 * RwrScaleFactor);
+        internal static Rect RwrDisplayRect = new Rect(0, 0, RwrSize * RwrScaleFactor, RwrSize * RwrScaleFactor);
 
         GUIStyle rwrIconLabelStyle;
 
@@ -127,7 +130,7 @@ namespace BDArmory.Radar
                 //float size = RwrDisplayRect.height + 20;
                 if (!WindowRectRWRInitialized)
                 {
-                    BDArmorySetup.WindowRectRwr = new Rect(40, Screen.height - RwrDisplayRect.height, RwrDisplayRect.height + 10, RwrDisplayRect.height + 30);
+                    BDArmorySetup.WindowRectRwr = new Rect(40, Screen.height - RwrDisplayRect.height, RwrDisplayRect.height + BorderSize, RwrDisplayRect.height + BorderSize + HeaderSize);
                     WindowRectRWRInitialized = true;
                 }
 
@@ -335,7 +338,7 @@ namespace BDArmory.Radar
           if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !BDArmorySetup.GAME_UI_ENABLED ||
               !vessel.isActiveVessel || !rwrEnabled) return;
           if (audioSourceRepeatDelay > 0)
-            audioSourceRepeatDelay -= Time.fixedDeltaTime;
+              audioSourceRepeatDelay -= Time.fixedDeltaTime;
 
           BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, RWRWindow,
             "Radar Warning Receiver", GUI.skin.window);
@@ -349,7 +352,7 @@ namespace BDArmory.Radar
             {
                 DisableRWR();
             }
-            GUI.BeginGroup(new Rect(5, 20, RwrDisplayRect.width, RwrDisplayRect.height));
+            GUI.BeginGroup(new Rect(BorderSize / 2, HeaderSize + (BorderSize / 2), RwrDisplayRect.width, RwrDisplayRect.height));
             GUI.DragWindow(RwrDisplayRect);
 
             GUI.DrawTexture(RwrDisplayRect, VesselRadarData.omniBgTexture, ScaleMode.StretchToFill, false);

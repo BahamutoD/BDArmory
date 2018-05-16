@@ -774,7 +774,7 @@ namespace BDArmory.Parts
                 {
                     LR = gameObject.GetComponent<LineRenderer>();
                 }
-                LR.SetVertexCount(2);
+                LR.positionCount = 2;
                 LR.SetPosition(0, start);
                 LR.SetPosition(1, end);
             }

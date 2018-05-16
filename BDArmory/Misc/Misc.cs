@@ -82,7 +82,7 @@ namespace BDArmory.Misc
 
                 if (wm.vesselRadarData && wm.vesselRadarData.guiEnabled)
                 {
-                    if (VesselRadarData.radarWindowRect.Contains(inverseMousePos)) return true;
+                    if (BDArmorySetup.WindowRectRadar.Contains(inverseMousePos)) return true;
                     if (wm.vesselRadarData.linkWindowOpen && wm.vesselRadarData.linkWindowRect.Contains(inverseMousePos))
                         return true;
                 }

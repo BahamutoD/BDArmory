@@ -2811,7 +2811,8 @@ namespace BDArmory
                             lr = gameObject.AddComponent<LineRenderer>();
                         }
                         lr.enabled = true;
-                        lr.SetWidth(.1f, .1f);
+                        lr.startWidth = .1f;
+                        lr.endWidth = .1f;
                     }
                     else
                     {
@@ -2852,7 +2853,7 @@ namespace BDArmory
                     if (lr)
                     {
                         lr.useWorldSpace = false;
-                        lr.SetVertexCount(4);
+                        lr.positionCount = 4;
                         lr.SetPosition(0, transform.InverseTransformPoint(rays[0].origin));
                         lr.SetPosition(1, transform.InverseTransformPoint(rays[0].GetPoint(rayDistance)));
                         lr.SetPosition(2, transform.InverseTransformPoint(rays[1].GetPoint(rayDistance)));
@@ -4654,8 +4655,9 @@ namespace BDArmory
                     lr = gameObject.AddComponent<LineRenderer>();
                 }
                 lr.enabled = true;
-                lr.SetWidth(.1f, .1f);
-                lr.SetVertexCount(pointsArray.Length);
+                lr.startWidth = .1f;
+                lr.endWidth = .1f;
+                lr.positionCount = pointsArray.Length;
                 for (int i = 0; i < pointsArray.Length; i++)
                 {
                     lr.SetPosition(i, pointsArray[i]);

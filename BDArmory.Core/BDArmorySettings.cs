@@ -17,13 +17,14 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static bool AIM_ASSIST = true;
         [BDAPersistantSettingsField] public static bool REMOTE_SHOOTING = false;
         [BDAPersistantSettingsField] public static bool BOMB_CLEARANCE_CHECK = true;
-        [BDAPersistantSettingsField] public static float MAX_BULLET_RANGE = 8000f;               //TODO: remove all references to this so it can be deprecated! all ranges should be supplied in part config!
+        //[BDAPersistantSettingsField] public static float MAX_BULLET_RANGE = 8000f;               //TODO: remove all references to this so it can be deprecated! all ranges should be supplied in part config!
         [BDAPersistantSettingsField] public static float TRIGGER_HOLD_TIME = 0.3f;
         [BDAPersistantSettingsField] public static bool ALLOW_LEGACY_TARGETING = true;           //TODO: remove all references to this so it can be deprecated! legacy targeting should not be support anymore in future versions.
         [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024f;
         [BDAPersistantSettingsField] public static bool BW_TARGET_CAM = true;
         [BDAPersistantSettingsField] public static float SMOKE_DEFLECTION_FACTOR = 10f;
         [BDAPersistantSettingsField] public static float RWR_WINDOW_SIZE = 1f;
+        [BDAPersistantSettingsField] public static float RADAR_WINDOW_SIZE = 1f;
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000f;

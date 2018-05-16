@@ -445,7 +445,7 @@ namespace BDArmory.Parts
                     t.Dispose();
 				}
 
-                IEnumerator<KSPParticleEmitter> pEmitter = part.partTransform.FindChild("model").GetComponentsInChildren<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
+                IEnumerator<KSPParticleEmitter> pEmitter = part.partTransform.Find("model").GetComponentsInChildren<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
                 while (pEmitter.MoveNext())
                 {
                     if (pEmitter.Current == null) continue;

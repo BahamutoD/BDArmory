@@ -24,6 +24,7 @@ namespace BDArmory.UI
         [BDAWindowSettingsField] public static Rect WindowRectToolbar;
         [BDAWindowSettingsField] public static Rect WindowRectGps;
         [BDAWindowSettingsField] public static Rect WindowRectSettings;
+        [BDAWindowSettingsField] public static Rect WindowRectRadar;
         [BDAWindowSettingsField] public static Rect WindowRectRwr;
         [BDAWindowSettingsField] public static Rect WindowRectVesselSwitcher;
 
@@ -66,6 +67,9 @@ namespace BDArmory.UI
         //editor alignment
         public static bool showWeaponAlignment;
 
+        // Gui Skin
+        public static GUISkin BDGuiSkin = HighLogic.Skin;
+        
         //toolbar gui
         public static bool hasAddedButton = false;
         public static bool toolbarGuiEnabled;
@@ -349,18 +353,18 @@ namespace BDArmory.UI
             leftLabelGray.alignment = TextAnchor.UpperLeft;
             leftLabelGray.normal.textColor = Color.gray;
 
-            rippleSliderStyle = new GUIStyle(HighLogic.Skin.horizontalSlider);
-            rippleThumbStyle = new GUIStyle(HighLogic.Skin.horizontalSliderThumb);
+            rippleSliderStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.horizontalSlider);
+            rippleThumbStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.horizontalSliderThumb);
             rippleSliderStyle.fixedHeight = rippleThumbStyle.fixedHeight = 0;
 
             kspTitleLabel = new GUIStyle();
-            kspTitleLabel.normal.textColor = HighLogic.Skin.window.normal.textColor;
-            kspTitleLabel.font = HighLogic.Skin.window.font;
-            kspTitleLabel.fontSize = HighLogic.Skin.window.fontSize;
-            kspTitleLabel.fontStyle = HighLogic.Skin.window.fontStyle;
+            kspTitleLabel.normal.textColor = BDArmorySetup.BDGuiSkin.window.normal.textColor;
+            kspTitleLabel.font = BDArmorySetup.BDGuiSkin.window.font;
+            kspTitleLabel.fontSize = BDArmorySetup.BDGuiSkin.window.fontSize;
+            kspTitleLabel.fontStyle = BDArmorySetup.BDGuiSkin.window.fontStyle;
             kspTitleLabel.alignment = TextAnchor.UpperCenter;
 
-            redErrorStyle = new GUIStyle(HighLogic.Skin.label);
+            redErrorStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.label);
             redErrorStyle.normal.textColor = Color.red;
             redErrorStyle.fontStyle = FontStyle.Bold;
             redErrorStyle.fontSize = 22;
@@ -402,33 +406,10 @@ namespace BDArmory.UI
 
         private void CheckIfWindowsSettingsAreWithinScreen()
         {
-            if (WindowRectToolbar.x > Screen.width - toolWindowWidth ||
-                WindowRectToolbar.y > Screen.height - toolWindowHeight )
-            {
-                WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
-            }
-
-            if (WindowRectSettings.x > Screen.width - 420 - 40 ||
-               WindowRectSettings.y > Screen.height - 480)
-            {
-                WindowRectSettings = new Rect(settingsLeft, settingsTop, 420, 480);
-            }
-
-            if (WindowRectRwr.x > Screen.width - 276 - 40 ||
-                WindowRectRwr.y > Screen.height - 296 ||
-                WindowRectRwr.height == 0 ||
-                WindowRectRwr.width == 0)
-            {
-                WindowRectRwr = new Rect(40, Screen.height - 296, 276, 296);
-            }
-
-            if (WindowRectVesselSwitcher.x > Screen.width - 250 ||
-                WindowRectVesselSwitcher.y > Screen.height - 250 ||
-                WindowRectVesselSwitcher.height == 0 ||
-                WindowRectVesselSwitcher.width == 0)
-            {
-                WindowRectVesselSwitcher = new Rect(10, Screen.height / 6f, 250, 10);
-            }
+            BDGUIUtils.RepositionWindow(ref WindowRectToolbar);
+            BDGUIUtils.RepositionWindow(ref WindowRectSettings);
+            BDGUIUtils.RepositionWindow(ref WindowRectRwr);
+            BDGUIUtils.RepositionWindow(ref WindowRectVesselSwitcher);
         }
 
         void Update()
@@ -605,64 +586,53 @@ namespace BDArmory.UI
 
         void OnGUI()
         {
-            if (GAME_UI_ENABLED)
+            if (!GAME_UI_ENABLED) return;
+            if (settingsGuiEnabled)
             {
-                if (settingsGuiEnabled)
-                {
-                    WindowRectSettings = GUI.Window(129419, WindowRectSettings, SettingsGUI, GUIContent.none);
-                }
-
-
-                if (drawCursor)
-                {
-                    //mouse cursor
-                    int origDepth = GUI.depth;
-                    GUI.depth = -100;
-                    float cursorSize = 40;
-                    Vector3 cursorPos = Input.mousePosition;
-                    Rect cursorRect = new Rect(cursorPos.x - (cursorSize/2),
-                        Screen.height - cursorPos.y - (cursorSize/2), cursorSize, cursorSize);
-                    GUI.DrawTexture(cursorRect, cursorTexture);
-                    GUI.depth = origDepth;
-                }
-
-                if (toolbarGuiEnabled && HighLogic.LoadedSceneIsFlight)
-                {
-                    WindowRectToolbar = GUI.Window(321, WindowRectToolbar, ToolbarGUI, "BDA Weapon Manager",
-                        HighLogic.Skin.window);
-                    BDGUIUtils.UseMouseEventInRect(WindowRectToolbar);
-                    if (showGPSWindow && ActiveWeaponManager)
-                    {
-                        //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
-                        BDGUIUtils.UseMouseEventInRect(WindowRectGps);
-                        List<GPSTargetInfo>.Enumerator coord = 
-                            BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)].GetEnumerator();
-                        while (coord.MoveNext())
-                        {
-                            BDGUIUtils.DrawTextureOnWorldPos(coord.Current.worldPos, Instance.greenDotTexture, new Vector2(8, 8), 0);
-                        }
-                        coord.Dispose();
-                    }
-
-                    // big error messages for missing dependencies
-                    if (!ModuleManagerLoaded || !PhysicsRangeExtenderLoaded)
-                    {
-                        string message = (ModuleManagerLoaded ? "Physics Range Extender" : "Module Manager")
-                            + " is missing. BDA will not work properly.";
-                        GUI.Label(new Rect(0 + 2, Screen.height / 6 + 2, Screen.width, 100),
-                            message, redErrorShadowStyle);
-                        GUI.Label(new Rect(0, Screen.height / 6, Screen.width, 100),
-                            message , redErrorStyle);
-                    }
-                }
+                WindowRectSettings = GUI.Window(129419, WindowRectSettings, SettingsGUI, GUIContent.none);
             }
 
-        }
 
+            if (drawCursor)
+            {
+                //mouse cursor
+                int origDepth = GUI.depth;
+                GUI.depth = -100;
+                float cursorSize = 40;
+                Vector3 cursorPos = Input.mousePosition;
+                Rect cursorRect = new Rect(cursorPos.x - (cursorSize/2), Screen.height - cursorPos.y - (cursorSize/2), cursorSize, cursorSize);
+                GUI.DrawTexture(cursorRect, cursorTexture);
+                GUI.depth = origDepth;
+            }
+
+            if (!toolbarGuiEnabled || !HighLogic.LoadedSceneIsFlight) return;
+            WindowRectToolbar = GUI.Window(321, WindowRectToolbar, ToolbarGUI, "BDA Weapon Manager", BDArmorySetup.BDGuiSkin.window);
+            BDGUIUtils.UseMouseEventInRect(WindowRectToolbar);
+            if (showGPSWindow && ActiveWeaponManager)
+            {
+                //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
+                BDGUIUtils.UseMouseEventInRect(WindowRectGps);
+                List<GPSTargetInfo>.Enumerator coord = 
+                  BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)].GetEnumerator();
+                while (coord.MoveNext())
+                {
+                  BDGUIUtils.DrawTextureOnWorldPos(coord.Current.worldPos, Instance.greenDotTexture, new Vector2(8, 8), 0);
+                }
+                coord.Dispose();
+            }
+
+            // big error messages for missing dependencies
+            if (ModuleManagerLoaded && PhysicsRangeExtenderLoaded) return;
+            string message = (ModuleManagerLoaded ? "Physics Range Extender" : "Module Manager")
+                             + " is missing. BDA will not work properly.";
+            GUI.Label(new Rect(0 + 2, Screen.height / 6 + 2, Screen.width, 100),
+              message, redErrorShadowStyle);
+            GUI.Label(new Rect(0, Screen.height / 6, Screen.width, 100),
+              message , redErrorStyle);
+        }
 
         public bool hasVS = false;
         public bool showVSGUI;
-
 
         float rippleHeight;
         float weaponsHeight;
@@ -686,7 +656,7 @@ namespace BDArmory.UI
 
             //SETTINGS BUTTON
             if (!BDKeyBinder.current &&
-                GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, HighLogic.Skin.button))
+                GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, BDArmorySetup.BDGuiSkin.button))
             {
                 ToggleSettingsGUI();
             }
@@ -694,7 +664,7 @@ namespace BDArmory.UI
             //vesselswitcher button
             if (hasVS)
             {
-                GUIStyle vsStyle = showVSGUI ? HighLogic.Skin.box : HighLogic.Skin.button;
+                GUIStyle vsStyle = showVSGUI ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
                 if (GUI.Button(new Rect(toolWindowWidth - 30 - 28, 4, 26, 26), "VS", vsStyle))
                 {
                     showVSGUI = !showVSGUI;
@@ -706,14 +676,14 @@ namespace BDArmory.UI
             {
                 //MINIMIZE BUTTON
                 toolMinimized = GUI.Toggle(new Rect(4, 4, 26, 26), toolMinimized, "_",
-                    toolMinimized ? HighLogic.Skin.box : HighLogic.Skin.button);
+                    toolMinimized ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button);
 
 
                 GUIStyle armedLabelStyle;
                 Rect armedRect = new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth/2, entryHeight);
                 if (ActiveWeaponManager.guardMode)
                 {
-                    if (GUI.Button(armedRect, "- Guard Mode -", HighLogic.Skin.box))
+                    if (GUI.Button(armedRect, "- Guard Mode -", BDArmorySetup.BDGuiSkin.box))
                     {
                         showGuardMenu = true;
                     }
@@ -724,12 +694,12 @@ namespace BDArmory.UI
                     if (ActiveWeaponManager.isArmed)
                     {
                         armedText += "ARMED.";
-                        armedLabelStyle = HighLogic.Skin.box;
+                        armedLabelStyle = BDArmorySetup.BDGuiSkin.box;
                     }
                     else
                     {
                         armedText += "disarmed.";
-                        armedLabelStyle = HighLogic.Skin.button;
+                        armedLabelStyle = BDArmorySetup.BDGuiSkin.button;
                     }
                     if (GUI.Button(armedRect, armedText, armedLabelStyle))
                     {
@@ -741,12 +711,12 @@ namespace BDArmory.UI
                 string teamText = "Team: ";
                 if (ActiveWeaponManager.team)
                 {
-                    teamButtonStyle = HighLogic.Skin.box;
+                    teamButtonStyle = BDArmorySetup.BDGuiSkin.box;
                     teamText += "B";
                 }
                 else
                 {
-                    teamButtonStyle = HighLogic.Skin.button;
+                    teamButtonStyle = BDArmorySetup.BDGuiSkin.button;
                     teamText += "A";
                 }
 
@@ -762,8 +732,7 @@ namespace BDArmory.UI
                 string weaponName = ActiveWeaponManager.selectedWeaponString;
                 // = ActiveWeaponManager.selectedWeapon == null ? "None" : ActiveWeaponManager.selectedWeapon.GetShortName();
                 string selectionText = "Weapon: " + weaponName;
-                GUI.Label(new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth, entryHeight*1.25f),
-                    selectionText, HighLogic.Skin.box);
+                GUI.Label(new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth, entryHeight*1.25f), selectionText, BDArmorySetup.BDGuiSkin.box);
                 line += 1.25f;
                 line += 0.1f;
                 //if weapon can ripple, show option and slider.
@@ -775,8 +744,8 @@ namespace BDArmory.UI
                             ? "Barrage: " + ActiveWeaponManager.gunRippleRpm.ToString("0") + " RPM"
                             : "Salvo";
                         GUIStyle rippleStyle = ActiveWeaponManager.rippleFire
-                            ? HighLogic.Skin.box
-                            : HighLogic.Skin.button;
+                            ? BDArmorySetup.BDGuiSkin.box
+                            : BDArmorySetup.BDGuiSkin.button;
                         if (
                             GUI.Button(
                                 new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth/2, entryHeight*1.25f),
@@ -793,8 +762,8 @@ namespace BDArmory.UI
                             ? "Ripple: " + ActiveWeaponManager.rippleRPM.ToString("0") + " RPM"
                             : "Ripple: OFF";
                         GUIStyle rippleStyle = ActiveWeaponManager.rippleFire
-                            ? HighLogic.Skin.box
-                            : HighLogic.Skin.button;
+                            ? BDArmorySetup.BDGuiSkin.box
+                            : BDArmorySetup.BDGuiSkin.button;
                         if (
                             GUI.Button(
                                 new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth/2, entryHeight*1.25f),
@@ -824,17 +793,17 @@ namespace BDArmory.UI
                 {
                     showWeaponList =
                         GUI.Toggle(new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth/3, entryHeight),
-                            showWeaponList, "Weapons", showWeaponList ? HighLogic.Skin.box : HighLogic.Skin.button);
+                            showWeaponList, "Weapons", showWeaponList ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button);
                     showGuardMenu =
                         GUI.Toggle(
                             new Rect(leftIndent + (contentWidth/3), contentTop + (line*entryHeight), contentWidth/3,
                                 entryHeight), showGuardMenu, "Guard Menu",
-                            showGuardMenu ? HighLogic.Skin.box : HighLogic.Skin.button);
+                            showGuardMenu ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button);
                     showModules =
                         GUI.Toggle(
                             new Rect(leftIndent + (2*contentWidth/3), contentTop + (line*entryHeight), contentWidth/3,
                                 entryHeight), showModules, "Modules",
-                            showModules ? HighLogic.Skin.box : HighLogic.Skin.button);
+                            showModules ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button);
                     line++;
                 }
 
@@ -844,7 +813,7 @@ namespace BDArmory.UI
                     line += 0.25f;
                     Rect weaponListGroupRect = new Rect(5, contentTop + (line*entryHeight), toolWindowWidth - 10,
                         ((float) ActiveWeaponManager.weaponArray.Length + 0.1f)*entryHeight);
-                    GUI.BeginGroup(weaponListGroupRect, GUIContent.none, HighLogic.Skin.box); //darker box
+                    GUI.BeginGroup(weaponListGroupRect, GUIContent.none, BDArmorySetup.BDGuiSkin.box); //darker box
                     weaponLines += 0.1f;
                     for (int i = 0; i < ActiveWeaponManager.weaponArray.Length; i++)
                     {
@@ -903,13 +872,13 @@ namespace BDArmory.UI
                     line += 0.25f;
                     GUI.BeginGroup(
                         new Rect(5, contentTop + (line*entryHeight), toolWindowWidth - 10, 7.45f*entryHeight),
-                        GUIContent.none, HighLogic.Skin.box);
+                        GUIContent.none, BDArmorySetup.BDGuiSkin.box);
                     guardLines += 0.1f;
                     contentWidth -= 16;
                     leftIndent += 3;
                     string guardButtonLabel = "Guard Mode " + (ActiveWeaponManager.guardMode ? "ON" : "Off");
                     if (GUI.Button(new Rect(leftIndent, (guardLines*entryHeight), contentWidth, entryHeight),
-                        guardButtonLabel, ActiveWeaponManager.guardMode ? HighLogic.Skin.box : HighLogic.Skin.button))
+                        guardButtonLabel, ActiveWeaponManager.guardMode ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button))
                     {
                         ActiveWeaponManager.ToggleGuardMode();
                     }
@@ -969,19 +938,19 @@ namespace BDArmory.UI
                         ActiveWeaponManager.guardRange.ToString(), leftLabel);
                     guardLines++;
 
-                    GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Guns Range", leftLabel);
-                    float gRange = ActiveWeaponManager.gunRange;
-                    gRange =
-                        GUI.HorizontalSlider(
-                            new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
-                            gRange, 0, BDArmorySettings.MAX_BULLET_RANGE);
-                    gRange /= 100f;
-                    gRange = Mathf.Round(gRange);
-                    gRange *= 100f;
-                    ActiveWeaponManager.gunRange = gRange;
-                    GUI.Label(new Rect(leftIndent + (contentWidth - 35), (guardLines*entryHeight), 35, entryHeight),
-                        ActiveWeaponManager.gunRange.ToString(), leftLabel);
-                    guardLines++;
+                    //GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Guns Range", leftLabel);
+                    //float gRange = ActiveWeaponManager.gunRange;
+                    //gRange =
+                    //    GUI.HorizontalSlider(
+                    //        new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
+                    //        gRange, 0, BDArmorySettings.MAX_BULLET_RANGE);
+                    //gRange /= 100f;
+                    //gRange = Mathf.Round(gRange);
+                    //gRange *= 100f;
+                    //ActiveWeaponManager.gunRange = gRange;
+                    //GUI.Label(new Rect(leftIndent + (contentWidth - 35), (guardLines*entryHeight), 35, entryHeight),
+                    //    ActiveWeaponManager.gunRange.ToString(), leftLabel);
+                    //guardLines++;
 
                     GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Missiles/Tgt", leftLabel);
                     float mslCount = ActiveWeaponManager.maxMissilesOnTarget;
@@ -1006,7 +975,7 @@ namespace BDArmory.UI
                     }
 
                     if (GUI.Button(new Rect(leftIndent, (guardLines*entryHeight), contentWidth, entryHeight), targetType,
-                        HighLogic.Skin.button))
+                        BDArmorySetup.BDGuiSkin.button))
                     {
                         ActiveWeaponManager.ToggleTargetType();
                     }
@@ -1023,7 +992,7 @@ namespace BDArmory.UI
                     line += 0.25f;
                     GUI.BeginGroup(
                         new Rect(5, contentTop + (line*entryHeight), toolWindowWidth - 10, numberOfModules*entryHeight),
-                        GUIContent.none, HighLogic.Skin.box);
+                        GUIContent.none, BDArmorySetup.BDGuiSkin.box);
 
                     numberOfModules = 0;
                     moduleLines += 0.1f;
@@ -1179,7 +1148,7 @@ namespace BDArmory.UI
             else
             {
                 GUI.Label(new Rect(leftIndent, contentTop + (line*entryHeight), contentWidth, entryHeight),
-                    "No Weapon Manager found.", HighLogic.Skin.box);
+                    "No Weapon Manager found.", BDArmorySetup.BDGuiSkin.box);
                 line++;
             }
 
@@ -1195,7 +1164,7 @@ namespace BDArmory.UI
         //GPS window
         public void GPSWindow()
         {
-            GUI.Box(WindowRectGps, GUIContent.none, HighLogic.Skin.box);
+            GUI.Box(WindowRectGps, GUIContent.none, BDArmorySetup.BDGuiSkin.box);
             gpsEntryCount = 0;
             Rect listRect = new Rect(gpsBorder, gpsBorder, WindowRectGps.width - (2*gpsBorder),
                 WindowRectGps.height - (2*gpsBorder));
@@ -1206,11 +1175,11 @@ namespace BDArmory.UI
             if (ActiveWeaponManager.designatedGPSCoords != Vector3d.zero)
             {
                 GUI.Label(new Rect(0, gpsEntryCount*gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight),
-                    Misc.Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), HighLogic.Skin.box);
+                    Misc.Misc.FormattedGeoPos(ActiveWeaponManager.designatedGPSCoords, true), BDArmorySetup.BDGuiSkin.box);
                 if (
                     GUI.Button(
                         new Rect(listRect.width - gpsEntryHeight, gpsEntryCount*gpsEntryHeight, gpsEntryHeight,
-                            gpsEntryHeight), "X", HighLogic.Skin.button))
+                            gpsEntryHeight), "X", BDArmorySetup.BDGuiSkin.button))
                 {
                     ActiveWeaponManager.designatedGPSInfo = new GPSTargetInfo();
                 }
@@ -1218,7 +1187,7 @@ namespace BDArmory.UI
             else
             {
                 GUI.Label(new Rect(0, gpsEntryCount*gpsEntryHeight, listRect.width - gpsEntryHeight, gpsEntryHeight),
-                    "No Target", HighLogic.Skin.box);
+                    "No Target", BDArmorySetup.BDGuiSkin.box);
             }
             gpsEntryCount += 1.35f;
             int indexToRemove = -1;
@@ -1262,7 +1231,7 @@ namespace BDArmory.UI
                 else
                 {
                     if (GUI.Button(new Rect(0, gpsEntryCount*gpsEntryHeight, nameWidth, gpsEntryHeight), coordinate.Current.name,
-                        HighLogic.Skin.button))
+                        BDArmorySetup.BDGuiSkin.button))
                     {
                         editingGPSName = true;
                         editingGPSNameIndex = index;
@@ -1272,7 +1241,7 @@ namespace BDArmory.UI
                 if (
                     GUI.Button(
                         new Rect(nameWidth, gpsEntryCount*gpsEntryHeight, listRect.width - gpsEntryHeight - nameWidth,
-                            gpsEntryHeight), label, HighLogic.Skin.button))
+                            gpsEntryHeight), label, BDArmorySetup.BDGuiSkin.button))
                 {
                     ActiveWeaponManager.designatedGPSInfo = coordinate.Current;
                     editingGPSName = false;
@@ -1280,7 +1249,7 @@ namespace BDArmory.UI
                 if (
                     GUI.Button(
                         new Rect(listRect.width - gpsEntryHeight, gpsEntryCount*gpsEntryHeight, gpsEntryHeight,
-                            gpsEntryHeight), "X", HighLogic.Skin.button))
+                            gpsEntryHeight), "X", BDArmorySetup.BDGuiSkin.button))
                 {
                     indexToRemove = index;
                 }
@@ -1404,12 +1373,34 @@ namespace BDArmory.UI
             if (Math.Abs(rwrSize - BDArmorySettings.RWR_WINDOW_SIZE) > 0.005f)
             {
               RadarWarningReceiver.RwrScaleFactor = rwrSize;
-              RadarWarningReceiver.RwrDisplayRect = new Rect(0, 0, 256 * RadarWarningReceiver.RwrScaleFactor, 256 * RadarWarningReceiver.RwrScaleFactor);
-              BDArmorySetup.WindowRectRwr = new Rect(BDArmorySetup.WindowRectRwr.x, BDArmorySetup.WindowRectRwr.y, RadarWarningReceiver.RwrDisplayRect.height + 10, RadarWarningReceiver.RwrDisplayRect.height + 25);
-      }
-      BDArmorySettings.RWR_WINDOW_SIZE = rwrSize;
+              RadarWarningReceiver.RwrDisplayRect = new Rect(0, 0, RadarWarningReceiver.RwrSize * RadarWarningReceiver.RwrScaleFactor, RadarWarningReceiver.RwrSize * RadarWarningReceiver.RwrScaleFactor);
+              BDArmorySetup.WindowRectRwr = 
+                new Rect(BDArmorySetup.WindowRectRwr.x, BDArmorySetup.WindowRectRwr.y, 
+                  RadarWarningReceiver.RwrDisplayRect.height + RadarWarningReceiver.BorderSize, 
+                  RadarWarningReceiver.RwrDisplayRect.height + RadarWarningReceiver.BorderSize + RadarWarningReceiver.HeaderSize);
+            }
+            BDArmorySettings.RWR_WINDOW_SIZE = rwrSize;
+            line++;
+
+            GUI.Label(SLeftRect(line), "Radar Window Scale: " + (BDArmorySettings.RADAR_WINDOW_SIZE * 100).ToString("0") + "%", leftLabel);
+            float radarSize = BDArmorySettings.RADAR_WINDOW_SIZE;
+            radarSize = GUI.HorizontalSlider(SRightRect(line), radarSize, 0.5f, 1f);
+            if (Math.Abs(radarSize - BDArmorySettings.RADAR_WINDOW_SIZE) > 0.005f)
+            {
+              VesselRadarData.RadarScaleFactor = radarSize;
+              VesselRadarData.RadarDisplayRect = 
+                new Rect(VesselRadarData.BorderSize / 2, VesselRadarData.BorderSize / 2 + VesselRadarData.HeaderSize, 
+                  VesselRadarData.RadarScreenSize * VesselRadarData.RadarScaleFactor, 
+                  VesselRadarData.RadarScreenSize * VesselRadarData.RadarScaleFactor);
+              WindowRectRadar = 
+                new Rect(WindowRectRadar.x, WindowRectRadar.y, 
+                  VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize, 
+                  VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.HeaderSize + VesselRadarData.ControlsHeight);
+            }
+            BDArmorySettings.RADAR_WINDOW_SIZE = radarSize;
             line++;
             line++;
+          
 
             GUI.Label(SLeftRect(line), "Trigger Hold: " + BDArmorySettings.TRIGGER_HOLD_TIME.ToString("0.00") + "s", leftLabel);
             BDArmorySettings.TRIGGER_HOLD_TIME = GUI.HorizontalSlider(SRightRect(line), BDArmorySettings.TRIGGER_HOLD_TIME, 0.02f, 1f);

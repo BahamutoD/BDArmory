@@ -26,7 +26,7 @@ namespace BDArmory.Control
         {
             if (competitionStarting)
             {
-                GUIStyle cStyle = new GUIStyle(HighLogic.Skin.label);
+                GUIStyle cStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.label);
                 cStyle.fontStyle = FontStyle.Bold;
                 cStyle.fontSize = 22;
                 cStyle.alignment = TextAnchor.UpperCenter;

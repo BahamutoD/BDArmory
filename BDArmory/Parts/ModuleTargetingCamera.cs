@@ -676,7 +676,7 @@ namespace BDArmory.Parts
 					//window
 					if (activeCam == this && TargetingCamera.ReadyForUse) 
 					{
-						camWindowRect = GUI.Window (125452, camWindowRect, CamWindow, string.Empty, HighLogic.Skin.window);
+						camWindowRect = GUI.Window (125452, camWindowRect, CamWindow, string.Empty, BDArmorySetup.BDGuiSkin.window);
 						BDGUIUtils.UseMouseEventInRect(camWindowRect);
 					}
 
@@ -735,22 +735,22 @@ namespace BDArmory.Parts
 			Rect slewDownRect = new Rect(slewStartX + slewSize, controlsStartY + (2*slewSize), slewSize, slewSize);
 			Rect slewLeftRect = new Rect(slewStartX, controlsStartY + slewSize, slewSize, slewSize);
 			Rect slewRightRect = new Rect(slewStartX + (2*slewSize), controlsStartY+slewSize, slewSize, slewSize);
-			if(GUI.RepeatButton(slewUpRect, "^", HighLogic.Skin.button))
+			if(GUI.RepeatButton(slewUpRect, "^", BDArmorySetup.BDGuiSkin.button))
 			{
 				//SlewCamera(Vector3.up);
 				slewInput.y = 1;
 			}
-			if(GUI.RepeatButton(slewDownRect, "v", HighLogic.Skin.button))
+			if(GUI.RepeatButton(slewDownRect, "v", BDArmorySetup.BDGuiSkin.button))
 			{
 				//SlewCamera(Vector3.down);
 				slewInput.y = -1;
 			}
-			if(GUI.RepeatButton(slewLeftRect, "<", HighLogic.Skin.button))
+			if(GUI.RepeatButton(slewLeftRect, "<", BDArmorySetup.BDGuiSkin.button))
 			{
 				//SlewCamera(Vector3.left);
 				slewInput.x = -1;
 			}
-			if(GUI.RepeatButton(slewRightRect, ">", HighLogic.Skin.button))
+			if(GUI.RepeatButton(slewRightRect, ">", BDArmorySetup.BDGuiSkin.button))
 			{
 				//SlewCamera(Vector3.right);
 				slewInput.x = 1;
@@ -765,7 +765,7 @@ namespace BDArmory.Parts
 			disabledStyle.normal.textColor = Color.white;
 			if(currentFovIndex < zoomFovs.Length-1)
 			{
-				if(GUI.Button(zoomInRect, "In", HighLogic.Skin.button))
+				if(GUI.Button(zoomInRect, "In", BDArmorySetup.BDGuiSkin.button))
 				{
 					ZoomIn();
 				}
@@ -776,7 +776,7 @@ namespace BDArmory.Parts
 			}
 			if(currentFovIndex > 0)
 			{
-				if(GUI.Button(zoomOutRect, "Out", HighLogic.Skin.button))
+				if(GUI.Button(zoomOutRect, "Out", BDArmorySetup.BDGuiSkin.button))
 				{
 					ZoomOut();
 				}
@@ -786,7 +786,7 @@ namespace BDArmory.Parts
 				GUI.Label(zoomOutRect, "(Out)", disabledStyle);
 			}
 			Rect zoomInfoRect = new Rect(zoomStartX, controlsStartY + slewSize, 3*slewSize, slewSize);
-			GUIStyle zoomInfoStyle = new GUIStyle(HighLogic.Skin.box);
+			GUIStyle zoomInfoStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.box);
 			zoomInfoStyle.fontSize = 12;
 			zoomInfoStyle.wordWrap = false;
 			GUI.Label(zoomInfoRect, "Zoom "+(currentFovIndex+1).ToString(), zoomInfoStyle);
@@ -800,20 +800,20 @@ namespace BDArmory.Parts
 			Rect stabilizeRect = new Rect(stabilStartX, controlsStartY, 3*slewSize, 3*slewSize);
 			if(!groundStabilized)
 			{
-				if(GUI.Button(stabilizeRect, "Lock\nTarget", HighLogic.Skin.button))
+				if(GUI.Button(stabilizeRect, "Lock\nTarget", BDArmorySetup.BDGuiSkin.button))
 				{
 					GroundStabilize();
 				}
 			}
 			else
 			{
-				if(GUI.Button(new Rect(stabilizeRect.x,stabilizeRect.y,stabilizeRect.width,stabilizeRect.height/2), "Unlock", HighLogic.Skin.button))
+				if(GUI.Button(new Rect(stabilizeRect.x,stabilizeRect.y,stabilizeRect.width,stabilizeRect.height/2), "Unlock", BDArmorySetup.BDGuiSkin.button))
 				{
 					ClearTarget();
 				}
 				if(weaponManager)
 				{
-					GUIStyle gpsStyle = new GUIStyle(HighLogic.Skin.button);
+					GUIStyle gpsStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
 					gpsStyle.fontSize = 10;
 					if(GUI.Button(new Rect(stabilizeRect.x, stabilizeRect.y + (stabilizeRect.height / 2), stabilizeRect.width, stabilizeRect.height / 2), "Send GPS", gpsStyle))
 					{
@@ -922,7 +922,7 @@ namespace BDArmory.Parts
 			//reset button
 			float resetStartX = stabilStartX + stabilizeRect.width + 4;
 			Rect resetRect = new Rect(resetStartX, controlsStartY + (2*slewSize), 3*slewSize, slewSize-1);
-			if(GUI.Button(resetRect, "Reset", HighLogic.Skin.button))
+			if(GUI.Button(resetRect, "Reset", BDArmorySetup.BDGuiSkin.button))
 			{
 				ResetCameraButton();
 			}
@@ -930,7 +930,7 @@ namespace BDArmory.Parts
 
 			//CoM lock
 			Rect comLockRect = new Rect(resetRect.x, controlsStartY, 3*slewSize, slewSize-1);
-			GUIStyle comStyle = new GUIStyle(CoMLock ? HighLogic.Skin.box : HighLogic.Skin.button);
+			GUIStyle comStyle = new GUIStyle(CoMLock ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button);
 			comStyle.fontSize = 10;
 			comStyle.wordWrap = false;
 			if(GUI.Button(comLockRect, "CoM Track",comStyle))
@@ -941,7 +941,7 @@ namespace BDArmory.Parts
 
 			//radar slave
 			Rect radarSlaveRect = new Rect(comLockRect.x + comLockRect.width + 4, comLockRect.y, 3*slewSize, slewSize-1);
-			GUIStyle radarSlaveStyle = radarLock ? HighLogic.Skin.box : HighLogic.Skin.button;
+			GUIStyle radarSlaveStyle = radarLock ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
 			if(GUI.Button(radarSlaveRect, "Radar", radarSlaveStyle))
 			{
 				radarLock = !radarLock;
@@ -951,14 +951,14 @@ namespace BDArmory.Parts
 			Rect slaveRect = new Rect(resetStartX, controlsStartY + slewSize, (3*slewSize), slewSize-1);
 			if(!slaveTurrets)
 			{
-				if(GUI.Button(slaveRect, "Turrets", HighLogic.Skin.button))
+				if(GUI.Button(slaveRect, "Turrets", BDArmorySetup.BDGuiSkin.button))
 				{
 					SlaveTurrets ();
 				}
 			}
 			else
 			{
-				if(GUI.Button(slaveRect, "Turrets", HighLogic.Skin.box))
+				if(GUI.Button(slaveRect, "Turrets", BDArmorySetup.BDGuiSkin.box))
 				{
 					UnslaveTurrets ();
 				}
@@ -966,7 +966,7 @@ namespace BDArmory.Parts
 
 			//point to gps button
 			Rect toGpsRect = new Rect(resetRect.x + slaveRect.width + 4, slaveRect.y, 3*slewSize, slewSize-1);
-			if(GUI.Button(toGpsRect, "To GPS", HighLogic.Skin.button))
+			if(GUI.Button(toGpsRect, "To GPS", BDArmorySetup.BDGuiSkin.button))
 			{
 				PointToGPSTarget();
 			}
@@ -976,7 +976,7 @@ namespace BDArmory.Parts
 			float nvStartX = resetStartX + resetRect.width + 4;
 			Rect nvRect = new Rect(nvStartX, resetRect.y, 3*slewSize, slewSize-1);
 			string nvLabel = nvMode ? "NV Off" : "NV On";
-			GUIStyle nvStyle = nvMode ? HighLogic.Skin.box : HighLogic.Skin.button;
+			GUIStyle nvStyle = nvMode ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
 			if(GUI.Button(nvRect, nvLabel, nvStyle))
 			{
 				ToggleNV();
@@ -985,7 +985,7 @@ namespace BDArmory.Parts
 			//off button
 			float offStartX = nvStartX + nvRect.width + 4;
 			Rect offRect = new Rect(offStartX, controlsStartY, slewSize*1.5f, 3*slewSize);
-			if(GUI.Button(offRect, "O\nF\nF", HighLogic.Skin.button))
+			if(GUI.Button(offRect, "O\nF\nF", BDArmorySetup.BDGuiSkin.button))
 			{
 				DisableCamera();
 			}

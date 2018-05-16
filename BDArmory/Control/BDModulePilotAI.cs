@@ -214,12 +214,13 @@ namespace BDArmory.Control
 				else
 				{
 					lr = gameObject.AddComponent<LineRenderer>();
-					lr.SetVertexCount(2);
-					lr.SetWidth(0.5f, 0.5f);
+					lr.positionCount = 2;
+					lr.startWidth = 0.5f;
+				  lr.endWidth = 0.5f;
 				}
 
 
-				minSpeed = Mathf.Clamp(minSpeed, 0, idleSpeed - 20);
+        minSpeed = Mathf.Clamp(minSpeed, 0, idleSpeed - 20);
 				minSpeed = Mathf.Clamp(minSpeed, 0, maxSpeed - 20);
 			}
 			else
