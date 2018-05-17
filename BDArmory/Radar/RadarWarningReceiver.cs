@@ -58,7 +58,6 @@ namespace BDArmory.Radar
         const int dataCount = 10;
 
         internal float rwrDisplayRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
-        internal static float RwrScaleFactor = 1;
         internal static float RwrSize = 256;
         internal static float BorderSize = 10;
         internal static float HeaderSize = 15;
@@ -83,7 +82,7 @@ namespace BDArmory.Radar
             }
         }
 
-        internal static Rect RwrDisplayRect = new Rect(0, 0, RwrSize * RwrScaleFactor, RwrSize * RwrScaleFactor);
+        internal static Rect RwrDisplayRect = new Rect(0, 0, RwrSize * BDArmorySettings.RWR_WINDOW_SCALE, RwrSize * BDArmorySettings.RWR_WINDOW_SCALE);
 
         GUIStyle rwrIconLabelStyle;
 
@@ -356,7 +355,7 @@ namespace BDArmory.Radar
             GUI.DragWindow(RwrDisplayRect);
 
             GUI.DrawTexture(RwrDisplayRect, VesselRadarData.omniBgTexture, ScaleMode.StretchToFill, false);
-            float pingSize = 32 * (float) RwrScaleFactor;
+            float pingSize = 32 * BDArmorySettings.RWR_WINDOW_SCALE;
 
             for (int i = 0; i < dataCount; i++)
             {

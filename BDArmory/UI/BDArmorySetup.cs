@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using BDArmory.Armor;
@@ -61,7 +62,7 @@ namespace BDArmory.UI
         public static bool GAME_UI_ENABLED = true;
 
         //settings gui
-        public bool settingsGuiEnabled;
+        public static bool settingsGuiEnabled;
         public string fireKeyGui;
 
         //editor alignment
@@ -1325,6 +1326,10 @@ namespace BDArmory.UI
         {
             float line = 1.25f;
             GUI.Box(new Rect(0, 0, settingsWidth, settingsHeight), "BDArmory Settings");
+            if (GUI.Button(new Rect(settingsWidth - 18, 2, 16, 16), "X"))
+            {
+              settingsGuiEnabled = false;
+            }
             GUI.DragWindow(new Rect(0, 0, settingsWidth, 25));
             if (editKeys)
             {
@@ -1367,37 +1372,37 @@ namespace BDArmory.UI
             line++;
 
 
-            GUI.Label(SLeftRect(line), "RWR Window Scale: " + (BDArmorySettings.RWR_WINDOW_SIZE * 100).ToString("0") + "%", leftLabel);
-            float rwrSize = BDArmorySettings.RWR_WINDOW_SIZE;
-            rwrSize = GUI.HorizontalSlider(SRightRect(line), rwrSize, 0.5f, 1f);
-            if (Math.Abs(rwrSize - BDArmorySettings.RWR_WINDOW_SIZE) > 0.005f)
+            GUI.Label(SLeftRect(line), "RWR Window Scale: " + (BDArmorySettings.RWR_WINDOW_SCALE * 100).ToString("0") + "%", leftLabel);
+            float rwrSize = BDArmorySettings.RWR_WINDOW_SCALE;
+            rwrSize = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), rwrSize, 0.50f, 1.00f) * 100.0f) * 0.01f;
+            if (rwrSize.ToString(CultureInfo.InvariantCulture) != BDArmorySettings.RWR_WINDOW_SCALE.ToString(CultureInfo.InvariantCulture))
             {
-              RadarWarningReceiver.RwrScaleFactor = rwrSize;
-              RadarWarningReceiver.RwrDisplayRect = new Rect(0, 0, RadarWarningReceiver.RwrSize * RadarWarningReceiver.RwrScaleFactor, RadarWarningReceiver.RwrSize * RadarWarningReceiver.RwrScaleFactor);
+              BDArmorySettings.RWR_WINDOW_SCALE = rwrSize;
+              RadarWarningReceiver.RwrDisplayRect = new Rect(0, 0, RadarWarningReceiver.RwrSize * BDArmorySettings.RWR_WINDOW_SCALE, RadarWarningReceiver.RwrSize * BDArmorySettings.RWR_WINDOW_SCALE);
               BDArmorySetup.WindowRectRwr = 
                 new Rect(BDArmorySetup.WindowRectRwr.x, BDArmorySetup.WindowRectRwr.y, 
                   RadarWarningReceiver.RwrDisplayRect.height + RadarWarningReceiver.BorderSize, 
                   RadarWarningReceiver.RwrDisplayRect.height + RadarWarningReceiver.BorderSize + RadarWarningReceiver.HeaderSize);
             }
-            BDArmorySettings.RWR_WINDOW_SIZE = rwrSize;
+            //BDArmorySettings.RWR_WINDOW_SCALE = Mathf.Round(rwrSize * 100.0f) * 0.01f; 
             line++;
 
-            GUI.Label(SLeftRect(line), "Radar Window Scale: " + (BDArmorySettings.RADAR_WINDOW_SIZE * 100).ToString("0") + "%", leftLabel);
-            float radarSize = BDArmorySettings.RADAR_WINDOW_SIZE;
-            radarSize = GUI.HorizontalSlider(SRightRect(line), radarSize, 0.5f, 1f);
-            if (Math.Abs(radarSize - BDArmorySettings.RADAR_WINDOW_SIZE) > 0.005f)
+            GUI.Label(SLeftRect(line), "Radar Window Scale: " + (BDArmorySettings.RADAR_WINDOW_SCALE * 100).ToString("0") + "%", leftLabel);
+            float radarSize = BDArmorySettings.RADAR_WINDOW_SCALE;
+            radarSize = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), radarSize, 0.50f, 1.00f) * 100.0f) * 0.01f;
+            if (radarSize.ToString(CultureInfo.InvariantCulture) != BDArmorySettings.RADAR_WINDOW_SCALE.ToString(CultureInfo.InvariantCulture))
             {
-              VesselRadarData.RadarScaleFactor = radarSize;
+              BDArmorySettings.RADAR_WINDOW_SCALE = radarSize;
               VesselRadarData.RadarDisplayRect = 
                 new Rect(VesselRadarData.BorderSize / 2, VesselRadarData.BorderSize / 2 + VesselRadarData.HeaderSize, 
-                  VesselRadarData.RadarScreenSize * VesselRadarData.RadarScaleFactor, 
-                  VesselRadarData.RadarScreenSize * VesselRadarData.RadarScaleFactor);
+                  VesselRadarData.RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE, 
+                  VesselRadarData.RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE);
               WindowRectRadar = 
                 new Rect(WindowRectRadar.x, WindowRectRadar.y, 
                   VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.ControlsWidth + VesselRadarData.Gap *2, 
                   VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.HeaderSize);
             }
-            BDArmorySettings.RADAR_WINDOW_SIZE = radarSize;
+            //BDArmorySettings.RADAR_WINDOW_SCALE = Mathf.Round(radarSize * 100.0f) * 0.01f;
             line++;
             line++;
           

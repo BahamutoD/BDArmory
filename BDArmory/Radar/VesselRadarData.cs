@@ -41,7 +41,6 @@ namespace BDArmory.Radar
         public static bool radarRectInitialized;
         internal static float RadarScreenSize = 360;
         internal static Rect RadarDisplayRect;
-        internal static float RadarScaleFactor = 1f;
 
         internal static float BorderSize = 10;
         internal static float HeaderSize = 15;
@@ -84,8 +83,8 @@ namespace BDArmory.Radar
         float guiInputCooldown = 0.2f;
 
         //range increments
-        //TODO:  Determine if Specific radars impact this list and increas options to 1000km
-        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000,100000};
+        //TODO:  Determine how to dynamically generate this list from the radar being used.
+        public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000,100000,250000,500000,750000,1000000};
         int rangeIndex = 0;
 
         //lock cursor
@@ -197,7 +196,9 @@ namespace BDArmory.Radar
             externalVRDs = new List<VesselRadarData>();
             waitingForVessels = new List<string>();
 
-            RadarDisplayRect = new Rect(BorderSize/2, BorderSize/2 + HeaderSize, RadarScreenSize * RadarScaleFactor, RadarScreenSize * RadarScaleFactor);
+            RadarDisplayRect = new Rect(BorderSize/2, BorderSize/2 + HeaderSize, 
+              RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE, 
+              RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE);
 
             if (!radarRectInitialized)
             {
@@ -847,7 +848,7 @@ namespace BDArmory.Radar
                         }
 
 
-                        GUIUtility.RotateAroundPivot(currentAngle, new Vector2((RadarScreenSize * RadarScaleFactor) /2, (RadarScreenSize * RadarScaleFactor) / 2));
+                        GUIUtility.RotateAroundPivot(currentAngle, new Vector2((RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE) /2, (RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE) / 2));
                         if (availableRadars[i].omnidirectional && radarCount == 1)
                         {
                             GUI.DrawTexture(scanRect, scanTexture, ScaleMode.StretchToFill, true);
