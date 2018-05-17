@@ -3,7 +3,12 @@
   * Added boundary checking to all moveable windows.  Now windows cannot be positioned off the screen.
   * Added ability to scale Radar Warning Receiver Window.  Scale persists to config file and can be changed in Settings.
   * Added ability to scale Radar Window.  Scale persists to config file and can be changed in Settings.
+  * Increased the number of range steps in the Radar.  Now can display up to 1000km
+  * Added Dynamic range settings to Radar Display based on the max range of the radars in operation.
+  * Added close buttons to the upper right of some windows.
+* FIXES
   * Cleaned up obsolete and deprecated unity method calls.
+  * Removed MM config 30_bdac_missiles_terminalmaneuvering.cfg.  No longer used.
 
 v1.2.1
 * NEW FEATURES:

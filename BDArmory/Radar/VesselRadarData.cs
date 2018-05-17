@@ -202,8 +202,8 @@ namespace BDArmory.Radar
 
             if (!radarRectInitialized)
             {
-                float width = RadarScreenSize + BorderSize + ControlsWidth + Gap;
-                float height = RadarScreenSize + BorderSize + HeaderSize;
+                float width = RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE + BorderSize + ControlsWidth + Gap;
+                float height = RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE + BorderSize + HeaderSize;
                 BDArmorySetup.WindowRectRadar = new Rect(Screen.width - width, Screen.height - height, width, height);
                 radarRectInitialized = true;
             }
@@ -1955,26 +1955,26 @@ namespace BDArmory.Radar
 
             if (!omniDisplay)
             {
-                if (selectorPos.y > RadarScreenSize*0.975f)
+                if (selectorPos.y > RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE * 0.975f)
                 {
                     if (rangeIndex > 0)
                     {
                         DecreaseRange();
-                        selectorPos.y = RadarScreenSize*0.75f;
+                        selectorPos.y = RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE * 0.75f;
                     }
                 }
-                else if (selectorPos.y < RadarScreenSize*0.025f)
+                else if (selectorPos.y < RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE * 0.025f)
                 {
                     if (rangeIndex < rIncrements.Length - 1)
                     {
                         IncreaseRange();
-                        selectorPos.y = RadarScreenSize*0.25f;
+                        selectorPos.y = RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE * 0.25f;
                     }
                 }
             }
 
-            selectorPos.y = Mathf.Clamp(selectorPos.y, 10, RadarScreenSize - 10);
-            selectorPos.x = Mathf.Clamp(selectorPos.x, 10, RadarScreenSize - 10);
+            selectorPos.y = Mathf.Clamp(selectorPos.y, 10, RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE - 10);
+            selectorPos.x = Mathf.Clamp(selectorPos.x, 10, RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE - 10);
         }
 
         void ShowSelector()
@@ -1982,7 +1982,7 @@ namespace BDArmory.Radar
             if (!showSelector)
             {
                 showSelector = true;
-                selectorPos = new Vector2(RadarScreenSize/2, RadarScreenSize/2);
+                selectorPos = new Vector2(RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE / 2, RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE / 2);
             }
         }
     }

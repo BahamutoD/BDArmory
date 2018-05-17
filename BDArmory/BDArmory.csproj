@@ -220,7 +220,6 @@
     <None Include="Distribution\GameData\BDArmory\MMPatches\000000_HitpointModule.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\000000_HitpointModule_PartFixes.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\10_bdac_stealth.cfg" />
-    <None Include="Distribution\GameData\BDArmory\MMPatches\30_bdac_missiles_terminalmaneuvering.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\99_bdac_engagementenvelopes.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\Armor_CVE.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_Armor.cfg" />
