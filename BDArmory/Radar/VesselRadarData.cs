@@ -45,7 +45,8 @@ namespace BDArmory.Radar
 
         internal static float BorderSize = 10;
         internal static float HeaderSize = 15;
-        internal static float ControlsHeight = 50;
+        internal static float ControlsWidth = 125;
+        internal static float Gap = 2;
 
         Vector2 pingSize = new Vector2(16, 8);
 
@@ -83,6 +84,7 @@ namespace BDArmory.Radar
         float guiInputCooldown = 0.2f;
 
         //range increments
+        //TODO:  Determine if Specific radars impact this list and increas options to 1000km
         public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000,100000};
         int rangeIndex = 0;
 
@@ -96,7 +98,7 @@ namespace BDArmory.Radar
         private Transform referenceTransform;
         private Transform vesselReferenceTransform;
 
-		public MissileBase LastMissile;
+		    public MissileBase LastMissile;
 
         //bool boresightScan = false;
 
@@ -199,8 +201,8 @@ namespace BDArmory.Radar
 
             if (!radarRectInitialized)
             {
-                float width = RadarScreenSize + BorderSize;
-                float height = RadarScreenSize + BorderSize + HeaderSize + ControlsHeight;
+                float width = RadarScreenSize + BorderSize + ControlsWidth + Gap;
+                float height = RadarScreenSize + BorderSize + HeaderSize;
                 BDArmorySetup.WindowRectRadar = new Rect(Screen.width - width, Screen.height - height, width, height);
                 radarRectInitialized = true;
             }
@@ -994,19 +996,20 @@ namespace BDArmory.Radar
 
         private void DisplayRadarControls()
         {
-            float buttonWidth = 65;
-            float gap = 2;
-            float buttonHeight = (ControlsHeight / 2) - (2 * gap);
-            float controlsStartY = HeaderSize + RadarScreenSize * RadarScaleFactor + BorderSize / 2;
-            float controlsStartY2 = controlsStartY + buttonHeight + gap;
+            float buttonHeight = 25;
+            float line = HeaderSize + BorderSize / 2;
+            float startX = BorderSize + RadarDisplayRect.width;
 
             //Set up button positions depending on window scale.
-            Rect dataLinkRect = new Rect(BorderSize / 2, controlsStartY, buttonWidth, buttonHeight);
-            Rect lockModeCycleRect = new Rect(BorderSize / 2 + gap + buttonWidth, controlsStartY, buttonWidth, buttonHeight);
-            Rect slaveRect = new Rect(lockModeCycleRect.x + gap + lockModeCycleRect.width, lockModeCycleRect.y, buttonWidth * 1.4f, buttonHeight);
-
-            Rect unlockRect = new Rect(lockModeCycleRect.x, controlsStartY2, buttonWidth * 1.5f, buttonHeight);
-            Rect unlockAllRect = new Rect(lockModeCycleRect.x + gap + lockModeCycleRect.width, controlsStartY2, buttonWidth * 1.4f, buttonHeight);
+            Rect dataLinkRect = new Rect(startX, line, ControlsWidth, buttonHeight);
+            line+= buttonHeight + Gap;
+            Rect lockModeCycleRect = new Rect(startX, line, ControlsWidth, buttonHeight);
+            line += buttonHeight + Gap;
+            Rect slaveRect = new Rect(startX, line, ControlsWidth, buttonHeight);
+            line += buttonHeight + Gap;
+            Rect unlockRect = new Rect(startX, line, ControlsWidth, buttonHeight);
+            line += buttonHeight + Gap;
+            Rect unlockAllRect = new Rect(startX, line, ControlsWidth, buttonHeight);
 
             if (canReceiveRadarData)
             {
@@ -1080,13 +1083,13 @@ namespace BDArmory.Radar
 
         void LinkRadarWindow()
             {
-                GUI.Box(linkWindowRect, string.Empty, BDArmorySetup.BDGuiSkin.window);
+                GUI.Box(linkWindowRect, string.Empty, GUI.skin.window);
 
                 numberOfAvailableLinks = 0;
 
                 GUI.BeginGroup(linkWindowRect);
 
-                if (GUI.Button(new Rect(8, 8, 100, linkRectEntryHeight), "Refresh", BDArmorySetup.BDGuiSkin.button))
+                if (GUI.Button(new Rect(8, 8, 100, linkRectEntryHeight), "Refresh", GUI.skin.button))
                 {
                     RefreshAvailableLinks();
                 }
@@ -1098,7 +1101,7 @@ namespace BDArmory.Radar
                     if (v.Current == null) continue;
                     if (!v.Current.vessel || !v.Current.vessel.loaded) continue;
                     bool linked = externalVRDs.Contains(v.Current);
-                    GUIStyle style = linked ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
+                    GUIStyle style = linked ? BDArmorySetup.BDGuiSkin.box : GUI.skin.button;
                     if (
                         GUI.Button(
                             new Rect(8, 8 + (linkRectEntryHeight*numberOfAvailableLinks), linkRectWidth - 16,

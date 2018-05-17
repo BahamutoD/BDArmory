@@ -938,19 +938,19 @@ namespace BDArmory.UI
                         ActiveWeaponManager.guardRange.ToString(), leftLabel);
                     guardLines++;
 
-                    //GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Guns Range", leftLabel);
-                    //float gRange = ActiveWeaponManager.gunRange;
-                    //gRange =
-                    //    GUI.HorizontalSlider(
-                    //        new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
-                    //        gRange, 0, BDArmorySettings.MAX_BULLET_RANGE);
-                    //gRange /= 100f;
-                    //gRange = Mathf.Round(gRange);
-                    //gRange *= 100f;
-                    //ActiveWeaponManager.gunRange = gRange;
-                    //GUI.Label(new Rect(leftIndent + (contentWidth - 35), (guardLines*entryHeight), 35, entryHeight),
-                    //    ActiveWeaponManager.gunRange.ToString(), leftLabel);
-                    //guardLines++;
+                    GUI.Label(new Rect(leftIndent, (guardLines * entryHeight), 85, entryHeight), "Guns Range", leftLabel);
+                    float gRange = ActiveWeaponManager.gunRange;
+                    gRange =
+                        GUI.HorizontalSlider(
+                            new Rect(leftIndent + 90, (guardLines * entryHeight), contentWidth - 90 - 38, entryHeight),
+                            gRange, 0, BDArmorySettings.MAX_BULLET_RANGE);
+                    gRange /= 100f;
+                    gRange = Mathf.Round(gRange);
+                    gRange *= 100f;
+                    ActiveWeaponManager.gunRange = gRange;
+                    GUI.Label(new Rect(leftIndent + (contentWidth - 35), (guardLines * entryHeight), 35, entryHeight),
+                        ActiveWeaponManager.gunRange.ToString(), leftLabel);
+                    guardLines++;
 
                     GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Missiles/Tgt", leftLabel);
                     float mslCount = ActiveWeaponManager.maxMissilesOnTarget;
@@ -1394,8 +1394,8 @@ namespace BDArmory.UI
                   VesselRadarData.RadarScreenSize * VesselRadarData.RadarScaleFactor);
               WindowRectRadar = 
                 new Rect(WindowRectRadar.x, WindowRectRadar.y, 
-                  VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize, 
-                  VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.HeaderSize + VesselRadarData.ControlsHeight);
+                  VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.ControlsWidth + VesselRadarData.Gap *2, 
+                  VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.HeaderSize);
             }
             BDArmorySettings.RADAR_WINDOW_SIZE = radarSize;
             line++;
