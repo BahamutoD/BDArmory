@@ -13,6 +13,7 @@ namespace BDArmory.Radar
         private List<ModuleRadar> availableRadars;
         private List<ModuleRadar> externalRadars;
         private List<VesselRadarData> externalVRDs;
+        private float _maxRadarRange = 0;
 
         private int rCount;
 
@@ -84,6 +85,8 @@ namespace BDArmory.Radar
 
         //range increments
         //TODO:  Determine how to dynamically generate this list from the radar being used.
+        public float[] baseIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, 250000, 500000, 750000, 1000000 };
+
         public float[] rIncrements = new float[] {500,2500,5000,10000,20000,40000,100000,250000,500000,750000,1000000};
         int rangeIndex = 0;
 
@@ -145,6 +148,7 @@ namespace BDArmory.Radar
             rCount = availableRadars.Count;
             //UpdateDataLinkCapability();
             linkCapabilityDirty = true;
+            rangeCapabilityDirty = true;
         }
 
         public void RemoveRadar(ModuleRadar mr)
@@ -154,9 +158,11 @@ namespace BDArmory.Radar
             RemoveDataFromRadar(mr);
             //UpdateDataLinkCapability();
             linkCapabilityDirty = true;
+            rangeCapabilityDirty = true;
         }
 
         public bool linkCapabilityDirty;
+        public bool rangeCapabilityDirty;
         public bool radarsReady;
 
         void Awake()
@@ -220,7 +226,7 @@ namespace BDArmory.Radar
                 rangeIndex--;
             }
 
-            UpdateLockedTargets();
+          UpdateLockedTargets();
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
             {
@@ -331,6 +337,37 @@ namespace BDArmory.Radar
             }
 
             RemoveDisconnectedRadars();
+        }
+
+        void UpdateRangeCapability()
+        {
+            _maxRadarRange = 0;
+            List<ModuleRadar>.Enumerator rad = availableRadars.GetEnumerator();
+            while (rad.MoveNext())
+            {
+                if (rad.Current == null) continue;
+                float maxRange = rad.Current.radarDetectionCurve.maxTime * 1000;
+                if (rad.Current.vessel != vessel || !(maxRange > 0)) continue;
+                if (maxRange > _maxRadarRange) _maxRadarRange = maxRange;
+            }
+            rad.Dispose();
+            // Now rebuild range display array
+            bool maxReached = false;
+            List<float> newArray = new List<float>();
+            for (int x = 0; x < baseIncrements.Length; x++)
+            {
+                if (_maxRadarRange > baseIncrements[x])
+                {
+                  newArray.Add(baseIncrements[x]);
+                }
+                else if (maxReached) break;
+                else
+                {
+                  newArray.Add(baseIncrements[x]);
+                  maxReached = true;
+                }
+            }
+            if (newArray.Count > 0) rIncrements = newArray.ToArray();
         }
 
         void UpdateDataLinkCapability()
@@ -500,12 +537,16 @@ namespace BDArmory.Radar
                 }
             }
 
-
             if (linkCapabilityDirty)
             {
                 UpdateDataLinkCapability();
-
                 linkCapabilityDirty = false;
+            }
+
+            if (rangeCapabilityDirty)
+            {
+                UpdateRangeCapability();
+                rangeCapabilityDirty = false;
             }
 
             drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && rCount > 0 &&
