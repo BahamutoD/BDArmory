@@ -542,11 +542,8 @@ namespace BDArmory.UI
 								Debug.Log("[BDArmory]: ==== BDA GPS Target string was empty! ====");
 								return;
 							}
-							else
-							{
-								StringToGPSList(targetString);
-								Debug.Log("[BDArmory]: ==== Loaded BDA GPS Targets ====");
-							}
+							StringToGPSList(targetString);
+							Debug.Log("[BDArmory]: ==== Loaded BDA GPS Targets ====");
 						}
 						else
 						{

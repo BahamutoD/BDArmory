@@ -2,13 +2,16 @@
 * NEW FEATURES:
   * Added boundary checking to all moveable windows.  Now windows cannot be positioned off the screen.
   * Added ability to scale Radar Warning Receiver Window.  Scale persists to config file and can be changed in Settings.
-  * Added ability to scale Radar Window.  Scale persists to config file and can be changed in Settings.
+  * Redesigned and added ability to scale Radar Window.  Scale persists to config file and can be changed in Settings.
+  * Added a toggle to collapse/expand the list of weapons on the Weapon Manager window.
   * Increased the number of range steps in the Radar.  Now can display up to 1000km
   * Added Dynamic range settings to Radar Display based on the max range of the radars in operation.
+  * Added ModuleSpaceRadar.  This limits use of space based radar supporting this module to outside the atmosphere.
   * Added close buttons to the upper right of some windows.
 * FIXES
   * Cleaned up obsolete and deprecated unity method calls.
   * Removed MM config 30_bdac_missiles_terminalmaneuvering.cfg.  No longer used.
+  * Fixed radar locking in space.
 
 v1.2.1
 * NEW FEATURES:

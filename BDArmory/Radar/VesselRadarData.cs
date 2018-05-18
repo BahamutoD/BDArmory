@@ -211,12 +211,12 @@ namespace BDArmory.Radar
 
         void Start()
         {
-            rangeIndex = rIncrements.Length - 2;
+            rangeIndex = rIncrements.Length - 6;
 
             //determine configured physics ranges and add a radar range level for the highest range
             if (vessel.vesselRanges.flying.load > rIncrements[rIncrements.Length-1])
             {
-                rIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, vessel.vesselRanges.flying.load };
+                rIncrements = new [] { 500, 2500, 5000, 10000, 20000, 40000, 100000, 250000, 500000, 750000, 1000000, vessel.vesselRanges.flying.load };
                 rangeIndex--;
             }
 
@@ -521,40 +521,34 @@ namespace BDArmory.Radar
 
         public void CycleActiveLock()
         {
-            if (locked)
+            if (!locked) return;
+            activeLockedTargetIndex++;
+            if (activeLockedTargetIndex >= lockedTargetIndexes.Count)
             {
-                activeLockedTargetIndex++;
-                if (activeLockedTargetIndex >= lockedTargetIndexes.Count)
-                {
-                    activeLockedTargetIndex = 0;
-                }
-
-                lockedTargetData.detectedByRadar.SetActiveLock(lockedTargetData.targetData);
-
-                UpdateLockedTargets();
+                activeLockedTargetIndex = 0;
             }
+
+            lockedTargetData.detectedByRadar.SetActiveLock(lockedTargetData.targetData);
+
+            UpdateLockedTargets();
         }
 
         void IncreaseRange()
         {
             int origIndex = rangeIndex;
             rangeIndex = Mathf.Clamp(rangeIndex + 1, 0, rIncrements.Length - 1);
-            if (origIndex != rangeIndex)
-            {
-                pingPositionsDirty = true;
-                UpdateRWRRange();
-            }
+            if (origIndex == rangeIndex) return;
+            pingPositionsDirty = true;
+            UpdateRWRRange();
         }
 
         void DecreaseRange()
         {
             int origIndex = rangeIndex;
             rangeIndex = Mathf.Clamp(rangeIndex - 1, 0, rIncrements.Length - 1);
-            if (origIndex != rangeIndex)
-            {
-                pingPositionsDirty = true;
-                UpdateRWRRange();
-            }
+            if (origIndex == rangeIndex) return;
+            pingPositionsDirty = true;
+            UpdateRWRRange();
         }
 
         /// <summary>
