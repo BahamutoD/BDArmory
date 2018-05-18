@@ -49,6 +49,7 @@ namespace BDArmory.FX
 
         public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float penetrationfactor)
         {
+            if (!BDArmorySettings.BULLET_DECALS) return;
             ObjectPool decalPool_;
 
             if (caliber >= 90f)

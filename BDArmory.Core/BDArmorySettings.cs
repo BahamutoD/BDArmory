@@ -7,6 +7,7 @@ namespace BDArmory.Core
         
         [BDAPersistantSettingsField] public static bool INSTAKILL = false;
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
+        [BDAPersistantSettingsField] public static bool BULLET_DECALS = true;
         [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;                 //TODO: remove all references to this so it can be deprecated!
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
         [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;  

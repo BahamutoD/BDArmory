@@ -1371,7 +1371,8 @@ namespace BDArmory.UI
             BDArmorySettings.ALLOW_LEGACY_TARGETING = GUI.Toggle(SLeftRect(line), BDArmorySettings.ALLOW_LEGACY_TARGETING, "Legacy Targeting");
             BDArmorySettings.SHELL_COLLISIONS = GUI.Toggle(SRightRect(line), BDArmorySettings.SHELL_COLLISIONS, "Shell Collisions");
             line++;
-            BDArmorySettings.PERFORMANCE_LOGGING = GUI.Toggle(SLeftRect(line), BDArmorySettings.PERFORMANCE_LOGGING, "Performance Logging");
+            BDArmorySettings.BULLET_DECALS = GUI.Toggle(SLeftRect(line), BDArmorySettings.BULLET_DECALS, "Bullet Hole Decals");
+            BDArmorySettings.PERFORMANCE_LOGGING = GUI.Toggle(SRightRect(line), BDArmorySettings.PERFORMANCE_LOGGING, "Performance Logging");
             line++;
             line++;
 

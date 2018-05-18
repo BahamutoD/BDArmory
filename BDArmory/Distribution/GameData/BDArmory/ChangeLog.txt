@@ -10,6 +10,7 @@
   * Increased the number of range steps in the Radar.  Now can display up to 1000km by default.
   * Added Dynamic range settings to Radar Display based on the max range of the radars in operation.
   * Added close buttons to the upper right of some windows.
+  * Added option in Settings to turn off Bullet Hole Decals (may help with performance)
 
 * FIXES
   * Cleaned up obsolete and deprecated unity method calls.
