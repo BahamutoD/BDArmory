@@ -1,6 +1,7 @@
 ﻿v1.2.1.1
 * NEW FEATURES:
   * Added ModuleSpaceRadar.  This limits use of space based radars supporting this module to outside the atmosphere. By DoctorDivinchi and Kergan
+  * Added Air to ground versions of Air to Air radars.  By SpannerMonkey(smce)
 
 * ENHANCEMENTS:
   * Added boundary checking to all moveable windows.  Now windows cannot be positioned off the screen.
