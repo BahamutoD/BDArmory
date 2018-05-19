@@ -90,7 +90,7 @@ namespace BDArmory.Misc
                     return true;
                 if (wm.wingCommander && wm.wingCommander.showGUI)
                 {
-                    if (wm.wingCommander.guiWindowRect.Contains(inverseMousePos)) return true;
+                    if (BDArmorySetup.WindowRectWingCommander.Contains(inverseMousePos)) return true;
                     if (wm.wingCommander.showAGWindow && wm.wingCommander.agWindowRect.Contains(inverseMousePos))
                         return true;
                 }

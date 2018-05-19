@@ -239,12 +239,13 @@ namespace BDArmory.Control
 
 
         public bool showGUI;
-        public Rect guiWindowRect;
         bool rectInit;
         float buttonStartY = 30;
         float buttonHeight = 24;
         float buttonGap = 3;
         float margin = 6;
+        private float windowWidth = 240;
+        private float windowHeight = 800;
         float buttonWidth;
         float buttonEndY;
         GUIStyle wingmanButtonStyle;
@@ -258,8 +259,9 @@ namespace BDArmory.Control
             {
                 if (!rectInit)
                 {
-                    guiWindowRect = new Rect(45, 75, 240, 800);
-                    buttonWidth = guiWindowRect.width - (2*margin);
+                    // this Rect initialization ensures any save issues with height or width of the window are resolved
+                    BDArmorySetup.WindowRectWingCommander = new Rect(BDArmorySetup.WindowRectWingCommander.x, BDArmorySetup.WindowRectWingCommander.y, windowWidth, windowHeight);
+                    buttonWidth = BDArmorySetup.WindowRectWingCommander.width - (2*margin);
                     buttonEndY = buttonStartY;
                     wingmanButtonStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
                     wingmanButtonStyle.alignment = TextAnchor.MiddleLeft;
@@ -271,7 +273,9 @@ namespace BDArmory.Control
                     wingmanButtonSelectedStyle.fontSize = 11;
                     rectInit = true;
                 }
-                guiWindowRect = GUI.Window(1293293, guiWindowRect, WingmenWindow, "WingCommander",
+                // this Rect initialization ensures any save issues with height or width of the window are resolved
+                BDArmorySetup.WindowRectWingCommander = new Rect(BDArmorySetup.WindowRectWingCommander.x, BDArmorySetup.WindowRectWingCommander.y, windowWidth, windowHeight);
+                BDArmorySetup.WindowRectWingCommander = GUI.Window(1293293, BDArmorySetup.WindowRectWingCommander, WingmenWindow, "WingCommander",
                     BDArmorySetup.BDGuiSkin.window);
 
                 if (showAGWindow) AGWindow();
@@ -305,7 +309,7 @@ namespace BDArmory.Control
         void WingmenWindow(int windowID)
         {
             float height = buttonStartY;
-            GUI.DragWindow(new Rect(0, 0, guiWindowRect.width - buttonStartY - margin - margin, buttonStartY));
+            GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectWingCommander.width - buttonStartY - margin - margin, buttonStartY));
 
             //close buttton
             float xSize = buttonStartY - margin - margin;
@@ -373,9 +377,9 @@ namespace BDArmory.Control
 
             //resize window
             height += ((commandButtonLine - 1)*(buttonHeight + buttonGap));
-            guiWindowRect.height = height;
-            GUI.DragWindow(guiWindowRect);
-            BDGUIUtils.RepositionWindow(ref guiWindowRect);
+            BDArmorySetup.WindowRectWingCommander.height = height;
+            GUI.DragWindow(BDArmorySetup.WindowRectWingCommander);
+            BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectWingCommander);
         }
 
         void WingmanButton(int index, out float buttonEndY)
@@ -495,7 +499,7 @@ namespace BDArmory.Control
             float buttonHeight = 20;
             float agMargin = 5;
             float newHeight = 0;
-            agWindowRect = new Rect(guiWindowRect.x + guiWindowRect.width, guiWindowRect.y, width, agWindowHeight);
+            agWindowRect = new Rect(BDArmorySetup.WindowRectWingCommander.x + BDArmorySetup.WindowRectWingCommander.width, BDArmorySetup.WindowRectWingCommander.y, width, agWindowHeight);
             GUI.Box(agWindowRect, string.Empty, BDArmorySetup.BDGuiSkin.window);
             GUI.BeginGroup(agWindowRect);
             newHeight += agMargin;

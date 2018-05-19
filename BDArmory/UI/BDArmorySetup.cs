@@ -29,6 +29,8 @@ namespace BDArmory.UI
         [BDAWindowSettingsField] public static Rect WindowRectRadar;
         [BDAWindowSettingsField] public static Rect WindowRectRwr;
         [BDAWindowSettingsField] public static Rect WindowRectVesselSwitcher;
+        [BDAWindowSettingsField] public static Rect WindowRectWingCommander = new Rect(45, 75, 240, 800);
+
 
         //reflection field lists
         FieldInfo[] iFs;
@@ -412,6 +414,7 @@ namespace BDArmory.UI
             BDGUIUtils.RepositionWindow(ref WindowRectSettings);
             BDGUIUtils.RepositionWindow(ref WindowRectRwr);
             BDGUIUtils.RepositionWindow(ref WindowRectVesselSwitcher);
+            BDGUIUtils.RepositionWindow(ref WindowRectWingCommander);
         }
 
         void Update()

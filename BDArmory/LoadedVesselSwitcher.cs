@@ -24,11 +24,6 @@ namespace BDArmory
 
         //gui params
         private float _windowHeight; //auto adjusting
-        internal Rect WindowRect
-        {
-            get { return BDArmorySetup.WindowRectVesselSwitcher; }
-            set { BDArmorySetup.WindowRectVesselSwitcher = value; }
-        }
         private readonly float _windowWidth = 250;
 
         private List<MissileFire> _wmgrsA;
@@ -61,7 +56,7 @@ namespace BDArmory
             FloatingOrigin.fetch.thresholdSqr = 20000*20000; //20km
             Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
 
-            //_windowRect = new Rect(10, Screen.height / 6f, _windowWidth, 10); // now tied to BDArmorySetup persisted field!
+            //BDArmorySetup.WindowRectVesselSwitcher = new Rect(10, Screen.height / 6f, _windowWidth, 10);
         }
 
         private void OnDestroy()
@@ -163,9 +158,11 @@ namespace BDArmory
                 if (_showGui && BDArmorySetup.GAME_UI_ENABLED)
                 {
                     SetNewHeight(_windowHeight);
-                    WindowRect = GUI.Window(10293444, WindowRect, ListWindow, "BDA Vessel Switcher",
+                    // this Rect initialization ensures any save issues with height or width of the window are resolved
+                    BDArmorySetup.WindowRectVesselSwitcher = new Rect(BDArmorySetup.WindowRectVesselSwitcher.x, BDArmorySetup.WindowRectVesselSwitcher.y, _windowWidth, _windowHeight);
+                    BDArmorySetup.WindowRectVesselSwitcher = GUI.Window(10293444, BDArmorySetup.WindowRectVesselSwitcher, ListWindow, "BDA Vessel Switcher",
                         BDArmorySetup.BDGuiSkin.window);
-                    Misc.Misc.UpdateGUIRect(WindowRect, _guiCheckIndex);
+                    Misc.Misc.UpdateGUIRect(BDArmorySetup.WindowRectVesselSwitcher, _guiCheckIndex);
                 }
                 else
                 {
