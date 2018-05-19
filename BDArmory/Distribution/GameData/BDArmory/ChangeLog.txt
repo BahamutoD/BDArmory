@@ -1,6 +1,6 @@
 ﻿v1.2.1.1
 * NEW FEATURES:
-  * Added ModuleSpaceRadar.  This limits use of space based radars supporting this module to outside the atmosphere. By DoctorDivinchi and Kergan
+  * Added ModuleSpaceRadar.  This limits use of space based radars supporting this module to outside the atmosphere. By DoctorDavinci and Kergan
   * Added Air to ground versions of Air to Air radars.  By SpannerMonkey(smce)
   * Added new explosion effects.  By SpanerMonkey(smce)
 
