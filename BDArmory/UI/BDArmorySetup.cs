@@ -1405,7 +1405,6 @@ namespace BDArmory.UI
                   RadarWarningReceiver.RwrDisplayRect.height + RadarWarningReceiver.BorderSize, 
                   RadarWarningReceiver.RwrDisplayRect.height + RadarWarningReceiver.BorderSize + RadarWarningReceiver.HeaderSize);
             }
-            //BDArmorySettings.RWR_WINDOW_SCALE = Mathf.Round(rwrSize * 100.0f) * 0.01f; 
             line++;
 
             GUI.Label(SLeftRect(line), "Radar Window Scale: " + (BDArmorySettings.RADAR_WINDOW_SCALE * 100).ToString("0") + "%", leftLabel);
@@ -1423,7 +1422,6 @@ namespace BDArmory.UI
                   VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.ControlsWidth + VesselRadarData.Gap *2, 
                   VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.HeaderSize);
             }
-            //BDArmorySettings.RADAR_WINDOW_SCALE = Mathf.Round(radarSize * 100.0f) * 0.01f;
             line++;
             line++;
           

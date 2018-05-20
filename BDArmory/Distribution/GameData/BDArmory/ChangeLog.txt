@@ -1,4 +1,8 @@
-﻿v1.2.1.1
+﻿v1.2.1.2
+* FIXES
+  * Correct Raar display when using low quality graphics Git Issue 516.
+
+v1.2.1.1
 * NEW FEATURES:
   * Added ModuleSpaceRadar.  This limits use of space based radars supporting this module to outside the atmosphere. By DoctorDavinci and Kergan
   * Added Air to ground versions of Air to Air radars.  By SpannerMonkey(smce)
