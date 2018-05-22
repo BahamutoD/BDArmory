@@ -2,6 +2,7 @@
 * FIXES
   * Correct Radar display missing graphics when using low quality graphics Git Issue #516.
   * Correct tracer display missing graphics when using low quality graphics.  Git Issue #520.
+  * Reintroduce BDAcUniversalAmmoBox Module Manager config file.  Somehow was dropped during a merge somewhere back.
 
 v1.2.1.1
 * NEW FEATURES:
