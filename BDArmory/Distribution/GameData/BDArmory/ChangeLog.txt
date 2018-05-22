@@ -1,6 +1,7 @@
 ﻿v1.2.1.2
 * FIXES
-  * Correct Raar display when using low quality graphics Git Issue 516.
+  * Correct Radar display missing graphics when using low quality graphics Git Issue #516.
+  * Correct tracer display missing graphics when using low quality graphics.  Git Issue #520.
 
 v1.2.1.1
 * NEW FEATURES:

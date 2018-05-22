@@ -569,7 +569,6 @@
     <Content Include="Distribution\GameData\BDArmory\Sounds\windloop.wav" />
     <Content Include="Distribution\GameData\BDArmory\Textures\aimer.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\bullet.png" />
-    <Content Include="Distribution\GameData\BDArmory\Textures\bullet_backup.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\camReticle.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\crossedGreenSquare.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\directionIcon.png" />
