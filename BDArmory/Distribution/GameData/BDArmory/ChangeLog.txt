@@ -3,6 +3,8 @@
   * Correct Radar display missing graphics when using low quality graphics Git Issue #516.
   * Correct tracer display missing graphics when using low quality graphics.  Git Issue #520.
   * Reintroduce BDAcUniversalAmmoBox Module Manager config file.  Somehow was dropped during a merge somewhere back.
+  * Increase the limits of the Radar and RWR window scaling to allow for larger windows.  
+    Add min and max settings to the settings.cfg to allow user defined limits. Git Issue #521
 
 v1.2.1.1
 * NEW FEATURES:

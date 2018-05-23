@@ -1395,7 +1395,7 @@ namespace BDArmory.UI
 
             GUI.Label(SLeftRect(line), "RWR Window Scale: " + (BDArmorySettings.RWR_WINDOW_SCALE * 100).ToString("0") + "%", leftLabel);
             float rwrSize = BDArmorySettings.RWR_WINDOW_SCALE;
-            rwrSize = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), rwrSize, 0.50f, 1.00f) * 100.0f) * 0.01f;
+            rwrSize = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), rwrSize, BDArmorySettings.RWR_WINDOW_SCALE_MIN, BDArmorySettings.RWR_WINDOW_SCALE_MAX) * 100.0f) * 0.01f;
             if (rwrSize.ToString(CultureInfo.InvariantCulture) != BDArmorySettings.RWR_WINDOW_SCALE.ToString(CultureInfo.InvariantCulture))
             {
               BDArmorySettings.RWR_WINDOW_SCALE = rwrSize;
@@ -1409,7 +1409,7 @@ namespace BDArmory.UI
 
             GUI.Label(SLeftRect(line), "Radar Window Scale: " + (BDArmorySettings.RADAR_WINDOW_SCALE * 100).ToString("0") + "%", leftLabel);
             float radarSize = BDArmorySettings.RADAR_WINDOW_SCALE;
-            radarSize = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), radarSize, 0.50f, 1.00f) * 100.0f) * 0.01f;
+            radarSize = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), radarSize, BDArmorySettings.RADAR_WINDOW_SCALE_MIN, BDArmorySettings.RADAR_WINDOW_SCALE_MAX) * 100.0f) * 0.01f;
             if (radarSize.ToString(CultureInfo.InvariantCulture) != BDArmorySettings.RADAR_WINDOW_SCALE.ToString(CultureInfo.InvariantCulture))
             {
               BDArmorySettings.RADAR_WINDOW_SCALE = radarSize;
