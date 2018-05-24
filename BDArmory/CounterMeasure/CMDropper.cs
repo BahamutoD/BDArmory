@@ -197,10 +197,12 @@ namespace BDArmory.CounterMeasure
             GameObject cm = flarePool.GetPooledObject();
             cm.transform.position = transform.position;
             CMFlare cmf = cm.GetComponent<CMFlare>();
-            cmf.startVelocity = part.rb.velocity + (ejectVelocity*transform.up) +
-                                (UnityEngine.Random.Range(-3f, 3f)*transform.forward) +
-                                (UnityEngine.Random.Range(-3f, 3f)*transform.right);
-            cmf.sourceVessel = vessel;
+            cmf.velocity = part.rb.velocity
+                + Krakensbane.GetFrameVelocityV3f()
+                + (ejectVelocity * transform.up)
+                + (UnityEngine.Random.Range(-3f, 3f) * transform.forward)
+                + (UnityEngine.Random.Range(-3f, 3f) * transform.right);
+            cmf.SetThermal(vessel);
 
             cm.SetActive(true);
 
