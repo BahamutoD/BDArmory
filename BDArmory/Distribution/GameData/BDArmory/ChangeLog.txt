@@ -2,9 +2,16 @@
 * FIXES
   * Correct Radar display missing graphics when using low quality graphics Git Issue #516.
   * Correct tracer display missing graphics when using low quality graphics.  Git Issue #520.
+  * Correct automatic resizing of WingCommander Window
   * Reintroduce BDAcUniversalAmmoBox Module Manager config file.  Somehow was dropped during a merge somewhere back.
+  * Separate RWR operation from RWR display.  RWR should be enabled at all times when a Radar is installed on craft. 
+    - Opening and closing the RWR window now leaves RWR operation active.  Git Issues 410, #411, #461
+
+* ENHANCEMENTS:
   * Increase the limits of the Radar and RWR window scaling to allow for larger windows.  
-    Add min and max settings to the settings.cfg to allow user defined limits. Git Issue #521
+    - Add min and max settings to the settings.cfg to allow user defined limits. Git Issue #521
+  * Add mouse driven RWR and Radar windows resizing.  Now you can intuitivly resize by mouse.
+
 
 v1.2.1.1
 * NEW FEATURES:
@@ -14,12 +21,12 @@ v1.2.1.1
 
 * ENHANCEMENTS:
   * Added boundary checking to all moveable windows.  Now windows cannot be positioned off the screen.
-  * Added ability to scale Radar Warning Receiver Window.  Scale persists to config file and can be changed in Settings.
-  * Redesigned and added ability to scale Radar Window.  Scale persists to config file and can be changed in Settings.
-  * Added a toggle to collapse/expand the list of weapons on the Weapon Manager window.
+  * Added ability to scale Radar Warning Receiver Window.  Scale persists to config file and can be changed in Settings. Git Issue #410
+  * Redesigned and added ability to scale Radar Window.  Scale persists to config file and can be changed in Settings. Git Issue #410
+  * Added a toggle to collapse/expand the list of weapons on the Weapon Manager window. Git Issue #410
   * Increased the number of range steps in the Radar.  Now can display up to 1000km by default.
   * Added Dynamic range settings to Radar Display based on the max range of the radars in operation.
-  * Added close buttons to the upper right of some windows.
+  * Added close buttons to the upper right of some windows. Git Issue #410
   * Added option in Settings to turn off Bullet Hole Decals (may help with performance)
 
 * FIXES

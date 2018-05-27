@@ -1052,7 +1052,7 @@ namespace BDArmory
                     }
                     else if (missile.TargetingMode == MissileBase.TargetingModes.AntiRad)
                     {
-                        if (rwr && rwr.rwrEnabled)
+                        if (rwr && rwr.rwrEnabled && rwr.displayRWR)
                         {
                             for (int i = 0; i < rwr.pingsData.Length; i++)
                             {
@@ -1420,10 +1420,11 @@ namespace BDArmory
                 {
                     if (rwr)
                     {
-                        rwr.EnableRWR();
+                        if (!rwr.rwrEnabled) rwr.EnableRWR();
+                        if (rwr.rwrEnabled && !rwr.displayRWR) rwr.displayRWR = true;
                     }
 
-                    float attemptStartTime = Time.time;
+          float attemptStartTime = Time.time;
                     float attemptDuration = targetScanInterval * 0.75f;
                     while (Time.time - attemptStartTime < attemptDuration &&
                            (!antiRadTargetAcquired || (antiRadiationTarget - guardTarget.CoM).sqrMagnitude > 20*20))
@@ -4117,10 +4118,8 @@ namespace BDArmory
 
             if (results.foundMissile)
             {
-                if (rwr && !rwr.rwrEnabled)
-                {
-                    rwr.EnableRWR();
-                }
+                if (rwr && !rwr.rwrEnabled) rwr.EnableRWR();
+                if (rwr && rwr.rwrEnabled && !rwr.displayRWR) rwr.displayRWR = true;
             }
 
             if (results.foundHeatMissile)

@@ -34,7 +34,18 @@ namespace BDArmory.Radar
 
         public MissileFire weaponManager;
 
+        // This field may not need to be persistent.  It was combining display with active RWR status.
         [KSPField(isPersistant = true)] public bool rwrEnabled;
+        // This field was added to separate RWR active status from the display of the RWR.  the RWR should be running all the time...
+        public bool displayRWR = false;
+        internal static bool resizingWindow = false;
+        internal static Vector2 oldMousePos = new Vector2(0,0);
+
+        public Rect RWRresizeRect = new Rect(
+            BDArmorySetup.WindowRectRwr.width - (16 * BDArmorySettings.RWR_WINDOW_SCALE), 
+            BDArmorySetup.WindowRectRwr.height - (16 * BDArmorySettings.RWR_WINDOW_SCALE), 
+            (16 * BDArmorySettings.RWR_WINDOW_SCALE),
+            (16 * BDArmorySettings.RWR_WINDOW_SCALE));
 
         public static Texture2D rwrDiamondTexture =
             GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "rwrDiamond", false);
@@ -144,9 +155,10 @@ namespace BDArmory.Radar
                     }
                 }
                 mf.Dispose();
-                if (rwrEnabled) EnableRWR();
+                //if (rwrEnabled) EnableRWR();
+                EnableRWR();
             }
-        }
+    }
 
         void UpdateVolume()
         {
@@ -335,24 +347,31 @@ namespace BDArmory.Radar
         void OnGUI()
         {
           if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !BDArmorySetup.GAME_UI_ENABLED ||
-              !vessel.isActiveVessel || !rwrEnabled) return;
+              !vessel.isActiveVessel || !displayRWR) return;
           if (audioSourceRepeatDelay > 0)
               audioSourceRepeatDelay -= Time.fixedDeltaTime;
 
+          if (Event.current.type == EventType.MouseUp && resizingWindow)
+          {
+            resizingWindow = false;
+            oldMousePos = new Vector2(0, 0);
+          }
+
           BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, RWRWindow,
             "Radar Warning Receiver", GUI.skin.window);
-          BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectRwr);
-        }
+          BDGUIUtils.UseMouseEventInRect(RwrDisplayRect);
 
-        void RWRWindow(int windowID)
+    }
+
+    void RWRWindow(int windowID)
         {
             GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectRwr.width - 18, 30));
             if (GUI.Button(new Rect(BDArmorySetup.WindowRectRwr.width - 18, 2, 16, 16), "X", GUI.skin.button))
             {
-                DisableRWR();
+                displayRWR = false;
             }
             GUI.BeginGroup(new Rect(BorderSize / 2, HeaderSize + (BorderSize / 2), RwrDisplayRect.width, RwrDisplayRect.height));
-            GUI.DragWindow(RwrDisplayRect);
+            //GUI.DragWindow(RwrDisplayRect);
 
             GUI.DrawTexture(RwrDisplayRect, VesselRadarData.omniBgTexture, ScaleMode.StretchToFill, false);
             float pingSize = 32 * BDArmorySettings.RWR_WINDOW_SCALE;
@@ -388,10 +407,52 @@ namespace BDArmory.Radar
             }
             lw.Dispose();
             GUI.EndGroup();
+            
+            // Resizing code block.
+            RWRresizeRect =
+                new Rect(
+                    (BDArmorySetup.WindowRectRwr.width - (17 * BDArmorySettings.RWR_WINDOW_SCALE)),
+                    (BDArmorySetup.WindowRectRwr.height - (17 * BDArmorySettings.RWR_WINDOW_SCALE)),
+                    (16 * BDArmorySettings.RWR_WINDOW_SCALE),
+                    (16 * BDArmorySettings.RWR_WINDOW_SCALE));
+            GUI.DrawTexture(RWRresizeRect, Misc.Misc.resizeTexture, ScaleMode.StretchToFill, true);
+            if (Event.current.type == EventType.MouseDown && RWRresizeRect.Contains(Event.current.mousePosition))
+            {
+                resizingWindow = true;
+                oldMousePos = Event.current.mousePosition;
+            }
+
+            if (Event.current.type == EventType.Repaint && resizingWindow)
+            {
+                Vector2 currMousePos = Event.current.mousePosition;
+                if (currMousePos.x != oldMousePos.x || currMousePos.y != oldMousePos.y)
+                {
+                    float diff = (currMousePos.x + currMousePos.y) - (oldMousePos.x + oldMousePos.y);
+                    oldMousePos = currMousePos;
+                    UpateRWRScale(diff);
+                    BDArmorySetup.ResizeRwrWindow(BDArmorySettings.RWR_WINDOW_SCALE);
+                }
+            }
+            // End Resizing code.
+
             BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectRwr);
         }
 
-        public static void PingRWR(Vessel v, Vector3 source, RWRThreatTypes type, float persistTime)
+      internal static void UpateRWRScale(float diff)
+      {
+        float scaleDiff = ((diff / (BDArmorySetup.WindowRectRwr.width + BDArmorySetup.WindowRectRwr.height)) * 100 * .01f);
+        BDArmorySettings.RWR_WINDOW_SCALE += Mathf.Abs(scaleDiff) > .01f ? scaleDiff : scaleDiff > 0 ? .01f : -.01f;
+        BDArmorySettings.RWR_WINDOW_SCALE =
+          BDArmorySettings.RWR_WINDOW_SCALE > BDArmorySettings.RWR_WINDOW_SCALE_MAX
+            ? BDArmorySettings.RWR_WINDOW_SCALE_MAX
+            : BDArmorySettings.RWR_WINDOW_SCALE;
+        BDArmorySettings.RWR_WINDOW_SCALE =
+          BDArmorySettings.RWR_WINDOW_SCALE_MIN > BDArmorySettings.RWR_WINDOW_SCALE
+            ? BDArmorySettings.RWR_WINDOW_SCALE_MIN
+            : BDArmorySettings.RWR_WINDOW_SCALE;
+      }
+
+      public static void PingRWR(Vessel v, Vector3 source, RWRThreatTypes type, float persistTime)
         {
             if (OnRadarPing != null)
             {

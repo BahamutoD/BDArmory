@@ -12,6 +12,9 @@ namespace BDArmory.Misc
 {
     public static class Misc
     {
+        public static Texture2D resizeTexture =
+          GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "resizeSquare", false);
+
         public static Color ParseColor255(string color)
         {
             Color outputColor = new Color(0, 0, 0, 1);
@@ -86,7 +89,7 @@ namespace BDArmory.Misc
                     if (wm.vesselRadarData.linkWindowOpen && wm.vesselRadarData.linkWindowRect.Contains(inverseMousePos))
                         return true;
                 }
-                if (wm.rwr && wm.rwr.rwrEnabled && BDArmorySetup.WindowRectRwr.Contains(inverseMousePos))
+                if (wm.rwr && wm.rwr.rwrEnabled && wm.rwr.displayRWR && BDArmorySetup.WindowRectRwr.Contains(inverseMousePos))
                     return true;
                 if (wm.wingCommander && wm.wingCommander.showGUI)
                 {
@@ -105,6 +108,11 @@ namespace BDArmory.Misc
             }
 
             return false;
+        }
+
+        public static void ResizeGuiWindow(Rect windowrect, Vector2 mousePos)
+        {
+            
         }
 
         public static List<Rect> extraGUIRects;

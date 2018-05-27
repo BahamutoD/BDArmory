@@ -595,6 +595,7 @@
     <Content Include="Distribution\GameData\BDArmory\Textures\radarContactIcon.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\radarRollIndicator.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\radialRadarTexture.png" />
+    <Content Include="Distribution\GameData\BDArmory\Textures\resizeSquare.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\rollIndicator.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\rollReference.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\rwrDiamond.png" />

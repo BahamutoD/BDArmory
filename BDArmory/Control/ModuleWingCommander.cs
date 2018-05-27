@@ -245,7 +245,7 @@ namespace BDArmory.Control
         float buttonGap = 3;
         float margin = 6;
         private float windowWidth = 240;
-        private float windowHeight = 800;
+        private float windowHeight = 100;
         float buttonWidth;
         float buttonEndY;
         GUIStyle wingmanButtonStyle;
@@ -274,7 +274,7 @@ namespace BDArmory.Control
                     rectInit = true;
                 }
                 // this Rect initialization ensures any save issues with height or width of the window are resolved
-                BDArmorySetup.WindowRectWingCommander = new Rect(BDArmorySetup.WindowRectWingCommander.x, BDArmorySetup.WindowRectWingCommander.y, windowWidth, windowHeight);
+                //BDArmorySetup.WindowRectWingCommander = new Rect(BDArmorySetup.WindowRectWingCommander.x, BDArmorySetup.WindowRectWingCommander.y, windowWidth, windowHeight);
                 BDArmorySetup.WindowRectWingCommander = GUI.Window(1293293, BDArmorySetup.WindowRectWingCommander, WingmenWindow, "WingCommander",
                     BDArmorySetup.BDGuiSkin.window);
 
