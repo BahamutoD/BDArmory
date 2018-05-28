@@ -11,6 +11,7 @@
   * Increase the limits of the Radar and RWR window scaling to allow for larger windows.  
     - Add min and max settings to the settings.cfg to allow user defined limits. Git Issue #521
   * Add mouse driven RWR and Radar windows resizing.  Now you can intuitivly resize by mouse.
+  * Retune BDAc missiles to improve characteristics, performance, and balance.  Tuning performed by Kergan
 
 
 v1.2.1.1
