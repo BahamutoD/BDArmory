@@ -628,7 +628,7 @@ namespace BDArmory
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Open GUI", active = true)]
         public void ToggleToolbarGUI()
         {
-            BDArmorySetup.toolbarGuiEnabled = !BDArmorySetup.toolbarGuiEnabled;
+            BDArmorySetup.windowBDAToolBarEnabled = !BDArmorySetup.windowBDAToolBarEnabled;
         }
 
         #endregion
@@ -1071,7 +1071,7 @@ namespace BDArmory
                     }
                 }
 
-                if ((missile && missile.TargetingMode == MissileBase.TargetingModes.Gps) || BDArmorySetup.Instance.showingGPSWindow)
+                if ((missile && missile.TargetingMode == MissileBase.TargetingModes.Gps) || BDArmorySetup.Instance.showingWindowGPS)
                 {
                     if (designatedGPSCoords != Vector3d.zero)
                     {

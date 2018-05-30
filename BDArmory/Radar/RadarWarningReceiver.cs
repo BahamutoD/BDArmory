@@ -39,7 +39,6 @@ namespace BDArmory.Radar
         // This field was added to separate RWR active status from the display of the RWR.  the RWR should be running all the time...
         public bool displayRWR = false;
         internal static bool resizingWindow = false;
-        internal static Vector2 oldMousePos = new Vector2(0,0);
 
         public Rect RWRresizeRect = new Rect(
             BDArmorySetup.WindowRectRwr.width - (16 * BDArmorySettings.RWR_WINDOW_SCALE), 
@@ -354,16 +353,15 @@ namespace BDArmory.Radar
           if (Event.current.type == EventType.MouseUp && resizingWindow)
           {
             resizingWindow = false;
-            oldMousePos = new Vector2(0, 0);
           }
 
-          BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, RWRWindow,
+          BDArmorySetup.WindowRectRwr = GUI.Window(94353, BDArmorySetup.WindowRectRwr, WindowRwr,
             "Radar Warning Receiver", GUI.skin.window);
           BDGUIUtils.UseMouseEventInRect(RwrDisplayRect);
 
     }
 
-    void RWRWindow(int windowID)
+    internal void WindowRwr(int windowID)
         {
             GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectRwr.width - 18, 30));
             if (GUI.Button(new Rect(BDArmorySetup.WindowRectRwr.width - 18, 2, 16, 16), "X", GUI.skin.button))
@@ -410,26 +408,19 @@ namespace BDArmory.Radar
             
             // Resizing code block.
             RWRresizeRect =
-                new Rect(
-                    (BDArmorySetup.WindowRectRwr.width - (17 * BDArmorySettings.RWR_WINDOW_SCALE)),
-                    (BDArmorySetup.WindowRectRwr.height - (17 * BDArmorySettings.RWR_WINDOW_SCALE)),
-                    (16 * BDArmorySettings.RWR_WINDOW_SCALE),
-                    (16 * BDArmorySettings.RWR_WINDOW_SCALE));
+                new Rect(BDArmorySetup.WindowRectRwr.width - 18, BDArmorySetup.WindowRectRwr.height - 18, 16, 16);
             GUI.DrawTexture(RWRresizeRect, Misc.Misc.resizeTexture, ScaleMode.StretchToFill, true);
             if (Event.current.type == EventType.MouseDown && RWRresizeRect.Contains(Event.current.mousePosition))
             {
                 resizingWindow = true;
-                oldMousePos = Event.current.mousePosition;
             }
 
             if (Event.current.type == EventType.Repaint && resizingWindow)
             {
-                Vector2 currMousePos = Event.current.mousePosition;
-                if (currMousePos.x != oldMousePos.x || currMousePos.y != oldMousePos.y)
+                if (Mouse.delta.x != 0 || Mouse.delta.y != 0)
                 {
-                    float diff = (currMousePos.x + currMousePos.y) - (oldMousePos.x + oldMousePos.y);
-                    oldMousePos = currMousePos;
-                    UpateRWRScale(diff);
+                    float diff = Mouse.delta.x + Mouse.delta.y;
+                    UpdateRWRScale(diff);
                     BDArmorySetup.ResizeRwrWindow(BDArmorySettings.RWR_WINDOW_SCALE);
                 }
             }
@@ -438,7 +429,7 @@ namespace BDArmory.Radar
             BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectRwr);
         }
 
-      internal static void UpateRWRScale(float diff)
+      internal static void UpdateRWRScale(float diff)
       {
         float scaleDiff = ((diff / (BDArmorySetup.WindowRectRwr.width + BDArmorySetup.WindowRectRwr.height)) * 100 * .01f);
         BDArmorySettings.RWR_WINDOW_SCALE += Mathf.Abs(scaleDiff) > .01f ? scaleDiff : scaleDiff > 0 ? .01f : -.01f;

@@ -15,7 +15,6 @@ namespace BDArmory.Radar
         private List<VesselRadarData> externalVRDs;
         private float _maxRadarRange = 0;
         internal bool resizingWindow = false;
-        internal static Vector2 oldMousePos = new Vector2(0, 0);
 
         public Rect RADARresizeRect = new Rect(
             BDArmorySetup.WindowRectRadar.width - (17 * BDArmorySettings.RADAR_WINDOW_SCALE),
@@ -789,13 +788,12 @@ namespace BDArmory.Radar
             }
 
 
-          if (Event.current.type == EventType.MouseUp && resizingWindow)
-          {
-            resizingWindow = false;
-            oldMousePos = new Vector2(0, 0);
-          }
+            if (Event.current.type == EventType.MouseUp && resizingWindow)
+            {
+                resizingWindow = false;
+            }
             const string windowTitle = "Radar";
-            BDArmorySetup.WindowRectRadar = GUI.Window(524141, BDArmorySetup.WindowRectRadar, RadarWindow, windowTitle, GUI.skin.window);
+            BDArmorySetup.WindowRectRadar = GUI.Window(524141, BDArmorySetup.WindowRectRadar, WindowRadar, windowTitle, GUI.skin.window);
             BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectRadar);
 
             if (linkWindowOpen && canReceiveRadarData)
@@ -812,7 +810,7 @@ namespace BDArmory.Radar
 
         //GUI
         //=============================================
-        private void RadarWindow(int windowID)
+        private void WindowRadar(int windowID)
         {
 
             GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectRadar.width - 18, 30));
@@ -1015,49 +1013,37 @@ namespace BDArmory.Radar
             // Show Control Button group
             DisplayRadarControls();
 
-          // Resizing code block.
-          RADARresizeRect =
-            new Rect(
-              (BDArmorySetup.WindowRectRadar.width - (17 * BDArmorySettings.RADAR_WINDOW_SCALE)),
-              (BDArmorySetup.WindowRectRadar.height - (17 * BDArmorySettings.RADAR_WINDOW_SCALE)),
-              (16 * BDArmorySettings.RADAR_WINDOW_SCALE),
-              (16 * BDArmorySettings.RADAR_WINDOW_SCALE));
-          GUI.DrawTexture(RADARresizeRect, Misc.Misc.resizeTexture, ScaleMode.StretchToFill, true);
-          if (Event.current.type == EventType.MouseDown && RADARresizeRect.Contains(Event.current.mousePosition))
-          {
-            resizingWindow = true;
-            oldMousePos = Event.current.mousePosition;
-          }
-
-          if (Event.current.type == EventType.Repaint && resizingWindow)
-          {
-            Vector2 currMousePos = Event.current.mousePosition;
-            if (currMousePos.x != oldMousePos.x || currMousePos.y != oldMousePos.y)
+            // Resizing code block.
+            RADARresizeRect =
+                new Rect(BDArmorySetup.WindowRectRadar.width - 18, BDArmorySetup.WindowRectRadar.height - 19, 16, 16);
+            GUI.DrawTexture(RADARresizeRect, Misc.Misc.resizeTexture, ScaleMode.StretchToFill, true);
+            if (Event.current.type == EventType.MouseDown && RADARresizeRect.Contains(Event.current.mousePosition))
             {
-              float diff = (currMousePos.x + currMousePos.y) - (oldMousePos.x + oldMousePos.y);
-              oldMousePos = currMousePos;
-              UpateRadarScale(diff);
-              BDArmorySetup.ResizeRadarWindow(BDArmorySettings.RADAR_WINDOW_SCALE);
+                resizingWindow = true;
             }
-          }
-      // End Resizing code.
 
-          BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectRadar);
+            if (Event.current.type == EventType.Repaint && resizingWindow)
+            {
+                if (Mouse.delta.x != 0 || Mouse.delta.y != 0)
+                {
+                    float diff = Mouse.delta.x + Mouse.delta.y;
+                    UpdateRadarScale(diff);
+                    BDArmorySetup.ResizeRadarWindow(BDArmorySettings.RADAR_WINDOW_SCALE);
+                }
+            }
+            // End Resizing code.
+
+            BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectRadar);
         }
 
-      internal static void UpateRadarScale(float diff)
-      {
-        float scaleDiff = ((diff / (BDArmorySetup.WindowRectRadar.width + BDArmorySetup.WindowRectRadar.height)) * 100 * .01f);
-        BDArmorySettings.RADAR_WINDOW_SCALE += Mathf.Abs(scaleDiff) > .01f ? scaleDiff : scaleDiff > 0 ? .01f : -.01f;
-        BDArmorySettings.RADAR_WINDOW_SCALE =
-          BDArmorySettings.RADAR_WINDOW_SCALE > BDArmorySettings.RADAR_WINDOW_SCALE_MAX
-            ? BDArmorySettings.RADAR_WINDOW_SCALE_MAX
-            : BDArmorySettings.RADAR_WINDOW_SCALE;
-        BDArmorySettings.RADAR_WINDOW_SCALE =
-          BDArmorySettings.RADAR_WINDOW_SCALE_MIN > BDArmorySettings.RADAR_WINDOW_SCALE
-            ? BDArmorySettings.RADAR_WINDOW_SCALE_MIN
-            : BDArmorySettings.RADAR_WINDOW_SCALE;
-      }
+        internal static void UpdateRadarScale(float diff)
+        {
+            float scaleDiff = ((diff / (BDArmorySetup.WindowRectRadar.width + BDArmorySetup.WindowRectRadar.height)) * 100 * .01f);
+            BDArmorySettings.RADAR_WINDOW_SCALE += Mathf.Abs(scaleDiff) > .01f ? scaleDiff : scaleDiff > 0 ? .01f : -.01f;
+            BDArmorySettings.RADAR_WINDOW_SCALE = Mathf.Clamp(BDArmorySettings.RADAR_WINDOW_SCALE,
+                BDArmorySettings.RADAR_WINDOW_SCALE_MIN,
+                BDArmorySettings.RADAR_WINDOW_SCALE_MAX);
+        }
 
         private void DisplayRange()
         {

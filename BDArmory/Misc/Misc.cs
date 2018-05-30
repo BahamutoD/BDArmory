@@ -75,9 +75,9 @@ namespace BDArmory.Misc
 
 
             if (topGui.Contains(inverseMousePos)) return true;
-            if (BDArmorySetup.toolbarGuiEnabled && BDArmorySetup.WindowRectToolbar.Contains(inverseMousePos))
+            if (BDArmorySetup.windowBDAToolBarEnabled && BDArmorySetup.WindowRectToolbar.Contains(inverseMousePos))
                 return true;
-            if (ModuleTargetingCamera.windowIsOpen && ModuleTargetingCamera.camWindowRect.Contains(inverseMousePos))
+            if (ModuleTargetingCamera.windowIsOpen && BDArmorySetup.WindowRectTargetingCam.Contains(inverseMousePos))
                 return true;
             if (BDArmorySetup.Instance.ActiveWeaponManager)
             {

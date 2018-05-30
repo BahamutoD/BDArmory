@@ -253,8 +253,6 @@
     <None Include="Distribution\GameData\BDArmory\Parts\ABL\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\adjustableRail\adjustableRail.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\adjustableRail\model.mu" />
-    <None Include="Distribution\GameData\BDArmory\Parts\agm-86Cruise\agm86.cfg" />
-    <None Include="Distribution\GameData\BDArmory\Parts\agm-86Cruise\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aim-120\amraam.cfg" />
@@ -347,8 +345,6 @@
     <None Include="Distribution\GameData\BDArmory\Parts\RBS-15-17AL\rbs15-17AL.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\RBS-15-17\RBS-15-17.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\RBS-15-17\rbs15-17.cfg" />
-    <None Include="Distribution\GameData\BDArmory\Parts\rbs-15\model.mu" />
-    <None Include="Distribution\GameData\BDArmory\Parts\rbs-15\rbs15.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\rotaryBombBay\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\rotaryBombBay\rotaryBombBay.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\model.mu" />
@@ -436,8 +432,6 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\ABL\sounds\laser.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\ABL\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\adjustableRail\texture.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\agm-86Cruise\srbsmoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\agm-86Cruise\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\aim-120\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\aiPilot\SAI1.png" />
@@ -519,8 +513,6 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\radome125\tex_radome125.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\RBS-15-17AL\RBS15-17.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\RBS-15-17\RBS15-17.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\rbs-15\srbsmoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\rbs-15\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\rotaryBombBay\tex_rotBombBay.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\nrm2_NRM.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\s-8Rocket\rocketTexture.png" />

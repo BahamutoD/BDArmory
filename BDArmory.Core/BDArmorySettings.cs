@@ -30,6 +30,9 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static float RADAR_WINDOW_SCALE_MIN = 0.50f;
         [BDAPersistantSettingsField] public static float RADAR_WINDOW_SCALE = 1f;
         [BDAPersistantSettingsField] public static float RADAR_WINDOW_SCALE_MAX = 1.50f;
+        [BDAPersistantSettingsField] public static float TARGET_WINDOW_SCALE_MIN = 0.50f;
+        [BDAPersistantSettingsField] public static float TARGET_WINDOW_SCALE = 1f;
+        [BDAPersistantSettingsField] public static float TARGET_WINDOW_SCALE_MAX = 2f;
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000f;

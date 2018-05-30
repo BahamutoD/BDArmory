@@ -30,10 +30,11 @@ namespace BDArmory.UI
         [BDAWindowSettingsField] public static Rect WindowRectRwr;
         [BDAWindowSettingsField] public static Rect WindowRectVesselSwitcher;
         [BDAWindowSettingsField] public static Rect WindowRectWingCommander = new Rect(45, 75, 240, 800);
+        [BDAWindowSettingsField] public static Rect WindowRectTargetingCam;
 
 
-        //reflection field lists
-        FieldInfo[] iFs;
+      //reflection field lists
+    FieldInfo[] iFs;
 
         FieldInfo[] inputFields
         {
@@ -64,8 +65,8 @@ namespace BDArmory.UI
         public static BDArmorySetup Instance;
         public static bool GAME_UI_ENABLED = true;
 
-        //settings gui
-        public static bool settingsGuiEnabled;
+        //settings gui 
+        public static bool windowSettingsEnabled;
         public string fireKeyGui;
 
         //editor alignment
@@ -74,24 +75,24 @@ namespace BDArmory.UI
         // Gui Skin
         public static GUISkin BDGuiSkin = HighLogic.Skin;
         
-        //toolbar gui
+        //toolbar gui 
         public static bool hasAddedButton = false;
-        public static bool toolbarGuiEnabled;
+        public static bool windowBDAToolBarEnabled;
         float toolWindowWidth = 300;
         float toolWindowHeight = 100;
         bool showWeaponList;
         bool showGuardMenu;
         bool showModules;
         int numberOfModules;
+        bool showWindowGPS;
 
         //gps window
-        public bool showingGPSWindow
+        public bool showingWindowGPS
         {
-            get { return showGPSWindow; }
+            get { return showWindowGPS; }
         }
 
         bool maySavethisInstance = false;
-        bool showGPSWindow;
         float gpsEntryCount;
         float gpsEntryHeight = 24;
         float gpsBorder = 5;
@@ -415,9 +416,10 @@ namespace BDArmory.UI
             BDGUIUtils.RepositionWindow(ref WindowRectRwr);
             BDGUIUtils.RepositionWindow(ref WindowRectVesselSwitcher);
             BDGUIUtils.RepositionWindow(ref WindowRectWingCommander);
+            BDGUIUtils.RepositionWindow(ref WindowRectTargetingCam);
         }
 
-        void Update()
+    void Update()
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -428,7 +430,7 @@ namespace BDArmory.UI
 
                 if (Input.GetKeyDown(KeyCode.KeypadMultiply))
                 {
-                    toolbarGuiEnabled = !toolbarGuiEnabled;
+                    windowBDAToolBarEnabled = !windowBDAToolBarEnabled;
                 }
             }
             else if (HighLogic.LoadedSceneIsEditor)
@@ -443,20 +445,20 @@ namespace BDArmory.UI
             {
                 if (Input.GetKeyDown(KeyCode.B))
                 {
-                    ToggleSettingsGUI();
+                    ToggleWindowSettings();
                 }
             }
         }
 
-        void ToggleSettingsGUI()
+        void ToggleWindowSettings()
         {
             if (HighLogic.LoadedScene == GameScenes.LOADING || HighLogic.LoadedScene == GameScenes.LOADINGBUFFER)
             {
                 return;
             }
 
-            settingsGuiEnabled = !settingsGuiEnabled;
-            if (settingsGuiEnabled)
+            windowSettingsEnabled = !windowSettingsEnabled;
+            if (windowSettingsEnabled)
             {
                 LoadConfig();
             }
@@ -592,9 +594,9 @@ namespace BDArmory.UI
         void OnGUI()
         {
             if (!GAME_UI_ENABLED) return;
-            if (settingsGuiEnabled)
+            if (windowSettingsEnabled)
             {
-                WindowRectSettings = GUI.Window(129419, WindowRectSettings, SettingsGUI, GUIContent.none);
+                WindowRectSettings = GUI.Window(129419, WindowRectSettings, WindowSettings, GUIContent.none);
             }
 
 
@@ -610,10 +612,10 @@ namespace BDArmory.UI
                 GUI.depth = origDepth;
             }
 
-            if (!toolbarGuiEnabled || !HighLogic.LoadedSceneIsFlight) return;
-            WindowRectToolbar = GUI.Window(321, WindowRectToolbar, ToolbarGUI, "BDA Weapon Manager", BDGuiSkin.window);
+            if (!windowBDAToolBarEnabled || !HighLogic.LoadedSceneIsFlight) return;
+            WindowRectToolbar = GUI.Window(321, WindowRectToolbar, WindowBDAToolbar, "BDA Weapon Manager", BDGuiSkin.window);
             BDGUIUtils.UseMouseEventInRect(WindowRectToolbar);
-            if (showGPSWindow && ActiveWeaponManager)
+            if (showWindowGPS && ActiveWeaponManager)
             {
                 //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
                 BDGUIUtils.UseMouseEventInRect(WindowRectGps);
@@ -646,7 +648,7 @@ namespace BDArmory.UI
         float gpsHeight;
         bool toolMinimized;
 
-        void ToolbarGUI(int windowID)
+        void WindowBDAToolbar(int windowID)
         {
             GUI.DragWindow(new Rect(30, 0, toolWindowWidth - 90, 30));
 
@@ -663,7 +665,7 @@ namespace BDArmory.UI
             if (!BDKeyBinder.current &&
                 GUI.Button(new Rect(toolWindowWidth - 30, 4, 26, 26), settingsIconTexture, BDGuiSkin.button))
             {
-                ToggleSettingsGUI();
+                ToggleWindowSettings();
             }
 
             //vesselswitcher button
@@ -1109,12 +1111,12 @@ namespace BDArmory.UI
                         }
 
                     //GPS coordinator
-                    GUIStyle gpsModuleStyle = showGPSWindow ? centerLabelBlue : centerLabel;
+                    GUIStyle gpsModuleStyle = showWindowGPS ? centerLabelBlue : centerLabel;
                     numberOfModules++;
                     if (GUI.Button(new Rect(leftIndent, +(moduleLines*entryHeight), contentWidth, entryHeight),
                         "GPS Coordinator", gpsModuleStyle))
                     {
-                        showGPSWindow = !showGPSWindow;
+                        showWindowGPS = !showWindowGPS;
                     }
                     moduleLines++;
 
@@ -1141,11 +1143,11 @@ namespace BDArmory.UI
                 line += modulesHeight;
 
                 float gpsLines = 0;
-                if (showGPSWindow && !toolMinimized)
+                if (showWindowGPS && !toolMinimized)
                 {
                     line += 0.25f;
                     GUI.BeginGroup(new Rect(5, contentTop + (line*entryHeight), toolWindowWidth, WindowRectGps.height));
-                    GPSWindow();
+                    WindowGPS();
                     GUI.EndGroup();
                     gpsLines = WindowRectGps.height/entryHeight;
                 }
@@ -1169,7 +1171,7 @@ namespace BDArmory.UI
         bool validGPSName = true;
 
         //GPS window
-        public void GPSWindow()
+        public void WindowGPS()
         {
             GUI.Box(WindowRectGps, GUIContent.none, BDGuiSkin.box);
             gpsEntryCount = 0;
@@ -1344,13 +1346,13 @@ namespace BDArmory.UI
             WindowRectSettings = new Rect(settingsLeft, settingsTop, 420, 480);
         }
 
-        void SettingsGUI(int windowID)
+        void WindowSettings(int windowID)
         {
             float line = 1.25f;
             GUI.Box(new Rect(0, 0, settingsWidth, settingsHeight), "BDArmory Settings");
             if (GUI.Button(new Rect(settingsWidth - 18, 2, 16, 16), "X"))
             {
-              settingsGuiEnabled = false;
+              windowSettingsEnabled = false;
             }
             GUI.DragWindow(new Rect(0, 0, settingsWidth, 25));
             if (editKeys)
@@ -1412,6 +1414,15 @@ namespace BDArmory.UI
               ResizeRadarWindow(radarScale);
             }
             line++;
+
+            GUI.Label(SLeftRect(line), "Target Window Scale: " + (BDArmorySettings.TARGET_WINDOW_SCALE * 100).ToString("0") + "%", leftLabel);
+            float targetScale = BDArmorySettings.TARGET_WINDOW_SCALE;
+            targetScale = Mathf.Round(GUI.HorizontalSlider(SRightRect(line), targetScale, BDArmorySettings.TARGET_WINDOW_SCALE_MIN, BDArmorySettings.TARGET_WINDOW_SCALE_MAX) * 100.0f) * 0.01f;
+            if (targetScale.ToString(CultureInfo.InvariantCulture) != BDArmorySettings.TARGET_WINDOW_SCALE.ToString(CultureInfo.InvariantCulture))
+            {
+                ResizeTargetWindow(targetScale);
+            }
+            line++;
             line++;
           
 
@@ -1463,7 +1474,7 @@ namespace BDArmory.UI
                         compDistGui = competitionDist.ToString();
                         BDACompetitionMode.Instance.StartCompetitionMode(competitionDist);
                         SaveConfig();
-                        settingsGuiEnabled = false;
+                        windowSettingsEnabled = false;
                     }
                 }
                 else
@@ -1488,7 +1499,7 @@ namespace BDArmory.UI
             if (!BDKeyBinder.current && GUI.Button(SLineRect(line), "Save and Close"))
             {
                 SaveConfig();
-                settingsGuiEnabled = false;
+                windowSettingsEnabled = false;
             }
 
             line += 1.5f;
@@ -1520,6 +1531,12 @@ namespace BDArmory.UI
             new Rect(WindowRectRadar.x, WindowRectRadar.y,
               VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.ControlsWidth + VesselRadarData.Gap * 3,
               VesselRadarData.RadarDisplayRect.height + VesselRadarData.BorderSize + VesselRadarData.HeaderSize);
+        }
+
+        internal static void ResizeTargetWindow(float targetScale)
+        {
+            BDArmorySettings.TARGET_WINDOW_SCALE = targetScale;
+            ModuleTargetingCamera.ResizeTargetWindow();
         }
 
     void InputSettings()
@@ -1669,7 +1686,5 @@ namespace BDArmory.UI
             SeismicChargeFX.originalMusicVolume = GameSettings.MUSIC_VOLUME;
             SeismicChargeFX.originalAmbienceVolume = GameSettings.AMBIENCE_VOLUME;
         }
-
-       
     }
 }

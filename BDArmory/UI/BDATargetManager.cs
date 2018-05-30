@@ -150,12 +150,12 @@ namespace BDArmory.UI
 		}
 		public void ShowToolbarGUI()
 		{
-			BDArmorySetup.toolbarGuiEnabled = true;	
+			BDArmorySetup.windowBDAToolBarEnabled = true;	
 		}
 
 		public void HideToolbarGUI()
 		{
-			BDArmorySetup.toolbarGuiEnabled = false;	
+			BDArmorySetup.windowBDAToolBarEnabled = false;	
 		}
 		void Dummy()
 		{}
