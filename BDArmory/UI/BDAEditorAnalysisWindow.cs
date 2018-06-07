@@ -132,14 +132,19 @@ namespace BDArmory.UI
         {
             if (showRcsWindow)
             {
-               windowRect = GUI.Window(this.GetInstanceID(), windowRect, RcsWindow, windowTitle, BDArmorySetup.BDGuiSkin.window);
+               windowRect = GUI.Window(this.GetInstanceID(), windowRect, WindowRcs, windowTitle, BDArmorySetup.BDGuiSkin.window);
             }
 
             PreventClickThrough();
         }
 
-        void RcsWindow(int windowID)
+        void WindowRcs(int windowID)
         {
+            if (GUI.Button(new Rect(windowRect.width - 18, 2, 16, 16), "X"))
+            {
+                HideToolbarGUI();
+            }
+
             GUI.Label(new Rect(10, 40, 200, 20), "Frontal", BDArmorySetup.BDGuiSkin.box);
             GUI.Label(new Rect(220, 40, 200, 20), "Lateral", BDArmorySetup.BDGuiSkin.box);
             GUI.Label(new Rect(430, 40, 200, 20), "Ventral",  BDArmorySetup.BDGuiSkin.box);

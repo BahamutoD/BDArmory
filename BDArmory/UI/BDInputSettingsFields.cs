@@ -34,6 +34,8 @@ namespace BDArmory.UI
         public static BDInputInfo RADAR_TURRETS = new BDInputInfo("Slave Turrets");
         public static BDInputInfo RADAR_RANGE_UP = new BDInputInfo("Range +");
         public static BDInputInfo RADAR_RANGE_DN = new BDInputInfo("Range -");
+        public static BDInputInfo RADAR_TARGET_NEXT = new BDInputInfo("Target Next");
+        public static BDInputInfo RADAR_TARGET_PREV = new BDInputInfo("Target Previous");
 
 
         public static void SaveSettings()

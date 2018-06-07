@@ -145,6 +145,19 @@ namespace BDArmory.Radar
                 EnableRadar();
             }
         }
+
+        [KSPAction("Target Next")]
+        public void TargetNext(KSPActionParam param)
+        {
+            vesselRadarData.TargetNext();
+        }
+
+        [KSPAction("Target Prev")]
+        public void TargetPrev(KSPActionParam param)
+        {
+            vesselRadarData.TargetNext();
+        }
+
         #endregion
 
 

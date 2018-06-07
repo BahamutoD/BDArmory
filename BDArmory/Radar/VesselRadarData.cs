@@ -1505,6 +1505,54 @@ namespace BDArmory.Radar
             }
         }
 
+        public void TargetNext()
+        {
+            if (!locked)
+            {
+                // No locked targets, get the first target in the list of displayed targets.
+                if (displayedTargets.Count == 0) return;
+                TryLockTarget(displayedTargets[0]);
+                return;
+            }
+            // We have locked target(s)  Lets see if we can select the next one in the list (if it exists)
+            ModuleRadar rad = displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]].detectedByRadar;
+            if (activeLockedTargetIndex < lockedTargetIndexes.Count - 2)
+                activeLockedTargetIndex++;
+            else
+            {
+                activeLockedTargetIndex = 0;
+            }
+            TryLockTarget(displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]]);
+            rad.UnlockTargetAt(rad.currentLockIndex);
+            UpdateLockedTargets();
+        }
+
+        public void TargetPrev()
+        {
+            if (!locked)
+            {
+                // No locked targets, get the last target in the list of displayed targets.
+                if (displayedTargets.Count == 0) return;
+                TryLockTarget(displayedTargets[displayedTargets.Count-1]);
+                return;
+            }
+            ModuleRadar rad = displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]].detectedByRadar;
+            if (activeLockedTargetIndex > 0)
+                activeLockedTargetIndex--;
+            else
+            {
+                activeLockedTargetIndex = lockedTargetIndexes.Count - 1;
+            }
+
+            if (activeLockedTargetIndex == rad.currentLockIndex && displayedTargets.Count > lockedTargetIndexes.Count)
+            {
+                //TryLockTarget(displayedTargets[displayedTargets.Count - 1]);
+            }
+            TryLockTarget(displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]]);
+            rad.UnlockTargetAt(rad.currentLockIndex);
+            UpdateLockedTargets();
+        }
+
         public void UnlockAllTargetsOfRadar(ModuleRadar radar)
         {
             //radar.UnlockTarget();
@@ -1985,6 +2033,15 @@ namespace BDArmory.Radar
             else if (BDInputUtils.GetKeyDown(BDInputSettingsFields.RADAR_RANGE_DN))
             {
                 DecreaseRange();
+            }
+
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.RADAR_TARGET_NEXT))
+            {
+                TargetNext();
+            }
+            else if (BDInputUtils.GetKeyDown(BDInputSettingsFields.RADAR_TARGET_PREV))
+            {
+                TargetPrev();
             }
         }
 
