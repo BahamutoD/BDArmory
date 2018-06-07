@@ -1507,50 +1507,110 @@ namespace BDArmory.Radar
 
         public void TargetNext()
         {
+            // activeLockedTargetIndex is the index to the list of locked targets.
+            // It contains the index of the displayedTargets.  We are really concerned with the displayed targets here,
+            // but we need to keep the locked targets index list current.
+            int displayedTargetIndex;
             if (!locked)
             {
                 // No locked targets, get the first target in the list of displayed targets.
                 if (displayedTargets.Count == 0) return;
-                TryLockTarget(displayedTargets[0]);
+                displayedTargetIndex = 0;
+                TryLockTarget(displayedTargets[displayedTargetIndex]);
+                lockedTargetIndexes.Add(displayedTargetIndex);
+                UpdateLockedTargets();
                 return;
             }
             // We have locked target(s)  Lets see if we can select the next one in the list (if it exists)
-            ModuleRadar rad = displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]].detectedByRadar;
-            if (activeLockedTargetIndex < lockedTargetIndexes.Count - 2)
-                activeLockedTargetIndex++;
+            displayedTargetIndex = lockedTargetIndexes[activeLockedTargetIndex];
+            // Lets store the displayed target that is ative
+            ModuleRadar rad = displayedTargets[displayedTargetIndex].detectedByRadar;
+            if (lockedTargetIndexes.Count > 1)
+            {
+                // We have more than one locked target.  Switch to the next locked target.
+                if (activeLockedTargetIndex < lockedTargetIndexes.Count - 1)
+                    activeLockedTargetIndex++;
+                else
+                {
+                    activeLockedTargetIndex = 0;
+                }
+                UpdateLockedTargets();
+            }
             else
             {
-                activeLockedTargetIndex = 0;
+                // If we have only one target we are done.
+                if (displayedTargets.Count <= 1) return;
+                // We have more targets to work with so attempt lock on the next available displayed target.
+                if (displayedTargetIndex < displayedTargets.Count - 1)
+                {
+                    displayedTargetIndex++;
+                }
+                else
+                {
+                    displayedTargetIndex = 0;
+                }
+
+                TryLockTarget(displayedTargets[displayedTargetIndex]);
+                if (!displayedTargets[displayedTargetIndex].detectedByRadar) return;
+                // We have a good lock.  Lets update the indexes and locks
+                lockedTargetIndexes.Add(displayedTargetIndex);
+                rad.UnlockTargetAt(rad.currentLockIndex);
+                UpdateLockedTargets();
             }
-            TryLockTarget(displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]]);
-            rad.UnlockTargetAt(rad.currentLockIndex);
-            UpdateLockedTargets();
         }
 
         public void TargetPrev()
         {
+            // activeLockedTargetIndex is the index to the list of locked targets.
+            // It contains the index of the displayedTargets.  We are really concerned with the displayed targets here,
+            // but we need to keep the locked targets index list current.
+            int displayedTargetIndex;
             if (!locked)
             {
                 // No locked targets, get the last target in the list of displayed targets.
                 if (displayedTargets.Count == 0) return;
-                TryLockTarget(displayedTargets[displayedTargets.Count-1]);
+                displayedTargetIndex = displayedTargets.Count - 1;
+                TryLockTarget(displayedTargets[displayedTargetIndex]);
+                lockedTargetIndexes.Add(displayedTargetIndex);
+                UpdateLockedTargets();
                 return;
             }
-            ModuleRadar rad = displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]].detectedByRadar;
-            if (activeLockedTargetIndex > 0)
-                activeLockedTargetIndex--;
+            // We have locked target(s)  Lets see if we can select the previous one in the list (if it exists)
+            displayedTargetIndex = lockedTargetIndexes[activeLockedTargetIndex];
+            // Lets store the displayed target that is ative
+            ModuleRadar rad = displayedTargets[displayedTargetIndex].detectedByRadar;
+            if (lockedTargetIndexes.Count > 1)
+            {
+                // We have more than one locked target.  switch to the previous locked target.
+                if (activeLockedTargetIndex > 0)
+                    activeLockedTargetIndex--;
+                else
+                {
+                    activeLockedTargetIndex = lockedTargetIndexes.Count - 1;
+                }
+                UpdateLockedTargets();
+            }
             else
             {
-                activeLockedTargetIndex = lockedTargetIndexes.Count - 1;
-            }
+                // If we have only one target we are done.
+                if (displayedTargets.Count <= 1) return;
+                // We have more targets to work with so attempt lock on the pevious available displayed target.
+                if (displayedTargetIndex > 0)
+                {
+                    displayedTargetIndex--;
+                }
+                else
+                {
+                    displayedTargetIndex = displayedTargets.Count - 1;
+                }
 
-            if (activeLockedTargetIndex == rad.currentLockIndex && displayedTargets.Count > lockedTargetIndexes.Count)
-            {
-                //TryLockTarget(displayedTargets[displayedTargets.Count - 1]);
+                TryLockTarget(displayedTargets[displayedTargetIndex]);
+                if (!displayedTargets[displayedTargetIndex].detectedByRadar) return;
+                // We got a good lock.  Lets update the indexes and locks
+                lockedTargetIndexes.Add(displayedTargetIndex);
+                rad.UnlockTargetAt(rad.currentLockIndex);
+                UpdateLockedTargets();
             }
-            TryLockTarget(displayedTargets[lockedTargetIndexes[activeLockedTargetIndex]]);
-            rad.UnlockTargetAt(rad.currentLockIndex);
-            UpdateLockedTargets();
         }
 
         public void UnlockAllTargetsOfRadar(ModuleRadar radar)
