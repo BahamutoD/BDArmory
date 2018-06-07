@@ -3,7 +3,7 @@
   * Removed 99_bdac_engagementenvelopes.cfg.  This legacy file was interfering with the new tuning of some of the missiles.
 
 * ENHANCEMENTS:
-  * Numerous missile tuning tweaks to improve flight profiles appearances and improve config consistency.
+  * Numerous missile tuning tweaks to improve flight profile appearances and improve config consistency.
   * Add slider to adjust Eject Velocit of Chaff and flares in Editor.
   * Revised Jet engine sound (much better now)
   * Added Target Next / Previous hot keys and Actions.  Now you can switch targets without having to click on the Radar!
