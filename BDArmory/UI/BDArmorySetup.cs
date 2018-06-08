@@ -1539,11 +1539,21 @@ namespace BDArmory.UI
             ModuleTargetingCamera.ResizeTargetWindow();
         }
 
-    void InputSettings()
+        private static Vector2 _displayViewerPosition = Vector2.zero;
+        void InputSettings()
         {
             float line = 1.25f;
             int inputID = 0;
+            float origSettingsWidth = settingsWidth;
+            float origSettingsHeight = settingsHeight;
+            float origSettingsMargin = settingsMargin;
 
+            settingsWidth = origSettingsWidth - 28;
+            settingsMargin = 10;
+            Rect viewRect = new Rect(settingsMargin, 20, origSettingsWidth - 12, origSettingsHeight - 100);
+            Rect scrollerRect = new Rect(settingsMargin, 20, origSettingsWidth - 30, settingsHeight * 1.4f);
+            
+            _displayViewerPosition = GUI.BeginScrollView(viewRect, _displayViewerPosition, scrollerRect, false, true);
 
             GUI.Label(SLineRect(line), "- Weapons -", centerLabel);
             line++;
@@ -1558,16 +1568,26 @@ namespace BDArmory.UI
             GUI.Label(SLineRect(line), "- Radar -", centerLabel);
             line++;
             InputSettingsList("RADAR_", ref inputID, ref line);
+            line++;
 
+            GUI.Label(SLineRect(line), "- Vessel Switcher -", centerLabel);
+            line++;
+            InputSettingsList("VS_", ref inputID, ref line);
+            GUI.EndScrollView();
+
+
+            line = (origSettingsHeight - 100) / settingsLineHeight;
             line += 2;
+            settingsWidth = origSettingsWidth;
+            settingsMargin = origSettingsMargin;
             if (!BDKeyBinder.current && GUI.Button(SLineRect(line), "Back"))
             {
                 editKeys = false;
             }
 
-            line += 1.5f;
-            settingsHeight = (line*settingsLineHeight);
-            WindowRectSettings.height = settingsHeight;
+            //line += 1.5f;
+            settingsHeight = origSettingsHeight;
+            WindowRectSettings.height = origSettingsHeight ;
             BDGUIUtils.UseMouseEventInRect(WindowRectSettings);
         }
 

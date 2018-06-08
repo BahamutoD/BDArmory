@@ -34,8 +34,13 @@ namespace BDArmory.UI
         public static BDInputInfo RADAR_TURRETS = new BDInputInfo("Slave Turrets");
         public static BDInputInfo RADAR_RANGE_UP = new BDInputInfo("Range +");
         public static BDInputInfo RADAR_RANGE_DN = new BDInputInfo("Range -");
-        public static BDInputInfo RADAR_TARGET_NEXT = new BDInputInfo("Target Next");
-        public static BDInputInfo RADAR_TARGET_PREV = new BDInputInfo("Target Previous");
+        public static BDInputInfo RADAR_TARGET_NEXT = new BDInputInfo("Next Target");
+        public static BDInputInfo RADAR_TARGET_PREV = new BDInputInfo("Prev Target");
+
+        // VESSEL SWITCHER
+        public static BDInputInfo VS_SWITCH_NEXT = new BDInputInfo("Next Vessel");
+        public static BDInputInfo VS_SWITCH_PREV = new BDInputInfo("Prev Vessel");
+
 
 
         public static void SaveSettings()

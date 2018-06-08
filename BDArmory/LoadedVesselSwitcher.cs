@@ -119,9 +119,9 @@ namespace BDArmory
 
         private void Hotkeys()
         {
-            if (Input.GetKeyDown(KeyCode.PageDown))
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.VS_SWITCH_NEXT))
                 SwitchToNextVessel();
-            if (Input.GetKeyDown(KeyCode.PageUp))
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.VS_SWITCH_PREV))
                 SwitchToPreviousVessel();
         }
 

@@ -7,6 +7,8 @@
   * Numerous missile tuning tweaks to improve flight profile appearances and improve config consistency.
   * Add slider to adjust Eject Velocity of Chaff and flares in Editor.
   * Revised Jet engine sound (much better now)
+  * Added configurable hot keys for VesselSwitcher Next and Previous Vessel (Defaults remain PgUp and PgDn)
+  * Revised Input Settings window to use a scroller.  This reduces the size of the window by about half.
 
 
 v1.2.1.2
