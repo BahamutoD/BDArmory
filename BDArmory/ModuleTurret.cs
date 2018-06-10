@@ -268,10 +268,7 @@ namespace BDArmory
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         public bool TargetInRange(Vector3 targetPosition, float thresholdDegrees, float maxDistance)

@@ -91,6 +91,8 @@
     <Compile Include="Misc\IEngageService.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
+    <Compile Include="Parts\ModuleWWC.cs" />
+    <Compile Include="Parts\SM_Reactive_Armor.cs" />
     <Compile Include="Radar\ModuleSpaceRadar.cs" />
     <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
     <Compile Include="UI\BDArmorySetup.cs" />

@@ -155,7 +155,7 @@ namespace BDArmory.Radar
         [KSPAction("Target Prev")]
         public void TargetPrev(KSPActionParam param)
         {
-            vesselRadarData.TargetNext();
+            vesselRadarData.TargetPrev();
         }
 
         #endregion
