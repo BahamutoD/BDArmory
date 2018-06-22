@@ -3,7 +3,7 @@
   * Recompiled for KSP 1.4.4. 
 
 * ENHANCEMENTS:
-  * Added AN/APG-77  Air to ground radar 
+  * Added AN/APG-77  Air to ground radar. 
 
 v1.2.1.4
 * FIXES
