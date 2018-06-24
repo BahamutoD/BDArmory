@@ -449,7 +449,7 @@ namespace BDArmory
                 //fix incorrect hierarchy
                 if (!mTf)
                 {
-                    Transform modelTransform = ml.part.partTransform.FindChild("model");
+                    Transform modelTransform = ml.part.partTransform.Find("model");
 
                     mTf = new GameObject("missileTransform").transform;
                     Transform[] tfchildren = new Transform[modelTransform.childCount];

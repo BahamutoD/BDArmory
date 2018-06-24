@@ -61,7 +61,7 @@ namespace BDArmory.UI
             if (selectedItemIndex > -1)
                 buttonContent.text = listContent[selectedItemIndex].text;
 
-            if (GUI.Button(buttonRect, buttonContent, HighLogic.Skin.button))
+            if (GUI.Button(buttonRect, buttonContent, BDArmorySetup.BDGuiSkin.button))
             {
                 if (useControlID == -1)
                 {
@@ -83,9 +83,9 @@ namespace BDArmory.UI
                 Rect listRect = new Rect(rect.x+5, rect.y + listStyle.CalcHeight(listContent[0], 1.0f), rect.width-20f, items_height);
 
                 scrollViewVector = GUI.BeginScrollView(new Rect(rect.x, rect.y + rect.height, rect.width + 10f, comboxbox_height), scrollViewVector,
-                                                        new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), false, false, HighLogic.Skin.horizontalScrollbar, HighLogic.Skin.verticalScrollbar);
+                                                        new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), false, false, BDArmorySetup.BDGuiSkin.horizontalScrollbar, BDArmorySetup.BDGuiSkin.verticalScrollbar);
 
-                GUI.Box(new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), "", HighLogic.Skin.window);
+                GUI.Box(new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), "", BDArmorySetup.BDGuiSkin.window);
 
                 int newSelectedItemIndex = GUI.SelectionGrid(listRect, selectedItemIndex, listContent, 2, listStyle);
                 if (newSelectedItemIndex != selectedItemIndex)
