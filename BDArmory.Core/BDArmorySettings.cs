@@ -7,6 +7,7 @@ namespace BDArmory.Core
         
         [BDAPersistantSettingsField] public static bool INSTAKILL = false;
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
+        [BDAPersistantSettingsField] public static bool BULLET_DECALS = true;
         [BDAPersistantSettingsField] public static float PHYSICS_RANGE = 0;                 //TODO: remove all references to this so it can be deprecated!
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
         [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;  
@@ -23,6 +24,15 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static float TARGET_CAM_RESOLUTION = 1024f;
         [BDAPersistantSettingsField] public static bool BW_TARGET_CAM = true;
         [BDAPersistantSettingsField] public static float SMOKE_DEFLECTION_FACTOR = 10f;
+        [BDAPersistantSettingsField] public static float RWR_WINDOW_SCALE_MIN = 0.50f;
+        [BDAPersistantSettingsField] public static float RWR_WINDOW_SCALE = 1f;
+        [BDAPersistantSettingsField] public static float RWR_WINDOW_SCALE_MAX = 1.50f;
+        [BDAPersistantSettingsField] public static float RADAR_WINDOW_SCALE_MIN = 0.50f;
+        [BDAPersistantSettingsField] public static float RADAR_WINDOW_SCALE = 1f;
+        [BDAPersistantSettingsField] public static float RADAR_WINDOW_SCALE_MAX = 1.50f;
+        [BDAPersistantSettingsField] public static float TARGET_WINDOW_SCALE_MIN = 0.50f;
+        [BDAPersistantSettingsField] public static float TARGET_WINDOW_SCALE = 1f;
+        [BDAPersistantSettingsField] public static float TARGET_WINDOW_SCALE_MAX = 2f;
         [BDAPersistantSettingsField] public static float BDARMORY_UI_VOLUME = 0.35f;
         [BDAPersistantSettingsField] public static float BDARMORY_WEAPONS_VOLUME = 0.32f;
         [BDAPersistantSettingsField] public static float MAX_GUARD_VISUAL_RANGE = 40000f;

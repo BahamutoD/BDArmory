@@ -677,8 +677,9 @@ namespace BDArmory
                     if (gameObject.GetComponent<LineRenderer>() == null)
                     {
                         LineRenderer lr = gameObject.AddComponent<LineRenderer>();
-                        lr.SetWidth(.1f, .1f);
-                        lr.SetVertexCount(pointsArray.Length);
+                        lr.startWidth = .1f;
+                        lr.endWidth = .1f;
+                        lr.positionCount = pointsArray.Length;
                         for (int i = 0; i < pointsArray.Length; i++)
                         {
                             lr.SetPosition(i, pointsArray[i]);
@@ -688,7 +689,7 @@ namespace BDArmory
                     {
                         LineRenderer lr = gameObject.GetComponent<LineRenderer>();
                         lr.enabled = true;
-                        lr.SetVertexCount(pointsArray.Length);
+                        lr.positionCount = pointsArray.Length;
                         for (int i = 0; i < pointsArray.Length; i++)
                         {
                             lr.SetPosition(i, pointsArray[i]);
