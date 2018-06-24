@@ -82,8 +82,7 @@ namespace BDArmory.Core.Extension
                                                float multiplier,
                                                float penetrationfactor,                                               
                                                float bulletDmgMult,
-                                               float impactVelocity,
-                                               bool explosive)
+                                               float impactVelocity)
         {          
 
             //////////////////////////////////////////////////////////
@@ -95,19 +94,7 @@ namespace BDArmory.Core.Extension
             float damage_ = ((0.5f * (mass * Mathf.Pow(impactVelocity, 2)))
                             * (BDArmorySettings.DMG_MULTIPLIER / 100) * bulletDmgMult
                             * 1e-4f);
-
-            //Explosive bullets should not cause much penetration damage, most damage needs to come from explosion
-            if (explosive) damage_ *= 0.725f;
             
-            //penetration multipliers   
-            damage_ *= multiplier * Mathf.Clamp(penetrationfactor, 0 , 1.85f);
-
-            //Caliber Adjustments for Gameplay balance
-            if (caliber <= 30f) 
-            {
-               damage_ *= 15f;
-            }
-
             //////////////////////////////////////////////////////////
             //   Armor Reduction factors
             //////////////////////////////////////////////////////////
@@ -395,15 +382,6 @@ namespace BDArmory.Core.Extension
                 {
                     damage *= 0.200f;
                 }
-            }
-
-            /////////////////////////////////
-            // Caliber Adjustments
-            /////////////////////////////////
-
-            if (caliber < 20f && caliber != 0)
-            {
-                damage *= 0.625f;
             }
 
             return damage;

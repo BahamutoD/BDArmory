@@ -113,7 +113,7 @@ namespace BDArmory.Parts
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"), UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float CruiseAltitude = 500;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"), UI_FloatRange(minValue = 100f, maxValue = 2000f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise speed"), UI_FloatRange(minValue = 100f, maxValue = 6000f, stepIncrement = 50f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float CruiseSpeed = 300;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise prediction time"), UI_FloatRange(minValue = 1f, maxValue = 15f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
@@ -774,7 +774,7 @@ namespace BDArmory.Parts
                 {
                     LR = gameObject.GetComponent<LineRenderer>();
                 }
-                LR.SetVertexCount(2);
+                LR.positionCount = 2;
                 LR.SetPosition(0, start);
                 LR.SetPosition(1, end);
             }

@@ -150,12 +150,12 @@ namespace BDArmory.UI
 		}
 		public void ShowToolbarGUI()
 		{
-			BDArmorySetup.toolbarGuiEnabled = true;	
+			BDArmorySetup.windowBDAToolBarEnabled = true;	
 		}
 
 		public void HideToolbarGUI()
 		{
-			BDArmorySetup.toolbarGuiEnabled = false;	
+			BDArmorySetup.windowBDAToolBarEnabled = false;	
 		}
 		void Dummy()
 		{}
@@ -542,11 +542,8 @@ namespace BDArmory.UI
 								Debug.Log("[BDArmory]: ==== BDA GPS Target string was empty! ====");
 								return;
 							}
-							else
-							{
-								StringToGPSList(targetString);
-								Debug.Log("[BDArmory]: ==== Loaded BDA GPS Targets ====");
-							}
+							StringToGPSList(targetString);
+							Debug.Log("[BDArmory]: ==== Loaded BDA GPS Targets ====");
 						}
 						else
 						{

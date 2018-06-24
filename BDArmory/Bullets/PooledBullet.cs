@@ -502,11 +502,20 @@ namespace BDArmory
 
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, hasRichocheted, caliber,penetrationfactor);
+                BulletHitFX.CreateBulletHit(hitPart, hit.point, hit, hit.normal, hasRichocheted, caliber,
+                    penetrationfactor);
             }
 
-            hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
-                                        bulletDmgMult,impactVelocity, explosive);
+            if (explosive)
+            {
+                hitPart.AddBallisticDamage(bulletMass - tntMass, caliber, multiplier, penetrationfactor,
+                    bulletDmgMult, impactVelocity);
+            }
+            else
+            {
+                hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
+                    bulletDmgMult, impactVelocity);
+            }
         }
 
         private void CalculateDragNumericalIntegration()
@@ -710,10 +719,9 @@ namespace BDArmory
             float fov = c.fieldOfView;
             float factor = (fov / 60) * resizeFactor *
                            Mathf.Clamp(Vector3.Distance(transform.position, c.transform.position), 0, 3000) / 50;
-            float width1 = tracerStartWidth * factor * randomWidthScale;
-            float width2 = tracerEndWidth * factor * randomWidthScale;
+            bulletTrail.startWidth = tracerStartWidth * factor * randomWidthScale;
+            bulletTrail.endWidth = tracerEndWidth * factor * randomWidthScale;
 
-            bulletTrail.SetWidth(width1, width2);
         }
 
         void KillBullet()

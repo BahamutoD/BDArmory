@@ -628,7 +628,7 @@ namespace BDArmory
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Open GUI", active = true)]
         public void ToggleToolbarGUI()
         {
-            BDArmorySetup.toolbarGuiEnabled = !BDArmorySetup.toolbarGuiEnabled;
+            BDArmorySetup.windowBDAToolBarEnabled = !BDArmorySetup.windowBDAToolBarEnabled;
         }
 
         #endregion
@@ -1052,7 +1052,7 @@ namespace BDArmory
                     }
                     else if (missile.TargetingMode == MissileBase.TargetingModes.AntiRad)
                     {
-                        if (rwr && rwr.rwrEnabled)
+                        if (rwr && rwr.rwrEnabled && rwr.displayRWR)
                         {
                             for (int i = 0; i < rwr.pingsData.Length; i++)
                             {
@@ -1071,7 +1071,7 @@ namespace BDArmory
                     }
                 }
 
-                if ((missile && missile.TargetingMode == MissileBase.TargetingModes.Gps) || BDArmorySetup.Instance.showingGPSWindow)
+                if ((missile && missile.TargetingMode == MissileBase.TargetingModes.Gps) || BDArmorySetup.Instance.showingWindowGPS)
                 {
                     if (designatedGPSCoords != Vector3d.zero)
                     {
@@ -1420,10 +1420,11 @@ namespace BDArmory
                 {
                     if (rwr)
                     {
-                        rwr.EnableRWR();
+                        if (!rwr.rwrEnabled) rwr.EnableRWR();
+                        if (rwr.rwrEnabled && !rwr.displayRWR) rwr.displayRWR = true;
                     }
 
-                    float attemptStartTime = Time.time;
+          float attemptStartTime = Time.time;
                     float attemptDuration = targetScanInterval * 0.75f;
                     while (Time.time - attemptStartTime < attemptDuration &&
                            (!antiRadTargetAcquired || (antiRadiationTarget - guardTarget.CoM).sqrMagnitude > 20*20))
@@ -2811,7 +2812,8 @@ namespace BDArmory
                             lr = gameObject.AddComponent<LineRenderer>();
                         }
                         lr.enabled = true;
-                        lr.SetWidth(.1f, .1f);
+                        lr.startWidth = .1f;
+                        lr.endWidth = .1f;
                     }
                     else
                     {
@@ -2852,7 +2854,7 @@ namespace BDArmory
                     if (lr)
                     {
                         lr.useWorldSpace = false;
-                        lr.SetVertexCount(4);
+                        lr.positionCount = 4;
                         lr.SetPosition(0, transform.InverseTransformPoint(rays[0].origin));
                         lr.SetPosition(1, transform.InverseTransformPoint(rays[0].GetPoint(rayDistance)));
                         lr.SetPosition(2, transform.InverseTransformPoint(rays[1].GetPoint(rayDistance)));
@@ -4116,10 +4118,8 @@ namespace BDArmory
 
             if (results.foundMissile)
             {
-                if (rwr && !rwr.rwrEnabled)
-                {
-                    rwr.EnableRWR();
-                }
+                if (rwr && !rwr.rwrEnabled) rwr.EnableRWR();
+                if (rwr && rwr.rwrEnabled && !rwr.displayRWR) rwr.displayRWR = true;
             }
 
             if (results.foundHeatMissile)
@@ -4654,8 +4654,9 @@ namespace BDArmory
                     lr = gameObject.AddComponent<LineRenderer>();
                 }
                 lr.enabled = true;
-                lr.SetWidth(.1f, .1f);
-                lr.SetVertexCount(pointsArray.Length);
+                lr.startWidth = .1f;
+                lr.endWidth = .1f;
+                lr.positionCount = pointsArray.Length;
                 for (int i = 0; i < pointsArray.Length; i++)
                 {
                     lr.SetPosition(i, pointsArray[i]);
