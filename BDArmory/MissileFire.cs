@@ -2574,7 +2574,8 @@ namespace BDArmory
                         while (r.MoveNext())
                         {
                             if (r.Current == null) continue;
-                            if (r.Current.resourceName != rl.rocketType || !(r.Current.amount > 0)) continue;
+                            if ((r.Current.resourceName != rl.rocketType || !(r.Current.amount > 0)) 
+                                && !BDArmorySettings.INFINITE_AMMO) continue;
                             hasRocket = true;
                             break;
                         }
@@ -2610,7 +2611,7 @@ namespace BDArmory
                         while (r.MoveNext())
                         {
                             if (r.Current == null) continue;
-                            if (r.Current.amount > 0) hasRocket = true;
+                            if (r.Current.amount > 0 || BDArmorySettings.INFINITE_AMMO) hasRocket = true;
                             else orl.Current.drawAimer = false;
                         }
                         r.Dispose();
