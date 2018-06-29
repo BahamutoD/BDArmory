@@ -2112,7 +2112,8 @@ namespace BDArmory
 
                 //dont add empty rocket pods
                 if (weapon.Current.GetWeaponClass() == WeaponClasses.Rocket &&
-                    weapon.Current.GetPart().FindModuleImplementing<RocketLauncher>().GetRocketResource().amount < 1)
+                    weapon.Current.GetPart().FindModuleImplementing<RocketLauncher>().GetRocketResource().amount < 1
+                    && !BDArmorySettings.INFINITE_AMMO)
                 {
                     continue;
                 }
