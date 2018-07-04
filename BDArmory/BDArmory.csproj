@@ -106,7 +106,7 @@
     <Compile Include="FX\BulletHitFX.cs" />
     <Compile Include="CounterMeasure\CMFlare.cs" />
     <Compile Include="CounterMeasure\CMDropper.cs" />
-    <Compile Include="RocketLauncher.cs" />
+    <Compile Include="Parts\RocketLauncher.cs" />
     <Compile Include="FX\ParticleTurbulence.cs" />
     <Compile Include="Parts\ClusterBomb.cs" />
     <Compile Include="Misc\KSPForceApplier.cs" />
@@ -121,7 +121,7 @@
     <Compile Include="UI\BDGUIComboBox.cs" />
     <Compile Include="UI\BDGUIUtils.cs" />
     <Compile Include="UI\BDInputUtils.cs" />
-    <Compile Include="TargetInfo.cs" />
+    <Compile Include="Targeting\TargetInfo.cs" />
     <Compile Include="UI\BDATargetManager.cs" />
     <Compile Include="Control\BDModulePilotAI.cs" />
     <Compile Include="Parts\TargetingCamera.cs" />
@@ -138,7 +138,7 @@
     <Compile Include="Parts\TGPCameraEffects.cs" />
     <Compile Include="Parts\TGPCamRotator.cs" />
     <Compile Include="CounterMeasure\CMSmoke.cs" />
-    <Compile Include="TargetSignatureData.cs" />
+    <Compile Include="Targeting\TargetSignatureData.cs" />
     <Compile Include="Radar\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
     <Compile Include="Misc\BDAEditorCategory.cs" />
