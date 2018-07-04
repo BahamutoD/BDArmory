@@ -548,6 +548,9 @@ namespace BDArmory
 
             int rocketsLeft = (int)Math.Floor(rocketResource.amount);
 
+            if (BDArmorySettings.INFINITE_AMMO && rocketsLeft < 1)
+                rocketsLeft = 1;
+
             if (rocketsLeft >= 1)
             {
                 Transform currentRocketTfm = rockets[rocketsLeft - 1];
@@ -580,7 +583,8 @@ namespace BDArmory
                 rocket.parentRB = part.rb;
 
                 sfAudioSource.PlayOneShot(GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/launch"));
-                rocketResource.amount--;
+                if (!BDArmorySettings.INFINITE_AMMO)
+                    rocketResource.amount--;
 
                 lastRocketsLeft = rocketResource.amount;
             }
