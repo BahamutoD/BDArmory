@@ -286,8 +286,7 @@ namespace BDArmory.Parts
         public void AGJettsion(KSPActionParam param)
         {
             Jettison();
-        }            
-        
+        }                    
 
         void ParseWeaponClass()
 		{

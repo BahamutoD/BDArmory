@@ -406,7 +406,7 @@ namespace BDArmory
         public bool proximityDetonation = false;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
-         UI_FloatRange(minValue = 500, maxValue = 3500f, stepIncrement = 1f, scene = UI_Scene.All)]
+         UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float defaultDetonationRange = 3500;
 
         [KSPField]
