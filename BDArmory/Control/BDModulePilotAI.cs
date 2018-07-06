@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Parts;
@@ -97,7 +99,7 @@ namespace BDArmory.Control
 		public float idleSpeed = 120f;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max G"),
-			UI_FloatRange(minValue = 2f, maxValue = 25f, stepIncrement = 0.25f, scene = UI_Scene.All)]
+			UI_FloatRange(minValue = 2f, maxValue = 45f, stepIncrement = 0.25f, scene = UI_Scene.All)]
 		public float maxAllowedGForce = 10;
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max AoA"),
@@ -105,6 +107,26 @@ namespace BDArmory.Control
 		public float maxAllowedAoA = 35;
 		float maxAllowedCosAoA;
 		float lastAllowedAoA;
+
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Unclamp tuning ", advancedTweakable = true),
+			UI_Toggle(enabledText = "Unclamped", disabledText = "Clamped", scene = UI_Scene.All),]
+		public bool UpToEleven = false;
+		bool toEleven = false;
+
+		Dictionary<string, float> altMaxValues = new Dictionary<string, float>
+		{
+			{ nameof(defaultAltitude), 100000f },
+			{ nameof(minAltitude), 30000f },
+			{ nameof(steerMult), 200f },
+			{ nameof(pitchKiAdjust), 400f },
+			{ nameof(steerDamping), 100f },
+			{ nameof(maxSpeed), 3000f },
+			{ nameof(takeOffSpeed), 2000f },
+			{ nameof(minSpeed), 2000f },
+			{ nameof(idleSpeed), 3000f },
+			{ nameof(maxAllowedGForce), 1000f },
+			{ nameof(maxAllowedAoA), 180f },
+		};
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Standby Mode"),
 			UI_Toggle(enabledText = "On", disabledText = "Off")]
@@ -219,8 +241,7 @@ namespace BDArmory.Control
 				  lr.endWidth = 0.5f;
 				}
 
-
-        minSpeed = Mathf.Clamp(minSpeed, 0, idleSpeed - 20);
+				minSpeed = Mathf.Clamp(minSpeed, 0, idleSpeed - 20);
 				minSpeed = Mathf.Clamp(minSpeed, 0, maxSpeed - 20);
 			}
 			else
@@ -230,6 +251,30 @@ namespace BDArmory.Control
 					lr.enabled = false;
 				}
 			}
+
+			// switch up the alt values if up to eleven is toggled
+			if (UpToEleven != toEleven)
+			{
+				using (var s = altMaxValues.Keys.ToList().GetEnumerator())
+					while (s.MoveNext())
+					{
+						UI_FloatRange euic = (UI_FloatRange)
+							(HighLogic.LoadedSceneIsFlight ? Fields[s.Current].uiControlFlight : Fields[s.Current].uiControlEditor);
+						float tempValue = euic.maxValue;
+						euic.maxValue = altMaxValues[s.Current];
+						altMaxValues[s.Current] = tempValue;
+						// change the value back to what it is now after fixed update, because changing the max value will clamp it down
+						// using reflection here, don't look at me like that, this does not run often
+						StartCoroutine(setVar(s.Current, (float)typeof(BDModulePilotAI).GetField(s.Current).GetValue(this)));
+					}
+				toEleven = UpToEleven;
+			}
+		}
+
+		IEnumerator setVar(string name, float value)
+		{
+			yield return new WaitForFixedUpdate();
+			typeof(BDModulePilotAI).GetField(name).SetValue(this, value);
 		}
 
 		void FixedUpdate()

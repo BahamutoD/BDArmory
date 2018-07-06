@@ -502,11 +502,20 @@ namespace BDArmory
 
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, hasRichocheted, caliber,penetrationfactor);
+                BulletHitFX.CreateBulletHit(hitPart, hit.point, hit, hit.normal, hasRichocheted, caliber,
+                    penetrationfactor);
             }
 
-            hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
-                                        bulletDmgMult,impactVelocity, explosive);
+            if (explosive)
+            {
+                hitPart.AddBallisticDamage(bulletMass - tntMass, caliber, multiplier, penetrationfactor,
+                    bulletDmgMult, impactVelocity);
+            }
+            else
+            {
+                hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
+                    bulletDmgMult, impactVelocity);
+            }
         }
 
         private void CalculateDragNumericalIntegration()
