@@ -1,4 +1,11 @@
-﻿v1.2.2
+﻿v1.2.2.1
+* FIXES
+  * Added bulletinfo.explosive check to GetInfo, so explosive shells now show blast radius in the part Info (RMB) section in the editor.
+
+* ENHANCEMENTS:
+  * Deprecate the Cannon weaponType.  Ballistic should be used instead going forward.
+
+v1.2.2
 * NEW FEATURES:
   * Recompiled for KSP 1.4.4. 
 

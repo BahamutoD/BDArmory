@@ -33,6 +33,7 @@ namespace BDArmory
 
         public int rippleIndex = 0;
 
+        // WeaponTypes.Cannon is deprecated.  identical behavior is achieved with WeaponType.Ballistic and bulletInfo.explosive = true.
         public enum WeaponTypes
         {
             Ballistic,
@@ -723,7 +724,7 @@ namespace BDArmory
                             StartCoroutine(IncrementRippleIndex(0));
                             finalFire = false;
                         }
-                        else if (eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon)
+                        else if (eWeaponType == WeaponTypes.Ballistic || eWeaponType == WeaponTypes.Cannon) //WeaponTypes.Cannon is deprecated
                         {
                             finalFire = true;
                         }
@@ -1147,7 +1148,7 @@ namespace BDArmory
 
                         pBullet.bulletDrop = bulletDrop;
 
-                        if (eWeaponType == WeaponTypes.Cannon || bulletInfo.explosive)
+                        if ((eWeaponType == WeaponTypes.Ballistic && bulletInfo.explosive) || eWeaponType == WeaponTypes.Cannon) //WeaponTypes.Cannon is deprecated
                         {
                             if (bulletType == "def")
                             {
@@ -1433,6 +1434,8 @@ namespace BDArmory
                     break;
 
                 case "cannon":
+                    // Note:  this type is deprecated.  behavior is duplicated with Ballistic and bulletInfo.explosive = true
+                    // Type remains for backward compatability for now.
                     eWeaponType = WeaponTypes.Cannon;
                     break;
 
@@ -2261,7 +2264,7 @@ namespace BDArmory
                 output.Append(Environment.NewLine);
                 output.Append($"Max Range: {maxEffectiveDistance} m");
                 output.Append(Environment.NewLine);
-                if (weaponType == "cannon")
+                if (weaponType == "cannon" || bulletInfo.explosive)
                 {
                     output.Append($"Shell radius/power/heat:");
                     output.Append(Environment.NewLine);
