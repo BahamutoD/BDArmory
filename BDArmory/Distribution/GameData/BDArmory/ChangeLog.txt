@@ -1,9 +1,12 @@
 ﻿v1.2.2.1
 * FIXES
   * Added bulletinfo.explosive check to GetInfo, so explosive shells now show blast radius in the part Info (RMB) section in the editor.
+  * Correct text errors in bullet names on some files.  Not all platforms support UTF8 characters. 
+  * (Internal) Fix file copy error in build process.
 
 * ENHANCEMENTS:
-  * Deprecate the Cannon weaponType.  Ballistic should be used instead going forward.
+  * Deprecate the Cannon weaponType.   Going forward, Ballistic should be used instead.  Cannon remains (backwards compatibility), but will be eventually removed.
+  * (Internal) Updated build process to improve multi developer build and deployments.  Simplified KSP version change dev environment build process.
 
 v1.2.2
 * NEW FEATURES:
