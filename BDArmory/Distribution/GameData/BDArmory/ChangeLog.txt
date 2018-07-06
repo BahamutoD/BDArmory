@@ -11,7 +11,6 @@
   * Deprecate the Cannon weaponType.   Going forward, Ballistic should be used instead.  Cannon remains (backwards compatibility), but will be eventually removed.
   * (Internal) Updated build process to improve multi developer build and deployments.  Simplified KSP version change dev environment build process.
 
-
 v1.2.2
 * NEW FEATURES:
   * Recompiled for KSP 1.4.4. 
