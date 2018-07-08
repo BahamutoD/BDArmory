@@ -980,8 +980,9 @@ namespace BDArmory
                 //Transform[] fireTransforms = part.FindModelTransforms("fireTransform");
                 for (int i = 0; i < fireTransforms.Length; i++)
                 {
-                    if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount) > 0))
-                    {
+                    //if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount) > 0))
+                    if (CanFire())
+                        {
                         Transform fireTransform = fireTransforms[i];
                         spinningDown = false;
 
@@ -1211,6 +1212,8 @@ namespace BDArmory
 
                         //heat
                         heat += heatPerShot;
+                        //EC
+                        DrainECPerShot();
                     }
                     else
                     {
@@ -1444,6 +1447,33 @@ namespace BDArmory
             }
         }
 
+        void DrainECPerShot()
+        {
+            if (ECPerShot == 0) return;
+            //double drainAmount = ECPerShot * TimeWarp.fixedDeltaTime;
+            double drainAmount = ECPerShot;
+            double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
+        }
+
+        bool CanFire()
+        {
+            if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount) > 0))
+            {
+                if (ECPerShot != 0)
+                {
+                    double chargeAvailable = part.RequestResource("ElectricCharge", ECPerShot, ResourceFlowMode.ALL_VESSEL);
+                    if (chargeAvailable < ECPerShot * 0.95f)
+                    {
+                        ScreenMessages.PostScreenMessage("Weapon Requires EC", 5.0f, ScreenMessageStyle.UPPER_CENTER);
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            
+            return false;
+        }
 
         #endregion
 

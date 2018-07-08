@@ -90,6 +90,7 @@
     <Compile Include="Misc\CFEnable.cs" />
     <Compile Include="Misc\EngageableWeapon.cs" />
     <Compile Include="Misc\IEngageService.cs" />
+    <Compile Include="ModuleEMP.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="Parts\ModuleWWC.cs" />
