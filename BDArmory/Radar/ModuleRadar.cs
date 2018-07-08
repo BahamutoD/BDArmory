@@ -118,7 +118,6 @@ namespace BDArmory.Radar
 
         #endregion
 
-
         #region KSP Events & Actions
         [KSPAction("Toggle Radar")]
         public void AGEnable(KSPActionParam param)
@@ -159,7 +158,6 @@ namespace BDArmory.Radar
         }
 
         #endregion
-
 
         #region Part members
         //locks
@@ -265,15 +263,13 @@ namespace BDArmory.Radar
         public float leftLimit;
         public float rightLimit;
         private int snapshotTicker;
-        #endregion
-        
+        #endregion       
         
 
         void UpdateToggleGuiName()
         {
             Events["Toggle"].guiName = radarEnabled ? "Disable Radar" : "Enable Radar";
         }
-
         
         public void EnsureVesselRadarData()
         {
@@ -289,7 +285,6 @@ namespace BDArmory.Radar
     	        vesselRadarData.weaponManager = weaponManager;
             }
         }
-
         
         public void EnableRadar()
         {
@@ -312,7 +307,6 @@ namespace BDArmory.Radar
             UpdateToggleGuiName();
             vesselRadarData.AddRadar(this);
         }
-
         
         public void DisableRadar()
         {
@@ -337,7 +331,6 @@ namespace BDArmory.Radar
             }
             vrd.Dispose();
         }
-
 
         void OnDestroy()
         {
@@ -368,7 +361,6 @@ namespace BDArmory.Radar
                 }
             }
         }
-
 
         public override void OnStart(StartState state)
         {
@@ -450,7 +442,6 @@ namespace BDArmory.Radar
                 Debug.Log("[BDArmory]: WARNING: " + part.name + " has legacy definition, missing new radarDetectionCurve and radarLockTrackCurve definitions! Please update for the part to be usable!");
             }
         }
-
         /*
         void OnGoOnRails(Vessel v)
         {
@@ -487,8 +478,7 @@ namespace BDArmory.Radar
             UpdateToggleGuiName();
             startupComplete = true;
         }
-
-        
+                
         void Update()
         {
             if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled)
@@ -512,8 +502,7 @@ namespace BDArmory.Radar
             drawGUI = (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && radarEnabled &&
                        vessel.isActiveVessel && BDArmorySetup.GAME_UI_ENABLED && !MapView.MapIsEnabled);
         }
-
-        
+               
         void FixedUpdate()
         {
             if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && startupComplete)
@@ -551,8 +540,7 @@ namespace BDArmory.Radar
             }
 
         }
-
-        
+                
         void UpdateSlaveData()
         {
             if (slaveTurrets && weaponManager)
@@ -567,8 +555,7 @@ namespace BDArmory.Radar
                 }
             }
         }
-
-        
+                
         void LateUpdate()
         {
             if (HighLogic.LoadedSceneIsFlight && (canScan || canLock))
@@ -576,8 +563,7 @@ namespace BDArmory.Radar
                 UpdateModel();
             }
         }
-
-        
+                
         void UpdateModel()
         {
             //model rotation
@@ -633,8 +619,7 @@ namespace BDArmory.Radar
                 }
             }
         }
-
-
+        
         void Scan()
         {
             float angleDelta = scanRotationSpeed*Time.fixedDeltaTime;
@@ -680,7 +665,6 @@ namespace BDArmory.Radar
             }
         }
 
-        
         public bool TryLockTarget(Vector3 position)
         {
             if (!canLock)
@@ -710,7 +694,7 @@ namespace BDArmory.Radar
 
             for (int i = 0; i < attemptedLocks.Length; i++)
             {
-                if (attemptedLocks[i].exists && (attemptedLocks[i].predictedPosition - position).sqrMagnitude < 40*40)
+                if (attemptedLocks[i].exists && (attemptedLocks[i].predictedPosition - position).sqrMagnitude < 40 * 40)
                 {
                     if (!locked && !omnidirectional)
                     {
@@ -735,9 +719,8 @@ namespace BDArmory.Radar
                 Debug.Log("[BDArmory]: - Failed to lock on target.");
 
             return false;
-        }
+        }        
 
-        
         void BoresightScan()
         {
             if (locked)
@@ -757,8 +740,7 @@ namespace BDArmory.Radar
                 return;
             }
         }
-
-
+        
         void UpdateLock(int index)
         {
             TargetSignatureData lockedTarget = lockedTargets[index];
@@ -834,8 +816,7 @@ namespace BDArmory.Radar
                 }
             }
         }
-
-        
+                
         public void UnlockAllTargets()
         {
             if (!locked) return;
@@ -852,8 +833,7 @@ namespace BDArmory.Radar
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 Debug.Log("[BDArmory]: Radar Targets were cleared (" + radarName + ").");
         }
-
-        
+                
         public void SetActiveLock(TargetSignatureData target)
         {
             for (int i = 0; i < lockedTargets.Count; i++)
@@ -865,8 +845,7 @@ namespace BDArmory.Radar
                 }
             }
         }
-
-        
+                
         public void UnlockTargetAt(int index, bool tryRelock = false)
         {
             Vessel rVess = lockedTargets[index].vessel;
@@ -898,15 +877,13 @@ namespace BDArmory.Radar
                 vesselRadarData.RemoveVesselFromTargets(rVess);
             }
         }
-
-        
+                
         IEnumerator RetryLockRoutine(Vessel v)
         {
             yield return null;
             vesselRadarData.TryLockTarget(v);
         }
-
-        
+                
         public void UnlockTargetVessel(Vessel v)
         {
             for (int i = 0; i < lockedTargets.Count; i++)
@@ -918,8 +895,7 @@ namespace BDArmory.Radar
                 }
             }
         }
-
-        
+                
         void SlaveTurrets()
         {
             List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();

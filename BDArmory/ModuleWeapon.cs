@@ -261,6 +261,8 @@ namespace BDArmory
         public float bulletDmgMult = 1; //Used for heat damage modifier for non-explosive bullets
         [KSPField]
         public float bulletVelocity = 1030; //velocity in meters/second
+        [KSPField]
+        public float ECPerShot = 0; //EC to use per shot for weapons like railguns
 
         [KSPField]
         public string bulletDragTypeName = "AnalyticEstimate";
