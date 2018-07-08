@@ -53,26 +53,22 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\_LocalDev\KSPRefs\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>LocalDev\Refs\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\_LocalDev\KSPRefs\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
-    <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\KSPAssets.dll</HintPath>
+    <Reference Include="KSPAssets">
+      <HintPath>..\..\_LocalDev\KSPRefs\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\UnityEngine.dll</HintPath>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\_LocalDev\KSPRefs\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LocalDev\Refs\UnityEngine.UI.dll</HintPath>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\_LocalDev\KSPRefs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -87,15 +83,17 @@
     <Compile Include="Guidances\CruiseGuidance.cs" />
     <Compile Include="LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
+    <Compile Include="Misc\BDAModuleInfos.cs" />
     <Compile Include="Misc\CFEnable.cs" />
     <Compile Include="Misc\EngageableWeapon.cs" />
     <Compile Include="Misc\IEngageService.cs" />
     <Compile Include="ModuleEMP.cs" />
     <Compile Include="Parts\BDExplosivePart.cs" />
+    <Compile Include="Modules\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
-    <Compile Include="Parts\ModuleWWC.cs" />
-    <Compile Include="Parts\SM_Reactive_Armor.cs" />
-    <Compile Include="Radar\ModuleSpaceRadar.cs" />
+    <Compile Include="Modules\ModuleWWC.cs" />
+    <Compile Include="Modules\SM_Reactive_Armor.cs" />
+    <Compile Include="Modules\ModuleSpaceRadar.cs" />
     <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
     <Compile Include="UI\BDArmorySetup.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
@@ -109,15 +107,15 @@
     <Compile Include="CounterMeasure\CMDropper.cs" />
     <Compile Include="Parts\RocketLauncher.cs" />
     <Compile Include="FX\ParticleTurbulence.cs" />
-    <Compile Include="Parts\ClusterBomb.cs" />
+    <Compile Include="Modules\ClusterBomb.cs" />
     <Compile Include="Misc\KSPForceApplier.cs" />
     <Compile Include="Parts\BDModularGuidance.cs" />
-    <Compile Include="Parts\BDMMLauncher.cs" />
-    <Compile Include="Parts\BDAdjustableRail.cs" />
+    <Compile Include="Modules\BDMMLauncher.cs" />
+    <Compile Include="Modules\BDAdjustableRail.cs" />
     <Compile Include="FX\BDAGaplessParticleEmitter.cs" />
     <Compile Include="MissileGuidance.cs" />
-    <Compile Include="Animation\BDAScaleByDistance.cs" />
-    <Compile Include="Animation\BDALookConstraintUp.cs" />
+    <Compile Include="Modules\Animation\BDAScaleByDistance.cs" />
+    <Compile Include="Modules\Animation\BDALookConstraintUp.cs" />
     <Compile Include="Parts\SeismicChargeFX.cs" />
     <Compile Include="UI\BDGUIComboBox.cs" />
     <Compile Include="UI\BDGUIUtils.cs" />
@@ -126,32 +124,34 @@
     <Compile Include="UI\BDATargetManager.cs" />
     <Compile Include="Control\BDModulePilotAI.cs" />
     <Compile Include="Parts\TargetingCamera.cs" />
-    <Compile Include="Parts\ModuleTargetingCamera.cs" />
-    <Compile Include="ModuleTurret.cs" />
+    <Compile Include="Modules\ModuleTargetingCamera.cs" />
+    <Compile Include="Modules\ModuleTurret.cs" />
     <Compile Include="Misc\VectorUtils.cs" />
-    <Compile Include="ModuleWeapon.cs" />
+    <Compile Include="Modules\ModuleWeapon.cs" />
     <Compile Include="Misc\ObjectPool.cs" />
     <Compile Include="Bullets\PooledBullet.cs" />
     <Compile Include="FX\CameraBulletRenderer.cs" />
     <Compile Include="Shaders\BDAShaderLoader.cs" />
     <Compile Include="Misc\IBDWeapon.cs" />
-    <Compile Include="MissileFire.cs" />
+    <Compile Include="Modules\MissileFire.cs" />
     <Compile Include="Parts\TGPCameraEffects.cs" />
     <Compile Include="Parts\TGPCamRotator.cs" />
     <Compile Include="CounterMeasure\CMSmoke.cs" />
     <Compile Include="Targeting\TargetSignatureData.cs" />
     <Compile Include="Radar\ModuleRadar.cs" />
+    <Compile Include="TargetSignatureData.cs" />
+    <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
     <Compile Include="Misc\BDAEditorCategory.cs" />
     <Compile Include="Misc\BDAExtensions.cs" />
     <Compile Include="Misc\BDACategoryModule.cs" />
-    <Compile Include="Radar\RadarWarningReceiver.cs" />
+    <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />
     <Compile Include="CounterMeasure\VesselECMJInfo.cs" />
-    <Compile Include="Parts\ModuleECMJammer.cs" />
+    <Compile Include="Modules\ModuleECMJammer.cs" />
     <Compile Include="Misc\DecoupledBooster.cs" />
-    <Compile Include="Parts\ModuleMovingPart.cs" />
+    <Compile Include="Modules\ModuleMovingPart.cs" />
     <Compile Include="Parts\GPSTargetInfo.cs" />
     <Compile Include="Misc\ViewScanResults.cs" />
     <Compile Include="UI\BDKeyBinder.cs" />
@@ -163,11 +163,11 @@
     <Compile Include="Misc\WMTurretGroup.cs" />
     <Compile Include="Control\BDAirspeedControl.cs" />
     <Compile Include="Misc\RippleOption.cs" />
-    <Compile Include="MissileTurret.cs" />
+    <Compile Include="Modules\MissileTurret.cs" />
     <Compile Include="FX\BDAParticleSelfDestruct.cs" />
     <Compile Include="Radar\VesselRadarData.cs" />
     <Compile Include="Radar\RadarDisplayData.cs" />
-    <Compile Include="Parts\BDRotaryRail.cs" />
+    <Compile Include="Modules\BDRotaryRail.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Control\BDACompetitionMode.cs" />
     <Compile Include="UI\IBDWMModule.cs" />
@@ -184,10 +184,7 @@
     <EmbeddedResource Include="Shaders\UnlitBlack.shader" />
     <EmbeddedResource Include="Shaders\BulletShader.shader" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Distribution\GameData\BDArmory\Sounds\105343SonarPing_data\e00\d00\" />
-    <Folder Include="LocalDev\Refs\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Distribution\GameData\BDArmory\Agencies\Agents.cfg" />
     <None Include="Distribution\GameData\BDArmory\Agencies\BDA_scaled.truecolor" />
@@ -226,7 +223,6 @@
     <None Include="Distribution\GameData\BDArmory\MMPatches\000000_HitpointModule_PartFixes.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\10_bdac_stealth.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\Armor_CVE.cfg" />
-    <None Include="Distribution\GameData\BDArmory\MMPatches\BDAcUniversalAmmoBox.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_Armor.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_GroundRadar.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_SLW.cfg" />
@@ -249,11 +245,17 @@
     <None Include="Distribution\GameData\BDArmory\Models\explosion\explosionLarge.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\shell\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\sounds\VulcanCannon.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\sounds\VulcanEnd.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\vulcanTurret.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\50CalTurret\50cal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\50CalTurret\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\50CalTurret\sounds\shot.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\50CalTurret\sounds\turretOverheat.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\ABL\ABL.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\ABL\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\ABL\sounds\charge.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\ABL\sounds\laser.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\adjustableRail\adjustableRail.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\adjustableRail\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.cfg" />
@@ -282,6 +284,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\bammGuidance\part.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\browninganm2\browninganm2.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\browninganm2\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\browninganm2\Sounds\fire.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\clusterBomb\clusterBomb.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\clusterBomb\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\cmDropper\chaffDispenser.cfg" />
@@ -291,6 +294,8 @@
     <None Include="Distribution\GameData\BDArmory\Parts\ecmJammer\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\gau8.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\gau-8\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8Cannon.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8End.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMk1.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBDAcMK1.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk2\BDAcGKmk2.cfg" />
@@ -320,8 +325,13 @@
     <None Include="Distribution\GameData\BDArmory\Parts\m102Howitzer\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\m1Abrams\m1Abrams.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\m1Abrams\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\m1Abrams\sounds\reload.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\m1Abrams\sounds\shot.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\m230.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\Sounds\m230loop.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\Sounds\m230loopEnd.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\Sounds\m230shot.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\maverick\maverickMissile.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\maverick\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\missileTurret\missileTurret.cfg" />
@@ -332,6 +342,8 @@
     <None Include="Distribution\GameData\BDArmory\Parts\mk82Bomb\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\oMillennium\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\oMillennium\oMillennium.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\oMillennium\Sounds\oFireEnd.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\oMillennium\Sounds\oFiring.ogg" />
     <None Include="Distribution\GameData\BDArmory\Parts\pac-3\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\pac-3\pac3.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\patriotLauncher\model.mu" />
@@ -377,8 +389,40 @@
     <None Include="Distribution\GameData\BDArmory\Resources\BDAmmo_Universal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\Countermeasures.cfg" />
     <None Include="Distribution\GameData\BDArmory\settings.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\armOff.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\armOn.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\Artillery_Shot.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\bulletHit1.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\bulletHit2.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\bulletHit3.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\click.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\deployClick.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\explode1.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\flareSound.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\heatGrowl.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\hydraulicLoop.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\Jet.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\launch.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\missileFlyby.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\mLaunchWarning.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\popThrust.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\reload.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\ricochet1.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\ricochet2.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\ricochet3.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\rocketLoop.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\rwrMissileLock.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\rwrPing.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\rwr_sonarping.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\rwr_torpedoping.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\shellWhistle.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\smokeEject.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\smokePoof.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\subExplode.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\TorpPropFX.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\warning.ogg" />
+    <None Include="Distribution\GameData\BDArmory\Sounds\windloop.ogg" />
+    <None Include="Shaders\rcsShader.shader" />
     <None Include="packages.config" />
     <None Include="Shaders\rcsShader.shader" />
   </ItemGroup>
@@ -423,16 +467,10 @@
     <Content Include="Distribution\GameData\BDArmory\Models\shell\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\smoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\sounds\VulcanCannon.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\sounds\VulcanEnd.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\20mmVulcan\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\50CalTurret\muzzle.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\50CalTurret\sounds\shot.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\50CalTurret\sounds\turretOverheat.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\50CalTurret\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\ABL\glasstest.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\ABL\sounds\charge.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\ABL\sounds\laser.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\ABL\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\adjustableRail\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.png" />
@@ -451,7 +489,6 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\bammGuidance\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\browninganm2\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\browninganm2\smoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\browninganm2\Sounds\fire.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\browninganm2\tex_browninganm2.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\clusterBomb\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\cmDropper\tex_chaffDispenser.png" />
@@ -459,8 +496,6 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\ecmJammer\tex_ecmj131.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\smoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8Cannon.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\sounds\GAU8End.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\gau-8\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\GoalKeeperBD.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\GoalKeeperBDAcMk1\muzzle.png" />
@@ -489,14 +524,9 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\m102Howitzer\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\m102Howitzer\tex_m102.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\m1Abrams\muzzle.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\m1Abrams\sounds\reload.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\m1Abrams\sounds\shot.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\m1Abrams\tex_abrams.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\smoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\Sounds\m230loop.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\Sounds\m230loopEnd.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\Sounds\m230shot.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\m230ChainGun\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\maverick\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\missileTurret\tex_detectionRadar.png" />
@@ -506,8 +536,6 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\mk82Bomb\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\oMillennium\muzzle.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\oMillennium\smoke.png" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\oMillennium\Sounds\oFireEnd.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Parts\oMillennium\Sounds\oFiring.wav" />
     <Content Include="Distribution\GameData\BDArmory\Parts\oMillennium\srbsmoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\oMillennium\texture.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\pac-3\texture.png" />
@@ -533,36 +561,6 @@
     <Content Include="Distribution\GameData\BDArmory\Parts\towMissile\srbsmoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\towMissile\tex_towMissile.png" />
     <Content Include="Distribution\GameData\BDArmory\Parts\weaponManager\texture.png" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\armOff.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\armOn.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\Artillery_Shot.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\bulletHit1.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\bulletHit2.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\bulletHit3.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\click.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\deployClick.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\explode1.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\flareSound.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\heatGrowl.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\hydraulicLoop.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\jet.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\launch.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\missileFlyby.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\mLaunchWarning.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\popThrust.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\ricochet1.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\ricochet2.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\ricochet3.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\rocketLoop.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\rwrMissileLock.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\rwrPing.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\shellWhistle.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\smokeEject.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\smokePoof.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\subExplode.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\TorpPropFX.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\warning.wav" />
-    <Content Include="Distribution\GameData\BDArmory\Sounds\windloop.wav" />
     <Content Include="Distribution\GameData\BDArmory\Textures\aimer.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\bullet.png" />
     <Content Include="Distribution\GameData\BDArmory\Textures\camReticle.png" />
@@ -602,16 +600,24 @@
   <PropertyGroup>
     <PostBuildEvent>@echo $(Targetname)
 SET ModName=BDArmory
+
+rem this step strips the solutionName from the git path to give us the root folder for locating the LocalDev Folder
+rem the echo commands are commented.  used for testing of the desired path.
+set GIT_PATH=$(SolutionDir)
+rem @echo %25GIT_PATH%25
+set GIT_PATH=%25GIT_PATH:BDArmory\=%25
+rem @echo %25GIT_PATH%25
+
 @echo ...
-@echo set lpath vars from LocalDev storage...
-set /p KSP_DIR=&lt;"$(ProjectDir)LocalDev\ksp_dir.txt"
-set /p PDB2MDB_EXE=&lt;"$(ProjectDir)LocalDev\pdb2mdb_exe.txt"
-set /p ZA_DIR=&lt;"$(ProjectDir)LocalDev\7za_dir.txt"
-set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
+@echo set lpath vars from "%25GIT_PATH%25_LocalDev\LocalDev" storage...
+set /p KSP_DIR=&lt;"%25GIT_PATH%25_LocalDev\ksp_dir.txt"
+set /p PDB2MDB_EXE=&lt;"%25GIT_PATH%25_LocalDev\pdb2mdb_exe.txt"
+set /p ZA_DIR=&lt;"%25GIT_PATH%25_LocalDev\7za_dir.txt"
+set /p DIST_DIR=&lt;"%25GIT_PATH%25_LocalDev\dist_dir.txt"
 
 @echo Copying assemblies to Distribution $(Targetname) files...
 if not exist "$(ProjectDir)Distribution\GameData\%25ModName%25\Plugins\" mkdir "$(ProjectDir)Distribution\GameData\%25ModName%25\Plugins\"
-copy /Y "$(TargetDir)"BDArmory*.dll "$(ProjectDir)Distribution\GameData\%25ModName%25\Plugins\"
+xcopy /E /Y "$(TargetDir)"BDArmory*.dll "$(ProjectDir)Distribution\GameData\%25ModName%25\Plugins\"
 
 if $(ConfigurationName) == Debug (
 @echo building debug files and symbols...
@@ -656,23 +662,8 @@ xcopy /E /Y "$(ProjectDir)Distribution\GameData" "%25KSP_DIR%25\GameData"
   </PostBuildEventDependsOn>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>@echo $(Targetname)
-SET ModName=BDArmory
-@echo ...
-@echo set lpath vars from LocalDev storage...
-set /p KSP_DIR=&lt;"$(ProjectDir)LocalDev\ksp_dir.txt"
-set /p PDB2MDB_EXE=&lt;"$(ProjectDir)LocalDev\pdb2mdb_exe.txt"
-set /p ZA_DIR=&lt;"$(ProjectDir)LocalDev\7za_dir.txt"
-set /p DIST_DIR=&lt;"$(ProjectDir)LocalDev\dist_dir.txt"
-
-@echo Copying KSP assemblies from "%25KSP_DIR%25\KSP_x64_Data\Managed" to "$(ProjectDir)LocalDev\Refs" folder...
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\Assembly-CSharp.dll" "$(ProjectDir)LocalDev\Refs"
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll" "$(ProjectDir)LocalDev\Refs"
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\KSPAssets.dll" "$(ProjectDir)LocalDev\Refs"
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.dll" "$(ProjectDir)LocalDev\Refs"
-copy /Y "%25KSP_DIR%25\KSP_x64_Data\Managed\UnityEngine.UI.dll" "$(ProjectDir)LocalDev\Refs"
-
-@echo KSP API references copying complete!</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

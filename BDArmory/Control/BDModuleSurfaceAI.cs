@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using BDArmory.Misc;
 using BDArmory.UI;
 using BDArmory.Core;
+using BDArmory.Modules;
 using UnityEngine;
 
 namespace BDArmory.Control
@@ -131,33 +133,37 @@ namespace BDArmory.Control
             { nameof(MaxEngagementRange), 30000f },
             { nameof(AvoidMass), 1000000f },
         };
-		#endregion
+        #endregion
 
-		#region RMB info in editor
-		public override string GetInfo()
-		{
-            // known bug - the game caches the RMB info, changing the variable after checking the info
-            // does not update the info. :( No idea how to force an update.
-			return @"
-<b>Available settings</b>:
-<b>Vehicle type</b> - can this vessel operate on land/sea/both
-<b>Max slope angle</b> - what is the steepest slope this vessel can negotiate
-<b>Cruise speed</b> - the default speed at which it is safe to maneuver
-<b>Max speed</b> - the maximum combat speed
-<b>Max drift</b> - maximum allowed angle between facing and velocity vector
-<b>Moving pitch</b> - the pitch level to maintain when moving at cruise speed
-<b>Bank angle</b> - the limit on roll when turning, positive rolls into turns
-<b>Steer Factor</b> - higher will make the AI apply more control input for the same desired rotation
-<b>Bank angle</b> - higher will make the AI apply more control input when it wants to stop rotation
-<b>Attack vector</b> - does the vessel attack from the front or the sides
-<b>Min engagement range</b> - AI will try to move away from oponents if closer than this range
-<b>Max engagement range</b> - AI will prioritize getting closer over attacking when beyond this range
-<b>RCS active</b> - Use RCS during any maneuvers, or only in combat
-" + (GameSettings.ADVANCED_TWEAKABLES ?
-@"<b>Min obstacle mass</b> - Obstacles of a lower mass than this will be ignored instead of avoided
-<b> Goes up to</b> - Increases variable limits, no direct effect on behaviour
-" : "");
-		}
+        #region RMB info in editor
+	    // <color={XKCDColors.HexFormat.Lime}>Yes</color>
+        public override string GetInfo()
+	    {
+	        // known bug - the game caches the RMB info, changing the variable after checking the info
+	        // does not update the info. :( No idea how to force an update.
+	        StringBuilder sb = new StringBuilder();
+	        sb.AppendLine("<b>Available settings</b>:");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Vehicle type</color> - can this vessel operate on land/sea/both");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Max slope angle</color> - what is the steepest slope this vessel can negotiate");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Cruise speed</color> - the default speed at which it is safe to maneuver");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Max speed</color> - the maximum combat speed");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Max drift</color> - maximum allowed angle between facing and velocity vector");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Moving pitch</color> - the pitch level to maintain when moving at cruise speed");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Bank angle</color> - the limit on roll when turning, positive rolls into turns");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Steer Factor</color> - higher will make the AI apply more control input for the same desired rotation");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Bank angle</color> - higher will make the AI apply more control input when it wants to stop rotation");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Attack vector</color> - does the vessel attack from the front or the sides");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Min engagement range</color> - AI will try to move away from oponents if closer than this range");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Max engagement range</color> - AI will prioritize getting closer over attacking when beyond this range");
+	        sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- RCS active</color> - Use RCS during any maneuvers, or only in combat ");
+	        if (GameSettings.ADVANCED_TWEAKABLES)
+	        {
+	            sb.Append($"<color={XKCDColors.HexFormat.Cyan}>- Min obstacle mass</color> - Obstacles of a lower mass than this will be ignored instead of avoided");
+	            sb.AppendLine($"<color={XKCDColors.HexFormat.Cyan}>- Goes up to</color> - Increases variable limits, no direct effect on behaviour");
+	        }
+
+	        return sb.ToString();
+	    }
 		#endregion
 
 		#region events

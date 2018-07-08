@@ -4,6 +4,7 @@ using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Guidances;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using BDArmory.Radar;
 using BDArmory.UI;
 using KSP.UI.Screens;

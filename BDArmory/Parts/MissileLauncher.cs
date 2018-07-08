@@ -9,6 +9,7 @@ using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Guidances;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using BDArmory.Radar;
 using UniLinq;
 using UnityEngine;
@@ -2064,10 +2065,7 @@ namespace BDArmory.Parts
 
             if (TargetingMode == TargetingModes.Gps)
             {
-                if (TargetingModeTerminal != TargetingModes.None)
-                    return "GPS/Terminal";
-                else
-                    return "GPS";
+                return TargetingModeTerminal != TargetingModes.None ? "GPS/Terminal" : "GPS";
             }
 
             // default:
@@ -2080,101 +2078,76 @@ namespace BDArmory.Parts
             ParseModes();
 
             StringBuilder output = new StringBuilder();
-            output.Append($"{missileType.ToUpper()} - {GetBrevityCode()}");
+            output.AppendLine($"{missileType.ToUpper()} - {GetBrevityCode()}");
             output.Append(Environment.NewLine);
-            output.Append(Environment.NewLine);
-            output.Append($"Targeting Type: {targetingType.ToString().ToLower()}");
-            output.Append(Environment.NewLine);
-            output.Append($"Guidance Mode: {homingType.ToString().ToLower()}");
-            output.Append(Environment.NewLine);
+            output.AppendLine($"Targeting Type: {targetingType.ToLower()}");
+            output.AppendLine($"Guidance Mode: {homingType.ToLower()}");
             if (missileRadarCrossSection != RadarUtils.RCS_MISSILES)
             {
-                output.Append($"Detectable cross section: {missileRadarCrossSection} m^2");
-                output.Append(Environment.NewLine);
+                output.AppendLine($"Detectable cross section: {missileRadarCrossSection} m^2");
             }
-            output.Append($"Min/Max Range: {minStaticLaunchRange} / {maxStaticLaunchRange} m");
-            output.Append(Environment.NewLine);
+            output.AppendLine($"Min Range: {minStaticLaunchRange} m");
+            output.AppendLine($"Max Range: {maxStaticLaunchRange} m");
 
             if (TargetingMode == TargetingModes.Radar)
             {
                 if (activeRadarRange > 0)
                 {
-                    output.Append($"Active Radar Range: {activeRadarRange} m");
-                    output.Append(Environment.NewLine);
+                    output.AppendLine($"Active Radar Range: {activeRadarRange} m");
                     if (activeRadarLockTrackCurve.maxTime > 0)
-                        output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                        output.AppendLine($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
                     else
-                        output.Append($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange/1000} km");
-                    output.Append(Environment.NewLine);
-                    output.Append($"- LOAL: {radarLOAL}");
-                    output.Append(Environment.NewLine);
+                        output.AppendLine($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange/1000} km");
+                    output.AppendLine($"- LOAL: {radarLOAL}");
                 }
-                output.Append($"Max Offborsight: {maxOffBoresight}");
-                output.Append(Environment.NewLine);
-                output.Append($"Locked FOV: {lockedSensorFOV}");
-                output.Append(Environment.NewLine);
+                output.AppendLine($"Max Offborsight: {maxOffBoresight}");
+                output.AppendLine($"Locked FOV: {lockedSensorFOV}");
             }
 
             if (TargetingMode == TargetingModes.Heat)
             {
-                output.Append($"All Aspect: {allAspect}");
-                output.Append(Environment.NewLine);
-                output.Append($"Min Heat threshold: {heatThreshold}");
-                output.Append(Environment.NewLine);
-                output.Append($"Max Offborsight: {maxOffBoresight}");
-                output.Append(Environment.NewLine);
-                output.Append($"Locked FOV: {lockedSensorFOV}");
-                output.Append(Environment.NewLine);
+                output.AppendLine($"All Aspect: {allAspect}");
+                output.AppendLine($"Min Heat threshold: {heatThreshold}");
+                output.AppendLine($"Max Offborsight: {maxOffBoresight}");
+                output.AppendLine($"Locked FOV: {lockedSensorFOV}");
             }
 
             if (TargetingMode == TargetingModes.Gps)
             {
-                output.Append($"Terminal Maneuvering: {terminalManeuvering}");
-                output.Append(Environment.NewLine);
+                output.AppendLine($"Terminal Maneuvering: {terminalManeuvering}");
                 if (terminalGuidanceType != "")
                 {
-                    output.Append($"Terminal guidance: {terminalGuidanceType} @ distance: {terminalGuidanceDistance} m");
-                    output.Append(Environment.NewLine);
+                    output.AppendLine($"Terminal guidance: {terminalGuidanceType} @ distance: {terminalGuidanceDistance} m");
 
                     if (TargetingModeTerminal == TargetingModes.Radar)
                     {
-                        output.Append($"Active Radar Range: {activeRadarRange} m");
-                        output.Append(Environment.NewLine);
+                        output.AppendLine($"Active Radar Range: {activeRadarRange} m");
                         if (activeRadarLockTrackCurve.maxTime > 0)
-                            output.Append($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
+                            output.AppendLine($"- Lock/Track: {activeRadarLockTrackCurve.Evaluate(activeRadarLockTrackCurve.maxTime)} m^2 @ {activeRadarLockTrackCurve.maxTime} km");
                         else
-                            output.Append($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange / 1000} km");
-                        output.Append(Environment.NewLine);
-                        output.Append($"- LOAL: {radarLOAL}");
-                        output.Append(Environment.NewLine);
-                        output.Append($"Max Offborsight: {maxOffBoresight}");
-                        output.Append(Environment.NewLine);
-                        output.Append($"Locked FOV: {lockedSensorFOV}");
-                        output.Append(Environment.NewLine);
+                            output.AppendLine($"- Lock/Track: {RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS} m^2 @ {activeRadarRange / 1000} km");
+                        output.AppendLine($"- LOAL: {radarLOAL}");
+                        output.AppendLine($"Max Offborsight: {maxOffBoresight}");
+                        output.AppendLine($"Locked FOV: {lockedSensorFOV}");
                     }
 
                     if (TargetingModeTerminal == TargetingModes.Heat)
                     {
-                        output.Append($"All Aspect: {allAspect}");
-                        output.Append(Environment.NewLine);
-                        output.Append($"Min Heat threshold: {heatThreshold}");
-                        output.Append(Environment.NewLine);
-                        output.Append($"Max Offborsight: {maxOffBoresight}");
-                        output.Append(Environment.NewLine);
-                        output.Append($"Locked FOV: {lockedSensorFOV}");
-                        output.Append(Environment.NewLine);
+                        output.AppendLine($"All Aspect: {allAspect}");
+                        output.AppendLine($"Min Heat threshold: {heatThreshold}");
+                        output.AppendLine($"Max Offborsight: {maxOffBoresight}");
+                        output.AppendLine($"Locked FOV: {lockedSensorFOV}");
                     }
 
                 }
             }
 
-            output.Append($"Warhead radius/power/heat:");
-            output.Append(Environment.NewLine);
-            output.Append($"Blast radius/tntMass/heat: {blastRadius}/{blastPower}/{blastHeat}");
-            output.Append(Environment.NewLine);
+            output.AppendLine($"Warhead:");
+            output.AppendLine($"- Blast radius: {blastRadius}");
+            output.AppendLine($"- tnt Mass: {blastPower}");
+            output.AppendLine($"- Blast heat: {blastHeat}");
 
             return output.ToString();
-
         }
 
     }
