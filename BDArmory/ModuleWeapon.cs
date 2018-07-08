@@ -1457,18 +1457,19 @@ namespace BDArmory
 
         bool CanFire()
         {
+
+            if (ECPerShot != 0)
+            {
+                double chargeAvailable = part.RequestResource("ElectricCharge", ECPerShot, ResourceFlowMode.ALL_VESSEL);
+                if (chargeAvailable < ECPerShot * 0.95f)
+                {
+                    ScreenMessages.PostScreenMessage("Weapon Requires EC", 5.0f, ScreenMessageStyle.UPPER_CENTER);
+                    return false;
+                }
+            }
+
             if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount) > 0))
             {
-                if (ECPerShot != 0)
-                {
-                    double chargeAvailable = part.RequestResource("ElectricCharge", ECPerShot, ResourceFlowMode.ALL_VESSEL);
-                    if (chargeAvailable < ECPerShot * 0.95f)
-                    {
-                        ScreenMessages.PostScreenMessage("Weapon Requires EC", 5.0f, ScreenMessageStyle.UPPER_CENTER);
-                        return false;
-                    }
-                }
-
                 return true;
             }
             
