@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using BDArmory.Parts;
 using BDArmory.UI;
 using UniLinq;

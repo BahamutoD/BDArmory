@@ -6,6 +6,7 @@ using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
 using System.Collections.Generic;
+using BDArmory.Modules;
 
 namespace BDArmory
 {

@@ -8,6 +8,7 @@ using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
@@ -787,20 +788,16 @@ namespace BDArmory
         {
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.Append("Weapon Type: Rocket Launcher");
-            output.Append(Environment.NewLine);
-            output.Append($"Rocket Type: {rocketType}");
-            output.Append(Environment.NewLine);
-            output.Append($"Max Range: {maxTargetingRange} m");
-            output.Append(Environment.NewLine);
+            output.AppendLine("Weapon Type: Rocket Launcher");
+            output.AppendLine($"Rocket Type: {rocketType}");
+            output.AppendLine($"Max Range: {maxTargetingRange} m");
 
-            output.Append($"Blast radius/power/heat:");
-            output.Append(Environment.NewLine);
-            output.Append($"{blastRadius} / {blastForce} / {blastHeat}");
-            output.Append(Environment.NewLine);
+            output.AppendLine($"Blast:");
+            output.AppendLine($"- radius: {blastRadius}");
+            output.AppendLine($"- power: {blastForce}");
+            output.AppendLine($"- heat: {blastHeat}");
 
             return output.ToString();
-
         }
     }
 

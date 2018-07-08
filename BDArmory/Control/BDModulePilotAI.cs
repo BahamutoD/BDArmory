@@ -8,6 +8,7 @@ using BDArmory.Parts;
 using BDArmory.UI;
 using UnityEngine;
 using BDArmory.Core;
+using BDArmory.Modules;
 
 namespace BDArmory.Control
 {

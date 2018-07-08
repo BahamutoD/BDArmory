@@ -12,6 +12,7 @@ using BDArmory.Core;
 using BDArmory.Core.Enum;
 using BDArmory.FX;
 using BDArmory.Guidances;
+using BDArmory.Modules;
 
 namespace BDArmory.Parts
 {

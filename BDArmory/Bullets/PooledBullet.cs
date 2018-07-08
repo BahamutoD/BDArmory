@@ -1,17 +1,16 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using BDArmory.Armor;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Module;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using UnityEngine;
-using System.Collections.Generic;
-using BDArmory.Core;
 
-namespace BDArmory
+namespace BDArmory.Bullets
 {
     public class PooledBullet : MonoBehaviour
     {

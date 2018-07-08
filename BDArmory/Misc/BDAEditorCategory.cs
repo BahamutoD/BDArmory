@@ -3,6 +3,7 @@ using UnityEngine;
 using KSP.UI.Screens;
 using System;
 using BDArmory.Core;
+using BDArmory.Modules;
 using BDArmory.Radar;
 using BDArmory.UI;
 using BDArmory.Parts;

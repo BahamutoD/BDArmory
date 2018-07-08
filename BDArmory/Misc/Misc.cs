@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using BDArmory.Modules;
 using BDArmory.Parts;
 using BDArmory.Radar;
 using BDArmory.UI;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BDArmory.Armor
+namespace BDArmory.Bullets
 {
     public class BulletInfo
     {

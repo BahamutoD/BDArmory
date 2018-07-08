@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BDArmory.CounterMeasure;
+using BDArmory.Modules;
 using BDArmory.Parts;
 using BDArmory.Radar;
 
