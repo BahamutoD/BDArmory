@@ -916,8 +916,7 @@ namespace BDArmory.Radar
 
             slaveTurrets = true;
         }
-
-        
+                
         void UnslaveTurrets()
         {
             List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
@@ -941,8 +940,7 @@ namespace BDArmory.Radar
 
             slaveTurrets = false;
         }
-
-        
+                
         public void UpdateLockedTargetInfo(TargetSignatureData newData)
         {
             int index = -1;
@@ -958,8 +956,7 @@ namespace BDArmory.Radar
                 lockedTargets[index] = newData;
             }
         }
-
-        
+                
         public void ReceiveContactData(TargetSignatureData contactData, bool _locked)
         {
             if (vesselRadarData)
@@ -978,8 +975,7 @@ namespace BDArmory.Radar
             }
             vrd.Dispose();
         }
-
-        
+                
         public void AddExternalVRD(VesselRadarData vrd)
         {
             if (!linkedToVessels.Contains(vrd))
@@ -987,14 +983,12 @@ namespace BDArmory.Radar
                 linkedToVessels.Add(vrd);
             }
         }
-
-        
+                
         public void RemoveExternalVRD(VesselRadarData vrd)
         {
             linkedToVessels.Remove(vrd);
         }
-
-        
+                
         void OnGUI()
         {
             if (drawGUI)
@@ -1006,8 +1000,7 @@ namespace BDArmory.Radar
                 }
             }
         }
-
-        
+                
         public void RecoverLinkedVessels()
         {
             string[] vesselIDs = linkedVesselID.Split(new char[] {','});
@@ -1016,8 +1009,7 @@ namespace BDArmory.Radar
                 StartCoroutine(RecoverLinkedVesselRoutine(vesselIDs[i]));
             }
         }
-
-        
+                
         IEnumerator RecoverLinkedVesselRoutine(string vesselID)
         {
             while (true)
@@ -1037,8 +1029,7 @@ namespace BDArmory.Radar
                 yield return new WaitForSeconds(0.5f);
             }
         }
-
-        
+                
         IEnumerator RelinkVRDWhenReadyRoutine(VesselRadarData vrd)
         {
             while (!vrd.radarsReady || vrd.vessel.packed)
@@ -1050,8 +1041,7 @@ namespace BDArmory.Radar
             Debug.Log("[BDArmory]: Radar data link recovered: Local - " + vessel.vesselName + ", External - " +
                       vrd.vessel.vesselName);
         }
-
-
+        
         public string getRWRType(int i)
         {
             switch (i)
@@ -1074,7 +1064,6 @@ namespace BDArmory.Radar
             //{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5, Sonar = 6}
         }
 
-        
         // RMB info in editor
         public override string GetInfo()
         {
@@ -1130,8 +1119,7 @@ namespace BDArmory.Radar
 
             return output.ToString();
         }
-
-
+        
         void DrainElectricity()
         {
             if (resourceDrain <= 0)
