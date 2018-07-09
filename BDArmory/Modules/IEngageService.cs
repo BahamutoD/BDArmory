@@ -1,4 +1,4 @@
-namespace BDArmory.Misc
+namespace BDArmory.Modules
 {
     public interface IEngageService
     {

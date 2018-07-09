@@ -3,18 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core;
-using BDArmory.UI;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Guidances;
 using BDArmory.Misc;
-using BDArmory.Modules;
+using BDArmory.Parts;
 using BDArmory.Radar;
+using BDArmory.Targeting;
+using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
 
-namespace BDArmory.Parts
+namespace BDArmory.Modules
 {	
 	public class MissileLauncher : MissileBase
     {

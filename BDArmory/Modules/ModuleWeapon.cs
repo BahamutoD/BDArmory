@@ -8,6 +8,7 @@ using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
+using BDArmory.Targeting;
 using BDArmory.UI;
 using KSP.UI.Screens;
 using UniLinq;

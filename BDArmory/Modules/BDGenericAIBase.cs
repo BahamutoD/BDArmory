@@ -1,12 +1,13 @@
 ﻿using System;
-using BDArmory.Misc;
-using BDArmory.UI;
-using BDArmory.Core;
-using UnityEngine;
 using System.Text;
-using BDArmory.Modules;
+using BDArmory.Control;
+using BDArmory.Core;
+using BDArmory.Misc;
+using BDArmory.Targeting;
+using BDArmory.UI;
+using UnityEngine;
 
-namespace BDArmory.Control
+namespace BDArmory.Modules
 {
 	/// <summary>
 	/// A base class for implementing AI.

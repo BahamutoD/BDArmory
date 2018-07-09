@@ -5,6 +5,7 @@ using System.Text;
 using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.Radar;
+using BDArmory.Targeting;
 using BDArmory.UI;
 using UnityEngine;
 

@@ -3,17 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using BDArmory.Core;
-using BDArmory.Core.Enum;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Misc;
-using BDArmory.Modules;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
 
-namespace BDArmory
+namespace BDArmory.Modules
 {
     public class RocketLauncher : EngageableWeapon, IBDWeapon
     {

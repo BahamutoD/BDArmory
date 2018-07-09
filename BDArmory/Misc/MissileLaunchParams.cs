@@ -1,10 +1,9 @@
 ﻿using BDArmory.Core;
 using BDArmory.Core.Extension;
-using BDArmory.Parts;
-using BDArmory.UI;
+using BDArmory.Modules;
 using UnityEngine;
 
-namespace BDArmory
+namespace BDArmory.Misc
 {
 	public struct MissileLaunchParams
 	{

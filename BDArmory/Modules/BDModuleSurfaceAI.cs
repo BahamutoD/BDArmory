@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using BDArmory.Control;
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
-using BDArmory.Core;
-using BDArmory.Modules;
 using UnityEngine;
 
-namespace BDArmory.Control
+namespace BDArmory.Modules
 {
 	public class BDModuleSurfaceAI : BDGenericAIBase, IBDAIControl
 	{
@@ -615,7 +615,7 @@ namespace BDArmory.Control
 		{
 			//evasive will handle avoiding missiles
 			if (v == weaponManager.incomingMissileVessel 
-                || v.rootPart.FindModuleImplementing<Parts.MissileBase>() != null)
+                || v.rootPart.FindModuleImplementing<MissileBase>() != null)
                 return null;
 
 			float time = Mathf.Min(0.5f, maxTime);

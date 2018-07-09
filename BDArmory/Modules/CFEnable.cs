@@ -4,7 +4,7 @@
 //Class by NathanKell
 //http://forum.kerbalspaceprogram.com/threads/76499-0-23-5-CrossFeedEnabler-v1-4-13-14
 
-namespace BDArmory.Misc
+namespace BDArmory.Modules
 {
     public class CFEnable : PartModule
     {
