@@ -7,6 +7,8 @@ using BDArmory.Shaders;
 using BDArmory.UI;
 using System.Collections.Generic;
 using BDArmory.Core;
+using BDArmory.Modules;
+using BDArmory.Targeting;
 using UnityEngine;
 
 namespace BDArmory.Radar

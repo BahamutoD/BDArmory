@@ -10,6 +10,8 @@ using UnityEngine;
 using System.Text;
 using System;
 using BDArmory.Core;
+using BDArmory.Modules;
+using BDArmory.Targeting;
 
 namespace BDArmory.UI
 {

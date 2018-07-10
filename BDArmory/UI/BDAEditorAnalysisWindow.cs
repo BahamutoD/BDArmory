@@ -6,6 +6,7 @@ using KSP.UI.Screens;
 using BDArmory.Radar;
 using BDArmory.Parts;
 using BDArmory.Misc;
+using BDArmory.Modules;
 
 namespace BDArmory.UI
 {
