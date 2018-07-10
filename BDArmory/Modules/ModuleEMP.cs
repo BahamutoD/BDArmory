@@ -1,43 +1,52 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using BDArmory.Core;
-using BDArmory.Core.Extension;
-
-
-using KSP.UI.Screens;
-using UniLinq;
-using UnityEngine;
-using BDArmory.Core.Utils;
-
-namespace BDArmory
+﻿
+namespace BDArmory.Modules
 {
     public class ModuleEMP : PartModule
     {
-        [KSPField]
-        public float empRange;
-        [KSPField]
-        public bool isEMPed = false;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "EMP Blast Radius"),
+         UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
+        public float proximity = 5000;
 
-        public override void OnUpdate()
+        public override void OnStart(StartState state)
         {
-            if (!HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                return;
+                part.force_activate();
+                part.OnJustAboutToBeDestroyed += DetonateEMPRoutine;
             }
-            //Timer code for effect?
-            
+            base.OnStart(state);
         }
 
-        void CheckEMP()
+        public void DetonateEMPRoutine()
         {
+            foreach (Vessel v in FlightGlobals.Vessels)
+            {
+                if (!v.HoldPhysics)
+                {
+                    double targetDistance = Vector3d.Distance(this.vessel.GetWorldPos3D(), v.GetWorldPos3D());
 
-        }
+                    if (targetDistance <= proximity)
+                    {
+                        var count = 0;
 
-        void ApplyEMP()
-        {
+                        foreach (Part p in v.parts)
+                        {
+                            var wmPart = p.FindModuleImplementing<MissileFire>();
 
+                            if (wmPart != null)
+                            {
+                                count = 1;
+                                p.AddModule("ModuleDrainEC");
+                            }
+                        }
+
+                        if (count == 0)
+                        {
+                            v.rootPart.AddModule("ModuleDrainEC");
+                        }
+                    }
+                }
+            }
         }
     }
 }

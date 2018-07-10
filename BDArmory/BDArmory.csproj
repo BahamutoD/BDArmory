@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Control\AIUtils.cs" />
+    <Compile Include="Modules\ModuleDrainEC.cs" />
     <Compile Include="Modules\BDGenericAIBase.cs" />
     <Compile Include="Modules\BDModuleSurfaceAI.cs" />
     <Compile Include="Control\IBDAIControl.cs" />
