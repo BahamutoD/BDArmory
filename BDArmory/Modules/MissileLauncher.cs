@@ -9,13 +9,13 @@ using BDArmory.Core.Utils;
 using BDArmory.FX;
 using BDArmory.Guidances;
 using BDArmory.Misc;
-using BDArmory.Modules;
 using BDArmory.Radar;
 using UniLinq;
 using UnityEngine;
 using BDArmory.Targeting;
+using BDArmory.Parts;
 
-namespace BDArmory.Parts
+namespace BDArmory.Modules
 {
     public class MissileLauncher : MissileBase
     {

@@ -4,7 +4,6 @@ using BDArmory.Core.Extension;
 using BDArmory.Misc;
 using BDArmory.Modules;
 using UnityEngine;
-using BDArmory.Parts;
 
 namespace BDArmory.Guidances
 {

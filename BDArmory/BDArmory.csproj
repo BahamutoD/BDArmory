@@ -104,7 +104,6 @@
     <Compile Include="FX\BulletHitFX.cs" />
     <Compile Include="CounterMeasure\CMFlare.cs" />
     <Compile Include="CounterMeasure\CMDropper.cs" />
-    <Compile Include="Parts\RocketLauncher.cs" />
     <Compile Include="Modules\RocketLauncher.cs" />
     <Compile Include="FX\ParticleTurbulence.cs" />
     <Compile Include="Modules\ClusterBomb.cs" />
