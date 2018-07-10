@@ -13,6 +13,7 @@ using BDArmory.Modules;
 using BDArmory.Radar;
 using UniLinq;
 using UnityEngine;
+using BDArmory.Targeting;
 
 namespace BDArmory.Parts
 {

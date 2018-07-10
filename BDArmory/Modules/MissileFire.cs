@@ -6,9 +6,11 @@ using BDArmory.Control;
 using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
+using BDArmory.Guidances;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Radar;
+using BDArmory.Targeting;
 using BDArmory.UI;
 using UnityEngine;
 

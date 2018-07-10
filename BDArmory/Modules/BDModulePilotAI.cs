@@ -2,15 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using BDArmory.Control;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
+using BDArmory.Guidances;
 using BDArmory.Misc;
-using BDArmory.Parts;
+using BDArmory.Targeting;
 using BDArmory.UI;
 using UnityEngine;
-using BDArmory.Core;
-using BDArmory.Modules;
 
-namespace BDArmory.Control
+namespace BDArmory.Modules
 {
 	public class BDModulePilotAI : BDGenericAIBase, IBDAIControl
 	{

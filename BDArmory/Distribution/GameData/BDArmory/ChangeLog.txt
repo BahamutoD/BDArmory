@@ -9,7 +9,7 @@
   * Improved reload sound on M1Abrams Turret.
   * Converted all .wav sounds to .ogg (reduce DL size and in game memory footprint)
   * Updated several Module info pages to reflect recent changes to ballistic mechanics
-  * Added a Info Page refresh mechanism to support settings changes that affect part Module info blocks in the editor.
+  * Added a part module Info Page refresh mechanism to support settings changes that affect part Module info blocks in the editor.
   * Added Jettison action to parts TweakUI in flight.  Git Issue #539
   * (Internal) Some code refactoring (basic cleanup, Module reorganization)
   * Deprecate the Cannon weaponType.   Going forward, Ballistic should be used instead.  Cannon remains (backwards compatibility), but will be eventually removed.

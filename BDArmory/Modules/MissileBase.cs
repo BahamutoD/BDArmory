@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BDArmory.Core.Extension;
-using BDArmory.CounterMeasure;
-using BDArmory.Misc;
-using BDArmory.Radar;
-using BDArmory.UI;
-using UnityEngine;
 using System.Text;
 using BDArmory.Core;
-using BDArmory.Core.Enum;
+using BDArmory.Core.Extension;
+using BDArmory.CounterMeasure;
 using BDArmory.FX;
 using BDArmory.Guidances;
-using BDArmory.Modules;
+using BDArmory.Misc;
+using BDArmory.Radar;
+using BDArmory.Targeting;
+using BDArmory.UI;
+using UnityEngine;
 
-namespace BDArmory.Parts
+namespace BDArmory.Modules
 {
     public abstract class MissileBase : EngageableWeapon, IBDWeapon
     {

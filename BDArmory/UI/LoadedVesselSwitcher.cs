@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Modules;
-using BDArmory.UI;
 using UnityEngine;
 
-namespace BDArmory
+namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class LoadedVesselSwitcher : MonoBehaviour

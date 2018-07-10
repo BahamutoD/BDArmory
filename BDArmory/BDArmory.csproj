@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Microsoft.Net.Compilers.2.8.2\build\Microsoft.Net.Compilers.props" Condition="Exists('packages\Microsoft.Net.Compilers.2.8.2\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="packages\Microsoft.Net.Compilers.2.8.0\build\Microsoft.Net.Compilers.props" Condition="Exists('packages\Microsoft.Net.Compilers.2.8.0\build\Microsoft.Net.Compilers.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -73,23 +73,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Control\AIUtils.cs" />
-    <Compile Include="Control\BDGenericAIBase.cs" />
-    <Compile Include="Control\BDModuleSurfaceAI.cs" />
+    <Compile Include="Modules\BDGenericAIBase.cs" />
+    <Compile Include="Modules\BDModuleSurfaceAI.cs" />
     <Compile Include="Control\IBDAIControl.cs" />
-    <Compile Include="Bullets\AmmoSwitch.cs" />
+    <Compile Include="Modules\AmmoSwitch.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
     <Compile Include="FX\MissileFX.cs" />
     <Compile Include="Guidances\CruiseGuidance.cs" />
-    <Compile Include="LoadedVesselSwitcher.cs" />
+    <Compile Include="UI\LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\BDAModuleInfos.cs" />
-    <Compile Include="Misc\CFEnable.cs" />
-    <Compile Include="Misc\EngageableWeapon.cs" />
-    <Compile Include="Misc\IEngageService.cs" />
-    <Compile Include="ModuleEMP.cs" />
+    <Compile Include="Modules\ModuleEMP.cs" />
+    <Compile Include="Modules\CFEnable.cs" />
+    <Compile Include="Modules\EngageableWeapon.cs" />
+    <Compile Include="Modules\IEngageService.cs" />
     <Compile Include="Modules\BDExplosivePart.cs" />
-    <Compile Include="Parts\MissileBase.cs" />
+    <Compile Include="Modules\MissileBase.cs" />
     <Compile Include="Modules\ModuleWWC.cs" />
     <Compile Include="Modules\SM_Reactive_Armor.cs" />
     <Compile Include="Modules\ModuleSpaceRadar.cs" />
@@ -97,7 +97,7 @@
     <Compile Include="UI\BDArmorySetup.cs" />
     <Compile Include="UI\BDAWindowSettingsField.cs" />
     <Compile Include="Bullets\BulletInfo.cs" />
-    <Compile Include="Parts\MissileLauncher.cs" />
+    <Compile Include="Modules\MissileLauncher.cs" />
     <Compile Include="Misc\Misc.cs" />
     <Compile Include="FX\ShellCasing.cs" />
     <Compile Include="FX\ExplosionFX.cs" />
@@ -105,14 +105,15 @@
     <Compile Include="CounterMeasure\CMFlare.cs" />
     <Compile Include="CounterMeasure\CMDropper.cs" />
     <Compile Include="Parts\RocketLauncher.cs" />
+    <Compile Include="Modules\RocketLauncher.cs" />
     <Compile Include="FX\ParticleTurbulence.cs" />
     <Compile Include="Modules\ClusterBomb.cs" />
     <Compile Include="Misc\KSPForceApplier.cs" />
-    <Compile Include="Parts\BDModularGuidance.cs" />
+    <Compile Include="Modules\BDModularGuidance.cs" />
     <Compile Include="Modules\BDMMLauncher.cs" />
     <Compile Include="Modules\BDAdjustableRail.cs" />
     <Compile Include="FX\BDAGaplessParticleEmitter.cs" />
-    <Compile Include="MissileGuidance.cs" />
+    <Compile Include="Guidances\MissileGuidance.cs" />
     <Compile Include="Modules\Animation\BDAScaleByDistance.cs" />
     <Compile Include="Modules\Animation\BDALookConstraintUp.cs" />
     <Compile Include="Parts\SeismicChargeFX.cs" />
@@ -120,8 +121,8 @@
     <Compile Include="UI\BDGUIUtils.cs" />
     <Compile Include="UI\BDInputUtils.cs" />
     <Compile Include="Targeting\TargetInfo.cs" />
-    <Compile Include="Targeting\BDATargetManager.cs" />
-    <Compile Include="Control\BDModulePilotAI.cs" />
+    <Compile Include="UI\BDATargetManager.cs" />
+    <Compile Include="Modules\BDModulePilotAI.cs" />
     <Compile Include="Parts\TargetingCamera.cs" />
     <Compile Include="Modules\ModuleTargetingCamera.cs" />
     <Compile Include="Modules\ModuleTurret.cs" />
@@ -141,7 +142,7 @@
     <Compile Include="Radar\RadarUtils.cs" />
     <Compile Include="Misc\BDAEditorCategory.cs" />
     <Compile Include="Misc\BDAExtensions.cs" />
-    <Compile Include="Misc\BDACategoryModule.cs" />
+    <Compile Include="Modules\BDACategoryModule.cs" />
     <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />
@@ -154,9 +155,9 @@
     <Compile Include="UI\BDKeyBinder.cs" />
     <Compile Include="UI\BDInputSettingsFields.cs" />
     <Compile Include="UI\BDInputInfo.cs" />
-    <Compile Include="Control\ModuleWingCommander.cs" />
+    <Compile Include="Modules\ModuleWingCommander.cs" />
     <Compile Include="Misc\BDATooltips.cs" />
-    <Compile Include="MissileLaunchParams.cs" />
+    <Compile Include="Misc\MissileLaunchParams.cs" />
     <Compile Include="Misc\WMTurretGroup.cs" />
     <Compile Include="Control\BDAirspeedControl.cs" />
     <Compile Include="Misc\RippleOption.cs" />
@@ -419,8 +420,8 @@
     <None Include="Distribution\GameData\BDArmory\Sounds\TorpPropFX.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\warning.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\windloop.ogg" />
-    <None Include="Shaders\rcsShader.shader" />
     <None Include="packages.config" />
+    <None Include="Shaders\rcsShader.shader" />
     <None Include="Shaders\rcsShader.shader" />
   </ItemGroup>
   <ItemGroup>
@@ -666,6 +667,6 @@ xcopy /E /Y "$(ProjectDir)Distribution\GameData" "%25KSP_DIR%25\GameData"
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\Microsoft.Net.Compilers.2.8.2\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Net.Compilers.2.8.2\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('packages\Microsoft.Net.Compilers.2.8.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Net.Compilers.2.8.0\build\Microsoft.Net.Compilers.props'))" />
   </Target>
 </Project>

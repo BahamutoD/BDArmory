@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Control;
 using BDArmory.Misc;
-using BDArmory.Modules;
 using BDArmory.Parts;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
 
-namespace BDArmory.Control
+namespace BDArmory.Modules
 {
     public class ModuleWingCommander : PartModule
     {

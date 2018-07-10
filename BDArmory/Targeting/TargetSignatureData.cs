@@ -1,14 +1,14 @@
 using System;
+using System.Collections.Generic;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using BDArmory.Radar;
 using BDArmory.UI;
 using UnityEngine;
-using System.Collections.Generic;
-using BDArmory.Modules;
 
-namespace BDArmory
+namespace BDArmory.Targeting
 {
 	public struct TargetSignatureData : IEquatable<TargetSignatureData>
 	{

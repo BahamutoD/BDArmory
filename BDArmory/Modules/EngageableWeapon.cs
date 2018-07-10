@@ -1,4 +1,4 @@
-namespace BDArmory.Misc
+namespace BDArmory.Modules
 {
     public abstract class EngageableWeapon : PartModule, IEngageService
     {
@@ -57,7 +57,7 @@ namespace BDArmory.Misc
             Fields["engageSLW"].guiActive = engageEnabled;
             Fields["engageSLW"].guiActiveEditor = engageEnabled;
 
-            Misc.RefreshAssociatedWindows(part);
+            Misc.Misc.RefreshAssociatedWindows(part);
         }
         public void OnRangeUpdated(BaseField field, object obj)
         {

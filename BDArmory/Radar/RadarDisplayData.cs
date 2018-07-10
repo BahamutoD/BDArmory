@@ -1,4 +1,5 @@
 ﻿using BDArmory.Modules;
+using BDArmory.Targeting;
 using UnityEngine;
 
 namespace BDArmory.Radar

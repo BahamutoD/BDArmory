@@ -2,10 +2,11 @@ using System;
 using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
-using BDArmory.Parts;
+using BDArmory.Modules;
 using UnityEngine;
+using BDArmory.Parts;
 
-namespace BDArmory
+namespace BDArmory.Guidances
 {
     public class MissileGuidance
     {
