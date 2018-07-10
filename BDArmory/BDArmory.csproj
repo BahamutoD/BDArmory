@@ -88,7 +88,6 @@
     <Compile Include="Misc\EngageableWeapon.cs" />
     <Compile Include="Misc\IEngageService.cs" />
     <Compile Include="ModuleEMP.cs" />
-    <Compile Include="Parts\BDExplosivePart.cs" />
     <Compile Include="Modules\BDExplosivePart.cs" />
     <Compile Include="Parts\MissileBase.cs" />
     <Compile Include="Modules\ModuleWWC.cs" />
@@ -121,7 +120,7 @@
     <Compile Include="UI\BDGUIUtils.cs" />
     <Compile Include="UI\BDInputUtils.cs" />
     <Compile Include="Targeting\TargetInfo.cs" />
-    <Compile Include="UI\BDATargetManager.cs" />
+    <Compile Include="Targeting\BDATargetManager.cs" />
     <Compile Include="Control\BDModulePilotAI.cs" />
     <Compile Include="Parts\TargetingCamera.cs" />
     <Compile Include="Modules\ModuleTargetingCamera.cs" />
@@ -138,8 +137,6 @@
     <Compile Include="Parts\TGPCamRotator.cs" />
     <Compile Include="CounterMeasure\CMSmoke.cs" />
     <Compile Include="Targeting\TargetSignatureData.cs" />
-    <Compile Include="Radar\ModuleRadar.cs" />
-    <Compile Include="TargetSignatureData.cs" />
     <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
     <Compile Include="Misc\BDAEditorCategory.cs" />
