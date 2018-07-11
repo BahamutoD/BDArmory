@@ -368,7 +368,7 @@ namespace BDArmory.Core.Extension
 
             }
 
-            if(!isMissile && !(penetrationfactor >= 1f))
+            if (!isMissile && !(penetrationfactor >= 1f))
             {
                 if (BDAMath.Between(armor, 100f, 200f))
                 {
