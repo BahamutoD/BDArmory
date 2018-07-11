@@ -1,5 +1,6 @@
-﻿
-namespace BDArmory.Modules
+﻿using BDArmory.Modules;
+
+namespace EMP
 {
     public class ModuleEMP : PartModule
     {
