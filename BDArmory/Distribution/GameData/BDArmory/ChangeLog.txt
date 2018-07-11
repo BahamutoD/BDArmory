@@ -4,9 +4,11 @@
   * Correct text errors in bullet names on some files.  Not all platforms support UTF8 characters. 
   * (Internal) Fix file copy error in build process.
   * Increase default detonation range boundaries and step increments.  Git Issue #527
+  * Removed : Final from entried in MM config 000000_HitpointModule.cfg.  Causing race conditions with some BDA part mods
   
 * ENHANCEMENTS:
   * Improved reload sound on M1Abrams Turret.
+  * Removed BDA_SLW.cfg from MM configs.  Obsolete and no longer used.
   * Converted all .wav sounds to .ogg (reduce DL size and in game memory footprint)
   * Updated several Module info pages to reflect recent changes to ballistic mechanics
   * Added a part module Info Page refresh mechanism to support settings changes that affect part Module info blocks in the editor.

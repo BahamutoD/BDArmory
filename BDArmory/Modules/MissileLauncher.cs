@@ -2137,10 +2137,18 @@ namespace BDArmory.Modules
                 }
             }
 
+            IEnumerator<PartModule> partModules = part.Modules.GetEnumerator();
             output.AppendLine($"Warhead:");
-            output.AppendLine($"- Blast radius: {blastRadius}");
-            output.AppendLine($"- tnt Mass: {blastPower}");
-            output.AppendLine($"- Blast heat: {blastHeat}");
+            while (partModules.MoveNext())
+            {
+                if (partModules.Current == null) continue;
+                if (partModules.Current.moduleName != "BDExplosivePart") continue;
+                float tntMass = ((BDExplosivePart) partModules.Current).tntMass;
+                output.AppendLine($"- Blast radius: {Math.Round(BlastPhysicsUtils.CalculateBlastRange(tntMass), 2)} m");
+                output.AppendLine($"- tnt Mass: {tntMass} kg");
+                break;
+            }
+            partModules.Dispose();
 
             return output.ToString();
         }
