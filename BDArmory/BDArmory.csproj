@@ -223,7 +223,6 @@
     <None Include="Distribution\GameData\BDArmory\MMPatches\Armor_CVE.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_Armor.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_GroundRadar.cfg" />
-    <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_SLW.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\BDA_TweakScale.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\bdmk22_cockpit.cfg" />
     <None Include="Distribution\GameData\BDArmory\MMPatches\Explode_Mode_Squad_Tanks.cfg" />

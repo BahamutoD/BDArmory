@@ -2290,7 +2290,7 @@ namespace BDArmory.Modules
                 output.AppendLine($"Ammunition: {ammoName}");
                 output.AppendLine($"Bullet type: {bulletType}");
                 output.AppendLine($"Bullet mass: {Math.Round(binfo.bulletMass,2)} kg");
-                output.AppendLine($"Muzzle velocity: {bulletVelocity} m/s");
+                output.AppendLine($"Muzzle velocity: {Math.Round(binfo.bulletVelocity, 2)} m/s");
                 output.AppendLine($"Max Range: {maxEffectiveDistance} m");
                 if (weaponType == "cannon" || weaponType == "ballistic")
                 {
