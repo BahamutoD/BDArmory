@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 using System;
+using BDArmory.Core;
+using BDArmory.Modules;
 using BDArmory.Radar;
 using BDArmory.UI;
 using BDArmory.Parts;
@@ -139,7 +141,7 @@ namespace BDArmory.Misc
                         radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.omnidirectional + ";" + radar.directionalFieldOfView + ";" + radar.boresightFOV + ";" + radar.scanRotationSpeed + ";" + radar.lockRotationSpeed + ";" +
                         radar.lockRotationAngle + ";" + radar.showDirectionWhileScan + ";" + radar.multiLockFOV + ";" + radar.lockAttemptFOV + ";" +
                         radar.canScan + ";" + radar.canLock + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" + 
-                        radar.minSignalThreshold + ";" + radar.minLockedSignalThreshold + ";" + radar.maxLocks + ";" + radar.radarGroundClutterFactor + ";" + 
+                        radar.maxLocks + ";" + radar.radarGroundClutterFactor + ";" + 
                         radar.radarDetectionCurve.Evaluate(radar.radarMaxDistanceDetect) + "@" + radar.radarMaxDistanceDetect + ";" +
                         radar.radarLockTrackCurve.Evaluate(radar.radarMaxDistanceLockTrack) + "@" + radar.radarMaxDistanceLockTrack
                         );

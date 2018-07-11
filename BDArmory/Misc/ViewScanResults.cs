@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using BDArmory.Modules;
+using UnityEngine;
 
 namespace BDArmory.Misc
 {

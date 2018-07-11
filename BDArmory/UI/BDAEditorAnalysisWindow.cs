@@ -6,6 +6,7 @@ using KSP.UI.Screens;
 using BDArmory.Radar;
 using BDArmory.Parts;
 using BDArmory.Misc;
+using BDArmory.Modules;
 
 namespace BDArmory.UI
 {
@@ -107,7 +108,7 @@ namespace BDArmory.UI
             {
                 if (toolbarButton == null)
                 {
-                    Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySettings.textureDir + "icon_rcs", false);
+                    Texture buttonTexture = GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "icon_rcs", false);
                     toolbarButton = ApplicationLauncher.Instance.AddModApplication(ShowToolbarGUI, HideToolbarGUI, Dummy, Dummy, Dummy, Dummy, ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB, buttonTexture);
                 }
             }
@@ -132,17 +133,22 @@ namespace BDArmory.UI
         {
             if (showRcsWindow)
             {
-               windowRect = GUI.Window(this.GetInstanceID(), windowRect, RcsWindow, windowTitle, HighLogic.Skin.window);
+               windowRect = GUI.Window(this.GetInstanceID(), windowRect, WindowRcs, windowTitle, BDArmorySetup.BDGuiSkin.window);
             }
 
             PreventClickThrough();
         }
 
-        void RcsWindow(int windowID)
+        void WindowRcs(int windowID)
         {
-            GUI.Label(new Rect(10, 40, 200, 20), "Frontal", HighLogic.Skin.box);
-            GUI.Label(new Rect(220, 40, 200, 20), "Lateral", HighLogic.Skin.box);
-            GUI.Label(new Rect(430, 40, 200, 20), "Ventral",  HighLogic.Skin.box);
+            if (GUI.Button(new Rect(windowRect.width - 18, 2, 16, 16), "X"))
+            {
+                HideToolbarGUI();
+            }
+
+            GUI.Label(new Rect(10, 40, 200, 20), "Frontal", BDArmorySetup.BDGuiSkin.box);
+            GUI.Label(new Rect(220, 40, 200, 20), "Lateral", BDArmorySetup.BDGuiSkin.box);
+            GUI.Label(new Rect(430, 40, 200, 20), "Ventral",  BDArmorySetup.BDGuiSkin.box);
 
             if (takeSnapshot)
                 takeRadarSnapshot();
@@ -164,11 +170,11 @@ namespace BDArmory.UI
                 GUI.DrawTexture(new Rect(430, 70, 200, 200), RadarUtils.GetTextureVentral45, ScaleMode.StretchToFill);
 
 
-            GUI.Label(new Rect(10, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsFrontal, RadarUtils.rcsFrontal45)) + " m^2", HighLogic.Skin.label);
-            GUI.Label(new Rect(220, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsLateral, RadarUtils.rcsLateral45)) + " m^2", HighLogic.Skin.label);
-            GUI.Label(new Rect(430, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsVentral, RadarUtils.rcsVentral45)) + " m^2", HighLogic.Skin.label);
+            GUI.Label(new Rect(10, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsFrontal, RadarUtils.rcsFrontal45)) + " m^2", BDArmorySetup.BDGuiSkin.label);
+            GUI.Label(new Rect(220, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsLateral, RadarUtils.rcsLateral45)) + " m^2", BDArmorySetup.BDGuiSkin.label);
+            GUI.Label(new Rect(430, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsVentral, RadarUtils.rcsVentral45)) + " m^2", BDArmorySetup.BDGuiSkin.label);
 
-            GUIStyle style = HighLogic.Skin.label;
+            GUIStyle style = BDArmorySetup.BDGuiSkin.label;
             style.fontStyle = FontStyle.Bold;
             GUI.Label(new Rect(10, 300, 600, 20), "Base radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal) , style);
             GUI.Label(new Rect(10, 320, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction/stealth/ground clutter)", RadarUtils.rcsTotal * rcsReductionFactor * rcsGCF), style);
@@ -179,12 +185,12 @@ namespace BDArmory.UI
             GUI.Label(new Rect(10, 430, 600, 20), text_locktrack, style);
             GUI.Label(new Rect(10, 450, 600, 20), text_sonar, style);
 
-            bool bNewValue = GUI.Toggle(new Rect(490, 348, 150, 20), bLandedSplashed, "Splashed/Landed", HighLogic.Skin.toggle);
+            bool bNewValue = GUI.Toggle(new Rect(490, 348, 150, 20), bLandedSplashed, "Splashed/Landed", BDArmorySetup.BDGuiSkin.toggle);
 
             if (radars == null)
             {
                 FillRadarList();
-                GUIStyle listStyle = new GUIStyle(HighLogic.Skin.button);
+                GUIStyle listStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
                 listStyle.fixedHeight = 18; //make list contents slightly smaller
                 radarBox = new BDGUIComboBox(new Rect(10, 350, 600, 20), new Rect(10, 350, 250, 20), radarBoxText, radarsGUI, 124, listStyle);
             }
@@ -250,6 +256,7 @@ namespace BDArmory.UI
             previous_index = selected_index;
 
             GUI.DragWindow();
+            BDGUIUtils.RepositionWindow(ref windowRect);
         }
 
 

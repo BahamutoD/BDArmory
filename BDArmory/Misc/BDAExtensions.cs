@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BDArmory.CounterMeasure;
+using BDArmory.Modules;
 using BDArmory.Parts;
 using BDArmory.Radar;
 
@@ -14,7 +15,8 @@ namespace BDArmory.Misc
 		{
 			return (from avPart in parts.Where(p => p.partPrefab)
 				let missile = avPart.partPrefab.GetComponent<MissileLauncher>()
-				let moduleWeapon = avPart.partPrefab.GetComponent<ModuleWeapon>()
+			    let mmissile = avPart.partPrefab.GetComponent<BDModularGuidance>()
+                let moduleWeapon = avPart.partPrefab.GetComponent<ModuleWeapon>()
 				let missileFire = avPart.partPrefab.GetComponent<MissileFire>()
 				let moduleRadar = avPart.partPrefab.GetComponent<ModuleRadar>()
 				let cm = avPart.partPrefab.GetComponent<CMDropper>()

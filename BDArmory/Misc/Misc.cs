@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using BDArmory.Modules;
 using BDArmory.Parts;
 using BDArmory.Radar;
 using BDArmory.UI;
@@ -12,6 +13,9 @@ namespace BDArmory.Misc
 {
     public static class Misc
     {
+        public static Texture2D resizeTexture =
+          GameDatabase.Instance.GetTexture(BDArmorySetup.textureDir + "resizeSquare", false);
+
         public static Color ParseColor255(string color)
         {
             Color outputColor = new Color(0, 0, 0, 1);
@@ -63,7 +67,7 @@ namespace BDArmory.Misc
         public static bool CheckMouseIsOnGui()
         {
 
-            if (!BDArmorySettings.GAME_UI_ENABLED) return false;
+            if (!BDArmorySetup.GAME_UI_ENABLED) return false;
 
             if (!BDInputSettingsFields.WEAP_FIRE_KEY.inputString.Contains("mouse")) return false;
 
@@ -72,25 +76,25 @@ namespace BDArmory.Misc
 
 
             if (topGui.Contains(inverseMousePos)) return true;
-            if (BDArmorySettings.toolbarGuiEnabled && BDArmorySettings.WindowRectToolbar.Contains(inverseMousePos))
+            if (BDArmorySetup.windowBDAToolBarEnabled && BDArmorySetup.WindowRectToolbar.Contains(inverseMousePos))
                 return true;
-            if (ModuleTargetingCamera.windowIsOpen && ModuleTargetingCamera.camWindowRect.Contains(inverseMousePos))
+            if (ModuleTargetingCamera.windowIsOpen && BDArmorySetup.WindowRectTargetingCam.Contains(inverseMousePos))
                 return true;
-            if (BDArmorySettings.Instance.ActiveWeaponManager)
+            if (BDArmorySetup.Instance.ActiveWeaponManager)
             {
-                MissileFire wm = BDArmorySettings.Instance.ActiveWeaponManager;
+                MissileFire wm = BDArmorySetup.Instance.ActiveWeaponManager;
 
                 if (wm.vesselRadarData && wm.vesselRadarData.guiEnabled)
                 {
-                    if (VesselRadarData.radarWindowRect.Contains(inverseMousePos)) return true;
+                    if (BDArmorySetup.WindowRectRadar.Contains(inverseMousePos)) return true;
                     if (wm.vesselRadarData.linkWindowOpen && wm.vesselRadarData.linkWindowRect.Contains(inverseMousePos))
                         return true;
                 }
-                if (wm.rwr && wm.rwr.rwrEnabled && BDArmorySettings.WindowRectRwr.Contains(inverseMousePos))
+                if (wm.rwr && wm.rwr.rwrEnabled && wm.rwr.displayRWR && BDArmorySetup.WindowRectRwr.Contains(inverseMousePos))
                     return true;
                 if (wm.wingCommander && wm.wingCommander.showGUI)
                 {
-                    if (wm.wingCommander.guiWindowRect.Contains(inverseMousePos)) return true;
+                    if (BDArmorySetup.WindowRectWingCommander.Contains(inverseMousePos)) return true;
                     if (wm.wingCommander.showAGWindow && wm.wingCommander.agWindowRect.Contains(inverseMousePos))
                         return true;
                 }
@@ -105,6 +109,11 @@ namespace BDArmory.Misc
             }
 
             return false;
+        }
+
+        public static void ResizeGuiWindow(Rect windowrect, Vector2 mousePos)
+        {
+            
         }
 
         public static List<Rect> extraGUIRects;
@@ -199,7 +208,7 @@ namespace BDArmory.Misc
             Ray ray = new Ray(origin, target - origin);
             ray.origin += ray.direction*startDistance;
             RaycastHit rayHit;
-            if (Physics.Raycast(ray, out rayHit, dist, 688129))
+            if (Physics.Raycast(ray, out rayHit, dist, 9076737))
             {
                 if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
                 {
@@ -222,7 +231,7 @@ namespace BDArmory.Misc
             ray.origin += ray.direction*startDistance;
             RaycastHit rayHit;
 
-            if (Physics.Raycast(ray, out rayHit, dist, 688129))
+            if (Physics.Raycast(ray, out rayHit, dist, 9076737))
             {
                 if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
                 {

@@ -1,10 +1,11 @@
-using BDArmory.UI;
 using System.Collections.Generic;
+using BDArmory.Core;
+using BDArmory.Modules;
 using UnityEngine;
 
 namespace BDArmory.Parts
 {
-	public class TargetingCamera : MonoBehaviour
+    public class TargetingCamera : MonoBehaviour
 	{
 		public static TargetingCamera Instance;
 		public static bool ReadyForUse;
@@ -304,8 +305,6 @@ namespace BDArmory.Parts
 			nvLight.enabled = false;
 		}
 
-
-
 		private Camera FindCamera(string cameraName)
 		{
 			foreach(Camera cam in Camera.allCameras)
@@ -318,8 +317,6 @@ namespace BDArmory.Parts
 			Debug.Log ("Couldn't find "+cameraName);
 			return null;
 		}
-
-
 
 		void OnDestroy()
 		{

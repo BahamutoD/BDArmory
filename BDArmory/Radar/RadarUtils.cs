@@ -1,16 +1,19 @@
 using BDArmory.Core.Extension;
+using BDArmory.Control;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using BDArmory.UI;
-using System;
 using System.Collections.Generic;
+using BDArmory.Core;
+using BDArmory.Modules;
+using BDArmory.Targeting;
 using UnityEngine;
 
 namespace BDArmory.Radar
 {
-	public static class RadarUtils
+    public static class RadarUtils
 	{
         private static bool rcsSetupCompleted = false;
         private static int radarResolution = 128;
@@ -313,6 +316,7 @@ namespace BDArmory.Radar
             radarCam.targetTexture = rcsRendering;
             RenderTexture.active = rcsRendering;
             Shader.SetGlobalVector("_LIGHTDIR", -cameraDirection);
+            Shader.SetGlobalColor("_RCSCOLOR", Color.white);
             radarCam.RenderWithShader(BDAShaderLoader.RCSShader, string.Empty);
             rcsTexture.ReadPixels(new Rect(0, 0, radarResolution, radarResolution), 0, 0);
             rcsTexture.Apply();
@@ -532,6 +536,14 @@ namespace BDArmory.Radar
                 // ignore null, unloaded
                 if (loadedvessels.Current == null) continue;
                 if (!loadedvessels.Current.loaded) continue;
+
+                // IFF code check to prevent friendly lock-on (neutral vessel without a weaponmanager WILL be lockable!)
+                MissileFire wm = loadedvessels.Current.FindPartModuleImplementing<MissileFire>();
+                if (wm != null)
+                {
+                    if (missile.Team == wm.team)
+                        continue;
+                }                
 
                 // ignore self, ignore behind ray
                 Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
@@ -881,6 +893,9 @@ namespace BDArmory.Radar
 
 						BDATargetManager.ReportVessel(loadedvessels.Current, myWpnManager);
 
+						vesselDistance = Mathf.Sqrt(vesselDistance);
+						Vector3 predictedRelativeDirection = loadedvessels.Current.transform.position - myWpnManager.vessel.PredictPosition(vesselDistance / (950 + Vector3.Dot(myWpnManager.vessel.Velocity(), vesselDirection.normalized)));
+
 						TargetInfo tInfo;
 						if((tInfo = loadedvessels.Current.gameObject.GetComponent<TargetInfo>()))
 						{
@@ -930,7 +945,8 @@ namespace BDArmory.Radar
 									if(!weapon.Current.recentlyFiring) continue;
 									if(Vector3.Dot(weapon.Current.fireTransforms[0].forward, vesselDirection) > 0) continue;
 
-									if(Vector3.Angle(weapon.Current.fireTransforms[0].forward, -vesselDirection) < 6500 / vesselDistance && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
+									if ((Vector3.Angle(weapon.Current.fireTransforms[0].forward, -predictedRelativeDirection) < 6500 / vesselDistance)
+										&& (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
 									{
 										results.firingAtMe = true;
 										results.threatPosition = weapon.Current.vessel.transform.position;

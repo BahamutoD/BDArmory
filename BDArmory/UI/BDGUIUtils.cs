@@ -144,6 +144,30 @@ namespace BDArmory.UI
 	    rect.height = (int)rect.height;
 	    return rect;
 	  }
+
+	  internal static void RepositionWindow(ref Rect windowPosition)
+	  {
+	    // This method uses Gui point system.
+	    if (windowPosition.x < 0) windowPosition.x = 0;
+	    if (windowPosition.y < 0) windowPosition.y = 0;
+
+	    if (windowPosition.xMax > Screen.width)
+	      windowPosition.x = Screen.width - windowPosition.width;
+	    if (windowPosition.yMax > Screen.height)
+	      windowPosition.y = Screen.height - windowPosition.height;
+	  }
+
+	  internal static Rect GuiToScreenRect(Rect rect)
+	  {
+	    // Must run during OnGui to work...
+	    Rect newRect = new Rect
+	    {
+	      position = GUIUtility.GUIToScreenPoint(rect.position),
+	      width = rect.width,
+	      height = rect.height
+	    };
+	    return newRect;
+	  }
 	}
 }
 
