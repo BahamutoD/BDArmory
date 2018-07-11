@@ -1,17 +1,16 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using BDArmory.Armor;
+using BDArmory.Core;
 using BDArmory.Core.Extension;
 using BDArmory.Core.Module;
 using BDArmory.FX;
 using BDArmory.Parts;
 using BDArmory.Shaders;
 using UnityEngine;
-using System.Collections.Generic;
-using BDArmory.Core;
 
-namespace BDArmory
+namespace BDArmory.Bullets
 {
     public class PooledBullet : MonoBehaviour
     {
@@ -502,11 +501,20 @@ namespace BDArmory
 
             if (BDArmorySettings.BULLET_HITS)
             {
-                BulletHitFX.CreateBulletHit(hitPart,hit.point, hit, hit.normal, hasRichocheted, caliber,penetrationfactor);
+                BulletHitFX.CreateBulletHit(hitPart, hit.point, hit, hit.normal, hasRichocheted, caliber,
+                    penetrationfactor);
             }
 
-            hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
-                                        bulletDmgMult,impactVelocity, explosive);
+            if (explosive)
+            {
+                hitPart.AddBallisticDamage(bulletMass - tntMass, caliber, multiplier, penetrationfactor,
+                    bulletDmgMult, impactVelocity);
+            }
+            else
+            {
+                hitPart.AddBallisticDamage(bulletMass, caliber, multiplier, penetrationfactor,
+                    bulletDmgMult, impactVelocity);
+            }
         }
 
         private void CalculateDragNumericalIntegration()

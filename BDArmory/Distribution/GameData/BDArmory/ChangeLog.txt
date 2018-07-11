@@ -1,4 +1,30 @@
-﻿v1.2.1.4
+﻿v1.2.2.1
+* FIXES
+  * Added bulletinfo.explosive check to GetInfo, so explosive shells now show blast radius in the part Info (RMB) section in the editor.
+  * Correct text errors in bullet names on some files.  Not all platforms support UTF8 characters. 
+  * (Internal) Fix file copy error in build process.
+  * Increase default detonation range boundaries and step increments.  Git Issue #527
+  * Removed : Final from entried in MM config 000000_HitpointModule.cfg.  Causing race conditions with some BDA part mods
+  
+* ENHANCEMENTS:
+  * Improved reload sound on M1Abrams Turret.
+  * Removed BDA_SLW.cfg from MM configs.  Obsolete and no longer used.
+  * Converted all .wav sounds to .ogg (reduce DL size and in game memory footprint)
+  * Updated several Module info pages to reflect recent changes to ballistic mechanics
+  * Added a part module Info Page refresh mechanism to support settings changes that affect part Module info blocks in the editor.
+  * Added Jettison action to parts TweakUI in flight.  Git Issue #539
+  * (Internal) Some code refactoring (basic cleanup, Module reorganization)
+  * Deprecate the Cannon weaponType.   Going forward, Ballistic should be used instead.  Cannon remains (backwards compatibility), but will be eventually removed.
+  * (Internal) Updated build process to improve multi developer build and deployments.  Simplified KSP version change dev environment build process.
+
+v1.2.2
+* NEW FEATURES:
+  * Recompiled for KSP 1.4.4. 
+
+* ENHANCEMENTS:
+  * Added AN/APG-77  Air to ground radar. 
+
+v1.2.1.4
 * FIXES
   * Corrected error in Target Previous action group.  Was pointing to Target Next method instead.
 
