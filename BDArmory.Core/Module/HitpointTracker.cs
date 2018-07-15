@@ -165,14 +165,23 @@ namespace BDArmory.Core.Module
             if (!part.IsMissile())
             {
                 //1. Density of the dry mass of the part.
-                var density = part.GetDensity();
+                var density = part.GetDensity();              
+                                
+
+                Debug.Log("[BDArmory]: Hitpoint Calc | Density : " + density);
 
                 //2. Incresing density based on crash tolerance
                 density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
 
+                Debug.Log("[BDArmory]: Hitpoint Calc | Density + CrashTolerance : " + density );
+
                 //12 square meters is the standard size of MK1 fuselage using it as a base
-                var areaExcess = Mathf.Max(part.GetArea() - 12f, 0);
-                var areaCalculation = Mathf.Min(12f, part.GetArea()) + Mathf.Pow(areaExcess, (1f / 3f));
+                var areaExcess = Mathf.Max(part.GetArea(true,_prefabPart) - 12f, 0);
+                var areaCalculation = Mathf.Min(12f, part.GetArea(true, _prefabPart)) + Mathf.Pow(areaExcess, (1f / 3f));
+
+                //areaCalculation = (float)part.exposedArea;
+
+                Debug.Log("[BDArmory]: Hitpoin Calc | AreaCalc : " + areaCalculation);
 
                 //3. final calculations 
                 hitpoints = areaCalculation * density * hitpointMultiplier;
@@ -191,9 +200,11 @@ namespace BDArmory.Core.Module
             {
                 hitpoints = maxHitPoints;
             }
-
             
             if (hitpoints <= 0) hitpoints = 500;
+
+            Debug.Log("[BDArmory]: Hitpoint Calc Ran : " + hitpoints);
+
             return hitpoints;
         }
 
