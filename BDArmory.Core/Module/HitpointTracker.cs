@@ -42,7 +42,11 @@ namespace BDArmory.Core.Module
         private bool _setupRun = false;
         private bool _firstSetup = true;
 
-        protected virtual void Setup()
+        private const float mk1CockpitArea = 7.292964f;
+        private const int HpRounding = 250;
+
+
+        public void Setup()
         {
             if (_setupRun)
             {
@@ -55,6 +59,8 @@ namespace BDArmory.Core.Module
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
+
+            if (!HighLogic.LoadedSceneIsEditor && !HighLogic.LoadedSceneIsFlight) return;
 
             if (part.partInfo == null)
             {
@@ -73,7 +79,7 @@ namespace BDArmory.Core.Module
             }
         }        
 
-        protected virtual void SetupPrefab()
+        public void SetupPrefab()
         {
             if (part != null)
             {
@@ -129,16 +135,16 @@ namespace BDArmory.Core.Module
             }         
         }
 
-        private void ShipModified(ShipConstruct data)
+        public void ShipModified(ShipConstruct data)
         {
             SetupPrefab();
         }
 
         void OnGUI()
         {
-            if (HighLogic.LoadedSceneIsEditor && _firstSetup)
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                //SetupPrefab();
+                SetupPrefab();
             }
         }
 
@@ -158,7 +164,7 @@ namespace BDArmory.Core.Module
 
         #region Hitpoints Functions
 
-        private float CalculateTotalHitpoints()
+        public float CalculateTotalHitpoints()
         {
             float hitpoints;
 
@@ -168,17 +174,16 @@ namespace BDArmory.Core.Module
                 var density = part.GetDensity();
 
                 //2. Incresing density based on crash tolerance
-                density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
+                //density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
 
                 //12 square meters is the standard size of MK1 fuselage using it as a base
-                var areaExcess = Mathf.Max(part.GetArea() - 12f, 0);
-                var areaCalculation = Mathf.Min(12f, part.GetArea()) + Mathf.Pow(areaExcess, (1f / 3f));
 
+                var areaCalculation = part.GetArea() / mk1CockpitArea;
                 //3. final calculations 
                 hitpoints = areaCalculation * density * hitpointMultiplier;
-                hitpoints = Mathf.Round(hitpoints/500) * 500;
+                hitpoints = Mathf.Round(hitpoints/ HpRounding) * HpRounding;
 
-                if (hitpoints <= 0) hitpoints = 500;                
+                if (hitpoints <= 0) hitpoints = HpRounding;                
             }
             else
             {
@@ -193,7 +198,7 @@ namespace BDArmory.Core.Module
             }
 
             
-            if (hitpoints <= 0) hitpoints = 500;
+            if (hitpoints <= 0) hitpoints = HpRounding;
             return hitpoints;
         }
 
