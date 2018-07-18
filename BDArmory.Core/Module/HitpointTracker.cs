@@ -1,5 +1,6 @@
 ﻿using BDArmory.Core.Extension;
 using UnityEngine;
+using TweakScale;
 
 namespace BDArmory.Core.Module
 {
@@ -10,6 +11,9 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Hitpoints"),
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None,controlEnabled = false,scene = UI_Scene.All,maxValue = 100000,minValue = 0,requireFullControl = false)]
         public float Hitpoints;
+
+        [KSPField]
+        bool hasPrefabRun = false;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor Thickness"),
         UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
@@ -77,7 +81,7 @@ namespace BDArmory.Core.Module
                 else
                     enabled = false;
             }
-        }        
+        }
 
         public void SetupPrefab()
         {
@@ -112,11 +116,12 @@ namespace BDArmory.Core.Module
                 if (!ArmorSet) overrideArmorSetFromConfig();           
                 
                 previousHitpoints = Hitpoints;
+                hasPrefabRun = true;
             }
             else
             {
 
-                    Debug.Log("[BDArmory]: HitpointTracker::OnStart part  is null");
+                    Debug.Log("[BDArmory]: HitpointTracker::OnStart part is null");
             }
         }
 
@@ -136,16 +141,16 @@ namespace BDArmory.Core.Module
         }
 
         public void ShipModified(ShipConstruct data)
-        {
+        {            
             SetupPrefab();
         }
-
+         
         void OnGUI()
         {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                SetupPrefab();
-            }
+            //if (HighLogic.LoadedSceneIsEditor)
+            //{
+            //    SetupPrefab();
+            //}
         }
 
         public override void OnUpdate()
@@ -171,19 +176,17 @@ namespace BDArmory.Core.Module
             if (!part.IsMissile())
             {
                 //1. Density of the dry mass of the part.
-                var density = part.GetDensity();              
-                                
+                var density = part.GetDensity();       
 
                 Debug.Log("[BDArmory]: Hitpoint Calc | Density : " + density);
 
                 //2. Incresing density based on crash tolerance
                 //density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
 
-                Debug.Log("[BDArmory]: Hitpoint Calc | Density + CrashTolerance : " + density );
-
                 //12 square meters is the standard size of MK1 fuselage using it as a base
 
                 var areaCalculation = part.GetArea() / mk1CockpitArea;
+
                 //3. final calculations 
                 hitpoints = areaCalculation * density * hitpointMultiplier;
                 hitpoints = Mathf.Round(hitpoints/ HpRounding) * HpRounding;
