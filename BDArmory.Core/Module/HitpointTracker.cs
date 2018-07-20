@@ -1,6 +1,5 @@
 ﻿using BDArmory.Core.Extension;
 using UnityEngine;
-using TweakScale;
 
 namespace BDArmory.Core.Module
 {
@@ -48,15 +47,15 @@ namespace BDArmory.Core.Module
 
         private const float mk1CockpitArea = 7.292964f;
         private const int HpRounding = 250;
-
-
+                         
+        
         public void Setup()
         {
             if (_setupRun)
             {
                 return;
             }
-            _prefabPart = part.partInfo.partPrefab;
+            //_prefabPart = part.partInfo.partPrefab;
             _setupRun = true;
         }
 
@@ -81,15 +80,18 @@ namespace BDArmory.Core.Module
                 else
                     enabled = false;
             }
+
         }
 
         public void SetupPrefab()
         {
+            _prefabPart = part.partInfo.partPrefab;
+
             if (part != null)
             {
                 var maxHitPoints_ = CalculateTotalHitpoints();
 
-                if (previousHitpoints == maxHitPoints_) return;
+                //if (previousHitpoints == maxHitPoints_) return;
 
                 //Add Hitpoints
                 UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Hitpoints"].uiControlFlight;
@@ -123,7 +125,7 @@ namespace BDArmory.Core.Module
 
                     Debug.Log("[BDArmory]: HitpointTracker::OnStart part is null");
             }
-        }
+        }            
 
         public override void OnStart(StartState state)
         {
@@ -137,7 +139,13 @@ namespace BDArmory.Core.Module
                 //Once started the max value of the field should be the initial one
                 armorField.maxValue = Armor;
                 part.RefreshAssociatedWindows();
-            }         
+            }
+            GameEvents.onEditorShipModified.Add(ShipModified);
+        }
+
+        private void OnDestroy()
+        {
+            GameEvents.onEditorShipModified.Remove(ShipModified);
         }
 
         public void ShipModified(ShipConstruct data)
@@ -164,10 +172,24 @@ namespace BDArmory.Core.Module
             {
                 _firstSetup = false;
                 SetupPrefab();
-             }        
-        }        
+             }
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                //if (_ScalingFactor.index >= 0f)
+                //{
+                //    var changed = _ScalingFactor.index != (isFreeScale ? tweakScale : ScaleFactors[tweakName]);
+                //    if (changed) // user has changed the scale tweakable
+                //    {
+                //        //OnTweakScaleChanged();
+                //    }
+                //}
+            }
+        }
 
         #region Hitpoints Functions
+
+    
 
         public float CalculateTotalHitpoints()
         {
@@ -178,7 +200,7 @@ namespace BDArmory.Core.Module
                 //1. Density of the dry mass of the part.
                 var density = part.GetDensity();       
 
-                Debug.Log("[BDArmory]: Hitpoint Calc | Density : " + density);
+                Debug.Log("[BDArmory]: Hitpoint Calc | Density : " + Mathf.Round(density));
 
                 //2. Incresing density based on crash tolerance
                 //density += Mathf.Clamp(part.crashTolerance, 10f, 30f);
@@ -186,6 +208,10 @@ namespace BDArmory.Core.Module
                 //12 square meters is the standard size of MK1 fuselage using it as a base
 
                 var areaCalculation = part.GetArea() / mk1CockpitArea;
+
+                Debug.Log("[BDArmory]: Hitpoint Calc | areaCalc : " +  Mathf.Round(areaCalculation));
+                Debug.Log("[BDArmory]: Hitpoint Calc | ScaleFactor : ");
+
 
                 //3. final calculations 
                 hitpoints = areaCalculation * density * hitpointMultiplier;
