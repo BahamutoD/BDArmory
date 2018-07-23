@@ -276,30 +276,23 @@ namespace BDArmory.Core.Extension
 
         public static float GetArea(this Part part, bool isprefab = false, Part prefab = null)
         {
-            float sfcAreaCalc = 2f * (part.prefabSize.x * part.prefabSize.y) + 2f * (part.prefabSize.y * part.prefabSize.z) + 2f * (part.prefabSize.x * part.prefabSize.z);
-
-            if (sfcAreaCalc == 0)
-            {
-                sfcAreaCalc = 2f * (part.HighlightRenderer[0].bounds.size.x * part.HighlightRenderer[0].bounds.size.y) + 2f * (part.HighlightRenderer[0].bounds.size.y * part.HighlightRenderer[0].bounds.size.z) + 2f * (part.HighlightRenderer[0].bounds.size.x * part.HighlightRenderer[0].bounds.size.z);
-            }
-
-            Debug.Log("Part name = " + part.name + "Area ="+ sfcAreaCalc);
+            var size = part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            float sfcAreaCalc = 2f * (size.x * size.y) + 2f * (size.y * size.z) + 2f * (size.x * size.z);
+        
             return sfcAreaCalc;
         }
 
         public static float GetAverageBoundSize(this Part part)
         {
-            return (part.prefabSize.x + part.prefabSize.y + part.prefabSize.z) / 3f;
+            var size = part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            return (size.x + size.y + size.z) / 3f;
         }
 
         public static float GetVolume(this Part part)
         {
-            var volume = part.prefabSize.x * part.prefabSize.y * part.prefabSize.z;
-            if (volume == 0)
-            {
-                volume = part.HighlightRenderer[0].bounds.size.x * part.HighlightRenderer[0].bounds.size.y * part.HighlightRenderer[0].bounds.size.z;
-            }
-            Debug.Log("Part name = " + part.name + "volume =" + volume);
+            var size = part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            var volume = size.x * size.y * size.z;
+            
             return volume;
         }
 
