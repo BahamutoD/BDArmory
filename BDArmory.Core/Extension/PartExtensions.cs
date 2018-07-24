@@ -276,7 +276,7 @@ namespace BDArmory.Core.Extension
 
         public static float GetArea(this Part part, bool isprefab = false, Part prefab = null)
         {
-            var size = part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            var size = part.GetSize();
             float sfcAreaCalc = 2f * (size.x * size.y) + 2f * (size.y * size.z) + 2f * (size.x * size.z);
         
             return sfcAreaCalc;
@@ -284,16 +284,28 @@ namespace BDArmory.Core.Extension
 
         public static float GetAverageBoundSize(this Part part)
         {
-            var size = part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            var size = part.GetSize();
             return (size.x + size.y + size.z) / 3f;
         }
 
         public static float GetVolume(this Part part)
         {
-            var size = part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            var size = part.GetSize();
             var volume = size.x * size.y * size.z;
-            
             return volume;
+        }
+
+        public static Vector3 GetSize(this Part part)
+        {
+            var tweakScaleModule = part.Modules["TweakScale"];
+
+            float scaleMultiplier = 1f;
+            if (tweakScaleModule != null)
+            {
+                scaleMultiplier = tweakScaleModule.Fields["currentScale"].GetValue<float>(tweakScaleModule) /
+                                  tweakScaleModule.Fields["defaultScale"].GetValue<float>(tweakScaleModule);
+            }
+            return part.GetComponentInChildren<MeshFilter>().mesh.bounds.size * scaleMultiplier;
         }
 
         public static float GetDensity (this Part part)

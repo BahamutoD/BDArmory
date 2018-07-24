@@ -41,11 +41,9 @@ namespace BDArmory.Core.Module
         private readonly float hitpointMultiplier = BDArmorySettings.HITPOINT_MULTIPLIER;
 
         private float previousHitpoints;
-        private Part _prefabPart;
         private bool _setupRun = false;
         private bool _firstSetup = true;
-
-        private const float mk1CockpitArea = 7.292964f;
+        private bool _updateHitpoints = false;
         private const int HpRounding = 250;
 
 
@@ -68,8 +66,7 @@ namespace BDArmory.Core.Module
             if (part.partInfo == null)
             {
                 // Loading of the prefab from the part config
-                _prefabPart = part;
-                SetupPrefab();
+                _updateHitpoints = true;
 
             }
             else
@@ -85,8 +82,6 @@ namespace BDArmory.Core.Module
 
         public void SetupPrefab()
         {
-            _prefabPart = part.partInfo.partPrefab;
-
             if (part != null)
             {
                 var maxHitPoints_ = CalculateTotalHitpoints();
@@ -112,7 +107,6 @@ namespace BDArmory.Core.Module
                 UI_FloatRange armorFieldEditor = (UI_FloatRange)Fields["Armor"].uiControlEditor;
                 armorFieldEditor.maxValue = 500f;
                 armorFieldEditor.minValue = 10f;
-
                 part.RefreshAssociatedWindows();
 
                 if (!ArmorSet) overrideArmorSetFromConfig();
@@ -131,7 +125,7 @@ namespace BDArmory.Core.Module
         {
             isEnabled = true;
 
-            if (part != null) SetupPrefab();
+            if (part != null) _updateHitpoints = true;
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -150,15 +144,16 @@ namespace BDArmory.Core.Module
 
         public void ShipModified(ShipConstruct data)
         {
-            SetupPrefab();
+            _updateHitpoints = true;
         }
 
         void OnGUI()
         {
-            //if (HighLogic.LoadedSceneIsEditor)
-            //{
-            //    SetupPrefab();
-            //}
+            if (_updateHitpoints)
+            {
+                SetupPrefab();
+                _updateHitpoints = false;
+            }
         }
 
         public void Update()
@@ -171,19 +166,7 @@ namespace BDArmory.Core.Module
             if (part != null && _firstSetup)
             {
                 _firstSetup = false;
-                SetupPrefab();
-            }
-
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                //if (_ScalingFactor.index >= 0f)
-                //{
-                //    var changed = _ScalingFactor.index != (isFreeScale ? tweakScale : ScaleFactors[tweakName]);
-                //    if (changed) // user has changed the scale tweakable
-                //    {
-                //        //OnTweakScaleChanged();
-                //    }
-                //}
+                _updateHitpoints = true;
             }
         }
 
@@ -200,13 +183,9 @@ namespace BDArmory.Core.Module
                 //1. Density of the dry mass of the part.
                 var density = part.GetDensity();
 
-                Debug.Log("[BDArmory]: Hitpoint Calc | Mesh : " + part.GetComponentInChildren<MeshFilter>().mesh.bounds.size);
-                var tweakScaleModule = part.Modules["TweakScale"];
-
-                if (tweakScaleModule != null)
-                {
-                    Debug.Log("[BDArmory]: Hitpoint Calc | scale : " + tweakScaleModule.Fields["currentScale"].GetValue<float>(tweakScaleModule) / tweakScaleModule.Fields["defaultScale"].GetValue<float>(tweakScaleModule));
-                }
+                Debug.Log("[BDArmory]: Hitpoint Calc | Size : " + part.GetSize());
+                Debug.Log("[BDArmory]: Hitpoint Calc | mass : " + part.mass);
+                Debug.Log("[BDArmory]: Hitpoint Calc | volume : " + part.GetVolume());
 
                 Debug.Log("[BDArmory]: Hitpoint Calc | Density : " + Mathf.Round(density));
               
