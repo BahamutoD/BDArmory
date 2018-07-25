@@ -41,21 +41,11 @@ namespace BDArmory.Core.Module
         private readonly float hitpointMultiplier = BDArmorySettings.HITPOINT_MULTIPLIER;
 
         private float previousHitpoints;
-        private bool _setupRun = false;
         private bool _firstSetup = true;
         private bool _updateHitpoints = false;
-        private const int HpRounding = 250;
+        private bool _forceUpdateHitpointsUI = false;
+        private const int HpRounding = 100;
 
-
-        public void Setup()
-        {
-            if (_setupRun)
-            {
-                return;
-            }
-            //_prefabPart = part.partInfo.partPrefab;
-            _setupRun = true;
-        }
 
         public override void OnLoad(ConfigNode node)
         {
@@ -73,7 +63,9 @@ namespace BDArmory.Core.Module
             {
                 // Loading of the part from a saved craft                
                 if (HighLogic.LoadedSceneIsEditor)
-                    Setup();
+                {
+                    _updateHitpoints = true;    
+                }
                 else
                     enabled = false;
             }
@@ -86,7 +78,7 @@ namespace BDArmory.Core.Module
             {
                 var maxHitPoints_ = CalculateTotalHitpoints();
 
-                if (previousHitpoints == maxHitPoints_) return;
+                if (!_forceUpdateHitpointsUI &&  previousHitpoints == maxHitPoints_) return;
 
                 //Add Hitpoints
                 UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Hitpoints"].uiControlFlight;
@@ -137,6 +129,8 @@ namespace BDArmory.Core.Module
             GameEvents.onEditorShipModified.Add(ShipModified);
         }
 
+
+
         private void OnDestroy()
         {
             GameEvents.onEditorShipModified.Remove(ShipModified);
@@ -146,33 +140,30 @@ namespace BDArmory.Core.Module
         {
             _updateHitpoints = true;
         }
-
-        void OnGUI()
+        public override void OnUpdate()
         {
-            if (_updateHitpoints)
-            {
-                SetupPrefab();
-                _updateHitpoints = false;
-            }
+
+            RefreshHitPoints();
         }
 
         public void Update()
         {
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || Hitpoints == 0f)
-            {
-                return;
-            }
 
-            if (part != null && _firstSetup)
+            RefreshHitPoints();
+        }
+
+        private void RefreshHitPoints()
+        {
+
+            if (_updateHitpoints)
             {
-                _firstSetup = false;
-                _updateHitpoints = true;
+                SetupPrefab();
+                _updateHitpoints = false;
+                _forceUpdateHitpointsUI = false;
             }
         }
 
         #region Hitpoints Functions
-
-
 
         public float CalculateTotalHitpoints()
         {
@@ -180,24 +171,13 @@ namespace BDArmory.Core.Module
 
             if (!part.IsMissile())
             {
-                //1. Density of the dry mass of the part.
-                var density = part.GetDensity();
+                var density = 5325; //aluminum steel 50/50 alloy (density in kg/m3)
 
-                Debug.Log("[BDArmory]: Hitpoint Calc | Size : " + part.GetSize());
-                Debug.Log("[BDArmory]: Hitpoint Calc | mass : " + part.mass);
-                Debug.Log("[BDArmory]: Hitpoint Calc | volume : " + part.GetVolume());
-
-                Debug.Log("[BDArmory]: Hitpoint Calc | Density : " + Mathf.Round(density));
-              
-                //Structural mass is the area in m2 * 2 cm of thickness * material density
-
-                var structuralMass = part.GetArea() * 0.02f * density;
-
-                Debug.Log("[BDArmory]: Hitpoint Calc | structuralMass : " + Mathf.Round(structuralMass));
-
+                //Structural mass is the area in m2 * imaginary thickness for balance * material density
+                var structuralMass = part.GetArea() * 0.01f * density;
 
                 //3. final calculations 
-                hitpoints = structuralMass * 10 * hitpointMultiplier;
+                hitpoints = 0.25f* structuralMass * hitpointMultiplier;
                 hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
 
                 if (hitpoints <= 0) hitpoints = HpRounding;

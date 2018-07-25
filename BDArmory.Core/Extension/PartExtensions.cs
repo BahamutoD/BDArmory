@@ -308,10 +308,14 @@ namespace BDArmory.Core.Extension
             return part.GetComponentInChildren<MeshFilter>().mesh.bounds.size * scaleMultiplier;
         }
 
-        public static float GetDensity (this Part part)
-        {
-            return (part.mass * 1000) / part.GetVolume();
-        }
+        //public static float GetDensity(this Part part)
+        //{
+        //    float structuralMassPercentage = part.mass / (part.mass + part.resourceMass);
+
+        //    float structuralVolume = part.GetVolume() * structuralMassPercentage;
+
+        //    return ((part.mass * 1000) / structuralVolume);
+        //}
 
         public static bool IsAero(this Part part)
         {
