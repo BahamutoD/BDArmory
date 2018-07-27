@@ -133,7 +133,7 @@ namespace BDArmory.Core.Module
 
         private void OnDestroy()
         {
-            GameEvents.onEditorShipModified.Remove(ShipModified);
+            GameEvents.onEditorShipModified.Remove(ShipModified);   
         }
 
         public void ShipModified(ShipConstruct data)
@@ -171,13 +171,21 @@ namespace BDArmory.Core.Module
 
             if (!part.IsMissile())
             {
-                var density = 5325; //aluminum steel 50/50 alloy (density in kg/m3)
 
-                //Structural mass is the area in m2 * imaginary thickness for balance * material density
-                var structuralMass = part.GetArea() * 0.01f * density;
+                var averageSize = part.GetAverageBoundSize();
+                var sphereRadius = averageSize * 0.5f;
+                var sphereSurface = 4 * Mathf.PI * sphereRadius * sphereRadius;
+                var structuralVolume = sphereSurface * 0.1f;
 
+                var density = (part.mass * 1000f) / structuralVolume;
+                density = Mathf.Clamp(density, 1000, 10000);
+                //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralVolume : " + structuralVolume);
+                //Debug.Log("[BDArmory]: Hitpoint Calc"+part.name+" | Density : " + density);
+                
+                var structuralMass = density * structuralVolume;
+                //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralMass : " + structuralMass);
                 //3. final calculations 
-                hitpoints = 0.25f* structuralMass * hitpointMultiplier;
+                hitpoints =  structuralMass * hitpointMultiplier *0.33f;
                 hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
 
                 if (hitpoints <= 0) hitpoints = HpRounding;

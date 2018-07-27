@@ -298,24 +298,22 @@ namespace BDArmory.Core.Extension
         public static Vector3 GetSize(this Part part)
         {
             var tweakScaleModule = part.Modules["TweakScale"];
-
+            part.GetComponentInChildren<MeshFilter>().mesh.RecalculateBounds();
+            var size =  part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
             float scaleMultiplier = 1f;
             if (tweakScaleModule != null)
             {
                 scaleMultiplier = tweakScaleModule.Fields["currentScale"].GetValue<float>(tweakScaleModule) /
                                   tweakScaleModule.Fields["defaultScale"].GetValue<float>(tweakScaleModule);
             }
-            return part.GetComponentInChildren<MeshFilter>().mesh.bounds.size * scaleMultiplier;
+    
+            return size * scaleMultiplier;
         }
 
-        //public static float GetDensity(this Part part)
-        //{
-        //    float structuralMassPercentage = part.mass / (part.mass + part.resourceMass);
-
-        //    float structuralVolume = part.GetVolume() * structuralMassPercentage;
-
-        //    return ((part.mass * 1000) / structuralVolume);
-        //}
+        public static float GetDensity(this Part part)
+        {
+            return (part.mass * 1000f) / (part.GetVolume()*0.476f);
+        }
 
         public static bool IsAero(this Part part)
         {
