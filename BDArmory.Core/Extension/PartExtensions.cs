@@ -285,6 +285,9 @@ namespace BDArmory.Core.Extension
         public static float GetAverageBoundSize(this Part part)
         {
             var size = part.GetSize();
+
+
+
             return (size.x + size.y + size.z) / 3f;
         }
 
@@ -298,21 +301,22 @@ namespace BDArmory.Core.Extension
         public static Vector3 GetSize(this Part part)
         {
             var tweakScaleModule = part.Modules["TweakScale"];
-            part.GetComponentInChildren<MeshFilter>().mesh.RecalculateBounds();
+
             var size =  part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
+            
+            if (part.name.Contains("B9.Aero.Wing.Procedural"))
+            {
+                size = size * 0.1f;
+            }
+
             float scaleMultiplier = 1f;
             if (tweakScaleModule != null)
             {
                 scaleMultiplier = tweakScaleModule.Fields["currentScale"].GetValue<float>(tweakScaleModule) /
                                   tweakScaleModule.Fields["defaultScale"].GetValue<float>(tweakScaleModule);
             }
-    
-            return size * scaleMultiplier;
-        }
 
-        public static float GetDensity(this Part part)
-        {
-            return (part.mass * 1000f) / (part.GetVolume()*0.476f);
+            return size * scaleMultiplier;
         }
 
         public static bool IsAero(this Part part)
