@@ -384,6 +384,7 @@
     <None Include="Distribution\GameData\BDArmory\Resources\Armor.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\BDAmmo_Universal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\Countermeasures.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Resources\HighExplosive.cfg" />
     <None Include="Distribution\GameData\BDArmory\settings.cfg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\armOff.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\armOn.ogg" />
