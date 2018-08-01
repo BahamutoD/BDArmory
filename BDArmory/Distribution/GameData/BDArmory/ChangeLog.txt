@@ -1,6 +1,11 @@
 ﻿v1.2.2.2
 * FIXES
-    *Error spam in Log when a radar is destroyed.  An orphaned index was not properly being updated.
+    *Error spam in Log when a radar is destroyed.  An orphaned index was not properly being updated. 
+     Reported in BDAc Forum post: https://forum.kerbalspaceprogram.com/index.php?/topic/155014-14x-bdarmory-continued-v1221-7102018-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/&do=findComment&comment=3425233
+
+* ENHANCEMENTS:
+  * Increased maximum missles per target to 18, up from 6.
+  * Added EMP Module.  Now Electromagnetic pulses exist that can disable electronics within the blast range.
 
 v1.2.2.1
 * FIXES
