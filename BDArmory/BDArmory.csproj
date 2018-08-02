@@ -234,7 +234,7 @@
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMSmoke\cmSmokeModel.mu" />
-    <None Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPexplosion1.mu" />
+    <None Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPexplosion.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\largeExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\mediumExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\smallExhaust.mu" />
