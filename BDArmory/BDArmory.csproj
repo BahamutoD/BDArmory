@@ -234,6 +234,7 @@
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMSmoke\cmSmokeModel.mu" />
+    <None Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPexplosion1.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\largeExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\mediumExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\smallExhaust.mu" />
@@ -455,6 +456,7 @@
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smoke4.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smokeCm.png" />
+    <Content Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPBlast1.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_smokeExhaust.dds" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_smokeExhaust.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_sphere.dds" />
