@@ -965,7 +965,7 @@ namespace BDArmory.UI
                     mslCount =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
-                            mslCount, 1, 6);
+                            mslCount, 1, MissileFire.maxAllowableMissilesOnTarget);
                     mslCount = Mathf.Round(mslCount);
                     ActiveWeaponManager.maxMissilesOnTarget = mslCount;
                     GUI.Label(new Rect(leftIndent + (contentWidth - 35), (guardLines*entryHeight), 35, entryHeight),

@@ -6,6 +6,9 @@
 * ENHANCEMENTS:
   * Increased maximum missles per target to 18, up from 6.
   * Added EMP Module.  Now Electromagnetic pulses exist that can disable electronics within the blast range.
+  * Added 2 new EMP equipped missiles  HellFire EMP, and AIM-120 EMP.  Small pulse radius but demonstrates the feature.
+  * Added Reloadable Missile Rail.  Now you can reload your missile launchers!  This module can be added to a missile launcher to allow reloading 
+    (code used with permission courtesy of @flywyx)
 
 v1.2.2.1
 * FIXES
