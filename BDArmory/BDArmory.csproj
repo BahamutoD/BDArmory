@@ -629,7 +629,7 @@ copy /Y "$(TargetDir)"BDArmory*.pdb "%25KSP_DIR%25\GameData\%25ModName%25\Plugin
 )
 
 @echo deleting previous build ...
-if exist "%25DIST_DIR%25\%25ModName%25*.zip" del "%25DIST_DIR%25\%25ModName%25*.zip"
+if exist "%25DIST_DIR%25\%25ModName%25.*.zip" del "%25DIST_DIR%25\%25ModName%25.*.zip"
 @echo packaging new build...
 call "%25ZA_DIR%25\7za.exe" a -tzip -r  "%25DIST_DIR%25\%25ModName%25.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25.zip" "$(ProjectDir)Distribution\*.*"
 
