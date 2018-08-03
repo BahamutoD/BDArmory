@@ -71,6 +71,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AmmoSwitch\BDAcAmmo.cs" />
+    <Compile Include="AmmoSwitch\BDAcAmmoSwitch.cs" />
+    <Compile Include="AmmoSwitch\BDACategoryModule.cs" />
+    <Compile Include="Misc\BDAcTools.cs" />
+    <Compile Include="AmmoSwitch\BDAcUniversalAmmo.cs" />
     <Compile Include="Control\AIUtils.cs" />
     <Compile Include="Modules\BDGenericAIBase.cs" />
     <Compile Include="Modules\BDModuleSurfaceAI.cs" />
