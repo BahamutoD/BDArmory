@@ -4,11 +4,15 @@
      Reported in BDAc Forum post: https://forum.kerbalspaceprogram.com/index.php?/topic/155014-14x-bdarmory-continued-v1221-7102018-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/&do=findComment&comment=3425233
 
 * ENHANCEMENTS:
-  * Increased maximum missles per target to 18, up from 6.
-  * Added EMP Module.  Now Electromagnetic pulses exist that can disable electronics within the blast range.
+  * Increased maximum allowable missles per target to 18, up from 6.
+  * Added EMP Module.  Now Electromagnetic pulses exist in game that can disable electronics within the blast range.
   * Added 2 new EMP equipped missiles  HellFire EMP, and AIM-120 EMP.  Small pulse radius but demonstrates the feature.
-  * Added Reloadable Missile Rail (ModuleMissileRearm.  Now you can reload your missile launchers!  This module can be added to a missile launcher to allow reloading 
-    (code used with permission courtesy of @flywyx)
+  * Added 3 different sized EMP pulse FX, allows for additional sized pulse weapons.
+  * Added Reloadable Missile Rail (ModuleMissileRearm.  Now missile launchers can be reloadable!  
+    This module can be added to missile launcher designs to allow reloading. (code used with permission courtesy of @flywyx).  
+    Requires unity based modifications,  normal rails will not function as reloadable unless additional transforms are added.
+  * Added new standard resource High Explosive  Provides better matching of tntMass for balance
+  * Added an Ammo switcher feature (no more Firespitter required) and improved categories for BDA parts.  This helps with the clutter in the Editor.
 
 v1.2.2.1
 * FIXES
