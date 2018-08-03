@@ -73,7 +73,6 @@
   <ItemGroup>
     <Compile Include="AmmoSwitch\BDAcAmmo.cs" />
     <Compile Include="AmmoSwitch\BDAcAmmoSwitch.cs" />
-    <Compile Include="AmmoSwitch\BDACategoryModule.cs" />
     <Compile Include="Misc\BDAcTools.cs" />
     <Compile Include="AmmoSwitch\BDAcUniversalAmmo.cs" />
     <Compile Include="Control\AIUtils.cs" />
@@ -146,8 +145,6 @@
     <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
     <Compile Include="Misc\BDAEditorCategory.cs" />
-    <Compile Include="Misc\BDAExtensions.cs" />
-    <Compile Include="Modules\BDACategoryModule.cs" />
     <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />
@@ -273,6 +270,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\30mm.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\50cal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\BDAcUniversalAmmoBox.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\UniversalAmmoBoxBDA.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\cannonShell.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\ArmorPlate\BD1x1panelArmor.cfg" />

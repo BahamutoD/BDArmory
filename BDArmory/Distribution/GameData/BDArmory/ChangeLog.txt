@@ -11,8 +11,14 @@
   * Added Reloadable Missile Rail (ModuleMissileRearm.  Now missile launchers can be reloadable!  
     This module can be added to missile launcher designs to allow reloading. (code used with permission courtesy of @flywyx).  
     Requires unity based modifications,  normal rails will not function as reloadable unless additional transforms are added.
-  * Added new standard resource High Explosive  Provides better matching of tntMass for balance
-  * Added an Ammo switcher feature (no more Firespitter required) and improved categories for BDA parts.  This helps with the clutter in the Editor.
+  * Added new standard resource High Explosive.  Provides better matching of tntMass for balance.
+  * Added an Ammo switcher feature (no more Firespitter required)
+  * Added new Universal Ammo Box part that uses the new Ammo switcher feature.  Old part remains for backawards compatability.  
+    Use the new part going forward.  To remove the need for FireSpitter, replace existing Ammo Box parts with the new part on existing craft.
+  * Improved sub categories for BDA parts.  This helps with the clutter in the Editor under the BDA category.
+  * Removed BDACategoryModule as a result of the BDA categories refactor.  
+    Existing craft may see a module not found warnings in the log.  This will have no ill effects and can be safely ignored.
+  * Improved smoke effects for smoke canister launchers
 
 v1.2.2.1
 * FIXES
