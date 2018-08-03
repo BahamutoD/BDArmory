@@ -767,9 +767,10 @@ namespace BDArmory.Modules
 			GUI.DrawTexture(imageRect, TargetingCamera.Instance.targetCamRenderTexture, ScaleMode.StretchToFill, false);
 			GUI.DrawTexture(imageRect, TargetingCamera.Instance.ReticleTexture, ScaleMode.StretchToFill, true);
 
+            // slew buttons
 			DrawSlewButtons();
 
-		    //zoom buttons
+		    // zoom buttons
 			DrawZoomButtons();
 
             // Right side control buttons
@@ -806,6 +807,7 @@ namespace BDArmory.Modules
 			float indicatorBorder = imageRect.width * 0.056f;
 			Vector3 vesForward = vessel.ReferenceTransform.up;
 			Vector3 upDirection = (transform.position-FlightGlobals.currentMainBody.transform.position).normalized;
+
 			//horizon indicator
 			float horizY = imageRect.y+imageRect.height-indicatorSize-indicatorBorder;
 			Vector3 hForward = Vector3.ProjectOnPlane(vesForward, upDirection);

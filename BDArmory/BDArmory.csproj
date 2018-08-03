@@ -80,6 +80,9 @@
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
     <Compile Include="FX\MissileFX.cs" />
     <Compile Include="Guidances\CruiseGuidance.cs" />
+    <Compile Include="Modules\ModuleDrainEC.cs" />
+    <Compile Include="Modules\ModuleEMP.cs" />
+    <Compile Include="Modules\ModuleMissileRearm.cs" />
     <Compile Include="UI\LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\BDAModuleInfos.cs" />
@@ -231,6 +234,7 @@
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMSmoke\cmSmokeModel.mu" />
+    <None Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPexplosion.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\largeExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\mediumExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\smallExhaust.mu" />
@@ -255,6 +259,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aim-120\amraam.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\aim-120\amraam_emp.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\aim-120\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aiPilot\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aiPilot\part.cfg" />
@@ -310,6 +315,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\hekv1\hekv1.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\hekv1\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\hellfireMissile\hellfireMissile.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\hellfireMissile\hellfire_emp.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\hellfireMissile\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\hiddenVulcan\hiddenVulcan.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\hiddenVulcan\model.mu" />
@@ -450,6 +456,7 @@
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smoke4.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smokeCm.png" />
+    <Content Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPBlast1.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_smokeExhaust.dds" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_smokeExhaust.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_sphere.dds" />
@@ -622,7 +629,7 @@ copy /Y "$(TargetDir)"BDArmory*.pdb "%25KSP_DIR%25\GameData\%25ModName%25\Plugin
 )
 
 @echo deleting previous build ...
-if exist "%25DIST_DIR%25\%25ModName%25*.zip" del "%25DIST_DIR%25\%25ModName%25*.zip"
+if exist "%25DIST_DIR%25\%25ModName%25.*.zip" del "%25DIST_DIR%25\%25ModName%25.*.zip"
 @echo packaging new build...
 call "%25ZA_DIR%25\7za.exe" a -tzip -r  "%25DIST_DIR%25\%25ModName%25.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25.zip" "$(ProjectDir)Distribution\*.*"
 

@@ -403,9 +403,11 @@ namespace BDArmory.Modules
          UI_FloatRange(minValue = 0f, maxValue = 10000f, stepIncrement = 10f, scene = UI_Scene.All)] public float
             gunRange = 2500f;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Missiles/Target"), UI_FloatRange(minValue = 1f, maxValue = 6f, stepIncrement = 1f, scene = UI_Scene.All)]
+        public const float maxAllowableMissilesOnTarget = 18f;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Missiles/Target"), UI_FloatRange(minValue = 1f, maxValue = maxAllowableMissilesOnTarget, stepIncrement = 1f, scene = UI_Scene.All)]
         public float maxMissilesOnTarget = 1;
-        
+
         public void ToggleGuardMode()
         {
             guardMode = !guardMode;
@@ -752,7 +754,7 @@ namespace BDArmory.Modules
             }
         }
 
-        void OnPartDie(Part p = null)
+        void OnPartDie(Part p)
         {
             if (p == part)
             {

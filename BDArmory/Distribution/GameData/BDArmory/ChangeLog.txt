@@ -1,4 +1,16 @@
-﻿v1.2.2.1
+﻿v1.2.2.2
+* FIXES
+    *Error spam in Log when a radar is destroyed.  An orphaned index was not properly being updated. 
+     Reported in BDAc Forum post: https://forum.kerbalspaceprogram.com/index.php?/topic/155014-14x-bdarmory-continued-v1221-7102018-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/&do=findComment&comment=3425233
+
+* ENHANCEMENTS:
+  * Increased maximum missles per target to 18, up from 6.
+  * Added EMP Module.  Now Electromagnetic pulses exist that can disable electronics within the blast range.
+  * Added 2 new EMP equipped missiles  HellFire EMP, and AIM-120 EMP.  Small pulse radius but demonstrates the feature.
+  * Added Reloadable Missile Rail (ModuleMissileRearm.  Now you can reload your missile launchers!  This module can be added to a missile launcher to allow reloading 
+    (code used with permission courtesy of @flywyx)
+
+v1.2.2.1
 * FIXES
   * Added bulletinfo.explosive check to GetInfo, so explosive shells now show blast radius in the part Info (RMB) section in the editor.
   * Correct text errors in bullet names on some files.  Not all platforms support UTF8 characters. 
