@@ -71,15 +71,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AmmoSwitch\BDAcAmmo.cs" />
-    <Compile Include="AmmoSwitch\BDAcAmmoSwitch.cs" />
+    <Compile Include="Modules\ModuleAmmoSwitch.cs" />
     <Compile Include="Misc\BDAcTools.cs" />
-    <Compile Include="AmmoSwitch\BDAcUniversalAmmo.cs" />
     <Compile Include="Control\AIUtils.cs" />
     <Compile Include="Modules\BDGenericAIBase.cs" />
     <Compile Include="Modules\BDModuleSurfaceAI.cs" />
     <Compile Include="Control\IBDAIControl.cs" />
-    <Compile Include="Modules\AmmoSwitch.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
     <Compile Include="FX\MissileFX.cs" />
@@ -96,7 +93,7 @@
     <Compile Include="Modules\BDExplosivePart.cs" />
     <Compile Include="Modules\MissileBase.cs" />
     <Compile Include="Modules\ModuleWWC.cs" />
-    <Compile Include="Modules\SM_Reactive_Armor.cs" />
+    <Compile Include="Modules\ModuleReactiveArmor.cs" />
     <Compile Include="Modules\ModuleSpaceRadar.cs" />
     <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
     <Compile Include="UI\BDArmorySetup.cs" />
@@ -368,6 +365,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\s-8Launcher.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\s-8Rocket\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\SaturnAL31\SaturnAL31.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\sidewinder\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\sidewinder\sidewinder.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\smallWarhead\model.mu" />

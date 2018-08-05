@@ -3,9 +3,9 @@ using System.Text;
 using BDArmory.Misc;
 using UnityEngine;
 
-namespace BDArmory.AmmoSwitch
+namespace BDArmory.Modules
 {
-    public class BDAcAmmoSwitch : PartModule, IPartCostModifier
+    public class ModuleAmmoSwitch : PartModule, IPartCostModifier
     {
         [KSPField]
         public string resourceNames = "ElectricCharge;LiquidFuel,Oxidizer;MonoPropellant";
@@ -157,7 +157,7 @@ namespace BDArmory.AmmoSwitch
                 for (int s = 0; s < part.symmetryCounterparts.Count; s++)
                 {
                     setupTankInPart(part.symmetryCounterparts[s], calledByPlayer);
-                    BDAcAmmoSwitch symSwitch = part.symmetryCounterparts[s].GetComponent<BDAcAmmoSwitch>();
+                    ModuleAmmoSwitch symSwitch = part.symmetryCounterparts[s].GetComponent<ModuleAmmoSwitch>();
                     if (symSwitch != null)
                     {
                         symSwitch.selectedTankSetup = selectedTankSetup;
@@ -333,7 +333,7 @@ namespace BDArmory.AmmoSwitch
             {
                 List<string> resourceList = BDAcTools.ParseNames(resourceNames);
                 StringBuilder info = new StringBuilder();
-                info.AppendLine("Fuel tank setups available:");
+                info.AppendLine("Ammo Box setups available:");
                 for (int i = 0; i < resourceList.Count; i++)
                 {
                     info.AppendLine(resourceList[i].Replace(",", ", "));
@@ -354,4 +354,36 @@ namespace BDArmory.AmmoSwitch
             return ModifierChangeWhen.CONSTANTLY;
         }
     }
+
+    // Supporting classes
+    public class BDAcUniversalAmmo
+    {
+        public List<BDAcAmmo> resources = new List<BDAcAmmo>();
+    }
+
+    public class BDAcAmmo
+    {
+        //public PartResource resource;
+        public string name;
+        public int ID;
+        public float ratio;
+        public double currentSupply = 0f;
+        public double amount = 0f;
+        public double maxAmount = 0f;
+
+        public BDAcAmmo(string _name, float _ratio)
+        {
+            name = _name;
+            ID = _name.GetHashCode();
+            ratio = _ratio;
+        }
+
+        public BDAcAmmo(string _name)
+        {
+            name = _name;
+            ID = _name.GetHashCode();
+            ratio = 1f;
+        }
+    }
+
 }

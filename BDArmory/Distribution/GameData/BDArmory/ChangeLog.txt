@@ -2,6 +2,7 @@
 * FIXES
     *Error spam in Log when a radar is destroyed.  An orphaned index was not properly being updated. 
      Reported in BDAc Forum post: https://forum.kerbalspaceprogram.com/index.php?/topic/155014-14x-bdarmory-continued-v1221-7102018-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/&do=findComment&comment=3425233
+     Thanks to greydragon70 for his thoughtful evaluation of BDac and issue reporting.
 
 * ENHANCEMENTS:
   * Increased maximum allowable missles per target to 18, up from 6.
@@ -19,6 +20,9 @@
   * Removed BDACategoryModule as a result of the BDA categories refactor.  
     Existing craft may see a module not found warnings in the log.  This will have no ill effects and can be safely ignored.
   * Improved smoke effects for smoke canister launchers
+  * Added new Jet engine based on the J-404.  Licensed from KTech. (Thanks @TheKurgan!)
+  * Added new BDAc Test Drone MKIII craft, utilizing the new engine.
+
 
 v1.2.2.1
 * FIXES
