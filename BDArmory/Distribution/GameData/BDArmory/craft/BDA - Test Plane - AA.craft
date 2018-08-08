@@ -2155,21 +2155,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -6006,21 +5991,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -6138,21 +6108,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -6255,21 +6210,6 @@ PART
 		isEnabled = True
 		railHeight = -0.0799999982
 		railLength = 0.600000024
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -6510,21 +6450,6 @@ PART
 		isEnabled = True
 		railHeight = -0.0799999982
 		railLength = 0.600000024
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -7858,21 +7783,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -7990,21 +7900,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -8107,21 +8002,6 @@ PART
 		isEnabled = True
 		railHeight = -0.0799999982
 		railLength = 0.600000024
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -8375,21 +8255,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -8612,21 +8477,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = HitpointTracker
 		isEnabled = True
 		Hitpoints = 13000
@@ -8778,21 +8628,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = TweakScale
 		isEnabled = True
 		currentScale = 1
@@ -8880,21 +8715,6 @@ PART
 	}
 	PARTDATA
 	{
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
 	}
 	MODULE
 	{
@@ -9036,21 +8856,6 @@ PART
 		selectedTankSetup = 7
 		hasLaunched = False
 		configLoaded = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -9256,21 +9061,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 0.600000024
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -9525,21 +9315,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -9781,21 +9556,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -10024,21 +9784,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 0.600000024
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -10559,21 +10304,6 @@ PART
 			{
 				actionGroup = Custom10
 			}
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
 		}
 		UPGRADESAPPLIED
 		{

@@ -5,3 +5,5 @@ Vulcan and gau-8 sfx credit goes to upupandaway's DCS World sound mod : http://f
 Toolbar icon by sumghai.
 Laser damage model and other contributions by Yski
 Bullet aerodynamics and AI Pilot improvements by ferram4
+Reloadable rails code portions used with permission, courtesy of @flywyx
+Portions of texture switching code in FireSpitter used by permission.  See license.txt for details. 

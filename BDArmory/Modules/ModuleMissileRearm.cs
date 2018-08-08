@@ -69,7 +69,7 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(name = "Reassign", guiName = "Reassign", active = true, guiActive = true)]
+        //[KSPEvent(name = "Reassign", guiName = "Reassign", active = true, guiActive = true)]
         public void Reassign()
         {
             if (this.part.children.Count == 1)
