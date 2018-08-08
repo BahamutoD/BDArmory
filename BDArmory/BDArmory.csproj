@@ -195,6 +195,7 @@
     <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Plane - AG.craft" />
     <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Platform - Missile.craft" />
     <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Platform.craft" />
+    <None Include="Distribution\GameData\BDArmory\craft\BDAc_Test_Drone_MKIII.craft" />
     <None Include="Distribution\GameData\BDArmory\FX\FlameEffect2\model.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\jetdriveWake.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\PenFX.mu" />
