@@ -20,7 +20,7 @@
   * Removed BDACategoryModule as a result of the BDA categories refactor.  
     Existing craft may see a module not found warnings in the log.  This will have no ill effects and can be safely ignored.
   * Improved smoke effects for smoke canister launchers
-  * Added new Jet engine based on the J-404.  Licensed from KTech. (Thanks @TheKurgan!)
+  * Added new Jet engine based on the J-404.  Licensed from KTech. (Thanks @TheKurgan, @SpannerMonkey(SMCE) & @XOC2008!)
   * Added new BDAc Test Drone MKIII craft, utilizing the new engine.
   * Added engagement rules to all missiles
 
