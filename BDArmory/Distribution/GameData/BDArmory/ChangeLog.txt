@@ -22,6 +22,7 @@
   * Improved smoke effects for smoke canister launchers
   * Added new Jet engine based on the J-404.  Licensed from KTech. (Thanks @TheKurgan!)
   * Added new BDAc Test Drone MKIII craft, utilizing the new engine.
+  * Added engagement rules to all missiles
 
 
 v1.2.2.1
