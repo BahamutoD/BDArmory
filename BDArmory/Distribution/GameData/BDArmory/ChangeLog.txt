@@ -1,4 +1,8 @@
-﻿v1.2.2.2
+﻿v1.2.2.2a
+* FIXES
+* added in missing high speed missle fix.  somehow got lost in the merge migration.
+
+v1.2.2.2
 * Recompiled for KSP 1.4.5
 
 * FIXES
