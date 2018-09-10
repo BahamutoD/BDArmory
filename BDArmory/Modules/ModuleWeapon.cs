@@ -20,10 +20,6 @@ namespace BDArmory.Modules
     {
         #region Declarations
 
-        #region Variables
-
-        #endregion
-
         public static ObjectPool bulletPool;
         public static ObjectPool shellPool;
 
