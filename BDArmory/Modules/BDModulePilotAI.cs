@@ -72,8 +72,8 @@ namespace BDArmory.Modules
 		//make a combat steer mult and idle steer mult
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Pitch Ki"),
-			UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.All)]
-		public float pitchKiAdjust = 5;
+			UI_FloatRange(minValue = 0.05f, maxValue = 2f, stepIncrement = .01f, scene = UI_Scene.All)]
+		public float pitchKiAdjust = 0.2f;
 
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"),
@@ -120,7 +120,7 @@ namespace BDArmory.Modules
 			{ nameof(defaultAltitude), 100000f },
 			{ nameof(minAltitude), 30000f },
 			{ nameof(steerMult), 200f },
-			{ nameof(pitchKiAdjust), 400f },
+			{ nameof(pitchKiAdjust), 200f },
 			{ nameof(steerDamping), 100f },
 			{ nameof(maxSpeed), 3000f },
 			{ nameof(takeOffSpeed), 2000f },
@@ -802,6 +802,7 @@ namespace BDArmory.Modules
 		}
 
 		Vector3 prevTargetDir;
+        Vector3 debugPos;
 		bool useVelRollTarget;
 		void FlyToPosition(FlightCtrlState s, Vector3 targetPosition)
 		{
@@ -885,6 +886,7 @@ namespace BDArmory.Modules
 				targetDirectionYaw = targetDirection;
 
 			}
+            debugPos = vessel.transform.position + (targetPosition - vesselTransform.position) * 5000;
 
 			pitchError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirection, Vector3.right), Vector3.back);
 			yawError = VectorUtils.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(targetDirectionYaw, Vector3.forward), Vector3.right);
@@ -1780,6 +1782,9 @@ namespace BDArmory.Modules
 		    {
 		        BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, debugFollowPosition, 2, Color.red);
 		    }
+
+            BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, debugPos, 5, Color.red);
+            BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + vesselTransform.up * 5000, 3, Color.white);
 
 		    BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position, vesselTransform.position + rollTarget, 2, Color.blue);
 		    BDGUIUtils.DrawLineBetweenWorldPositions(vesselTransform.position + (0.05f * vesselTransform.right), vesselTransform.position + (0.05f * vesselTransform.right) + angVelRollTarget, 2, Color.green);
