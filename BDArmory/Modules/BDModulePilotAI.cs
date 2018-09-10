@@ -110,7 +110,11 @@ namespace BDArmory.Modules
 		float maxAllowedCosAoA;
 		float lastAllowedAoA;
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Unclamp tuning ", advancedTweakable = true),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Orbit ", advancedTweakable = true),
+            UI_Toggle(enabledText = "Clockwise", disabledText = "Counterclockwise", scene = UI_Scene.All),]
+        public bool ClockwiseOrbit = true;
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Unclamp tuning ", advancedTweakable = true),
 			UI_Toggle(enabledText = "Unclamped", disabledText = "Clamped", scene = UI_Scene.All),]
 		public bool UpToEleven = false;
 		bool toEleven = false;
@@ -500,7 +504,7 @@ namespace BDArmory.Modules
 				if(!extending)
 				{
 					currentStatus = "Orbiting";
-					FlyOrbit(s, assignedPositionGeo, 2000, idleSpeed, true);
+					FlyOrbit(s, assignedPositionGeo, 2000, idleSpeed, ClockwiseOrbit);
 				}
 			}
 
@@ -1662,12 +1666,12 @@ namespace BDArmory.Modules
 			else if(command == PilotCommands.FlyTo)
 			{
 				currentStatus = "Fly To";
-				FlyOrbit(s, assignedPositionGeo, 2500, idleSpeed, true);
+				FlyOrbit(s, assignedPositionGeo, 2500, idleSpeed, ClockwiseOrbit);
 			}
 			else if(command == PilotCommands.Attack)
 			{
 				currentStatus = "Attack";
-				FlyOrbit(s, assignedPositionGeo, 4500, maxSpeed, true);
+				FlyOrbit(s, assignedPositionGeo, 4500, maxSpeed, ClockwiseOrbit);
 			}
 		}
 
