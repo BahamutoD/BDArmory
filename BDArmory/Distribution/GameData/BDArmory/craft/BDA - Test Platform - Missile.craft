@@ -3971,21 +3971,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 }
 PART
 {
@@ -4750,21 +4735,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 }
 PART
 {
@@ -5513,21 +5483,6 @@ PART
 		minPitchLimit = -1
 		maxPitchLimit = 80
 		yawRangeLimit = 360
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{

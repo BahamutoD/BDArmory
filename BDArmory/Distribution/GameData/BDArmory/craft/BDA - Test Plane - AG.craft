@@ -2155,21 +2155,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -7298,21 +7283,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = HitpointTracker
 		isEnabled = True
 		Hitpoints = 13000
@@ -7464,21 +7434,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = TweakScale
 		isEnabled = True
 		currentScale = 1
@@ -7574,21 +7529,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -7843,21 +7783,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -8083,21 +8008,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = HitpointTracker
 		isEnabled = True
 		Hitpoints = 13000
@@ -8249,21 +8159,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = TweakScale
 		isEnabled = True
 		currentScale = 1
@@ -8359,21 +8254,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -8615,21 +8495,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -9061,21 +8926,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = HitpointTracker
 		isEnabled = True
 		Hitpoints = 500
@@ -9238,21 +9088,6 @@ PART
 		isEnabled = True
 		railHeight = -0.0800000131
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -9507,21 +9342,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -9750,21 +9570,6 @@ PART
 		isEnabled = True
 		railHeight = -0.0800000131
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -10019,21 +9824,6 @@ PART
 	}
 	MODULE
 	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
 		name = DCKtextureswitch2
 		isEnabled = True
 		selectedTexture = 0
@@ -10262,21 +10052,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{
@@ -10534,21 +10309,6 @@ PART
 		isEnabled = True
 		railHeight = -0.11999999
 		railLength = 1
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
 		stagingEnabled = True
 		EVENTS
 		{

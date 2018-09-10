@@ -965,7 +965,7 @@ namespace BDArmory.UI
                     mslCount =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
-                            mslCount, 1, 6);
+                            mslCount, 1, MissileFire.maxAllowableMissilesOnTarget);
                     mslCount = Mathf.Round(mslCount);
                     ActiveWeaponManager.maxMissilesOnTarget = mslCount;
                     GUI.Label(new Rect(leftIndent + (contentWidth - 35), (guardLines*entryHeight), 35, entryHeight),
@@ -1381,6 +1381,9 @@ namespace BDArmory.UI
             line++;
             BDArmorySettings.BULLET_DECALS = GUI.Toggle(SLeftRect(line), BDArmorySettings.BULLET_DECALS, "Bullet Hole Decals");
             BDArmorySettings.PERFORMANCE_LOGGING = GUI.Toggle(SRightRect(line), BDArmorySettings.PERFORMANCE_LOGGING, "Performance Logging");
+            line++;
+            GUI.Label(SLeftRect(line), $"Max Bullet Holes:  ({BDArmorySettings.MAX_NUM_BULLET_DECALS})", leftLabel);
+            BDArmorySettings.MAX_NUM_BULLET_DECALS = (int)GUI.HorizontalSlider(SRightRect(line), BDArmorySettings.MAX_NUM_BULLET_DECALS, 1f, 999);
             line++;
             line++;
 

@@ -1,46 +1,77 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 using System;
 using BDArmory.Core;
 using BDArmory.Modules;
-using BDArmory.Radar;
-using BDArmory.UI;
-using BDArmory.Parts;
 
 namespace BDArmory.Misc
 {
-	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
-	public class BDAEditorCategory : MonoBehaviour
-	{
-		private static readonly List<AvailablePart> availableParts = new List<AvailablePart>();
+    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    public class BDAEditorCategory : MonoBehaviour
+    {
+        private static readonly List<AvailablePart> availableParts = new List<AvailablePart>();
+        private static readonly List<AvailablePart> radars = new List<AvailablePart>();
 
-		void Awake()
-		{
-			GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
+        protected string Manufacturer
+        {
+            get { return "Bahamuto Dynamics"; }
+            set { }
+        }
 
-			//availableParts.Clear();
-			//availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
+        void Awake()
+        {
+            radars.Clear();
+            availableParts.Clear();
+            var count = PartLoader.LoadedPartsList.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                var avPart = PartLoader.LoadedPartsList[i];
+                if (!avPart.partPrefab) continue;
+                if (avPart.manufacturer == Manufacturer)
+                {
+                    availableParts.Add(avPart);
+                }
+            }
 
-		}
+            print(Manufacturer + "  Filter Count: " + availableParts.Count);
+            if (availableParts.Count > 0)
+                GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
 
+            var count2 = PartLoader.LoadedPartsList.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                var avPart2 = PartLoader.LoadedPartsList[i];
+                if (!avPart2.partPrefab) continue;
+                var avpModule = avPart2.partPrefab.GetComponent<ModuleRadar>();
+                if (avpModule != null)
+                {
+                    radars.Add(avPart2);
+                }
+            }
+
+            //GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
+
+            //availableParts.Clear();
+            //availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
+
+        }
 
         void BDAWeaponsCategory()
         {
+
             const string customCategoryName = "BDAWeapons";
             const string customDisplayCategoryName = "BDA Weapons";
 
-            availableParts.Clear();
-            availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
-
             Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
 
-			RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
+            RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
 
             PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
 
             PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
-                p => availableParts.Contains(p));
+                avPart => availableParts.Contains(avPart));
 
 
             // dump parts to .CSV list
@@ -53,7 +84,7 @@ namespace BDArmory.Misc
         {
             List<ModuleRadar> results = new List<ModuleRadar>(150);
 
-            foreach (var item in availableParts)
+            foreach (var item in radars)
             {
                 var radar = item.partPrefab.GetComponent<ModuleRadar>();
                 if (radar != null && (radar.canScan || radar.canLock))
@@ -91,8 +122,8 @@ namespace BDArmory.Misc
                                     "HEAT_HEATTHRESHOLD;" +
                                     "LASER_BEAMCORRECTIONFACTOR; LASER_BEAMCORRECTIONDAMPING"
                                     );
-            fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;radar_name;rwrThreatType;omnidirectional;directionalFieldOfView;boresightFOV;"+
-                                 "scanRotationSpeed;lockRotationSpeed;lockRotationAngle;showDirectionWhileScan;multiLockFOV;lockAttemptFOV;canScan;canLock;canTrackWhileScan;canRecieveRadarData;"+
+            fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;radar_name;rwrThreatType;omnidirectional;directionalFieldOfView;boresightFOV;" +
+                                 "scanRotationSpeed;lockRotationSpeed;lockRotationAngle;showDirectionWhileScan;multiLockFOV;lockAttemptFOV;canScan;canLock;canTrackWhileScan;canRecieveRadarData;" +
                                  "DEPRECATED_minSignalThreshold;DEPRECATED_minLockedSignalThreshold;maxLocks;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
                                   );
             filejammers.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;alwaysOn;rcsReduction;rcsReducationFactor;lockbreaker;lockbreak_strength;jammerStrength");
@@ -140,8 +171,8 @@ namespace BDArmory.Misc
                         item.name + ";" + item.title + ";" + item.author + ";" + item.manufacturer + ";" + item.partPrefab.mass + ";" + item.cost + ";" + item.partPrefab.crashTolerance + ";" + item.partPrefab.maxTemp + ";" +
                         radar.radarName + ";" + radar.getRWRType(radar.rwrThreatType) + ";" + radar.omnidirectional + ";" + radar.directionalFieldOfView + ";" + radar.boresightFOV + ";" + radar.scanRotationSpeed + ";" + radar.lockRotationSpeed + ";" +
                         radar.lockRotationAngle + ";" + radar.showDirectionWhileScan + ";" + radar.multiLockFOV + ";" + radar.lockAttemptFOV + ";" +
-                        radar.canScan + ";" + radar.canLock + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" + 
-                        radar.maxLocks + ";" + radar.radarGroundClutterFactor + ";" + 
+                        radar.canScan + ";" + radar.canLock + ";" + radar.canTrackWhileScan + ";" + radar.canRecieveRadarData + ";" +
+                        radar.maxLocks + ";" + radar.radarGroundClutterFactor + ";" +
                         radar.radarDetectionCurve.Evaluate(radar.radarMaxDistanceDetect) + "@" + radar.radarMaxDistanceDetect + ";" +
                         radar.radarLockTrackCurve.Evaluate(radar.radarMaxDistanceLockTrack) + "@" + radar.radarMaxDistanceLockTrack
                         );
@@ -166,4 +197,3 @@ namespace BDArmory.Misc
 
     }
 }
-
