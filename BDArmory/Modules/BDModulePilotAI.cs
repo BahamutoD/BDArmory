@@ -71,9 +71,9 @@ namespace BDArmory.Modules
 		public float steerMult = 6;
 		//make a combat steer mult and idle steer mult
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Pitch Ki"),
-			UI_FloatRange(minValue = 0.05f, maxValue = 2f, stepIncrement = .01f, scene = UI_Scene.All)]
-		public float pitchKiAdjust = 0.2f;
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ki factor"),
+			UI_FloatRange(minValue = 0.01f, maxValue = 1f, stepIncrement = 0.01f, scene = UI_Scene.All)]
+		public float steerKiAdjust = 0.05f;
 
 
 		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Limiter"),
@@ -120,7 +120,7 @@ namespace BDArmory.Modules
 			{ nameof(defaultAltitude), 100000f },
 			{ nameof(minAltitude), 30000f },
 			{ nameof(steerMult), 200f },
-			{ nameof(pitchKiAdjust), 200f },
+			{ nameof(steerKiAdjust), 20f },
 			{ nameof(steerDamping), 100f },
 			{ nameof(maxSpeed), 3000f },
 			{ nameof(takeOffSpeed), 2000f },
@@ -161,6 +161,7 @@ namespace BDArmory.Modules
 
 		//Controller Integral
 		float pitchIntegral;
+		float yawIntegral;
 
 		//instantaneous turn radius and possible acceleration from lift
 		//properties can be used so that other AI modules can read this for future maneuverability comparisons between craft
@@ -947,19 +948,24 @@ namespace BDArmory.Modules
 				pitchError = pitchError * Mathf.Clamp01((21 - Mathf.Exp(Mathf.Abs(rollError) / 30)) / 20);
 			}
 
-			float steerPitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x);
-			float steerYaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z);
+			float steerPitch = (0.015f * steerMult * pitchError) - (steerDamping * -localAngVel.x * (1 + steerKiAdjust));
+			float steerYaw = (0.005f * steerMult * yawError) - (steerDamping * 0.2f * -localAngVel.z * (1 + steerKiAdjust));
 
 			pitchIntegral += pitchError;
+            yawIntegral += yawError;
 
 			steerPitch *= dynamicAdjustment;
 			steerYaw *= dynamicAdjustment;
 
-			float pitchKi = 0.1f * (pitchKiAdjust/5); //This is what should be allowed to be tweaked by the player, just like the steerMult, it is very low right now
+			float pitchKi = 0.1f * (steerKiAdjust/5); //This is what should be allowed to be tweaked by the player, just like the steerMult, it is very low right now
 			pitchIntegral = Mathf.Clamp(pitchIntegral, -0.2f / (pitchKi * dynamicAdjustment), 0.2f / (pitchKi * dynamicAdjustment)); //0.2f is the limit of the integral variable, making it bigger increases overshoot
 			steerPitch += pitchIntegral * pitchKi * dynamicAdjustment; //Adds the integral component to the mix
 
-			float roll = Mathf.Clamp(steerRoll, -maxSteer, maxSteer);
+            float yawKi = 0.1f * (steerKiAdjust / 15);
+            yawIntegral = Mathf.Clamp(yawIntegral, -0.2f / (yawKi * dynamicAdjustment), 0.2f / (yawKi * dynamicAdjustment));
+            steerYaw += yawIntegral * yawKi * dynamicAdjustment;
+
+            float roll = Mathf.Clamp(steerRoll, -maxSteer, maxSteer);
 			s.roll = roll;
 			s.yaw = Mathf.Clamp(steerYaw, -finalMaxSteer, finalMaxSteer);
 			s.pitch = Mathf.Clamp(steerPitch, Mathf.Min(-finalMaxSteer, -0.2f), finalMaxSteer);
