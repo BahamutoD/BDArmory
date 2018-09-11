@@ -875,7 +875,7 @@ namespace BDArmory.Modules
         private void CheckMiss()
         {
             float sqrDist = ((TargetPosition + (TargetVelocity * Time.fixedDeltaTime)) - (transform.position + (part.rb.velocity * Time.fixedDeltaTime))).sqrMagnitude;
-            if (sqrDist < 160000 || (MissileState == MissileStates.PostThrust && (GuidanceMode == GuidanceModes.AAMLead || GuidanceMode == GuidanceModes.AAMPure)))
+            if (sqrDist < 160000 || MissileState == MissileStates.PostThrust)
             {
                 checkMiss = true;
             }

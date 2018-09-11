@@ -902,10 +902,7 @@ namespace BDArmory.Modules
 
                 if(missileBase.SourceVessel != this.vessel) continue;
 
-                if ((missileBase.guidanceActive == false 
-                     && !missileBase.HasMissed 
-                     && missileBase.MissileState != MissileBase.MissileStates.PostThrust)
-                    || missileBase.GetWeaponClass() == WeaponClasses.Bomb)
+                if (!missileBase.HasMissed)
                 {
                     tempMissilesAway++;
                 }
