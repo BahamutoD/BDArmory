@@ -571,12 +571,7 @@ namespace BDArmory.Modules
                 rocket.thrust = thrust;
                 rocket.thrustTime = thrustTime;
                 rocket.randomThrustDeviation = thrustDeviation;
-                if (BDArmorySettings.ALLOW_LEGACY_TARGETING && vessel.targetObject != null)
-                {
-                    rocket.targetVessel = vessel.targetObject.GetVessel();
-                }
 
-                rocket.sourceVessel = vessel;
                 rocketObj.SetActive(true);
                 rocketObj.transform.SetParent(currentRocketTfm.parent);
                 rocket.parentRB = part.rb;
@@ -803,9 +798,6 @@ namespace BDArmory.Modules
     public class Rocket : MonoBehaviour
     {
         public Transform spawnTransform;
-        public Vessel targetVessel;
-        public Vessel sourceVessel;
-        public Vector3 startVelocity;
         public float mass;
         public float thrust;
         public float thrustTime;
@@ -824,9 +816,6 @@ namespace BDArmory.Modules
 
         Vector3 prevPosition;
         Vector3 currPosition;
-
-
-        Vector3 relativePos;
 
         float stayTime = 0.04f;
         float lifeTime = 10;
@@ -886,14 +875,12 @@ namespace BDArmory.Modules
 
         void FixedUpdate()
         {
-            //floatingOrigin fix
-            if (sourceVessel != null &&
-                (transform.position - sourceVessel.transform.position - relativePos).sqrMagnitude > 800*800)
+            //floating origin and velocity offloading corrections
+            if (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero())
             {
-                transform.position = sourceVessel.transform.position + relativePos + (rb.velocity*Time.fixedDeltaTime);
+                transform.position -= FloatingOrigin.OffsetNonKrakensbane;
+                prevPosition -= FloatingOrigin.OffsetNonKrakensbane;
             }
-            if (sourceVessel != null) relativePos = transform.position - sourceVessel.transform.position;
-            //
 
 
             if (Time.time - startTime < stayTime && transform.parent != null)
@@ -906,10 +893,9 @@ namespace BDArmory.Modules
             {
                 if (transform.parent != null && parentRB)
                 {
-                    startVelocity = parentRB.velocity;
                     transform.parent = null;
                     rb.isKinematic = false;
-                    rb.velocity = startVelocity;
+                    rb.velocity = parentRB.velocity + Krakensbane.GetFrameVelocityV3f();
                 }
             }
 
@@ -1008,11 +994,7 @@ namespace BDArmory.Modules
                         {
                         }
 
-
-                        if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
-                        {
-                            Detonate(hit.point);
-                        }
+                        Detonate(hit.point);
                     }
                     else if (FlightGlobals.getAltitudeAtPos(transform.position) < 0)
                     {
@@ -1027,13 +1009,6 @@ namespace BDArmory.Modules
             prevPosition = currPosition;
 
             if (Time.time - startTime > lifeTime)
-            {
-                Detonate(transform.position);
-            }
-
-            //proxy detonation
-            if (targetVessel != null &&
-                (transform.position - targetVessel.transform.position).sqrMagnitude < 0.5f*blastRadius*blastRadius)
             {
                 Detonate(transform.position);
             }
