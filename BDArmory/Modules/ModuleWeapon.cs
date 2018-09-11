@@ -248,7 +248,7 @@ namespace BDArmory.Modules
         [KSPField]
         public float roundsPerMinute = 850; //rate of fire
         [KSPField]
-        public float maxDeviation = 1; //max inaccuracy deviation in degrees
+        public float maxDeviation = 1; //inaccuracy standard deviation in degrees
         [KSPField]
         public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
         [KSPField]
@@ -791,9 +791,6 @@ namespace BDArmory.Modules
                 if (weaponState == WeaponStates.Enabled &&
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
-                    UpdateTargetVessel();
-                    updateAcceleration(targetVelocity);
-                    relativeVelocity = targetVelocity - vessel.rb_velocity;
                     //Aim();
                     StartCoroutine(AimAndFireAtEndOfFrame());
 
@@ -822,50 +819,6 @@ namespace BDArmory.Modules
                         laserRenderers[i].enabled = false;
                     }
                     audioSource.Stop();
-                }
-
-
-                //autofiring with AI
-                if (targetAcquired && aiControlled)
-                {
-                    Transform fireTransform = fireTransforms[0];
-                    Vector3 targetRelPos = (finalAimTarget) - fireTransform.position;
-                    Vector3 aimDirection = fireTransform.forward;
-                    float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
-
-                    Vector3 targetDiffVec = finalAimTarget - lastFinalAimTarget;
-                    Vector3 projectedTargetPos = targetDiffVec;
-                    //projectedTargetPos /= TimeWarp.fixedDeltaTime;
-                    //projectedTargetPos *= TimeWarp.fixedDeltaTime;
-                    projectedTargetPos *= 2; //project where the target will be in 2 timesteps
-                    projectedTargetPos += finalAimTarget;
-
-                    targetDiffVec.Normalize();
-                    Vector3 lastTargetRelPos = (lastFinalAimTarget) - fireTransform.position;
-
-                    if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) &&
-                        //~1 degree of unsafe angle
-                        (targetCosAngle >= maxAutoFireCosAngle || //check if directly on target
-                         (Vector3.Dot(targetDiffVec, targetRelPos) * Vector3.Dot(targetDiffVec, lastTargetRelPos) < 0 &&
-                          targetCosAngle > 0))) //check if target will pass this point soon
-                    {
-                        autoFire = true;
-                    }
-                    else
-                    {
-                        autoFire = false;
-                    }
-                }
-                else
-                {
-                    autoFire = false;
-                }
-
-                //disable autofire after burst length
-                if (autoFire && Time.time - autoFireTimer > autoFireLength)
-                {
-                    autoFire = false;
-                    legacyTargetVessel = null;
                 }
             }
             lastFinalAimTarget = finalAimTarget;
@@ -971,8 +924,11 @@ namespace BDArmory.Modules
             }
 
             float timeGap = (60 / roundsPerMinute) * TimeWarp.CurrentRate;
-            if (Time.time - timeFired > timeGap && !isOverheated && !pointingAtSelf && !Misc.Misc.CheckMouseIsOnGui() &&
-                WMgrAuthorized())
+            if (Time.time - timeFired > timeGap 
+                && !isOverheated 
+                && !pointingAtSelf 
+                && (aiControlled || !Misc.Misc.CheckMouseIsOnGui())
+                && WMgrAuthorized())
             {
                 bool effectsShot = false;
                 //Transform[] fireTransforms = part.FindModelTransforms("fireTransform");
@@ -1712,13 +1668,63 @@ namespace BDArmory.Modules
             }
         }
 
+        void CheckAIAutofire()
+        {
+            //autofiring with AI
+            if (targetAcquired && aiControlled)
+            {
+                Transform fireTransform = fireTransforms[0];
+                Vector3 targetRelPos = (finalAimTarget) - fireTransform.position;
+                Vector3 aimDirection = fireTransform.forward;
+                float targetCosAngle = Vector3.Dot(aimDirection, targetRelPos.normalized);
+
+                Vector3 targetDiffVec = finalAimTarget - lastFinalAimTarget;
+                Vector3 projectedTargetPos = targetDiffVec;
+                //projectedTargetPos /= TimeWarp.fixedDeltaTime;
+                //projectedTargetPos *= TimeWarp.fixedDeltaTime;
+                projectedTargetPos *= 2; //project where the target will be in 2 timesteps
+                projectedTargetPos += finalAimTarget;
+
+                targetDiffVec.Normalize();
+                Vector3 lastTargetRelPos = (lastFinalAimTarget) - fireTransform.position;
+
+                if (BDATargetManager.CheckSafeToFireGuns(weaponManager, aimDirection, 1000, 0.999848f) //~1 degree of unsafe angle
+                    && targetCosAngle >= maxAutoFireCosAngle) //check if directly on target
+                {
+                    autoFire = true;
+                    Debug.Log($"target cos angle {Vector3.Dot(aimDirection, targetRelPos.normalized)}, target angle ");
+                }
+                else
+                {
+                    autoFire = false;
+                }
+            }
+            else
+            {
+                autoFire = false;
+            }
+
+            //disable autofire after burst length
+            if (autoFire && Time.time - autoFireTimer > autoFireLength)
+            {
+                autoFire = false;
+                legacyTargetVessel = null;
+            }
+        }
+
         IEnumerator AimAndFireAtEndOfFrame()
         {
+            if (eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
+
+            UpdateTargetVessel();
+            updateAcceleration(targetVelocity);
+            relativeVelocity = targetVelocity - vessel.rb_velocity;
+
             RunTrajectorySimulation();
             Aim();
             CheckWeaponSafety();
+            CheckAIAutofire();
 
-            if (eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
             if (finalFire)
             {
                 if (eWeaponType == WeaponTypes.Laser)
