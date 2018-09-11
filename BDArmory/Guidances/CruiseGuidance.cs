@@ -11,6 +11,7 @@ namespace BDArmory.Guidances
     {
         Ascending,
         Cruising,
+        Descending,
         Terminal
     }
 

@@ -71,16 +71,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modules\ModuleAmmoSwitch.cs" />
+    <Compile Include="Misc\BDAcTools.cs" />
     <Compile Include="Control\AIUtils.cs" />
-    <Compile Include="Modules\ModuleDrainEC.cs" />
     <Compile Include="Modules\BDGenericAIBase.cs" />
     <Compile Include="Modules\BDModuleSurfaceAI.cs" />
     <Compile Include="Control\IBDAIControl.cs" />
-    <Compile Include="Modules\AmmoSwitch.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
     <Compile Include="FX\MissileFX.cs" />
     <Compile Include="Guidances\CruiseGuidance.cs" />
+    <Compile Include="Modules\ModuleDrainEC.cs" />
+    <Compile Include="Modules\ModuleMissileRearm.cs" />
     <Compile Include="UI\LoadedVesselSwitcher.cs" />
     <Compile Include="Misc\BahaTurretBullet.cs" />
     <Compile Include="Misc\BDAModuleInfos.cs" />
@@ -91,7 +93,7 @@
     <Compile Include="Modules\BDExplosivePart.cs" />
     <Compile Include="Modules\MissileBase.cs" />
     <Compile Include="Modules\ModuleWWC.cs" />
-    <Compile Include="Modules\SM_Reactive_Armor.cs" />
+    <Compile Include="Modules\ModuleReactiveArmor.cs" />
     <Compile Include="Modules\ModuleSpaceRadar.cs" />
     <Compile Include="UI\BDAEditorAnalysisWindow.cs" />
     <Compile Include="UI\BDArmorySetup.cs" />
@@ -140,8 +142,6 @@
     <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
     <Compile Include="Misc\BDAEditorCategory.cs" />
-    <Compile Include="Misc\BDAExtensions.cs" />
-    <Compile Include="Modules\BDACategoryModule.cs" />
     <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />
@@ -195,6 +195,7 @@
     <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Plane - AG.craft" />
     <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Platform - Missile.craft" />
     <None Include="Distribution\GameData\BDArmory\craft\BDA - Test Platform.craft" />
+    <None Include="Distribution\GameData\BDArmory\craft\BDAc_Test_Drone_MKIII.craft" />
     <None Include="Distribution\GameData\BDArmory\FX\FlameEffect2\model.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\jetdriveWake.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\PenFX.mu" />
@@ -233,6 +234,7 @@
     <None Include="Distribution\GameData\BDArmory\Models\CMChaff\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMFlare\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\CMSmoke\cmSmokeModel.mu" />
+    <None Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPexplosion.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\largeExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\mediumExhaust.mu" />
     <None Include="Distribution\GameData\BDArmory\Models\exhaust\smallExhaust.mu" />
@@ -257,6 +259,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AGM86-17\AGM86-17.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aim-120\amraam.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\aim-120\amraam_emp.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\aim-120\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aiPilot\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\aiPilot\part.cfg" />
@@ -265,6 +268,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\30mm.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\50cal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\BDAcUniversalAmmoBox.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\UniversalAmmoBoxBDA.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\cannonShell.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\AmmoBox\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\ArmorPlate\BD1x1panelArmor.cfg" />
@@ -312,6 +316,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\hekv1\hekv1.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\hekv1\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\hellfireMissile\hellfireMissile.cfg" />
+    <None Include="Distribution\GameData\BDArmory\Parts\hellfireMissile\hellfire_emp.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\hellfireMissile\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\hiddenVulcan\hiddenVulcan.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\hiddenVulcan\model.mu" />
@@ -361,6 +366,7 @@
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\s-8Launcher.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\s-8Launcher\s-8Rocket\model.mu" />
+    <None Include="Distribution\GameData\BDArmory\Parts\SaturnAL31\SaturnAL31.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\sidewinder\model.mu" />
     <None Include="Distribution\GameData\BDArmory\Parts\sidewinder\sidewinder.cfg" />
     <None Include="Distribution\GameData\BDArmory\Parts\smallWarhead\model.mu" />
@@ -453,6 +459,7 @@
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smoke.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smoke4.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\CMSmoke\smokeCm.png" />
+    <Content Include="Distribution\GameData\BDArmory\Models\EMPexplosion\EMPBlast1.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_smokeExhaust.dds" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_smokeExhaust.png" />
     <Content Include="Distribution\GameData\BDArmory\Models\exhaust\tex_sphere.dds" />
@@ -625,7 +632,7 @@ copy /Y "$(TargetDir)"BDArmory*.pdb "%25KSP_DIR%25\GameData\%25ModName%25\Plugin
 )
 
 @echo deleting previous build ...
-if exist "%25DIST_DIR%25\%25ModName%25*.zip" del "%25DIST_DIR%25\%25ModName%25*.zip"
+if exist "%25DIST_DIR%25\%25ModName%25.*.zip" del "%25DIST_DIR%25\%25ModName%25.*.zip"
 @echo packaging new build...
 call "%25ZA_DIR%25\7za.exe" a -tzip -r  "%25DIST_DIR%25\%25ModName%25.@(VersionNumber)_%25DATE:~4,2%25%25DATE:~7,2%25%25DATE:~10,4%25%25time:~0,2%25%25time:~3,2%25.zip" "$(ProjectDir)Distribution\*.*"
 

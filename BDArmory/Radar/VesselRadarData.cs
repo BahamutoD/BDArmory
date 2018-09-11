@@ -1659,6 +1659,7 @@ namespace BDArmory.Radar
 
         private Vector2 UpdatedPingPosition(Vector3 worldPosition, ModuleRadar radar)
         {
+            if (rangeIndex < 0 || rangeIndex > rIncrements.Length - 1) rangeIndex = rIncrements.Length - 1;
             if (omniDisplay)
             {
                 return RadarUtils.WorldToRadar(worldPosition, referenceTransform, RadarDisplayRect, rIncrements[rangeIndex]);

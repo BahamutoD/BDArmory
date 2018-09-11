@@ -1,8 +1,6 @@
-﻿using BDArmory.Modules;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 
-namespace EMP
+namespace BDArmory.Modules
 {
     public class ModuleDrainEC : PartModule
     {
@@ -38,18 +36,26 @@ namespace EMP
 
         void ThrottleControl(FlightCtrlState s)
         {
+            this.vessel.Autopilot.Enabled = false;
             s.mainThrottle = 0;
+            s.rollTrim += 0.1f;
+            s.wheelSteerTrim += 0.1f;
+            s.yawTrim += 0.1f;
+            s.yaw += 0.1f;
+            s.roll += 0.1f;
+            s.pitch -= 0.1f;
+            s.pitchTrim -= 0.1f;
         }
 
         private void EnableVessel()
         {
-            foreach (var p in vessel.parts)
+            foreach (Part p in vessel.parts)
             {
                 var command = p.FindModuleImplementing<ModuleCommand>();
 
                 if (command != null)
                 {
-                    command.minimumCrew = minCrew;
+                    //command.minimumCrew = minCrew;
                 }
 
                 foreach (ModuleEnginesFX engineFX in p.Modules)
@@ -68,35 +74,18 @@ namespace EMP
 
         private void DisableVessel()
         {
-            UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Start");
             vessel.OnFlyByWire -= ThrottleControl;
             vessel.OnFlyByWire += ThrottleControl;
 
-            UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Checking Vessel Parts");
-
-            foreach (Part p in vessel.parts)
+            if (setup)
             {
-                UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Draining EC");
+                setup = false;
 
-                PartResource r = p.Resources.Where(pr => pr.resourceName == "ElectricCharge").FirstOrDefault();
-                if (r != null)
+                foreach (Part p in this.vessel.parts)
                 {
-                    if (r.amount >= 0)
-                    {
-                        p.RequestResource("ElectricCharge", r.amount);
-                    }
-                }
-
-                if (setup)
-                {
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Setup");
-
-                    setup = false;
-
                     var camera = p.FindModuleImplementing<ModuleTargetingCamera>();
                     var radar = p.FindModuleImplementing<ModuleRadar>();
                     var spaceRadar = p.FindModuleImplementing<ModuleSpaceRadar>();
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Seeking Radar");
 
                     if (radar != null)
                     {
@@ -106,8 +95,6 @@ namespace EMP
                         }
                     }
 
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Seeking Space Radar");
-
                     if (spaceRadar != null)
                     {
                         if (spaceRadar.radarEnabled)
@@ -115,8 +102,6 @@ namespace EMP
                             spaceRadar.DisableRadar();
                         }
                     }
-
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Seeking Camera");
 
                     if (camera != null)
                     {
@@ -129,7 +114,6 @@ namespace EMP
                     var command = p.FindModuleImplementing<ModuleCommand>();
                     var weapon = p.FindModuleImplementing<ModuleWeapon>();
                     var turret = p.FindModuleImplementing<ModuleTurret>();
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Seeking Turret");
 
                     if (turret != null)
                     {
@@ -137,7 +121,6 @@ namespace EMP
                         turret.yawRange = 0;
                         turret.yawRangeLimit = 0;
                     }
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Seeking Weapon");
 
                     if (weapon != null)
                     {
@@ -149,50 +132,43 @@ namespace EMP
                         weapon.engageGround = false;
                         weapon.engageAir = false;
                     }
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Seeking Command");
 
                     if (command != null)
                     {
                         minCrew = command.minimumCrew;
-                        command.minimumCrew = 100;
+                        //command.minimumCrew = 100;
                     }
-                    /*
-                    var wmPart = part.FindModuleImplementing<MissileFire>();
-                    UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Find Weapon Manager");
 
-                    if (wmPart != null)
+                    var PAI = this.vessel.FindPartModuleImplementing<BDModulePilotAI>();
+                    var SAI = this.vessel.FindPartModuleImplementing<BDModuleSurfaceAI>();
+
+                    if (SAI != null)
                     {
-                        UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Found Weapon Manager");
-
-                        if (wmPart.guardMode)
+                        if (SAI.pilotEnabled)
                         {
-                            UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Guard Mode Off");
-
-                            wmPart.guardMode = false;
-                        }
-
-                        if (wmPart.AI.pilotEnabled)
-                        {
-                            UnityEngine.Debug.Log("MODULE DRAIN EC ------------- Disable Vessel Pilot AI Off");
-
-                            wmPart.AI.TogglePilot();
+                            SAI.TogglePilot();
                         }
                     }
 
-                    /*
-                    foreach (ModuleEnginesFX engineFX in p.Modules)
+                    if (PAI != null)
                     {
-                        engineFX.allowRestart = false;
-                        engineFX.Shutdown();
-                        engineFX.ShutdownAction(new KSPActionParam(KSPActionGroup.None, KSPActionType.Deactivate));
+                        if (PAI.pilotEnabled)
+                        {
+                            PAI.TogglePilot();
+                        }
                     }
+                }
+            }
 
-                    foreach (ModuleEngines engine in p.Modules)
+            foreach (Part p in vessel.parts)
+            {
+                PartResource r = p.Resources.Where(pr => pr.resourceName == "ElectricCharge").FirstOrDefault();
+                if (r != null)
+                {
+                    if (r.amount >= 0)
                     {
-                        engine.allowRestart = false;
-                        engine.Shutdown();
-                        engine.ShutdownAction(new KSPActionParam(KSPActionGroup.None, KSPActionType.Deactivate));
-                    }*/
+                        p.RequestResource("ElectricCharge", r.amount);
+                    }
                 }
             }
         }

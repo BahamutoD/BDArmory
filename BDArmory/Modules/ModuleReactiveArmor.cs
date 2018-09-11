@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace BDArmory.Modules
 {
-    public class SM_Reactive_Armor : PartModule
+    public class ModuleReactiveArmor : PartModule
     {
 
         //[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Damage Percentage Threshold"),
