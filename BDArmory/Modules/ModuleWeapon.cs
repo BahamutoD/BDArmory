@@ -1692,7 +1692,6 @@ namespace BDArmory.Modules
                     && targetCosAngle >= maxAutoFireCosAngle) //check if directly on target
                 {
                     autoFire = true;
-                    Debug.Log($"target cos angle {Vector3.Dot(aimDirection, targetRelPos.normalized)}, target angle ");
                 }
                 else
                 {
