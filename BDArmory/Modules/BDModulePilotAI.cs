@@ -71,7 +71,7 @@ namespace BDArmory.Modules
 		public float steerMult = 6;
 		//make a combat steer mult and idle steer mult
 
-		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ki factor"),
+		[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Ki"),
 			UI_FloatRange(minValue = 0.01f, maxValue = 1f, stepIncrement = 0.01f, scene = UI_Scene.All)]
 		public float steerKiAdjust = 0.05f;
 
@@ -111,7 +111,7 @@ namespace BDArmory.Modules
 		float lastAllowedAoA;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Orbit ", advancedTweakable = true),
-            UI_Toggle(enabledText = "Clockwise", disabledText = "Counterclockwise", scene = UI_Scene.All),]
+            UI_Toggle(enabledText = "Starboard (CW)", disabledText = "Port (CCW)", scene = UI_Scene.All),]
         public bool ClockwiseOrbit = true;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Unclamp tuning ", advancedTweakable = true),
