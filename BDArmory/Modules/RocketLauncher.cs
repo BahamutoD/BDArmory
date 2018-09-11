@@ -572,6 +572,7 @@ namespace BDArmory.Modules
                 rocket.thrustTime = thrustTime;
                 rocket.randomThrustDeviation = thrustDeviation;
 
+                rocket.sourceVessel = vessel;
                 rocketObj.SetActive(true);
                 rocketObj.transform.SetParent(currentRocketTfm.parent);
                 rocket.parentRB = part.rb;
@@ -798,6 +799,7 @@ namespace BDArmory.Modules
     public class Rocket : MonoBehaviour
     {
         public Transform spawnTransform;
+        public Vessel sourceVessel;
         public float mass;
         public float thrust;
         public float thrustTime;
@@ -994,7 +996,11 @@ namespace BDArmory.Modules
                         {
                         }
 
-                        Detonate(hit.point);
+
+                        if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
+                        {
+                            Detonate(hit.point);
+                        }
                     }
                     else if (FlightGlobals.getAltitudeAtPos(transform.position) < 0)
                     {
