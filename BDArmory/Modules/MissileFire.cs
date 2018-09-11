@@ -3942,7 +3942,10 @@ namespace BDArmory.Modules
                     if (weapon.Current.part.partInfo.title != selectedWeapon.GetPart().partInfo.title) continue;
                     weapon.Current.EnableWeapon();
                     weapon.Current.aiControlled = true;
-                    weapon.Current.maxAutoFireCosAngle = vessel.LandedOrSplashed ? 0.9993908f : 0.9975641f; //2 : 4 degrees
+                    if (weapon.Current.yawRange >= 5 && (weapon.Current.maxPitch - weapon.Current.minPitch) >= 5)
+                        weapon.Current.maxAutoFireCosAngle = Mathf.Cos(weapon.Current.maxDeviation / 2 * Mathf.Deg2Rad);
+                    else
+                        weapon.Current.maxAutoFireCosAngle = vessel.LandedOrSplashed ? 0.9993908f : 0.9975641f; //2 : 4 degrees
                 }
                 weapon.Dispose();
             }
