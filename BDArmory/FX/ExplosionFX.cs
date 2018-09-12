@@ -248,6 +248,12 @@ namespace BDArmory.FX
 
         public void FixedUpdate()
         {
+            //floating origin and velocity offloading corrections
+            if (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero())
+            {
+                transform.position -= FloatingOrigin.OffsetNonKrakensbane;
+            }
+
             while (ExplosionEvents.Count > 0 && ExplosionEvents.Peek().TimeToImpact <= TimeIndex)
             {
                 BlastHitEvent eventToExecute = ExplosionEvents.Dequeue();

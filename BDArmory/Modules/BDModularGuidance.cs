@@ -653,24 +653,23 @@ namespace BDArmory.Modules
 
 
                 Vector3 newTargetPosition = new Vector3();
-                if (GuidanceIndex == 1)
+                switch (GuidanceIndex)
                 {
-                    newTargetPosition = AAMGuidance();
-                    CheckMiss(newTargetPosition);
+                    case 1:
+                        newTargetPosition = AAMGuidance();
+                        break;
+                    case 2:
+                        newTargetPosition = AGMGuidance();
+                        break;
+                    case 3:
+                        newTargetPosition = CruiseGuidance();
+                        break;
+                    case 4:
+                        newTargetPosition = BallisticGuidance();
+                        break;
+                }
+                CheckMiss(newTargetPosition);
 
-                }
-                else if (GuidanceIndex == 2)
-                {
-                    newTargetPosition = AGMGuidance();
-                }
-                else if (GuidanceIndex == 3)
-                {
-                    newTargetPosition = CruiseGuidance();
-                }
-                else if (GuidanceIndex == 4)
-                {
-                    newTargetPosition = BallisticGuidance();
-                }
 
                 //Updating aero surfaces
                 if (TimeIndex > dropTime + 0.5f)
