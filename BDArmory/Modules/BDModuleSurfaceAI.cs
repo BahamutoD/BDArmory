@@ -29,7 +29,6 @@ namespace BDArmory.Modules
 		float weaveDirection = 1;
 		const float weaveLimit = 15;
 		const float weaveFactor = 6.5f;
-        int sideSlipDirection = 0;
 
 		Vector3 upDir;
 
@@ -115,6 +114,14 @@ namespace BDArmory.Modules
             UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.All),]
         public float AvoidMass = 0f;
 
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Preferred broadside direction", advancedTweakable = true),
+            UI_ChooseOption(options = new string[3] { "Starboard", "Whatever", "Port" }, scene = UI_Scene.All),]
+        public string OrbitDirectionName = "Whatever";
+        readonly string[] orbitDirections = new string[3] { "Starboard", "Whatever", "Port" };
+
+        [KSPField(isPersistant = true)]
+        int sideSlipDirection = 0;
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Goes up to ", advancedTweakable = true),
             UI_Toggle(enabledText = "eleven", disabledText = "ten", scene = UI_Scene.All), ]
         public bool UpToEleven = false;
@@ -181,8 +188,12 @@ namespace BDArmory.Modules
             }
             motorControl.Activate();
 
-            if (BroadsideAttack)
-                sideSlipDirection = UnityEngine.Random.Range(0, 2) > 1 ? 1 : -1;
+            if (BroadsideAttack && sideSlipDirection == 0)
+            {
+                sideSlipDirection = orbitDirections.IndexOf(OrbitDirectionName);
+                if (sideSlipDirection == 0)
+                    sideSlipDirection = UnityEngine.Random.Range(0, 2) > 1 ? 1 : -1;
+            }
 
             leftPath = true;
             extendingTarget = null;
