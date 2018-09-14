@@ -248,7 +248,7 @@ namespace BDArmory.Modules
         [KSPField]
         public float roundsPerMinute = 850; //rate of fire
         [KSPField]
-        public float maxDeviation = 1; //inaccuracy standard deviation in degrees
+        public float maxDeviation = 1; //inaccuracy two standard deviations in degrees (two because backwards compatibility :)
         [KSPField]
         public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
         [KSPField]
@@ -1072,7 +1072,7 @@ namespace BDArmory.Modules
                         timeFired = Time.time;
                         
                         Vector3 firedVelocity =
-                            VectorUtils.GaussianDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
+                            VectorUtils.GaussianDirectionDeviation(fireTransform.forward, maxDeviation / 2) * bulletVelocity;
 
                         firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
                         pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
