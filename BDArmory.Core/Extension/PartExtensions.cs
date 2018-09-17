@@ -300,7 +300,6 @@ namespace BDArmory.Core.Extension
 
         public static Vector3 GetSize(this Part part)
         {
-            var tweakScaleModule = part.Modules["TweakScale"];
 
             var size =  part.GetComponentInChildren<MeshFilter>().mesh.bounds.size;
             
@@ -310,8 +309,9 @@ namespace BDArmory.Core.Extension
             }
 
             float scaleMultiplier = 1f;
-            if (tweakScaleModule != null)
+            if (part.Modules.Contains("TweakScale"))
             {
+                var tweakScaleModule = part.Modules["TweakScale"];
                 scaleMultiplier = tweakScaleModule.Fields["currentScale"].GetValue<float>(tweakScaleModule) /
                                   tweakScaleModule.Fields["defaultScale"].GetValue<float>(tweakScaleModule);
             }
