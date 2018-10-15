@@ -5,6 +5,8 @@ namespace BDArmory.Misc
 {
 	public static class VectorUtils
 	{
+        private static System.Random RandomGen = new System.Random();
+
 		/// <param name="referenceRight">Right compared to fromDirection, make sure it's not orthogonal to toDirection, or you'll get unstable signs</param>
 		public static float SignedAngle(Vector3 fromDirection, Vector3 toDirection, Vector3 referenceRight)
 		{
@@ -89,27 +91,17 @@ namespace BDArmory.Misc
         }
 
         /// <returns>Random float distributed with an approximated standard normal distribution</returns>
-        /// <see>https://www.johndcook.com/blog/csharp_phi/</see>
+        /// <see>https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform</see>
         /// <remarks>Note a standard normal variable is technically unbounded</remarks>
         public static float Gaussian()
         {
-            const float a1 = 0.254829592f;
-            const float a2 = -0.284496736f;
-            const float a3 = 1.421413741f;
-            const float a4 = -1.453152027f;
-            const float a5 = 1.061405429f;
-            const float p = 0.3275911f;
-            const float invsqrt2 = 0.70710678118654752440084436210485f;
-
-            float x = UnityEngine.Random.Range(-invsqrt2, invsqrt2);
-            int sign = Math.Sign(x);
-            x = Mathf.Abs(x);
-
-            // A&S formula 7.1.26
-            float t = 1f / (1f + p * x);
-            float y = 1f - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Mathf.Exp(-x * x);
-
-            return 0.5f * (1f + sign * y);
+            // Technically this will raise an exception if the first random produces a zero
+            try {
+                return Mathf.Sqrt(-2 * Mathf.Log(UnityEngine.Random.value)) * Mathf.Cos(Mathf.PI * UnityEngine.Random.value);
+            }
+            catch (Exception) { // I have no idea what exception Mathf.Log raises when it gets a zero
+                return 0;
+            }
         }
 
 		/// <summary>

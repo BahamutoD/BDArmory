@@ -248,7 +248,7 @@ namespace BDArmory.Modules
         [KSPField]
         public float roundsPerMinute = 850; //rate of fire
         [KSPField]
-        public float maxDeviation = 1; //inaccuracy standard deviation in degrees
+        public float maxDeviation = 1; //inaccuracy two standard deviations in degrees (two because backwards compatibility :)
         [KSPField]
         public float maxEffectiveDistance = 2500; //used by AI to select appropriate weapon
         [KSPField]
@@ -932,6 +932,7 @@ namespace BDArmory.Modules
             {
                 bool effectsShot = false;
                 //Transform[] fireTransforms = part.FindModelTransforms("fireTransform");
+                for (float iTime = Mathf.Min(Time.time - timeFired - timeGap, TimeWarp.fixedDeltaTime); iTime >= 0; iTime -= timeGap)
                 for (int i = 0; i < fireTransforms.Length; i++)
                 {
                     //if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount) > 0))
@@ -1065,17 +1066,18 @@ namespace BDArmory.Modules
 
                         pBullet.ballisticCoefficient = bulletBallisticCoefficient;
 
-                        pBullet.flightTimeElapsed = 0;
+                        pBullet.flightTimeElapsed = iTime;
                         // measure bullet lifetime in time rather than in distance, because distances get very relative in orbit
                         pBullet.timeToLiveUntil = Mathf.Max(maxTargetingRange, maxEffectiveDistance) / bulletVelocity * 1.1f + Time.time;
 
-                        timeFired = Time.time;
+                        timeFired = Time.time - iTime;
                         
                         Vector3 firedVelocity =
-                            VectorUtils.GaussianDirectionDeviation(fireTransform.forward, maxDeviation) * bulletVelocity;
+                            VectorUtils.GaussianDirectionDeviation(fireTransform.forward, maxDeviation / 2) * bulletVelocity;
 
-                        firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime;
                         pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
+                        firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime 
+                                                            + pBullet.currentVelocity * iTime;
 
                         pBullet.sourceVessel = vessel;
                         pBullet.bulletTexturePath = bulletTexturePath;
@@ -2287,7 +2289,7 @@ namespace BDArmory.Modules
             }
             else
             {
-                output.AppendLine($"Rounds Per Minute: {roundsPerMinute}");
+                output.AppendLine($"Rounds Per Minute: {roundsPerMinute * (fireTransforms?.Length ?? 1)}");
                 output.AppendLine($"Ammunition: {ammoName}");
                 output.AppendLine($"Bullet type: {bulletType}");
                 output.AppendLine($"Bullet mass: {Math.Round(binfo.bulletMass,2)} kg");
