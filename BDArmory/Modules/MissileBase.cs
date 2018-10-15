@@ -919,17 +919,19 @@ namespace BDArmory.Modules
             //Guard clauses     
             if (!TargetAcquired) return;
 
-                var targetDistancePerFrame = TargetVelocity * Time.deltaTime;
-                var missileDistancePerFrame = vessel.Velocity() * Time.deltaTime;
+                var targetDistancePerFrame = TargetVelocity * Time.fixedDeltaTime;
+                var missileDistancePerFrame = vessel.Velocity() * Time.fixedDeltaTime;
 
                 var futureTargetPosition = (TargetPosition + targetDistancePerFrame);
                 var futureMissilePosition = (vessel.CoM + missileDistancePerFrame);
+
+               var relativeSpeed = (TargetVelocity - vessel.Velocity()).magnitude * Time.fixedDeltaTime;
 
                 switch (DetonationDistanceState)
                 {
                     case DetonationDistanceStates.NotSafe:
                         //Lets check if we are at a safe distance from the source vessel
-                        Ray raySourceVessel = new Ray(futureMissilePosition, SourceVessel.CoM + SourceVessel.Velocity() * Time.deltaTime);
+                        Ray raySourceVessel = new Ray(futureMissilePosition, SourceVessel.CoM + SourceVessel.Velocity() * Time.fixedDeltaTime);
 
                         var hits = Physics.RaycastAll(raySourceVessel, GetBlastRadius() * 2, 557057).AsEnumerable();
 
@@ -991,14 +993,14 @@ namespace BDArmory.Modules
                                         {
                                             var hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
 
-                                            if (hitPart?.vessel != SourceVessel)
-                                            {
-                                                //We found a hit to other vessel
-                                                vessel.transform.position = hit.point;
-                                                DetonationDistanceState = DetonationDistanceStates.Detonate;
-                                            return;
-                                            }
-                                        }
+                                                if (hitPart?.vessel != SourceVessel)
+                                                {
+                                                    //We found a hit to other vessel
+                                                    vessel.transform.position = hit.point;
+                                                    DetonationDistanceState = DetonationDistanceStates.Detonate;
+                                                    return;
+                                                }
+                                         }
                                         catch
                                         {
                                             // ignored
@@ -1012,7 +1014,7 @@ namespace BDArmory.Modules
                         }
                         else
                         {
-                            float optimalDistance = (float)(DetonationDistance + missileDistancePerFrame.magnitude);
+                            float optimalDistance = (float)(Math.Max(DetonationDistance, relativeSpeed));
 
                             using (var hitsEnu = Physics.OverlapSphere(vessel.CoM, optimalDistance, 557057).AsEnumerable().GetEnumerator())
                             {

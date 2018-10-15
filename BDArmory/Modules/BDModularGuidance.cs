@@ -153,6 +153,7 @@ namespace BDArmory.Modules
             if (HasFired && !HasExploded)
             {
                 UpdateGuidance();
+                CheckDetonationState();
                 CheckDetonationDistance();
                 CheckDelayedFired();
                 CheckNextStage();
