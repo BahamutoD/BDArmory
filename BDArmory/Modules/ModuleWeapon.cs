@@ -703,6 +703,9 @@ namespace BDArmory.Modules
 
         private void ReloadIconOnVesselSwitch(Vessel data0, Vessel data1)
         {
+            if (part == null) return;
+            if (part.vessel == null) return;
+
             if (part.vessel.isActiveVessel)
             {
                 part.stagingIconAlwaysShown = true;
