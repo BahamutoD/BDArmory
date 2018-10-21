@@ -931,21 +931,17 @@ namespace BDArmory.Modules
                 {
                     case DetonationDistanceStates.NotSafe:
                         //Lets check if we are at a safe distance from the source vessel
-                        Ray raySourceVessel = new Ray(futureMissilePosition, SourceVessel.CoM + SourceVessel.Velocity() * Time.fixedDeltaTime);
 
-                        var hits = Physics.RaycastAll(raySourceVessel, GetBlastRadius() * 2, 557057).AsEnumerable();
-
-                        using (var hitsEnu = hits.GetEnumerator())
+                        using (var hitsEnu = Physics.OverlapSphere(futureMissilePosition, GetBlastRadius() * 3f, 557057).AsEnumerable().GetEnumerator())
                         {
                             while (hitsEnu.MoveNext())
                             {
-                                RaycastHit hit = hitsEnu.Current;
-
+                                if (hitsEnu.Current == null) continue;
                                 try
                                 {
-                                    var hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
+                                    Part partHit = hitsEnu.Current.GetComponentInParent<Part>();
 
-                                    if (hitPart?.vessel == SourceVessel)
+                                    if (partHit?.vessel == SourceVessel)
                                     {
                                         //We found a hit to the vessel
                                         return;
@@ -958,7 +954,8 @@ namespace BDArmory.Modules
                             }
                         }
 
-                        //We are safe and we can continue with the next state
+                        //We are safe and we can continue with the cruising phase
+
                         DetonationDistanceState = DetonationDistanceStates.Cruising;
                         break;
                     case DetonationDistanceStates.Cruising:
@@ -1026,7 +1023,7 @@ namespace BDArmory.Modules
                                     {
                                         Part partHit = hitsEnu.Current.GetComponentInParent<Part>();
 
-                                        if (partHit?.vessel == vessel) continue;
+                                        if (partHit?.vessel == vessel || partHit?.vessel == SourceVessel) continue;
 
                                         Debug.Log("[BDArmory]: Missile proximity sphere hit | Distance overlap = " + optimalDistance + "| Part name = " + partHit.name);
 
@@ -1041,8 +1038,6 @@ namespace BDArmory.Modules
                                 }
                             }
                     }
-
-                        
 
                         break;
                 }
