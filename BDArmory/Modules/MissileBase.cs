@@ -990,7 +990,7 @@ namespace BDArmory.Modules
                                         {
                                             var hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
 
-                                                if (hitPart?.vessel != SourceVessel)
+                                                if (hitPart?.vessel != SourceVessel && hitPart?.vessel != vessel )
                                                 {
                                                     //We found a hit to other vessel
                                                     vessel.transform.position = hit.point;
