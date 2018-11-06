@@ -1091,7 +1091,7 @@ namespace BDArmory.Modules
                 {
                     case TargetingModes.Heat:
                         // get ground heat targets
-                        heatTarget = BDATargetManager.GetHeatTarget(new Ray(transform.position + (50 * GetForwardTransform()), TargetPosition - GetForwardTransform()), terminalGuidanceDistance, heatThreshold, true, null, true);
+                        heatTarget = BDATargetManager.GetHeatTarget(new Ray(transform.position + (50 * GetForwardTransform()), TargetPosition - GetForwardTransform()), terminalGuidanceDistance, heatThreshold, true, SourceVessel.gameObject.GetComponent<MissileFire>(), true);
                         if (heatTarget.exists)
                         {
                             if (BDArmorySettings.DRAW_DEBUG_LABELS)

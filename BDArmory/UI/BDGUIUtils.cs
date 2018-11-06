@@ -61,6 +61,9 @@ namespace BDArmory.UI
 		public static void DrawLineBetweenWorldPositions(Vector3 worldPosA, Vector3 worldPosB, float width, Color color)
 		{
 			Camera cam = GetMainCamera();
+
+		    if (cam == null) return;
+
 			GUI.matrix = Matrix4x4.identity;
 
 			bool aBehind = false;

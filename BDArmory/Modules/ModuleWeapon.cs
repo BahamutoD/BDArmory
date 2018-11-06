@@ -522,11 +522,25 @@ namespace BDArmory.Modules
 
         #region KSP Events
 
+        public override void OnAwake()
+        {
+            base.OnAwake();
+
+            part.stagingIconAlwaysShown = true;
+            this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
 
-            ParseWeaponType();
+            part.stagingIconAlwaysShown = true;
+            this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
+
+            GameEvents.onVesselSwitching.Add(ReloadIconOnVesselSwitch);
+            
+                
+                ParseWeaponType();
             
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxEffectiveDistance);
@@ -687,6 +701,18 @@ namespace BDArmory.Modules
             BDArmorySetup.OnVolumeChange += UpdateVolume;
         }
 
+        private void ReloadIconOnVesselSwitch(Vessel data0, Vessel data1)
+        {
+            if (part == null) return;
+            if (part.vessel == null) return;
+
+            if (part.vessel.isActiveVessel)
+            {
+                part.stagingIconAlwaysShown = true;
+                this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
+            }
+        }
+
         void OnDestroy()
         {
             BDArmorySetup.OnVolumeChange -= UpdateVolume;
@@ -766,11 +792,6 @@ namespace BDArmory.Modules
                         DisableWeapon();
                     }
                     return;
-                }
-
-                if (part.stackIcon.StageIcon == null)
-                {
-                    part.stackIcon.CreateIcon();
                 }
 
 
