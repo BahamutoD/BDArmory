@@ -1,4 +1,49 @@
-﻿v1.2.2.2a
+﻿v1.2.3
+* NEW FEATURES:
+	* Recompiled for KSP 1.5.1  
+	* EC per shot for energy weapons like Rail guns. #486
+	* EMP Weapons logic.
+    * Modular Missiles: Min speed before guidance trigger, time between stages.
+    * New High Explosive resource for missiles.
+	* New smoke model.
+	* Autopilot: Orbiting direction can be set.
+
+* ENHANCEMENTS:
+	* Explosive blast forces increased.
+	* Hitpoints rounding reduced to 100. #432
+    * Missiles can be jettisoned using action group #539
+	* Max detonation range for air explosive bullets increased from 3500m to 8000m.
+	* Autopilot improvements: pitchKi has saner values, also steering added.
+	* Guard mode: Better calculation of missiles away.
+	* Better bullet distribution.
+	* FX performance improved limiting number of parallel animations.
+	* Better checks for missile detonations.
+
+* FIXES
+	* HE bullets now do less kinetic damage after substracting HE mass
+	* HitPoints calculations: values remain the same between scenes 
+	* HitPoints calculations: bigger vessels now have more sensible HP values. #477
+	* Stop explosions moving across the ground
+	* Fixed detonation on collision #566
+	* CSV parts export now show all parts
+	* Fixed weapons category due to localization issues. #580
+	* Stage icons fixed for KSP 1.5.1
+	* Some exceptions controlled
+	* Heat missiles will not lock friendly vessels. #586
+	* Fixed issue where modular missiles were detecting themselves as enemy vessels and detonating.
+    * Modular Missiles: roll correction fixed.
+
+* BALANCE
+	* Bullet mass rebalance for lower calibers #515
+	* No damage reductions for lower calibers #515
+	* 120mm bullet improvements.
+- Thanks to SpannerMoneky, Gedas-S, DoctorDavinci, Kergan, Gomker, PapaJoesSoup, TheDogKSP, Duck1998, and Fitiales for their work on this release!
+
+v1.2.2.2a
+* FIXES
+* added in missing high speed missle fix.  somehow got lost in the merge migration.
+
+v1.2.2.2a
 * FIXES
 * added in missing high speed missle fix.  somehow got lost in the merge migration.
 

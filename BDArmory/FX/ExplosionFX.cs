@@ -39,8 +39,11 @@ namespace BDArmory.FX
 
         private float particlesMaxEnergy;
 
+        public static Queue<ExplosionFx> ExplosionsLoaded = new Queue<ExplosionFx>();
+
         private void Start()
         {
+            ExplosionsLoaded.Enqueue(this);
             StartTime = Time.time;
             MaxTime = (Range / ExplosionVelocity)*3f;
             CalculateBlastEvents();
@@ -234,13 +237,15 @@ namespace BDArmory.FX
                 pe.Dispose();
             }
 
-            if (ExplosionEvents.Count == 0 && TimeIndex > Math.Max(MaxTime, particlesMaxEnergy))
+            if (ExplosionEvents.Count == 0 && TimeIndex > 2f*MaxTime)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 {
                     Debug.Log(
                         "[BDArmory]:Explosion Finished");
                 }
+
+                ExplosionsLoaded.Dequeue();
                 Destroy(gameObject);
                 return;
             }
@@ -248,6 +253,12 @@ namespace BDArmory.FX
 
         public void FixedUpdate()
         {
+            //floating origin and velocity offloading corrections
+            if (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero())
+            {
+                transform.position -= FloatingOrigin.OffsetNonKrakensbane;
+            }
+
             while (ExplosionEvents.Count > 0 && ExplosionEvents.Peek().TimeToImpact <= TimeIndex)
             {
                 BlastHitEvent eventToExecute = ExplosionEvents.Dequeue();
@@ -369,6 +380,7 @@ namespace BDArmory.FX
 
         public static void CreateExplosion(Vector3 position, float tntMassEquivalent, string explModelPath, string soundPath, bool isMissile = true,float caliber = 0, Part explosivePart = null, Vector3 direction = default(Vector3))
         {
+            if (ExplosionsLoaded.Count > 5) return;
             var go = GameDatabase.Instance.GetModel(explModelPath);
             var soundClip = GameDatabase.Instance.GetAudioClip(soundPath);
 

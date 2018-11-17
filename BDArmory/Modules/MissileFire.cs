@@ -902,8 +902,7 @@ namespace BDArmory.Modules
 
                 if(missileBase.SourceVessel != this.vessel) continue;
 
-                if (missileBase.guidanceActive == true && !missileBase.HasMissed &&
-                                                 missileBase.MissileState != MissileBase.MissileStates.PostThrust)
+                if (!missileBase.HasMissed)
                 {
                     tempMissilesAway++;
                 }
@@ -1576,7 +1575,8 @@ namespace BDArmory.Modules
                     hasSetCargoBays = true;
                 }
 
-                if (targetDist > radius)
+                if (targetDist > radius 
+                    || Vector3.Dot(VectorUtils.GetUpDirection(vessel.CoM), vessel.transform.forward) > 0) // roll check
                 {
                     if (targetDist < Mathf.Max(radius * 2, 800f) &&
                         Vector3.Dot(guardTarget.CoM - bombAimerPosition, guardTarget.CoM - transform.position) < 0)
@@ -3802,7 +3802,7 @@ namespace BDArmory.Modules
                     heatTarget.predictedPosition - CurrentMissile.MissileReferenceTransform.position
                     : CurrentMissile.GetForwardTransform();
 
-                heatTarget = BDATargetManager.GetHeatTarget(new Ray(CurrentMissile.MissileReferenceTransform.position + (50 * CurrentMissile.GetForwardTransform()), direction), scanRadius, CurrentMissile.heatThreshold, CurrentMissile.allAspect);
+                heatTarget = BDATargetManager.GetHeatTarget(new Ray(CurrentMissile.MissileReferenceTransform.position + (50 * CurrentMissile.GetForwardTransform()), direction), scanRadius, CurrentMissile.heatThreshold, CurrentMissile.allAspect, this);
             }
         }
 
@@ -3939,7 +3939,10 @@ namespace BDArmory.Modules
                     if (weapon.Current.part.partInfo.title != selectedWeapon.GetPart().partInfo.title) continue;
                     weapon.Current.EnableWeapon();
                     weapon.Current.aiControlled = true;
-                    weapon.Current.maxAutoFireCosAngle = vessel.LandedOrSplashed ? 0.9993908f : 0.9975641f; //2 : 4 degrees
+                    if (weapon.Current.yawRange >= 5 && (weapon.Current.maxPitch - weapon.Current.minPitch) >= 5)
+                        weapon.Current.maxAutoFireCosAngle = 1;
+                    else
+                        weapon.Current.maxAutoFireCosAngle = vessel.LandedOrSplashed ? 0.9993908f : 0.9975641f; //2 : 4 degrees
                 }
                 weapon.Dispose();
             }

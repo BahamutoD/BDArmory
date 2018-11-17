@@ -2,6 +2,7 @@
 BDArmory Ignore
 #######################################
 BDArmory/BDArmory.csproj.user
+_LocalDev
 
 BahaTurret/.vs
 BahaTurret/obj

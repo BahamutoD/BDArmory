@@ -124,14 +124,14 @@ namespace BDArmory.Misc
                                     );
             fileradars.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;radar_name;rwrThreatType;omnidirectional;directionalFieldOfView;boresightFOV;" +
                                  "scanRotationSpeed;lockRotationSpeed;lockRotationAngle;showDirectionWhileScan;multiLockFOV;lockAttemptFOV;canScan;canLock;canTrackWhileScan;canRecieveRadarData;" +
-                                 "DEPRECATED_minSignalThreshold;DEPRECATED_minLockedSignalThreshold;maxLocks;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
+                                 "maxLocks;radarGroundClutterFactor;radarDetectionCurve;radarLockTrackCurve"
                                   );
             filejammers.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;alwaysOn;rcsReduction;rcsReducationFactor;lockbreaker;lockbreak_strength;jammerStrength");
 
             Debug.Log("Dumping parts...");
 
             // 3. iterate weapons and write out fields
-            foreach (var item in availableParts)
+            foreach (var item in PartLoader.LoadedPartsList)
             {
 
                 weapon = null;
