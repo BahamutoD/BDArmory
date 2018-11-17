@@ -21,7 +21,7 @@ namespace BDArmory.Core.Extension
 
         public static bool InVacuum(this Vessel v)
         {
-            return v.atmDensity <= 0.001;
+            return v.atmDensity <= 0.001f;
         }
 
         public static Vector3d Velocity(this Vessel v)
