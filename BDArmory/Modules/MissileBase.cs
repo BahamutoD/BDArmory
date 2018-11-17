@@ -770,7 +770,7 @@ namespace BDArmory.Modules
             }
         }
 
-        public void DrawDebugLine(Vector3 start, Vector3 end)
+        public void DrawDebugLine(Vector3 start, Vector3 end,Color color = default(Color))
         {
             if (BDArmorySettings.DRAW_DEBUG_LINES)
             {
@@ -778,7 +778,7 @@ namespace BDArmory.Modules
                 {
                     LR = gameObject.AddComponent<LineRenderer>();
                     LR.material = new Material(Shader.Find("KSP/Emissive/Diffuse"));
-                    LR.material.SetColor("_EmissiveColor", Color.red);
+                    LR.material.SetColor("_EmissiveColor", color);
                 }
                 else
                 {
