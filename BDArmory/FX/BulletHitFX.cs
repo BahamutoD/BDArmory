@@ -20,7 +20,6 @@ namespace BDArmory.FX
         public GameObject bulletHoleDecalPrefab;
         public static ObjectPool decalPool_small;
         public static ObjectPool decalPool_large;
-        public static int maxPoolSize = 200;
         public static Dictionary<Vessel,List<float>> PartsOnFire = new Dictionary<Vessel, List<float>>(); 
 
         public static int MaxFiresPerVessel = 3;
@@ -36,19 +35,20 @@ namespace BDArmory.FX
                     Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal2"));
             templateShell_large.SetActive(false);
             if (decalPool_large == null)
-                decalPool_large = ObjectPool.CreateObjectPool(templateShell_large, maxPoolSize, true, true);
+                decalPool_large = ObjectPool.CreateObjectPool(templateShell_large, BDArmorySettings.MAX_NUM_BULLET_DECALS, true, true);
 
             GameObject templateShell_small;
             templateShell_small =
                 Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal1"));
             templateShell_small.SetActive(false);
             if (decalPool_small == null)
-                decalPool_small = ObjectPool.CreateObjectPool(templateShell_small, maxPoolSize, true, true);
+                decalPool_small = ObjectPool.CreateObjectPool(templateShell_small, BDArmorySettings.MAX_NUM_BULLET_DECALS, true, true);
             
         }
 
         public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float penetrationfactor)
         {
+            if (!BDArmorySettings.BULLET_DECALS) return;
             ObjectPool decalPool_;
 
             if (caliber >= 90f)
@@ -91,7 +91,7 @@ namespace BDArmory.FX
         
         private static bool CanFlamesBeAttached(Part hitPart)
         {
-            if (!hitPart.vessel.LandedOrSplashed || !hitPart.HasFuel()) //removing FX from flight for now due to performance issues
+            if (!BDArmorySettings.FIRE_FX_IN_FLIGHT && !hitPart.vessel.LandedOrSplashed || !hitPart.HasFuel()) 
                 return false;            
 
             if (hitPart.vessel.LandedOrSplashed)

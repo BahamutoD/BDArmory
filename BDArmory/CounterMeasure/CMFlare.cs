@@ -10,16 +10,11 @@ namespace BDArmory.CounterMeasure
 {
     public class CMFlare : MonoBehaviour
     {
-        public Vessel sourceVessel;
-        Vector3 relativePos;
-
         List<KSPParticleEmitter> pEmitters; // = new List<KSPParticleEmitter>();
         List<BDAGaplessParticleEmitter> gaplessEmitters; // = new List<BDAGaplessParticleEmitter>();
 
         Light[] lights;
         float startTime;
-
-        public Vector3 startVelocity;
 
         public bool alive = true;
 
@@ -33,12 +28,16 @@ namespace BDArmory.CounterMeasure
 
         float lifeTime = 5;
 
-        void OnEnable()
+        public void SetThermal(Vessel sourceVessel)
         {
             // OLD:
             //thermal = BDArmorySetup.FLARE_THERMAL*UnityEngine.Random.Range(0.45f, 1.25f);
             // NEW: generate flare within spectrum of emitting vessel's heat signature
             thermal = BDATargetManager.GetVesselHeatSignature(sourceVessel) * UnityEngine.Random.Range(0.65f, 1.75f);
+        }
+
+        void OnEnable()
+        {
             startThermal = thermal;
             minThermal = startThermal * 0.3f;
 
@@ -106,14 +105,7 @@ namespace BDArmory.CounterMeasure
 
             BDArmorySetup.Flares.Add(this);            
 
-            if (sourceVessel != null)
-            {
-                relativePos = transform.position - sourceVessel.transform.position;
-            }
-
             upDirection = VectorUtils.GetUpDirection(transform.position);
-
-            velocity = startVelocity;
         }
 
         void FixedUpdate()
@@ -123,6 +115,12 @@ namespace BDArmory.CounterMeasure
                 return;
             }
 
+            //floating origin and velocity offloading corrections
+            if (!FloatingOrigin.Offset.IsZero() || !Krakensbane.GetFrameVelocity().IsZero())
+            {
+                transform.position -= FloatingOrigin.OffsetNonKrakensbane;
+            }
+
             if (velocity != Vector3.zero)
             {
                 transform.rotation = Quaternion.LookRotation(velocity, upDirection);
@@ -130,15 +128,8 @@ namespace BDArmory.CounterMeasure
 
 
             //Particle effects
-            Vector3 downForce = Vector3.zero;
             //downforce
-
-            if (sourceVessel != null)
-            {
-                downForce = (Mathf.Clamp((float) sourceVessel.srfSpeed, 0.1f, 150)/150)*
-                            Mathf.Clamp01(20/Vector3.Distance(sourceVessel.transform.position, transform.position))*20*
-                            -upDirection;
-            }
+            Vector3 downForce = (Mathf.Clamp(velocity.magnitude, 0.1f, 150) / 150) * 20 * -upDirection;
 
             //turbulence
             List<BDAGaplessParticleEmitter>.Enumerator gEmitter = gaplessEmitters.GetEnumerator();
@@ -173,20 +164,6 @@ namespace BDArmory.CounterMeasure
             //thermal decay
             thermal = Mathf.MoveTowards(thermal, minThermal,
                 ((thermal - minThermal)/lifeTime)*Time.fixedDeltaTime);
-
-
-            //floatingOrigin fix
-            if (sourceVessel != null)
-            {
-                if (((transform.position - sourceVessel.transform.position) - relativePos).sqrMagnitude > 800*800)
-                {
-                    transform.position = sourceVessel.transform.position + relativePos;
-                }
-
-                relativePos = transform.position - sourceVessel.transform.position;
-            }
-            //
-
 
             if (Time.time - startTime > lifeTime) //stop emitting after lifeTime seconds
             {
@@ -231,8 +208,8 @@ namespace BDArmory.CounterMeasure
             //atmospheric drag (stock)
             float simSpeedSquared = velocity.sqrMagnitude;
             Vector3 currPos = transform.position;
-            float mass = 0.001f;
-            float drag = 1f;
+            const float mass = 0.001f;
+            const float drag = 1f;
             Vector3 dragForce = (0.008f*mass)*drag*0.5f*simSpeedSquared*
                                 (float)
                                 FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos),

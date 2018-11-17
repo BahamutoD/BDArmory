@@ -23,7 +23,7 @@ namespace BDArmory.Parts
         void Start()
         {
             transform.localScale = 2*Vector3.one;
-            lightFlare = gameObject.transform.FindChild("lightFlare");
+            lightFlare = gameObject.transform.Find("lightFlare");
 
 
             startTime = Time.time;

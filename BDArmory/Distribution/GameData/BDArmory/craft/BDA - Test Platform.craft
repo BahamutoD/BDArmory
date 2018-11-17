@@ -2554,21 +2554,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = CannonShells
@@ -2619,21 +2604,6 @@ PART
 	MODULE
 	{
 		name = CFEnable
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
 		isEnabled = True
 		stagingEnabled = True
 		EVENTS
@@ -2708,21 +2678,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 30x173Ammo
@@ -2773,21 +2728,6 @@ PART
 	MODULE
 	{
 		name = CFEnable
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
 		isEnabled = True
 		stagingEnabled = True
 		EVENTS
@@ -2862,21 +2802,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 50CalAmmo
@@ -2927,21 +2852,6 @@ PART
 	MODULE
 	{
 		name = CFEnable
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
 		isEnabled = True
 		stagingEnabled = True
 		EVENTS
@@ -3016,21 +2926,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 20x102Ammo
@@ -3081,21 +2976,6 @@ PART
 	MODULE
 	{
 		name = CFEnable
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
 		isEnabled = True
 		stagingEnabled = True
 		EVENTS
@@ -3606,21 +3486,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 20x102Ammo
@@ -3852,21 +3717,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 20x102Ammo
@@ -4041,21 +3891,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 20x102Ammo
@@ -4218,21 +4053,6 @@ PART
 	MODULE
 	{
 		name = CFEnable
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
 		isEnabled = True
 		stagingEnabled = True
 		EVENTS
@@ -4421,21 +4241,6 @@ PART
 		{
 		}
 	}
-	MODULE
-	{
-		name = BDACategoryModule
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
 	RESOURCE
 	{
 		name = 20x102Ammo
@@ -4599,21 +4404,6 @@ PART
 	MODULE
 	{
 		name = CFEnable
-		isEnabled = True
-		stagingEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-		UPGRADESAPPLIED
-		{
-		}
-	}
-	MODULE
-	{
-		name = BDACategoryModule
 		isEnabled = True
 		stagingEnabled = True
 		EVENTS

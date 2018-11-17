@@ -1,6 +1,7 @@
 ﻿using System;
 using BDArmory.Core.Extension;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using BDArmory.Parts;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace BDArmory.Guidances
     {
         Ascending,
         Cruising,
+        Descending,
         Terminal
     }
 
