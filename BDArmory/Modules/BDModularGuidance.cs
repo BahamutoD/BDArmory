@@ -9,6 +9,7 @@ using BDArmory.UI;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
+using VehiclePhysics;
 
 namespace BDArmory.Modules
 {
@@ -85,6 +86,12 @@ namespace BDArmory.Modules
         private float rollError;
 
         private bool _minSpeedAchieved = false;
+        private double lastRollAngle;
+        private double angularVelocity;
+        private double angularAcceleration;
+        private double lasAngularVelocity
+            ;
+
         #endregion
 
         public TransformAxisVectors ForwardTransformAxis { get; set; }
@@ -689,30 +696,47 @@ namespace BDArmory.Modules
 
                     if (RollCorrection)
                     {
-                       s.roll = GetRoll();
+                      SetRoll();
+                        s.roll = Roll;
                     }
                 }
                 s.mainThrottle = Throttle;
             }
 
         }
-
-        private float GetRoll()
+        private void SetRoll()
         {
-            Vector3 rollA = this.initialMissileForward;
-            Vector3 rollB = Vector3.ProjectOnPlane(vessel.transform.forward, this.initialMissileRollPlane).normalized;
+            var vesselTransform = vessel.transform.position;
 
-            var angle = Vector3.Angle(rollA, rollB);
+            Vector3 gravityVector = FlightGlobals.getGeeForceAtPosition(vesselTransform).normalized;
+            Vector3 rollVessel = -vessel.transform.right.normalized;
 
-            var crossErrorAngle = Vector3.Cross(rollA, rollB);
+            var currentAngle = Vector3.SignedAngle(rollVessel, gravityVector,Vector3.Cross(rollVessel, gravityVector) ) - 90f;
 
-            if (crossErrorAngle.y > 0)
+            debugString.Append($"Roll angle: {currentAngle}");
+            debugString.Append(Environment.NewLine);
+            this.angularVelocity = currentAngle - this.lastRollAngle;
+            //this.angularAcceleration = angularVelocity - this.lasAngularVelocity;
+
+            var futureAngle = currentAngle + angularVelocity / Time.fixedDeltaTime * 1f;
+
+            debugString.Append($"future Roll angle: {futureAngle}");
+
+            if (futureAngle > 0.5f || currentAngle > 0.5f)
             {
-                angle = angle * -1;
+                 this.Roll = Mathf.Clamp(Roll + 0.001f, 0, 1f);
             }
+            else if (futureAngle < -0.5f || currentAngle < -0.5f)
+            {
+                this.Roll = Mathf.Clamp(Roll - 0.001f, -1f, 0f);
+            }
+            debugString.Append($"Roll value: {this.Roll}");
 
-            return angle * (1f / -180f);
+            lastRollAngle = currentAngle;
+            //lasAngularVelocity = angularVelocity;
         }
+
+        public float Roll { get; set; }
 
         private Vector3 BallisticGuidance()
         {
