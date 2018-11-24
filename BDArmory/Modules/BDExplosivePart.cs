@@ -96,7 +96,7 @@ namespace BDArmory.Modules
 		
 		public void DetonateIfPossible()
 		{
-			if(!hasDetonated && Armed && part.vessel.speed > 10)
+			if(!hasDetonated && Armed)
 			{
 			    Vector3 direction = default(Vector3);
 

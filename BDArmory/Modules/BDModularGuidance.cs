@@ -982,19 +982,17 @@ namespace BDArmory.Modules
             if (HasExploded || !HasFired) return;
             if (SourceVessel == null) SourceVessel = vessel;
 
-                if (StageToTriggerOnProximity != 0)
-                {
-                    vessel.ActionGroups.ToggleGroup(
-                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
-                }
-                else
-                {
-                    vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
-                    AutoDestruction();
-                }
-                
-               
             HasExploded = true;
+            if (StageToTriggerOnProximity != 0)
+            {
+                vessel.ActionGroups.ToggleGroup(
+                    (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
+            }
+            else
+            {
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
+                AutoDestruction();
+            }
         }
 
         public override Vector3 GetForwardTransform()
