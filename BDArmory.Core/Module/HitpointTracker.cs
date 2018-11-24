@@ -185,7 +185,8 @@ namespace BDArmory.Core.Module
                 var structuralMass = density * structuralVolume;
                 //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralMass : " + structuralMass);
                 //3. final calculations 
-                hitpoints =  structuralMass * hitpointMultiplier *0.33f;
+
+                hitpoints =  Mathf.Clamp(structuralMass * hitpointMultiplier *0.33f, 0.5f*part.mass*1000f, 1.5f*part.mass*1000f);
                 hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
 
                 if (hitpoints <= 0) hitpoints = HpRounding;
