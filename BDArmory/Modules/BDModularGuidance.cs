@@ -170,6 +170,11 @@ namespace BDArmory.Modules
                     AutoDestruction();
                 } 
             }
+
+            if (HasExploded)
+            {
+                AutoDestruction();
+            }
         }
 
         void Update()
@@ -851,6 +856,7 @@ namespace BDArmory.Modules
                 Jettison();
                 AddTargetInfoToVessel();
 
+                IncreaseTolerance();
                 
                 this.initialMissileRollPlane = -this.vessel.transform.up;
                 this.initialMissileForward = this.vessel.transform.forward;
@@ -873,6 +879,16 @@ namespace BDArmory.Modules
             if (BDArmorySetup.Instance.ActiveWeaponManager != null)
             {
                 BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
+            }
+        }
+
+        private void IncreaseTolerance()
+        {
+            foreach (var vesselPart in this.vessel.parts)
+            {
+                vesselPart.crashTolerance = 9999;
+                vesselPart.breakingForce = 9999;
+                vesselPart.breakingTorque = 9999;
             }
         }
 
@@ -968,13 +984,10 @@ namespace BDArmory.Modules
 
         private void AutoDestruction()
         {
-            List<Part>.Enumerator vesselPart = vessel.Parts.GetEnumerator();
-            while (vesselPart.MoveNext())
+            for (int i = this.vessel.parts.Count - 1; i >= 0; i--)
             {
-                if (vesselPart.Current == null) continue;
-                vesselPart.Current.Destroy();
+                this.vessel.parts[i]?.explode();
             }
-            vesselPart.Dispose();
         }
 
         public override void Detonate()

@@ -73,6 +73,11 @@ namespace BDArmory.Modules
             {
                 OnUpdateEditor();
             }
+
+            if (hasDetonated)
+            {
+                this.part.explode();
+            }
         }
 
 	    private void OnUpdateEditor()
