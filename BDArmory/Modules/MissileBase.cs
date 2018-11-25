@@ -993,8 +993,7 @@ namespace BDArmory.Modules
                                                 if (hitPart?.vessel != SourceVessel && hitPart?.vessel != vessel )
                                                 {
                                                     //We found a hit to other vessel
-                                                    vessel.transform.position = hit.point;
-                                                    vessel.rb_velocity = Vector3.zero;
+                                                    vessel.SetPosition(hit.point);
                                                     DetonationDistanceState = DetonationDistanceStates.Detonate;
                                                     Detonate();
                                                     return;
