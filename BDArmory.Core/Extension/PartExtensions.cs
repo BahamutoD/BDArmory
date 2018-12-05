@@ -337,7 +337,8 @@ namespace BDArmory.Core.Extension
                 part.Modules.Contains("ModuleWheelBase") ||
                 part.Modules.Contains("KSPWheelBase") ||
                 part.gameObject.GetComponentUpwards<KerbalEVA>()||
-                part.Modules.Contains("ModuleDCKShields")
+                part.Modules.Contains("ModuleDCKShields")||
+                part.Modules.Contains("ModuleShieldGenerator")
                 )
             {
                 return true;
