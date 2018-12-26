@@ -186,9 +186,17 @@ namespace BDArmory.Core.Module
                 //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralMass : " + structuralMass);
                 //3. final calculations 
                 hitpoints =  structuralMass * hitpointMultiplier *0.33f;
-                hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
+            
+                if (hitpoints > 10 * part.mass * 1000f || hitpoints < 0.1f * part.mass * 1000f)
+                {
+                    Debug.Log($"[BDArmory]: HitpointTracker::Clamping hitpoints for part {part.name}");
+                    hitpoints = hitpointMultiplier * part.mass * 333f;
+                }
 
+                hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
                 if (hitpoints <= 0) hitpoints = HpRounding;
+
+
             }
             else
             {
