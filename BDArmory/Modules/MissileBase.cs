@@ -965,7 +965,20 @@ namespace BDArmory.Modules
                             //We are now close enough to start checking the detonation distance
                             DetonationDistanceState = DetonationDistanceStates.CheckingProximity;
                         }
-                        break;
+                        else
+                        {
+                            BDModularGuidance bdModularGuidance = this as BDModularGuidance;
+
+
+
+                            if (bdModularGuidance == null) return;
+
+                            if(Vector3.Distance(futureMissilePosition, futureTargetPosition) > this.DetonationDistance) return;
+
+
+                            DetonationDistanceState = DetonationDistanceStates.CheckingProximity;
+                        }
+                    break;
                     case DetonationDistanceStates.CheckingProximity:
 
                         if (DetonationDistance == 0)
