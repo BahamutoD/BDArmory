@@ -793,15 +793,18 @@ namespace BDArmory.Modules
 
 
                 if (vessel.isActiveVessel)
-                if (showReloadMeter)
+                {
+                    if (showReloadMeter)
                     {
                         UpdateReloadMeter();
                     }
-					else
+                    else
                     {
                         UpdateHeatMeter();
                     }
                 }
+             
+                
                 UpdateHeat();
                 if (weaponState == WeaponStates.Enabled &&
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
