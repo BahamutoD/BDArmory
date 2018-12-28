@@ -965,20 +965,33 @@ namespace BDArmory.Modules
                             //We are now close enough to start checking the detonation distance
                             DetonationDistanceState = DetonationDistanceStates.CheckingProximity;
                         }
-                        break;
+                        else
+                        {
+                            BDModularGuidance bdModularGuidance = this as BDModularGuidance;
+
+
+
+                            if (bdModularGuidance == null) return;
+
+                            if(Vector3.Distance(futureMissilePosition, futureTargetPosition) > this.DetonationDistance) return;
+
+
+                            DetonationDistanceState = DetonationDistanceStates.CheckingProximity;
+                        }
+                    break;
                     case DetonationDistanceStates.CheckingProximity:
 
                         if (DetonationDistance == 0)
                         {
                             if (weaponClass == WeaponClasses.Bomb) return;
 
-                            if (TimeIndex > 1f && vessel.srfSpeed > part.crashTolerance)
+                            if (TimeIndex > 1f)
                             {
                             //Vector3 floatingorigin_current = FloatingOrigin.Offset;
                            
-                            Ray rayFuturePosition = new Ray(vessel.CoM, futureMissilePosition);
+                                Ray rayFuturePosition = new Ray(vessel.CoM, futureMissilePosition);
 
-                            var hitsFuture = Physics.RaycastAll(rayFuturePosition, (float) missileDistancePerFrame.magnitude, 557057).AsEnumerable();
+                                var hitsFuture = Physics.RaycastAll(rayFuturePosition, (float) missileDistancePerFrame.magnitude, 557057).AsEnumerable();
 
                                 using (var hitsEnu = hitsFuture.GetEnumerator())
                                 {
@@ -993,8 +1006,9 @@ namespace BDArmory.Modules
                                                 if (hitPart?.vessel != SourceVessel && hitPart?.vessel != vessel )
                                                 {
                                                     //We found a hit to other vessel
-                                                    vessel.transform.position = hit.point;
+                                                    vessel.SetPosition(hit.point);
                                                     DetonationDistanceState = DetonationDistanceStates.Detonate;
+                                                    Detonate();
                                                     return;
                                                 }
                                          }
@@ -1004,7 +1018,7 @@ namespace BDArmory.Modules
                                         }
                                     }
                                 }
-                        }
+                            }
 
                             previousPos = part.transform.position;
                         

@@ -51,6 +51,7 @@ namespace BDArmory.Modules
 		{
 		    if (HighLogic.LoadedSceneIsFlight)
 		    {
+		        part.explosionPotential = 1.0f;
 		        part.OnJustAboutToBeDestroyed += DetonateIfPossible;
                 part.force_activate();
 		    }
@@ -73,6 +74,11 @@ namespace BDArmory.Modules
             {
                 OnUpdateEditor();
             }
+
+            if (hasDetonated)
+            {
+                this.part.explode();
+            }
         }
 
 	    private void OnUpdateEditor()
@@ -87,8 +93,8 @@ namespace BDArmory.Modules
 	            if (part.Resources["HighExplosive"].amount == previousMass) return;
 
 	            tntMass = (float) (part.Resources["HighExplosive"].amount * part.Resources["HighExplosive"].info.density * 1000) * 1.5f;
-      
-	            previousMass = part.Resources["HighExplosive"].amount;
+	            part.explosionPotential = tntMass / 10f;
+                previousMass = part.Resources["HighExplosive"].amount;
             }
 
 	        blastRadius = BlastPhysicsUtils.CalculateBlastRange(tntMass);
@@ -96,7 +102,7 @@ namespace BDArmory.Modules
 		
 		public void DetonateIfPossible()
 		{
-			if(!hasDetonated && Armed && part.vessel.speed > 10)
+			if(!hasDetonated && Armed)
 			{
 			    Vector3 direction = default(Vector3);
 

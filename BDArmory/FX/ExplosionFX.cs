@@ -154,18 +154,17 @@ namespace BDArmory.FX
         private void ProcessPartEvent(Part part, List<BlastHitEvent> eventList, List<Part> partsAdded)
         {
             RaycastHit hit;
-        
-            if (IsInLineOfSight(part, ExplosivePart, out hit))
+            float distance = 0;
+            if (IsInLineOfSight(part, ExplosivePart, out hit, out distance))
             {
                 if (IsAngleAllowed(Direction, hit))
                 {
-                    var realDistance = Vector3.Distance(Position, hit.point);
                     //Adding damage hit
                     eventList.Add(new PartBlastHitEvent()
                     {
-                        Distance = realDistance,
+                        Distance = distance,
                         Part = part,
-                        TimeToImpact = realDistance / ExplosionVelocity,
+                        TimeToImpact = distance / ExplosionVelocity,
                         HitPoint = hit.point,
                     });
                     partsAdded.Add(part);
@@ -190,7 +189,7 @@ namespace BDArmory.FX
         /// <param name="explosivePart"></param>
         /// <param name="hit"> out property with the actual hit</param>
         /// <returns></returns>
-        private bool IsInLineOfSight(Part part, Part explosivePart, out RaycastHit hit)
+        private bool IsInLineOfSight(Part part, Part explosivePart, out RaycastHit hit, out float distance)
         {
             Ray partRay = new Ray(Position, part.transform.position - Position);
 
@@ -202,24 +201,31 @@ namespace BDArmory.FX
                     Part partHit = hitsEnu.Current.collider.GetComponentInParent<Part>();
                     if (partHit == null) continue;
                     hit = hitsEnu.Current;
-
+                    distance = Vector3.Distance(Position, hit.point);
                     if (partHit == part)
                     {
                         return true;
                     }
                     if (partHit != part)
                     {
-                        // ignoring collsions against the explosive
+                        // ignoring collisions against the explosive
                         if (explosivePart != null && partHit.vessel == explosivePart.vessel)
                         {
                             continue;
                         }
+                        // if there are parts in between but we still inside the critical sphere of damage.
+                        if (distance <= 0.1f * Range)
+                        {
+                            continue;
+                        }
+
                         return false;
                     }
                 }
             }
 
             hit = new RaycastHit();
+            distance = 0;
             return false;
         }
 
