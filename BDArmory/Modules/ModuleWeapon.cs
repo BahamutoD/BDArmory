@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -64,8 +64,8 @@ namespace BDArmory.Modules
         public WeaponTypes eWeaponType;
                 
         public float heat;
-        public bool isOverheated;       
-        private bool wasFiring;
+        public bool isOverheated;
+		private bool wasFiring;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
         AudioClip reloadCompleteAudioClip;
@@ -106,9 +106,9 @@ namespace BDArmory.Modules
 
         //UI gauges(next to staging icon)
         private ProtoStageIconInfo heatGauge;
-       
-        //AI will fire gun if target is within this Cos(angle) of barrel
-        public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
+
+		//AI will fire gun if target is within this Cos(angle) of barrel
+		public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
 
         //aimer textures
         Vector3 pointingAtPosition;
@@ -187,12 +187,7 @@ namespace BDArmory.Modules
             return WeaponClasses.Gun;
         }
 
-        public string GetShortName()
-        {
-            return shortName;
-        }
-
-        public Part GetPart()
+		public Part GetPart()
         {
             return part;
         }
@@ -217,10 +212,10 @@ namespace BDArmory.Modules
 
         #region KSPFields
 
-        [KSPField]
-        public string shortName = string.Empty;
-                
-        [KSPField]
+		[KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
+		public string WeaponName;
+
+		[KSPField]
         public string fireTransformName = "fireTransform";
         public Transform[] fireTransforms;
 
@@ -538,18 +533,19 @@ namespace BDArmory.Modules
             this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
 
             GameEvents.onVesselSwitching.Add(ReloadIconOnVesselSwitch);
-            
-                
-                ParseWeaponType();
+
+			Events["HideUI"].active = false;
+			Events["ShowUI"].active = true;
+			ParseWeaponType();
             
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxEffectiveDistance);
-            if(shortName == string.Empty)
-            {
-                shortName = part.partInfo.title;
-            }
-
-            IEnumerator<KSPParticleEmitter> emitter = part.FindModelComponents<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
+			if (string.IsNullOrEmpty(GetShortName()))
+			{
+				shortName = part.partInfo.title;
+			}
+			WeaponName = shortName;
+			IEnumerator<KSPParticleEmitter> emitter = part.FindModelComponents<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())
             {
                 if (emitter.Current == null) continue;
@@ -574,8 +570,7 @@ namespace BDArmory.Modules
                 Fields["defaultDetonationRange"].guiActive = false;
                 Fields["defaultDetonationRange"].guiActiveEditor = false;
             }
-
-            muzzleFlashEmitters = new List<KSPParticleEmitter>();
+			muzzleFlashEmitters = new List<KSPParticleEmitter>();
             IEnumerator<Transform> mtf = part.FindModelTransforms("muzzleTransform").AsEnumerable().GetEnumerator();
             while (mtf.MoveNext())
             {
@@ -650,10 +645,11 @@ namespace BDArmory.Modules
             else if (HighLogic.LoadedSceneIsEditor)
             {
                 fireTransforms = part.FindModelTransforms(fireTransformName);
-            }
-
-            //turret setup
-            List<ModuleTurret>.Enumerator turr = part.FindModulesImplementing<ModuleTurret>().GetEnumerator();
+   				WeaponNameWindow.OnActionGroupEditorOpened.Add(OnActionGroupEditorOpened);
+				WeaponNameWindow.OnActionGroupEditorClosed.Add(OnActionGroupEditorClosed);
+			}
+			//turret setup
+			List<ModuleTurret>.Enumerator turr = part.FindModulesImplementing<ModuleTurret>().GetEnumerator();
             while (turr.MoveNext())
             {
                 if (turr.Current == null) continue;
@@ -716,9 +712,10 @@ namespace BDArmory.Modules
         void OnDestroy()
         {
             BDArmorySetup.OnVolumeChange -= UpdateVolume;
-        }
-
-        void Update()
+			WeaponNameWindow.OnActionGroupEditorOpened.Remove(OnActionGroupEditorOpened);
+			WeaponNameWindow.OnActionGroupEditorClosed.Remove(OnActionGroupEditorClosed);
+		}
+		void Update()
         {
             if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !vessel.packed && vessel.IsControllable)
             {
@@ -783,7 +780,7 @@ namespace BDArmory.Modules
 
         void FixedUpdate()
         {
-            if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
+			if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
             {
                 if (!vessel.IsControllable)
                 {
@@ -806,9 +803,9 @@ namespace BDArmory.Modules
                         UpdateHeatMeter();
                     }
                 }
+             
+                
                 UpdateHeat();
-
-
                 if (weaponState == WeaponStates.Enabled &&
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
                 {
@@ -844,8 +841,37 @@ namespace BDArmory.Modules
             }
             lastFinalAimTarget = finalAimTarget;
         }
+		private void UpdateMenus(bool visible)
+		{
+			Events["HideUI"].active = visible;
+			Events["ShowUI"].active = !visible;
+		}
 
-        void OnGUI()
+		private void OnActionGroupEditorOpened()
+		{
+			Events["HideUI"].active = false;
+			Events["ShowUI"].active = false;
+		}
+
+		private void OnActionGroupEditorClosed()
+		{
+			Events["HideUI"].active = false;
+			Events["ShowUI"].active = true;
+		}
+		[KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Name UI", active = false)]
+		public void HideUI()
+		{
+			WeaponGroupWindow.HideGUI();
+			UpdateMenus(false);
+		}
+
+		[KSPEvent(guiActiveEditor = true, guiName = "Set Weapon Name UI", active = false)]
+		public void ShowUI()
+		{
+			WeaponGroupWindow.ShowGUI(this);
+			UpdateMenus(true);
+		}
+		void OnGUI()
         {
             if (weaponState == WeaponStates.Enabled && vessel && !vessel.packed && vessel.isActiveVessel &&
                 BDArmorySettings.DRAW_AIMERS && !aiControlled && !MapView.MapIsEnabled && !pointingAtSelf)
@@ -1105,7 +1131,6 @@ namespace BDArmory.Modules
                         pBullet.projectileColor = projectileColorC;
                         pBullet.startColor = startColorC;
                         pBullet.fadeColor = fadeColor;
-
                         tracerIntervalCounter++;
                         if (tracerIntervalCounter > tracerInterval)
                         {
@@ -1120,11 +1145,9 @@ namespace BDArmory.Modules
                             pBullet.startColor.a *= 0.5f;
                             pBullet.projectileColor.a *= 0.5f;
                         }
-
                         pBullet.tracerLength = tracerLength;
                         pBullet.tracerDeltaFactor = tracerDeltaFactor;
                         pBullet.tracerLuminance = tracerLuminance;
-
                         pBullet.bulletDrop = bulletDrop;
 
                         if ((eWeaponType == WeaponTypes.Ballistic && bulletInfo.explosive) || eWeaponType == WeaponTypes.Cannon) //WeaponTypes.Cannon is deprecated
@@ -1982,8 +2005,7 @@ namespace BDArmory.Modules
                 heat = 0;
             }
         }
-
-        void UpdateHeatMeter()
+		void UpdateHeatMeter()
         {
             //heat
             if (heat > maxHeat / 3)
@@ -1999,10 +2021,10 @@ namespace BDArmory.Modules
             {
                 part.stackIcon.ClearInfoBoxes();
                 heatGauge = null;
-            }
-        }
+			}
+		}
 
-        void UpdateReloadMeter()
+		void UpdateReloadMeter()
         {
             if (Time.time - timeFired < (60 / roundsPerMinute) && Time.time - timeFired > 0.1f)
             {
@@ -2165,8 +2187,7 @@ namespace BDArmory.Modules
             }
             return v;
         }
-
-        IEnumerator StartupRoutine()
+		IEnumerator StartupRoutine()
         {
             weaponState = WeaponStates.PoweringUp;
             UpdateGUIWeaponState();
@@ -2336,6 +2357,235 @@ namespace BDArmory.Modules
             return output.ToString();
         }
 
-        #endregion
-    }
+		#endregion
+	}
+	#region UI //borrowing code from ModularMissile GUI
+	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	public class WeaponGroupWindow : MonoBehaviour
+	{
+		internal static EventVoid OnActionGroupEditorOpened = new EventVoid("OnActionGroupEditorOpened");
+		internal static EventVoid OnActionGroupEditorClosed = new EventVoid("OnActionGroupEditorClosed");
+
+		private static GUIStyle unchanged;
+		private static GUIStyle changed;
+		private static GUIStyle greyed;
+		private static GUIStyle overfull;
+
+		private static WeaponGroupWindow instance;
+		private static Vector3 mousePos = Vector3.zero;
+
+		private bool ActionGroupMode;
+
+		private Rect guiWindowRect = new Rect(0, 0, 0, 0);
+
+		private ModuleWeapon WPNmodule;
+
+		[KSPField] public int offsetGUIPos = -1;
+
+		private Vector2 scrollPos;
+
+		[KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Weapon Name Editor"), UI_Toggle(enabledText = "Weapon Name GUI", disabledText = "GUI")] [NonSerialized] public bool showRFGUI;
+
+		private bool styleSetup;
+
+		private string txtName = string.Empty;
+
+		public static void HideGUI()
+		{
+			if (instance != null && instance.WPNmodule != null)
+			{
+				instance.WPNmodule.WeaponName = instance.WPNmodule.shortName;
+				instance.WPNmodule = null;
+				instance.UpdateGUIState();
+			}
+			EditorLogic editor = EditorLogic.fetch;
+			if (editor != null)
+				editor.Unlock("BD_MN_GUILock");
+		}
+
+		public static void ShowGUI(ModuleWeapon WPNmodule)
+		{
+			if (instance != null)
+			{
+				instance.WPNmodule = WPNmodule;
+				instance.UpdateGUIState();
+			}
+		}
+
+		private void UpdateGUIState()
+		{
+			enabled = WPNmodule != null;
+			EditorLogic editor = EditorLogic.fetch;
+			if (!enabled && editor != null)
+				editor.Unlock("BD_MN_GUILock");
+		}
+		private IEnumerator<YieldInstruction> CheckActionGroupEditor()
+		{
+			while (EditorLogic.fetch == null)
+			{
+				yield return null;
+			}
+			EditorLogic editor = EditorLogic.fetch;
+			while (EditorLogic.fetch != null)
+			{
+				if (editor.editorScreen == EditorScreen.Actions)
+				{
+					if (!ActionGroupMode)
+					{
+						HideGUI();
+						OnActionGroupEditorOpened.Fire();
+					}
+					EditorActionGroups age = EditorActionGroups.Instance;
+					if (WPNmodule && !age.GetSelectedParts().Contains(WPNmodule.part))
+					{
+						HideGUI();
+					}
+					ActionGroupMode = true;
+				}
+				else
+				{
+					if (ActionGroupMode)
+					{
+						HideGUI();
+						OnActionGroupEditorClosed.Fire();
+					}
+					ActionGroupMode = false;
+				}
+				yield return null;
+			}
+		}
+		private void Awake()
+		{
+			enabled = false;
+			instance = this;
+		}
+
+		private void OnDestroy()
+		{
+			instance = null;
+		}
+
+		public void OnGUI()
+		{
+			if (!styleSetup)
+			{
+				styleSetup = true;
+				Styles.InitStyles();
+			}
+
+			EditorLogic editor = EditorLogic.fetch;
+			if (!HighLogic.LoadedSceneIsEditor || !editor)
+			{
+				return;
+			}
+			bool cursorInGUI = false; // nicked the locking code from Ferram
+			mousePos = Input.mousePosition; //Mouse location; based on Kerbal Engineer Redux code
+			mousePos.y = Screen.height - mousePos.y;
+
+			int posMult = 0;
+			if (offsetGUIPos != -1)
+			{
+				posMult = offsetGUIPos;
+			}
+			if (ActionGroupMode)
+			{
+				if (guiWindowRect.width == 0)
+				{
+					guiWindowRect = new Rect(430 * posMult, 365, 438, 50);
+				}
+				new Rect(guiWindowRect.xMin + 440, mousePos.y - 5, 300, 20);
+			}
+			else
+			{
+				if (guiWindowRect.width == 0)
+				{
+					//guiWindowRect = new Rect(Screen.width - 8 - 430 * (posMult + 1), 365, 438, (Screen.height - 365));
+					guiWindowRect = new Rect(Screen.width - 8 - 430 * (posMult + 1), 365, 438, 50);
+				}
+				new Rect(guiWindowRect.xMin - (230 - 8), mousePos.y - 5, 220, 20);
+			}
+			cursorInGUI = guiWindowRect.Contains(mousePos);
+			if (cursorInGUI)
+			{
+				editor.Lock(false, false, false, "BD_MN_GUILock");
+				//if (EditorTooltip.Instance != null)
+				//    EditorTooltip.Instance.HideToolTip();
+			}
+			else
+			{
+				editor.Unlock("BD_MN_GUILock");
+			}
+			guiWindowRect = GUILayout.Window(GetInstanceID(), guiWindowRect, GUIWindow, "Weapon Name GUI", Styles.styleEditorPanel);
+		}
+
+		public void GUIWindow(int windowID)
+		{
+			InitializeStyles();
+
+			GUILayout.BeginVertical();
+			GUILayout.Space(20);
+
+			GUILayout.BeginHorizontal();
+
+			GUILayout.Label("Add to Weapon Group: ");
+
+
+			txtName = GUILayout.TextField(txtName);
+
+
+			if (GUILayout.Button("Save & Close"))
+			{
+				WPNmodule.WeaponName = txtName;
+				WPNmodule.shortName = txtName;  
+				instance.WPNmodule.HideUI();
+			}
+
+			GUILayout.EndHorizontal();
+
+			scrollPos = GUILayout.BeginScrollView(scrollPos);
+
+			GUILayout.EndScrollView();
+
+			GUILayout.EndVertical();
+
+			GUI.DragWindow();
+			BDGUIUtils.RepositionWindow(ref guiWindowRect);
+		}
+
+		private static void InitializeStyles()
+		{
+			if (unchanged == null)
+			{
+				if (GUI.skin == null)
+				{
+					unchanged = new GUIStyle();
+					changed = new GUIStyle();
+					greyed = new GUIStyle();
+					overfull = new GUIStyle();
+				}
+				else
+				{
+					unchanged = new GUIStyle(GUI.skin.textField);
+					changed = new GUIStyle(GUI.skin.textField);
+					greyed = new GUIStyle(GUI.skin.textField);
+					overfull = new GUIStyle(GUI.skin.label);
+				}
+
+				unchanged.normal.textColor = Color.white;
+				unchanged.active.textColor = Color.white;
+				unchanged.focused.textColor = Color.white;
+				unchanged.hover.textColor = Color.white;
+
+				changed.normal.textColor = Color.yellow;
+				changed.active.textColor = Color.yellow;
+				changed.focused.textColor = Color.yellow;
+				changed.hover.textColor = Color.yellow;
+
+				greyed.normal.textColor = Color.gray;
+
+				overfull.normal.textColor = Color.red;
+			}
+		}
+	}
+	#endregion
 }

@@ -164,11 +164,16 @@ namespace BDArmory.Modules
                 CheckDetonationDistance();
                 CheckDelayedFired();
                 CheckNextStage();
-     
+
                 if (isTimed && TimeIndex > detonationTime)
                 {
                     AutoDestruction();
-                } 
+                }
+            }
+
+            if (HasExploded && StageToTriggerOnProximity == 0)
+            {
+                AutoDestruction();
             }
         }
 
@@ -457,7 +462,7 @@ namespace BDArmory.Modules
             {
                 detonationDistance = (UI_FloatRange) Fields["DetonationDistance"].uiControlEditor;
 
-                detonationDistance.maxValue = 2000;
+                detonationDistance.maxValue = 8000;
 
                 detonationDistance.stepIncrement = 50;
             }
@@ -724,11 +729,11 @@ namespace BDArmory.Modules
 
             if (futureAngle > 0.5f || currentAngle > 0.5f)
             {
-                 this.Roll = Mathf.Clamp(Roll + 0.001f, 0, 1f);
+                this.Roll = Mathf.Clamp(Roll - 0.001f, -1f, 0f);
             }
             else if (futureAngle < -0.5f || currentAngle < -0.5f)
             {
-                this.Roll = Mathf.Clamp(Roll - 0.001f, -1f, 0f);
+                this.Roll = Mathf.Clamp(Roll + 0.001f, 0, 1f);
             }
             debugString.Append($"Roll value: {this.Roll}");
 
@@ -850,8 +855,9 @@ namespace BDArmory.Modules
                 SetTargeting();
                 Jettison();
                 AddTargetInfoToVessel();
+                IncreaseTolerance();
 
-                
+
                 this.initialMissileRollPlane = -this.vessel.transform.up;
                 this.initialMissileForward = this.vessel.transform.forward;
                 vessel.vesselName = GetShortName();
@@ -873,6 +879,16 @@ namespace BDArmory.Modules
             if (BDArmorySetup.Instance.ActiveWeaponManager != null)
             {
                 BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
+            }
+        }
+
+        private void IncreaseTolerance()
+        {
+            foreach (var vesselPart in this.vessel.parts)
+            {
+                vesselPart.crashTolerance = 99;
+                vesselPart.breakingForce = 99;
+                vesselPart.breakingTorque = 99;
             }
         }
 
@@ -968,13 +984,10 @@ namespace BDArmory.Modules
 
         private void AutoDestruction()
         {
-            List<Part>.Enumerator vesselPart = vessel.Parts.GetEnumerator();
-            while (vesselPart.MoveNext())
+            for (int i = this.vessel.parts.Count - 1; i >= 0; i--)
             {
-                if (vesselPart.Current == null) continue;
-                vesselPart.Current.Destroy();
+                this.vessel.parts[i]?.explode();
             }
-            vesselPart.Dispose();
         }
 
         public override void Detonate()
@@ -982,7 +995,8 @@ namespace BDArmory.Modules
             if (HasExploded || !HasFired) return;
             if (SourceVessel == null) SourceVessel = vessel;
 
-                if (StageToTriggerOnProximity != 0)
+               HasExploded = true;
+            if (StageToTriggerOnProximity != 0)
                 {
                     vessel.ActionGroups.ToggleGroup(
                         (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
@@ -993,8 +1007,6 @@ namespace BDArmory.Modules
                     AutoDestruction();
                 }
                 
-               
-            HasExploded = true;
         }
 
         public override Vector3 GetForwardTransform()
