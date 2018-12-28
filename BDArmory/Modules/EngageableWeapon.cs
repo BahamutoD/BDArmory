@@ -119,5 +119,12 @@ namespace BDArmory.Modules
             return engageSLW;
         }
 
-    }
+		[KSPField(isPersistant = true)]
+		public string shortName = string.Empty;
+
+		public string GetShortName()
+		{
+			return shortName;
+		}
+	}
 }

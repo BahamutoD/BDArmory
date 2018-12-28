@@ -1,4 +1,14 @@
-﻿v1.2.3
+﻿v1.2.4
+* NEW FEATURES:
+	* Weapons groups - different weapons firing in parallel(thanks to @SuicidalInsanity)
+* ENHANCEMENTS:
+	* Recompiled for KSP 1.6.0 
+* FIXES
+	* Fixing modular missiles roll correction.
+	* Fixing modular missiles stage on proximity.
+	* Fixing Hipoints for mods like AirplanePlus #598
+
+v1.2.3
 * NEW FEATURES:
 	* Recompiled for KSP 1.5.1  
 	* EC per shot for energy weapons like Rail guns. #486

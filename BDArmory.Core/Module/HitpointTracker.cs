@@ -7,7 +7,7 @@ namespace BDArmory.Core.Module
     {
         #region KSP Fields
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Hitpoints"),
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = true, guiName = "Hitpoints"),
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None, controlEnabled = false, scene = UI_Scene.All, maxValue = 100000, minValue = 0, requireFullControl = false)]
         public float Hitpoints;
 
@@ -186,9 +186,17 @@ namespace BDArmory.Core.Module
                 //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralMass : " + structuralMass);
                 //3. final calculations 
                 hitpoints =  structuralMass * hitpointMultiplier *0.33f;
-                hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
+            
+                if (hitpoints > 10 * part.mass * 1000f || hitpoints < 0.1f * part.mass * 1000f)
+                {
+                    Debug.Log($"[BDArmory]: HitpointTracker::Clamping hitpoints for part {part.name}");
+                    hitpoints = hitpointMultiplier * part.mass * 333f;
+                }
 
+                hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
                 if (hitpoints <= 0) hitpoints = HpRounding;
+
+
             }
             else
             {
