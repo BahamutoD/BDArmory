@@ -1625,20 +1625,28 @@ namespace BDArmory.Modules
                         relVelAdj = relativeVelocity * time;
                         var vc = finalTarget;
                         #endif
-                        
+
+                        // Assume that any acceleration orthogonal to the velocity vector is transient and do not extrapolate it.
+                        // For cases where it is not transient, extrapolation is hopeless anyway.
+                        var projectedAcceleration = Vector3.Project(targetAcceleration, targetVelocity);
                         //target vessel relative velocity compensation
                         if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
                         {
                             var geeForceAtTarget = FlightGlobals.getGeeForceAtPosition(targetPosition);
-                            var finalTargetGeeForce = FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (targetAcceleration
+                            var finalTargetGeeForce = FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (projectedAcceleration
                                 - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
                                 * time * time);
                             var cosine = Vector3d.Dot(finalTargetGeeForce.normalized, geeForceAtTarget.normalized);
                             var avGeeForce = (finalTargetGeeForce + geeForceAtTarget) / 2 / (2 * cosine * cosine - 1);
-                            finalTarget += 0.5f * (targetAcceleration - geeForceAtTarget + avGeeForce) * time * time;
+                            finalTarget += 0.5f * (projectedAcceleration - geeForceAtTarget + avGeeForce) * time * time;
                         }
                         else
-                            finalTarget += 0.5f * targetAcceleration * time * time; //target acceleration
+                            // Also clamp the vector to the current velocity, as extreme velocity changes are not usefully predictable,
+                            // and most cases will be ships bobbing in water or parts swaying.
+                            finalTarget += Vector3.ClampMagnitude(
+                                0.5f * projectedAcceleration * time, 
+                                (targetVelocity + Krakensbane.GetFrameVelocityV3f()).magnitude
+                            ) * time;
 
                         #if DEBUG
                         accAdj = (finalTarget - vc);
@@ -2151,7 +2159,8 @@ namespace BDArmory.Modules
 
         void updateAcceleration(Vector3 target_rb_velocity)
         {
-            targetAcceleration = (target_rb_velocity - Krakensbane.GetLastCorrection() - targetVelocityPrevious) / Time.fixedDeltaTime;
+            targetAcceleration = targetAcceleration * 0.95f
+                + (target_rb_velocity - Krakensbane.GetLastCorrection() - targetVelocityPrevious) / Time.fixedDeltaTime * 0.05f;
             targetVelocityPrevious = target_rb_velocity;
         }
 
