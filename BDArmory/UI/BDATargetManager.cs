@@ -806,7 +806,7 @@ namespace BDArmory.UI
             List<TargetInfo>.Enumerator target = TargetDatabase[team].GetEnumerator();
             while (target.MoveNext())
             {
-                if (target.Current == null || !target.Current.Vessel || target.Current.isLanded || target.Current.isMissile || !target.Current.isThreat) continue;
+                if (target.Current == null || !target.Current.Vessel || target.Current.isLandedOrSurfaceSplashed || target.Current.isMissile || !target.Current.isThreat) continue;
                 Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
 
                 float distance, dot;

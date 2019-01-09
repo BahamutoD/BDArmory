@@ -721,7 +721,7 @@ namespace BDArmory.Modules
         {
             return (ti.isMissile && engageMissile) ||
                     (!ti.isMissile && ti.isFlying && engageAir) ||
-                    ((ti.isLanded || ti.isSplashed) && engageGround) ||
+                    ((ti.isLandedOrSurfaceSplashed || ti.isSplashed) && engageGround) ||
                     (ti.isUnderwater && engageSLW);
         }
 

@@ -24,7 +24,7 @@ namespace BDArmory.Targeting
         public bool alreadyScheduledRCSUpdate = false;
 
 
-        public bool isLanded
+        public bool isLandedOrSurfaceSplashed
 		{
 			get
 			{

@@ -426,7 +426,7 @@ namespace BDArmory.Radar
             float groundClutterMutiplier = Mathf.Lerp(1, radar.radarGroundClutterFactor, (lookDownAngle / 90));
 
             //additional ground clutter factor when target is landed/splashed:
-            if (ti.isLanded || ti.isSplashed)
+            if (ti.isLandedOrSurfaceSplashed || ti.isSplashed)
                 groundClutterMutiplier *= radar.radarGroundClutterFactor;
 
             return groundClutterMutiplier;
