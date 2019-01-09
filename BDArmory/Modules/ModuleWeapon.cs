@@ -2529,8 +2529,10 @@ namespace BDArmory.Modules
 
 			if (GUILayout.Button("Save & Close"))
 			{
-				WPNmodule.WeaponName = txtName;
-				WPNmodule.shortName = txtName;  
+                string newName = string.IsNullOrEmpty(txtName.Trim()) ? txtName.Trim() : WPNmodule.part.partInfo.title;
+
+                WPNmodule.WeaponName = newName;
+				WPNmodule.shortName = newName;  
 				instance.WPNmodule.HideUI();
 			}
 
