@@ -3345,7 +3345,7 @@ namespace BDArmory.Modules
                 item.Dispose();
             }
 
-            else if (target.isLanded)
+            else if (target.isLandedOrSurfaceSplashed)
             {
                 // iterate over weaponTypesGround and pick suitable one based on engagementRange (and dynamic launch zone for missiles)
                 // Prioritize by:
@@ -3372,6 +3372,17 @@ namespace BDArmory.Modules
                         targetWeapon = item.Current;
                         if (distance > gunRange)
                             break;  //definitely use missiles
+                    }
+
+                    // TargetInfo.isLanded includes splashed but not underwater, for whatever reasons.
+                    // If target is splashed, and we have torpedoes, use torpedoes, because, obviously,
+                    // torpedoes are the best kind of sausage for splashed targets, 
+                    // almost as good as STS missiles, which we don't have.
+                    if (candidateClass == WeaponClasses.SLW && target.isSplashed)
+                    {
+                        targetWeapon = item.Current;
+                        if (distance > gunRange)
+                            break;
                     }
 
                     if (candidateClass == WeaponClasses.Bomb)
@@ -3423,26 +3434,7 @@ namespace BDArmory.Modules
                     targetWeapon = item.Current;
                     targetWeaponImpact = candidateImpact;
                 }
-
             }
-                //if we have a torpedo use it
-            else if (target.isSplashed)
-            { 
-                List<IBDWeapon>.Enumerator item = weaponTypesSLW.GetEnumerator();
-                while (item.MoveNext())
-                {
-                    if (item.Current == null) continue;
-                    if (CheckEngagementEnvelope(item.Current, distance))
-                    {
-                        if (item.Current.GetMissileType().ToLower() == "torpedo")
-                        {
-                            targetWeapon = item.Current;
-                            break;
-                        }
-                    }
-                }
-                item.Dispose();
-            }              
             else if (target.isUnderwater)
             {
                 // iterate over weaponTypesSLW (Ship Launched Weapons) and pick suitable one based on engagementRange
