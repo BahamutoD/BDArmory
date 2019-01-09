@@ -418,7 +418,7 @@ namespace BDArmory.Modules
             while (weapon.MoveNext())
             {
                 if (weapon.Current == null) continue;
-                weapon.Current.legacyTargetVessel = null;
+                weapon.Current.visualTargetVessel = null;
                 weapon.Current.autoFire = false;
                 weapon.Current.aiControlled = false;
             }
@@ -3832,7 +3832,7 @@ namespace BDArmory.Modules
                     if (weapon.Current == null) continue;
 					if (weapon.Current.GetShortName() != selectedWeapon.GetShortName()) continue;
 					weapon.Current.autoFire = false;
-                    weapon.Current.legacyTargetVessel = null;
+                    weapon.Current.visualTargetVessel = null;
                 }
                 weapon.Dispose();
             }
@@ -4136,7 +4136,7 @@ namespace BDArmory.Modules
                 {
                     if (weapon.Current == null) continue;
 					if (weapon.Current.GetShortName() != selectedWeapon.GetShortName()) continue;
-					weapon.Current.legacyTargetVessel = guardTarget;
+					weapon.Current.visualTargetVessel = guardTarget;
                     weapon.Current.autoFireTimer = Time.time;
                     //weapon.Current.autoFireLength = 3 * targetScanInterval / 4;
                     weapon.Current.autoFireLength = (fireBurstLength < 0.5) ? targetScanInterval / 2 : fireBurstLength;

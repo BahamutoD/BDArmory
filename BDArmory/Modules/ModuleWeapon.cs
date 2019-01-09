@@ -91,7 +91,7 @@ namespace BDArmory.Modules
         private Vector3 relativeVelocity;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
-        public Vessel legacyTargetVessel;
+        public Vessel visualTargetVessel;
         bool targetAcquired;
 
         public Vector3? FiringSolutionVector => finalAimTarget.IsZero() ? (Vector3?)null : (finalAimTarget - fireTransforms[0].position).normalized;
@@ -114,7 +114,6 @@ namespace BDArmory.Modules
         Vector3 pointingAtPosition;
         Vector3 bulletPrediction;
         Vector3 fixedLeadOffset = Vector3.zero;
-        float targetLeadDistance;
         
         //gapless particles
         List<BDAGaplessParticleEmitter> gaplessEmitters = new List<BDAGaplessParticleEmitter>();
@@ -1266,7 +1265,7 @@ namespace BDArmory.Modules
                     Vector3 targetDirection = Vector3.zero; //autoTrack enhancer
                     Vector3 targetDirectionLR = tf.forward;
 
-                    if (((legacyTargetVessel != null && legacyTargetVessel.loaded) || slaved) 
+                    if (((visualTargetVessel != null && visualTargetVessel.loaded) || slaved) 
                         && Vector3.Angle(rayDirection, targetDirection) < 1)
                     {
                         targetDirection = targetPosition + relativeVelocity * Time.fixedDeltaTime * 2 - tf.position;
@@ -1394,7 +1393,7 @@ namespace BDArmory.Modules
 
                 if (targetAcquired)
                 {
-                    pointingAtPosition = fireTransforms[i].transform.position + (ray.direction * targetLeadDistance);
+                    pointingAtPosition = fireTransforms[i].transform.position + (ray.direction * targetDistance);
                 }
                 else
                 {
@@ -1588,10 +1587,10 @@ namespace BDArmory.Modules
                 {
                     targetPosition = (ray.direction * (maxTargetingRange + (FlightCamera.fetch.Distance * 0.75f))) +
                                      FlightCamera.fetch.mainCamera.transform.position;
-                    if (legacyTargetVessel != null && legacyTargetVessel.loaded)
+                    if (visualTargetVessel != null && visualTargetVessel.loaded)
                     {
                         targetPosition = ray.direction *
-                                         Vector3.Distance(legacyTargetVessel.transform.position,
+                                         Vector3.Distance(visualTargetVessel.transform.position,
                                              FlightCamera.fetch.mainCamera.transform.position) +
                                          FlightCamera.fetch.mainCamera.transform.position;
                     }
@@ -1602,8 +1601,7 @@ namespace BDArmory.Modules
             //aim assist
             Vector3 finalTarget = targetPosition;
             Vector3 originalTarget = targetPosition;
-            targetDistance = Vector3.Distance(finalTarget, transform.position);
-            targetLeadDistance = targetDistance;
+            targetDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
 
             if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
             {
@@ -1684,7 +1682,7 @@ namespace BDArmory.Modules
 
                 }
 
-                targetLeadDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
+                targetDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
                 fixedLeadOffset = originalTarget - finalTarget; //for aiming fixed guns to moving target	
 
                 //airdetonation
@@ -1761,7 +1759,7 @@ namespace BDArmory.Modules
             if (autoFire && Time.time - autoFireTimer > autoFireLength)
             {
                 autoFire = false;
-                legacyTargetVessel = null;
+                visualTargetVessel = null;
             }
         }
 
@@ -1889,10 +1887,10 @@ namespace BDArmory.Modules
 
                         simPrevPos = simCurrPos;
 
-                        if (legacyTargetVessel != null && legacyTargetVessel.loaded && !legacyTargetVessel.Landed &&
-                            (simStartPos - simCurrPos).sqrMagnitude > targetLeadDistance*targetLeadDistance)
+                        if (visualTargetVessel != null && visualTargetVessel.loaded && !visualTargetVessel.Landed &&
+                            (simStartPos - simCurrPos).sqrMagnitude > targetDistance*targetDistance)
                         {
-                            bulletPrediction = simStartPos + (simCurrPos - simStartPos).normalized * targetLeadDistance;
+                            bulletPrediction = simStartPos + (simCurrPos - simStartPos).normalized * targetDistance;
                             simulating = false;
                         }
 
@@ -2067,11 +2065,11 @@ namespace BDArmory.Modules
             if (weaponManager)
             {
                 //legacy or visual range guard targeting
-                if (aiControlled && weaponManager && legacyTargetVessel &&
-                    (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange)
+                if (aiControlled && weaponManager && visualTargetVessel &&
+                    (visualTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange)
                 {
-                    targetPosition = legacyTargetVessel.CoM;
-                    targetVelocity = legacyTargetVessel.rb_velocity;
+                    targetPosition = visualTargetVessel.CoM;
+                    targetVelocity = visualTargetVessel.rb_velocity;
                     targetAcquired = true;
                     return;
                 }
