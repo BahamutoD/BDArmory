@@ -3589,6 +3589,23 @@ namespace BDArmory.Modules
                     break;
 
                 case WeaponClasses.SLW:
+                    // Enable sonar, or radar, if no sonar is found.
+                    if (((MissileBase)weaponCandidate).TargetingMode == MissileBase.TargetingModes.Radar)
+                    {
+                        ModuleRadar foundRadar = null;
+                        using (List<ModuleRadar>.Enumerator rd = radars.GetEnumerator())
+                            while (rd.MoveNext())
+                            {
+                                if (rd.Current == null || !rd.Current.canLock) continue;
+                                if (!foundRadar || rd.Current.rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
+                                {
+                                    foundRadar = rd.Current;
+                                    if (rd.Current.rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
+                                        break;
+                                }
+                            }
+                        foundRadar.EnableRadar();
+                    }
                     return true;                    
 
                 default:
