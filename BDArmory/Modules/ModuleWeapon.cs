@@ -2064,24 +2064,11 @@ namespace BDArmory.Modules
             bool atprWasAcquired = atprAcquired;
             atprAcquired = false;
 
-            //targetVessel = null;
-            if (BDArmorySettings.ALLOW_LEGACY_TARGETING)
-            {
-                if (!aiControlled)
-                {
-                    if (vessel.targetObject != null && vessel.targetObject.GetVessel() != null)
-                    {
-                        legacyTargetVessel = vessel.targetObject.GetVessel();
-                    }
-                }
-            }
-
             if (weaponManager)
             {
                 //legacy or visual range guard targeting
                 if (aiControlled && weaponManager && legacyTargetVessel &&
-                    (BDArmorySettings.ALLOW_LEGACY_TARGETING ||
-                     (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange))
+                    (legacyTargetVessel.transform.position - transform.position).sqrMagnitude < weaponManager.guardRange*weaponManager.guardRange)
                 {
                     targetPosition = legacyTargetVessel.CoM;
                     targetVelocity = legacyTargetVessel.rb_velocity;

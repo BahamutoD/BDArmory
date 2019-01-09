@@ -254,7 +254,7 @@ namespace BDArmory.Modules
                 }
                 else if (type == RWRThreatTypes.MissileLock)
                 {
-                    if (!BDArmorySettings.ALLOW_LEGACY_TARGETING && weaponManager && weaponManager.guardMode)
+                    if (weaponManager && weaponManager.guardMode)
                     {
                         weaponManager.FireChaff();
                         // TODO: if torpedo inbound, also fire accoustic decoys (not yet implemented...)
