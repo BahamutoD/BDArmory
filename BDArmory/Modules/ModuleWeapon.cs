@@ -1239,10 +1239,6 @@ namespace BDArmory.Modules
 
         private bool FireLaser()
         {
-            float maxDistance = BDArmorySettings.PHYSICS_RANGE;
-            if (BDArmorySettings.PHYSICS_RANGE == 0)
-                maxDistance = 2500;
-
             float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
 
             if (!pointingAtSelf && !Misc.Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated &&
@@ -1278,7 +1274,7 @@ namespace BDArmory.Modules
                     lr.SetPosition(0, Vector3.zero);
                     RaycastHit hit;                    
                     
-                    if (Physics.Raycast(ray, out hit, maxDistance, 9076737))
+                    if (Physics.Raycast(ray, out hit, maxTargetingRange, 9076737))
                     {
                         lr.useWorldSpace = true;
                         laserPoint = hit.point + targetVelocity * Time.fixedDeltaTime;
@@ -1309,7 +1305,7 @@ namespace BDArmory.Modules
                     }
                     else
                     {
-                        laserPoint = lr.transform.InverseTransformPoint((targetDirectionLR * maxDistance) + tf.position);
+                        laserPoint = lr.transform.InverseTransformPoint((targetDirectionLR * maxTargetingRange) + tf.position);
                         lr.SetPosition(1, laserPoint);
                     }
                 }

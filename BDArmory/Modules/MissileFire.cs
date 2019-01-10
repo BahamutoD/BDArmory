@@ -4154,14 +4154,7 @@ namespace BDArmory.Modules
         public void UpdateMaxGuardRange()
         {
             UI_FloatRange rangeEditor = (UI_FloatRange)Fields["guardRange"].uiControlEditor;
-            if (BDArmorySettings.PHYSICS_RANGE != 0)
-            {
-                rangeEditor.maxValue = BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
-            }
-            else
-            {
-                rangeEditor.maxValue = 5000;
-            }
+            rangeEditor.maxValue = BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
         }
 
 
@@ -4538,7 +4531,7 @@ namespace BDArmory.Modules
 
         bool AltitudeTrigger()
         {
-            float maxAlt = Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE * 0.75f, 2250, 10000);
+            const float maxAlt = 10000;
             double asl = vessel.mainBody.GetAltitude(vessel.CoM);
             double radarAlt = asl - vessel.terrainAltitude;
 
