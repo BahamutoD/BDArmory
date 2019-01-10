@@ -29,6 +29,7 @@ namespace BDArmory.Modules
         bool finalFire;
 
         public int rippleIndex = 0;
+        public string OriginalShortName { get; private set; }
 
         // WeaponTypes.Cannon is deprecated.  identical behavior is achieved with WeaponType.Ballistic and bulletInfo.explosive = true.
         public enum WeaponTypes
@@ -543,6 +544,7 @@ namespace BDArmory.Modules
 			{
 				shortName = part.partInfo.title;
 			}
+            OriginalShortName = shortName;
 			WeaponName = shortName;
 			IEnumerator<KSPParticleEmitter> emitter = part.FindModelComponents<KSPParticleEmitter>().AsEnumerable().GetEnumerator();
             while (emitter.MoveNext())
@@ -2525,7 +2527,7 @@ namespace BDArmory.Modules
 
 			if (GUILayout.Button("Save & Close"))
 			{
-                string newName = string.IsNullOrEmpty(txtName.Trim()) ? txtName.Trim() : WPNmodule.part.partInfo.title;
+                string newName = string.IsNullOrEmpty(txtName.Trim()) ? WPNmodule.OriginalShortName : txtName.Trim();
 
                 WPNmodule.WeaponName = newName;
 				WPNmodule.shortName = newName;  
