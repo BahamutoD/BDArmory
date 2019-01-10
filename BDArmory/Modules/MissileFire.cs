@@ -316,28 +316,6 @@ namespace BDArmory.Modules
 
         public Vector3d designatedGPSCoords => designatedGPSInfo.gpsCoordinates;
 
-        //Guard view scanning
-        float guardViewScanDirection = 1;
-        float guardViewScanRate = 200;
-        float currentGuardViewAngle;
-        private Transform vrt;
-
-        public Transform viewReferenceTransform
-        {
-            get
-            {
-                if (vrt == null)
-                {
-                    vrt = (new GameObject()).transform;
-                    vrt.parent = transform;
-                    vrt.localPosition = Vector3.zero;
-                    vrt.rotation = Quaternion.LookRotation(-transform.forward, -vessel.ReferenceTransform.forward);
-                }
-
-                return vrt;
-            }
-        }
-
         //weapon slaving
         public bool slavingTurrets = false;
         public Vector3 slavedPosition;
@@ -366,7 +344,6 @@ namespace BDArmory.Modules
         public bool underFire;
         Coroutine ufRoutine;
 
-        Vector3 debugGuardViewDirection;
         bool focusingOnTarget;
         float focusingOnTargetTimer;
         public Vector3 incomingThreatPosition;
@@ -947,12 +924,6 @@ namespace BDArmory.Modules
             {
                 if (BDArmorySettings.DRAW_DEBUG_LINES)
                 {
-                    if (guardMode)
-                    {
-                        BDGUIUtils.DrawLineBetweenWorldPositions(part.transform.position,
-                            part.transform.position + (debugGuardViewDirection * 25), 2, Color.yellow);
-                    }
-
                     if (incomingMissileVessel)
                     {
                         BDGUIUtils.DrawLineBetweenWorldPositions(part.transform.position,
@@ -3940,53 +3911,7 @@ namespace BDArmory.Modules
 
         void UpdateGuardViewScan()
         {
-            float finalMaxAngle = guardAngle / 2;
-            float finalScanDirectionAngle = currentGuardViewAngle;
-            if (guardTarget != null)
-            {
-                if (focusingOnTarget)
-                {
-                    if (focusingOnTargetTimer > 3)
-                    {
-                        focusingOnTargetTimer = 0;
-                        focusingOnTarget = false;
-                    }
-                    else
-                    {
-                        focusingOnTargetTimer += Time.fixedDeltaTime;
-                    }
-                    finalMaxAngle = 20;
-                    finalScanDirectionAngle =
-                        VectorUtils.SignedAngle(viewReferenceTransform.forward,
-                            guardTarget.transform.position - viewReferenceTransform.position,
-                            viewReferenceTransform.right) + currentGuardViewAngle;
-                }
-                else
-                {
-                    if (focusingOnTargetTimer > 2)
-                    {
-                        focusingOnTargetTimer = 0;
-                        focusingOnTarget = true;
-                    }
-                    else
-                    {
-                        focusingOnTargetTimer += Time.fixedDeltaTime;
-                    }
-                }
-            }
-
-
-            float angleDelta = guardViewScanRate * Time.fixedDeltaTime;
-            ViewScanResults results;
-            debugGuardViewDirection = RadarUtils.GuardScanInDirection(this, finalScanDirectionAngle,
-                viewReferenceTransform, angleDelta, out results, guardRange);
-
-            currentGuardViewAngle += guardViewScanDirection * angleDelta;
-            if (Mathf.Abs(currentGuardViewAngle) > finalMaxAngle)
-            {
-                currentGuardViewAngle = Mathf.Sign(currentGuardViewAngle) * finalMaxAngle;
-                guardViewScanDirection = -guardViewScanDirection;
-            }
+            ViewScanResults results = RadarUtils.GuardScanInDirection(this, transform, guardAngle, guardRange);
 
             if (results.foundMissile)
             {

@@ -843,10 +843,10 @@ namespace BDArmory.Radar
         /// Scans for targets in direction with field of view.
         /// (Visual Target acquisition)
         /// </summary>
-        public static Vector3 GuardScanInDirection(MissileFire myWpnManager, float directionAngle, Transform referenceTransform, float fov, out ViewScanResults results, float maxDistance)
+        public static ViewScanResults GuardScanInDirection(MissileFire myWpnManager, Transform referenceTransform, float fov, float maxDistance)
 		{
 			fov *= 1.1f;
-            results = new ViewScanResults
+            var results = new ViewScanResults
             {
                 foundMissile = false,
                 foundHeatMissile = false,
@@ -860,14 +860,14 @@ namespace BDArmory.Radar
 
             if (!myWpnManager || !referenceTransform)
 			{
-				return Vector3.zero;
+				return results;
 			}
 
 			Vector3 position = referenceTransform.position;
 			//Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
 			Vector3 forwardVector = referenceTransform.forward;
 			Vector3 upVector = referenceTransform.up;
-			Vector3 lookDirection = Quaternion.AngleAxis(directionAngle, upVector) * forwardVector;
+			Vector3 lookDirection = forwardVector;
 
 
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
@@ -962,7 +962,7 @@ namespace BDArmory.Radar
 			}
 
             loadedvessels.Dispose();
-            return lookDirection;
+            return results;
 		}
 
 
