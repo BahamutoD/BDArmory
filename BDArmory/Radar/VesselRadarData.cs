@@ -244,7 +244,7 @@ namespace BDArmory.Radar
             mf.Dispose();
             GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
             GameEvents.onVesselCreate.Add(OnVesselDestroyed);
-            MissileFire.OnToggleTeam += OnToggleTeam;
+            MissileFire.OnChangeTeam += OnChangeTeam;
             GameEvents.onGameStateSave.Add(OnGameStateSave);
             GameEvents.onPartDestroyed.Add(PartDestroyed);
 
@@ -315,7 +315,7 @@ namespace BDArmory.Radar
         {
             GameEvents.onVesselDestroy.Remove(OnVesselDestroyed);
             GameEvents.onVesselCreate.Remove(OnVesselDestroyed);
-            MissileFire.OnToggleTeam -= OnToggleTeam;
+            MissileFire.OnChangeTeam -= OnChangeTeam;
             GameEvents.onGameStateSave.Remove(OnGameStateSave);
             GameEvents.onPartDestroyed.Remove(PartDestroyed);
 
@@ -328,11 +328,11 @@ namespace BDArmory.Radar
             }
         }
 
-        private void OnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
+        private void OnChangeTeam(MissileFire wm, BDTeam team)
         {
             if (!weaponManager || !wm) return;
 
-            if (team != BDATargetManager.BoolToTeam(weaponManager.team))
+            if (team != weaponManager.Team)
             {
                 if (wm.vesselRadarData)
                 {

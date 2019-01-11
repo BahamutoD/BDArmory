@@ -74,7 +74,7 @@ namespace BDArmory.Modules
                 GameEvents.onVesselLoaded.Add(OnVesselLoad);
                 GameEvents.onVesselDestroy.Add(OnVesselLoad);
                 GameEvents.onVesselGoOnRails.Add(OnVesselLoad);
-                MissileFire.OnToggleTeam += OnToggleTeam;
+                MissileFire.OnChangeTeam += OnToggleTeam;
 
                 screenMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
             }
@@ -108,7 +108,7 @@ namespace BDArmory.Modules
                 GameEvents.onVesselLoaded.Remove(OnVesselLoad);
                 GameEvents.onVesselDestroy.Remove(OnVesselLoad);
                 GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
-                MissileFire.OnToggleTeam -= OnToggleTeam;
+                MissileFire.OnChangeTeam -= OnToggleTeam;
             }
         }
 

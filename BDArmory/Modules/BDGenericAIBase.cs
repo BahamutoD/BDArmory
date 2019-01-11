@@ -182,7 +182,7 @@ namespace BDArmory.Modules
 				part.OnJustAboutToBeDestroyed += DeactivatePilot;
 				vessel.OnJustAboutToBeDestroyed += DeactivatePilot;
                 GameEvents.onVesselWasModified.Add(onVesselWasModified);
-				MissileFire.OnToggleTeam += OnToggleTeam;
+				MissileFire.OnChangeTeam += OnToggleTeam;
 
                 activeVessel = vessel;
 				UpdateWeaponManager();
@@ -198,7 +198,7 @@ namespace BDArmory.Modules
 
 		protected virtual void OnDestroy()
 		{
-			MissileFire.OnToggleTeam -= OnToggleTeam;
+			MissileFire.OnChangeTeam -= OnToggleTeam;
 		}
 
 		protected virtual void OnGUI()

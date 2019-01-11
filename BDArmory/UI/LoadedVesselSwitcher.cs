@@ -45,7 +45,7 @@ namespace BDArmory.UI
             GameEvents.onVesselDestroy.Add(VesselEventUpdate);
             GameEvents.onVesselGoOffRails.Add(VesselEventUpdate);
             GameEvents.onVesselGoOnRails.Add(VesselEventUpdate);
-            MissileFire.OnToggleTeam += MissileFireOnToggleTeam;
+            MissileFire.OnChangeTeam += MissileFireOnToggleTeam;
 
             _ready = false;
             StartCoroutine(WaitForBdaSettings());
@@ -64,7 +64,7 @@ namespace BDArmory.UI
                 GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
                 GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
                 GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
-                MissileFire.OnToggleTeam -= MissileFireOnToggleTeam;
+                MissileFire.OnChangeTeam -= MissileFireOnToggleTeam;
 
                 _ready = false;
 

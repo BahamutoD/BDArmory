@@ -461,12 +461,6 @@ namespace BDArmory.Modules
 		}
 		
 		
-		void UpdateTeamString()
-		{
-			teamString = Enum.GetName(typeof(BDArmorySetup.BDATeams), BDATargetManager.BoolToTeam(team));
-		}
-		
-		
         public BDTeam Team
         {
             get
@@ -494,40 +488,47 @@ namespace BDArmory.Modules
         public string team;
 
 
-        [KSPAction("Toggle Team")]
-        public void AGToggleTeam(KSPActionParam param)
+        [KSPAction("Next Team")]
+        public void AGNextTeam(KSPActionParam param)
         {
-            ToggleTeam();
+            NextTeam();
         }
 
-        public delegate void ToggleTeamDelegate(MissileFire wm, BDArmorySetup.BDATeams team);
+        public delegate void ChangeTeamDelegate(MissileFire wm, BDTeam team);
 
-        public static event ToggleTeamDelegate OnToggleTeam;
+        public static event ChangeTeamDelegate OnChangeTeam;
 
         [KSPEvent(active = true, guiActiveEditor = true, guiActive = false)]
-        public void ToggleTeam()
+        public void NextTeam()
         {
-            team = !team;
+            var teamList = new List<string> { "A", "B" };
+            using (var teams = BDArmorySetup.Instance.BDTeams.GetEnumerator())
+                while (teams.MoveNext())
+                    if (!teamList.Contains(teams.Current.Key) && !teams.Current.Value.Neutral)
+                        teamList.Add(teams.Current.Key);
+            teamList.Sort();
+            Team = BDArmorySetup.Instance.BDTeams[teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]];
 
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
             {
-                audioSource.PlayOneShot(clickSound);
-                List<MissileFire>.Enumerator wpnMgr = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-                while (wpnMgr.MoveNext())
+                using (var wpnMgr = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                    while (wpnMgr.MoveNext())
+                    {
+                        if (wpnMgr.Current == null) continue;
+                        wpnMgr.Current.Team = Team;
+                    }
+
+                if (HighLogic.LoadedSceneIsFlight)
                 {
-                    if (wpnMgr.Current == null) continue;
-                    wpnMgr.Current.team = team;
+                    if (vessel.gameObject.GetComponent<TargetInfo>())
+                    {
+                        vessel.gameObject.GetComponent<TargetInfo>().RemoveFromDatabases();
+                        Destroy(vessel.gameObject.GetComponent<TargetInfo>());
+                    }
+                    OnChangeTeam?.Invoke(this, Team);
+                    ResetGuardInterval();
                 }
-                wpnMgr.Dispose();
-                if (vessel.gameObject.GetComponent<TargetInfo>())
-                {
-                    vessel.gameObject.GetComponent<TargetInfo>().RemoveFromDatabases();
-                    Destroy(vessel.gameObject.GetComponent<TargetInfo>());
-                }
-                OnToggleTeam?.Invoke(this, BDATargetManager.BoolToTeam(team));
             }
-            UpdateTeamString();
-            ResetGuardInterval();
 
         }
 
@@ -682,8 +683,6 @@ namespace BDArmory.Modules
             UpdateMaxGuardRange();
 
             startTime = Time.time;
-
-            UpdateTeamString();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
