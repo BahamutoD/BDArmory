@@ -137,6 +137,7 @@ namespace BDArmory.UI
             B,
             None
         };
+        public Dictionary<string, BDTeam> BDTeams = new Dictionary<string, BDTeam> { { "Neutral", new BDTeam("Neutral", neutral: true) } };
 
         //competition mode
         float competitionDist = 8000;

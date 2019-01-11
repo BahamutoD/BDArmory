@@ -461,16 +461,37 @@ namespace BDArmory.Modules
 		}
 		
 		
-		[KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
-		public string teamString = "A";
 		void UpdateTeamString()
 		{
 			teamString = Enum.GetName(typeof(BDArmorySetup.BDATeams), BDATargetManager.BoolToTeam(team));
 		}
 		
 		
+        public BDTeam Team
+        {
+            get
+            {
+                BDTeam value;
+                if (BDArmorySetup.Instance.BDTeams.TryGetValue(teamString, out value))
+                    return value;
+                return new BDTeam(teamString);
+            }
+            set
+            {
+                teamString = value.Name;
+                if (!BDArmorySetup.Instance.BDTeams.ContainsKey(teamString))
+                    BDArmorySetup.Instance.BDTeams.Add(value.Name, value);
+                team = BDArmorySetup.Instance.BDTeams[value.Name].ToString();
+            }
+        }
+        
+        // Team name
+		[KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
+		public string teamString = "A";
+        
+        // Serialized team
 		[KSPField(isPersistant = true)]
-        public bool team = false;
+        public string team;
 
 
         [KSPAction("Toggle Team")]
@@ -644,6 +665,8 @@ namespace BDArmory.Modules
 
         public override void OnAwake()
         {
+            Team = BDTeam.FromString(team);
+
             clickSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/click");
             warningSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/warning");
             armOnSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOn");
