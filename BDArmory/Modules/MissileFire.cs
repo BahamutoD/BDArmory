@@ -465,17 +465,14 @@ namespace BDArmory.Modules
         {
             get
             {
-                BDTeam value;
-                if (BDArmorySetup.Instance.BDTeams.TryGetValue(teamString, out value))
-                    return value;
-                return new BDTeam(teamString);
+                return BDTeam.Get(teamString);
             }
             set
             {
+                if (!BDArmorySetup.Instance.Teams.ContainsKey(value.Name))
+                    BDArmorySetup.Instance.Teams.Add(value.Name, value);
                 teamString = value.Name;
-                if (!BDArmorySetup.Instance.BDTeams.ContainsKey(teamString))
-                    BDArmorySetup.Instance.BDTeams.Add(value.Name, value);
-                team = BDArmorySetup.Instance.BDTeams[value.Name].ToString();
+                team = value.Serialize();
             }
         }
         
@@ -502,12 +499,12 @@ namespace BDArmory.Modules
         public void NextTeam()
         {
             var teamList = new List<string> { "A", "B" };
-            using (var teams = BDArmorySetup.Instance.BDTeams.GetEnumerator())
+            using (var teams = BDArmorySetup.Instance.Teams.GetEnumerator())
                 while (teams.MoveNext())
                     if (!teamList.Contains(teams.Current.Key) && !teams.Current.Value.Neutral)
                         teamList.Add(teams.Current.Key);
             teamList.Sort();
-            Team = BDArmorySetup.Instance.BDTeams[teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]];
+            Team = BDArmorySetup.Instance.Teams[teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]];
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
             {
@@ -666,7 +663,7 @@ namespace BDArmory.Modules
 
         public override void OnAwake()
         {
-            Team = BDTeam.FromString(team);
+            Team = BDTeam.Deserialize(team);
 
             clickSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/click");
             warningSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/warning");

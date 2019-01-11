@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BDArmory.UI;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace BDArmory.Misc
@@ -7,45 +8,62 @@ namespace BDArmory.Misc
     public class BDTeam
     {
         [JsonProperty]
-        public readonly string Name;
+        public string Name;
 
         [JsonProperty]
         public bool Neutral;
 
         [JsonProperty]
-        public readonly List<string> Friends;
+        public List<string> Allies;
 
-        public BDTeam(string name, List<string> friends = null, bool neutral = false)
+        public BDTeam(string name, List<string> allies = null, bool neutral = false)
         {
             Name = name;
-            Friends = friends ?? new List<string>();
             Neutral = neutral;
+            Allies = allies ?? new List<string>();
+        }
+
+        public static BDTeam Get(string name)
+        {
+            if (!BDArmorySetup.Instance.Teams.ContainsKey(name))
+                BDArmorySetup.Instance.Teams.Add(name, new BDTeam(name));
+            return BDArmorySetup.Instance.Teams[name];
         }
 
         public bool IsEnemy(BDTeam other)
         {
-            if (Neutral || other is null || other.Neutral || other.Name == Name || Friends.Contains(other.Name))
+            if (other == null)
+                return true;
+            if (Neutral || other.Neutral || other.Name == Name || Allies.Contains(other.Name))
                 return false;
             return true;
         }
 
-        public override string ToString() => JsonConvert.SerializeObject(this);
+        public override string ToString() => Name;
 
-        public static BDTeam FromString(string teamString)
+        public static BDTeam Deserialize(string teamString)
         {
             // Backward compatibility
             if (string.IsNullOrEmpty(teamString) || teamString == "False")
-                return new BDTeam("A");
+                return BDTeam.Get("A");
             else if (teamString == "True")
-                return new BDTeam("B");
+                return BDTeam.Get("B");
             try
             {
-                return JsonConvert.DeserializeObject<BDTeam>(teamString);
+                BDTeam team = JsonConvert.DeserializeObject<BDTeam>(teamString);
+                if (!BDArmorySetup.Instance.Teams.ContainsKey(team.Name))
+                    BDArmorySetup.Instance.Teams.Add(team.Name, team);
+                return BDArmorySetup.Instance.Teams[team.Name];
             }
             catch
             {
-                return new BDTeam("A");
+                return BDTeam.Get("A");
             }
+        }
+
+        public string Serialize()
+        {
+            return JsonConvert.SerializeObject(this);
         }
 
         public override int GetHashCode() => Name.GetHashCode();
@@ -54,8 +72,8 @@ namespace BDArmory.Misc
 
         public override bool Equals(object obj) => Equals(obj as BDTeam);
 
-        public static bool operator ==(BDTeam left, BDTeam right) => object.Equals(left, right);
+        public static bool operator ==(BDTeam left, BDTeam right) => Equals(left, right);
 
-        public static bool operator !=(BDTeam left, BDTeam right) => !object.Equals(left, right);
+        public static bool operator !=(BDTeam left, BDTeam right) => !Equals(left, right);
     }
 }
