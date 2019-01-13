@@ -541,7 +541,7 @@ namespace BDArmory.Radar
                 MissileFire wm = loadedvessels.Current.FindPartModuleImplementing<MissileFire>();
                 if (wm != null)
                 {
-                    if (missile.Team == wm.team)
+                    if (missile.Team.IsFriendly(wm.Team))
                         continue;
                 }                
 

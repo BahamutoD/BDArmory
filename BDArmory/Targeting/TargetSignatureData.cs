@@ -19,7 +19,7 @@ namespace BDArmory.Targeting
 		public float timeAcquired;
         public float signalStrength;
 		public TargetInfo targetInfo;
-		public BDArmorySetup.BDATeams team;
+		public BDTeam Team;
 		public Vector2 pingPosition;
 		public VesselECMJInfo vesselJammer;
 		public ModuleRadar lockedByRadar;
@@ -58,11 +58,11 @@ namespace BDArmory.Targeting
                 targetInfo = v.gameObject.AddComponent<TargetInfo>();
             }
 
-            team = BDArmorySetup.BDATeams.None;
+            Team = null;
 
 			if(targetInfo)
 			{
-				team = targetInfo.team;
+				Team = targetInfo.team;
                 targetInfo.detectedTime = Time.time;
             }
 			else
@@ -70,7 +70,7 @@ namespace BDArmory.Targeting
                 List<MissileFire>.Enumerator mf = v.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                 while (mf.MoveNext())
                 {
-                    team = BDATargetManager.BoolToTeam(mf.Current.team);
+                    Team = mf.Current.Team;
 					break;
 				}
                 mf.Dispose();
@@ -92,7 +92,7 @@ namespace BDArmory.Targeting
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			vesselJammer = null;
-			team = BDArmorySetup.BDATeams.None;
+			Team = null;
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;
@@ -110,7 +110,7 @@ namespace BDArmory.Targeting
 			signalStrength = _signalStrength;
 			targetInfo = null;
 			vesselJammer = null;
-			team = BDArmorySetup.BDATeams.None;
+			Team = null;
 			pingPosition = Vector2.zero;
 			orbital = false;
 			orbit = null;

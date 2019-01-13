@@ -18,8 +18,8 @@ namespace BDArmory.UI
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class BDATargetManager : MonoBehaviour
 	{
-		public static Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>> TargetDatabase;
-		public static Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>> GPSTargets;
+		public static Dictionary<BDTeam, List<TargetInfo>> TargetDatabase;
+		public static Dictionary<BDTeam, List<GPSTargetInfo>> GPSTargets;
 		public static List<ModuleTargetingCamera> ActiveLasers;
 		public static List<IBDWeapon> FiredMissiles;
 		public static List<DestructibleBuilding> LoadedBuildings;
@@ -55,9 +55,7 @@ namespace BDArmory.UI
 				GameEvents.onGameStateSave.Remove(SaveGPSTargets);
 			}
 
-			GPSTargets = new Dictionary<BDArmorySetup.BDATeams, List<GPSTargetInfo>>();
-			GPSTargets.Add(BDArmorySetup.BDATeams.A, new List<GPSTargetInfo>());
-			GPSTargets.Add(BDArmorySetup.BDATeams.B, new List<GPSTargetInfo>());
+			GPSTargets = new Dictionary<BDTeam, List<GPSTargetInfo>>();
 
 			GameEvents.onVesselLoaded.Remove(AddVessel);
 			GameEvents.onVesselGoOnRails.Remove(RemoveVessel);
@@ -69,9 +67,7 @@ namespace BDArmory.UI
 		void Start()
 		{
 			//legacy targetDatabase
-			TargetDatabase = new Dictionary<BDArmorySetup.BDATeams, List<TargetInfo>>();
-			TargetDatabase.Add(BDArmorySetup.BDATeams.A, new List<TargetInfo>());
-			TargetDatabase.Add(BDArmorySetup.BDATeams.B, new List<TargetInfo>());
+			TargetDatabase = new Dictionary<BDTeam, List<TargetInfo>>();
 			StartCoroutine(CleanDatabaseRoutine());
 
 			if(GPSTargets == null)
@@ -404,53 +400,33 @@ namespace BDArmory.UI
 		{
             debugString.Length = 0;
 
-			debugString.Append($"Team A's targets:");
-            debugString.Append(Environment.NewLine);
-            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySetup.BDATeams.A])
-			{
-				if(targetInfo)
-				{
-					if(!targetInfo.Vessel)
-					{
-                        debugString.Append($"- A target with no vessel reference.");
-                        debugString.Append(Environment.NewLine);
-                    }
-					else
-					{
-                        debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
-                        debugString.Append(Environment.NewLine);
-                    }
-				}
-				else
-				{
-                    debugString.Append($"- null target info.");
+            using (var team = TargetDatabase.GetEnumerator())
+                while (team.MoveNext())
+                {
+                    debugString.Append($"Team {team.Current.Key} targets:");
                     debugString.Append(Environment.NewLine);
+                    foreach (TargetInfo targetInfo in team.Current.Value)
+			        {
+				        if(targetInfo)
+				        {
+					        if(!targetInfo.Vessel)
+					        {
+                                debugString.Append($"- A target with no vessel reference.");
+                                debugString.Append(Environment.NewLine);
+                            }
+					        else
+					        {
+                                debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
+                                debugString.Append(Environment.NewLine);
+                            }
+				        }
+				        else
+				        {
+                            debugString.Append($"- null target info.");
+                            debugString.Append(Environment.NewLine);
+                        }
+			        }
                 }
-			}
-
-            debugString.Append($"Team B's targets:");
-            debugString.Append(Environment.NewLine);
-            foreach (TargetInfo targetInfo in TargetDatabase[BDArmorySetup.BDATeams.B])
-			{
-				if(targetInfo)
-				{
-					if(!targetInfo.Vessel)
-					{
-                        debugString.Append($"- A target with no vessel reference.");
-                        debugString.Append(Environment.NewLine);
-                    }
-					else
-					{
-                        debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
-                        debugString.Append(Environment.NewLine);
-                    }
-				}
-				else
-				{
-                    debugString.Append($"- null target info.");
-                    debugString.Append(Environment.NewLine);
-                }
-			}
 
             debugString.Append(Environment.NewLine);
             debugString.Append($"Heat Signature: {GetVesselHeatSignature(FlightGlobals.ActiveVessel):#####}");
@@ -665,14 +641,10 @@ namespace BDArmory.UI
 
 		//Legacy target managing stuff
 
+        [Obsolete]
 		public static BDArmorySetup.BDATeams BoolToTeam(bool team)
 		{
 			return team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
-		}
-
-		public static BDArmorySetup.BDATeams OtherTeam(BDArmorySetup.BDATeams team)
-		{
-			return team == BDArmorySetup.BDATeams.A ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
 		}
 
 		IEnumerator CleanDatabaseRoutine()
@@ -680,21 +652,28 @@ namespace BDArmory.UI
 			while(enabled)
 			{
 				yield return new WaitForSeconds(5);
-			
-				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => target == null);
-				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => target.team == BDArmorySetup.BDATeams.A);
-				TargetDatabase[BDArmorySetup.BDATeams.A].RemoveAll(target => !target.isThreat);
 
-				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => target == null);
-				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => target.team == BDArmorySetup.BDATeams.B);
-				TargetDatabase[BDArmorySetup.BDATeams.B].RemoveAll(target => !target.isThreat);
+                using (var team = TargetDatabase.GetEnumerator())
+                    while (team.MoveNext())
+                    {
+                        team.Current.Value.RemoveAll(target => target == null);
+                        team.Current.Value.RemoveAll(target => target.Team == team.Current.Key);
+                        team.Current.Value.RemoveAll(target => !target.isThreat);
+                    }
 			}
 		}
 
-		void RemoveTarget(TargetInfo target, BDArmorySetup.BDATeams team)
+		void RemoveTarget(TargetInfo target, BDTeam team)
 		{
 			TargetDatabase[team].Remove(target);
 		}
+
+        public static void RemoveTarget(TargetInfo target)
+        {
+            using (var db = TargetDatabase.GetEnumerator())
+                while (db.MoveNext())
+                    db.Current.Value.Remove(target);
+        }
 
         public static void ReportVessel(Vessel v, MissileFire reporter)
         {
@@ -737,19 +716,27 @@ namespace BDArmory.UI
             // add target to database
             if (info)
             {
-                AddTarget(info);
+                AddTarget(info, reporter.Team);
                 info.detectedTime = Time.time;
             }
         }
 
-        public static void AddTarget(TargetInfo target)
+        public static void AddTarget(TargetInfo target, BDTeam reportingTeam)
         {
-            var team = target.team;
-            if (team == BDArmorySetup.BDATeams.None) return;
-            if (!BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Contains(target))
+            if (target.Team == null) return;
+            if (!BDATargetManager.TargetDatabase[reportingTeam].Contains(target))
             {
-                BDATargetManager.TargetDatabase[BDATargetManager.OtherTeam(team)].Add(target);
+                BDATargetManager.TargetDatabase[reportingTeam].Add(target);
             }
+        }
+
+        public static List<TargetInfo> TargetList(BDTeam team)
+        {
+            if (TargetDatabase.TryGetValue(team, out List<TargetInfo> database))
+                return database;
+            var newList = new List<TargetInfo>();
+            TargetDatabase.Add(team, newList);
+            return newList;
         }
 
 		public static void ClearDatabase()

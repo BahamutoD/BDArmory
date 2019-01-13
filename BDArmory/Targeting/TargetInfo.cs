@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Core.Extension;
+using BDArmory.Misc;
 using BDArmory.Modules;
 using BDArmory.UI;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace BDArmory.Targeting
 {
 	public class TargetInfo : MonoBehaviour
 	{
-		public BDArmorySetup.BDATeams team;
+		public BDTeam Team;
 		public bool isMissile;
 		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
@@ -161,13 +162,13 @@ namespace BDArmory.Targeting
                 }
             }
 
-			team = BDArmorySetup.BDATeams.None;
+			Team = null;
 			bool foundMf = false;
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
             {
                 foundMf = true;
-                team = BDATargetManager.BoolToTeam(mf.Current.team);
+                Team = mf.Current.Team;
                 weaponManager = mf.Current;
                 break;
             }
@@ -180,15 +181,10 @@ namespace BDArmory.Targeting
                 {
                     isMissile = true;
                     MissileBaseModule = ml.Current;
-                    team = BDATargetManager.BoolToTeam(ml.Current.Team);
+                    Team = ml.Current.Team;
                     break;
                 }
                 ml.Dispose();
-			}
-				
-			if(team != BDArmorySetup.BDATeams.None)
-			{
-                BDATargetManager.AddTarget(this);
 			}
 
 			friendliesEngaging = new List<MissileFire>();
@@ -200,7 +196,7 @@ namespace BDArmory.Targeting
 
             //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
 
-            if (!isMissile && team != BDArmorySetup.BDATeams.None)
+            if (!isMissile && Team != null)
 			{
                 GameEvents.onVesselPartCountChanged.Add(VesselModified);
                 //massRoutine = StartCoroutine(MassRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
@@ -237,8 +233,8 @@ namespace BDArmory.Targeting
 			{
 				if((vessel.vesselType == VesselType.Debris) && (weaponManager == null))
 				{
-					RemoveFromDatabases();
-					team = BDArmorySetup.BDATeams.None;
+                    BDATargetManager.RemoveTarget(this);
+					Team = null;
 				}
 			}
 		}
@@ -277,8 +273,8 @@ namespace BDArmory.Targeting
 		
 		void AboutToBeDestroyed()
 		{
-			RemoveFromDatabases();
-			Destroy(this);
+            BDATargetManager.RemoveTarget(this);
+            Destroy(this);
 		}
 
 		public bool IsCloser(TargetInfo otherTarget, MissileFire myMf)
@@ -286,12 +282,6 @@ namespace BDArmory.Targeting
 			float thisSqrDist = (position-myMf.transform.position).sqrMagnitude;
 			float otherSqrDist = (otherTarget.position-myMf.transform.position).sqrMagnitude;
 			return thisSqrDist < otherSqrDist;
-		}
-
-		public void RemoveFromDatabases()
-		{
-			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.A].Remove(this);
-			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.B].Remove(this);
 		}
 
         public void VesselModified(Vessel v)

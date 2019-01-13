@@ -453,7 +453,7 @@ namespace BDArmory.Radar
                 {
                     radarsToRemove.Add(radar.Current);
                 }
-                else if (!radar.Current.weaponManager || (weaponManager && radar.Current.weaponManager.team != weaponManager.team))
+                else if (!radar.Current.weaponManager || (weaponManager && radar.Current.weaponManager.Team != weaponManager.Team))
                 {
                     radarsToRemove.Add(radar.Current);
                 }
@@ -771,7 +771,7 @@ namespace BDArmory.Radar
                 TargetSignatureData lockedTarget = displayedTargets[lockedTargetIndexes[i]].targetData;
                 if (i == activeLockedTargetIndex)
                 {
-                    if (weaponManager && lockedTarget.team == BDATargetManager.BoolToTeam(weaponManager.team))
+                    if (weaponManager && weaponManager.Team.IsEnemy(lockedTarget.team))
                     {
                         BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
                             BDArmorySetup.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
@@ -1385,17 +1385,17 @@ namespace BDArmory.Radar
             {
                 if (v.Current == null || !v.Current.loaded || vessel == null || v.Current == vessel) continue;
 
-                BDArmorySetup.BDATeams team = BDArmorySetup.BDATeams.None;
+                BDTeam team = null;
                 List<MissileFire>.Enumerator mf = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                 while (mf.MoveNext())
                 {
                     if (mf.Current == null) continue;
-                    team = BDATargetManager.BoolToTeam(mf.Current.team);
+                    team = mf.Current.Team;
                     break;
                 }
                 mf.Dispose();
 
-                if (team != BDATargetManager.BoolToTeam(weaponManager.team)) continue;
+                if (team != weaponManager.Team) continue;
                 VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                 if (vrd && vrd.radarCount > 0)
                 {
@@ -1899,7 +1899,7 @@ namespace BDArmory.Radar
                         Color origGUIColor = GUI.color;
                         GUI.color = Color.white - new Color(0, 0, 0, minusAlpha);
                         if (weaponManager &&
-                            displayedTargets[i].targetData.team == BDATargetManager.BoolToTeam(weaponManager.team))
+                            displayedTargets[i].targetData.Team == weaponManager.Team)
                         {
                             GUI.DrawTexture(pingRect, friendlyContactIcon, ScaleMode.StretchToFill, true);
                         }
@@ -1979,7 +1979,7 @@ namespace BDArmory.Radar
                             }
 
                             if (jammed ||
-                                displayedTargets[i].targetData.team != BDATargetManager.BoolToTeam(weaponManager.team))
+                                displayedTargets[i].targetData.Team != weaponManager.Team)
                             {
                                 BDGUIUtils.DrawRectangle(jammedRect, iconColor - new Color(0, 0, 0, minusAlpha));
                             }

@@ -131,6 +131,7 @@ namespace BDArmory.UI
         GUIStyle redErrorStyle;
         GUIStyle redErrorShadowStyle;
 
+        [Obsolete]
         public enum BDATeams
         {
             A,

@@ -8,19 +8,19 @@ namespace BDArmory.Misc
     public class BDTeam
     {
         [JsonProperty]
-        public string Name;
+        public readonly string Name;
 
         [JsonProperty]
         public bool Neutral;
 
         [JsonProperty]
-        public List<string> Allies;
+        public HashSet<string> Allies;
 
-        public BDTeam(string name, List<string> allies = null, bool neutral = false)
+        public BDTeam(string name, HashSet<string> allies = null, bool neutral = false)
         {
             Name = name;
             Neutral = neutral;
-            Allies = allies ?? new List<string>();
+            Allies = allies ?? new HashSet<string>();
         }
 
         public static BDTeam Get(string name)
@@ -32,11 +32,16 @@ namespace BDArmory.Misc
 
         public bool IsEnemy(BDTeam other)
         {
-            if (other == null)
-                return true;
-            if (Neutral || other.Neutral || other.Name == Name || Allies.Contains(other.Name))
+            if (Neutral || other == null || other.Neutral || other.Name == Name || Allies.Contains(other.Name))
                 return false;
             return true;
+        }
+
+        public bool IsFriendly(BDTeam other)
+        {
+            if (other == null)
+                return false;
+            return !IsEnemy(other);
         }
 
         public override string ToString() => Name;

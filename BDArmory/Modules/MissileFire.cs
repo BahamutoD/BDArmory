@@ -519,7 +519,7 @@ namespace BDArmory.Modules
                 {
                     if (vessel.gameObject.GetComponent<TargetInfo>())
                     {
-                        vessel.gameObject.GetComponent<TargetInfo>().RemoveFromDatabases();
+                        BDATargetManager.RemoveTarget(vessel.gameObject.GetComponent<TargetInfo>());
                         Destroy(vessel.gameObject.GetComponent<TargetInfo>());
                     }
                     OnChangeTeam?.Invoke(this, Team);

@@ -1148,7 +1148,7 @@ namespace BDArmory.Modules
 		{
 			if(groundStabilized && weaponManager)
 			{
-				BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
+				BDATargetManager.GPSTargets[weaponManager.team.Name].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
 			}
 		}
 

@@ -148,7 +148,7 @@ namespace BDArmory.Modules
 
         public bool HasFired { get; set; } = false;
 
-        public bool Team { get; set; }
+        public BDTeam Team { get; set; }
 
         public bool HasMissed { get; set; } = false;
 
@@ -287,7 +287,7 @@ namespace BDArmory.Modules
         protected void AddTargetInfoToVessel()
         {
             TargetInfo info = vessel.gameObject.AddComponent<TargetInfo>();
-            info.team = BDATargetManager.BoolToTeam(Team);
+            info.Team = Team;
             info.isMissile = true;
             info.MissileBaseModule = this;
         }
