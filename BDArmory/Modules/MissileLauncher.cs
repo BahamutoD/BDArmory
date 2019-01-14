@@ -705,26 +705,6 @@ namespace BDArmory.Modules
 		    TargetPosition = transform.position + (transform.forward * 5000); //set initial target position so if no target update, missileBase will count a miss if it nears this point or is flying post-thrust
 		    startDirection = transform.forward;
 
-		    if(BDArmorySettings.ALLOW_LEGACY_TARGETING)
-		    {
-		        if(vessel.targetObject!=null && vessel.targetObject.GetVessel()!=null)
-		        {
-		            legacyTargetVessel = vessel.targetObject.GetVessel();
-		            List<MissileFire>.Enumerator mf = legacyTargetVessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-		            while(mf.MoveNext())
-		            {
-		                if (mf.Current == null) continue;
-		                TargetMf = mf.Current;
-		                break;
-		            }
-                    mf.Dispose();
-
-		            if(TargetingMode == TargetingModes.Heat)
-		            {
-		                heatTarget = new TargetSignatureData(legacyTargetVessel, 9999);
-		            }
-		        }
-		    }
 		    SetLaserTargeting();
 		    SetAntiRadTargeting();
 
@@ -919,11 +899,6 @@ namespace BDArmory.Modules
 		{
 			if(guidanceActive)
 			{
-				if(BDArmorySettings.ALLOW_LEGACY_TARGETING && legacyTargetVessel)
-				{
-					UpdateLegacyTarget();
-				}
-
 				if(TargetingMode == TargetingModes.Heat)
 				{
 					UpdateHeatTarget();
@@ -1697,41 +1672,6 @@ namespace BDArmory.Modules
 		{
             DoAero(CalculateAGMBallisticGuidance(this,TargetPosition));
         }
-
-		void UpdateLegacyTarget()
-		{
-			if(legacyTargetVessel)
-			{
-				maxOffBoresight = 90;
-				
-				if(TargetingMode == TargetingModes.Radar)
-				{
-                    //activeRadarRange = 40000;
-                    activeRadarRange = BDArmorySettings.MAX_ACTIVE_RADAR_RANGE;
-
-                    TargetAcquired = true;
-					radarTarget = new TargetSignatureData(legacyTargetVessel, 500);
-					return;
-				}
-				else if(TargetingMode == TargetingModes.Heat)
-				{
-					TargetAcquired = true;
-					heatTarget = new TargetSignatureData(legacyTargetVessel, 500);
-					return;
-				}
-
-				if(TargetingMode != TargetingModes.Gps || TargetAcquired)
-				{
-					TargetAcquired = true;
-					TargetPosition = legacyTargetVessel.CoM + (legacyTargetVessel.Velocity() * Time.fixedDeltaTime);
-					targetGPSCoords = VectorUtils.WorldPositionToGeoCoords(TargetPosition, vessel.mainBody);
-					TargetVelocity = legacyTargetVessel.Velocity();
-					TargetAcceleration = legacyTargetVessel.acceleration;
-					lastLaserPoint = TargetPosition;
-					lockFailTimer = 0;
-				}
-			}
-		}
 	
 		public override void Detonate()
 		{

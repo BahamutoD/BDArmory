@@ -26,7 +26,7 @@ namespace BDArmory.Misc
             while (weapon.MoveNext())
             {
                 if (weapon.Current == null) continue;
-                weapon.Current.legacyTargetVessel = targetVessel;
+                weapon.Current.visualTargetVessel = targetVessel;
                 weapon.Current.autoFireTimer = Time.time;
                 weapon.Current.autoFireLength = burstLength;
             }
@@ -40,7 +40,7 @@ namespace BDArmory.Misc
             {
                 if (weapon.Current == null) continue;
                 weapon.Current.autoFire = false;
-                weapon.Current.legacyTargetVessel = null;
+                weapon.Current.visualTargetVessel = null;
             }
             weapon.Dispose();
         }

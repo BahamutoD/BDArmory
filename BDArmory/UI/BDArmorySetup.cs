@@ -892,8 +892,7 @@ namespace BDArmory.UI
                     }
                     guardLines += 1.25f;
 
-                    string scanLabel = BDArmorySettings.ALLOW_LEGACY_TARGETING ? "Scan Interval" : "Firing Interval";
-                    GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), scanLabel, leftLabel);
+                    GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Firing Interval", leftLabel);
                     ActiveWeaponManager.targetScanInterval =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + (90), (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
@@ -929,16 +928,12 @@ namespace BDArmory.UI
                         ActiveWeaponManager.guardAngle.ToString(), leftLabel);
                     guardLines++;
 
-                    string rangeLabel = BDArmorySettings.ALLOW_LEGACY_TARGETING ? "Guard Range" : "Visual Range";
-                    GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), rangeLabel, leftLabel);
+                    GUI.Label(new Rect(leftIndent, (guardLines*entryHeight), 85, entryHeight), "Visual Range", leftLabel);
                     float guardRange = ActiveWeaponManager.guardRange;
-                    float maxVisRange = BDArmorySettings. ALLOW_LEGACY_TARGETING
-                        ? Mathf.Clamp(BDArmorySettings.PHYSICS_RANGE, 2500, 100000)
-                        : BDArmorySettings.MAX_GUARD_VISUAL_RANGE;
                     guardRange =
                         GUI.HorizontalSlider(
                             new Rect(leftIndent + 90, (guardLines*entryHeight), contentWidth - 90 - 38, entryHeight),
-                            guardRange, 100, maxVisRange);
+                            guardRange, 100, BDArmorySettings.MAX_GUARD_VISUAL_RANGE);
                     guardRange = guardRange/100;
                     guardRange = Mathf.Round(guardRange);
                     ActiveWeaponManager.guardRange = guardRange*100;
@@ -1376,7 +1371,6 @@ namespace BDArmory.UI
             BDArmorySettings.REMOTE_SHOOTING = GUI.Toggle(SLeftRect(line), BDArmorySettings.REMOTE_SHOOTING, "Remote Firing");
             BDArmorySettings.BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BDArmorySettings.BOMB_CLEARANCE_CHECK, "Clearance Check");
             line++;
-            BDArmorySettings.ALLOW_LEGACY_TARGETING = GUI.Toggle(SLeftRect(line), BDArmorySettings.ALLOW_LEGACY_TARGETING, "Legacy Targeting");
             BDArmorySettings.SHELL_COLLISIONS = GUI.Toggle(SRightRect(line), BDArmorySettings.SHELL_COLLISIONS, "Shell Collisions");
             line++;
             BDArmorySettings.BULLET_DECALS = GUI.Toggle(SLeftRect(line), BDArmorySettings.BULLET_DECALS, "Bullet Hole Decals");
