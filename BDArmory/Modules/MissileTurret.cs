@@ -483,9 +483,6 @@ namespace BDArmory.Modules
                 ml.MissileReferenceTransform = mTf;
                 ml.missileTurret = this;
 
-                ml.decoupleForward = true;
-                ml.dropTime = 0;
-
                 if (!comOffsets.ContainsKey(ml.part.name))
                 {
                     comOffsets.Add(ml.part.name, ml.part.CoMOffset);
@@ -603,9 +600,6 @@ namespace BDArmory.Modules
             missileTransforms[index].localRotation = Quaternion.identity;
             missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
             missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
-
-            missileChildren[index].dropTime = 0;
-            missileChildren[index].decoupleForward = true;
 
             missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part.name];
         }
