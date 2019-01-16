@@ -19,8 +19,8 @@ namespace BDArmory.UI
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class BDATargetManager : MonoBehaviour
 	{
-		public static Dictionary<BDTeam, List<TargetInfo>> TargetDatabase;
-		public static Dictionary<BDTeam, List<GPSTargetInfo>> GPSTargets;
+		private static Dictionary<BDTeam, List<TargetInfo>> TargetDatabase;
+		private static Dictionary<BDTeam, List<GPSTargetInfo>> GPSTargets;
 		public static List<ModuleTargetingCamera> ActiveLasers;
 		public static List<IBDWeapon> FiredMissiles;
 		public static List<DestructibleBuilding> LoadedBuildings;

@@ -1,4 +1,22 @@
-﻿v1.2.4
+﻿v1.3.0
+* NEW FEATURES:
+	* Multiple teams are now supported by BDA.
+		* Probably breaks ALL the existing addons.
+			The new property is `Team` instead of `team`.
+			Review all existing references and check whether the check is for the same/different team (`==`/`!=`) or enemy/ally (use `isEnemy` and `isAlly`).
+			`TargetDatabase` and `GPSTargets` have gone private and are not guaranteed to contain all the teams anyway. 
+			Use `TargetList` and `GPSTargetList` instead.
+		* Will lose existing saved GPS targets.
+
+* ENHANCEMENTS:
+* FIXES
+	* AI pilot should now use torpedoes.
+	* Weapons will revert to default weapon group on blank weapon group entry.
+	* Missiles fired from turrets will obey drop time and decouple direction.
+	* Updated ballistics calculation acceleration extrapolation
+		(guard mode should hit bobbing ships more accurately).
+
+v1.2.4
 * NEW FEATURES:
 	* Weapons groups - different weapons firing in parallel(thanks to @SuicidalInsanity)
 * ENHANCEMENTS:
