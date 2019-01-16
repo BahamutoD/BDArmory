@@ -982,11 +982,7 @@ namespace BDArmory.Modules
 				if (weaponManager.TargetOverride)
 				{
 					extending = false;
-					weaponManager.ForceWideViewScan();
 				}
-				else
-					weaponManager.ForceWideViewScan();
-
 
 				float extendDistance = Mathf.Clamp(weaponManager.guardRange-1800, 2500, 4000);
 

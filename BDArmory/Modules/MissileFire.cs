@@ -344,8 +344,6 @@ namespace BDArmory.Modules
         public bool underFire;
         Coroutine ufRoutine;
 
-        bool focusingOnTarget;
-        float focusingOnTargetTimer;
         public Vector3 incomingThreatPosition;
         public Vessel incomingThreatVessel;
 
@@ -4036,12 +4034,6 @@ namespace BDArmory.Modules
                 }
                 ufRoutine = StartCoroutine(UnderFireRoutine());
             }
-        }
-
-        public void ForceWideViewScan()
-        {
-            focusingOnTarget = false;
-            focusingOnTargetTimer = 1;
         }
 
         public void ForceScan()
