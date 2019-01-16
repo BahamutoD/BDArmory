@@ -627,7 +627,7 @@ namespace BDArmory.UI
                 //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
                 BDGUIUtils.UseMouseEventInRect(WindowRectGps);
                 List<GPSTargetInfo>.Enumerator coord = 
-                  BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)].GetEnumerator();
+                  BDATargetManager.GPSTargetList(ActiveWeaponManager.Team).GetEnumerator();
                 while (coord.MoveNext())
                 {
                   BDGUIUtils.DrawTextureOnWorldPos(coord.Current.worldPos, Instance.greenDotTexture, new Vector2(8, 8), 0);
@@ -1210,10 +1210,10 @@ namespace BDArmory.UI
             gpsEntryCount += 1.35f;
             int indexToRemove = -1;
             int index = 0;
-            BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
+            BDTeam myTeam = ActiveWeaponManager.Team;
             if (showTargets)
             {
-              List<GPSTargetInfo>.Enumerator coordinate = BDATargetManager.GPSTargets[myTeam].GetEnumerator();
+              List<GPSTargetInfo>.Enumerator coordinate = BDATargetManager.GPSTargetList(myTeam).GetEnumerator();
               while (coordinate.MoveNext())
               {
                 Color origWColor = GUI.color;
@@ -1286,16 +1286,16 @@ namespace BDArmory.UI
               coordinate.Dispose();
             }
 
-            if (hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargets[myTeam].Count)
+            if (hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargetList(myTeam).Count)
             {
                 hasEnteredGPSName = false;
-                GPSTargetInfo old = BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex];
+                GPSTargetInfo old = BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex];
                 if (ActiveWeaponManager.designatedGPSInfo.EqualsTarget(old))
                 {
                     ActiveWeaponManager.designatedGPSInfo.name = newGPSName;
                 }
-                BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex] =
-                    new GPSTargetInfo(BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex].gpsCoordinates,
+                BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex] =
+                    new GPSTargetInfo(BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex].gpsCoordinates,
                         newGPSName);
                 editingGPSNameIndex = 0;
             }
@@ -1304,7 +1304,7 @@ namespace BDArmory.UI
 
             if (indexToRemove >= 0)
             {
-                BDATargetManager.GPSTargets[myTeam].RemoveAt(indexToRemove);
+                BDATargetManager.GPSTargetList(myTeam).RemoveAt(indexToRemove);
             }
 
             WindowRectGps.height = (2*gpsBorder) + (gpsEntryCount*gpsEntryHeight);

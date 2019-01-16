@@ -1463,7 +1463,7 @@ namespace BDArmory.Modules
                 //check database for target first
                 float twoxsqrRad = 4f * radius * radius;
                 bool foundTargetInDatabase = false;
-                List<GPSTargetInfo>.Enumerator gps = BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(team)].GetEnumerator();
+                List<GPSTargetInfo>.Enumerator gps = BDATargetManager.GPSTargetList(Team).GetEnumerator();
                 while (gps.MoveNext())
                 {
                     if (!((gps.Current.worldPos - guardTarget.CoM).sqrMagnitude < twoxsqrRad)) continue;

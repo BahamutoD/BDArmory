@@ -1864,7 +1864,7 @@ namespace BDArmory.Radar
                     //draw missiles and debris as dots
                     if ((displayedTargets[i].targetData.targetInfo &&
                          displayedTargets[i].targetData.targetInfo.isMissile) ||
-                        displayedTargets[i].targetData.team == BDArmorySetup.BDATeams.None)
+                        displayedTargets[i].targetData.Team == null)
                     {
                         float mDotSize = 6;
                         pingRect = new Rect(pingPosition.x - (mDotSize / 2), pingPosition.y - (mDotSize / 2), mDotSize,

@@ -1,11 +1,17 @@
-﻿using BDArmory.Misc;
+﻿using Newtonsoft.Json;
+using BDArmory.Misc;
 
 namespace BDArmory.Parts
 {
+    [JsonObject(MemberSerialization.OptIn)]
     public struct GPSTargetInfo
     {
+        [JsonProperty]
         public Vector3d gpsCoordinates;
+
+        [JsonProperty]
         public string name;
+
         public Vessel gpsVessel;
 
         public Vector3d worldPos
