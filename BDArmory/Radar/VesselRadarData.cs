@@ -360,19 +360,13 @@ namespace BDArmory.Radar
             }
             rad.Dispose();
             // Now rebuild range display array
-            bool maxReached = false;
             List<float> newArray = new List<float>();
             for (int x = 0; x < baseIncrements.Length; x++)
             {
-                if (_maxRadarRange > baseIncrements[x])
+                newArray.Add(baseIncrements[x]);
+                if (_maxRadarRange <= baseIncrements[x])
                 {
-                    newArray.Add(baseIncrements[x]);
-                }
-                else if (maxReached) break;
-                else
-                {
-                    newArray.Add(baseIncrements[x]);
-                    maxReached = true;
+                    break;
                 }
             }
             if (newArray.Count > 0) rIncrements = newArray.ToArray();
