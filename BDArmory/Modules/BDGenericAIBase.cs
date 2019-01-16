@@ -210,7 +210,7 @@ namespace BDArmory.Modules
 			}
 		}
 
-		protected virtual void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
+		protected virtual void OnToggleTeam(MissileFire mf, BDTeam team)
 		{
 			if (mf.vessel == vessel || (commandLeader && commandLeader.vessel == mf.vessel))
 			{
@@ -291,7 +291,7 @@ namespace BDArmory.Modules
 		{
 			if (weaponManager != null && !weaponManager.guardMode)
 			{
-				if (vessel.targetObject?.GetVessel()?.FindPartModuleImplementing<MissileFire>()?.team == !weaponManager.team)
+				if (weaponManager.Team.IsEnemy(vessel.targetObject?.GetVessel()?.FindPartModuleImplementing<MissileFire>()?.Team))
 					targetVessel = (Vessel)vessel.targetObject;
 			}
 		}

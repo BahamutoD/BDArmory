@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Modules;
+using BDArmory.Misc;
 using UnityEngine;
 
 namespace BDArmory.UI
@@ -82,7 +83,7 @@ namespace BDArmory.UI
             _guiCheckIndex = Misc.Misc.RegisterGUIRect(new Rect());
         }
 
-        private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
+        private void MissileFireOnToggleTeam(MissileFire wm, BDTeam team)
         {
             if (_showGui)
                 UpdateList();

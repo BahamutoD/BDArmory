@@ -131,14 +131,6 @@ namespace BDArmory.UI
         GUIStyle redErrorStyle;
         GUIStyle redErrorShadowStyle;
 
-        [Obsolete]
-        public enum BDATeams
-        {
-            A,
-            B,
-            None
-        };
-
         public SortedList<string, BDTeam> Teams = new SortedList<string, BDTeam>
         {
             { "Neutral", new BDTeam("Neutral", neutral: true) }

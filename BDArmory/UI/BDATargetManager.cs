@@ -342,9 +342,10 @@ namespace BDArmory.UI
                     continue;
 
                 TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
+                // If no weaponManager or no target or the target is not a missile with engines on..??? and the target weighs less than 50kg, abort.
 				if(mf == null || 
 					!tInfo || 
-					!(mf && tInfo.isMissile && tInfo.team != BoolToTeam(mf.team) && (tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Boost || tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Cruise)))
+					!(mf && tInfo.isMissile && (tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Boost || tInfo.MissileBaseModule.MissileState == MissileBase.MissileStates.Cruise)))
 				{
 					if(vessel.GetTotalMass() < minMass)
 					{
@@ -352,9 +353,10 @@ namespace BDArmory.UI
 					}
 				}
 
+                // Abort if target is friendly.
 			    if (mf != null && tInfo != null)
 			    {
-			        if (BoolToTeam(mf.team) == tInfo.team)
+			        if (mf.Team.IsFriendly(tInfo.Team))
 			        {
 			            continue;
 			        }
@@ -583,14 +585,6 @@ namespace BDArmory.UI
             catch { }
 		}
 
-		//Legacy target managing stuff
-
-        [Obsolete]
-		public static BDArmorySetup.BDATeams BoolToTeam(bool team)
-		{
-			return team ? BDArmorySetup.BDATeams.B : BDArmorySetup.BDATeams.A;
-		}
-
 		IEnumerator CleanDatabaseRoutine()
 		{
 			while(enabled)
@@ -646,7 +640,7 @@ namespace BDArmory.UI
                     if (ml.Current == null) continue;
                     if (ml.Current.HasFired)
                     {
-                        if (ml.Current.Team != reporter.team)
+                        if (reporter.Team.IsEnemy(ml.Current.Team))
                         {
                             info = v.gameObject.AddComponent<TargetInfo>();
                             break;
