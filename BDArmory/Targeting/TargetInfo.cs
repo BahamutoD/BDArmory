@@ -14,7 +14,7 @@ namespace BDArmory.Targeting
 		public bool isMissile;
 		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
-        Dictionary<BDTeam, List<MissileFire>> friendliesEngaging;
+        Dictionary<BDTeam, List<MissileFire>> friendliesEngaging = new Dictionary<BDTeam, List<MissileFire>>();
         public Dictionary<BDTeam, float> detectedTime = new Dictionary<BDTeam, float>();
 
         public float radarBaseSignature = -1;
@@ -262,10 +262,12 @@ namespace BDArmory.Targeting
                 return;
 
             if (friendliesEngaging.TryGetValue(mf.Team, out var friendlies))
+            {
                 if (!friendlies.Contains(mf))
                     friendlies.Add(mf);
-                else
-                    friendliesEngaging.Add(mf.Team, new List<MissileFire> { mf });
+            }
+            else
+                friendliesEngaging.Add(mf.Team, new List<MissileFire> { mf });
 		}
 
 		public void Disengage(MissileFire mf)

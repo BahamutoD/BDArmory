@@ -502,7 +502,7 @@ namespace BDArmory.Modules
                     if (!teamList.Contains(teams.Current.Key) && !teams.Current.Value.Neutral)
                         teamList.Add(teams.Current.Key);
             teamList.Sort();
-            Team = BDArmorySetup.Instance.Teams[teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]];
+            Team = BDTeam.Get(teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]);
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
             {

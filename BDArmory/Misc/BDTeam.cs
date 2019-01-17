@@ -1,23 +1,25 @@
 ﻿using BDArmory.UI;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace BDArmory.Misc
 {
     [Serializable]
     public class BDTeam
     {
-        public readonly string Name;
+        // No warranty is provided for changing the Name, but this makes serialization easier. :)
+        public string Name;
 
         public bool Neutral;
 
-        public HashSet<string> Allies;
+        public List<string> Allies = new List<string>();
 
-        public BDTeam(string name, HashSet<string> allies = null, bool neutral = false)
+        public BDTeam(string name, List<string> allies = null, bool neutral = false)
         {
             Name = name;
             Neutral = neutral;
-            Allies = allies ?? new HashSet<string>();
+            Allies = allies ?? new List<string>();
         }
 
         public static BDTeam Get(string name)

@@ -199,7 +199,6 @@ namespace BDArmory.UI
                         {
                             if (wm.Current == null) continue;
 
-                            height += _buttonHeight + _buttonGap;
                             Rect buttonRect = new Rect(_margin, height, vesselButtonWidth, _buttonHeight);
                             GUIStyle vButtonStyle = wm.Current.vessel.isActiveVessel ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
                             string status = UpdateVesselStatus(wm.Current, vButtonStyle);
@@ -231,6 +230,8 @@ namespace BDArmory.UI
                                 _wmToSwitchTeam = wm.Current;
                                 _teamSwitchDirty = true;
                             }
+
+                            height += _buttonHeight + _buttonGap;
                         }
                 }
 
