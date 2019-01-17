@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
@@ -556,15 +554,21 @@ namespace BDArmory.UI
 			}
 		}
 
+        [Serializable]
+        public class GPSInfoContainer
+        {
+            public Dictionary<string, List<GPSTargetInfo>> data = new Dictionary<string, List<GPSTargetInfo>>();
+        }
+
 		//format: json
 		private string GPSListToString()
 		{
-            var dictForSerialization = new Dictionary<string, List<GPSTargetInfo>>();
+            var dictForSerialization = new GPSInfoContainer();
             using (var kvp = GPSTargets.GetEnumerator())
                 while (kvp.MoveNext())
-                    dictForSerialization.Add(kvp.Current.Key.Name, kvp.Current.Value);
+                    dictForSerialization.data.Add(kvp.Current.Key.Name, kvp.Current.Value);
 
-			return JsonConvert.SerializeObject(dictForSerialization);
+			return JsonUtility.ToJson(dictForSerialization);
 		}
 
 		private void StringToGPSList(string listString)
@@ -575,9 +579,9 @@ namespace BDArmory.UI
 			}
             try
             {
-                var deserializedDict = JsonConvert.DeserializeObject<Dictionary<string, List<GPSTargetInfo>>>(listString);
+                var deserializedDict = JsonUtility.FromJson<GPSInfoContainer>(listString);
 			    GPSTargets.Clear();
-                using (var kvp = deserializedDict.GetEnumerator())
+                using (var kvp = deserializedDict.data.GetEnumerator())
                     while (kvp.MoveNext())
                         GPSTargets.Add(BDTeam.Get(kvp.Current.Key), kvp.Current.Value);
 

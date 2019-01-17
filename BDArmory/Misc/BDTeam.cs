@@ -1,19 +1,16 @@
 ﻿using BDArmory.UI;
-using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace BDArmory.Misc
 {
-    [JsonObject(MemberSerialization.OptIn)]
+    [Serializable]
     public class BDTeam
     {
-        [JsonProperty]
         public readonly string Name;
 
-        [JsonProperty]
         public bool Neutral;
 
-        [JsonProperty]
         public HashSet<string> Allies;
 
         public BDTeam(string name, HashSet<string> allies = null, bool neutral = false)
@@ -55,7 +52,7 @@ namespace BDArmory.Misc
                 return BDTeam.Get("B");
             try
             {
-                BDTeam team = JsonConvert.DeserializeObject<BDTeam>(teamString);
+                BDTeam team = UnityEngine.JsonUtility.FromJson<BDTeam>(teamString);
                 if (!BDArmorySetup.Instance.Teams.ContainsKey(team.Name))
                     BDArmorySetup.Instance.Teams.Add(team.Name, team);
                 return BDArmorySetup.Instance.Teams[team.Name];
@@ -68,7 +65,7 @@ namespace BDArmory.Misc
 
         public string Serialize()
         {
-            return JsonConvert.SerializeObject(this);
+            return UnityEngine.JsonUtility.ToJson(this);
         }
 
         public override int GetHashCode() => Name.GetHashCode();
