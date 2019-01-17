@@ -63,7 +63,6 @@ namespace BDArmory.Targeting
 			if(targetInfo)  // Always true, as we just set it?
 			{
 				Team = targetInfo.Team;
-                targetInfo.detectedTime = Time.time;
             }
 			else
 			{
