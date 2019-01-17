@@ -765,7 +765,7 @@ namespace BDArmory.Radar
                 TargetSignatureData lockedTarget = displayedTargets[lockedTargetIndexes[i]].targetData;
                 if (i == activeLockedTargetIndex)
                 {
-                    if (weaponManager && weaponManager.Team.IsEnemy(lockedTarget.team))
+                    if (weaponManager && weaponManager.Team.IsEnemy(lockedTarget.Team))
                     {
                         BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
                             BDArmorySetup.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
@@ -1893,7 +1893,7 @@ namespace BDArmory.Radar
                         Color origGUIColor = GUI.color;
                         GUI.color = Color.white - new Color(0, 0, 0, minusAlpha);
                         if (weaponManager &&
-                            displayedTargets[i].targetData.Team == weaponManager.Team)
+                            weaponManager.Team.IsFriendly(displayedTargets[i].targetData.Team))
                         {
                             GUI.DrawTexture(pingRect, friendlyContactIcon, ScaleMode.StretchToFill, true);
                         }
@@ -1973,7 +1973,7 @@ namespace BDArmory.Radar
                             }
 
                             if (jammed ||
-                                displayedTargets[i].targetData.Team != weaponManager.Team)
+                                !weaponManager.Team.IsFriendly(displayedTargets[i].targetData.Team))
                             {
                                 BDGUIUtils.DrawRectangle(jammedRect, iconColor - new Color(0, 0, 0, minusAlpha));
                             }

@@ -713,25 +713,15 @@ namespace BDArmory.UI
                     }
                 }
 
-                GUIStyle teamButtonStyle;
-                string teamText = "Team: ";
-                if (ActiveWeaponManager.team)
-                {
-                    teamButtonStyle = BDGuiSkin.box;
-                    teamText += "B";
-                }
-                else
-                {
-                    teamButtonStyle = BDGuiSkin.button;
-                    teamText += "A";
-                }
+                GUIStyle teamButtonStyle = BDGuiSkin.box;
+                string teamText = $"Team: {ActiveWeaponManager.Team.Name}";
 
                 if (
                     GUI.Button(
                         new Rect(leftIndent + (contentWidth/2), contentTop + (line*entryHeight), contentWidth/2,
                             entryHeight), teamText, teamButtonStyle))
                 {
-                    ActiveWeaponManager.ToggleTeam();
+                    ActiveWeaponManager.NextTeam();
                 }
                 line++;
                 line += 0.25f;

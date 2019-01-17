@@ -14,8 +14,8 @@ namespace BDArmory.Targeting
 		public bool isMissile;
 		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
-        List<MissileFire> friendliesEngaging;
-        public float detectedTime;
+        Dictionary<BDTeam, List<MissileFire>> friendliesEngaging;
+        public Dictionary<BDTeam, float> detectedTime = new Dictionary<BDTeam, float>();
 
         public float radarBaseSignature = -1;
         public bool radarBaseSignatureNeedsUpdate = true;
@@ -187,8 +187,6 @@ namespace BDArmory.Targeting
                 ml.Dispose();
 			}
 
-			friendliesEngaging = new List<MissileFire>();
-
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;            
 
             //add delegate to peace enable event
@@ -239,28 +237,35 @@ namespace BDArmory.Targeting
 			}
 		}
 
-		public int numFriendliesEngaging
+		public int NumFriendliesEngaging(BDTeam team)
 		{
-			get
-			{
-				if(friendliesEngaging == null)
-				{
-					return 0;
-				}
-				friendliesEngaging.RemoveAll(item => item == null);
-				return friendliesEngaging.Count;
-			}
+            if (friendliesEngaging.TryGetValue(team, out var friendlies))
+            {
+                friendlies.RemoveAll(item => item == null);
+                return friendlies.Count;
+            }
+            return 0;
 		}
+
+        public int TotalEngaging()
+        {
+            int engaging = 0;
+            using (var teamEngaging = friendliesEngaging.GetEnumerator())
+                while (teamEngaging.MoveNext())
+                    engaging += teamEngaging.Current.Value.Count;
+            return engaging;
+        }
 
 		public void Engage(MissileFire mf)
 		{
-            if (mf == null || friendliesEngaging == null)
+            if (mf == null)
                 return;
 
-			if(!friendliesEngaging.Contains(mf))
-			{
-				friendliesEngaging?.Add(mf);
-			}
+            if (friendliesEngaging.TryGetValue(mf.Team, out var friendlies))
+                if (!friendlies.Contains(mf))
+                    friendlies.Add(mf);
+                else
+                    friendliesEngaging.Add(mf.Team, new List<MissileFire> { mf });
 		}
 
 		public void Disengage(MissileFire mf)
@@ -268,7 +273,8 @@ namespace BDArmory.Targeting
             if (mf == null)
                 return;
 
-            friendliesEngaging?.Remove(mf);
+            if (friendliesEngaging.TryGetValue(mf.Team, out var friendlies))
+                friendlies.Remove(mf);
 		}
 		
 		void AboutToBeDestroyed()

@@ -3597,7 +3597,7 @@ namespace BDArmory.Modules
             // but to prevent AI from stopping an engagement just because a target dropped behind a small hill 5 seconds ago, clamp the timeout to 30 seconds
             // i.e. let's have at least some object permanence :)
             // (Ideally, I'd love to have "stale targets", where AI would attack the last known position, but that's a feature for the future)
-            if (Time.time - target.detectedTime < Mathf.Max(targetScanInterval, 30))
+            if (target.detectedTime.TryGetValue(Team, out float detectedTime) && Time.time - detectedTime < Mathf.Max(targetScanInterval, 30))
                 return true;
 
             // can we get a visual sight of the target?
@@ -4008,8 +4008,8 @@ namespace BDArmory.Modules
                     TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
 
                     if (nearbyThreat?.weaponManager != null && nearbyFriendly?.weaponManager != null)
-                        if (nearbyThreat.weaponManager.team != team &&
-                            nearbyFriendly.weaponManager.team == team)
+                        if (Team.IsEnemy(nearbyThreat.weaponManager.Team) &&
+                            nearbyFriendly.weaponManager.Team == Team)
                         //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
                         {
                             if (nearbyThreat == currentTarget && nearbyFriendly.weaponManager.currentTarget != null)

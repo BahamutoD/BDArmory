@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
@@ -428,7 +429,7 @@ namespace BDArmory.UI
                             }
 					        else
 					        {
-                                debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.numFriendliesEngaging}");
+                                debugString.Append($"- {targetInfo.Vessel.vesselName} Engaged by {targetInfo.TotalEngaging()}");
                                 debugString.Append(Environment.NewLine);
                             }
 				        }
@@ -625,9 +626,10 @@ namespace BDArmory.UI
                 while (mf.MoveNext())
                 {
                     if (mf.Current == null) continue;
-                    if (mf.Current.team != reporter.team)
+                    if (reporter.Team.IsEnemy(mf.Current.Team))
                     {
                         info = v.gameObject.AddComponent<TargetInfo>();
+                        info.detectedTime[reporter.Team] = Time.time;
                         break;
                     }
 
@@ -643,6 +645,7 @@ namespace BDArmory.UI
                         if (reporter.Team.IsEnemy(ml.Current.Team))
                         {
                             info = v.gameObject.AddComponent<TargetInfo>();
+                            info.detectedTime[reporter.Team] = Time.time;
                             break;
                         }
                     }
@@ -655,7 +658,7 @@ namespace BDArmory.UI
             if (info)
             {
                 AddTarget(info, reporter.Team);
-                info.detectedTime = Time.time;
+                info.detectedTime[reporter.Team] = Time.time;
             }
         }
 
@@ -684,7 +687,7 @@ namespace BDArmory.UI
                 {
                     using (var targetList = teamDB.Current.Value.GetEnumerator())
                         while (targetList.MoveNext())
-                            targetList.Current.detectedTime = 0;
+                            targetList.Current.detectedTime.Clear();
                     teamDB.Current.Value.Clear();
                 }
 		}
@@ -699,14 +702,14 @@ namespace BDArmory.UI
             while (target.MoveNext())
             {
                 if (target.Current == null) continue;
-                if (target.Current.numFriendliesEngaging >= 2) continue;
+                if (target.Current.NumFriendliesEngaging(mf.Team) >= 2) continue;
 				if(target.Current && target.Current.Vessel && target.Current.isFlying && !target.Current.isMissile && target.Current.isThreat)
 				{
                     Vector3 targetRelPos = target.Current.Vessel.vesselTransform.position - mf.vessel.vesselTransform.position;
                     float targetSuitability = Vector3.Dot(targetRelPos.normalized, mf.vessel.ReferenceTransform.up);       //prefer targets ahead to those behind
                     targetSuitability += 500 / (targetRelPos.magnitude + 100);
 
-                    if (finalTarget == null || (target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging) || targetSuitability > finalTargetSuitability + finalTarget.numFriendliesEngaging)
+                    if (finalTarget == null || (target.Current.NumFriendliesEngaging(mf.Team) < finalTarget.NumFriendliesEngaging(mf.Team)) || targetSuitability > finalTargetSuitability + finalTarget.NumFriendliesEngaging(mf.Team))
 					{
 						finalTarget = target.Current;
                         finalTargetSuitability = targetSuitability;
@@ -830,7 +833,7 @@ namespace BDArmory.UI
                 if (target.Current == null) continue;
                 if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && !target.Current.isMissile && target.Current.isThreat)
 				{
-					if(finalTarget == null || target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)
+					if(finalTarget == null || target.Current.NumFriendliesEngaging(mf.Team) < finalTarget.NumFriendliesEngaging(mf.Team))
 					{
 						finalTarget = target.Current;
 					}
@@ -867,7 +870,7 @@ namespace BDArmory.UI
 					}
 
 
-					if(((finalTarget == null && target.Current.numFriendliesEngaging < 2) || (finalTarget != null && target.Current.numFriendliesEngaging < finalTarget.numFriendliesEngaging)))
+					if(((finalTarget == null && target.Current.NumFriendliesEngaging(mf.Team) < 2) || (finalTarget != null && target.Current.NumFriendliesEngaging(mf.Team) < finalTarget.NumFriendliesEngaging(mf.Team))))
 					{
 						finalTarget = target.Current;
 					}
@@ -885,7 +888,7 @@ namespace BDArmory.UI
                 if (target.Current == null) continue;
                 if (target.Current && target.Current.Vessel && mf.CanSeeTarget(target.Current) && target.Current.isMissile && target.Current.isThreat)
 				{
-					if(target.Current.numFriendliesEngaging == 0)
+					if(target.Current.NumFriendliesEngaging(mf.Team) == 0)
 					{
 						return target.Current;
 					}
