@@ -467,6 +467,7 @@ namespace BDArmory.Modules
             }
             set
             {
+                if (!team_loaded) return;
                 if (!BDArmorySetup.Instance.Teams.ContainsKey(value.Name))
                     BDArmorySetup.Instance.Teams.Add(value.Name, value);
                 teamString = value.Name;
@@ -476,11 +477,12 @@ namespace BDArmory.Modules
         
         // Team name
 		[KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
-		public string teamString = "A";
+		public string teamString = "Neutral";
         
         // Serialized team
 		[KSPField(isPersistant = true)]
         public string team;
+        private bool team_loaded = false;
 
 
         [KSPAction("Next Team")]
@@ -661,8 +663,6 @@ namespace BDArmory.Modules
 
         public override void OnAwake()
         {
-            Team = BDTeam.Deserialize(team);
-
             clickSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/click");
             warningSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/warning");
             armOnSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/armOn");
@@ -675,6 +675,9 @@ namespace BDArmory.Modules
 
         public override void OnStart(StartState state)
         {
+            team_loaded = true;
+            Team = BDTeam.Deserialize(team);
+
             UpdateMaxGuardRange();
 
             startTime = Time.time;

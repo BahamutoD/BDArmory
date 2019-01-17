@@ -331,5 +331,15 @@ namespace BDArmory.Misc
             FieldInfo field = typeof(GameSettings).GetField(groupName);
             return (KeyBinding) field.GetValue(null);
         }
+
+        public static string JsonCompat(string json)
+        {
+            return json.Replace('{', '<').Replace('}', '>');
+        }
+
+        public static string JsonDecompat(string json)
+        {
+            return json.Replace('<', '{').Replace('>', '}');
+        }
     }
 }
