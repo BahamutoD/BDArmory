@@ -554,36 +554,65 @@ namespace BDArmory.UI
 			}
 		}
 
+        // Because Unity's JsonConvert is a featureless pita.
         [Serializable]
-        public class GPSInfoContainer
+        public class SerializableGPSData
         {
-            public Dictionary<string, List<GPSTargetInfo>> data = new Dictionary<string, List<GPSTargetInfo>>();
+            public List<string> Team = new List<string>();
+            public List<string> Data = new List<string>();
+
+            public SerializableGPSData(Dictionary<BDTeam, List<GPSTargetInfo>> data)
+            {
+                using (var kvp = data.GetEnumerator())
+                    while (kvp.MoveNext())
+                    {
+                        Team.Add(kvp.Current.Key.Name);
+                        Data.Add(JsonUtility.ToJson(new SerializableGPSList(kvp.Current.Value)));
+                    }
+            }
+
+            public Dictionary<BDTeam, List<GPSTargetInfo>> Load()
+            {
+                var value = new Dictionary<BDTeam, List<GPSTargetInfo>>();
+                for (int i = 0; i < Team.Count; ++i)
+                    value.Add(BDTeam.Get(Team[i]), JsonUtility.FromJson<SerializableGPSList>(Data[i]).Load());
+                return value;
+            }
         }
 
-		//format: json
-		private string GPSListToString()
-		{
-            var dictForSerialization = new GPSInfoContainer();
-            using (var kvp = GPSTargets.GetEnumerator())
-                while (kvp.MoveNext())
-                    dictForSerialization.data.Add(kvp.Current.Key.Name, kvp.Current.Value);
+        [Serializable]
+        public class SerializableGPSList
+        {
+            public List<string> Data = new List<string>();
 
-			return JsonUtility.ToJson(dictForSerialization);
+            public SerializableGPSList(List<GPSTargetInfo> data)
+            {
+                using (var gps = data.GetEnumerator())
+                    while (gps.MoveNext())
+                        Data.Add(JsonUtility.ToJson(gps.Current));
+            }
+
+            public List<GPSTargetInfo> Load()
+            {
+                var value = new List<GPSTargetInfo>();
+                using (var json = Data.GetEnumerator())
+                    while (json.MoveNext())
+                        value.Add(JsonUtility.FromJson<GPSTargetInfo>(json.Current));
+                return value;
+            }
+        }
+
+        //format: very mangled json :(
+        private string GPSListToString()
+		{
+            return Misc.Misc.JsonCompat(JsonUtility.ToJson(new SerializableGPSData(GPSTargets)));
 		}
 
 		private void StringToGPSList(string listString)
 		{
-			if(GPSTargets == null)
-			{
-				GPSTargets = new Dictionary<BDTeam, List<GPSTargetInfo>>();
-			}
             try
             {
-                var deserializedDict = JsonUtility.FromJson<GPSInfoContainer>(listString);
-			    GPSTargets.Clear();
-                using (var kvp = deserializedDict.data.GetEnumerator())
-                    while (kvp.MoveNext())
-                        GPSTargets.Add(BDTeam.Get(kvp.Current.Key), kvp.Current.Value);
+				GPSTargets = JsonUtility.FromJson<SerializableGPSData>(Misc.Misc.JsonDecompat(listString)).Load();
 
 			    Debug.Log("[BDArmory]: Loaded GPS Targets.");
             }

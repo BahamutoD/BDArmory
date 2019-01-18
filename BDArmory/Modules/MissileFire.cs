@@ -673,7 +673,7 @@ namespace BDArmory.Modules
             heatTarget = TargetSignatureData.noTarget;
         }
 
-        public override void OnStart(StartState state)
+        public void Start()
         {
             team_loaded = true;
             Team = BDTeam.Deserialize(team);
