@@ -168,8 +168,12 @@ namespace BDArmory.Control
 
                         using (var otherLeader = leaders.GetEnumerator())
                             while (otherLeader.MoveNext())
+                            {
+                                if (leader.Current == otherLeader.Current)
+                                    continue;
                                 if ((leader.Current.transform.position - otherLeader.Current.transform.position).sqrMagnitude < sqrDistance)
                                     waiting = true;
+                            }
 
                         using (var pilot = pilots[leader.Current.weaponManager.Team].GetEnumerator())
                             while (pilot.MoveNext())
