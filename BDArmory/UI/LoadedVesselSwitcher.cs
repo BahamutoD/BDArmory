@@ -133,11 +133,16 @@ namespace BDArmory.UI
             {
                 if (v.Current == null || !v.Current.loaded || v.Current.packed)
                     continue;
-                var wm = v.Current.FindPartModuleImplementing<MissileFire>();
-                if (weaponManagers.TryGetValue(wm.Team.Name, out var teamManagers))
-                    teamManagers.Add(wm);
-                else
-                    weaponManagers.Add(wm.Team.Name, new List<MissileFire> { wm });
+                using (var wms = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                    while (wms.MoveNext())
+                        if (wms.Current != null)
+                        {
+                            if (weaponManagers.TryGetValue(wms.Current.Team.Name, out var teamManagers))
+                                teamManagers.Add(wms.Current);
+                            else
+                                weaponManagers.Add(wms.Current.Team.Name, new List<MissileFire> { wms.Current });
+                            break;
+                        }
             }
             v.Dispose();
         }
@@ -286,7 +291,7 @@ namespace BDArmory.UI
         {
             if (weaponManagers.Count == 0) return;
 
-            Vessel previousVessel = weaponManagers.Values[weaponManagers.Count][weaponManagers.Values[weaponManagers.Count].Count].vessel;
+            Vessel previousVessel = weaponManagers.Values[weaponManagers.Count - 1][weaponManagers.Values[weaponManagers.Count - 1].Count - 1].vessel;
 
             using (var teamManagers = weaponManagers.GetEnumerator())
                 while (teamManagers.MoveNext())
@@ -294,7 +299,10 @@ namespace BDArmory.UI
                         while (wm.MoveNext())
                         {
                             if (wm.Current.vessel.isActiveVessel)
+                            {
                                 ForceSwitchVessel(previousVessel);
+                                return;
+                            }
                             previousVessel = wm.Current.vessel;
                         }
             if (!previousVessel.isActiveVessel)
