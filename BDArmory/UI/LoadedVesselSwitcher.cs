@@ -232,8 +232,15 @@ namespace BDArmory.UI
                                 _buttonHeight, _buttonHeight);
                             if (GUI.Button(teamButtonRect, "T", BDArmorySetup.BDGuiSkin.button))
                             {
-                                _wmToSwitchTeam = wm.Current;
-                                _teamSwitchDirty = true;
+                                if (Event.current.button == 1)
+                                {
+                                    BDTeamSelector.Instance.Open(wm.Current, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+                                }
+                                else
+                                {
+                                    _wmToSwitchTeam = wm.Current;
+                                    _teamSwitchDirty = true;
+                                }
                             }
 
                             height += _buttonHeight + _buttonGap;

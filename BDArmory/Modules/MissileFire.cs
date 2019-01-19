@@ -484,7 +484,6 @@ namespace BDArmory.Modules
         public string team;
         private bool team_loaded = false;
 
-
         [KSPAction("Next Team")]
         public void AGNextTeam(KSPActionParam param)
         {
@@ -495,6 +494,38 @@ namespace BDArmory.Modules
 
         public static event ChangeTeamDelegate OnChangeTeam;
 
+        public void SetTeam(BDTeam team)
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                using (var wpnMgr = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                    while (wpnMgr.MoveNext())
+                    {
+                        if (wpnMgr.Current == null) continue;
+                        wpnMgr.Current.Team = team;
+                    }
+
+                if (vessel.gameObject.GetComponent<TargetInfo>())
+                {
+                    BDATargetManager.RemoveTarget(vessel.gameObject.GetComponent<TargetInfo>());
+                    Destroy(vessel.gameObject.GetComponent<TargetInfo>());
+                }
+                OnChangeTeam?.Invoke(this, Team);
+                ResetGuardInterval();
+            }
+            else if (HighLogic.LoadedSceneIsEditor)
+            {
+                using (var editorPart = EditorLogic.fetch.ship.Parts.GetEnumerator())
+                    while (editorPart.MoveNext())
+                        using (var wpnMgr = editorPart.Current.FindModulesImplementing<MissileFire>().GetEnumerator())
+                            while (wpnMgr.MoveNext())
+                            {
+                                if (wpnMgr.Current == null) continue;
+                                wpnMgr.Current.Team = team;
+                            }
+            }
+        }
+
         [KSPEvent(active = true, guiActiveEditor = true, guiActive = false)]
         public void NextTeam()
         {
@@ -504,29 +535,13 @@ namespace BDArmory.Modules
                     if (!teamList.Contains(teams.Current.Key) && !teams.Current.Value.Neutral)
                         teamList.Add(teams.Current.Key);
             teamList.Sort();
-            Team = BDTeam.Get(teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]);
+            SetTeam(BDTeam.Get(teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]));
+        }
 
-            if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
-            {
-                using (var wpnMgr = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator())
-                    while (wpnMgr.MoveNext())
-                    {
-                        if (wpnMgr.Current == null) continue;
-                        wpnMgr.Current.Team = Team;
-                    }
-
-                if (HighLogic.LoadedSceneIsFlight)
-                {
-                    if (vessel.gameObject.GetComponent<TargetInfo>())
-                    {
-                        BDATargetManager.RemoveTarget(vessel.gameObject.GetComponent<TargetInfo>());
-                        Destroy(vessel.gameObject.GetComponent<TargetInfo>());
-                    }
-                    OnChangeTeam?.Invoke(this, Team);
-                    ResetGuardInterval();
-                }
-            }
-
+        [KSPEvent(guiActive = false, guiActiveEditor = true, active = true, guiName = "Select Team")]
+        public void SelectTeam()
+        {
+            BDTeamSelector.Instance.Open(this, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
         }
 
         [KSPField(isPersistant = true)]

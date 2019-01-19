@@ -721,7 +721,14 @@ namespace BDArmory.UI
                         new Rect(leftIndent + (contentWidth/2), contentTop + (line*entryHeight), contentWidth/2,
                             entryHeight), teamText, teamButtonStyle))
                 {
-                    ActiveWeaponManager.NextTeam();
+                    if (Event.current.button == 1)
+                    {
+                        BDTeamSelector.Instance.Open(ActiveWeaponManager, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+                    }
+                    else
+                    {
+                        ActiveWeaponManager.NextTeam();
+                    }
                 }
                 line++;
                 line += 0.25f;
