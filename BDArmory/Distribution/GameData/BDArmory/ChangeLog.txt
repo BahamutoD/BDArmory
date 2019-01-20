@@ -7,8 +7,9 @@
 			`TargetDatabase` and `GPSTargets` have gone private and are not guaranteed to contain all the teams anyway. 
 			Use `TargetList` and `GPSTargetList` instead.
 		* Will lose existing saved GPS targets.
-
+		* Right-click the team button to customize the teams in-game.
 * ENHANCEMENTS:
+	* Recompiled for KSP 1.6.1 
 * FIXES
 	* AI pilot should now use torpedoes.
 	* Weapons will revert to default weapon group on blank weapon group entry.
