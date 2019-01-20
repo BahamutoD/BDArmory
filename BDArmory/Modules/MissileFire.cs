@@ -766,7 +766,7 @@ namespace BDArmory.Modules
             }
         }
 
-        void OnPartDie(Part p)
+        void OnPartDie(Part p = null)
         {
             if (p == part)
             {
@@ -3485,97 +3485,93 @@ namespace BDArmory.Modules
                 // TODO: is laser treated like a gun?
 
                 case WeaponClasses.Gun:
-                    ModuleWeapon gun = (ModuleWeapon)weaponCandidate;
+                    {
+                        ModuleWeapon gun = (ModuleWeapon)weaponCandidate;
 
-                    // check yaw range of turret
-                    ModuleTurret turret = gun.turret;
-                    float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
-                    if (turret != null)
-                        if (!TargetInTurretRange(turret, gimbalTolerance))
+                        // check yaw range of turret
+                        ModuleTurret turret = gun.turret;
+                        float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
+                        if (turret != null)
+                            if (!TargetInTurretRange(turret, gimbalTolerance))
+                                return false;
+
+                        // check overheat
+                        if (gun.isOverheated)
                             return false;
 
-                    // check overheat
-                    if (gun.isOverheated)
-                        return false;
-
-                    // check ammo
-                    if (CheckAmmo(gun))
-                    {
-
-                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        // check ammo
+                        if (CheckAmmo(gun))
                         {
-                            Debug.Log("[BDArmory] : " + vessel.vesselName + " - Firing possible with " + weaponCandidate.GetShortName());
-                        }
-                        return true;
-                    }
-                    break;
 
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            {
+                                Debug.Log("[BDArmory] : " + vessel.vesselName + " - Firing possible with " + weaponCandidate.GetShortName());
+                            }
+                            return true;
+                        }
+                        break;
+                    }
 
                 case WeaponClasses.Missile:
-                    MissileBase ml = (MissileBase)weaponCandidate;
+                    { 
+                        MissileBase ml = (MissileBase)weaponCandidate;
 
-                    // lock radar if needed
-                    if (ml.TargetingMode == MissileBase.TargetingModes.Radar)
-                    {
-                        List<ModuleRadar>.Enumerator rd = radars.GetEnumerator();
-                        while (rd.MoveNext())
+                        // lock radar if needed
+                        if (ml.TargetingMode == MissileBase.TargetingModes.Radar)
                         {
-                            if (rd.Current == null) continue;
-                            if (!rd.Current.canLock) continue;
-                            rd.Current.EnableRadar();
-                            break;
+                            List<ModuleRadar>.Enumerator rd = radars.GetEnumerator();
+                            while (rd.MoveNext())
+                            {
+                                if (rd.Current == null) continue;
+                                if (!rd.Current.canLock) continue;
+                                rd.Current.EnableRadar();
+                                break;
+                            }
+                            rd.Dispose();
                         }
-                        rd.Dispose();
-                    }
 
-                    // check DLZ
-                    MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.Velocity(), guardTarget.transform.position);
-                    if (vessel.srfSpeed > ml.minLaunchSpeed && distanceToTarget < dlz.maxLaunchRange && distanceToTarget > dlz.minLaunchRange)
-                    {
-                            return true;
+                        // check DLZ
+                        MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.Velocity(), guardTarget.transform.position);
+                        if (vessel.srfSpeed > ml.minLaunchSpeed && distanceToTarget < dlz.maxLaunchRange && distanceToTarget > dlz.minLaunchRange)
+                        {
+                                return true;
+                        }
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        {
+                            Debug.Log("[BDArmory] : " + vessel.vesselName + " - Failed DLZ test: " + weaponCandidate.GetShortName());
+                        }
+                        break;
                     }
-                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    {
-                        Debug.Log("[BDArmory] : " + vessel.vesselName + " - Failed DLZ test: " + weaponCandidate.GetShortName());
-                    }
-                    break;
-
 
                 case WeaponClasses.Bomb:
                     if (!vessel.LandedOrSplashed)
                         return true;    // TODO: bomb always allowed?
                     break;
 
-
                 case WeaponClasses.Rocket:
-                    RocketLauncher rocketlauncher = (RocketLauncher)weaponCandidate;
-                    // check yaw range of turret
-                    turret = rocketlauncher.turret;
-                    gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
-                    if (turret != null)
-                        if (TargetInTurretRange(turret, gimbalTolerance))
-                            return true;
-                    break;
+                    {
+                        RocketLauncher rocketlauncher = (RocketLauncher)weaponCandidate;
+                        // check yaw range of turret
+                        var turret = rocketlauncher.turret;
+                        float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
+                        if (turret != null)
+                            if (TargetInTurretRange(turret, gimbalTolerance))
+                                return true;
+                        break;
+                    }
 
                 case WeaponClasses.SLW:
-                    // Enable sonar, or radar, if no sonar is found.
-                    if (((MissileBase)weaponCandidate).TargetingMode == MissileBase.TargetingModes.Radar)
-                    {
-                        ModuleRadar foundRadar = null;
-                        using (List<ModuleRadar>.Enumerator rd = radars.GetEnumerator())
-                            while (rd.MoveNext())
-                            {
-                                if (rd.Current == null || !rd.Current.canLock) continue;
-                                if (!foundRadar || rd.Current.rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
+                    { 
+                        // Enable sonar, or radar, if no sonar is found.
+                        if (((MissileBase)weaponCandidate).TargetingMode == MissileBase.TargetingModes.Radar)
+                            using (List<ModuleRadar>.Enumerator rd = radars.GetEnumerator())
+                                while (rd.MoveNext())
                                 {
-                                    foundRadar = rd.Current;
-                                    if (rd.Current.rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
-                                        break;
+                                    if (rd.Current != null || rd.Current.canLock)
+                                        rd.Current.EnableRadar();
                                 }
-                            }
-                        foundRadar.EnableRadar();
+                        return true;                    
                     }
-                    return true;                    
 
                 default:
                     throw new ArgumentOutOfRangeException();
