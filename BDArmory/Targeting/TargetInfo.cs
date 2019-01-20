@@ -127,7 +127,7 @@ namespace BDArmory.Targeting
 				{
 					return true;
 				}
-				else if(weaponManager && weaponManager.vessel.IsControllable)
+				else if(weaponManager && weaponManager.vessel.IsCommandable) //Fix for GLOC'd pilots. IsControllable merely checks if plane has pilot; Iscommandable checks if they're conscious
 				{
 					return true;
 				}

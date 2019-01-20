@@ -859,14 +859,14 @@ namespace BDArmory.Modules
 			Events["HideUI"].active = false;
 			Events["ShowUI"].active = true;
 		}
-		[KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Name UI", active = false)]
+		[KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Group UI", active = false)]
 		public void HideUI()
 		{
 			WeaponGroupWindow.HideGUI();
 			UpdateMenus(false);
 		}
 
-		[KSPEvent(guiActiveEditor = true, guiName = "Set Weapon Name UI", active = false)]
+		[KSPEvent(guiActiveEditor = true, guiName = "Set Weapon Group UI", active = false)]
 		public void ShowUI()
 		{
 			WeaponGroupWindow.ShowGUI(this);
@@ -2376,7 +2376,7 @@ namespace BDArmory.Modules
 
 		private Vector2 scrollPos;
 
-		[KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Weapon Name Editor"), UI_Toggle(enabledText = "Weapon Name GUI", disabledText = "GUI")] [NonSerialized] public bool showRFGUI;
+		[KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Group Editor"), UI_Toggle(enabledText = "close Group GUI", disabledText = "open Group GUI")] [NonSerialized] public bool showRFGUI;
 
 		private bool styleSetup;
 
@@ -2507,7 +2507,7 @@ namespace BDArmory.Modules
 			{
 				editor.Unlock("BD_MN_GUILock");
 			}
-			guiWindowRect = GUILayout.Window(GetInstanceID(), guiWindowRect, GUIWindow, "Weapon Name GUI", Styles.styleEditorPanel);
+			guiWindowRect = GUILayout.Window(GetInstanceID(), guiWindowRect, GUIWindow, "Weapon Group GUI", Styles.styleEditorPanel);
 		}
 
 		public void GUIWindow(int windowID)
