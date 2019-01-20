@@ -178,7 +178,6 @@ namespace BDArmory.UI
                     updateTimer = 0.5f;    //next update in half a sec only
                 }
 			}
-
 		}
 
 		public static void RegisterLaserPoint(ModuleTargetingCamera cam)
@@ -688,7 +687,7 @@ namespace BDArmory.UI
             }
 
             // add target to database
-            if (info)
+            if (info && reporter.Team.IsEnemy(info.Team))
             {
                 AddTarget(info, reporter.Team);
                 info.detectedTime[reporter.Team] = Time.time;
