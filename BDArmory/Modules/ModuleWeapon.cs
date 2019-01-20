@@ -1691,7 +1691,7 @@ namespace BDArmory.Modules
                     if (targetAcquired && airDetonationTiming)
                     {                       
                         //detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass); //this returns 0, use detonationRange GUI tweakable instead 
-			defaultDetonationRange = targetLeadDistance;// adds variable time fuze if/when proximity fuzes fail
+			defaultDetonationRange = targetDistance;// adds variable time fuze if/when proximity fuzes fail
                     }
                     else
                     {
