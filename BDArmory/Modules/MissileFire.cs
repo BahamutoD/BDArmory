@@ -2768,7 +2768,7 @@ namespace BDArmory.Modules
                     }
 
 
-                    float radius = launcher.decoupleForward ? launcher.clearanceRadius : launcher.clearanceLength;
+                    float radius = launcher.decoupleForward ? launcher.ClearanceRadius : launcher.ClearanceLength;
                     float time = Mathf.Min(ml.dropTime, 2f);
                     Vector3 direction = ((launcher.decoupleForward
                         ? ml.MissileReferenceTransform.transform.forward
