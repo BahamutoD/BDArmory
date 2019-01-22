@@ -456,7 +456,7 @@ namespace BDArmory.UI
         }
 
 		
-		void SaveGPSTargets(ConfigNode saveNode)
+		public void SaveGPSTargets(ConfigNode saveNode = null)
 		{
 			string saveTitle = HighLogic.CurrentGame.Title;
 			Debug.Log("[BDArmory]: Save title: " + saveTitle);

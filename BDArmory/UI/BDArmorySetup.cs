@@ -1287,6 +1287,7 @@ namespace BDArmory.UI
                     new GPSTargetInfo(BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex].gpsCoordinates,
                         newGPSName);
                 editingGPSNameIndex = 0;
+                BDATargetManager.Instance.SaveGPSTargets();
             }
 
             GUI.EndGroup();
@@ -1294,6 +1295,7 @@ namespace BDArmory.UI
             if (indexToRemove >= 0)
             {
                 BDATargetManager.GPSTargetList(myTeam).RemoveAt(indexToRemove);
+                BDATargetManager.Instance.SaveGPSTargets();
             }
 
             WindowRectGps.height = (2*gpsBorder) + (gpsEntryCount*gpsEntryHeight);
