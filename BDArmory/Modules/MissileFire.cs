@@ -2280,7 +2280,7 @@ namespace BDArmory.Modules
                     if (weapCnt.Current == null) continue;
                     if (selectedWeapon.GetShortName() != weapCnt.Current.GetShortName()) continue;
                     weaponRpm = weapCnt.Current.roundsPerMinute;
-		    rippleWeapons.Add(weapCnt.Current);
+                    rippleWeapons.Add(weapCnt.Current);
                     counter += weaponRpm; // grab sum of weapons rpm
 				}
                 weapCnt.Dispose();
