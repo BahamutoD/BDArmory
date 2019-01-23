@@ -2305,14 +2305,14 @@ namespace BDArmory.Modules
                     if (weapCnt.Current == null) continue;
                     if (selectedWeapon.GetShortName() != weapCnt.Current.GetShortName()) continue;
                     weaponRpm = weapCnt.Current.roundsPerMinute;
-		    rippleWeapons.Add(weapCnt.Current);
                     counter += weaponRpm; // grab sum of weapons rpm
 				}
                 weapCnt.Dispose();
 
                 gunRippleRpm = counter;
 				//number of seconds between each gun firing; will reduce with increasing RPM or number of guns
-				float timeDelayPerGun = 60f / gunRippleRpm; // rpm*counter will return the square of rpm now
+				float timeDelayPerGun = 60f / (weaponRpm * counter);
+
 				// Now lets act on the filtered list.
 				List<ModuleWeapon>.Enumerator weapon = rippleWeapons.GetEnumerator();
                 while (weapon.MoveNext())
