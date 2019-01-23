@@ -846,7 +846,7 @@ namespace BDArmory.Modules
                 while (wpm.MoveNext())
                 {
                     if (wpm.Current == null) continue;
-                    Team = wpm.Current.team;
+                    Team = wpm.Current.Team;
                     break;
                 }
                 wpm.Dispose();

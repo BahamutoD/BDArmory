@@ -244,7 +244,7 @@ namespace BDArmory.Radar
             mf.Dispose();
             GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
             GameEvents.onVesselCreate.Add(OnVesselDestroyed);
-            MissileFire.OnToggleTeam += OnToggleTeam;
+            MissileFire.OnChangeTeam += OnChangeTeam;
             GameEvents.onGameStateSave.Add(OnGameStateSave);
             GameEvents.onPartDestroyed.Add(PartDestroyed);
 
@@ -315,7 +315,7 @@ namespace BDArmory.Radar
         {
             GameEvents.onVesselDestroy.Remove(OnVesselDestroyed);
             GameEvents.onVesselCreate.Remove(OnVesselDestroyed);
-            MissileFire.OnToggleTeam -= OnToggleTeam;
+            MissileFire.OnChangeTeam -= OnChangeTeam;
             GameEvents.onGameStateSave.Remove(OnGameStateSave);
             GameEvents.onPartDestroyed.Remove(PartDestroyed);
 
@@ -328,11 +328,11 @@ namespace BDArmory.Radar
             }
         }
 
-        private void OnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
+        private void OnChangeTeam(MissileFire wm, BDTeam team)
         {
             if (!weaponManager || !wm) return;
 
-            if (team != BDATargetManager.BoolToTeam(weaponManager.team))
+            if (team != weaponManager.Team)
             {
                 if (wm.vesselRadarData)
                 {
@@ -360,19 +360,13 @@ namespace BDArmory.Radar
             }
             rad.Dispose();
             // Now rebuild range display array
-            bool maxReached = false;
             List<float> newArray = new List<float>();
             for (int x = 0; x < baseIncrements.Length; x++)
             {
-                if (_maxRadarRange > baseIncrements[x])
+                newArray.Add(baseIncrements[x]);
+                if (_maxRadarRange <= baseIncrements[x])
                 {
-                    newArray.Add(baseIncrements[x]);
-                }
-                else if (maxReached) break;
-                else
-                {
-                    newArray.Add(baseIncrements[x]);
-                    maxReached = true;
+                    break;
                 }
             }
             if (newArray.Count > 0) rIncrements = newArray.ToArray();
@@ -453,7 +447,7 @@ namespace BDArmory.Radar
                 {
                     radarsToRemove.Add(radar.Current);
                 }
-                else if (!radar.Current.weaponManager || (weaponManager && radar.Current.weaponManager.team != weaponManager.team))
+                else if (!radar.Current.weaponManager || (weaponManager && radar.Current.weaponManager.Team != weaponManager.Team))
                 {
                     radarsToRemove.Add(radar.Current);
                 }
@@ -771,7 +765,7 @@ namespace BDArmory.Radar
                 TargetSignatureData lockedTarget = displayedTargets[lockedTargetIndexes[i]].targetData;
                 if (i == activeLockedTargetIndex)
                 {
-                    if (weaponManager && lockedTarget.team == BDATargetManager.BoolToTeam(weaponManager.team))
+                    if (weaponManager && weaponManager.Team.IsEnemy(lockedTarget.Team))
                     {
                         BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
                             BDArmorySetup.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
@@ -1385,17 +1379,17 @@ namespace BDArmory.Radar
             {
                 if (v.Current == null || !v.Current.loaded || vessel == null || v.Current == vessel) continue;
 
-                BDArmorySetup.BDATeams team = BDArmorySetup.BDATeams.None;
+                BDTeam team = null;
                 List<MissileFire>.Enumerator mf = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                 while (mf.MoveNext())
                 {
                     if (mf.Current == null) continue;
-                    team = BDATargetManager.BoolToTeam(mf.Current.team);
+                    team = mf.Current.Team;
                     break;
                 }
                 mf.Dispose();
 
-                if (team != BDATargetManager.BoolToTeam(weaponManager.team)) continue;
+                if (team != weaponManager.Team) continue;
                 VesselRadarData vrd = v.Current.gameObject.GetComponent<VesselRadarData>();
                 if (vrd && vrd.radarCount > 0)
                 {
@@ -1870,7 +1864,7 @@ namespace BDArmory.Radar
                     //draw missiles and debris as dots
                     if ((displayedTargets[i].targetData.targetInfo &&
                          displayedTargets[i].targetData.targetInfo.isMissile) ||
-                        displayedTargets[i].targetData.team == BDArmorySetup.BDATeams.None)
+                        displayedTargets[i].targetData.Team == null)
                     {
                         float mDotSize = 6;
                         pingRect = new Rect(pingPosition.x - (mDotSize / 2), pingPosition.y - (mDotSize / 2), mDotSize,
@@ -1899,7 +1893,7 @@ namespace BDArmory.Radar
                         Color origGUIColor = GUI.color;
                         GUI.color = Color.white - new Color(0, 0, 0, minusAlpha);
                         if (weaponManager &&
-                            displayedTargets[i].targetData.team == BDATargetManager.BoolToTeam(weaponManager.team))
+                            weaponManager.Team.IsFriendly(displayedTargets[i].targetData.Team))
                         {
                             GUI.DrawTexture(pingRect, friendlyContactIcon, ScaleMode.StretchToFill, true);
                         }
@@ -1979,7 +1973,7 @@ namespace BDArmory.Radar
                             }
 
                             if (jammed ||
-                                displayedTargets[i].targetData.team != BDATargetManager.BoolToTeam(weaponManager.team))
+                                !weaponManager.Team.IsFriendly(displayedTargets[i].targetData.Team))
                             {
                                 BDGUIUtils.DrawRectangle(jammedRect, iconColor - new Color(0, 0, 0, minusAlpha));
                             }

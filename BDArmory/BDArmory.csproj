@@ -71,6 +71,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Misc\BDTeam.cs" />
+    <Compile Include="UI\BDTeamSelector.cs" />
     <Compile Include="Modules\ModuleAmmoSwitch.cs" />
     <Compile Include="Misc\BDAcTools.cs" />
     <Compile Include="Control\AIUtils.cs" />

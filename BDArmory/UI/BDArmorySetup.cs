@@ -131,11 +131,9 @@ namespace BDArmory.UI
         GUIStyle redErrorStyle;
         GUIStyle redErrorShadowStyle;
 
-        public enum BDATeams
+        public SortedList<string, BDTeam> Teams = new SortedList<string, BDTeam>
         {
-            A,
-            B,
-            None
+            { "Neutral", new BDTeam("Neutral", neutral: true) }
         };
 
         //competition mode
@@ -621,7 +619,7 @@ namespace BDArmory.UI
                 //gpsWindowRect = GUI.Window(424333, gpsWindowRect, GPSWindow, "", GUI.skin.box);
                 BDGUIUtils.UseMouseEventInRect(WindowRectGps);
                 List<GPSTargetInfo>.Enumerator coord = 
-                  BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(ActiveWeaponManager.team)].GetEnumerator();
+                  BDATargetManager.GPSTargetList(ActiveWeaponManager.Team).GetEnumerator();
                 while (coord.MoveNext())
                 {
                   BDGUIUtils.DrawTextureOnWorldPos(coord.Current.worldPos, Instance.greenDotTexture, new Vector2(8, 8), 0);
@@ -715,25 +713,22 @@ namespace BDArmory.UI
                     }
                 }
 
-                GUIStyle teamButtonStyle;
-                string teamText = "Team: ";
-                if (ActiveWeaponManager.team)
-                {
-                    teamButtonStyle = BDGuiSkin.box;
-                    teamText += "B";
-                }
-                else
-                {
-                    teamButtonStyle = BDGuiSkin.button;
-                    teamText += "A";
-                }
+                GUIStyle teamButtonStyle = BDGuiSkin.box;
+                string teamText = $"Team: {ActiveWeaponManager.Team.Name}";
 
                 if (
                     GUI.Button(
                         new Rect(leftIndent + (contentWidth/2), contentTop + (line*entryHeight), contentWidth/2,
                             entryHeight), teamText, teamButtonStyle))
                 {
-                    ActiveWeaponManager.ToggleTeam();
+                    if (Event.current.button == 1)
+                    {
+                        BDTeamSelector.Instance.Open(ActiveWeaponManager, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+                    }
+                    else
+                    {
+                        ActiveWeaponManager.NextTeam();
+                    }
                 }
                 line++;
                 line += 0.25f;
@@ -1204,10 +1199,10 @@ namespace BDArmory.UI
             gpsEntryCount += 1.35f;
             int indexToRemove = -1;
             int index = 0;
-            BDATeams myTeam = BDATargetManager.BoolToTeam(ActiveWeaponManager.team);
+            BDTeam myTeam = ActiveWeaponManager.Team;
             if (showTargets)
             {
-              List<GPSTargetInfo>.Enumerator coordinate = BDATargetManager.GPSTargets[myTeam].GetEnumerator();
+              List<GPSTargetInfo>.Enumerator coordinate = BDATargetManager.GPSTargetList(myTeam).GetEnumerator();
               while (coordinate.MoveNext())
               {
                 Color origWColor = GUI.color;
@@ -1280,25 +1275,27 @@ namespace BDArmory.UI
               coordinate.Dispose();
             }
 
-            if (hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargets[myTeam].Count)
+            if (hasEnteredGPSName && editingGPSNameIndex < BDATargetManager.GPSTargetList(myTeam).Count)
             {
                 hasEnteredGPSName = false;
-                GPSTargetInfo old = BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex];
+                GPSTargetInfo old = BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex];
                 if (ActiveWeaponManager.designatedGPSInfo.EqualsTarget(old))
                 {
                     ActiveWeaponManager.designatedGPSInfo.name = newGPSName;
                 }
-                BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex] =
-                    new GPSTargetInfo(BDATargetManager.GPSTargets[myTeam][editingGPSNameIndex].gpsCoordinates,
+                BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex] =
+                    new GPSTargetInfo(BDATargetManager.GPSTargetList(myTeam)[editingGPSNameIndex].gpsCoordinates,
                         newGPSName);
                 editingGPSNameIndex = 0;
+                BDATargetManager.Instance.SaveGPSTargets();
             }
 
             GUI.EndGroup();
 
             if (indexToRemove >= 0)
             {
-                BDATargetManager.GPSTargets[myTeam].RemoveAt(indexToRemove);
+                BDATargetManager.GPSTargetList(myTeam).RemoveAt(indexToRemove);
+                BDATargetManager.Instance.SaveGPSTargets();
             }
 
             WindowRectGps.height = (2*gpsBorder) + (gpsEntryCount*gpsEntryHeight);

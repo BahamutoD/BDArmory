@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Core.Extension;
+using BDArmory.Misc;
 using BDArmory.Modules;
 using BDArmory.UI;
 using UnityEngine;
@@ -9,12 +10,12 @@ namespace BDArmory.Targeting
 {
 	public class TargetInfo : MonoBehaviour
 	{
-		public BDArmorySetup.BDATeams team;
+		public BDTeam Team;
 		public bool isMissile;
 		public MissileBase MissileBaseModule;
 		public MissileFire weaponManager;
-        List<MissileFire> friendliesEngaging;
-        public float detectedTime;
+        Dictionary<BDTeam, List<MissileFire>> friendliesEngaging = new Dictionary<BDTeam, List<MissileFire>>();
+        public Dictionary<BDTeam, float> detectedTime = new Dictionary<BDTeam, float>();
 
         public float radarBaseSignature = -1;
         public bool radarBaseSignatureNeedsUpdate = true;
@@ -161,13 +162,13 @@ namespace BDArmory.Targeting
                 }
             }
 
-			team = BDArmorySetup.BDATeams.None;
+			Team = null;
 			bool foundMf = false;
             List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
             while (mf.MoveNext())
             {
                 foundMf = true;
-                team = BDATargetManager.BoolToTeam(mf.Current.team);
+                Team = mf.Current.Team;
                 weaponManager = mf.Current;
                 break;
             }
@@ -180,18 +181,11 @@ namespace BDArmory.Targeting
                 {
                     isMissile = true;
                     MissileBaseModule = ml.Current;
-                    team = BDATargetManager.BoolToTeam(ml.Current.Team);
+                    Team = ml.Current.Team;
                     break;
                 }
                 ml.Dispose();
 			}
-				
-			if(team != BDArmorySetup.BDATeams.None)
-			{
-                BDATargetManager.AddTarget(this);
-			}
-
-			friendliesEngaging = new List<MissileFire>();
 
 			vessel.OnJustAboutToBeDestroyed += AboutToBeDestroyed;            
 
@@ -200,7 +194,7 @@ namespace BDArmory.Targeting
 
             //lifeRoutine = StartCoroutine(LifetimeRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
 
-            if (!isMissile && team != BDArmorySetup.BDATeams.None)
+            if (!isMissile && Team != null)
 			{
                 GameEvents.onVesselPartCountChanged.Add(VesselModified);
                 //massRoutine = StartCoroutine(MassRoutine());              // TODO: CHECK BEHAVIOUR AND SIDE EFFECTS!
@@ -237,34 +231,43 @@ namespace BDArmory.Targeting
 			{
 				if((vessel.vesselType == VesselType.Debris) && (weaponManager == null))
 				{
-					RemoveFromDatabases();
-					team = BDArmorySetup.BDATeams.None;
+                    BDATargetManager.RemoveTarget(this);
+					Team = null;
 				}
 			}
 		}
 
-		public int numFriendliesEngaging
+		public int NumFriendliesEngaging(BDTeam team)
 		{
-			get
-			{
-				if(friendliesEngaging == null)
-				{
-					return 0;
-				}
-				friendliesEngaging.RemoveAll(item => item == null);
-				return friendliesEngaging.Count;
-			}
+            if (friendliesEngaging.TryGetValue(team, out var friendlies))
+            {
+                friendlies.RemoveAll(item => item == null);
+                return friendlies.Count;
+            }
+            return 0;
 		}
+
+        public int TotalEngaging()
+        {
+            int engaging = 0;
+            using (var teamEngaging = friendliesEngaging.GetEnumerator())
+                while (teamEngaging.MoveNext())
+                    engaging += teamEngaging.Current.Value.Count;
+            return engaging;
+        }
 
 		public void Engage(MissileFire mf)
 		{
-            if (mf == null || friendliesEngaging == null)
+            if (mf == null)
                 return;
 
-			if(!friendliesEngaging.Contains(mf))
-			{
-				friendliesEngaging?.Add(mf);
-			}
+            if (friendliesEngaging.TryGetValue(mf.Team, out var friendlies))
+            {
+                if (!friendlies.Contains(mf))
+                    friendlies.Add(mf);
+            }
+            else
+                friendliesEngaging.Add(mf.Team, new List<MissileFire> { mf });
 		}
 
 		public void Disengage(MissileFire mf)
@@ -272,13 +275,14 @@ namespace BDArmory.Targeting
             if (mf == null)
                 return;
 
-            friendliesEngaging?.Remove(mf);
+            if (friendliesEngaging.TryGetValue(mf.Team, out var friendlies))
+                friendlies.Remove(mf);
 		}
 		
 		void AboutToBeDestroyed()
 		{
-			RemoveFromDatabases();
-			Destroy(this);
+            BDATargetManager.RemoveTarget(this);
+            Destroy(this);
 		}
 
 		public bool IsCloser(TargetInfo otherTarget, MissileFire myMf)
@@ -286,12 +290,6 @@ namespace BDArmory.Targeting
 			float thisSqrDist = (position-myMf.transform.position).sqrMagnitude;
 			float otherSqrDist = (otherTarget.position-myMf.transform.position).sqrMagnitude;
 			return thisSqrDist < otherSqrDist;
-		}
-
-		public void RemoveFromDatabases()
-		{
-			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.A].Remove(this);
-			BDATargetManager.TargetDatabase[BDArmorySetup.BDATeams.B].Remove(this);
 		}
 
         public void VesselModified(Vessel v)

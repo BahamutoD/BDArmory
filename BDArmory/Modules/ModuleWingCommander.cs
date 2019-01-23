@@ -74,13 +74,13 @@ namespace BDArmory.Modules
                 GameEvents.onVesselLoaded.Add(OnVesselLoad);
                 GameEvents.onVesselDestroy.Add(OnVesselLoad);
                 GameEvents.onVesselGoOnRails.Add(OnVesselLoad);
-                MissileFire.OnToggleTeam += OnToggleTeam;
+                MissileFire.OnChangeTeam += OnToggleTeam;
 
                 screenMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
             }
         }
 
-        void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
+        void OnToggleTeam(MissileFire mf, BDTeam team)
         {
             RefreshFriendlies();
             RefreshWingmen();
@@ -108,7 +108,7 @@ namespace BDArmory.Modules
                 GameEvents.onVesselLoaded.Remove(OnVesselLoad);
                 GameEvents.onVesselDestroy.Remove(OnVesselLoad);
                 GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
-                MissileFire.OnToggleTeam -= OnToggleTeam;
+                MissileFire.OnChangeTeam -= OnToggleTeam;
             }
         }
 
@@ -151,7 +151,7 @@ namespace BDArmory.Modules
                 }
                 ws.Dispose();
 
-                if (!wm || wm.team != weaponManager.team) continue;
+                if (!wm || wm.Team != weaponManager.Team) continue;
                 friendlies.Add(pilot);
             }
             vs.Dispose();
@@ -176,7 +176,7 @@ namespace BDArmory.Modules
                 focusIndexes.Clear();
                 return;
             }
-            wingmen.RemoveAll(w => w == null || (w.weaponManager && w.weaponManager.team != weaponManager.team));
+            wingmen.RemoveAll(w => w == null || (w.weaponManager && w.weaponManager.Team != weaponManager.Team));
 
             List<int> uniqueIndexes = new List<int>();
             List<int>.Enumerator fIndexes = focusIndexes.GetEnumerator();

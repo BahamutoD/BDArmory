@@ -1,11 +1,16 @@
-﻿using BDArmory.Misc;
+﻿using System;
+using BDArmory.Misc;
 
 namespace BDArmory.Parts
 {
+    [Serializable]
     public struct GPSTargetInfo
     {
         public Vector3d gpsCoordinates;
+
         public string name;
+
+        [NonSerialized]
         public Vessel gpsVessel;
 
         public Vector3d worldPos

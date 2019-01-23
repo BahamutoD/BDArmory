@@ -1148,8 +1148,9 @@ namespace BDArmory.Modules
 		{
 			if(groundStabilized && weaponManager)
 			{
-				BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(weaponManager.team)].Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
-			}
+				BDATargetManager.GPSTargetList(weaponManager.Team).Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
+                BDATargetManager.Instance.SaveGPSTargets();
+            }
 		}
 
 		void SlaveTurrets()

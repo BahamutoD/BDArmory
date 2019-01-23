@@ -344,8 +344,6 @@ namespace BDArmory.Modules
         public bool underFire;
         Coroutine ufRoutine;
 
-        bool focusingOnTarget;
-        float focusingOnTargetTimer;
         public Vector3 incomingThreatPosition;
         public Vessel incomingThreatVessel;
 
@@ -461,53 +459,89 @@ namespace BDArmory.Modules
 		}
 		
 		
-		[KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
-		public string teamString = "A";
-		void UpdateTeamString()
-		{
-			teamString = Enum.GetName(typeof(BDArmorySetup.BDATeams), BDATargetManager.BoolToTeam(team));
-		}
-		
-		
-		[KSPField(isPersistant = true)]
-        public bool team = false;
-
-
-        [KSPAction("Toggle Team")]
-        public void AGToggleTeam(KSPActionParam param)
+        public BDTeam Team
         {
-            ToggleTeam();
+            get
+            {
+                return BDTeam.Get(teamString);
+            }
+            set
+            {
+                if (!team_loaded) return;
+                if (!BDArmorySetup.Instance.Teams.ContainsKey(value.Name))
+                    BDArmorySetup.Instance.Teams.Add(value.Name, value);
+                teamString = value.Name;
+                team = value.Serialize();
+            }
+        }
+        
+        // Team name
+		[KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
+		public string teamString = "Neutral";
+        
+        // Serialized team
+		[KSPField(isPersistant = true)]
+        public string team;
+        private bool team_loaded = false;
+
+        [KSPAction("Next Team")]
+        public void AGNextTeam(KSPActionParam param)
+        {
+            NextTeam();
         }
 
-        public delegate void ToggleTeamDelegate(MissileFire wm, BDArmorySetup.BDATeams team);
+        public delegate void ChangeTeamDelegate(MissileFire wm, BDTeam team);
 
-        public static event ToggleTeamDelegate OnToggleTeam;
+        public static event ChangeTeamDelegate OnChangeTeam;
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActive = false)]
-        public void ToggleTeam()
+        public void SetTeam(BDTeam team)
         {
-            team = !team;
-
             if (HighLogic.LoadedSceneIsFlight)
             {
-                audioSource.PlayOneShot(clickSound);
-                List<MissileFire>.Enumerator wpnMgr = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-                while (wpnMgr.MoveNext())
-                {
-                    if (wpnMgr.Current == null) continue;
-                    wpnMgr.Current.team = team;
-                }
-                wpnMgr.Dispose();
+                using (var wpnMgr = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                    while (wpnMgr.MoveNext())
+                    {
+                        if (wpnMgr.Current == null) continue;
+                        wpnMgr.Current.Team = team;
+                    }
+
                 if (vessel.gameObject.GetComponent<TargetInfo>())
                 {
-                    vessel.gameObject.GetComponent<TargetInfo>().RemoveFromDatabases();
+                    BDATargetManager.RemoveTarget(vessel.gameObject.GetComponent<TargetInfo>());
                     Destroy(vessel.gameObject.GetComponent<TargetInfo>());
                 }
-                OnToggleTeam?.Invoke(this, BDATargetManager.BoolToTeam(team));
+                OnChangeTeam?.Invoke(this, Team);
+                ResetGuardInterval();
             }
-            UpdateTeamString();
-            ResetGuardInterval();
+            else if (HighLogic.LoadedSceneIsEditor)
+            {
+                using (var editorPart = EditorLogic.fetch.ship.Parts.GetEnumerator())
+                    while (editorPart.MoveNext())
+                        using (var wpnMgr = editorPart.Current.FindModulesImplementing<MissileFire>().GetEnumerator())
+                            while (wpnMgr.MoveNext())
+                            {
+                                if (wpnMgr.Current == null) continue;
+                                wpnMgr.Current.Team = team;
+                            }
+            }
+        }
 
+        [KSPEvent(active = true, guiActiveEditor = true, guiActive = false)]
+        public void NextTeam()
+        {
+            var teamList = new List<string> { "A", "B" };
+            using (var teams = BDArmorySetup.Instance.Teams.GetEnumerator())
+                while (teams.MoveNext())
+                    if (!teamList.Contains(teams.Current.Key) && !teams.Current.Value.Neutral)
+                        teamList.Add(teams.Current.Key);
+            teamList.Sort();
+            SetTeam(BDTeam.Get(teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]));
+        }
+
+        [KSPEvent(guiActive = false, guiActiveEditor = true, active = true, guiName = "Select Team")]
+        public void SelectTeam()
+        {
+            BDTeamSelector.Instance.Open(this, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
         }
 
         [KSPField(isPersistant = true)]
@@ -654,13 +688,14 @@ namespace BDArmory.Modules
             heatTarget = TargetSignatureData.noTarget;
         }
 
-        public override void OnStart(StartState state)
+        public void Start()
         {
+            team_loaded = true;
+            Team = BDTeam.Deserialize(team);
+
             UpdateMaxGuardRange();
 
             startTime = Time.time;
-
-            UpdateTeamString();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -731,7 +766,7 @@ namespace BDArmory.Modules
             }
         }
 
-        void OnPartDie(Part p)
+        void OnPartDie(Part p = null)
         {
             if (p == part)
             {
@@ -1444,7 +1479,7 @@ namespace BDArmory.Modules
                 //check database for target first
                 float twoxsqrRad = 4f * radius * radius;
                 bool foundTargetInDatabase = false;
-                List<GPSTargetInfo>.Enumerator gps = BDATargetManager.GPSTargets[BDATargetManager.BoolToTeam(team)].GetEnumerator();
+                List<GPSTargetInfo>.Enumerator gps = BDATargetManager.GPSTargetList(Team).GetEnumerator();
                 while (gps.MoveNext())
                 {
                     if (!((gps.Current.worldPos - guardTarget.CoM).sqrMagnitude < twoxsqrRad)) continue;
@@ -3450,97 +3485,93 @@ namespace BDArmory.Modules
                 // TODO: is laser treated like a gun?
 
                 case WeaponClasses.Gun:
-                    ModuleWeapon gun = (ModuleWeapon)weaponCandidate;
+                    {
+                        ModuleWeapon gun = (ModuleWeapon)weaponCandidate;
 
-                    // check yaw range of turret
-                    ModuleTurret turret = gun.turret;
-                    float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
-                    if (turret != null)
-                        if (!TargetInTurretRange(turret, gimbalTolerance))
+                        // check yaw range of turret
+                        ModuleTurret turret = gun.turret;
+                        float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
+                        if (turret != null)
+                            if (!TargetInTurretRange(turret, gimbalTolerance))
+                                return false;
+
+                        // check overheat
+                        if (gun.isOverheated)
                             return false;
 
-                    // check overheat
-                    if (gun.isOverheated)
-                        return false;
-
-                    // check ammo
-                    if (CheckAmmo(gun))
-                    {
-
-                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        // check ammo
+                        if (CheckAmmo(gun))
                         {
-                            Debug.Log("[BDArmory] : " + vessel.vesselName + " - Firing possible with " + weaponCandidate.GetShortName());
-                        }
-                        return true;
-                    }
-                    break;
 
+                            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                            {
+                                Debug.Log("[BDArmory] : " + vessel.vesselName + " - Firing possible with " + weaponCandidate.GetShortName());
+                            }
+                            return true;
+                        }
+                        break;
+                    }
 
                 case WeaponClasses.Missile:
-                    MissileBase ml = (MissileBase)weaponCandidate;
+                    { 
+                        MissileBase ml = (MissileBase)weaponCandidate;
 
-                    // lock radar if needed
-                    if (ml.TargetingMode == MissileBase.TargetingModes.Radar)
-                    {
-                        List<ModuleRadar>.Enumerator rd = radars.GetEnumerator();
-                        while (rd.MoveNext())
+                        // lock radar if needed
+                        if (ml.TargetingMode == MissileBase.TargetingModes.Radar)
                         {
-                            if (rd.Current == null) continue;
-                            if (!rd.Current.canLock) continue;
-                            rd.Current.EnableRadar();
-                            break;
+                            List<ModuleRadar>.Enumerator rd = radars.GetEnumerator();
+                            while (rd.MoveNext())
+                            {
+                                if (rd.Current == null) continue;
+                                if (!rd.Current.canLock) continue;
+                                rd.Current.EnableRadar();
+                                break;
+                            }
+                            rd.Dispose();
                         }
-                        rd.Dispose();
-                    }
 
-                    // check DLZ
-                    MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.Velocity(), guardTarget.transform.position);
-                    if (vessel.srfSpeed > ml.minLaunchSpeed && distanceToTarget < dlz.maxLaunchRange && distanceToTarget > dlz.minLaunchRange)
-                    {
-                            return true;
+                        // check DLZ
+                        MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.Velocity(), guardTarget.transform.position);
+                        if (vessel.srfSpeed > ml.minLaunchSpeed && distanceToTarget < dlz.maxLaunchRange && distanceToTarget > dlz.minLaunchRange)
+                        {
+                                return true;
+                        }
+                        if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                        {
+                            Debug.Log("[BDArmory] : " + vessel.vesselName + " - Failed DLZ test: " + weaponCandidate.GetShortName());
+                        }
+                        break;
                     }
-                    if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                    {
-                        Debug.Log("[BDArmory] : " + vessel.vesselName + " - Failed DLZ test: " + weaponCandidate.GetShortName());
-                    }
-                    break;
-
 
                 case WeaponClasses.Bomb:
                     if (!vessel.LandedOrSplashed)
                         return true;    // TODO: bomb always allowed?
                     break;
 
-
                 case WeaponClasses.Rocket:
-                    RocketLauncher rocketlauncher = (RocketLauncher)weaponCandidate;
-                    // check yaw range of turret
-                    turret = rocketlauncher.turret;
-                    gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
-                    if (turret != null)
-                        if (TargetInTurretRange(turret, gimbalTolerance))
-                            return true;
-                    break;
+                    {
+                        RocketLauncher rocketlauncher = (RocketLauncher)weaponCandidate;
+                        // check yaw range of turret
+                        var turret = rocketlauncher.turret;
+                        float gimbalTolerance = vessel.LandedOrSplashed ? 0 : 15;
+                        if (turret != null)
+                            if (TargetInTurretRange(turret, gimbalTolerance))
+                                return true;
+                        break;
+                    }
 
                 case WeaponClasses.SLW:
-                    // Enable sonar, or radar, if no sonar is found.
-                    if (((MissileBase)weaponCandidate).TargetingMode == MissileBase.TargetingModes.Radar)
-                    {
-                        ModuleRadar foundRadar = null;
-                        using (List<ModuleRadar>.Enumerator rd = radars.GetEnumerator())
-                            while (rd.MoveNext())
-                            {
-                                if (rd.Current == null || !rd.Current.canLock) continue;
-                                if (!foundRadar || rd.Current.rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
+                    { 
+                        // Enable sonar, or radar, if no sonar is found.
+                        if (((MissileBase)weaponCandidate).TargetingMode == MissileBase.TargetingModes.Radar)
+                            using (List<ModuleRadar>.Enumerator rd = radars.GetEnumerator())
+                                while (rd.MoveNext())
                                 {
-                                    foundRadar = rd.Current;
-                                    if (rd.Current.rwrType == RadarWarningReceiver.RWRThreatTypes.Sonar)
-                                        break;
+                                    if (rd.Current != null || rd.Current.canLock)
+                                        rd.Current.EnableRadar();
                                 }
-                            }
-                        foundRadar.EnableRadar();
+                        return true;                    
                     }
-                    return true;                    
 
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -3580,7 +3611,7 @@ namespace BDArmory.Modules
             // but to prevent AI from stopping an engagement just because a target dropped behind a small hill 5 seconds ago, clamp the timeout to 30 seconds
             // i.e. let's have at least some object permanence :)
             // (Ideally, I'd love to have "stale targets", where AI would attack the last known position, but that's a feature for the future)
-            if (Time.time - target.detectedTime < Mathf.Max(targetScanInterval, 30))
+            if (target.detectedTime.TryGetValue(Team, out float detectedTime) && Time.time - detectedTime < Mathf.Max(targetScanInterval, 30))
                 return true;
 
             // can we get a visual sight of the target?
@@ -3991,8 +4022,8 @@ namespace BDArmory.Modules
                     TargetInfo nearbyThreat = BDATargetManager.GetTargetFromWeaponManager(results.threatWeaponManager);
 
                     if (nearbyThreat?.weaponManager != null && nearbyFriendly?.weaponManager != null)
-                        if (nearbyThreat.weaponManager.team != team &&
-                            nearbyFriendly.weaponManager.team == team)
+                        if (Team.IsEnemy(nearbyThreat.weaponManager.Team) &&
+                            nearbyFriendly.weaponManager.Team == Team)
                         //turns out that there's no check for AI on the same team going after each other due to this.  Who knew?
                         {
                             if (nearbyThreat == currentTarget && nearbyFriendly.weaponManager.currentTarget != null)
@@ -4017,12 +4048,6 @@ namespace BDArmory.Modules
                 }
                 ufRoutine = StartCoroutine(UnderFireRoutine());
             }
-        }
-
-        public void ForceWideViewScan()
-        {
-            focusingOnTarget = false;
-            focusingOnTargetTimer = 1;
         }
 
         public void ForceScan()
