@@ -39,8 +39,6 @@ namespace BDArmory.Modules
         [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
         public string WeaponName;
 
-       
-
         [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
         public string GuidanceLabel = "AGM/STS";
 
@@ -79,6 +77,18 @@ namespace BDArmory.Modules
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Min Speed before guidance"),
          UI_FloatRange(minValue = 0f, maxValue = 1000f, stepIncrement = 50f, scene = UI_Scene.Editor)]
         public float MinSpeedGuidance = 200f;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Clearance radius", advancedTweakable = true),
+         UI_FloatRange(minValue = 0f, maxValue = 5f, stepIncrement = 0.05f, scene = UI_Scene.Editor)]
+        public float clearanceRadius = 0.14f;
+
+        public override float ClearanceRadius => clearanceRadius;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Clearance length", advancedTweakable = true),
+         UI_FloatRange(minValue = 0f, maxValue = 5f, stepIncrement = 0.05f, scene = UI_Scene.Editor)]
+        public float clearanceLength = 0.14f;
+
+        public override float ClearanceLength => clearanceLength;
 
         private Vector3 initialMissileRollPlane;
         private Vector3 initialMissileForward;

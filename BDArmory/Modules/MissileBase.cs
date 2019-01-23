@@ -58,6 +58,10 @@ namespace BDArmory.Modules
         [KSPField]
         public float minLaunchSpeed = 0;
 
+        public virtual float ClearanceRadius => 0.14f;
+
+        public virtual float ClearanceLength => 0.14f;
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Off Boresight"),
             UI_FloatRange(minValue = 0f, maxValue = 360f, stepIncrement = 5f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float maxOffBoresight = 360;

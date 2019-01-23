@@ -85,6 +85,16 @@ namespace BDArmory.Modules
         public float decoupleSpeed = 0;
 
         [KSPField]
+        public float clearanceRadius = 0.14f;
+
+        public override float ClearanceRadius => clearanceRadius;
+
+        [KSPField]
+        public float clearanceLength = 0.14f;
+
+        public override float ClearanceLength => clearanceLength;
+
+        [KSPField]
         public float optimumAirspeed = 220;
 
         [KSPField]

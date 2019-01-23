@@ -2803,14 +2803,14 @@ namespace BDArmory.Modules
                     }
 
 
-                    float radius = 0.28f / 2;
-                    float time = ml.dropTime;
+                    float radius = launcher.decoupleForward ? launcher.ClearanceRadius : launcher.ClearanceLength;
+                    float time = Mathf.Min(ml.dropTime, 2f);
                     Vector3 direction = ((launcher.decoupleForward
                         ? ml.MissileReferenceTransform.transform.forward
                         : -ml.MissileReferenceTransform.transform.up) * launcher.decoupleSpeed * time) +
                                         ((FlightGlobals.getGeeForceAtPosition(transform.position) - vessel.acceleration) *
                                          0.5f * time * time);
-                    Vector3 crossAxis = Vector3.Cross(direction, ml.GetForwardTransform()).normalized;
+                    Vector3 crossAxis = Vector3.Cross(direction, ml.MissileReferenceTransform.transform.right).normalized;
 
                     float rayDistance;
                     if (launcher.thrust == 0 || launcher.cruiseThrust == 0)
