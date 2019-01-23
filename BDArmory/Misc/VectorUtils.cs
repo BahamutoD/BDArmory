@@ -82,10 +82,22 @@ namespace BDArmory.Misc
 			return Vector3.RotateTowards(direction, Vector3.ProjectOnPlane(UnityEngine.Random.onUnitSphere, direction), maxRotate, 0).normalized;
 		}
 
+        /// <summary>
+        /// Returns the original vector rotated in a random direction using the give standard deviation.
+        /// </summary>
+        /// <param name="direction">mean direction</param>
+        /// <param name="standardDeviation">standard deviation in degrees</param>
+        /// <returns>Randomly adjusted Vector3</returns>
+        /// <remarks>
+        /// Technically, this is calculated using the chi-squared distribution in polar coordinates,
+        /// which, incidentally, makes the math easier too.
+        /// However a chi-squared (k=2) distance from center distribution produces a vector distributed normally
+        /// on any chosen axis orthogonal to the original vector, which is exactly what we want.
+        /// </remarks>
         public static Vector3 GaussianDirectionDeviation(Vector3 direction, float standardDeviation)
         {
             return Quaternion.AngleAxis(UnityEngine.Random.Range(-180f, 180f), direction)
-                * Quaternion.AngleAxis(Gaussian() * standardDeviation, 
+                * Quaternion.AngleAxis(Rayleigh() * standardDeviation, 
                                        new Vector3(-1 / direction.x, -1 / direction.y, 2 / direction.z))  // orthogonal vector
                 * direction;
         }
@@ -100,6 +112,26 @@ namespace BDArmory.Misc
                 return Mathf.Sqrt(-2 * Mathf.Log(UnityEngine.Random.value)) * Mathf.Cos(Mathf.PI * UnityEngine.Random.value);
             }
             catch (Exception) { // I have no idea what exception Mathf.Log raises when it gets a zero
+                return 0;
+            }
+        }
+
+        /// <returns>
+        /// Random float distributed with the chi-squared distribution with two degrees of freedom
+        /// aka the Rayleigh distribution.
+        /// Multiply by deviation for best results.
+        /// </returns>
+        /// <see>https://en.wikipedia.org/wiki/Rayleigh_distribution</see>
+        /// <remarks>Note a chi-square distributed variable is technically unbounded</remarks>
+        public static float Rayleigh()
+        {
+            // Technically this will raise an exception if the random produces a zero, which should almost never happen
+            try
+            {
+                return Mathf.Sqrt(-2 * Mathf.Log(UnityEngine.Random.value));
+            }
+            catch (Exception)
+            { // I have no idea what exception Mathf.Log raises when it gets a zero
                 return 0;
             }
         }

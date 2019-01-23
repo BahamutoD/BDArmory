@@ -1121,7 +1121,7 @@ namespace BDArmory.Modules
                         timeFired = Time.time - iTime;
                         
                         Vector3 firedVelocity =
-                            VectorUtils.GaussianDirectionDeviation(fireTransform.forward, maxDeviation / 2) * bulletVelocity;
+                            VectorUtils.GaussianDirectionDeviation(fireTransform.forward, maxDeviation / 4) * bulletVelocity;
 
                         pBullet.currentVelocity = (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) + firedVelocity; // use the real velocity, w/o offloading
                         firedBullet.transform.position += (part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * Time.fixedDeltaTime 
