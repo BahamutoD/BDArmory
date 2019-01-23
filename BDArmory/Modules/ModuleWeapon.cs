@@ -400,13 +400,15 @@ namespace BDArmory.Modules
         [KSPField]
         public bool proximityDetonation = false;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Default Detonation Range"),
-         UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
-        public float defaultDetonationRange = 3500;
+	[KSPField(isPersistant = true, guiActive = true, guiName = "Fuzed Detonation Range ", guiActiveEditor = false)]
+	public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
 
-        [KSPField]
-        public float maxAirDetonationRange = 3500;
-        float detonationRange = 10f;
+	[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+	public float detonationRange = 5f; // give ability to set proximity range
+
+	[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
+	 UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
+	public float maxAirDetonationRange = 3500; // could probably get rid of this entirely, max engagement range more or less already does this
         [KSPField]
         public bool airDetonationTiming = true;
 
@@ -563,14 +565,18 @@ namespace BDArmory.Modules
             vessel.Velocity();
             if (airDetonation)
             {
-                UI_FloatRange detRange = (UI_FloatRange)Fields["defaultDetonationRange"].uiControlEditor;
-                detRange.maxValue = maxAirDetonationRange;
+                UI_FloatRange detRange = (UI_FloatRange)Fields["maxAirDetonationRange"].uiControlEditor;
+                detRange.maxValue = maxEffectiveDistance; //altitude fuzing clamped to max range
             }
-            else
+            else //disable fuze GUI elements on un-fuzed munitions
             {
-                Fields["defaultDetonationRange"].guiActive = false;
-                Fields["defaultDetonationRange"].guiActiveEditor = false;
-            }
+				Fields["maxAirDetonationRange"].guiActive = false;
+				Fields["maxAirDetonationRange"].guiActiveEditor = false;
+				Fields["defaultDetonationRange"].guiActive = false;
+				Fields["defaultDetonationRange"].guiActiveEditor = false;
+				Fields["detonationRange"].guiActive = false;
+				Fields["detonationRange"].guiActiveEditor = false;
+	     }
 			muzzleFlashEmitters = new List<KSPParticleEmitter>();
             IEnumerator<Transform> mtf = part.FindModelTransforms("muzzleTransform").AsEnumerable().GetEnumerator();
             while (mtf.MoveNext())
@@ -1688,19 +1694,18 @@ namespace BDArmory.Modules
                 {
                     if (targetAcquired && airDetonationTiming)
                     {                       
-                        detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass);
+                        //detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass); //this returns 0, use detonationRange GUI tweakable instead 
+			defaultDetonationRange = targetDistance;// adds variable time fuze if/when proximity fuzes fail
                     }
                     else
                     {
                         //detonationRange = defaultDetonationRange;
+			defaultDetonationRange = maxAirDetonationRange; //airburst at max range
                     }
                 }
             }
 
-            if (airDetonation)
-            {
-                detonationRange *= UnityEngine.Random.Range(0.96f, 1.04f);
-            }
+	//removed the detonationange += UnityEngine.random, that gets called every frame and just causes the prox fuze range to wander
 
             finalAimTarget = finalTarget;
 
@@ -2302,7 +2307,9 @@ namespace BDArmory.Modules
                 bulletDragTypeName = bulletInfo.bulletDragTypeName;
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastPower;
-                cannonShellRadius = bulletInfo.blastRadius;      
+                cannonShellRadius = bulletInfo.blastRadius;
+		detonationRange = bulletInfo.tntMass; // get default proxfuze radius
+		detonationRange = (float)((14.8f * Math.Pow(detonationRange, 1 / 3f))*(2/3)); // have to call it this way, using BlastUtils.GetBlastRadius returns 0, setting it to 2/3's tnt blast radius so flak explodes when target inside radius, ratehr than at edge.
             }
             ParseBulletDragType();
         }
