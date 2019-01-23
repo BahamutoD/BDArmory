@@ -16,6 +16,8 @@
 	* Missiles fired from turrets will obey drop time and decouple direction.
 	* Updated ballistics calculation acceleration extrapolation
 		(guard mode should hit bobbing ships more accurately).
+	* Guns with air detonation (flak) should work now. (thanks to @SuicidalInsanity)
+	* Guard mode no longer stops firing at passed out pilots. (thanks to @SuicidalInsanity)
 
 v1.2.4
 * NEW FEATURES:
