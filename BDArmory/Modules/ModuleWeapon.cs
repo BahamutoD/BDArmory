@@ -1374,6 +1374,11 @@ namespace BDArmory.Modules
         void CheckWeaponSafety()
         {
             pointingAtSelf = false;
+
+            // While I'm not saying vessels larger than 500m are impossible, let's be practical here
+            const float maxCheckRange = 500f;
+            float checkRange = Mathf.Min(targetAcquired ? targetDistance : maxTargetingRange, maxCheckRange);
+
             for (int i = 0; i < fireTransforms.Length; i++)
             {
                 Ray ray = new Ray(fireTransforms[i].position, fireTransforms[i].forward);
@@ -1389,20 +1394,8 @@ namespace BDArmory.Modules
                         break;
                     }
                 }
-                else
-                {
-                    pointingAtSelf = false;
-                }
 
-
-                if (targetAcquired)
-                {
-                    pointingAtPosition = fireTransforms[i].transform.position + (ray.direction * targetDistance);
-                }
-                else
-                {
-                    pointingAtPosition = fireTransforms[i].position + (ray.direction * (maxTargetingRange));
-                }
+                pointingAtPosition = fireTransforms[i].position + (ray.direction * targetDistance);
             }
         }
 
