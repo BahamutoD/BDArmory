@@ -1686,19 +1686,19 @@ namespace BDArmory.Modules
                 if (airDetonation)
                 {
                     if (targetAcquired && airDetonationTiming)
-                    {                       
+                    {
                         //detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass); //this returns 0, use detonationRange GUI tweakable instead 
-			defaultDetonationRange = targetDistance;// adds variable time fuze if/when proximity fuzes fail
+                        defaultDetonationRange = targetDistance;// adds variable time fuze if/when proximity fuzes fail
                     }
                     else
                     {
                         //detonationRange = defaultDetonationRange;
-			defaultDetonationRange = maxAirDetonationRange; //airburst at max range
+                        defaultDetonationRange = maxAirDetonationRange; //airburst at max range
                     }
                 }
             }
 
-	//removed the detonationange += UnityEngine.random, that gets called every frame and just causes the prox fuze range to wander
+            //removed the detonationange += UnityEngine.random, that gets called every frame and just causes the prox fuze range to wander
 
             finalAimTarget = finalTarget;
 
@@ -1822,7 +1822,9 @@ namespace BDArmory.Modules
         void RunTrajectorySimulation()
         {
             //trajectory simulation
-            if (BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS)
+            if (BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS 
+                && (BDArmorySettings.DRAW_DEBUG_LINES 
+                    || (vessel && vessel.isActiveVessel && !aiControlled && !MapView.MapIsEnabled && !pointingAtSelf)))
             {
                 Transform fireTransform = fireTransforms[0];
 
