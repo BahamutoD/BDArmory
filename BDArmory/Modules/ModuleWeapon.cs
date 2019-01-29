@@ -1374,6 +1374,11 @@ namespace BDArmory.Modules
         void CheckWeaponSafety()
         {
             pointingAtSelf = false;
+
+            // While I'm not saying vessels larger than 500m are impossible, let's be practical here
+            const float maxCheckRange = 500f;
+            float checkRange = Mathf.Min(targetAcquired ? targetDistance : maxTargetingRange, maxCheckRange);
+
             for (int i = 0; i < fireTransforms.Length; i++)
             {
                 Ray ray = new Ray(fireTransforms[i].position, fireTransforms[i].forward);
@@ -1389,20 +1394,8 @@ namespace BDArmory.Modules
                         break;
                     }
                 }
-                else
-                {
-                    pointingAtSelf = false;
-                }
 
-
-                if (targetAcquired)
-                {
-                    pointingAtPosition = fireTransforms[i].transform.position + (ray.direction * targetDistance);
-                }
-                else
-                {
-                    pointingAtPosition = fireTransforms[i].position + (ray.direction * (maxTargetingRange));
-                }
+                pointingAtPosition = fireTransforms[i].position + (ray.direction * targetDistance);
             }
         }
 
@@ -1693,19 +1686,19 @@ namespace BDArmory.Modules
                 if (airDetonation)
                 {
                     if (targetAcquired && airDetonationTiming)
-                    {                       
+                    {
                         //detonationRange = BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass); //this returns 0, use detonationRange GUI tweakable instead 
-			defaultDetonationRange = targetDistance;// adds variable time fuze if/when proximity fuzes fail
+                        defaultDetonationRange = targetDistance;// adds variable time fuze if/when proximity fuzes fail
                     }
                     else
                     {
                         //detonationRange = defaultDetonationRange;
-			defaultDetonationRange = maxAirDetonationRange; //airburst at max range
+                        defaultDetonationRange = maxAirDetonationRange; //airburst at max range
                     }
                 }
             }
 
-	//removed the detonationange += UnityEngine.random, that gets called every frame and just causes the prox fuze range to wander
+            //removed the detonationange += UnityEngine.random, that gets called every frame and just causes the prox fuze range to wander
 
             finalAimTarget = finalTarget;
 
@@ -1829,7 +1822,9 @@ namespace BDArmory.Modules
         void RunTrajectorySimulation()
         {
             //trajectory simulation
-            if (BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS)
+            if (BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS 
+                && (BDArmorySettings.DRAW_DEBUG_LINES 
+                    || (vessel && vessel.isActiveVessel && !aiControlled && !MapView.MapIsEnabled && !pointingAtSelf)))
             {
                 Transform fireTransform = fireTransforms[0];
 

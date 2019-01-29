@@ -962,19 +962,24 @@ namespace BDArmory.UI
             if (weaponManager == null) return false;
             if (weaponManager.vessel == null) return false;
 
-            List<TargetInfo>.Enumerator friendlyTarget = TargetList(weaponManager.Team).GetEnumerator();
-            while (friendlyTarget.MoveNext())
-            {
-                if (friendlyTarget.Current == null || !friendlyTarget.Current.Vessel || friendlyTarget.Current.weaponManager == weaponManager) continue;
-                float friendlyPosDot = Vector3.Dot(friendlyTarget.Current.position - weaponManager.vessel.CoM, aimDirection);
-                if (!(friendlyPosDot > 0)) continue;
-                float friendlyDistance = (friendlyTarget.Current.position - weaponManager.vessel.CoM).magnitude;
-                float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
+            using (var friendlyTarget = FlightGlobals.Vessels.GetEnumerator())
+                while (friendlyTarget.MoveNext())
+                {
+                    if (friendlyTarget.Current == null || friendlyTarget.Current == weaponManager.vessel)
+                        continue;
+                    var wms = friendlyTarget.Current.FindPartModuleImplementing<MissileFire>();
+                    if (wms != null && wms.Team != weaponManager.Team)
+                        continue;
+                    Vector3 targetDistance = friendlyTarget.Current.CoM - weaponManager.vessel.CoM;
+                    float friendlyPosDot = Vector3.Dot(targetDistance, aimDirection);
+                    if (friendlyPosDot <= 0)
+                        continue;
+                    float friendlyDistance = targetDistance.magnitude;
+                    float friendlyPosDotNorm = friendlyPosDot / friendlyDistance;       //scale down the dot to be a 0-1 so we can check it againts cosUnsafeAngle
 
-                if (friendlyDistance < safeDistance && cosUnsafeAngle < friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
-                    return false;
-            }
-            friendlyTarget.Dispose();
+                    if (friendlyDistance < safeDistance && cosUnsafeAngle < friendlyPosDotNorm)           //if it's too close and it's within the Unsafe Angle, don't fire
+                        return false;
+                }
             return true;
         }
 
