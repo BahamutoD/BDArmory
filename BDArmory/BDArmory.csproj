@@ -143,7 +143,7 @@
     <Compile Include="Targeting\TargetSignatureData.cs" />
     <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
-    <Compile Include="Misc\BDAEditorCategory.cs" />
+    <Compile Include="Misc\BDAEditorTools.cs" />
     <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />

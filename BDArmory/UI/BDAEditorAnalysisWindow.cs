@@ -50,7 +50,7 @@ namespace BDArmory.UI
 
         private void FillRadarList()
         {
-            radars = BDAEditorCategory.getRadars().ToArray();
+            radars = BDAEditorTools.getRadars().ToArray();
 
             // first pass, then sort
             for (int i=0; i<radars.Length; i++)

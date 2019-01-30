@@ -9,7 +9,7 @@ using BDArmory.Modules;
 namespace BDArmory.Misc
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class BDAEditorCategory : MonoBehaviour
+    public class BDAEditorTools : MonoBehaviour
     {
         private static readonly List<AvailablePart> availableParts = new List<AvailablePart>();
         private static readonly List<AvailablePart> radars = new List<AvailablePart>();
@@ -107,10 +107,10 @@ namespace BDArmory.Misc
             ModuleECMJammer jammer = null;
 
             // 1. create the file
-            var fileguns = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(gunName);
-            var filemissiles = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(missileName);
-            var fileradars = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(radarName);
-            var filejammers = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(jammerName);
+            var fileguns = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(gunName);
+            var filemissiles = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(missileName);
+            var fileradars = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(radarName);
+            var filejammers = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(jammerName);
 
             // 2. write header
             fileguns.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;WEAPON_RPM;WEAPON_DEVIATION;WEAPON_MAXEFFECTIVEDISTANCE;WEAPON_TYPE;WEAPON_BULLETTYPE;WEAPON_AMMONAME;WEAPON_BULLETMASS;WEAPON_BULLET_VELOCITY;WEAPON_MAXHEAT;WEAPON_HEATPERSHOT;WEAPON_HEATLOSS;CANNON_SHELLPOWER;CANNON_SHELLHEAT;CANNON_SHELLRADIUS;CANNON_AIRDETONATION");
