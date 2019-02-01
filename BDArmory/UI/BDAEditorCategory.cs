@@ -11,8 +11,11 @@ namespace BDArmory.UI
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class BDAEditorCategory : MonoBehaviour
     {
-        public static PartCategorizer.Category BDACategory;
-        public static PartCategorizer BDAPartBar;
+        public static BDAEditorCategory Instance;
+        public PartCategorizer.Category BDACategory;
+        private RectTransform BDAPartBar;
+        private PartCategorizer.Category another_button;
+        public string CurrentCategory = "Guns";
         public static readonly List<string> Categories = new List<string>
         {
             "Control",
@@ -31,10 +34,10 @@ namespace BDArmory.UI
         };
         private bool expanded = false;
         private readonly Vector3 offset = new Vector3(30, 0, 0);
-        private static UnityEngine.RectTransform bgim;
 
         private void Awake()
         {
+            Instance = this;
             GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
         }
 
@@ -56,77 +59,65 @@ namespace BDArmory.UI
                 icon,
                 part => part.partConfig.HasValue("bdacategory")
             );
+        }
 
+        private void CreateBDAPartBar()
+        {
             // BDA part category bar background
-            foreach (var child in EditorPanels.Instance.partsEditorModes.panelTransform.parent.Find("PartCategorizer").Find("BackgroundRight").GetComponents<MonoBehaviour>())
-            {
-                Debug.Log(child.name);
-                Debug.Log(child.GetType());
-                if (child is UnityEngine.UI.Image image)
-                {
-                    Debug.Log(image.sprite.texture);
-
-                    //bgim = EditorPanels.Instance.partsEditorModes.panelTransform.parent.gameObject.AddComponent<UnityEngine.UI.Image>();
-                    //Texture2D tex = new Texture2D(image.sprite.texture.width, image.sprite.texture.height);
-                    //tex.SetPixels(image.sprite.texture.GetPixels());
-                    //bgim.sprite = Sprite.Create(tex, image.sprite.rect, image.sprite.pivot);
-                    //bgim.transform.position = EditorPanels.Instance.partsEditorModes.panelTransform.parent.Find("PartCategorizer").position + offset + offset + offset;
-                }
-            }
-            bgim = Instantiate<RectTransform>((RectTransform)EditorPanels.Instance.partsEditorModes.panelTransform.parent.Find("PartCategorizer").Find("BackgroundRight"));
-            bgim.SetParent(EditorPanels.Instance.partsEditorModes.panelTransform.parent);
-            // Debug.Log(EditorPanels.Instance.partsEditor.panelTransform == EditorPanels.Instance.partsEditorModes.panelTransform.parent.parent); // true
+            var dummy = new GameObject();
+            BDAPartBar = dummy.AddComponent<RectTransform>();
+            BDAPartBar.name = "BDAPartBar";
+            dummy.transform.SetParent(PartCategorizer.Instance.transform, false);
+            BDAPartBar.anchoredPosition = EditorPanels.Instance.partsEditorModes.panelTransform.anchoredPosition + new Vector2(offset.x, offset.y);
+            // DOESN'T WORK, NOTHING WORKS. :(
 
             // BDA part category buttons
+            PartCategorizer.Category filterByFunctionCategory = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
+            Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
+            RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
             string value = null;
-            var another_button = PartCategorizer.AddCustomSubcategoryFilter(
+            another_button = PartCategorizer.AddCustomSubcategoryFilter(
                 filterByFunctionCategory,
                 "Guns",
                 "Guns",
                 icon,
-                part => part.partConfig.TryGetValue("bdacategory", ref value) && value == "Guns"
+                part => part.partConfig.TryGetValue("bdacategory", ref value) && value == CurrentCategory
             );
-            another_button.button.transform.position += offset;
-            //BDACategory.subcategories.Add(another_button);
-            //PartCategorizer.Instance.categories.Remove(another_button);
-            filterByFunctionCategory.subcategories.Remove(another_button);
+            var button = another_button.button;
+            button.OnBtnTap.Clear();
+            //button.btnGeneric.enabled = false;
+            //button.btnToggleGeneric.enabled = false;
+            //button.btnGeneric.onClick.RemoveAllListeners();
+            button.btnToggleGeneric.onClick.RemoveAllListeners();
+            button.btnToggleGeneric.onFalse.RemoveAllListeners();
+            button.btnToggleGeneric.onFalseBtn.RemoveAllListeners();
+            button.btnToggleGeneric.onTrue.RemoveAllListeners();
+            button.btnToggleGeneric.onTrueBtn.RemoveAllListeners();
+            button.btnToggleGeneric.SetGroup(412440121);
+            button.transform.SetParent(BDAPartBar, false);
+            another_button.DeleteSubcategory();
+            //filterByFunctionCategory.subcategories.Remove(another_button);
             //filterByFunctionCategory.RebuildSubcategoryButtons();
 
             //var BDAPartBar;
         }
 
+        private void SetCategory(string category)
+        {
+            CurrentCategory = category;
+            PartCategorizer.Instance.editorPartList.Refresh();
+        }
+
         private void ExpandPartSelector(Vector3 offset)
         {
+            if (BDAPartBar == null)
+                CreateBDAPartBar();
             foreach (Transform child in EditorPanels.Instance.partsEditorModes.panelTransform.parent)
             {
-                if (child.name == "PartCategorizer")
-                {
-                    foreach (Transform subchild in child)
-                    {
-                        Debug.Log($"{subchild.name}: {subchild.position} - {subchild.GetType()}");
-                        if (subchild.name == "BackgroundRight")
-                        {
-                            Debug.Log("+++BEGIN++++");
-                            foreach (Transform subsubchild in subchild)
-                                Debug.Log($"{subsubchild.name}: {subsubchild.position} - {subsubchild.GetType()}");
-                            Debug.Log("+++COMP++++");
-                            foreach (MonoBehaviour subsubchild in subchild.GetComponents<MonoBehaviour>())
-                                Debug.Log($"{subsubchild.name}:  - {subsubchild.GetType()}");
-                            Debug.Log("+++OBJ++++");
-                            foreach (UnityEngine.Object subsubchild in subchild.GetComponents<UnityEngine.Object>())
-                                Debug.Log($"{subsubchild.name}:  - {subsubchild.GetType()}");
-                            Debug.Log("+++END++++");
-                        }
-                    }
-                }
-
                 if (child.name == "PartCategorizer")
                     continue;
                 child.position += offset;
             }
-            Debug.Log("---------------");
-            Debug.Log(bgim.transform.position);
-            bgim.transform.position = EditorPanels.Instance.partsEditorModes.panelTransform.parent.Find("PartCategorizer").Find("BackgroundRight").position + offset * 10;
         }
 
         void OnGUI()
