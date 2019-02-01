@@ -124,8 +124,11 @@ namespace BDArmory.Modules
         {
             return string.Empty;
         }
-
-
+		private ProtoStageIconInfo emptyGauge;
+		private ProtoStageIconInfo ammoGauge;
+    	double rocketsLeft;
+		double rocketsMax;
+        
         [KSPAction("Fire")]
         public void AGFire(KSPActionParam param)
         {
@@ -320,7 +323,19 @@ namespace BDArmory.Modules
 
             blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
+		private void ReloadIconOnVesselSwitch(Vessel data0, Vessel data1)
+		{
+			if (part == null) return;
+			if (part.vessel == null) return;
 
+			if (part.vessel.isActiveVessel)
+			{
+				part.stagingIconAlwaysShown = true;
+				this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
+				ammoGauge = null;
+				emptyGauge = null;
+			}
+		}
         IEnumerator DeployAnimRoutine(bool forward)
         {
             readyToFire = false;
@@ -398,6 +413,7 @@ namespace BDArmory.Modules
             {
                 targetPosition = Vector3.zero;
             }
+            
         }
 
         public override void OnUpdate()
@@ -437,7 +453,23 @@ namespace BDArmory.Modules
                 }
             }
         }
-
+		void FixedUpdate()
+		{
+			if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
+			{
+				if (vessel.isActiveVessel)
+				{
+					if (rocketsLeft > 0 && ammoGauge == null) //only redraw these if nulled from vessel switch
+					{
+						UpdateAmmoMeter();
+					}
+					if (rocketsLeft <= 0 && emptyGauge == null)
+					{
+						UpdateEmptyAlert();
+					}
+				}
+			}
+		}
         bool mouseAiming;
 
         void Aim()
@@ -768,15 +800,95 @@ namespace BDArmory.Modules
         void UpdateRocketScales()
         {
             PartResource rocketResource = GetRocketResource();
-            double rocketsLeft = Math.Floor(rocketResource.amount);
-            double rocketsMax = rocketResource.maxAmount;
+            rocketsLeft = Math.Floor(rocketResource.amount);
+            rocketsMax = rocketResource.maxAmount;
             for (int i = 0; i < rocketsMax; i++)
             {
                 if (i < rocketsLeft) rockets[i].localScale = Vector3.one;
                 else rockets[i].localScale = Vector3.zero;
             }
         }
-
+#region //UI gauges
+		public void UpdateAmmoMeter()
+		{
+			if (!BDArmorySettings.INFINITE_AMMO) //clear ammo gauges if infinite ammo, they're unnecessary
+			{
+				if (rocketsLeft > 0)
+				{
+					if (ammoGauge == null)
+					{
+						ammoGauge = InitAmmoGauge();
+					}
+					ammoGauge?.SetValue((float)rocketsLeft, 0, (float)rocketsMax);  //null check
+				}
+				else if (rocketsLeft < 1)
+				{
+					part.stackIcon.ClearInfoBoxes();
+					ammoGauge = null;
+					emptyGauge = null;
+					UpdateEmptyAlert();
+				}
+			}
+			else
+			{
+				part.stackIcon.ClearInfoBoxes();
+				ammoGauge = null;
+			}
+		}
+		public void UpdateEmptyAlert()
+		{
+			if (!BDArmorySettings.INFINITE_AMMO)
+			{
+				if (rocketsLeft < 1)
+				{
+					if (emptyGauge == null)
+					{
+						emptyGauge = InitEmptyGauge();
+					}
+					emptyGauge?.SetValue(1, 0, 1);    //null check
+				}
+				else if (emptyGauge != null && rocketsLeft > 0)
+				{
+					part.stackIcon.ClearInfoBoxes();
+					emptyGauge = null;
+					UpdateAmmoMeter();
+				}
+			}
+			else
+			{
+				part.stackIcon.ClearInfoBoxes();
+				emptyGauge = null;
+			}
+		}
+		private ProtoStageIconInfo InitAmmoGauge() //thanks DYJ
+		{
+			ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
+			// fix nullref if no stackicon exists
+			if (a != null)
+			{
+				a.SetMsgBgColor(XKCDColors.Grey);
+				a.SetMsgTextColor(XKCDColors.Yellow);
+				a.SetMessage($"{rocketType}");
+				a.SetProgressBarBgColor(XKCDColors.DarkGrey);
+				a.SetProgressBarColor(XKCDColors.Yellow);
+			}
+			return a;
+		}
+		private ProtoStageIconInfo InitEmptyGauge() //thanks DYJ
+		{
+			ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
+			// fix nullref if no stackicon exists
+			if (g != null)
+			{
+				g.SetMsgBgColor(XKCDColors.AlmostBlack);
+				g.SetMsgTextColor(XKCDColors.Yellow);
+				g.SetMessage("Ammo Depleted");
+				g.SetProgressBarBgColor(XKCDColors.Yellow);
+				g.SetProgressBarColor(XKCDColors.Black);
+			}
+			return g;
+		}
+		#endregion
         // RMB info in editor
         public override string GetInfo()
         {
