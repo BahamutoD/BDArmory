@@ -59,7 +59,6 @@ namespace BDArmory.UI
         private void Awake()
         {
             Instance = this;
-            bool foundParts = false;
             using (var parts = PartLoader.LoadedPartsList.GetEnumerator())
                 while (parts.MoveNext())
                 {
@@ -67,12 +66,15 @@ namespace BDArmory.UI
                         continue;
                     if (parts.Current.partConfig.HasValue(BDACategoryKey) || parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
                     {
-                        foundParts = true;
+                        GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
                         break;
                     }
                 }
-            if (foundParts)
-                GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
+        }
+
+        private void OnDestroy()
+        {
+            GameEvents.onGUIEditorToolbarReady.Remove(BDArmoryCategory);
         }
 
         public static string GetTexturePath(string category)
@@ -88,10 +90,12 @@ namespace BDArmory.UI
             const string customCategoryName = "BDAParts";
             const string customDisplayCategoryName = "Armory";
 
+            PartCategorizer.Category filterByFunctionCategory = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
+            if (BDACategory != null && filterByFunctionCategory.subcategories.Contains(BDACategory))
+                return;
+
             Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
             RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
-
-            PartCategorizer.Category filterByFunctionCategory = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
 
             BDACategory = PartCategorizer.AddCustomSubcategoryFilter(
                 filterByFunctionCategory,
@@ -122,9 +126,9 @@ namespace BDArmory.UI
                     else if (parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
                         foundLegacy = true;
                 }
-            if (foundMisc)
+            if (foundMisc && !Categories.Contains("Misc"))
                 Categories.Add("Misc");
-            if (foundLegacy)
+            if (foundLegacy && !Categories.Contains("Legacy"))
                 Categories.Add("Legacy");
 
             // BDA part category bar
@@ -202,7 +206,7 @@ namespace BDArmory.UI
 
         private void ExpandPartSelector(Vector3 offset)
         {
-            if (BDAPartBar == null)
+            if (BDAPartBar == null || !BDAPartBar.transform.IsChildOf(PartCategorizer.Instance.transform))
                 CreateBDAPartBar();
             else
                 BDAPartBar.anchoredPosition += new Vector2(offset.x * 10, 0);
