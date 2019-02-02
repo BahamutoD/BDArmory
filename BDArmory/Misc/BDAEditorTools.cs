@@ -11,7 +11,6 @@ namespace BDArmory.Misc
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class BDAEditorTools : MonoBehaviour
     {
-        private static readonly List<AvailablePart> availableParts = new List<AvailablePart>();
         private static readonly List<AvailablePart> radars = new List<AvailablePart>();
 
         public const string Manufacturer = "Bahamuto Dynamics";
@@ -19,7 +18,7 @@ namespace BDArmory.Misc
         void Awake()
         {
             radars.Clear();
-            availableParts.Clear();
+            var availableParts = new List<AvailablePart>();
             var count = PartLoader.LoadedPartsList.Count;
             for (int i = 0; i < count; ++i)
             {
@@ -29,47 +28,19 @@ namespace BDArmory.Misc
                 {
                     availableParts.Add(avPart);
                 }
+                if (avPart.partPrefab.GetComponent<ModuleRadar>() != null)
+                {
+                    radars.Add(avPart);
+                }
             }
 
             print(Manufacturer + "  Filter Count: " + availableParts.Count);
             if (availableParts.Count > 0)
-                GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
-
-            var count2 = PartLoader.LoadedPartsList.Count;
-            for (int i = 0; i < count; ++i)
-            {
-                var avPart2 = PartLoader.LoadedPartsList[i];
-                if (!avPart2.partPrefab) continue;
-                var avpModule = avPart2.partPrefab.GetComponent<ModuleRadar>();
-                if (avpModule != null)
-                {
-                    radars.Add(avPart2);
-                }
-            }
-
-            //GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
-
-            //availableParts.Clear();
-            //availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
-
+                GameEvents.onGUIEditorToolbarReady.Add(CheckDump);
         }
 
-        void BDAWeaponsCategory()
+        void CheckDump()
         {
-
-            const string customCategoryName = "BDAWeapons";
-            const string customDisplayCategoryName = "BDA Weapons";
-
-            Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
-
-            RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
-
-            PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
-
-            PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
-                avPart => availableParts.Contains(avPart));
-
-
             // dump parts to .CSV list
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 dumpParts();

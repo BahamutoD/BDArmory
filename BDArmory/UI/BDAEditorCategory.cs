@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 
@@ -63,7 +59,20 @@ namespace BDArmory.UI
         private void Awake()
         {
             Instance = this;
-            GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
+            bool foundParts = false;
+            using (var parts = PartLoader.LoadedPartsList.GetEnumerator())
+                while (parts.MoveNext())
+                {
+                    if (parts.Current == null || !parts.Current.partPrefab || parts.Current.partConfig == null)
+                        continue;
+                    if (parts.Current.partConfig.HasValue(BDACategoryKey) || parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
+                    {
+                        foundParts = true;
+                        break;
+                    }
+                }
+            if (foundParts)
+                GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
         }
 
         public static string GetTexturePath(string category)
@@ -112,7 +121,6 @@ namespace BDArmory.UI
                     // If part does not have a bdacategory but manufacturer is BDA.
                     else if (parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
                         foundLegacy = true;
-
                 }
             if (foundMisc)
                 Categories.Add("Misc");
@@ -136,6 +144,8 @@ namespace BDArmory.UI
             using (var category = Categories.GetEnumerator())
                 while (category.MoveNext())
                 {
+                    // Since I don't wanna deal with drawing pretty little buttons, we're making categories,
+                    // stealing the buttons, and then removing the categories.
                     Texture2D iconTex = GameDatabase.Instance.GetTexture(GetTexturePath(category.Current), false);
                     RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
                     string name = category.Current;
@@ -154,8 +164,8 @@ namespace BDArmory.UI
                     button.btnToggleGeneric.onTrueBtn.RemoveAllListeners();
                     button.btnToggleGeneric.SetGroup(412440121);
                     button.transform.SetParent(BDAPartBar, false);
-                    categorizer_button.DeleteSubcategory();
                     button.transform.position += button_offset * (SubcategoryButtons.Count - filterByFunctionCategory.subcategories.Count);
+                    categorizer_button.DeleteSubcategory();
                     SubcategoryButtons.Add(button);
                     // Gotta use a saved value, because the enumerator changes the value during the run
                     button.btnToggleGeneric.onTrue.AddListener((x, y) => SetCategory(name));
@@ -172,6 +182,7 @@ namespace BDArmory.UI
         {
             switch (CurrentCategory)
             {
+                // A few special cases.
                 case "All":
                     return part.partConfig.HasValue(BDACategoryKey);
                 case "Legacy":
