@@ -14,11 +14,7 @@ namespace BDArmory.Misc
         private static readonly List<AvailablePart> availableParts = new List<AvailablePart>();
         private static readonly List<AvailablePart> radars = new List<AvailablePart>();
 
-        protected string Manufacturer
-        {
-            get { return "Bahamuto Dynamics"; }
-            set { }
-        }
+        public const string Manufacturer = "Bahamuto Dynamics";
 
         void Awake()
         {
