@@ -22,11 +22,11 @@ namespace BDArmory.Modules
         //[KSPField(guiActive = false, guiActiveEditor = false, guiName = "")]
         public string guiTitle = "WingCommander:";
 
-        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Spread"), UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1, scene = UI_Scene.Editor)]
-        public float spread = 50;
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Spread"), UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1, scene = UI_Scene.Editor)]
+        public float spread = 100;
 
-        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Lag"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
-        public float lag = 10;
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Lag"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
+        public float lag = 7;
 
         [KSPField(isPersistant = true)] public bool commandSelf;
 
