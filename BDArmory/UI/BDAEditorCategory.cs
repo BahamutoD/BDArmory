@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using BDArmory.Core;
+using BDArmory.Modules;
+using BDArmory.Control;
+using BDArmory.CounterMeasure;
 
 namespace BDArmory.UI
 {
@@ -59,6 +63,7 @@ namespace BDArmory.UI
         private void Awake()
         {
             Instance = this;
+            bool partsDetected = false;
             using (var parts = PartLoader.LoadedPartsList.GetEnumerator())
                 while (parts.MoveNext())
                 {
@@ -66,10 +71,85 @@ namespace BDArmory.UI
                         continue;
                     if (parts.Current.partConfig.HasValue(BDACategoryKey) || parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
                     {
+                        partsDetected = true;
                         GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
                         break;
                     }
                 }
+            // Part autocategorization
+            if (partsDetected && BDArmorySettings.AUTOCATEGORIZE_PARTS)
+                using (var parts = PartLoader.LoadedPartsList.GetEnumerator())
+                    while (parts.MoveNext())
+                    {
+                        if (parts.Current.partConfig == null || parts.Current.partPrefab == null)
+                            continue;
+                        if (!parts.Current.partConfig.HasValue(BDACategoryKey))
+                        {
+                            ModuleWeapon moduleWeapon;
+                            MissileLauncher missileLauncher;
+                            if ((moduleWeapon = parts.Current.partPrefab.FindModuleImplementing<ModuleWeapon>()) != null)
+                            {
+                                if (moduleWeapon.weaponType == "laser")
+                                {
+                                    if (parts.Current.partPrefab.FindModuleImplementing<ModuleTurret>())
+                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Laser turrets");
+                                    else
+                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Lasers");
+                                }
+                                else
+                                {
+                                    if (parts.Current.partPrefab.FindModuleImplementing<ModuleTurret>())
+                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Gun turrets");
+                                    else
+                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Guns");
+                                }
+                            }
+                            else if ((missileLauncher = parts.Current.partPrefab.FindModuleImplementing<MissileLauncher>()) != null)
+                            {
+                                if (missileLauncher.GetWeaponClass() == Misc.WeaponClasses.Bomb)
+                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Bombs");
+                                else
+                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Missiles");
+                            }
+                            else if (parts.Current.partPrefab.FindModuleImplementing<MissileTurret>() != null)
+                            {
+                                parts.Current.partConfig.AddValue(BDACategoryKey, "Missile turrets");
+                            }
+                            else if (parts.Current.partPrefab.FindModuleImplementing<RocketLauncher>() != null)
+                            {
+                                if (parts.Current.partPrefab.FindModuleImplementing<ModuleTurret>())
+                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Rocket turrets");
+                                else
+                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Rocket pods");
+                            }
+                            else if (parts.Current.partPrefab.FindModuleImplementing<ModuleRadar>() != null)
+                            {
+                                parts.Current.partConfig.AddValue(BDACategoryKey, "Radars");
+                            }
+                            else if (parts.Current.partPrefab.FindModuleImplementing<ModuleTargetingCamera>() != null)
+                            {
+                                parts.Current.partConfig.AddValue(BDACategoryKey, "Targeting");
+                            }
+                            else if (parts.Current.partPrefab.FindModuleImplementing<MissileFire>() != null
+                                || parts.Current.partPrefab.FindModuleImplementing<IBDAIControl>() != null)
+                            {
+                                parts.Current.partConfig.AddValue(BDACategoryKey, "Control");
+                            }
+                            else if (parts.Current.partPrefab.FindModuleImplementing<ModuleECMJammer>() != null
+                                || parts.Current.partPrefab.FindModuleImplementing<CMDropper>() != null)
+                            {
+                                parts.Current.partConfig.AddValue(BDACategoryKey, "Countermeasures");
+                            }
+                            else
+                            {
+                                using (var resource = parts.Current.partPrefab.Resources.GetEnumerator())
+                                    while (resource.MoveNext())
+                                        // Very dumb check, but right now too lazy to implement a better one
+                                        if (resource.Current.resourceName.Contains("Ammo"))
+                                            parts.Current.partConfig.AddValue(BDACategoryKey, "Ammo");
+                            }
+                        }
+                    }
         }
 
         private void OnDestroy()
