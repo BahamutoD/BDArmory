@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using KSP.UI;
 using BDArmory.Core;
 using BDArmory.Modules;
 using BDArmory.Control;
@@ -14,6 +15,7 @@ namespace BDArmory.UI
         public static BDAEditorCategory Instance;
         public PartCategorizer.Category BDACategory;
         public const string BDACategoryKey = "bdacategory";
+        public const string AutoBDACategoryKey = "autobdacategory";
         public const int SubcategoryGroup = 412440121;
         /// <summary>
         /// Adding to this dictionary on KSPAddon.Startup.EditorAny will add more bda categories.
@@ -55,9 +57,15 @@ namespace BDArmory.UI
             {"Legacy", "BDArmory/Textures/icon"},
         };
         private List<PartCategorizerButton> SubcategoryButtons = new List<PartCategorizerButton>();
-        private string CurrentCategory = "All";
+        private string CurrentCategory = BDArmorySettings.SHOW_CATEGORIES ? "All" : "Legacy";
         private RectTransform BDAPartBar;
+        private const float SettingsWidth = 230;
+        private const float SettingsHeight = 83;
+        private const float SettingsMargin = 18;
+        private const float SettingsLineHeight = 22;
+        private Rect SettingsWindow = new Rect(0, 0, SettingsWidth, SettingsHeight);
         private bool expanded = false;
+        private bool SettingsOpen = false;
         private readonly Vector3 offset = new Vector3(34, 0, 0);
 
         private void Awake()
@@ -83,7 +91,9 @@ namespace BDArmory.UI
                     {
                         if (parts.Current.partConfig == null || parts.Current.partPrefab == null)
                             continue;
-                        if (!parts.Current.partConfig.HasValue(BDACategoryKey))
+                        if (parts.Current.partConfig.HasValue(BDACategoryKey))
+                            parts.Current.partConfig.AddValue(AutoBDACategoryKey, parts.Current.partConfig.GetValue(BDACategoryKey));
+                        else
                         {
                             ModuleWeapon moduleWeapon;
                             MissileLauncher missileLauncher;
@@ -92,53 +102,53 @@ namespace BDArmory.UI
                                 if (moduleWeapon.weaponType == "laser")
                                 {
                                     if (parts.Current.partPrefab.FindModuleImplementing<ModuleTurret>())
-                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Laser turrets");
+                                        parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Laser turrets");
                                     else
-                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Lasers");
+                                        parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Lasers");
                                 }
                                 else
                                 {
                                     if (parts.Current.partPrefab.FindModuleImplementing<ModuleTurret>())
-                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Gun turrets");
+                                        parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Gun turrets");
                                     else
-                                        parts.Current.partConfig.AddValue(BDACategoryKey, "Guns");
+                                        parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Guns");
                                 }
                             }
                             else if ((missileLauncher = parts.Current.partPrefab.FindModuleImplementing<MissileLauncher>()) != null)
                             {
                                 if (missileLauncher.GetWeaponClass() == Misc.WeaponClasses.Bomb)
-                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Bombs");
+                                    parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Bombs");
                                 else
-                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Missiles");
+                                    parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Missiles");
                             }
                             else if (parts.Current.partPrefab.FindModuleImplementing<MissileTurret>() != null)
                             {
-                                parts.Current.partConfig.AddValue(BDACategoryKey, "Missile turrets");
+                                parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Missile turrets");
                             }
                             else if (parts.Current.partPrefab.FindModuleImplementing<RocketLauncher>() != null)
                             {
                                 if (parts.Current.partPrefab.FindModuleImplementing<ModuleTurret>())
-                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Rocket turrets");
+                                    parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Rocket turrets");
                                 else
-                                    parts.Current.partConfig.AddValue(BDACategoryKey, "Rocket pods");
+                                    parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Rocket pods");
                             }
                             else if (parts.Current.partPrefab.FindModuleImplementing<ModuleRadar>() != null)
                             {
-                                parts.Current.partConfig.AddValue(BDACategoryKey, "Radars");
+                                parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Radars");
                             }
                             else if (parts.Current.partPrefab.FindModuleImplementing<ModuleTargetingCamera>() != null)
                             {
-                                parts.Current.partConfig.AddValue(BDACategoryKey, "Targeting");
+                                parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Targeting");
                             }
                             else if (parts.Current.partPrefab.FindModuleImplementing<MissileFire>() != null
                                 || parts.Current.partPrefab.FindModuleImplementing<IBDAIControl>() != null)
                             {
-                                parts.Current.partConfig.AddValue(BDACategoryKey, "Control");
+                                parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Control");
                             }
                             else if (parts.Current.partPrefab.FindModuleImplementing<ModuleECMJammer>() != null
                                 || parts.Current.partPrefab.FindModuleImplementing<CMDropper>() != null)
                             {
-                                parts.Current.partConfig.AddValue(BDACategoryKey, "Countermeasures");
+                                parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Countermeasures");
                             }
                             else
                             {
@@ -146,7 +156,7 @@ namespace BDArmory.UI
                                     while (resource.MoveNext())
                                         // Very dumb check, but right now too lazy to implement a better one
                                         if (resource.Current.resourceName.Contains("Ammo"))
-                                            parts.Current.partConfig.AddValue(BDACategoryKey, "Ammo");
+                                            parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Ammo");
                             }
                         }
                     }
@@ -184,6 +194,44 @@ namespace BDArmory.UI
                 icon,
                 part => PartInCurrentCategory(part)
             );
+
+            BDACategory.button.btnToggleGeneric.onClick.AddListener(CategoryButtonClick);
+        }
+
+        private void CategoryButtonClick(UnityEngine.EventSystems.PointerEventData pointerEventData, UIRadioButton.State state, UIRadioButton.CallType callType)
+        {
+            if (pointerEventData.button == UnityEngine.EventSystems.PointerEventData.InputButton.Right)
+            {
+                SettingsOpen = true;
+                SettingsWindow = new Rect(Input.mousePosition.x, Screen.height - Input.mousePosition.y, SettingsWidth, SettingsHeight);
+                pointerEventData.Use();
+            }
+        }
+
+
+        private void DrawSettingsWindow(int id)
+        {
+            GUI.Box(new Rect(0, 0, SettingsWidth, SettingsHeight), "BDA Category Settings");
+
+            if (BDArmorySettings.SHOW_CATEGORIES != (BDArmorySettings.SHOW_CATEGORIES = BDArmorySettings.SHOW_CATEGORIES = GUI.Toggle(
+                new Rect(SettingsMargin, SettingsLineHeight * 1.25f, SettingsWidth - (2 * SettingsMargin), SettingsLineHeight),
+                BDArmorySettings.SHOW_CATEGORIES,
+                "Subcategories"
+            )))
+            {
+                PartCategorizer.Instance.editorPartList.Refresh();
+            }
+            if (BDArmorySettings.AUTOCATEGORIZE_PARTS != (BDArmorySettings.AUTOCATEGORIZE_PARTS = BDArmorySettings.AUTOCATEGORIZE_PARTS = GUI.Toggle(
+                new Rect(SettingsMargin, SettingsLineHeight * 2.25f, SettingsWidth - (2 * SettingsMargin), SettingsLineHeight),
+                BDArmorySettings.AUTOCATEGORIZE_PARTS,
+                "Autocategorize parts"
+            )))
+            {
+                PartCategorizer.Instance.editorPartList.Refresh();
+            }
+
+            BDGUIUtils.RepositionWindow(ref SettingsWindow);
+            BDGUIUtils.UseMouseEventInRect(SettingsWindow);
         }
 
         private void CreateBDAPartBar()
@@ -191,21 +239,25 @@ namespace BDArmory.UI
             // Check if we need the special categories
             bool foundLegacy = false;
             bool foundMisc = false;
+            List<string> foundCategories = new List<string>();
             using (var parts = PartLoader.LoadedPartsList.GetEnumerator())
                 while (parts.MoveNext())
                 {
                     if (parts.Current == null || !parts.Current.partPrefab || parts.Current.partConfig == null)
                         continue;
                     string cat = "";
-                    if (parts.Current.partConfig.TryGetValue(BDACategoryKey, ref cat))
+                    if (parts.Current.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref cat))
                     {
                         if (!Categories.Contains(cat))
                             foundMisc = true;
+                        else if (!foundCategories.Contains(cat))
+                            foundCategories.Add(cat);
                     }
                     // If part does not have a bdacategory but manufacturer is BDA.
                     else if (parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
                         foundLegacy = true;
                 }
+            Categories.RemoveAll(s => !foundCategories.Contains(s) && s != "All");
             if (foundMisc && !Categories.Contains("Misc"))
                 Categories.Add("Misc");
             if (foundLegacy && !Categories.Contains("Legacy"))
@@ -264,22 +316,24 @@ namespace BDArmory.UI
 
         private bool PartInCurrentCategory(AvailablePart part)
         {
-            switch (CurrentCategory)
+            switch (BDArmorySettings.SHOW_CATEGORIES ? CurrentCategory : "Legacy")
             {
                 // A few special cases.
                 case "All":
-                    return part.partConfig.HasValue(BDACategoryKey);
+                    return part.partConfig.HasValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey);
                 case "Legacy":
-                    return part.manufacturer == Misc.BDAEditorTools.Manufacturer && !part.partConfig.HasValue(BDACategoryKey);
+                    return part.manufacturer == Misc.BDAEditorTools.Manufacturer;
                 case "Misc":
                     {
                         string value = null;
-                        return part.partConfig.TryGetValue(BDACategoryKey, ref value) && (value == "Misc" || !Categories.Contains(value));
+                        return part.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref value) 
+                            && (value == "Misc" || !Categories.Contains(value));
                     }
                 default:
                     {
                         string value = null;
-                        return part.partConfig.TryGetValue(BDACategoryKey, ref value) && value == CurrentCategory;
+                        return part.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref value) 
+                            && value == CurrentCategory;
                     }
             }
         }
@@ -300,15 +354,26 @@ namespace BDArmory.UI
 
         void OnGUI()
         {
-            if (BDACategory.button.activeButton.Value && !expanded)
+            if (BDArmorySettings.SHOW_CATEGORIES && BDACategory.button.activeButton.Value && !expanded)
             {
                 ExpandPartSelector(offset);
                 expanded = true;
             }
-            else if (!BDACategory.button.activeButton.Value && expanded)
+            else if ((!BDACategory.button.activeButton.Value || !BDArmorySettings.SHOW_CATEGORIES) && expanded)
             {
                 ExpandPartSelector(-offset);
                 expanded = false;
+            }
+
+            if (SettingsOpen && Event.current.type == EventType.MouseDown
+                && !SettingsWindow.Contains(Event.current.mousePosition))
+            {
+                SettingsOpen = false;
+                BDArmorySetup.SaveConfig();
+            }
+            if (SettingsOpen)
+            {
+                SettingsWindow = GUI.Window(9476026, SettingsWindow, DrawSettingsWindow, "", BDArmorySetup.BDGuiSkin.window);
             }
         }
     }

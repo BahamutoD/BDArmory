@@ -104,6 +104,7 @@ namespace BDArmory.UI
 
             height += margin;
             BDGUIUtils.RepositionWindow(ref window);
+            BDGUIUtils.UseMouseEventInRect(window);
         }
 
         protected virtual void OnGUI()
