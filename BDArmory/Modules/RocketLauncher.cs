@@ -802,7 +802,8 @@ namespace BDArmory.Modules
                 else rockets[i].localScale = Vector3.zero;
             }
         }
-#region //UI gauges
+
+#region UI gauges
 		public void UpdateAmmoMeter()
 		{
 			if (!BDArmorySettings.INFINITE_AMMO) //clear ammo gauges if infinite ammo, they're unnecessary
@@ -829,6 +830,7 @@ namespace BDArmory.Modules
 				ammoGauge = null;
 			}
 		}
+
 		public void UpdateEmptyAlert()
 		{
 			if (!BDArmorySettings.INFINITE_AMMO)
@@ -854,6 +856,7 @@ namespace BDArmory.Modules
 				emptyGauge = null;
 			}
 		}
+
 		private ProtoStageIconInfo InitAmmoGauge() //thanks DYJ
 		{
 			ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
@@ -868,6 +871,7 @@ namespace BDArmory.Modules
 			}
 			return a;
 		}
+
 		private ProtoStageIconInfo InitEmptyGauge() //thanks DYJ
 		{
 			ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
@@ -883,6 +887,7 @@ namespace BDArmory.Modules
 			return g;
 		}
 		#endregion
+
         // RMB info in editor
         public override string GetInfo()
         {

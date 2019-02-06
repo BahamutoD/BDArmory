@@ -66,10 +66,11 @@ namespace BDArmory.Modules
                 
         public float heat;
         public bool isOverheated;
-	public bool isOutofAmmo = false;
-	public float ammoAmount;
-	public float ammoMax;
-	private bool wasFiring;
+	    public bool isOutofAmmo = false;
+	    public float ammoAmount;
+	    public float ammoMax;
+        private float updateList;
+	    private bool wasFiring;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
         AudioClip reloadCompleteAudioClip;
@@ -110,8 +111,8 @@ namespace BDArmory.Modules
 
         //UI gauges(next to staging icon)
         private ProtoStageIconInfo heatGauge;
-	private ProtoStageIconInfo emptyGauge;
-	private ProtoStageIconInfo ammoGauge;
+	    private ProtoStageIconInfo emptyGauge;
+	    private ProtoStageIconInfo ammoGauge;
 		//AI will fire gun if target is within this Cos(angle) of barrel
 		public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
 
@@ -404,15 +405,15 @@ namespace BDArmory.Modules
         [KSPField]
         public bool proximityDetonation = false;
 
-	[KSPField(isPersistant = true, guiActive = true, guiName = "Fuzed Detonation Range ", guiActiveEditor = false)]
-	public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
+	    [KSPField(isPersistant = true, guiActive = true, guiName = "Fuzed Detonation Range ", guiActiveEditor = false)]
+	    public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
 
-	[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-	public float detonationRange = 5f; // give ability to set proximity range
+	    [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+	    public float detonationRange = 5f; // give ability to set proximity range
 
-	[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
-	 UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
-	public float maxAirDetonationRange = 3500; // could probably get rid of this entirely, max engagement range more or less already does this
+	    [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
+	     UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
+	    public float maxAirDetonationRange = 3500; // could probably get rid of this entirely, max engagement range more or less already does this
         [KSPField]
         public bool airDetonationTiming = true;
 
@@ -737,10 +738,10 @@ namespace BDArmory.Modules
             {
                 part.stagingIconAlwaysShown = true;
                 this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
-		ammoGauge = null; //switching vessels clears stageicon gauges but doesn't null them
-		emptyGauge = null; // nulling these here gets heat/reload gauges working properly on switched vessels
-		heatGauge = null;
-		reloadBar = null;
+		        ammoGauge = null; //switching vessels clears stageicon gauges but doesn't null them
+		        emptyGauge = null; // nulling these here gets heat/reload gauges working properly on switched vessels
+		        heatGauge = null;
+		        reloadBar = null;
             }
         }
 
@@ -2053,127 +2054,158 @@ namespace BDArmory.Modules
                 heat = 0;
             }
         }
-	void UpdateAmmo()
-	{
-		if (!BDArmorySettings.INFINITE_AMMO)
-		{
-			if (ammoAmount > 0)
-			{
-				isOutofAmmo = false;
-			}
-			else
-			{
-				isOutofAmmo = true;
-				//autoFire = false; // leaving this on could cause problems if infinite ammo turned on after ammo depleted
-				audioSource.Stop();
-				wasFiring = false;
-				weaponManager.ResetGuardInterval();
-			}
-		}
-		else
-		{
-			isOutofAmmo = false;
-		}
-	}
-	public void UpdateAmmoMeter()
-	{
-		if (!BDArmorySettings.INFINITE_AMMO)
-		{
-			if (!isOutofAmmo)
-			{
-				if (ammoGauge == null)
-				{
-					ammoGauge = InitAmmoGauge();
-				}
-				ammoGauge?.SetValue(ammoAmount, 0, ammoMax);  //null check
-			}
-			else if (ammoGauge != null && isOutofAmmo)
-			{
-				part.stackIcon.ClearInfoBoxes();
-				ammoGauge = null;
-				emptyGauge = null;
-				UpdateEmptyAlert();
-			}
-		}
-		else //clear ammo gauges if infinite ammo, they're unnecessary
-		{
-			part.stackIcon.ClearInfoBoxes();
-			ammoGauge = null;
-			heatGauge = null; //null these so other gauges will perperly re-initialize post ClearinfoBoxes()
-			reloadBar = null;
-			emptyGauge = null;
-			UpdateHeatMeter();
-			UpdateReloadMeter();
-		}
-	}
-	void UpdateHeatMeter()
-        {
-            //heat
-            if (heat > maxHeat / 3)
+	    void UpdateAmmo()
+	    {
+		    if (!BDArmorySettings.INFINITE_AMMO)
+		    {
+			    if (ammoAmount > 0)
+			    {
+				    isOutofAmmo = false;
+			    }
+			    else
+			    {
+				    isOutofAmmo = true;
+				    //autoFire = false; // leaving this on could cause problems if infinite ammo turned on after ammo depleted
+				    audioSource.Stop();
+				    wasFiring = false;
+				    weaponManager.ResetGuardInterval();
+			    }
+		    }
+		    else
+		    {
+			    isOutofAmmo = false;
+		    }
+	    }
+	    public void UpdateAmmoMeter()
+	    {
+		    if (!BDArmorySettings.INFINITE_AMMO)
+		    {
+			    if (!isOutofAmmo)
+			    {
+				    if (ammoGauge == null)
+				    {
+					    ammoGauge = InitAmmoGauge();
+				    }
+				    ammoGauge?.SetValue(ammoAmount, 0, ammoMax);  //null check
+			    }
+			    else if (ammoGauge != null && isOutofAmmo)
+			    {
+				    part.stackIcon.ClearInfoBoxes();
+				    ammoGauge = null;
+				    emptyGauge = null;
+				    UpdateEmptyAlert();
+			    }
+		    }
+		    else //clear ammo gauges if infinite ammo, they're unnecessary
+		    {
+			    part.stackIcon.ClearInfoBoxes();
+			    ammoGauge = null;
+			    heatGauge = null; //null these so other gauges will perperly re-initialize post ClearinfoBoxes()
+			    reloadBar = null;
+			    emptyGauge = null;
+			    UpdateHeatMeter();
+			    UpdateReloadMeter();
+		    }
+	    }
+	    void UpdateHeatMeter()
             {
-                if (heatGauge == null)
+                //heat
+                if (heat > maxHeat / 3)
                 {
-                    heatGauge = InitHeatGauge();
-                }
-
-                heatGauge?.SetValue(heat, maxHeat / 3, maxHeat);    //null check
-            }
-            else if (heatGauge != null && heat < maxHeat / 4)
-		{
-			part.stackIcon.ClearInfoBoxes();
-			heatGauge = null;
-			ammoGauge = null;
-			emptyGauge = null;
-			if (!BDArmorySettings.INFINITE_AMMO)
-			{
-				if (!isOutofAmmo)
-				{
-					UpdateAmmoMeter();
-				}
-				else
-				{
-					UpdateEmptyAlert();
-				}
-			}
-		}
-	}
-	void UpdateReloadMeter()
-        {
-            if (Time.time - timeFired < (60 / roundsPerMinute) && Time.time - timeFired > 0.1f)
-            {
-                if (reloadBar == null)
-                {
-                    reloadBar = InitReloadBar();
-                    if (reloadAudioClip)
+                    if (heatGauge == null)
                     {
-                        audioSource.PlayOneShot(reloadAudioClip);
+                        heatGauge = InitHeatGauge();
                     }
+
+                    heatGauge?.SetValue(heat, maxHeat / 3, maxHeat);    //null check
                 }
-                reloadBar.SetValue(Time.time - timeFired, 0, 60 / roundsPerMinute);
+                else if (heatGauge != null && heat < maxHeat / 4)
+		    {
+			    part.stackIcon.ClearInfoBoxes();
+			    heatGauge = null;
+			    ammoGauge = null;
+			    emptyGauge = null;
+			    if (!BDArmorySettings.INFINITE_AMMO)
+			    {
+				    if (!isOutofAmmo)
+				    {
+					    UpdateAmmoMeter();
+				    }
+				    else
+				    {
+					    UpdateEmptyAlert();
+				    }
+			    }
+		    }
+	    }
+	    void UpdateReloadMeter()
+            {
+                if (Time.time - timeFired < (60 / roundsPerMinute) && Time.time - timeFired > 0.1f)
+                {
+                    if (reloadBar == null)
+                    {
+                        reloadBar = InitReloadBar();
+                        if (reloadAudioClip)
+                        {
+                            audioSource.PlayOneShot(reloadAudioClip);
+                        }
+                    }
+                    reloadBar.SetValue(Time.time - timeFired, 0, 60 / roundsPerMinute);
+                }
+                else if (reloadBar != null)
+		    {
+			    part.stackIcon.ClearInfoBoxes();
+			    reloadBar = null;
+			    emptyGauge = null;
+			    ammoGauge = null;
+			    if (reloadCompleteAudioClip)
+			    {
+				    audioSource.PlayOneShot(reloadCompleteAudioClip);
+			    }
+			    if (!BDArmorySettings.INFINITE_AMMO)
+			    {
+				    if (!isOutofAmmo)
+				    {
+					    UpdateAmmoMeter();
+				    }
+				    else
+				    {
+					    UpdateEmptyAlert();
+				    }
+			    }
+		    }
+	    }
+        public void UpdateEmptyAlert()
+        {
+            if (!BDArmorySettings.INFINITE_AMMO)
+            {
+                if (isOutofAmmo)
+                {
+                    if (emptyGauge == null)
+                    {
+                        emptyGauge = InitEmptyGauge();
+                    }
+                    emptyGauge?.SetValue(1, 0, 1);    //null check
+                }
+                else if (emptyGauge != null && !isOutofAmmo)
+                {
+                    part.stackIcon.ClearInfoBoxes();
+                    ammoGauge = null;
+                    emptyGauge = null;
+                    heatGauge = null;
+                    reloadBar = null;
+                }
             }
-            else if (reloadBar != null)
-		{
-			part.stackIcon.ClearInfoBoxes();
-			reloadBar = null;
-			emptyGauge = null;
-			ammoGauge = null;
-			if (reloadCompleteAudioClip)
-			{
-				audioSource.PlayOneShot(reloadCompleteAudioClip);
-			}
-			if (!BDArmorySettings.INFINITE_AMMO)
-			{
-				if (!isOutofAmmo)
-				{
-					UpdateAmmoMeter();
-				}
-				else
-				{
-					UpdateEmptyAlert();
-				}
-			}
-		}
-	}
+            else
+            {
+                part.stackIcon.ClearInfoBoxes();
+                ammoGauge = null;
+                emptyGauge = null;
+                heatGauge = null;
+                reloadBar = null;
+            }
+        }
+
         void UpdateTargetVessel()
         {
             targetAcquired = false;
@@ -2300,36 +2332,39 @@ namespace BDArmory.Modules
             }
             return v;
         }
-	private ProtoStageIconInfo InitAmmoGauge() //thanks DYJ
-	{
-		ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
-		// fix nullref if no stackicon exists
-		if (a != null)
-		{
-			a.SetMsgBgColor(XKCDColors.Grey);
-			a.SetMsgTextColor(XKCDColors.Yellow);
-			//a.SetMessage("Ammunition");
-			a.SetMessage($"{ammoName}");
-			a.SetProgressBarBgColor(XKCDColors.DarkGrey);
-			a.SetProgressBarColor(XKCDColors.Yellow);
-		}
-		return a;
-	}
-	private ProtoStageIconInfo InitEmptyGauge() //could remove emptygauge, mainly a QoL thing, removal might increase performance slightly
-	{
-		ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
-		// fix nullref if no stackicon exists
-		if (g != null)
-		{
-			g.SetMsgBgColor(XKCDColors.AlmostBlack);
-			g.SetMsgTextColor(XKCDColors.Yellow);
-			g.SetMessage("Ammo Depleted");
-			g.SetProgressBarBgColor(XKCDColors.Yellow);
-			g.SetProgressBarColor(XKCDColors.Black);
-		}
-		return g;
-	}
-	IEnumerator StartupRoutine()
+
+	    private ProtoStageIconInfo InitAmmoGauge() //thanks DYJ
+	    {
+		    ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
+		    // fix nullref if no stackicon exists
+		    if (a != null)
+		    {
+			    a.SetMsgBgColor(XKCDColors.Grey);
+			    a.SetMsgTextColor(XKCDColors.Yellow);
+			    //a.SetMessage("Ammunition");
+			    a.SetMessage($"{ammoName}");
+			    a.SetProgressBarBgColor(XKCDColors.DarkGrey);
+			    a.SetProgressBarColor(XKCDColors.Yellow);
+		    }
+		    return a;
+	    }
+
+	    private ProtoStageIconInfo InitEmptyGauge() //could remove emptygauge, mainly a QoL thing, removal might increase performance slightly
+	    {
+		    ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
+		    // fix nullref if no stackicon exists
+		    if (g != null)
+		    {
+			    g.SetMsgBgColor(XKCDColors.AlmostBlack);
+			    g.SetMsgTextColor(XKCDColors.Yellow);
+			    g.SetMessage("Ammo Depleted");
+			    g.SetProgressBarBgColor(XKCDColors.Yellow);
+			    g.SetProgressBarColor(XKCDColors.Black);
+		    }
+		    return g;
+	    }
+
+	    IEnumerator StartupRoutine()
         {
             weaponState = WeaponStates.PoweringUp;
             UpdateGUIWeaponState();
