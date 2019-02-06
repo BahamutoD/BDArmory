@@ -10,14 +10,13 @@ using BDArmory.Misc;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
+using KSP.UI.Screens;
 
 namespace BDArmory.Modules
 {
     public class RocketLauncher : EngageableWeapon, IBDWeapon
     {
         public bool hasRocket = true;
-
-        [KSPField] public string shortName = string.Empty;
 
         [KSPField(isPersistant = false)] public string rocketType;
 
@@ -103,11 +102,6 @@ namespace BDArmory.Modules
         public Part GetPart()
         {
             return part;
-        }
-
-        public string GetShortName()
-        {
-            return shortName;
         }
 
         public WeaponClasses GetWeaponClass()

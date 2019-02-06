@@ -828,32 +828,32 @@ namespace BDArmory.Modules
 
 
                 if (vessel.isActiveVessel)// lets not have it re-initialize and reenumerate gauges and ammo counts every tick. Seriously, what was I thinking?
-		{
-			if (showReloadMeter)
-			{
-				UpdateReloadMeter();
-			}
-			else
-			{
-				UpdateHeatMeter();
-			}
-			UpdateAmmo();
-			if (!isOutofAmmo && ammoGauge == null) //only redraw these if nulled from vessel switch
-			{
-				UpdateAmmoMeter();
-			}
-			if (isOutofAmmo && emptyGauge == null)
-			{
-				UpdateEmptyAlert();
-			}
-			updateList -= Time.fixedDeltaTime;
-			if (updateList < 0)
-			{
-				UpdateAmmoMeter(); //call once a second to check for infinite ammo toggle, sanity check, etc
-				UpdateEmptyAlert();
-				updateList = 1.0f; 
-			}
-		}
+		        {
+			        if (showReloadMeter)
+			        {
+				        UpdateReloadMeter();
+			        }
+			        else
+			        {
+				        UpdateHeatMeter();
+			        }
+			        UpdateAmmo();
+			        if (!isOutofAmmo && ammoGauge == null) //only redraw these if nulled from vessel switch
+			        {
+				        UpdateAmmoMeter();
+			        }
+			        if (isOutofAmmo && emptyGauge == null)
+			        {
+				        UpdateEmptyAlert();
+			        }
+			        updateList -= Time.fixedDeltaTime;
+			        if (updateList < 0)
+			        {
+				        UpdateAmmoMeter(); //call once a second to check for infinite ammo toggle, sanity check, etc
+				        UpdateEmptyAlert();
+				        updateList = 1.0f; 
+			        }
+		        }
              
                 
                 UpdateHeat();
