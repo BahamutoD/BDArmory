@@ -10,7 +10,6 @@ using BDArmory.Misc;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
-using KSP.UI.Screens;
 
 namespace BDArmory.Modules
 {
@@ -54,6 +53,7 @@ namespace BDArmory.Modules
         Transform[] rockets;
 
         public AudioSource sfAudioSource;
+        private BDStagingAreaGauge gauge;
 
         //animation
         [KSPField] public string deployAnimationName;
@@ -97,6 +97,7 @@ namespace BDArmory.Modules
         public Vector3? FiringSolutionVector => targetPosition.IsZero() ? (Vector3?)null : (targetPosition - rockets[0].parent.transform.position).normalized;
 
         double lastRocketsLeft;
+        double rocketsMax;
 
         //weapon interface
         public Part GetPart()
@@ -118,10 +119,6 @@ namespace BDArmory.Modules
         {
             return string.Empty;
         }
-		private ProtoStageIconInfo emptyGauge;
-		private ProtoStageIconInfo ammoGauge;
-    	double rocketsLeft;
-		double rocketsMax;
         
         [KSPAction("Fire")]
         public void AGFire(KSPActionParam param)
@@ -255,10 +252,12 @@ namespace BDArmory.Modules
         }
 
 
-        public override void OnStart(StartState state)
+        public void Start()
         {
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxTargetingRange);
+
+            SetupAudio();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -266,7 +265,6 @@ namespace BDArmory.Modules
 
                 aimerTexture = BDArmorySetup.Instance.greenPointCircleTexture;
                 // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
-
 
                 MakeRocketArray();
                 UpdateRocketScales();
@@ -278,6 +276,10 @@ namespace BDArmory.Modules
 
                 UpdateAudio();
                 BDArmorySetup.OnVolumeChange += UpdateAudio;
+
+                gauge = (BDStagingAreaGauge)part.AddModule("BDStagingAreaGauge");
+                gauge.AmmoName = rocketType;
+                gauge.AudioSource = sfAudioSource;
             }
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
@@ -313,23 +315,10 @@ namespace BDArmory.Modules
                     readyToFire = false;
                 }
             }
-            SetupAudio();
 
             blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
-		private void ReloadIconOnVesselSwitch(Vessel data0, Vessel data1)
-		{
-			if (part == null) return;
-			if (part.vessel == null) return;
 
-			if (part.vessel.isActiveVessel)
-			{
-				part.stagingIconAlwaysShown = true;
-				this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
-				ammoGauge = null;
-				emptyGauge = null;
-			}
-		}
         IEnumerator DeployAnimRoutine(bool forward)
         {
             readyToFire = false;
@@ -382,15 +371,9 @@ namespace BDArmory.Modules
         }
 
 
-        public override void OnFixedUpdate()
+        public void FixedUpdate()
         {
-            if (GetRocketResource().amount != lastRocketsLeft)
-            {
-                UpdateRocketScales();
-                lastRocketsLeft = GetRocketResource().amount;
-            }
-
-            if (!vessel.IsControllable)
+            if (!HighLogic.LoadedSceneIsFlight || !vessel.IsControllable)
             {
                 return;
             }
@@ -410,9 +393,9 @@ namespace BDArmory.Modules
             
         }
 
-        public override void OnUpdate()
+        public void Update()
         {
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
             {
                 if (readyToFire && deployed)
                 {
@@ -445,25 +428,20 @@ namespace BDArmory.Modules
                         }
                     }
                 }
+
+                if (GetRocketResource().amount != lastRocketsLeft)
+                {
+                    UpdateRocketScales();
+                    lastRocketsLeft = GetRocketResource().amount;
+                }
+
+                if (vessel.isActiveVessel)
+                {
+                    gauge.UpdateAmmoMeter((float)(lastRocketsLeft / rocketsMax));
+                }
             }
         }
-		void FixedUpdate()
-		{
-			if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
-			{
-				if (vessel.isActiveVessel)
-				{
-					if (rocketsLeft > 0 && ammoGauge == null) //only redraw these if nulled from vessel switch
-					{
-						UpdateAmmoMeter();
-					}
-					if (rocketsLeft <= 0 && emptyGauge == null)
-					{
-						UpdateEmptyAlert();
-					}
-				}
-			}
-		}
+
         bool mouseAiming;
 
         void Aim()
@@ -781,20 +759,21 @@ namespace BDArmory.Modules
 
         public PartResource GetRocketResource()
         {
-            IEnumerator<PartResource> res = part.Resources.GetEnumerator();
-            while (res.MoveNext())
-            {
-                if (res.Current == null) continue;
-                if (res.Current.resourceName == rocketType) return res.Current;
-            }
-            res.Dispose();
+            using (var res = part.Resources.GetEnumerator())
+                while (res.MoveNext())
+                {
+                    if (res.Current == null) continue;
+                    if (res.Current.resourceName == rocketType) return res.Current;
+                }
             return null;
         }
 
         void UpdateRocketScales()
         {
+            // This is a backup method only, rockets will be rescaled to zero on firing,
+            // so this will be called only on start and if something weird happens.
             PartResource rocketResource = GetRocketResource();
-            rocketsLeft = Math.Floor(rocketResource.amount);
+            var rocketsLeft = Math.Floor(rocketResource.amount);
             rocketsMax = rocketResource.maxAmount;
             for (int i = 0; i < rocketsMax; i++)
             {
@@ -802,91 +781,6 @@ namespace BDArmory.Modules
                 else rockets[i].localScale = Vector3.zero;
             }
         }
-
-#region UI gauges
-		public void UpdateAmmoMeter()
-		{
-			if (!BDArmorySettings.INFINITE_AMMO) //clear ammo gauges if infinite ammo, they're unnecessary
-			{
-				if (rocketsLeft > 0)
-				{
-					if (ammoGauge == null)
-					{
-						ammoGauge = InitAmmoGauge();
-					}
-					ammoGauge?.SetValue((float)rocketsLeft, 0, (float)rocketsMax);  //null check
-				}
-				else if (rocketsLeft < 1)
-				{
-					part.stackIcon.ClearInfoBoxes();
-					ammoGauge = null;
-					emptyGauge = null;
-					UpdateEmptyAlert();
-				}
-			}
-			else
-			{
-				part.stackIcon.ClearInfoBoxes();
-				ammoGauge = null;
-			}
-		}
-
-		public void UpdateEmptyAlert()
-		{
-			if (!BDArmorySettings.INFINITE_AMMO)
-			{
-				if (rocketsLeft < 1)
-				{
-					if (emptyGauge == null)
-					{
-						emptyGauge = InitEmptyGauge();
-					}
-					emptyGauge?.SetValue(1, 0, 1);    //null check
-				}
-				else if (emptyGauge != null && rocketsLeft > 0)
-				{
-					part.stackIcon.ClearInfoBoxes();
-					emptyGauge = null;
-					UpdateAmmoMeter();
-				}
-			}
-			else
-			{
-				part.stackIcon.ClearInfoBoxes();
-				emptyGauge = null;
-			}
-		}
-
-		private ProtoStageIconInfo InitAmmoGauge() //thanks DYJ
-		{
-			ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
-			// fix nullref if no stackicon exists
-			if (a != null)
-			{
-				a.SetMsgBgColor(XKCDColors.Grey);
-				a.SetMsgTextColor(XKCDColors.Yellow);
-				a.SetMessage($"{rocketType}");
-				a.SetProgressBarBgColor(XKCDColors.DarkGrey);
-				a.SetProgressBarColor(XKCDColors.Yellow);
-			}
-			return a;
-		}
-
-		private ProtoStageIconInfo InitEmptyGauge() //thanks DYJ
-		{
-			ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
-			// fix nullref if no stackicon exists
-			if (g != null)
-			{
-				g.SetMsgBgColor(XKCDColors.AlmostBlack);
-				g.SetMsgTextColor(XKCDColors.Yellow);
-				g.SetMessage("Ammo Depleted");
-				g.SetProgressBarBgColor(XKCDColors.Yellow);
-				g.SetProgressBarColor(XKCDColors.Black);
-			}
-			return g;
-		}
-		#endregion
 
         // RMB info in editor
         public override string GetInfo()

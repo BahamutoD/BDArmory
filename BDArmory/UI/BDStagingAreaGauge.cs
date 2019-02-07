@@ -21,6 +21,15 @@ namespace BDArmory.UI
         void Start()
         {
             GameEvents.onVesselSwitching.Add(ReloadIconOnVesselSwitch);
+            // Fallback icon in case no icon is set for the part
+            if (string.IsNullOrEmpty(part.stagingIcon))
+            {
+                part.stagingIcon = "SOLID_BOOSTER";
+                part.stackIcon.CreateIcon();
+            }
+            part.stagingIconAlwaysShown = true;
+            part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
+            ForceRedraw();
         }
 
         void OnDestroy()
@@ -32,8 +41,6 @@ namespace BDArmory.UI
         {
             if (part?.vessel != null && part.vessel.isActiveVessel)
             {
-                part.stagingIconAlwaysShown = true;
-                part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
                 ForceRedraw();
             }
         }
