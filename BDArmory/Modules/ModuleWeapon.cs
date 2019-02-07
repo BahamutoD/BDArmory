@@ -66,10 +66,7 @@ namespace BDArmory.Modules
                 
         public float heat;
         public bool isOverheated;
-	    public bool isOutofAmmo = false;
-	    public float ammoAmount;
-	    public float ammoMax;
-        private float updateList;
+
 	    private bool wasFiring;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
@@ -80,6 +77,9 @@ namespace BDArmory.Modules
         AudioSource audioSource;
         AudioSource audioSource2;
         AudioLowPassFilter lowpassFilter;
+
+        private BDStagingAreaGauge gauge;
+        private int AmmoID;
 
         //AI
         public bool aiControlled = false;
@@ -109,10 +109,6 @@ namespace BDArmory.Modules
         //used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
         //private int numberOfGuns = 0;
 
-        //UI gauges(next to staging icon)
-        private ProtoStageIconInfo heatGauge;
-	    private ProtoStageIconInfo emptyGauge;
-	    private ProtoStageIconInfo ammoGauge;
 		//AI will fire gun if target is within this Cos(angle) of barrel
 		public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
 
@@ -393,8 +389,6 @@ namespace BDArmory.Modules
         [KSPField]
         public string reloadCompletePath = string.Empty;
 
-
-        private ProtoStageIconInfo reloadBar;
         [KSPField]
         public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
@@ -532,14 +526,10 @@ namespace BDArmory.Modules
             this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
         }
 
-        public override void OnStart(StartState state)
+        public void Start()
         {
-            base.OnStart(state);
-
             part.stagingIconAlwaysShown = true;
             this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
-
-            GameEvents.onVesselSwitching.Add(ReloadIconOnVesselSwitch);
 
 			Events["HideUI"].active = false;
 			Events["ShowUI"].active = true;
@@ -648,31 +638,20 @@ namespace BDArmory.Modules
                 //setup audio
                 SetupAudio();
 
+                // Setup gauges
+                gauge = (BDStagingAreaGauge)part.AddModule("BDStagingAreaGauge");
+                gauge.AmmoName = ammoName;
+                gauge.AudioSource = audioSource;
+                gauge.ReloadAudioClip = reloadAudioClip;
+                gauge.ReloadCompleteAudioClip = reloadCompleteAudioClip;
+
+                AmmoID = PartResourceLibrary.Instance.GetDefinition(ammoName).id;
+
                 //laser setup
                 if (eWeaponType == WeaponTypes.Laser)
                 {
                     SetupLaserSpecifics();
                 }
-		//ammo gauge setup
-		List<Part>.Enumerator p = vessel.parts.GetEnumerator(); //Moved to OnStart, only needs to proc once
-		while (p.MoveNext())
-		{
-			if (p.Current == null) continue;
-			IEnumerator<PartResource> resource = p.Current.Resources.GetEnumerator();
-			while (resource.MoveNext())
-			{
-				if (resource.Current == null) continue;
-				{
-					if (resource.Current.resourceName != ammoName) continue; //doesn't return ElectricCharge for the ABL, but does return resource amoutns for lasers using custom resources.
-					{
-						ammoAmount = (float)resource.Current.amount;
-						ammoMax = (float)resource.Current.maxAmount;
-					}
-				}
-			}
-			resource.Dispose();
-		}
-		p.Dispose();
             }
             else if (HighLogic.LoadedSceneIsEditor)
             {
@@ -727,22 +706,6 @@ namespace BDArmory.Modules
             }
 
             BDArmorySetup.OnVolumeChange += UpdateVolume;
-        }
-
-        private void ReloadIconOnVesselSwitch(Vessel data0, Vessel data1)
-        {
-            if (part == null) return;
-            if (part.vessel == null) return;
-
-            if (part.vessel.isActiveVessel)
-            {
-                part.stagingIconAlwaysShown = true;
-                this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
-		        ammoGauge = null; //switching vessels clears stageicon gauges but doesn't null them
-		        emptyGauge = null; // nulling these here gets heat/reload gauges working properly on switched vessels
-		        heatGauge = null;
-		        reloadBar = null;
-            }
         }
 
         void OnDestroy()
@@ -811,6 +774,22 @@ namespace BDArmory.Modules
                     fireState.speed = fireAnimSpeed;
                     fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
                 }
+
+                // Draw gauges
+                if (vessel.isActiveVessel)
+                {
+                    vessel.GetConnectedResourceTotals(AmmoID, out double ammoCurrent, out double ammoMax);
+                    gauge.UpdateAmmoMeter((float)(ammoCurrent / ammoMax));
+
+                    if (showReloadMeter)
+                    {
+                        gauge.UpdateReloadMeter((Time.time - timeFired) * roundsPerMinute / 60);
+                    }
+                    else
+                    {
+                        gauge.UpdateHeatMeter(heat / maxHeat);
+                    }
+                }
             }
         }
 
@@ -827,36 +806,6 @@ namespace BDArmory.Modules
                     return;
                 }
 
-
-                if (vessel.isActiveVessel)// lets not have it re-initialize and reenumerate gauges and ammo counts every tick. Seriously, what was I thinking?
-		        {
-			        if (showReloadMeter)
-			        {
-				        UpdateReloadMeter();
-			        }
-			        else
-			        {
-				        UpdateHeatMeter();
-			        }
-			        UpdateAmmo();
-			        if (!isOutofAmmo && ammoGauge == null) //only redraw these if nulled from vessel switch
-			        {
-				        UpdateAmmoMeter();
-			        }
-			        if (isOutofAmmo && emptyGauge == null)
-			        {
-				        UpdateEmptyAlert();
-			        }
-			        updateList -= Time.fixedDeltaTime;
-			        if (updateList < 0)
-			        {
-				        UpdateAmmoMeter(); //call once a second to check for infinite ammo toggle, sanity check, etc
-				        UpdateEmptyAlert();
-				        updateList = 1.0f; 
-			        }
-		        }
-             
-                
                 UpdateHeat();
                 if (weaponState == WeaponStates.Enabled &&
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
@@ -2051,158 +2000,6 @@ namespace BDArmory.Modules
             if (heat < maxHeat / 3 && isOverheated) //reset on cooldown
             {
                 isOverheated = false;
-                heat = 0;
-            }
-        }
-	    void UpdateAmmo()
-	    {
-		    if (!BDArmorySettings.INFINITE_AMMO)
-		    {
-			    if (ammoAmount > 0)
-			    {
-				    isOutofAmmo = false;
-			    }
-			    else
-			    {
-				    isOutofAmmo = true;
-				    //autoFire = false; // leaving this on could cause problems if infinite ammo turned on after ammo depleted
-				    audioSource.Stop();
-				    wasFiring = false;
-				    weaponManager.ResetGuardInterval();
-			    }
-		    }
-		    else
-		    {
-			    isOutofAmmo = false;
-		    }
-	    }
-	    public void UpdateAmmoMeter()
-	    {
-		    if (!BDArmorySettings.INFINITE_AMMO)
-		    {
-			    if (!isOutofAmmo)
-			    {
-				    if (ammoGauge == null)
-				    {
-					    ammoGauge = InitAmmoGauge();
-				    }
-				    ammoGauge?.SetValue(ammoAmount, 0, ammoMax);  //null check
-			    }
-			    else if (ammoGauge != null && isOutofAmmo)
-			    {
-				    part.stackIcon.ClearInfoBoxes();
-				    ammoGauge = null;
-				    emptyGauge = null;
-				    UpdateEmptyAlert();
-			    }
-		    }
-		    else //clear ammo gauges if infinite ammo, they're unnecessary
-		    {
-			    part.stackIcon.ClearInfoBoxes();
-			    ammoGauge = null;
-			    heatGauge = null; //null these so other gauges will perperly re-initialize post ClearinfoBoxes()
-			    reloadBar = null;
-			    emptyGauge = null;
-			    UpdateHeatMeter();
-			    UpdateReloadMeter();
-		    }
-	    }
-	    void UpdateHeatMeter()
-            {
-                //heat
-                if (heat > maxHeat / 3)
-                {
-                    if (heatGauge == null)
-                    {
-                        heatGauge = InitHeatGauge();
-                    }
-
-                    heatGauge?.SetValue(heat, maxHeat / 3, maxHeat);    //null check
-                }
-                else if (heatGauge != null && heat < maxHeat / 4)
-		    {
-			    part.stackIcon.ClearInfoBoxes();
-			    heatGauge = null;
-			    ammoGauge = null;
-			    emptyGauge = null;
-			    if (!BDArmorySettings.INFINITE_AMMO)
-			    {
-				    if (!isOutofAmmo)
-				    {
-					    UpdateAmmoMeter();
-				    }
-				    else
-				    {
-					    UpdateEmptyAlert();
-				    }
-			    }
-		    }
-	    }
-	    void UpdateReloadMeter()
-            {
-                if (Time.time - timeFired < (60 / roundsPerMinute) && Time.time - timeFired > 0.1f)
-                {
-                    if (reloadBar == null)
-                    {
-                        reloadBar = InitReloadBar();
-                        if (reloadAudioClip)
-                        {
-                            audioSource.PlayOneShot(reloadAudioClip);
-                        }
-                    }
-                    reloadBar.SetValue(Time.time - timeFired, 0, 60 / roundsPerMinute);
-                }
-                else if (reloadBar != null)
-		    {
-			    part.stackIcon.ClearInfoBoxes();
-			    reloadBar = null;
-			    emptyGauge = null;
-			    ammoGauge = null;
-			    if (reloadCompleteAudioClip)
-			    {
-				    audioSource.PlayOneShot(reloadCompleteAudioClip);
-			    }
-			    if (!BDArmorySettings.INFINITE_AMMO)
-			    {
-				    if (!isOutofAmmo)
-				    {
-					    UpdateAmmoMeter();
-				    }
-				    else
-				    {
-					    UpdateEmptyAlert();
-				    }
-			    }
-		    }
-	    }
-        public void UpdateEmptyAlert()
-        {
-            if (!BDArmorySettings.INFINITE_AMMO)
-            {
-                if (isOutofAmmo)
-                {
-                    if (emptyGauge == null)
-                    {
-                        emptyGauge = InitEmptyGauge();
-                    }
-                    emptyGauge?.SetValue(1, 0, 1);    //null check
-                }
-                else if (emptyGauge != null && !isOutofAmmo)
-                {
-                    part.stackIcon.ClearInfoBoxes();
-                    ammoGauge = null;
-                    emptyGauge = null;
-                    heatGauge = null;
-                    reloadBar = null;
-                }
-            }
-            else
-            {
-                part.stackIcon.ClearInfoBoxes();
-                ammoGauge = null;
-                emptyGauge = null;
-                heatGauge = null;
-                reloadBar = null;
             }
         }
 
@@ -2304,65 +2101,6 @@ namespace BDArmory.Modules
         {
             guiStatusString = weaponState.ToString();
         }
-
-        private ProtoStageIconInfo InitReloadBar()
-        {
-            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-            v.SetMsgBgColor(XKCDColors.DarkGrey);
-            v.SetMsgTextColor(XKCDColors.White);
-            v.SetMessage("Reloading");
-            v.SetProgressBarBgColor(XKCDColors.DarkGrey);
-            v.SetProgressBarColor(XKCDColors.Silver);
-
-            return v;
-        }
-
-        private ProtoStageIconInfo InitHeatGauge() //thanks DYJ
-        {
-            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-
-            // fix nullref if no stackicon exists
-            if (v != null)
-            {
-                v.SetMsgBgColor(XKCDColors.DarkRed);
-                v.SetMsgTextColor(XKCDColors.Orange);
-                v.SetMessage("Overheat");
-                v.SetProgressBarBgColor(XKCDColors.DarkRed);
-                v.SetProgressBarColor(XKCDColors.Orange);
-            }
-            return v;
-        }
-
-	    private ProtoStageIconInfo InitAmmoGauge() //thanks DYJ
-	    {
-		    ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
-		    // fix nullref if no stackicon exists
-		    if (a != null)
-		    {
-			    a.SetMsgBgColor(XKCDColors.Grey);
-			    a.SetMsgTextColor(XKCDColors.Yellow);
-			    //a.SetMessage("Ammunition");
-			    a.SetMessage($"{ammoName}");
-			    a.SetProgressBarBgColor(XKCDColors.DarkGrey);
-			    a.SetProgressBarColor(XKCDColors.Yellow);
-		    }
-		    return a;
-	    }
-
-	    private ProtoStageIconInfo InitEmptyGauge() //could remove emptygauge, mainly a QoL thing, removal might increase performance slightly
-	    {
-		    ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
-		    // fix nullref if no stackicon exists
-		    if (g != null)
-		    {
-			    g.SetMsgBgColor(XKCDColors.AlmostBlack);
-			    g.SetMsgTextColor(XKCDColors.Yellow);
-			    g.SetMessage("Ammo Depleted");
-			    g.SetProgressBarBgColor(XKCDColors.Yellow);
-			    g.SetProgressBarColor(XKCDColors.Black);
-		    }
-		    return g;
-	    }
 
 	    IEnumerator StartupRoutine()
         {
@@ -2488,8 +2226,8 @@ namespace BDArmory.Modules
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastPower;
                 cannonShellRadius = bulletInfo.blastRadius;
-		detonationRange = bulletInfo.tntMass; // get default proxfuze radius
-		detonationRange = (float)((14.8f * Math.Pow(detonationRange, 1 / 3f))*(2/3)); // have to call it this way, using BlastUtils.GetBlastRadius returns 0, setting it to 2/3's tnt blast radius so flak explodes when target inside radius, ratehr than at edge.
+		        detonationRange = bulletInfo.tntMass; // get default proxfuze radius
+		        detonationRange = (float)((14.8f * Math.Pow(detonationRange, 1 / 3f))*(2/3)); // have to call it this way, using BlastUtils.GetBlastRadius returns 0, setting it to 2/3's tnt blast radius so flak explodes when target inside radius, ratehr than at edge.
             }
             ParseBulletDragType();
         }

@@ -934,11 +934,6 @@ namespace BDArmory.Modules
             {
                 targetScanTimer = -100;
             }
-		if (selectedWeapon != null && selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
-		{
-			AmmoController(); //Could have this called by ModuleWeapon.Fire(); only need this called when a weapon fires, but salvo mode would have multiple duplicate calls 
-			//so going with slightly less performance efficient method in general to prevent greater perfomance cost in specific circumstances
-		}
             BombAimer();
         }
 
@@ -4312,50 +4307,7 @@ namespace BDArmory.Modules
 
             return false;
         }
-	public Dictionary<string, float> vesselAmmunition = new Dictionary<string, float>();
-	public void AmmoController() // instead of having every weapon call multiple enumerators for ammo checks every update tick, do single central enum 
-	//Stuck this here for convenience, but to avoid missileFire clutter could probably be spun off into seperate class.
-	{
-		if (selectedWeapon.GetWeaponClass() == WeaponClasses.Gun)
-		{
-			string lastAmmoName = null;
-			List<ModuleWeapon>.Enumerator w = vessel.FindPartModulesImplementing<ModuleWeapon>().GetEnumerator();
-			while (w.MoveNext())
-			{
-				if (w.Current == null) continue;
-				//if (w.Current.GetShortName() != selectedWeapon.GetShortName()) continue; run through all weapons instead of selected incase multiple weapon grous use same ammo type.
-				if (vesselAmmunition.TryGetValue(w.Current.ammoName, out w.Current.ammoAmount))
-				{
-					w.Current.ammoAmount = vesselAmmunition[w.Current.ammoName]; // once dictinary populated, simply grab ammocount from stored value
-				}
-				w.Current.UpdateAmmoMeter();
-				if (w.Current.ammoName == lastAmmoName) continue; //only run a single enumerator for ammocount per ammotype, instead of an enum per weapon instance
-				List<Part>.Enumerator p = vessel.parts.GetEnumerator();
-				while (p.MoveNext())
-				{
-					if (p.Current == null) continue;
-					IEnumerator<PartResource> resource = p.Current.Resources.GetEnumerator();
-					while (resource.MoveNext())
-					{
-						if (resource.Current == null) continue;
-						if (resource.Current.resourceName != w.Current.ammoName) continue;
-						if (vesselAmmunition.ContainsKey(w.Current.ammoName))
-						{
-							vesselAmmunition[w.Current.ammoName] = (float)resource.Current.amount;
-						}
-						else
-						{
-							vesselAmmunition.Add(w.Current.ammoName, (float)resource.Current.amount);
-						}
-					}
-					resource.Dispose();
-				}
-				p.Dispose();
-				lastAmmoName = w.Current.ammoName;
-			}
-			w.Dispose();
-		}
-	}
+
         void ToggleTurret()
         {
             List<ModuleWeapon>.Enumerator weapon = vessel.FindPartModulesImplementing<ModuleWeapon>().GetEnumerator();
