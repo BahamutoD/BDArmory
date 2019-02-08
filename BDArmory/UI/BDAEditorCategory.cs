@@ -91,7 +91,7 @@ namespace BDArmory.UI
                     }
                 }
             // Part autocategorization
-            if (partsDetected && BDArmorySettings.AUTOCATEGORIZE_PARTS)
+            if (partsDetected)
                 using (var parts = PartLoader.LoadedPartsList.GetEnumerator())
                     while (parts.MoveNext())
                     {
@@ -380,6 +380,20 @@ namespace BDArmory.UI
             if (SettingsOpen)
             {
                 SettingsWindow = GUI.Window(9476026, SettingsWindow, DrawSettingsWindow, "", BDArmorySetup.BDGuiSkin.window);
+            }
+
+            if (EditorLogic.fetch != null)
+            {
+                if (SettingsOpen 
+                    && SettingsWindow.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y))
+                    && !CameraMouseLook.GetMouseLook())
+                {
+                    EditorLogic.fetch.Lock(false, false, false, "BDA_CATEGORY_LOCK");
+                }
+                else
+                {
+                    EditorLogic.fetch.Unlock("BDA_CATEGORY_LOCK");
+                }
             }
         }
     }
