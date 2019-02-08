@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 using KSP.UI;
@@ -65,6 +66,7 @@ namespace BDArmory.UI
         private List<PartCategorizerButton> SubcategoryButtons = new List<PartCategorizerButton>();
         private string CurrentCategory = BDArmorySettings.SHOW_CATEGORIES ? "All" : "Legacy";
         private RectTransform BDAPartBar;
+        private PartCategorizer.Category FilterByFunctionCategory;
         private const float SettingsWidth = 230;
         private const float SettingsHeight = 83;
         private const float SettingsMargin = 18;
@@ -86,7 +88,7 @@ namespace BDArmory.UI
                     if (parts.Current.partConfig.HasValue(BDACategoryKey) || parts.Current.manufacturer == Misc.BDAEditorTools.Manufacturer)
                     {
                         partsDetected = true;
-                        GameEvents.onGUIEditorToolbarReady.Add(BDArmoryCategory);
+                        GameEvents.onGUIEditorToolbarReady.Add(LoadBDArmoryCategory);
                         break;
                     }
                 }
@@ -173,7 +175,7 @@ namespace BDArmory.UI
 
         private void OnDestroy()
         {
-            GameEvents.onGUIEditorToolbarReady.Remove(BDArmoryCategory);
+            GameEvents.onGUIEditorToolbarReady.Remove(LoadBDArmoryCategory);
         }
 
         public static string GetTexturePath(string category)
@@ -183,21 +185,33 @@ namespace BDArmory.UI
             return "BDArmory/Textures/icon";
         }
 
-        private void BDArmoryCategory()
+        private void LoadBDArmoryCategory()
         {
+            StartCoroutine(BDArmoryCategory());
+        }
+
+        private IEnumerator BDArmoryCategory()
+        {
+            // Wait for filter extensions to do their thing
+            yield return null;
+            yield return null;
+            yield return null;
+
             // BDA Category
             const string customCategoryName = "BDAParts";
             const string customDisplayCategoryName = "Armory";
 
-            PartCategorizer.Category filterByFunctionCategory = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
-            if (BDACategory != null && filterByFunctionCategory.subcategories.Contains(BDACategory))
-                return;
+            FilterByFunctionCategory = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
+            if (BDACategory != null && FilterByFunctionCategory.subcategories.Contains(BDACategory))
+            {
+                yield break;
+            }
 
             Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
             RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
 
             BDACategory = PartCategorizer.AddCustomSubcategoryFilter(
-                filterByFunctionCategory,
+                FilterByFunctionCategory,
                 customCategoryName,
                 customDisplayCategoryName,
                 icon,
@@ -309,7 +323,7 @@ namespace BDArmory.UI
                     button.btnToggleGeneric.onTrueBtn.RemoveAllListeners();
                     button.btnToggleGeneric.SetGroup(412440121);
                     button.transform.SetParent(BDAPartBar, false);
-                    button.transform.position = new Vector3(-767, 424, 750) + button_offset * SubcategoryButtons.Count;
+                    button.transform.position = new Vector3(BDACategory.button.transform.position.x + 34, 424, 750) + button_offset * SubcategoryButtons.Count;
                     categorizer_button.DeleteSubcategory();
                     SubcategoryButtons.Add(button);
                     // Gotta use a saved value, because the enumerator changes the value during the run
@@ -363,12 +377,16 @@ namespace BDArmory.UI
 
         void OnGUI()
         {
-            if (BDArmorySettings.SHOW_CATEGORIES && BDACategory.button.activeButton.Value && !expanded)
+            if (!HighLogic.LoadedSceneIsEditor || BDACategory == null)
+                return;
+
+            bool shouldOpen = BDArmorySettings.SHOW_CATEGORIES && FilterByFunctionCategory.button.activeButton.Value && BDACategory.button.activeButton.Value;
+            if (shouldOpen && !expanded)
             {
                 ExpandPartSelector(offset);
                 expanded = true;
             }
-            else if ((!BDACategory.button.activeButton.Value || !BDArmorySettings.SHOW_CATEGORIES) && expanded)
+            else if (!shouldOpen && expanded)
             {
                 ExpandPartSelector(-offset);
                 expanded = false;
