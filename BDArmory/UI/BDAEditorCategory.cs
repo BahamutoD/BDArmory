@@ -18,7 +18,7 @@ namespace BDArmory.UI
         public const string AutoBDACategoryKey = "autobdacategory";
         public const int SubcategoryGroup = 412440121;
         /// <summary>
-        /// Adding to this dictionary on KSPAddon.Startup.EditorAny will add more bda categories.
+        /// Adding to this dictionary before the category buttons are created will add more bda categories.
         /// </summary>
         public static readonly List<string> Categories = new List<string>
         {
@@ -306,7 +306,7 @@ namespace BDArmory.UI
                     button.btnToggleGeneric.onTrueBtn.RemoveAllListeners();
                     button.btnToggleGeneric.SetGroup(412440121);
                     button.transform.SetParent(BDAPartBar, false);
-                    button.transform.position += button_offset * (SubcategoryButtons.Count - filterByFunctionCategory.subcategories.Count);
+                    button.transform.position = new Vector3(-767, 424, 750) + button_offset * SubcategoryButtons.Count;
                     categorizer_button.DeleteSubcategory();
                     SubcategoryButtons.Add(button);
                     // Gotta use a saved value, because the enumerator changes the value during the run
