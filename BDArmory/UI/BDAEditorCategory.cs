@@ -122,8 +122,11 @@ namespace BDArmory.UI
                             }
                             else if ((missileLauncher = parts.Current.partPrefab.FindModuleImplementing<MissileLauncher>()) != null)
                             {
-                                if (missileLauncher.GetWeaponClass() == Misc.WeaponClasses.Bomb)
+                                // weapon class is not parsed when in editor, so using missileType
+                                if (missileLauncher.missileType.ToLower() == "bomb")
                                     parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Bombs");
+                                else if (missileLauncher.missileType.ToLower() == "torpedo" || missileLauncher.missileType.ToLower() == "depthcharge")
+                                    parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Torpedoes");
                                 else
                                     parts.Current.partConfig.AddValue(AutoBDACategoryKey, "Missiles");
                             }
