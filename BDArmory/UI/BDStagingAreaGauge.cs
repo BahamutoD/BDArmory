@@ -21,12 +21,6 @@ namespace BDArmory.UI
         void Start()
         {
             GameEvents.onVesselSwitching.Add(ReloadIconOnVesselSwitch);
-            // Fallback icon in case no icon is set for the part
-            if (string.IsNullOrEmpty(part.stagingIcon))
-            {
-                part.stagingIcon = "SOLID_BOOSTER";
-                part.stackIcon.CreateIcon();
-            }
             part.stagingIconAlwaysShown = true;
             part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
             ForceRedraw();
@@ -133,8 +127,22 @@ namespace BDArmory.UI
             emptyGauge = null;
         }
 
+        private void EnsureStagingIcon()
+        {
+            // Fallback icon in case no icon is set for the part
+            if (string.IsNullOrEmpty(part.stagingIcon))
+            {
+                part.stagingIcon = "SOLID_BOOSTER";
+                part.stackIcon.CreateIcon();
+                part.stagingIconAlwaysShown = true;
+                part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
+                ForceRedraw();
+            }
+        }
+
         private ProtoStageIconInfo InitReloadBar()
         {
+            EnsureStagingIcon();
             ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
             if (v == null)
                 return v;
@@ -149,6 +157,7 @@ namespace BDArmory.UI
 
         private ProtoStageIconInfo InitHeatGauge() //thanks DYJ
         {
+            EnsureStagingIcon();
             ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
 
             // fix nullref if no stackicon exists
@@ -165,6 +174,7 @@ namespace BDArmory.UI
 
         private ProtoStageIconInfo InitAmmoGauge(string ammoName) //thanks DYJ
         {
+            EnsureStagingIcon();
             ProtoStageIconInfo a = part.stackIcon.DisplayInfo();
             // fix nullref if no stackicon exists
             if (a != null)
@@ -181,6 +191,7 @@ namespace BDArmory.UI
 
         private ProtoStageIconInfo InitEmptyGauge() //could remove emptygauge, mainly a QoL thing, removal might increase performance slightly
         {
+            EnsureStagingIcon();
             ProtoStageIconInfo g = part.stackIcon.DisplayInfo();
             // fix nullref if no stackicon exists
             if (g != null)

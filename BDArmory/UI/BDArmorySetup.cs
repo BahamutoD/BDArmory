@@ -1368,6 +1368,7 @@ namespace BDArmory.UI
             BDArmorySettings.REMOTE_SHOOTING = GUI.Toggle(SLeftRect(line), BDArmorySettings.REMOTE_SHOOTING, "Remote Firing");
             BDArmorySettings.BOMB_CLEARANCE_CHECK = GUI.Toggle(SRightRect(line), BDArmorySettings.BOMB_CLEARANCE_CHECK, "Clearance Check");
             line++;
+            BDArmorySettings.SHOW_AMMO_GAUGES = GUI.Toggle(SLeftRect(line), BDArmorySettings.SHOW_AMMO_GAUGES, "Ammo Gauges");
             BDArmorySettings.SHELL_COLLISIONS = GUI.Toggle(SRightRect(line), BDArmorySettings.SHELL_COLLISIONS, "Shell Collisions");
             line++;
             BDArmorySettings.BULLET_DECALS = GUI.Toggle(SLeftRect(line), BDArmorySettings.BULLET_DECALS, "Bullet Hole Decals");
