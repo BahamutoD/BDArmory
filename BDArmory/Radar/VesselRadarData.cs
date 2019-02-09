@@ -765,7 +765,7 @@ namespace BDArmory.Radar
                 TargetSignatureData lockedTarget = displayedTargets[lockedTargetIndexes[i]].targetData;
                 if (i == activeLockedTargetIndex)
                 {
-                    if (weaponManager && weaponManager.Team.IsEnemy(lockedTarget.Team))
+                    if (weaponManager && weaponManager.Team.IsFriendly(lockedTarget.Team))
                     {
                         BDGUIUtils.DrawTextureOnWorldPos(lockedTarget.predictedPosition,
                             BDArmorySetup.Instance.crossedGreenSquare, new Vector2(20, 20), 0);
