@@ -9,7 +9,7 @@ namespace BDArmory.Core
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
         [BDAPersistantSettingsField] public static bool BULLET_DECALS = true;
         [BDAPersistantSettingsField] public static int MAX_NUM_BULLET_DECALS = 200;
-        [BDAPersistantSettingsField] public static bool SHOW_AMMO_GAUGES = true;
+        [BDAPersistantSettingsField] public static bool SHOW_AMMO_GAUGES = false;
         [BDAPersistantSettingsField] public static bool EJECT_SHELLS = true;
         [BDAPersistantSettingsField] public static bool SHELL_COLLISIONS = true;
         [BDAPersistantSettingsField] public static bool INFINITE_AMMO = false;
