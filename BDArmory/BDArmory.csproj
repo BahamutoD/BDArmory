@@ -83,7 +83,6 @@
     <Compile Include="Control\IBDAIControl.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
-    <Compile Include="FX\MissileFX.cs" />
     <Compile Include="Guidances\CruiseGuidance.cs" />
     <Compile Include="Modules\ModuleDrainEC.cs" />
     <Compile Include="Modules\ModuleMissileRearm.cs" />
