@@ -66,7 +66,8 @@ namespace BDArmory.Modules
                 
         public float heat;
         public bool isOverheated;
-		private bool wasFiring;
+
+	    private bool wasFiring;
             //used for knowing when to stop looped audio clip (when you're not shooting, but you were)
 
         AudioClip reloadCompleteAudioClip;
@@ -76,6 +77,9 @@ namespace BDArmory.Modules
         AudioSource audioSource;
         AudioSource audioSource2;
         AudioLowPassFilter lowpassFilter;
+
+        private BDStagingAreaGauge gauge;
+        private int AmmoID;
 
         //AI
         public bool aiControlled = false;
@@ -104,9 +108,6 @@ namespace BDArmory.Modules
         
         //used to reduce volume of audio if multiple guns are being fired (needs to be improved/changed)
         //private int numberOfGuns = 0;
-
-        //UI gauges(next to staging icon)
-        private ProtoStageIconInfo heatGauge;
 
 		//AI will fire gun if target is within this Cos(angle) of barrel
 		public float maxAutoFireCosAngle = 0.9993908f; //corresponds to ~2 degrees
@@ -388,8 +389,6 @@ namespace BDArmory.Modules
         [KSPField]
         public string reloadCompletePath = string.Empty;
 
-
-        private ProtoStageIconInfo reloadBar;
         [KSPField]
         public bool showReloadMeter = false; //used for cannons or guns with extremely low rate of fire
 
@@ -400,15 +399,15 @@ namespace BDArmory.Modules
         [KSPField]
         public bool proximityDetonation = false;
 
-	[KSPField(isPersistant = true, guiActive = true, guiName = "Fuzed Detonation Range ", guiActiveEditor = false)]
-	public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
+	    [KSPField(isPersistant = true, guiActive = true, guiName = "Fuzed Detonation Range ", guiActiveEditor = false)]
+	    public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
 
-	[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-	public float detonationRange = 5f; // give ability to set proximity range
+	    [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+	    public float detonationRange = 5f; // give ability to set proximity range
 
-	[KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
-	 UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
-	public float maxAirDetonationRange = 3500; // could probably get rid of this entirely, max engagement range more or less already does this
+	    [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
+	     UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
+	    public float maxAirDetonationRange = 3500; // could probably get rid of this entirely, max engagement range more or less already does this
         [KSPField]
         public bool airDetonationTiming = true;
 
@@ -527,14 +526,10 @@ namespace BDArmory.Modules
             this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
         }
 
-        public override void OnStart(StartState state)
+        public void Start()
         {
-            base.OnStart(state);
-
             part.stagingIconAlwaysShown = true;
             this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
-
-            GameEvents.onVesselSwitching.Add(ReloadIconOnVesselSwitch);
 
 			Events["HideUI"].active = false;
 			Events["ShowUI"].active = true;
@@ -643,6 +638,15 @@ namespace BDArmory.Modules
                 //setup audio
                 SetupAudio();
 
+                // Setup gauges
+                gauge = (BDStagingAreaGauge)part.AddModule("BDStagingAreaGauge");
+                gauge.AmmoName = ammoName;
+                gauge.AudioSource = audioSource;
+                gauge.ReloadAudioClip = reloadAudioClip;
+                gauge.ReloadCompleteAudioClip = reloadCompleteAudioClip;
+
+                AmmoID = PartResourceLibrary.Instance.GetDefinition(ammoName).id;
+
                 //laser setup
                 if (eWeaponType == WeaponTypes.Laser)
                 {
@@ -702,18 +706,6 @@ namespace BDArmory.Modules
             }
 
             BDArmorySetup.OnVolumeChange += UpdateVolume;
-        }
-
-        private void ReloadIconOnVesselSwitch(Vessel data0, Vessel data1)
-        {
-            if (part == null) return;
-            if (part.vessel == null) return;
-
-            if (part.vessel.isActiveVessel)
-            {
-                part.stagingIconAlwaysShown = true;
-                this.part.stackIconGrouping = StackIconGrouping.SAME_TYPE;
-            }
         }
 
         void OnDestroy()
@@ -782,6 +774,22 @@ namespace BDArmory.Modules
                     fireState.speed = fireAnimSpeed;
                     fireAnimSpeed = Mathf.Lerp(fireAnimSpeed, 0, 0.04f);
                 }
+
+                // Draw gauges
+                if (vessel.isActiveVessel)
+                {
+                    vessel.GetConnectedResourceTotals(AmmoID, out double ammoCurrent, out double ammoMax);
+                    gauge.UpdateAmmoMeter((float)(ammoCurrent / ammoMax));
+
+                    if (showReloadMeter)
+                    {
+                        gauge.UpdateReloadMeter((Time.time - timeFired) * roundsPerMinute / 60);
+                    }
+                    else
+                    {
+                        gauge.UpdateHeatMeter(heat / maxHeat);
+                    }
+                }
             }
         }
 
@@ -798,20 +806,6 @@ namespace BDArmory.Modules
                     return;
                 }
 
-
-                if (vessel.isActiveVessel)
-                {
-                    if (showReloadMeter)
-                    {
-                        UpdateReloadMeter();
-                    }
-                    else
-                    {
-                        UpdateHeatMeter();
-                    }
-                }
-             
-                
                 UpdateHeat();
                 if (weaponState == WeaponStates.Enabled &&
                     (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRate == 1))
@@ -2006,50 +2000,6 @@ namespace BDArmory.Modules
             if (heat < maxHeat / 3 && isOverheated) //reset on cooldown
             {
                 isOverheated = false;
-                heat = 0;
-            }
-        }
-		void UpdateHeatMeter()
-        {
-            //heat
-            if (heat > maxHeat / 3)
-            {
-                if (heatGauge == null)
-                {
-                    heatGauge = InitHeatGauge();
-                }
-
-                heatGauge?.SetValue(heat, maxHeat / 3, maxHeat);    //null check
-            }
-            else if (heatGauge != null && heat < maxHeat / 4)
-            {
-                part.stackIcon.ClearInfoBoxes();
-                heatGauge = null;
-			}
-		}
-
-		void UpdateReloadMeter()
-        {
-            if (Time.time - timeFired < (60 / roundsPerMinute) && Time.time - timeFired > 0.1f)
-            {
-                if (reloadBar == null)
-                {
-                    reloadBar = InitReloadBar();
-                    if (reloadAudioClip)
-                    {
-                        audioSource.PlayOneShot(reloadAudioClip);
-                    }
-                }
-                reloadBar.SetValue(Time.time - timeFired, 0, 60 / roundsPerMinute);
-            }
-            else if (reloadBar != null)
-            {
-                part.stackIcon.ClearInfoBoxes();
-                reloadBar = null;
-                if (reloadCompleteAudioClip)
-                {
-                    audioSource.PlayOneShot(reloadCompleteAudioClip);
-                }
             }
         }
 
@@ -2152,34 +2102,7 @@ namespace BDArmory.Modules
             guiStatusString = weaponState.ToString();
         }
 
-        private ProtoStageIconInfo InitReloadBar()
-        {
-            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-            v.SetMsgBgColor(XKCDColors.DarkGrey);
-            v.SetMsgTextColor(XKCDColors.White);
-            v.SetMessage("Reloading");
-            v.SetProgressBarBgColor(XKCDColors.DarkGrey);
-            v.SetProgressBarColor(XKCDColors.Silver);
-
-            return v;
-        }
-
-        private ProtoStageIconInfo InitHeatGauge() //thanks DYJ
-        {
-            ProtoStageIconInfo v = part.stackIcon.DisplayInfo();
-
-            // fix nullref if no stackicon exists
-            if (v != null)
-            {
-                v.SetMsgBgColor(XKCDColors.DarkRed);
-                v.SetMsgTextColor(XKCDColors.Orange);
-                v.SetMessage("Overheat");
-                v.SetProgressBarBgColor(XKCDColors.DarkRed);
-                v.SetProgressBarColor(XKCDColors.Orange);
-            }
-            return v;
-        }
-		IEnumerator StartupRoutine()
+	    IEnumerator StartupRoutine()
         {
             weaponState = WeaponStates.PoweringUp;
             UpdateGUIWeaponState();
@@ -2303,8 +2226,8 @@ namespace BDArmory.Modules
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastPower;
                 cannonShellRadius = bulletInfo.blastRadius;
-		detonationRange = bulletInfo.tntMass; // get default proxfuze radius
-		detonationRange = (float)((14.8f * Math.Pow(detonationRange, 1 / 3f))*(2/3)); // have to call it this way, using BlastUtils.GetBlastRadius returns 0, setting it to 2/3's tnt blast radius so flak explodes when target inside radius, ratehr than at edge.
+		        detonationRange = bulletInfo.tntMass; // get default proxfuze radius
+		        detonationRange = (float)((14.8f * Math.Pow(detonationRange, 1 / 3f))*(2/3)); // have to call it this way, using BlastUtils.GetBlastRadius returns 0, setting it to 2/3's tnt blast radius so flak explodes when target inside radius, ratehr than at edge.
             }
             ParseBulletDragType();
         }

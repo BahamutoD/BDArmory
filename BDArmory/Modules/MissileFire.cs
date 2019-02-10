@@ -934,7 +934,6 @@ namespace BDArmory.Modules
             {
                 targetScanTimer = -100;
             }
-
             BombAimer();
         }
 

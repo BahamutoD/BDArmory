@@ -17,8 +17,6 @@ namespace BDArmory.Modules
     {
         public bool hasRocket = true;
 
-        [KSPField] public string shortName = string.Empty;
-
         [KSPField(isPersistant = false)] public string rocketType;
 
         [KSPField(isPersistant = false)] public string rocketModelPath;
@@ -55,6 +53,7 @@ namespace BDArmory.Modules
         Transform[] rockets;
 
         public AudioSource sfAudioSource;
+        private BDStagingAreaGauge gauge;
 
         //animation
         [KSPField] public string deployAnimationName;
@@ -98,16 +97,12 @@ namespace BDArmory.Modules
         public Vector3? FiringSolutionVector => targetPosition.IsZero() ? (Vector3?)null : (targetPosition - rockets[0].parent.transform.position).normalized;
 
         double lastRocketsLeft;
+        double rocketsMax;
 
         //weapon interface
         public Part GetPart()
         {
             return part;
-        }
-
-        public string GetShortName()
-        {
-            return shortName;
         }
 
         public WeaponClasses GetWeaponClass()
@@ -124,8 +119,7 @@ namespace BDArmory.Modules
         {
             return string.Empty;
         }
-
-
+        
         [KSPAction("Fire")]
         public void AGFire(KSPActionParam param)
         {
@@ -258,10 +252,12 @@ namespace BDArmory.Modules
         }
 
 
-        public override void OnStart(StartState state)
+        public void Start()
         {
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxTargetingRange);
+
+            SetupAudio();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -269,7 +265,6 @@ namespace BDArmory.Modules
 
                 aimerTexture = BDArmorySetup.Instance.greenPointCircleTexture;
                 // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
-
 
                 MakeRocketArray();
                 UpdateRocketScales();
@@ -281,6 +276,10 @@ namespace BDArmory.Modules
 
                 UpdateAudio();
                 BDArmorySetup.OnVolumeChange += UpdateAudio;
+
+                gauge = (BDStagingAreaGauge)part.AddModule("BDStagingAreaGauge");
+                gauge.AmmoName = rocketType;
+                gauge.AudioSource = sfAudioSource;
             }
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
@@ -316,7 +315,6 @@ namespace BDArmory.Modules
                     readyToFire = false;
                 }
             }
-            SetupAudio();
 
             blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
@@ -373,15 +371,9 @@ namespace BDArmory.Modules
         }
 
 
-        public override void OnFixedUpdate()
+        public void FixedUpdate()
         {
-            if (GetRocketResource().amount != lastRocketsLeft)
-            {
-                UpdateRocketScales();
-                lastRocketsLeft = GetRocketResource().amount;
-            }
-
-            if (!vessel.IsControllable)
+            if (!HighLogic.LoadedSceneIsFlight || !vessel.IsControllable)
             {
                 return;
             }
@@ -398,11 +390,12 @@ namespace BDArmory.Modules
             {
                 targetPosition = Vector3.zero;
             }
+            
         }
 
-        public override void OnUpdate()
+        public void Update()
         {
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
             {
                 if (readyToFire && deployed)
                 {
@@ -434,6 +427,17 @@ namespace BDArmory.Modules
                             FireRocket();
                         }
                     }
+                }
+
+                if (GetRocketResource().amount != lastRocketsLeft)
+                {
+                    UpdateRocketScales();
+                    lastRocketsLeft = GetRocketResource().amount;
+                }
+
+                if (vessel.isActiveVessel)
+                {
+                    gauge.UpdateAmmoMeter((float)(lastRocketsLeft / rocketsMax));
                 }
             }
         }
@@ -755,21 +759,22 @@ namespace BDArmory.Modules
 
         public PartResource GetRocketResource()
         {
-            IEnumerator<PartResource> res = part.Resources.GetEnumerator();
-            while (res.MoveNext())
-            {
-                if (res.Current == null) continue;
-                if (res.Current.resourceName == rocketType) return res.Current;
-            }
-            res.Dispose();
+            using (var res = part.Resources.GetEnumerator())
+                while (res.MoveNext())
+                {
+                    if (res.Current == null) continue;
+                    if (res.Current.resourceName == rocketType) return res.Current;
+                }
             return null;
         }
 
         void UpdateRocketScales()
         {
+            // This is a backup method only, rockets will be rescaled to zero on firing,
+            // so this will be called only on start and if something weird happens.
             PartResource rocketResource = GetRocketResource();
-            double rocketsLeft = Math.Floor(rocketResource.amount);
-            double rocketsMax = rocketResource.maxAmount;
+            var rocketsLeft = Math.Floor(rocketResource.amount);
+            rocketsMax = rocketResource.maxAmount;
             for (int i = 0; i < rocketsMax; i++)
             {
                 if (i < rocketsLeft) rockets[i].localScale = Vector3.one;
