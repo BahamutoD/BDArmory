@@ -175,6 +175,8 @@ namespace BDArmory.Control
                                     waiting = true;
                             }
 
+                        // Increase the distance for large teams
+                        var sqrTeamDistance = (800 + 100 * pilots[leader.Current.weaponManager.Team].Count) * (800 + 100 * pilots[leader.Current.weaponManager.Team].Count);
                         using (var pilot = pilots[leader.Current.weaponManager.Team].GetEnumerator())
                             while (pilot.MoveNext())
                                 if (pilot.Current != null

@@ -1374,6 +1374,18 @@ namespace BDArmory.UI
             BDArmorySettings.BULLET_DECALS = GUI.Toggle(SLeftRect(line), BDArmorySettings.BULLET_DECALS, "Bullet Hole Decals");
             BDArmorySettings.PERFORMANCE_LOGGING = GUI.Toggle(SRightRect(line), BDArmorySettings.PERFORMANCE_LOGGING, "Performance Logging");
             line++;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                if (BDArmorySettings.SHOW_CATEGORIES != (BDArmorySettings.SHOW_CATEGORIES = GUI.Toggle(SLeftRect(line), BDArmorySettings.SHOW_CATEGORIES, "Show Editor Subcategories")))
+                {
+                    KSP.UI.Screens.PartCategorizer.Instance.editorPartList.Refresh();
+                }
+                if (BDArmorySettings.AUTOCATEGORIZE_PARTS != (BDArmorySettings.AUTOCATEGORIZE_PARTS = GUI.Toggle(SRightRect(line), BDArmorySettings.AUTOCATEGORIZE_PARTS, "Autocategorize Parts")))
+                {
+                    KSP.UI.Screens.PartCategorizer.Instance.editorPartList.Refresh();
+                }
+                line++;
+            }
             GUI.Label(SLeftRect(line), $"Max Bullet Holes:  ({BDArmorySettings.MAX_NUM_BULLET_DECALS})", leftLabel);
             BDArmorySettings.MAX_NUM_BULLET_DECALS = (int)GUI.HorizontalSlider(SRightRect(line), BDArmorySettings.MAX_NUM_BULLET_DECALS, 1f, 999);
             line++;
