@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Misc\BDTeam.cs" />
+    <Compile Include="UI\BDAEditorCategory.cs" />
     <Compile Include="UI\BDTeamSelector.cs" />
     <Compile Include="Modules\ModuleAmmoSwitch.cs" />
     <Compile Include="Misc\BDAcTools.cs" />
@@ -143,7 +144,7 @@
     <Compile Include="Targeting\TargetSignatureData.cs" />
     <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
-    <Compile Include="Misc\BDAEditorCategory.cs" />
+    <Compile Include="Misc\BDAEditorTools.cs" />
     <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />

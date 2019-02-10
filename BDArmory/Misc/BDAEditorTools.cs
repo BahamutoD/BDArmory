@@ -1,7 +1,5 @@
-
 using System.Collections.Generic;
 using UnityEngine;
-using KSP.UI.Screens;
 using System;
 using BDArmory.Core;
 using BDArmory.Modules;
@@ -9,21 +7,16 @@ using BDArmory.Modules;
 namespace BDArmory.Misc
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class BDAEditorCategory : MonoBehaviour
+    public class BDAEditorTools : MonoBehaviour
     {
-        private static readonly List<AvailablePart> availableParts = new List<AvailablePart>();
         private static readonly List<AvailablePart> radars = new List<AvailablePart>();
 
-        protected string Manufacturer
-        {
-            get { return "Bahamuto Dynamics"; }
-            set { }
-        }
+        public const string Manufacturer = "Bahamuto Dynamics";
 
         void Awake()
         {
             radars.Clear();
-            availableParts.Clear();
+            var availableParts = new List<AvailablePart>();
             var count = PartLoader.LoadedPartsList.Count;
             for (int i = 0; i < count; ++i)
             {
@@ -33,47 +26,19 @@ namespace BDArmory.Misc
                 {
                     availableParts.Add(avPart);
                 }
+                if (avPart.partPrefab.GetComponent<ModuleRadar>() != null)
+                {
+                    radars.Add(avPart);
+                }
             }
 
             print(Manufacturer + "  Filter Count: " + availableParts.Count);
             if (availableParts.Count > 0)
-                GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
-
-            var count2 = PartLoader.LoadedPartsList.Count;
-            for (int i = 0; i < count; ++i)
-            {
-                var avPart2 = PartLoader.LoadedPartsList[i];
-                if (!avPart2.partPrefab) continue;
-                var avpModule = avPart2.partPrefab.GetComponent<ModuleRadar>();
-                if (avpModule != null)
-                {
-                    radars.Add(avPart2);
-                }
-            }
-
-            //GameEvents.onGUIEditorToolbarReady.Add(BDAWeaponsCategory);
-
-            //availableParts.Clear();
-            //availableParts.AddRange(PartLoader.LoadedPartsList.BDAParts());
-
+                GameEvents.onGUIEditorToolbarReady.Add(CheckDump);
         }
 
-        void BDAWeaponsCategory()
+        void CheckDump()
         {
-
-            const string customCategoryName = "BDAWeapons";
-            const string customDisplayCategoryName = "BDA Weapons";
-
-            Texture2D iconTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/icon", false);
-
-            RUI.Icons.Selectable.Icon icon = new RUI.Icons.Selectable.Icon("BDArmory", iconTex, iconTex, false);
-
-            PartCategorizer.Category filter = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == "#autoLOC_453547");
-
-            PartCategorizer.AddCustomSubcategoryFilter(filter, customCategoryName, customDisplayCategoryName, icon,
-                avPart => availableParts.Contains(avPart));
-
-
             // dump parts to .CSV list
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
                 dumpParts();
@@ -107,10 +72,10 @@ namespace BDArmory.Misc
             ModuleECMJammer jammer = null;
 
             // 1. create the file
-            var fileguns = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(gunName);
-            var filemissiles = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(missileName);
-            var fileradars = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(radarName);
-            var filejammers = KSP.IO.TextWriter.CreateForType<BDAEditorCategory>(jammerName);
+            var fileguns = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(gunName);
+            var filemissiles = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(missileName);
+            var fileradars = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(radarName);
+            var filejammers = KSP.IO.TextWriter.CreateForType<BDAEditorTools>(jammerName);
 
             // 2. write header
             fileguns.WriteLine("NAME;TITLE;AUTHOR;MANUFACTURER;PART_MASS;PART_COST;PART_CRASHTOLERANCE;PART_MAXTEMP;WEAPON_RPM;WEAPON_DEVIATION;WEAPON_MAXEFFECTIVEDISTANCE;WEAPON_TYPE;WEAPON_BULLETTYPE;WEAPON_AMMONAME;WEAPON_BULLETMASS;WEAPON_BULLET_VELOCITY;WEAPON_MAXHEAT;WEAPON_HEATPERSHOT;WEAPON_HEATLOSS;CANNON_SHELLPOWER;CANNON_SHELLHEAT;CANNON_SHELLRADIUS;CANNON_AIRDETONATION");
