@@ -7,6 +7,7 @@ namespace BDArmory.UI
     {
         //MAIN
         public static BDInputInfo WEAP_FIRE_KEY = new BDInputInfo("mouse 0", "Fire");
+
         //TGP
         public static BDInputInfo TGP_SLEW_RIGHT = new BDInputInfo("Slew Right");
         public static BDInputInfo TGP_SLEW_LEFT = new BDInputInfo("Slew Left");
@@ -41,8 +42,6 @@ namespace BDArmory.UI
         public static BDInputInfo VS_SWITCH_NEXT = new BDInputInfo("Next Vessel");
         public static BDInputInfo VS_SWITCH_PREV = new BDInputInfo("Prev Vessel");
 
-
-
         public static void SaveSettings()
         {
             ConfigNode fileNode = ConfigNode.Load(BDArmorySettings.settingsConfigURL);
@@ -57,7 +56,7 @@ namespace BDArmory.UI
             for (int i = 0; i < fields.Length; i++)
             {
                 string fieldName = fields[i].Name;
-                string valueString = ((BDInputInfo) fields[i].GetValue(null)).inputString;
+                string valueString = ((BDInputInfo)fields[i].GetValue(null)).inputString;
                 cfg.SetValue(fieldName, valueString, true);
             }
 
@@ -79,7 +78,7 @@ namespace BDArmory.UI
             {
                 string fieldName = fields[i].Name;
                 if (!cfg.HasValue(fieldName)) continue;
-                BDInputInfo orig = (BDInputInfo) fields[i].GetValue(null);
+                BDInputInfo orig = (BDInputInfo)fields[i].GetValue(null);
                 BDInputInfo loaded = new BDInputInfo(cfg.GetValue(fieldName), orig.description);
                 fields[i].SetValue(null, loaded);
             }

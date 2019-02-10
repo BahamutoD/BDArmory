@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace BDArmory.Core.Extension
+﻿namespace BDArmory.Core.Extension
 {
     public static class VesselExtensions
     {
@@ -43,6 +41,5 @@ namespace BDArmory.Core.Extension
                 return new Vector3d(0, 0, 0);
             }
         }
-
     }
 }

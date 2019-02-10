@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using System.Reflection;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 
 // Information about this assembly is defined by the following attributes.
 // Change them to the values specific to your project.
@@ -12,7 +12,6 @@ using System.Reflection;
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-
 
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
 // The form "{Major}.{Minor}.*" will automatically update the build and revision,
@@ -31,4 +30,3 @@ using System.Reflection;
 
 [assembly: KSPAssembly("BDArmory", 1, 0)]
 [assembly: Guid("70e0663f-1b79-45e9-9a3f-0e2281d0640f")]
-

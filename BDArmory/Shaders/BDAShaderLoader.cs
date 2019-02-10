@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UniLinq;
@@ -12,7 +11,6 @@ namespace BDArmory.Shaders
         private static bool _loaded;
 
         private static string _bundlePath;
-
 
         public static Shader GrayscaleEffectShader;
         public static Shader UnlitBlackShader;
@@ -28,24 +26,29 @@ namespace BDArmory.Shaders
                     case RuntimePlatform.OSXPlayer:
                         return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_macosx.bundle";
+
                     case RuntimePlatform.WindowsPlayer:
                         return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_windows.bundle";
+
                     case RuntimePlatform.LinuxPlayer:
                         return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_macosx.bundle";
+
                     default:
                         return _bundlePath + Path.DirectorySeparatorChar +
                                "bdarmoryshaders_windows.bundle";
                 }
             }
         }
+
         private void Awake()
         {
             _bundlePath = KSPUtil.ApplicationRootPath + "GameData" +
                                                     Path.DirectorySeparatorChar +
                                                     "BDArmory" + Path.DirectorySeparatorChar + "AssetBundles";
         }
+
         private void Start()
         {
             if (!_loaded)
@@ -77,15 +80,19 @@ namespace BDArmory.Shaders
                         case "BDArmory/Particles/Bullet":
                             BulletShader = shader.Current;
                             break;
+
                         case "Custom/Unlit Black":
                             UnlitBlackShader = shader.Current;
                             break;
+
                         case "Hidden/Grayscale Effect":
                             GrayscaleEffectShader = shader.Current;
                             break;
+
                         case "Custom/rcsShader":
                             RCSShader = shader.Current;
                             break;
+
                         default:
                             Debug.Log($"[BDArmory] Not expected shader : {shader.Current.name}");
                             break;

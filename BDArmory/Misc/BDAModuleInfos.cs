@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Smooth.Collections;
 using UnityEngine;
 
 namespace BDArmory.Misc
@@ -13,9 +9,9 @@ namespace BDArmory.Misc
     /// due to changes in the environment after part loading at game start.
     /// </summary>
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    class BDAModuleInfos : MonoBehaviour
+    internal class BDAModuleInfos : MonoBehaviour
     {
-        public static Dictionary<string, string> Modules= new Dictionary<string, string>()
+        public static Dictionary<string, string> Modules = new Dictionary<string, string>()
         {
             //{"WeaponModule", "Weapon"},
             { "BDModuleSurfaceAI", "BDModule Surface AI"}
@@ -54,7 +50,6 @@ namespace BDArmory.Misc
                     }
                     partModules.Dispose();
                 }
-
             }
 
             loadedParts.Dispose();

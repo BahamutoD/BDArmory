@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace BDArmory.Core
 {
-    public static  class Dependencies
+    public static class Dependencies
     {
         private static readonly Dictionary<Type, object> Systems = new Dictionary<Type, object>();
-        public static void Register<T,TN>()
+
+        public static void Register<T, TN>()
         {
             if (!Systems.ContainsKey(typeof(T)))
             {
-
-                 Systems.Add(typeof(T), Activator.CreateInstance<TN>());
+                Systems.Add(typeof(T), Activator.CreateInstance<TN>());
             }
         }
 

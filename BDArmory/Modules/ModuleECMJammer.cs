@@ -44,7 +44,6 @@ namespace BDArmory.Modules
             }
         }
 
-
         [KSPAction("Toggle")]
         public void AGToggle(KSPActionParam param)
         {
@@ -144,7 +143,6 @@ namespace BDArmory.Modules
             vesselJammer.DelayedCleanJammerList();
         }
 
-
         void DrainElectricity()
         {
             if (resourceDrain <= 0)
@@ -152,14 +150,13 @@ namespace BDArmory.Modules
                 return;
             }
 
-            double drainAmount = resourceDrain*TimeWarp.fixedDeltaTime;
+            double drainAmount = resourceDrain * TimeWarp.fixedDeltaTime;
             double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
-            if (chargeAvailable < drainAmount*0.95f)
+            if (chargeAvailable < drainAmount * 0.95f)
             {
                 DisableJammer();
             }
         }
-
 
         // RMB info in editor
         public override string GetInfo()
@@ -182,7 +179,5 @@ namespace BDArmory.Modules
 
             return output.ToString();
         }
-
-
     }
 }

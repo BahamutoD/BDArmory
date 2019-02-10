@@ -21,7 +21,7 @@ namespace BDArmory.Misc
             string[] strings = color.Split(","[0]);
             for (int i = 0; i < 4; i++)
             {
-                outputColor[i] = Single.Parse(strings[i])/255;
+                outputColor[i] = Single.Parse(strings[i]) / 255;
             }
 
             return outputColor;
@@ -64,14 +64,12 @@ namespace BDArmory.Misc
 
         public static bool CheckMouseIsOnGui()
         {
-
             if (!BDArmorySetup.GAME_UI_ENABLED) return false;
 
             if (!BDInputSettingsFields.WEAP_FIRE_KEY.inputString.Contains("mouse")) return false;
 
             Vector3 inverseMousePos = new Vector3(Input.mousePosition.x, Screen.height - Input.mousePosition.y, 0);
             Rect topGui = new Rect(0, 0, Screen.width, 65);
-
 
             if (topGui.Contains(inverseMousePos)) return true;
             if (BDArmorySetup.windowBDAToolBarEnabled && BDArmorySetup.WindowRectToolbar.Contains(inverseMousePos))
@@ -111,7 +109,6 @@ namespace BDArmory.Misc
 
         public static void ResizeGuiWindow(Rect windowrect, Vector2 mousePos)
         {
-            
         }
 
         public static List<Rect> extraGUIRects;
@@ -167,14 +164,14 @@ namespace BDArmory.Misc
             Plane plane = new Plane(planeNormal, planePoint);
             float distance = plane.GetDistanceToPoint(point);
 
-            return point - (distance*planeNormal);
+            return point - (distance * planeNormal);
         }
 
         public static float SignedAngle(Vector3 fromDirection, Vector3 toDirection, Vector3 referenceRight)
         {
             float angle = Vector3.Angle(fromDirection, toDirection);
             float sign = Mathf.Sign(Vector3.Dot(toDirection, referenceRight));
-            float finalAngle = sign*angle;
+            float finalAngle = sign * angle;
             return finalAngle;
         }
 
@@ -186,11 +183,11 @@ namespace BDArmory.Misc
         /// <param name="curveString">Curve string.</param>
         public static FloatCurve ParseCurve(string curveString)
         {
-            string[] pairs = curveString.Split(new char[] {','});
+            string[] pairs = curveString.Split(new char[] { ',' });
             Keyframe[] keys = new Keyframe[pairs.Length];
             for (int p = 0; p < pairs.Length; p++)
             {
-                string[] pair = pairs[p].Split(new char[] {':'});
+                string[] pair = pairs[p].Split(new char[] { ':' });
                 keys[p] = new Keyframe(float.Parse(pair[0]), float.Parse(pair[1]));
             }
 
@@ -204,11 +201,11 @@ namespace BDArmory.Misc
         {
             float dist = maxDistance;
             Ray ray = new Ray(origin, target - origin);
-            ray.origin += ray.direction*startDistance;
+            ray.origin += ray.direction * startDistance;
             RaycastHit rayHit;
             if (Physics.Raycast(ray, out rayHit, dist, 9076737))
             {
-                if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
+                if ((target - rayHit.point).sqrMagnitude < threshold * threshold)
                 {
                     return true;
                 }
@@ -226,12 +223,12 @@ namespace BDArmory.Misc
         {
             float dist = maxDistance;
             Ray ray = new Ray(origin, target - origin);
-            ray.origin += ray.direction*startDistance;
+            ray.origin += ray.direction * startDistance;
             RaycastHit rayHit;
 
             if (Physics.Raycast(ray, out rayHit, dist, 9076737))
             {
-                if ((target - rayHit.point).sqrMagnitude < threshold*threshold)
+                if ((target - rayHit.point).sqrMagnitude < threshold * threshold)
                 {
                     return true;
                 }
@@ -244,10 +241,9 @@ namespace BDArmory.Misc
             return true;
         }
 
-
         public static float[] ParseToFloatArray(string floatString)
         {
-            string[] floatStrings = floatString.Split(new char[] {','});
+            string[] floatStrings = floatString.Split(new char[] { ',' });
             float[] floatArray = new float[floatStrings.Length];
             for (int i = 0; i < floatStrings.Length; i++)
             {
@@ -263,17 +259,16 @@ namespace BDArmory.Misc
             //lat
             double lat = geoPos.x;
             double latSign = Math.Sign(lat);
-            double latMajor = latSign*Math.Floor(Math.Abs(lat));
-            double latMinor = 100*(Math.Abs(lat) - Math.Abs(latMajor));
+            double latMajor = latSign * Math.Floor(Math.Abs(lat));
+            double latMinor = 100 * (Math.Abs(lat) - Math.Abs(latMajor));
             string latString = latMajor.ToString("0") + " " + latMinor.ToString("0.000");
             finalString += "N:" + latString;
-
 
             //longi
             double longi = geoPos.y;
             double longiSign = Math.Sign(longi);
-            double longiMajor = longiSign*Math.Floor(Math.Abs(longi));
-            double longiMinor = 100*(Math.Abs(longi) - Math.Abs(longiMajor));
+            double longiMajor = longiSign * Math.Floor(Math.Abs(longi));
+            double longiMinor = 100 * (Math.Abs(longi) - Math.Abs(longiMajor));
             string longiString = longiMajor.ToString("0") + " " + longiMinor.ToString("0.000");
             finalString += " E:" + longiString;
 
@@ -291,17 +286,16 @@ namespace BDArmory.Misc
             //lat
             double lat = geoPos.x;
             double latSign = Math.Sign(lat);
-            double latMajor = latSign*Math.Floor(Math.Abs(lat));
-            double latMinor = 100*(Math.Abs(lat) - Math.Abs(latMajor));
+            double latMajor = latSign * Math.Floor(Math.Abs(lat));
+            double latMinor = 100 * (Math.Abs(lat) - Math.Abs(latMajor));
             string latString = latMajor.ToString("0") + " " + latMinor.ToString("0");
             finalString += "N:" + latString;
-
 
             //longi
             double longi = geoPos.y;
             double longiSign = Math.Sign(longi);
-            double longiMajor = longiSign*Math.Floor(Math.Abs(longi));
-            double longiMinor = 100*(Math.Abs(longi) - Math.Abs(longiMajor));
+            double longiMajor = longiSign * Math.Floor(Math.Abs(longi));
+            double longiMinor = 100 * (Math.Abs(longi) - Math.Abs(longiMajor));
             string longiString = longiMajor.ToString("0") + " " + longiMinor.ToString("0");
             finalString += " E:" + longiString;
 
@@ -312,7 +306,6 @@ namespace BDArmory.Misc
 
             return finalString;
         }
-
 
         public static KeyBinding AGEnumToKeybinding(KSPActionGroup group)
         {
@@ -329,7 +322,7 @@ namespace BDArmory.Misc
             }
 
             FieldInfo field = typeof(GameSettings).GetField(groupName);
-            return (KeyBinding) field.GetValue(null);
+            return (KeyBinding)field.GetValue(null);
         }
 
         public static string JsonCompat(string json)

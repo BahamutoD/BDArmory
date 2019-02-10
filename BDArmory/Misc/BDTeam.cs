@@ -1,7 +1,6 @@
-﻿using BDArmory.UI;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using BDArmory.UI;
 
 namespace BDArmory.Misc
 {

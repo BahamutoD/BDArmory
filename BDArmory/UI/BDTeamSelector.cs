@@ -1,7 +1,6 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using BDArmory.Modules;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using UnityEngine;
 
 namespace BDArmory.UI
@@ -42,7 +41,7 @@ namespace BDArmory.UI
         {
             height = margin;
             // Team input field
-            newTeamName = GUI.TextField(new Rect(margin, margin, width - buttonGap - 2* margin - newTeanButtonWidth, buttonHeight), newTeamName, 30);
+            newTeamName = GUI.TextField(new Rect(margin, margin, width - buttonGap - 2 * margin - newTeanButtonWidth, buttonHeight), newTeamName, 30);
 
             // New team button
             Rect newTeamButtonRect = new Rect(width - margin - newTeanButtonWidth, height, newTeanButtonWidth, buttonHeight);
@@ -62,9 +61,9 @@ namespace BDArmory.UI
 
             if (scrollable)
                 scrollPosition = GUI.BeginScrollView(
-                    new Rect(margin, height, width - margin * 2 + scrollWidth, Screen.height / 2), 
-                    scrollPosition, 
-                    new Rect(margin, height, width - margin * 2, BDArmorySetup.Instance.Teams.Count * (buttonHeight + buttonGap)), 
+                    new Rect(margin, height, width - margin * 2 + scrollWidth, Screen.height / 2),
+                    scrollPosition,
+                    new Rect(margin, height, width - margin * 2, BDArmorySetup.Instance.Teams.Count * (buttonHeight + buttonGap)),
                     false, true);
 
             using (var teams = BDArmorySetup.Instance.Teams.Values.GetEnumerator())
@@ -111,8 +110,8 @@ namespace BDArmory.UI
         {
             if (ready)
             {
-                if (open && BDArmorySetup.GAME_UI_ENABLED 
-                    && Event.current.type == EventType.MouseDown 
+                if (open && BDArmorySetup.GAME_UI_ENABLED
+                    && Event.current.type == EventType.MouseDown
                     && !window.Contains(Event.current.mousePosition))
                 {
                     open = false;

@@ -8,9 +8,7 @@ namespace BDArmory.Modules
     {
         [KSPField(isPersistant = true)] public float railHeight;
 
-
         [KSPField(isPersistant = true)] public float railLength = 1;
-
 
         Transform railLengthTransform;
         Transform railHeightTransform;
@@ -37,23 +35,21 @@ namespace BDArmory.Modules
         void ParseStackNodePosition()
         {
             originalStackNodePosition = new Dictionary<string, Vector3>();
-            string[] nodes = stackNodePosition.Split(new char[] {';'});
+            string[] nodes = stackNodePosition.Split(new char[] { ';' });
             for (int i = 0; i < nodes.Length; i++)
             {
-                string[] split = nodes[i].Split(new char[] {','});
+                string[] split = nodes[i].Split(new char[] { ',' });
                 string id = split[0];
                 Vector3 position = new Vector3(float.Parse(split[1]), float.Parse(split[2]), float.Parse(split[3]));
                 originalStackNodePosition.Add(id, position);
             }
         }
 
-
         IEnumerator DelayedUpdateStackNode()
         {
             yield return null;
             UpdateStackNode(false);
         }
-
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height ++", active = true)]
         public void IncreaseHeight()
@@ -71,7 +67,6 @@ namespace BDArmory.Modules
             }
             sym.Dispose();
         }
-
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height --", active = true)]
         public void DecreaseHeight()

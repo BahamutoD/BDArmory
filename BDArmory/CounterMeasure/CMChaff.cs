@@ -8,7 +8,6 @@ namespace BDArmory.CounterMeasure
     {
         KSPParticleEmitter pe;
 
-
         const float drag = 5;
 
         Vector3d geoPos;
@@ -50,13 +49,13 @@ namespace BDArmory.CounterMeasure
             while (Time.time - startTime < pe.maxEnergy)
             {
                 transform.position = body.GetWorldSurfacePosition(geoPos.x, geoPos.y, geoPos.z);
-                velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*Time.fixedDeltaTime;
-                Vector3 dragForce = (0.008f)*drag*0.5f*velocity.sqrMagnitude*
+                velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
+                Vector3 dragForce = (0.008f) * drag * 0.5f * velocity.sqrMagnitude *
                                     (float)
                                     FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position),
-                                        FlightGlobals.getExternalTemperature(), body)*velocity.normalized;
-                velocity -= (dragForce)*Time.fixedDeltaTime;
-                transform.position += velocity*Time.fixedDeltaTime;
+                                        FlightGlobals.getExternalTemperature(), body) * velocity.normalized;
+                velocity -= (dragForce) * Time.fixedDeltaTime;
+                transform.position += velocity * Time.fixedDeltaTime;
                 geoPos = VectorUtils.WorldPositionToGeoCoords(transform.position, body);
                 yield return new WaitForFixedUpdate();
             }

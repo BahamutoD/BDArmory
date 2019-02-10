@@ -12,1595 +12,1557 @@ using Debug = UnityEngine.Debug;
 
 namespace BDArmory.Modules
 {
-	public class ModuleTargetingCamera : PartModule
-	{
-		[KSPField]
-		public string cameraTransformName;
-		public Transform cameraParentTransform;
+    public class ModuleTargetingCamera : PartModule
+    {
+        [KSPField]
+        public string cameraTransformName;
+        public Transform cameraParentTransform;
 
-		[KSPField]
-		public string eyeHolderTransformName;
-		Transform eyeHolderTransform;
+        [KSPField]
+        public string eyeHolderTransformName;
+        Transform eyeHolderTransform;
 
-		[KSPField]
-		public float maxRayDistance = 15500;
+        [KSPField]
+        public float maxRayDistance = 15500;
 
-		[KSPField]
-		public float gimbalLimit = 120;
-		public bool gimbalLimitReached;
+        [KSPField]
+        public float gimbalLimit = 120;
+        public bool gimbalLimitReached;
 
-		[KSPField]
-		public bool rollCameraModel = false;
+        [KSPField]
+        public bool rollCameraModel = false;
 
-		[KSPField(isPersistant = true)]
-		public bool cameraEnabled;
+        [KSPField(isPersistant = true)]
+        public bool cameraEnabled;
 
-		float fov
-		{
-			get
-			{
-				return zoomFovs[currentFovIndex];
-			}
-		}
+        float fov
+        {
+            get
+            {
+                return zoomFovs[currentFovIndex];
+            }
+        }
 
-		[KSPField]
-		public string zoomFOVs = "40,15,3,1";
-		float[] zoomFovs; 
+        [KSPField]
+        public string zoomFOVs = "40,15,3,1";
+        float[] zoomFovs;
 
-		[KSPField(isPersistant = true)]
-		public int currentFovIndex;
+        [KSPField(isPersistant = true)]
+        public int currentFovIndex;
 
-		[KSPField(isPersistant = true)]
-		public bool slaveTurrets;
+        [KSPField(isPersistant = true)]
+        public bool slaveTurrets;
 
-		[KSPField(isPersistant = true)]
-		public bool CoMLock;
+        [KSPField(isPersistant = true)]
+        public bool CoMLock;
 
-		public bool radarLock;
+        public bool radarLock;
 
-		float controlPanelHeight = 84;//80
+        float controlPanelHeight = 84;//80
 
-		[KSPField(isPersistant = true)]
-		public bool groundStabilized;
-		/// <summary>
-		/// Point on surface that camera is focused and stabilized on.
-		/// </summary>
-		public Vector3 groundTargetPosition;
+        [KSPField(isPersistant = true)]
+        public bool groundStabilized;
 
-		[KSPField(isPersistant = true)]
-		public double savedLat;
+        /// <summary>
+        /// Point on surface that camera is focused and stabilized on.
+        /// </summary>
+        public Vector3 groundTargetPosition;
 
-		[KSPField(isPersistant = true)]
-		public double savedLong;
+        [KSPField(isPersistant = true)]
+        public double savedLat;
 
-		[KSPField(isPersistant = true)]
-		public double savedAlt;
+        [KSPField(isPersistant = true)]
+        public double savedLong;
 
-		public Vector3 bodyRelativeGTP
-		{
-			get
-			{
-				return new Vector3d(savedLat, savedLong, savedAlt);
-			}
+        [KSPField(isPersistant = true)]
+        public double savedAlt;
 
-			set
-			{
-				savedLat = value.x;
-				savedLong = value.y;
-				savedAlt = value.z;
-			}
-		}
+        public Vector3 bodyRelativeGTP
+        {
+            get
+            {
+                return new Vector3d(savedLat, savedLong, savedAlt);
+            }
 
-		bool resetting;
+            set
+            {
+                savedLat = value.x;
+                savedLong = value.y;
+                savedAlt = value.z;
+            }
+        }
 
+        bool resetting;
 
-		public bool surfaceDetected;
-		/// <summary>
-		/// Point where camera is focused, regardless of whether surface is detected or not.
-		/// </summary>
-		public Vector3 targetPointPosition; 
+        public bool surfaceDetected;
 
-		[KSPField(isPersistant = true)]
-		public bool nvMode;
+        /// <summary>
+        /// Point where camera is focused, regardless of whether surface is detected or not.
+        /// </summary>
+        public Vector3 targetPointPosition;
 
-		//GUI
-		public static ModuleTargetingCamera activeCam;
-		public static bool camRectInitialized;
-		public static bool windowIsOpen;
-	    private static float camImageSize = 360;
-		private static float adjCamImageSize = 360;
-		internal static bool ResizingWindow;
-	    internal static bool SlewingMouseCam;
-	    internal static bool ZoomKeysSet;
-	    internal static bool isZooming;
-	    internal static bool wasZooming;
+        [KSPField(isPersistant = true)]
+        public bool nvMode;
+
+        //GUI
+        public static ModuleTargetingCamera activeCam;
+        public static bool camRectInitialized;
+        public static bool windowIsOpen;
+        private static float camImageSize = 360;
+        private static float adjCamImageSize = 360;
+        internal static bool ResizingWindow;
+        internal static bool SlewingMouseCam;
+        internal static bool ZoomKeysSet;
+        internal static bool isZooming;
+        internal static bool wasZooming;
 
         internal static bool SlewingButtonCam;
-	    float finalSlewSpeed;
-		Vector2 slewInput = Vector2.zero;
+        float finalSlewSpeed;
+        Vector2 slewInput = Vector2.zero;
 
-	    private static float gap = 2;
-	    private static float buttonHeight = 18;
-	    private static float controlsStartY = 22;
-	    private static float windowWidth = adjCamImageSize + (3 * buttonHeight) + 16 + 2 * gap;
-	    private static float windowHeight = adjCamImageSize + 23;
-	    private AxisBinding_Single ZoomKeyP;
-	    private AxisBinding_Single ZoomKeyS;
-	    private AxisBinding_Single NoZoomKeyP;
-	    private AxisBinding_Single NoZoomKeyS;
+        private static float gap = 2;
+        private static float buttonHeight = 18;
+        private static float controlsStartY = 22;
+        private static float windowWidth = adjCamImageSize + (3 * buttonHeight) + 16 + 2 * gap;
+        private static float windowHeight = adjCamImageSize + 23;
+        private AxisBinding_Single ZoomKeyP;
+        private AxisBinding_Single ZoomKeyS;
+        private AxisBinding_Single NoZoomKeyP;
+        private AxisBinding_Single NoZoomKeyS;
 
         Texture2D riTex;
-		Texture2D rollIndicatorTexture
-		{
-			get
-			{
-				if(!riTex)
-				{
-					riTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/rollIndicator", false);
-				}
-				return riTex;
-			}
-		}
 
-		Texture2D rrTex;
-		Texture2D rollReferenceTexture
-		{
-			get
-			{
-				if(!rrTex)
-				{
-					rrTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/rollReference", false);
-				}
-				return rrTex;
-			}
-		}
+        Texture2D rollIndicatorTexture
+        {
+            get
+            {
+                if (!riTex)
+                {
+                    riTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/rollIndicator", false);
+                }
+                return riTex;
+            }
+        }
 
-		private MissileFire wpmr;
-		public MissileFire weaponManager
-		{
-			get
-			{
-				if(wpmr == null || wpmr.vessel!=vessel)
-				{
-					wpmr = null;
+        Texture2D rrTex;
+
+        Texture2D rollReferenceTexture
+        {
+            get
+            {
+                if (!rrTex)
+                {
+                    rrTex = GameDatabase.Instance.GetTexture("BDArmory/Textures/rollReference", false);
+                }
+                return rrTex;
+            }
+        }
+
+        private MissileFire wpmr;
+
+        public MissileFire weaponManager
+        {
+            get
+            {
+                if (wpmr == null || wpmr.vessel != vessel)
+                {
+                    wpmr = null;
                     List<MissileFire>.Enumerator mf = vessel.FindPartModulesImplementing<MissileFire>().GetEnumerator();
                     while (mf.MoveNext())
-					{
+                    {
                         if (mf.Current)
-						    wpmr = mf.Current;
-					}
+                            wpmr = mf.Current;
+                    }
                     mf.Dispose();
-				}
+                }
 
-				return wpmr;
-			}
-		}
+                return wpmr;
+            }
+        }
 
+        [KSPEvent(guiName = "Enable", guiActive = true, guiActiveEditor = false)]
+        public void EnableButton()
+        {
+            EnableCamera();
+        }
 
-		[KSPEvent(guiName = "Enable", guiActive = true, guiActiveEditor = false)]
-		public void EnableButton()
-		{
-			EnableCamera();
-		}
+        [KSPAction("Enable")]
+        public void AGEnable(KSPActionParam param)
+        {
+            EnableCamera();
+        }
 
-		[KSPAction("Enable")]
-		public void AGEnable(KSPActionParam param)
-		{
-			EnableCamera();
-		}
+        public void ToggleCamera()
+        {
+            if (cameraEnabled)
+            {
+                DisableCamera();
+            }
+            else
+            {
+                EnableCamera();
+            }
+        }
 
-		public void ToggleCamera()
-		{
-			if(cameraEnabled)
-			{
-				DisableCamera();
-			}
-			else
-			{
-				EnableCamera();
-			}
-		}
+        public void EnableCamera()
+        {
+            if (!TargetingCamera.Instance)
+            {
+                Debug.Log("Tried to enable targeting camera, but camera instance is null.");
+                return;
+            }
+            if (vessel.isActiveVessel)
+            {
+                activeCam = this;
+                windowIsOpen = true;
+                TargetingCamera.Instance.EnableCamera(cameraParentTransform);
+                TargetingCamera.Instance.nvMode = nvMode;
+                TargetingCamera.Instance.SetFOV(fov);
+                ResizeTargetWindow();
+            }
 
-		public void EnableCamera()
-		{
-			if(!TargetingCamera.Instance)
-			{
-				Debug.Log ("Tried to enable targeting camera, but camera instance is null.");
-				return;
-			}
-			if(vessel.isActiveVessel)
-			{
-				activeCam = this;
-				windowIsOpen = true;
-				TargetingCamera.Instance.EnableCamera(cameraParentTransform);
-				TargetingCamera.Instance.nvMode = nvMode;
-				TargetingCamera.Instance.SetFOV(fov);
-				ResizeTargetWindow();
-			}
+            cameraEnabled = true;
 
-			cameraEnabled = true;
+            if (weaponManager)
+            {
+                weaponManager.mainTGP = this;
+            }
 
-			if(weaponManager)
-			{
-				weaponManager.mainTGP = this;
-			}
+            BDATargetManager.RegisterLaserPoint(this);
+        }
 
-			BDATargetManager.RegisterLaserPoint(this);
-		}
+        public void DisableCamera()
+        {
+            cameraEnabled = false;
+            groundStabilized = false;
 
-		public void DisableCamera()
-		{
-			cameraEnabled = false;
-			groundStabilized = false;
+            if (slaveTurrets)
+            {
+                UnslaveTurrets();
+            }
+            //StopResetting();
 
-			if(slaveTurrets)
-			{
-				UnslaveTurrets();
-			}
-			//StopResetting();
+            if (vessel.isActiveVessel)
+            {
+                if (!TargetingCamera.Instance)
+                {
+                    Debug.Log("Tried to disable targeting camera, but camera instance is null.");
+                    return;
+                }
 
+                TargetingCamera.Instance.DisableCamera();
+                if (activeCam == this)
+                {
+                    activeCam = FindNextActiveCamera();
+                    if (!activeCam)
+                    {
+                        windowIsOpen = false;
+                    }
+                }
+                else
+                {
+                    windowIsOpen = false;
+                }
+            }
+            BDATargetManager.ActiveLasers.Remove(this);
 
-		
-			if(vessel.isActiveVessel)
-			{
-				if(!TargetingCamera.Instance)
-				{
-					Debug.Log ("Tried to disable targeting camera, but camera instance is null.");
-					return;
-				}
+            if (weaponManager && weaponManager.mainTGP == this)
+            {
+                weaponManager.mainTGP = FindNextActiveCamera();
+            }
+        }
 
-				TargetingCamera.Instance.DisableCamera();
-				if(activeCam == this)
-				{
-					activeCam = FindNextActiveCamera();
-					if(!activeCam)
-					{
-						windowIsOpen = false;
-					}
-				}
-				else
-				{
-					windowIsOpen = false;
-				}
-
-
-
-			}
-			BDATargetManager.ActiveLasers.Remove(this);
-
-			if(weaponManager && weaponManager.mainTGP == this)
-			{
-				weaponManager.mainTGP = FindNextActiveCamera();
-			}
-		}
-
-		ModuleTargetingCamera FindNextActiveCamera()
-		{
+        ModuleTargetingCamera FindNextActiveCamera()
+        {
             List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
             while (mtc.MoveNext())
-			{
-				if(mtc.Current && mtc.Current.cameraEnabled)
-				{
-					mtc.Current.EnableCamera();
-					return mtc.Current;
-				}
-			}
+            {
+                if (mtc.Current && mtc.Current.cameraEnabled)
+                {
+                    mtc.Current.EnableCamera();
+                    return mtc.Current;
+                }
+            }
             mtc.Dispose();
 
-			return null;
-		}
+            return null;
+        }
 
-		public override void OnAwake ()
-		{
-			base.OnAwake ();
-		
-			if(HighLogic.LoadedSceneIsFlight)
-			{
-				if(!TargetingCamera.Instance)
-				{
-					(new GameObject("TargetingCameraObject")).AddComponent<TargetingCamera>();
-				}
-			}
-		}
-
-		public override void OnStart (StartState state)
-		{
-			base.OnStart (state);
-		    ZoomKeyP = GameSettings.AXIS_MOUSEWHEEL.primary;
-		    ZoomKeyS = GameSettings.AXIS_MOUSEWHEEL.secondary;
-	        NoZoomKeyP = new AxisBinding_Single();
-	        NoZoomKeyS = new AxisBinding_Single();
+        public override void OnAwake()
+        {
+            base.OnAwake();
 
             if (HighLogic.LoadedSceneIsFlight)
-			{
-				//GUI setup
-				if(!camRectInitialized)
-				{
-				    BDArmorySetup.WindowRectTargetingCam = new Rect(Screen.width-windowWidth, Screen.height-windowHeight, windowWidth, windowHeight);
-					camRectInitialized = true;
-				}
+            {
+                if (!TargetingCamera.Instance)
+                {
+                    (new GameObject("TargetingCameraObject")).AddComponent<TargetingCamera>();
+                }
+            }
+        }
 
-				cameraParentTransform = part.FindModelTransform(cameraTransformName);
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+            ZoomKeyP = GameSettings.AXIS_MOUSEWHEEL.primary;
+            ZoomKeyS = GameSettings.AXIS_MOUSEWHEEL.secondary;
+            NoZoomKeyP = new AxisBinding_Single();
+            NoZoomKeyS = new AxisBinding_Single();
 
-				eyeHolderTransform = part.FindModelTransform(eyeHolderTransformName);
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                //GUI setup
+                if (!camRectInitialized)
+                {
+                    BDArmorySetup.WindowRectTargetingCam = new Rect(Screen.width - windowWidth, Screen.height - windowHeight, windowWidth, windowHeight);
+                    camRectInitialized = true;
+                }
 
+                cameraParentTransform = part.FindModelTransform(cameraTransformName);
 
+                eyeHolderTransform = part.FindModelTransform(eyeHolderTransformName);
 
-				ParseFovs();
-				UpdateSlewRate();
+                ParseFovs();
+                UpdateSlewRate();
 
-				GameEvents.onVesselCreate.Add(Disconnect);
+                GameEvents.onVesselCreate.Add(Disconnect);
 
+                if (cameraEnabled)
+                {
+                    Debug.Log("[BDArmory]: saved gtp: " + bodyRelativeGTP);
+                    DelayedEnable();
+                }
+            }
+        }
 
-				if(cameraEnabled)
-				{
-					Debug.Log("[BDArmory]: saved gtp: " + bodyRelativeGTP);
-					DelayedEnable();
-				}
-			}
-		}
+        void Disconnect(Vessel v)
+        {
+            if (weaponManager && vessel)
+            {
+                if (weaponManager.vessel != vessel)
+                {
+                    if (slaveTurrets)
+                    {
+                        weaponManager.slavingTurrets = false;
+                    }
+                }
+            }
+        }
 
-		void Disconnect(Vessel v)
-		{
-			if(weaponManager && vessel)
-			{
-				if(weaponManager.vessel != vessel)
-				{
-					if(slaveTurrets)
-					{
-						weaponManager.slavingTurrets = false;
-					}
-				}
-			}
-		}
+        public void DelayedEnable()
+        {
+            StartCoroutine(DelayedEnableRoutine());
+        }
 
-		public void DelayedEnable()
-		{
-			StartCoroutine(DelayedEnableRoutine());
-		}
+        bool delayedEnabling;
 
-		bool delayedEnabling;
-		IEnumerator DelayedEnableRoutine()
-		{
-			if(delayedEnabling) yield break;
-			delayedEnabling = true;
+        IEnumerator DelayedEnableRoutine()
+        {
+            if (delayedEnabling) yield break;
+            delayedEnabling = true;
 
-			Vector3d savedGTP = bodyRelativeGTP;
-			Debug.Log("[BDArmory]: saved gtp: " + Misc.Misc.FormattedGeoPos(savedGTP, true));
-			Debug.Log("[BDArmory]: groundStabilized: " + groundStabilized);
+            Vector3d savedGTP = bodyRelativeGTP;
+            Debug.Log("[BDArmory]: saved gtp: " + Misc.Misc.FormattedGeoPos(savedGTP, true));
+            Debug.Log("[BDArmory]: groundStabilized: " + groundStabilized);
 
-			while(TargetingCamera.Instance == null)
-			{
-				yield return null;
-			}
-			while(!FlightGlobals.ready)
-			{
-				yield return null;
-			}
-			while(FlightCamera.fetch == null)
-			{
-				yield return null;
-			}
-			while(FlightCamera.fetch.mainCamera == null)
-			{
-				yield return null;
-			}
-			while(vessel.packed)
-			{
-				yield return null;
-			}
+            while (TargetingCamera.Instance == null)
+            {
+                yield return null;
+            }
+            while (!FlightGlobals.ready)
+            {
+                yield return null;
+            }
+            while (FlightCamera.fetch == null)
+            {
+                yield return null;
+            }
+            while (FlightCamera.fetch.mainCamera == null)
+            {
+                yield return null;
+            }
+            while (vessel.packed)
+            {
+                yield return null;
+            }
 
-			while(vessel.mainBody == null)
-			{
-				yield return null;
-			}
+            while (vessel.mainBody == null)
+            {
+                yield return null;
+            }
 
-			EnableCamera();
-			if(groundStabilized)
-			{
-				Debug.Log("[BDArmory]: Camera delayed enabled");
-				groundTargetPosition = VectorUtils.GetWorldSurfacePostion(savedGTP, vessel.mainBody);// vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
-				Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
-				PointCameraModel(lookVector);
-				GroundStabilize();
-			}
-			delayedEnabling = false;
+            EnableCamera();
+            if (groundStabilized)
+            {
+                Debug.Log("[BDArmory]: Camera delayed enabled");
+                groundTargetPosition = VectorUtils.GetWorldSurfacePostion(savedGTP, vessel.mainBody);// vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
+                Vector3 lookVector = groundTargetPosition - cameraParentTransform.position;
+                PointCameraModel(lookVector);
+                GroundStabilize();
+            }
+            delayedEnabling = false;
 
-			Debug.Log("[BDArmory]: post load saved gtp: " + bodyRelativeGTP);
-		}
+            Debug.Log("[BDArmory]: post load saved gtp: " + bodyRelativeGTP);
+        }
 
-		void PointCameraModel(Vector3 lookVector)
-		{
+        void PointCameraModel(Vector3 lookVector)
+        {
+            Vector3 worldUp = VectorUtils.GetUpDirection(cameraParentTransform.position);
+            if (rollCameraModel)
+            {
+                cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, worldUp);
+            }
+            else
+            {
+                Vector3 camUp = cameraParentTransform.up;
+                if (eyeHolderTransform) camUp = Vector3.Cross(cameraParentTransform.forward, eyeHolderTransform.right);
+                cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, camUp);
+                if (vessel.isActiveVessel && activeCam == this && TargetingCamera.cameraTransform)
+                {
+                    TargetingCamera.cameraTransform.rotation = Quaternion.LookRotation(cameraParentTransform.forward, worldUp);
+                }
+            }
+        }
 
-			Vector3 worldUp = VectorUtils.GetUpDirection(cameraParentTransform.position);
-			if(rollCameraModel)
-			{
-				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, worldUp);
-			}
-			else
-			{
-				Vector3 camUp = cameraParentTransform.up;
-				if(eyeHolderTransform) camUp = Vector3.Cross(cameraParentTransform.forward, eyeHolderTransform.right);
-				cameraParentTransform.rotation = Quaternion.LookRotation(lookVector, camUp);
-				if(vessel.isActiveVessel && activeCam == this && TargetingCamera.cameraTransform)
-				{
-					TargetingCamera.cameraTransform.rotation = Quaternion.LookRotation(cameraParentTransform.forward, worldUp); 
-				}
-			}
+        void Update()
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                if (cameraEnabled && TargetingCamera.ReadyForUse && vessel.IsControllable)
+                {
+                    if (delayedEnabling) return;
 
-		}
+                    if (!TargetingCamera.Instance || FlightGlobals.currentMainBody == null)
+                    {
+                        return;
+                    }
 
-		void Update()
-		{
-			if(HighLogic.LoadedSceneIsFlight)
-			{
-				
+                    if (activeCam == this)
+                    {
+                        if (zoomFovs != null)
+                        {
+                            TargetingCamera.Instance.SetFOV(fov);
+                        }
+                    }
 
-				if(cameraEnabled && TargetingCamera.ReadyForUse && vessel.IsControllable)
-				{
-					if(delayedEnabling) return;
+                    if (radarLock)
+                    {
+                        UpdateRadarLock();
+                    }
 
+                    if (groundStabilized)
+                    {
+                        groundTargetPosition = VectorUtils.GetWorldSurfacePostion(bodyRelativeGTP, vessel.mainBody);//vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
+                        Vector3 lookVector = groundTargetPosition - cameraParentTransform.position;
+                        //cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
+                        PointCameraModel(lookVector);
+                    }
 
-					if(!TargetingCamera.Instance || FlightGlobals.currentMainBody == null)
-					{
-						return;
-					}
+                    Vector3 lookDirection = cameraParentTransform.forward;
+                    if (Vector3.Angle(lookDirection, cameraParentTransform.parent.forward) > gimbalLimit)
+                    {
+                        lookDirection = Vector3.RotateTowards(cameraParentTransform.transform.parent.forward, lookDirection, gimbalLimit * Mathf.Deg2Rad, 0);
+                        gimbalLimitReached = true;
+                    }
+                    else
+                    {
+                        gimbalLimitReached = false;
+                    }
 
-					if(activeCam == this)
-					{
-						if(zoomFovs!=null)
-						{
-							TargetingCamera.Instance.SetFOV(fov);
-						}
-					}
+                    if (!groundStabilized || gimbalLimitReached)
+                    {
+                        PointCameraModel(lookDirection);
+                    }
 
+                    if (eyeHolderTransform)
+                    {
+                        Vector3 projectedForward = Vector3.ProjectOnPlane(cameraParentTransform.forward, eyeHolderTransform.parent.up);
+                        if (projectedForward != Vector3.zero)
+                        {
+                            eyeHolderTransform.rotation = Quaternion.LookRotation(projectedForward, eyeHolderTransform.parent.up);
+                        }
+                    }
 
+                    UpdateControls();
+                    UpdateSlaveData();
+                }
+            }
+        }
 
-					if(radarLock)
-					{
-						UpdateRadarLock();
-					}
+        public override void OnFixedUpdate()
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                if (cameraEnabled && !vessel.packed && !vessel.IsControllable)
+                {
+                    DisableCamera();
+                }
+            }
+        }
 
-					if(groundStabilized)
-					{
-						groundTargetPosition = VectorUtils.GetWorldSurfacePostion(bodyRelativeGTP, vessel.mainBody);//vessel.mainBody.GetWorldSurfacePosition(bodyRelativeGTP.x, bodyRelativeGTP.y, bodyRelativeGTP.z);
-						Vector3 lookVector = groundTargetPosition-cameraParentTransform.position;
-						//cameraParentTransform.rotation = Quaternion.LookRotation(lookVector);
-						PointCameraModel(lookVector);
-					}
+        void FixedUpdate()
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                if (delayedEnabling) return;
 
+                if (cameraEnabled)
+                {
+                    GetHitPoint();
+                }
+            }
+        }
 
+        void UpdateKeyInputs()
+        {
+            if (!vessel.isActiveVessel)
+            {
+                return;
+            }
 
-					Vector3 lookDirection = cameraParentTransform.forward;
-					if(Vector3.Angle(lookDirection, cameraParentTransform.parent.forward) > gimbalLimit)
-					{
-						lookDirection = Vector3.RotateTowards(cameraParentTransform.transform.parent.forward, lookDirection, gimbalLimit*Mathf.Deg2Rad, 0);
-						gimbalLimitReached = true;
-					}
-					else
-					{
-						gimbalLimitReached = false;
-					}
+            if (BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_LEFT))
+            {
+                slewInput.x = -1;
+            }
+            else if (BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_RIGHT))
+            {
+                slewInput.x = 1;
+            }
 
-					if(!groundStabilized || gimbalLimitReached)
-					{
-						PointCameraModel(lookDirection);
-					}
-						
-					
-					if(eyeHolderTransform)
-					{
-						Vector3 projectedForward = Vector3.ProjectOnPlane(cameraParentTransform.forward, eyeHolderTransform.parent.up);
-						if(projectedForward!=Vector3.zero)
-						{
-							eyeHolderTransform.rotation = Quaternion.LookRotation(projectedForward, eyeHolderTransform.parent.up);
-						}
-					}
+            if (BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_UP))
+            {
+                slewInput.y = 1;
+            }
+            else if (BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_DOWN))
+            {
+                slewInput.y = -1;
+            }
 
-					UpdateControls();
-					UpdateSlaveData();
-				}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_IN))
+            {
+                ZoomIn();
+            }
+            else if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_OUT))
+            {
+                ZoomOut();
+            }
 
-			}
-		}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_LOCK))
+            {
+                if (groundStabilized)
+                {
+                    ClearTarget();
+                }
+                else
+                {
+                    GroundStabilize();
+                }
+            }
 
-		public override void OnFixedUpdate()
-		{
-			if(HighLogic.LoadedSceneIsFlight)
-			{
-				if(cameraEnabled && !vessel.packed && !vessel.IsControllable)
-				{
-					DisableCamera();
-				}
-			}
-		}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_NV))
+            {
+                ToggleNV();
+            }
 
-		void FixedUpdate()
-		{
-			if(HighLogic.LoadedSceneIsFlight)
-			{
-				if(delayedEnabling) return;
+            if (groundStabilized && BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_SEND_GPS))
+            {
+                SendGPS();
+            }
 
-				if(cameraEnabled)
-				{
-					GetHitPoint();
-				}
-			}
-		}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_COM))
+            {
+                CoMLock = !CoMLock;
+            }
 
-		void UpdateKeyInputs()
-		{
-			if(!vessel.isActiveVessel)
-			{
-				return;
-			}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_RADAR))
+            {
+                radarLock = !radarLock;
+            }
 
-			if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_LEFT))
-			{
-				slewInput.x = -1;
-			}
-			else if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_RIGHT))
-			{
-				slewInput.x = 1;
-			}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_TURRETS))
+            {
+                if (slaveTurrets)
+                {
+                    UnslaveTurrets();
+                }
+                else
+                {
+                    SlaveTurrets();
+                }
+            }
 
-			if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_UP))
-			{
-				slewInput.y = 1;
-			}
-			else if(BDInputUtils.GetKey(BDInputSettingsFields.TGP_SLEW_DOWN))
-			{
-				slewInput.y = -1;
-			}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_TO_GPS))
+            {
+                PointToGPSTarget();
+            }
 
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_IN))
-			{
-				ZoomIn();
-			}
-			else if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_OUT))
-			{
-				ZoomOut();
-			}
+            if (BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_RESET))
+            {
+                ResetCameraButton();
+            }
+        }
 
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_LOCK))
-			{
-				if(groundStabilized)
-				{
-					ClearTarget();
-				}
-				else
-				{
-					GroundStabilize();
-				}
-			}
+        void ToggleNV()
+        {
+            nvMode = !nvMode;
+            TargetingCamera.Instance.nvMode = nvMode;
+        }
 
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_NV))
-			{
-				ToggleNV();
-			}
+        void UpdateControls()
+        {
+            UpdateKeyInputs();
+            UpdateSlewRate();
+            if (slewInput != Vector2.zero)
+            {
+                SlewCamera(slewInput);
+            }
+            slewInput = Vector2.zero;
+        }
 
-			if(groundStabilized && BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_SEND_GPS))
-			{
-				SendGPS();	
-			}
+        void UpdateSlewRate()
+        {
+            if (SlewingButtonCam)
+            {
+                finalSlewSpeed = Mathf.Clamp(finalSlewSpeed + (0.5f * (fov / 60)), 0, 80 * fov / 60);
+                SlewingButtonCam = false;
+            }
+            else
+            {
+                finalSlewSpeed = 15 * fov / 60;
+            }
+        }
 
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_COM))
-			{
-				CoMLock = !CoMLock;
-			}
+        void UpdateRadarLock()
+        {
+            if (weaponManager && weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
+            {
+                RadarDisplayData tgt = weaponManager.vesselRadarData.lockedTargetData;
+                Vector3 radarTargetPos = tgt.targetData.predictedPosition + (tgt.targetData.velocity * Time.fixedDeltaTime);
+                Vector3 targetDirection = radarTargetPos - cameraParentTransform.position;
 
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_RADAR))
-			{
-				radarLock = !radarLock;
-			}
+                //Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
+                if (Vector3.Angle(radarTargetPos - cameraParentTransform.position, cameraParentTransform.forward) < 0.5f)
+                {
+                    //cameraParentTransform.rotation = lookRotation;
+                    if (tgt.vessel)
+                    {
+                        targetDirection = ((tgt.vessel.CoM + (tgt.vessel.Velocity() * Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
+                    }
+                    PointCameraModel(targetDirection);
+                    GroundStabilize();
+                }
+                else
+                {
+                    if (groundStabilized)
+                    {
+                        ClearTarget();
+                    }
+                    //lookRotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 120*Time.fixedDeltaTime);
+                    Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 300 * Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
+                    PointCameraModel(rotateTwdDirection);
+                }
+            }
+            else
+            {
+                //radarLock = false;
+            }
+        }
 
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_TURRETS))
-			{
-				if(slaveTurrets)
-				{
-					UnslaveTurrets();
-				}
-				else
-				{
-					SlaveTurrets();
-				}
-			}
-
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_TO_GPS))
-			{
-				PointToGPSTarget();
-			}
-
-			if(BDInputUtils.GetKeyDown(BDInputSettingsFields.TGP_RESET))
-			{
-				ResetCameraButton();
-			}
-		}
-
-		void ToggleNV()
-		{
-			nvMode = !nvMode;
-			TargetingCamera.Instance.nvMode = nvMode;
-		}
-
-		void UpdateControls()
-		{
-			UpdateKeyInputs();
-			UpdateSlewRate();
-			if(slewInput != Vector2.zero)
-			{
-				SlewCamera(slewInput);
-			}
-			slewInput = Vector2.zero;
-		}		
-
-		void UpdateSlewRate()
-		{
-			if(SlewingButtonCam)
-			{
-				finalSlewSpeed = Mathf.Clamp(finalSlewSpeed + (0.5f * (fov/60)), 0, 80 * fov/60);
-				SlewingButtonCam = false;
-			}
-			else
-			{
-				finalSlewSpeed = 15 * fov/60;
-			}
-		}
-
-		void UpdateRadarLock()
-		{
-			if(weaponManager && weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
-			{
-				RadarDisplayData tgt = weaponManager.vesselRadarData.lockedTargetData;
-				Vector3 radarTargetPos = tgt.targetData.predictedPosition + (tgt.targetData.velocity*Time.fixedDeltaTime);
-				Vector3 targetDirection = radarTargetPos - cameraParentTransform.position;
-
-				//Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
-				if(Vector3.Angle(radarTargetPos - cameraParentTransform.position, cameraParentTransform.forward) < 0.5f)
-				{
-					//cameraParentTransform.rotation = lookRotation;
-					if(tgt.vessel)
-					{
-						targetDirection = ((tgt.vessel.CoM+(tgt.vessel.Velocity() * Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
-					}
-					PointCameraModel(targetDirection);
-					GroundStabilize();
-				}
-				else
-				{
-					if(groundStabilized)
-					{
-						ClearTarget();
-					}
-					//lookRotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 120*Time.fixedDeltaTime);
-					Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 300*Time.fixedDeltaTime*Mathf.Deg2Rad, 0);
-					PointCameraModel(rotateTwdDirection);
-				}
-			}
-			else
-			{
-				//radarLock = false;
-			}
-		}
-
-		void OnGUI()
-		{
-		    if (Event.current.type == EventType.MouseUp) 
-		    {
+        void OnGUI()
+        {
+            if (Event.current.type == EventType.MouseUp)
+            {
                 if (ResizingWindow) ResizingWindow = false;
                 if (SlewingMouseCam) SlewingMouseCam = false;
             }
 
-		    if (!wasZooming && isZooming)
-		    {
-		        wasZooming = true;
+            if (!wasZooming && isZooming)
+            {
+                wasZooming = true;
                 SetZoomKeys();
-		    }
+            }
 
-		    if (!isZooming && wasZooming)
-		    {
-		        wasZooming = false;
+            if (!isZooming && wasZooming)
+            {
+                wasZooming = false;
                 ResetZoomKeys();
-		    }
+            }
 
-			if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySetup.GAME_UI_ENABLED && !delayedEnabling) 
-			{
-				if (cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready) 
-				{
-					//window
-					if (activeCam == this && TargetingCamera.ReadyForUse) 
-					{
-					  BDArmorySetup.WindowRectTargetingCam = GUI.Window (125452, BDArmorySetup.WindowRectTargetingCam, WindowTargetCam, "Target Camera", GUI.skin.window);
-						BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectTargetingCam);
-					}
+            if (HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled && BDArmorySetup.GAME_UI_ENABLED && !delayedEnabling)
+            {
+                if (cameraEnabled && vessel.isActiveVessel && FlightGlobals.ready)
+                {
+                    //window
+                    if (activeCam == this && TargetingCamera.ReadyForUse)
+                    {
+                        BDArmorySetup.WindowRectTargetingCam = GUI.Window(125452, BDArmorySetup.WindowRectTargetingCam, WindowTargetCam, "Target Camera", GUI.skin.window);
+                        BDGUIUtils.UseMouseEventInRect(BDArmorySetup.WindowRectTargetingCam);
+                    }
 
-					//locked target icon
-					if(groundStabilized)
-					{
-						BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySetup.Instance.greenPointCircleTexture, new Vector3(20, 20), 0);
-					}
-					else
-					{
-						BDGUIUtils.DrawTextureOnWorldPos(targetPointPosition, BDArmorySetup.Instance.greenCircleTexture, new Vector3(18, 18), 0);
-					}
-				}
+                    //locked target icon
+                    if (groundStabilized)
+                    {
+                        BDGUIUtils.DrawTextureOnWorldPos(groundTargetPosition, BDArmorySetup.Instance.greenPointCircleTexture, new Vector3(20, 20), 0);
+                    }
+                    else
+                    {
+                        BDGUIUtils.DrawTextureOnWorldPos(targetPointPosition, BDArmorySetup.Instance.greenCircleTexture, new Vector3(18, 18), 0);
+                    }
+                }
 
-				if(BDArmorySettings.DRAW_DEBUG_LABELS)
-				{
-					GUI.Label(new Rect(600, 1000, 100, 100), "Slew rate: " + finalSlewSpeed);
-				}
+                if (BDArmorySettings.DRAW_DEBUG_LABELS)
+                {
+                    GUI.Label(new Rect(600, 1000, 100, 100), "Slew rate: " + finalSlewSpeed);
+                }
 
-				if(BDArmorySettings.DRAW_DEBUG_LINES)
-				{
-					if(groundStabilized)
-					{
-						BDGUIUtils.DrawLineBetweenWorldPositions(cameraParentTransform.position, groundTargetPosition, 2, Color.red);
-					}
-					else
-					{
-						BDGUIUtils.DrawLineBetweenWorldPositions(cameraParentTransform.position, targetPointPosition, 2, Color.red);
-					}
-				}
-			}
-
-		}
-
-		void WindowTargetCam(int windowID)
-		{
-		    float windowScale = BDArmorySettings.TARGET_WINDOW_SCALE;
-		    adjCamImageSize = camImageSize * windowScale;
-			if(!TargetingCamera.Instance)
-			{
-				return;
-			}
-
-			windowIsOpen = true;
-
-		    GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectTargetingCam.width - 18, 30));
-		    if (GUI.Button(new Rect(BDArmorySetup.WindowRectTargetingCam.width - 18, 2, 16, 16), "X", GUI.skin.button))
-		    {
-		        DisableCamera();
-                return;
-		    }
-
-            Rect imageRect = new Rect(2,20, adjCamImageSize, adjCamImageSize);
-			GUI.DrawTexture(imageRect, TargetingCamera.Instance.targetCamRenderTexture, ScaleMode.StretchToFill, false);
-			GUI.DrawTexture(imageRect, TargetingCamera.Instance.ReticleTexture, ScaleMode.StretchToFill, true);
-
-            // slew buttons
-			DrawSlewButtons();
-
-		    // zoom buttons
-			DrawZoomButtons();
-
-            // Right side control buttons
-		    DrawSideControlButtons(imageRect);
-
-            // Check for mousedown / mousescroll in target Cam and handle slew and zoom.
-		    if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
-		    {
-		        if (!SlewingMouseCam) SlewingMouseCam = true;
-		    }
-		    if (Event.current.type == EventType.repaint && SlewingMouseCam)
-		    {
-		        if (Mouse.delta.x != 0 && Mouse.delta.y != 0)
-		        {
-		            SlewRoutine(Mouse.delta);
-		        }
-		    }
-
-		    if (Event.current.type == EventType.repaint && imageRect.Contains(Event.current.mousePosition))
-		    {
-		        if (!wasZooming) isZooming = true;
-		    }
-
-            if (Event.current.type == EventType.ScrollWheel && imageRect.Contains(Event.current.mousePosition))
-		    {
-		        ZoomRoutine(Input.mouseScrollDelta);
-		    }
-		    if (Event.current.type == EventType.repaint && !imageRect.Contains(Event.current.mousePosition))
-		    {
-		        if (wasZooming) isZooming = false;
-		    }
-
-            float indicatorSize = Mathf.Clamp(64 * (adjCamImageSize / camImageSize), 48, 128);
-			float indicatorBorder = imageRect.width * 0.056f;
-			Vector3 vesForward = vessel.ReferenceTransform.up;
-			Vector3 upDirection = (transform.position-FlightGlobals.currentMainBody.transform.position).normalized;
-
-			//horizon indicator
-			float horizY = imageRect.y+imageRect.height-indicatorSize-indicatorBorder;
-			Vector3 hForward = Vector3.ProjectOnPlane(vesForward, upDirection);
-			float hAngle = -Misc.Misc.SignedAngle(hForward, vesForward, upDirection);
-			horizY -= (hAngle/90) * (indicatorSize/2);
-			Rect horizonRect = new Rect(indicatorBorder + imageRect.x, horizY, indicatorSize, indicatorSize);
-			GUI.DrawTexture(horizonRect, BDArmorySetup.Instance.horizonIndicatorTexture, ScaleMode.StretchToFill, true);
-
-			//roll indicator
-			Rect rollRect = new Rect(indicatorBorder+imageRect.x, imageRect.y+imageRect.height-indicatorSize-indicatorBorder, indicatorSize, indicatorSize);
-			GUI.DrawTexture(rollRect, rollReferenceTexture, ScaleMode.StretchToFill, true);
-			Vector3 localUp = vessel.ReferenceTransform.InverseTransformDirection(upDirection);
-			localUp = Vector3.ProjectOnPlane(localUp, Vector3.up).normalized;
-			float rollAngle = -Misc.Misc.SignedAngle(-Vector3.forward, localUp, Vector3.right);
-			GUIUtility.RotateAroundPivot(rollAngle, rollRect.center);
-			GUI.DrawTexture(rollRect, rollIndicatorTexture, ScaleMode.StretchToFill, true);
-			GUI.matrix = Matrix4x4.identity;
-
-			//target direction indicator
-			float angleToTarget = Misc.Misc.SignedAngle(hForward, Vector3.ProjectOnPlane(targetPointPosition-transform.position, upDirection), Vector3.Cross(upDirection, hForward));
-			GUIUtility.RotateAroundPivot(angleToTarget, rollRect.center);
-			GUI.DrawTexture(rollRect, BDArmorySetup.Instance.targetDirectionTexture, ScaleMode.StretchToFill, true);
-			GUI.matrix = Matrix4x4.identity;
-
-			//resizing
-			Rect resizeRect = 
-			    new Rect(BDArmorySetup.WindowRectTargetingCam.width - 18, BDArmorySetup.WindowRectTargetingCam.height - 18, 16, 16);
-		    GUI.DrawTexture(resizeRect, Misc.Misc.resizeTexture, ScaleMode.StretchToFill, true);
-		    if (Event.current.type == EventType.MouseDown && resizeRect.Contains(Event.current.mousePosition))
-			{
-				ResizingWindow = true;
-			}
-
-		    if (Event.current.type == EventType.Repaint && ResizingWindow)
-		    {
-		        if (Mouse.delta.x != 0 || Mouse.delta.y != 0)
-		        {
-		            float diff = Mouse.delta.x + Mouse.delta.y;
-		            UpdateTargetScale(diff);
-		            ResizeTargetWindow();
-		        }
-		    }
-            //ResetZoomKeys();
-		    BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectTargetingCam);
+                if (BDArmorySettings.DRAW_DEBUG_LINES)
+                {
+                    if (groundStabilized)
+                    {
+                        BDGUIUtils.DrawLineBetweenWorldPositions(cameraParentTransform.position, groundTargetPosition, 2, Color.red);
+                    }
+                    else
+                    {
+                        BDGUIUtils.DrawLineBetweenWorldPositions(cameraParentTransform.position, targetPointPosition, 2, Color.red);
+                    }
+                }
+            }
         }
 
-	    internal static void UpdateTargetScale(float diff)
-	    {
-	        float scaleDiff = ((diff / (BDArmorySetup.WindowRectTargetingCam.width + BDArmorySetup.WindowRectTargetingCam.height)) * 100 * .01f);
-	        BDArmorySettings.TARGET_WINDOW_SCALE += Mathf.Abs(scaleDiff) > .01f ? scaleDiff : scaleDiff > 0 ? .01f : -.01f;
-	        BDArmorySettings.TARGET_WINDOW_SCALE = Mathf.Clamp(BDArmorySettings.TARGET_WINDOW_SCALE, 
-	            BDArmorySettings.TARGET_WINDOW_SCALE_MIN,
-	            BDArmorySettings.TARGET_WINDOW_SCALE_MAX);
-	    }
+        void WindowTargetCam(int windowID)
+        {
+            float windowScale = BDArmorySettings.TARGET_WINDOW_SCALE;
+            adjCamImageSize = camImageSize * windowScale;
+            if (!TargetingCamera.Instance)
+            {
+                return;
+            }
 
-	    private void DrawSlewButtons()
-	    {
+            windowIsOpen = true;
 
-	        //slew buttons
-	        float slewStartX = adjCamImageSize * 0.06f;
-	        float slewStartY = 20 + (adjCamImageSize * 0.06f);
+            GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectTargetingCam.width - 18, 30));
+            if (GUI.Button(new Rect(BDArmorySetup.WindowRectTargetingCam.width - 18, 2, 16, 16), "X", GUI.skin.button))
+            {
+                DisableCamera();
+                return;
+            }
+
+            Rect imageRect = new Rect(2, 20, adjCamImageSize, adjCamImageSize);
+            GUI.DrawTexture(imageRect, TargetingCamera.Instance.targetCamRenderTexture, ScaleMode.StretchToFill, false);
+            GUI.DrawTexture(imageRect, TargetingCamera.Instance.ReticleTexture, ScaleMode.StretchToFill, true);
+
+            // slew buttons
+            DrawSlewButtons();
+
+            // zoom buttons
+            DrawZoomButtons();
+
+            // Right side control buttons
+            DrawSideControlButtons(imageRect);
+
+            // Check for mousedown / mousescroll in target Cam and handle slew and zoom.
+            if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
+            {
+                if (!SlewingMouseCam) SlewingMouseCam = true;
+            }
+            if (Event.current.type == EventType.repaint && SlewingMouseCam)
+            {
+                if (Mouse.delta.x != 0 && Mouse.delta.y != 0)
+                {
+                    SlewRoutine(Mouse.delta);
+                }
+            }
+
+            if (Event.current.type == EventType.repaint && imageRect.Contains(Event.current.mousePosition))
+            {
+                if (!wasZooming) isZooming = true;
+            }
+
+            if (Event.current.type == EventType.ScrollWheel && imageRect.Contains(Event.current.mousePosition))
+            {
+                ZoomRoutine(Input.mouseScrollDelta);
+            }
+            if (Event.current.type == EventType.repaint && !imageRect.Contains(Event.current.mousePosition))
+            {
+                if (wasZooming) isZooming = false;
+            }
+
+            float indicatorSize = Mathf.Clamp(64 * (adjCamImageSize / camImageSize), 48, 128);
+            float indicatorBorder = imageRect.width * 0.056f;
+            Vector3 vesForward = vessel.ReferenceTransform.up;
+            Vector3 upDirection = (transform.position - FlightGlobals.currentMainBody.transform.position).normalized;
+
+            //horizon indicator
+            float horizY = imageRect.y + imageRect.height - indicatorSize - indicatorBorder;
+            Vector3 hForward = Vector3.ProjectOnPlane(vesForward, upDirection);
+            float hAngle = -Misc.Misc.SignedAngle(hForward, vesForward, upDirection);
+            horizY -= (hAngle / 90) * (indicatorSize / 2);
+            Rect horizonRect = new Rect(indicatorBorder + imageRect.x, horizY, indicatorSize, indicatorSize);
+            GUI.DrawTexture(horizonRect, BDArmorySetup.Instance.horizonIndicatorTexture, ScaleMode.StretchToFill, true);
+
+            //roll indicator
+            Rect rollRect = new Rect(indicatorBorder + imageRect.x, imageRect.y + imageRect.height - indicatorSize - indicatorBorder, indicatorSize, indicatorSize);
+            GUI.DrawTexture(rollRect, rollReferenceTexture, ScaleMode.StretchToFill, true);
+            Vector3 localUp = vessel.ReferenceTransform.InverseTransformDirection(upDirection);
+            localUp = Vector3.ProjectOnPlane(localUp, Vector3.up).normalized;
+            float rollAngle = -Misc.Misc.SignedAngle(-Vector3.forward, localUp, Vector3.right);
+            GUIUtility.RotateAroundPivot(rollAngle, rollRect.center);
+            GUI.DrawTexture(rollRect, rollIndicatorTexture, ScaleMode.StretchToFill, true);
+            GUI.matrix = Matrix4x4.identity;
+
+            //target direction indicator
+            float angleToTarget = Misc.Misc.SignedAngle(hForward, Vector3.ProjectOnPlane(targetPointPosition - transform.position, upDirection), Vector3.Cross(upDirection, hForward));
+            GUIUtility.RotateAroundPivot(angleToTarget, rollRect.center);
+            GUI.DrawTexture(rollRect, BDArmorySetup.Instance.targetDirectionTexture, ScaleMode.StretchToFill, true);
+            GUI.matrix = Matrix4x4.identity;
+
+            //resizing
+            Rect resizeRect =
+                new Rect(BDArmorySetup.WindowRectTargetingCam.width - 18, BDArmorySetup.WindowRectTargetingCam.height - 18, 16, 16);
+            GUI.DrawTexture(resizeRect, Misc.Misc.resizeTexture, ScaleMode.StretchToFill, true);
+            if (Event.current.type == EventType.MouseDown && resizeRect.Contains(Event.current.mousePosition))
+            {
+                ResizingWindow = true;
+            }
+
+            if (Event.current.type == EventType.Repaint && ResizingWindow)
+            {
+                if (Mouse.delta.x != 0 || Mouse.delta.y != 0)
+                {
+                    float diff = Mouse.delta.x + Mouse.delta.y;
+                    UpdateTargetScale(diff);
+                    ResizeTargetWindow();
+                }
+            }
+            //ResetZoomKeys();
+            BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectTargetingCam);
+        }
+
+        internal static void UpdateTargetScale(float diff)
+        {
+            float scaleDiff = ((diff / (BDArmorySetup.WindowRectTargetingCam.width + BDArmorySetup.WindowRectTargetingCam.height)) * 100 * .01f);
+            BDArmorySettings.TARGET_WINDOW_SCALE += Mathf.Abs(scaleDiff) > .01f ? scaleDiff : scaleDiff > 0 ? .01f : -.01f;
+            BDArmorySettings.TARGET_WINDOW_SCALE = Mathf.Clamp(BDArmorySettings.TARGET_WINDOW_SCALE,
+                BDArmorySettings.TARGET_WINDOW_SCALE_MIN,
+                BDArmorySettings.TARGET_WINDOW_SCALE_MAX);
+        }
+
+        private void DrawSlewButtons()
+        {
+            //slew buttons
+            float slewStartX = adjCamImageSize * 0.06f;
+            float slewStartY = 20 + (adjCamImageSize * 0.06f);
 
             Rect slewLeftRect = new Rect(slewStartX, slewStartY + ((buttonHeight + gap) / 2), buttonHeight, buttonHeight);
-	        Rect slewUpRect = new Rect(slewStartX + buttonHeight + gap, slewStartY, buttonHeight, buttonHeight);
-	        Rect slewDownRect = new Rect(slewStartX + buttonHeight + gap, slewStartY + buttonHeight + gap, buttonHeight, buttonHeight);
-	        Rect slewRightRect = new Rect(slewStartX + (2 * buttonHeight) + (gap * 2), slewStartY + ((buttonHeight + gap) / 2), buttonHeight, buttonHeight);
-	        if (GUI.RepeatButton(slewUpRect, "^", GUI.skin.button))
-	        {
-	            //SlewCamera(Vector3.up);
-	            slewInput.y = 1;
-	        }
+            Rect slewUpRect = new Rect(slewStartX + buttonHeight + gap, slewStartY, buttonHeight, buttonHeight);
+            Rect slewDownRect = new Rect(slewStartX + buttonHeight + gap, slewStartY + buttonHeight + gap, buttonHeight, buttonHeight);
+            Rect slewRightRect = new Rect(slewStartX + (2 * buttonHeight) + (gap * 2), slewStartY + ((buttonHeight + gap) / 2), buttonHeight, buttonHeight);
+            if (GUI.RepeatButton(slewUpRect, "^", GUI.skin.button))
+            {
+                //SlewCamera(Vector3.up);
+                slewInput.y = 1;
+            }
 
-	        if (GUI.RepeatButton(slewDownRect, "v", GUI.skin.button))
-	        {
-	            //SlewCamera(Vector3.down);
-	            slewInput.y = -1;
-	        }
+            if (GUI.RepeatButton(slewDownRect, "v", GUI.skin.button))
+            {
+                //SlewCamera(Vector3.down);
+                slewInput.y = -1;
+            }
 
-	        if (GUI.RepeatButton(slewLeftRect, "<", GUI.skin.button))
-	        {
-	            //SlewCamera(Vector3.left);
-	            slewInput.x = -1;
-	        }
+            if (GUI.RepeatButton(slewLeftRect, "<", GUI.skin.button))
+            {
+                //SlewCamera(Vector3.left);
+                slewInput.x = -1;
+            }
 
-	        if (GUI.RepeatButton(slewRightRect, ">", GUI.skin.button))
-	        {
-	            //SlewCamera(Vector3.right);
-	            slewInput.x = 1;
-	        }
-	    }
+            if (GUI.RepeatButton(slewRightRect, ">", GUI.skin.button))
+            {
+                //SlewCamera(Vector3.right);
+                slewInput.x = 1;
+            }
+        }
 
-	    private void DrawZoomButtons()
-	    {
-
+        private void DrawZoomButtons()
+        {
             float zoomStartX = adjCamImageSize * 0.94f - (buttonHeight * 3) - (4 * gap);
-	        float zoomStartY = 20 + (adjCamImageSize * 0.06f);
-	        Rect zoomOutRect = new Rect(zoomStartX, zoomStartY, buttonHeight, buttonHeight);
-	        Rect zoomInfoRect = new Rect(zoomStartX + buttonHeight + gap, zoomStartY, buttonHeight + 4 * gap, buttonHeight);
-	        Rect zoomInRect = new Rect(zoomStartX + buttonHeight * 2 + 5 * gap, zoomStartY, buttonHeight, buttonHeight);
+            float zoomStartY = 20 + (adjCamImageSize * 0.06f);
+            Rect zoomOutRect = new Rect(zoomStartX, zoomStartY, buttonHeight, buttonHeight);
+            Rect zoomInfoRect = new Rect(zoomStartX + buttonHeight + gap, zoomStartY, buttonHeight + 4 * gap, buttonHeight);
+            Rect zoomInRect = new Rect(zoomStartX + buttonHeight * 2 + 5 * gap, zoomStartY, buttonHeight, buttonHeight);
 
-	        GUI.enabled = currentFovIndex > 0;
+            GUI.enabled = currentFovIndex > 0;
             if (GUI.Button(zoomOutRect, "-", GUI.skin.button))
-	        {
-	            ZoomOut();
-	        }
+            {
+                ZoomOut();
+            }
 
-	        GUIStyle zoomBox = GUI.skin.box;
-	        zoomBox.alignment = TextAnchor.UpperCenter;
-	        zoomBox.padding.top = 0;
-	        GUI.enabled = true;
-	        GUI.Label(zoomInfoRect, (currentFovIndex + 1).ToString() + "X", zoomBox);
+            GUIStyle zoomBox = GUI.skin.box;
+            zoomBox.alignment = TextAnchor.UpperCenter;
+            zoomBox.padding.top = 0;
+            GUI.enabled = true;
+            GUI.Label(zoomInfoRect, (currentFovIndex + 1).ToString() + "X", zoomBox);
 
-	        GUI.enabled = currentFovIndex < zoomFovs.Length - 1;
+            GUI.enabled = currentFovIndex < zoomFovs.Length - 1;
             if (GUI.Button(zoomInRect, "+", GUI.skin.button))
-	        {
-	            ZoomIn();
-	        }
-	        GUI.enabled = true;
-	    }
+            {
+                ZoomIn();
+            }
+            GUI.enabled = true;
+        }
 
-	    private void DrawSideControlButtons(Rect imageRect)
-	    {
-	        GUIStyle dataStyle = new GUIStyle();
-	        dataStyle.alignment = TextAnchor.MiddleCenter;
-	        dataStyle.normal.textColor = Color.white;
-	        GUIStyle buttonStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
-	        buttonStyle.fontSize = 11;
+        private void DrawSideControlButtons(Rect imageRect)
+        {
+            GUIStyle dataStyle = new GUIStyle();
+            dataStyle.alignment = TextAnchor.MiddleCenter;
+            dataStyle.normal.textColor = Color.white;
+            GUIStyle buttonStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
+            buttonStyle.fontSize = 11;
 
-	        float line = buttonHeight + gap;
-	        float buttonWidth = 3 * buttonHeight + 4 * gap;
-	        //groundStablize button
-	        float startX = imageRect.width + 3 * gap;
-	        Rect stabilizeRect = new Rect(startX, controlsStartY, buttonWidth, buttonHeight + line);
-	        if (!groundStabilized)
-	        {
-	            if (GUI.Button(stabilizeRect, "Lock\nTarget", buttonStyle))
-	            {
-	                GroundStabilize();
-	            }
-	        }
-	        else
-	        {
-	            if (GUI.Button(new Rect(startX, controlsStartY, buttonWidth, buttonHeight),
-	                "Unlock", buttonStyle))
-	            {
-	                ClearTarget();
-	            }
+            float line = buttonHeight + gap;
+            float buttonWidth = 3 * buttonHeight + 4 * gap;
+            //groundStablize button
+            float startX = imageRect.width + 3 * gap;
+            Rect stabilizeRect = new Rect(startX, controlsStartY, buttonWidth, buttonHeight + line);
+            if (!groundStabilized)
+            {
+                if (GUI.Button(stabilizeRect, "Lock\nTarget", buttonStyle))
+                {
+                    GroundStabilize();
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(startX, controlsStartY, buttonWidth, buttonHeight),
+                    "Unlock", buttonStyle))
+                {
+                    ClearTarget();
+                }
 
-	            if (weaponManager)
-	            {
-	                Rect sendGPSRect = new Rect(startX, controlsStartY + line, buttonWidth, buttonHeight);
-	                if (GUI.Button(sendGPSRect, "Send GPS", buttonStyle))
-	                {
-	                    SendGPS();
-	                }
-	            }
+                if (weaponManager)
+                {
+                    Rect sendGPSRect = new Rect(startX, controlsStartY + line, buttonWidth, buttonHeight);
+                    if (GUI.Button(sendGPSRect, "Send GPS", buttonStyle))
+                    {
+                        SendGPS();
+                    }
+                }
 
-	            if (!gimbalLimitReached)
-	            {
-	                //open square
-	                float oSqrSize = (24f / 512f) * adjCamImageSize;
-	                Rect oSqrRect = new Rect(imageRect.x + (adjCamImageSize / 2) - (oSqrSize / 2),
-	                    imageRect.y + (adjCamImageSize / 2) - (oSqrSize / 2), oSqrSize, oSqrSize);
-	                GUI.DrawTexture(oSqrRect, BDArmorySetup.Instance.openWhiteSquareTexture, ScaleMode.StretchToFill, true);
-	            }
+                if (!gimbalLimitReached)
+                {
+                    //open square
+                    float oSqrSize = (24f / 512f) * adjCamImageSize;
+                    Rect oSqrRect = new Rect(imageRect.x + (adjCamImageSize / 2) - (oSqrSize / 2),
+                        imageRect.y + (adjCamImageSize / 2) - (oSqrSize / 2), oSqrSize, oSqrSize);
+                    GUI.DrawTexture(oSqrRect, BDArmorySetup.Instance.openWhiteSquareTexture, ScaleMode.StretchToFill, true);
+                }
 
                 //geo data
-	            dataStyle.fontSize = (int)Mathf.Clamp(12 * BDArmorySettings.TARGET_WINDOW_SCALE, 8, 12);
-	            Rect geoRect = new Rect(imageRect.x, (adjCamImageSize * 0.94f), adjCamImageSize, 14);
-	            string geoLabel = Misc.Misc.FormattedGeoPos(bodyRelativeGTP, false);
-	            GUI.Label(geoRect, geoLabel, dataStyle);
+                dataStyle.fontSize = (int)Mathf.Clamp(12 * BDArmorySettings.TARGET_WINDOW_SCALE, 8, 12);
+                Rect geoRect = new Rect(imageRect.x, (adjCamImageSize * 0.94f), adjCamImageSize, 14);
+                string geoLabel = Misc.Misc.FormattedGeoPos(bodyRelativeGTP, false);
+                GUI.Label(geoRect, geoLabel, dataStyle);
 
-	            //target data
-	            dataStyle.fontSize = (int)Mathf.Clamp(16 * BDArmorySettings.TARGET_WINDOW_SCALE, 9, 16);
-	            //float dataStartX = stabilStartX + stabilizeRect.width + 8;
-	            Rect targetRangeRect = new Rect(imageRect.x, (adjCamImageSize * 0.94f) - (int)Mathf.Clamp(18 * BDArmorySettings.TARGET_WINDOW_SCALE, 9, 18), adjCamImageSize, (int)Mathf.Clamp(18 * BDArmorySettings.TARGET_WINDOW_SCALE, 10, 18));
-	            float targetRange = Vector3.Distance(groundTargetPosition, transform.position);
-	            string rangeString = "Range: " + targetRange.ToString("0.0") + "m";
-	            GUI.Label(targetRangeRect, rangeString, dataStyle);
+                //target data
+                dataStyle.fontSize = (int)Mathf.Clamp(16 * BDArmorySettings.TARGET_WINDOW_SCALE, 9, 16);
+                //float dataStartX = stabilStartX + stabilizeRect.width + 8;
+                Rect targetRangeRect = new Rect(imageRect.x, (adjCamImageSize * 0.94f) - (int)Mathf.Clamp(18 * BDArmorySettings.TARGET_WINDOW_SCALE, 9, 18), adjCamImageSize, (int)Mathf.Clamp(18 * BDArmorySettings.TARGET_WINDOW_SCALE, 10, 18));
+                float targetRange = Vector3.Distance(groundTargetPosition, transform.position);
+                string rangeString = "Range: " + targetRange.ToString("0.0") + "m";
+                GUI.Label(targetRangeRect, rangeString, dataStyle);
 
-	            //laser ranging indicator
-	            dataStyle.fontSize = (int) Mathf.Clamp(18 * BDArmorySettings.TARGET_WINDOW_SCALE, 9, 18);
-	            string lrLabel = surfaceDetected ? "LR" : "NO LR";
-	            Rect lrRect = new Rect(imageRect.x, imageRect.y + (adjCamImageSize * 0.65f), adjCamImageSize, 20);
-	            GUI.Label(lrRect, lrLabel, dataStyle);
+                //laser ranging indicator
+                dataStyle.fontSize = (int)Mathf.Clamp(18 * BDArmorySettings.TARGET_WINDOW_SCALE, 9, 18);
+                string lrLabel = surfaceDetected ? "LR" : "NO LR";
+                Rect lrRect = new Rect(imageRect.x, imageRect.y + (adjCamImageSize * 0.65f), adjCamImageSize, 20);
+                GUI.Label(lrRect, lrLabel, dataStyle);
 
-	            //azimuth and elevation indicator //UNFINISHED
-	            /*
+                //azimuth and elevation indicator //UNFINISHED
+                /*
 				Vector2 azielPos = TargetAzimuthElevationScreenPos(imageRect, groundTargetPosition, 4);
 				Rect azielRect = new Rect(azielPos.x, azielPos.y, 4, 4);
 				GUI.DrawTexture(azielRect, BDArmorySetup.Instance.whiteSquareTexture, ScaleMode.StretchToFill, true);
 				*/
 
-	            //DLZ
-	            if (weaponManager && weaponManager.selectedWeapon != null)
-	            {
-	                if (weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
-	                {
-	                    MissileBase currMissile = weaponManager.CurrentMissile;
-	                    if (currMissile.TargetingMode == MissileBase.TargetingModes.Gps ||
-	                        currMissile.TargetingMode == MissileBase.TargetingModes.Laser)
-	                    {
-	                        MissileLaunchParams dlz =
-	                            MissileLaunchParams.GetDynamicLaunchParams(currMissile, Vector3.zero, groundTargetPosition);
-	                        float dlzWidth = 12 * (imageRect.width / 360);
-	                        float lineWidth = 2;
-	                        Rect dlzRect = new Rect(imageRect.x + imageRect.width - (3 * dlzWidth) - lineWidth,
-	                            imageRect.y + (imageRect.height / 4), dlzWidth, imageRect.height / 2);
-	                        float scaleDistance =
-	                            Mathf.Max(Mathf.Max(8000f, currMissile.maxStaticLaunchRange * 2), targetRange);
-	                        float rangeToPixels = (1f / scaleDistance) * dlzRect.height;
+                //DLZ
+                if (weaponManager && weaponManager.selectedWeapon != null)
+                {
+                    if (weaponManager.selectedWeapon.GetWeaponClass() == WeaponClasses.Missile)
+                    {
+                        MissileBase currMissile = weaponManager.CurrentMissile;
+                        if (currMissile.TargetingMode == MissileBase.TargetingModes.Gps ||
+                            currMissile.TargetingMode == MissileBase.TargetingModes.Laser)
+                        {
+                            MissileLaunchParams dlz =
+                                MissileLaunchParams.GetDynamicLaunchParams(currMissile, Vector3.zero, groundTargetPosition);
+                            float dlzWidth = 12 * (imageRect.width / 360);
+                            float lineWidth = 2;
+                            Rect dlzRect = new Rect(imageRect.x + imageRect.width - (3 * dlzWidth) - lineWidth,
+                                imageRect.y + (imageRect.height / 4), dlzWidth, imageRect.height / 2);
+                            float scaleDistance =
+                                Mathf.Max(Mathf.Max(8000f, currMissile.maxStaticLaunchRange * 2), targetRange);
+                            float rangeToPixels = (1f / scaleDistance) * dlzRect.height;
 
+                            GUI.BeginGroup(dlzRect);
 
-	                        GUI.BeginGroup(dlzRect);
+                            float dlzX = 0;
 
-	                        float dlzX = 0;
+                            BDGUIUtils.DrawRectangle(new Rect(0, 0, dlzWidth, dlzRect.height), Color.black);
 
-	                        BDGUIUtils.DrawRectangle(new Rect(0, 0, dlzWidth, dlzRect.height), Color.black);
+                            Rect maxRangeVertLineRect = new Rect(dlzRect.width - lineWidth,
+                                Mathf.Clamp(dlzRect.height - (dlz.maxLaunchRange * rangeToPixels), 0, dlzRect.height),
+                                lineWidth, Mathf.Clamp(dlz.maxLaunchRange * rangeToPixels, 0, dlzRect.height));
+                            BDGUIUtils.DrawRectangle(maxRangeVertLineRect, Color.white);
 
-	                        Rect maxRangeVertLineRect = new Rect(dlzRect.width - lineWidth,
-	                            Mathf.Clamp(dlzRect.height - (dlz.maxLaunchRange * rangeToPixels), 0, dlzRect.height),
-	                            lineWidth, Mathf.Clamp(dlz.maxLaunchRange * rangeToPixels, 0, dlzRect.height));
-	                        BDGUIUtils.DrawRectangle(maxRangeVertLineRect, Color.white);
+                            Rect maxRangeTickRect = new Rect(dlzX, maxRangeVertLineRect.y, dlzWidth, lineWidth);
+                            BDGUIUtils.DrawRectangle(maxRangeTickRect, Color.white);
 
+                            Rect minRangeTickRect = new Rect(dlzX,
+                                Mathf.Clamp(dlzRect.height - (dlz.minLaunchRange * rangeToPixels), 0, dlzRect.height), dlzWidth,
+                                lineWidth);
+                            BDGUIUtils.DrawRectangle(minRangeTickRect, Color.white);
 
-	                        Rect maxRangeTickRect = new Rect(dlzX, maxRangeVertLineRect.y, dlzWidth, lineWidth);
-	                        BDGUIUtils.DrawRectangle(maxRangeTickRect, Color.white);
+                            Rect rTrTickRect = new Rect(dlzX,
+                                Mathf.Clamp(dlzRect.height - (dlz.rangeTr * rangeToPixels), 0, dlzRect.height), dlzWidth,
+                                lineWidth);
+                            BDGUIUtils.DrawRectangle(rTrTickRect, Color.white);
 
-	                        Rect minRangeTickRect = new Rect(dlzX,
-	                            Mathf.Clamp(dlzRect.height - (dlz.minLaunchRange * rangeToPixels), 0, dlzRect.height), dlzWidth,
-	                            lineWidth);
-	                        BDGUIUtils.DrawRectangle(minRangeTickRect, Color.white);
+                            Rect noEscapeLineRect =
+                                new Rect(dlzX, rTrTickRect.y, lineWidth, minRangeTickRect.y - rTrTickRect.y);
+                            BDGUIUtils.DrawRectangle(noEscapeLineRect, Color.white);
 
-	                        Rect rTrTickRect = new Rect(dlzX,
-	                            Mathf.Clamp(dlzRect.height - (dlz.rangeTr * rangeToPixels), 0, dlzRect.height), dlzWidth,
-	                            lineWidth);
-	                        BDGUIUtils.DrawRectangle(rTrTickRect, Color.white);
+                            GUI.EndGroup();
 
-	                        Rect noEscapeLineRect =
-	                            new Rect(dlzX, rTrTickRect.y, lineWidth, minRangeTickRect.y - rTrTickRect.y);
-	                        BDGUIUtils.DrawRectangle(noEscapeLineRect, Color.white);
+                            float targetDistIconSize = 6;
+                            float targetDistY = dlzRect.y + dlzRect.height - (targetRange * rangeToPixels);
+                            Rect targetDistanceRect = new Rect(dlzRect.x - (targetDistIconSize / 2), targetDistY,
+                                (targetDistIconSize / 2) + dlzRect.width, targetDistIconSize);
+                            BDGUIUtils.DrawRectangle(targetDistanceRect, Color.white);
+                        }
+                    }
+                }
+            }
 
+            //gimbal limit
+            dataStyle.fontSize = (int)Mathf.Clamp(24 * BDArmorySettings.TARGET_WINDOW_SCALE, 12, 24);
+            if (gimbalLimitReached)
+            {
+                Rect gLimRect = new Rect(imageRect.x, imageRect.y + (adjCamImageSize * 0.15f), adjCamImageSize, 28);
+                GUI.Label(gLimRect, "GIMBAL LIMIT", dataStyle);
+            }
 
-	                        GUI.EndGroup();
+            //reset button
+            Rect resetRect = new Rect(startX, controlsStartY + (2 * line), buttonWidth, buttonHeight);
+            if (GUI.Button(resetRect, "Reset", buttonStyle))
+            {
+                ResetCameraButton();
+            }
 
-	                        float targetDistIconSize = 6;
-	                        float targetDistY = dlzRect.y + dlzRect.height - (targetRange * rangeToPixels);
-	                        Rect targetDistanceRect = new Rect(dlzRect.x - (targetDistIconSize / 2), targetDistY,
-	                            (targetDistIconSize / 2) + dlzRect.width, targetDistIconSize);
-	                        BDGUIUtils.DrawRectangle(targetDistanceRect, Color.white);
-	                    }
-	                }
-	            }
-	        }
+            //CoM lock
+            Rect comLockRect = new Rect(startX, controlsStartY + 3 * line, buttonWidth, buttonHeight);
+            GUIStyle comStyle = new GUIStyle(CoMLock ? BDArmorySetup.BDGuiSkin.box : buttonStyle);
+            comStyle.fontSize = 10;
+            comStyle.wordWrap = false;
+            if (GUI.Button(comLockRect, "CoM Track", comStyle))
+            {
+                CoMLock = !CoMLock;
+            }
 
+            //radar slave
+            Rect radarSlaveRect = new Rect(startX, controlsStartY + 4 * line, buttonWidth, buttonHeight);
+            GUIStyle radarSlaveStyle = radarLock ? BDArmorySetup.BDGuiSkin.box : buttonStyle;
+            if (GUI.Button(radarSlaveRect, "Radar", radarSlaveStyle))
+            {
+                radarLock = !radarLock;
+            }
 
-	        //gimbal limit
-	        dataStyle.fontSize = (int)Mathf.Clamp(24 * BDArmorySettings.TARGET_WINDOW_SCALE, 12, 24);
-	        if (gimbalLimitReached)
-	        {
-	            Rect gLimRect = new Rect(imageRect.x, imageRect.y + (adjCamImageSize * 0.15f), adjCamImageSize, 28);
-	            GUI.Label(gLimRect, "GIMBAL LIMIT", dataStyle);
-	        }
+            //slave turrets button
+            Rect slaveRect = new Rect(startX, controlsStartY + 5 * line, buttonWidth, buttonHeight);
+            if (!slaveTurrets)
+            {
+                if (GUI.Button(slaveRect, "Turrets", buttonStyle))
+                {
+                    SlaveTurrets();
+                }
+            }
+            else
+            {
+                if (GUI.Button(slaveRect, "Turrets", BDArmorySetup.BDGuiSkin.box))
+                {
+                    UnslaveTurrets();
+                }
+            }
 
+            //point to gps button
+            Rect toGpsRect = new Rect(startX, controlsStartY + 6 * line, buttonWidth, buttonHeight);
+            if (GUI.Button(toGpsRect, "To GPS", buttonStyle))
+            {
+                PointToGPSTarget();
+            }
 
-	        //reset button
-	        Rect resetRect = new Rect(startX, controlsStartY + (2 * line), buttonWidth, buttonHeight);
-	        if (GUI.Button(resetRect, "Reset", buttonStyle))
-	        {
-	            ResetCameraButton();
-	        }
+            //nv button
+            float nvStartX = startX;
+            Rect nvRect = new Rect(nvStartX, controlsStartY + 7 * line, buttonWidth, buttonHeight);
+            string nvLabel = nvMode ? "NV Off" : "NV On";
+            GUIStyle nvStyle = nvMode ? BDArmorySetup.BDGuiSkin.box : buttonStyle;
+            if (GUI.Button(nvRect, nvLabel, nvStyle))
+            {
+                ToggleNV();
+            }
+        }
 
+        void ResetCameraButton()
+        {
+            if (!resetting)
+            {
+                StartCoroutine("ResetCamera");
+            }
+        }
 
-	        //CoM lock
-	        Rect comLockRect = new Rect(startX, controlsStartY + 3 * line, buttonWidth, buttonHeight);
-	        GUIStyle comStyle = new GUIStyle(CoMLock ? BDArmorySetup.BDGuiSkin.box : buttonStyle);
-	        comStyle.fontSize = 10;
-	        comStyle.wordWrap = false;
-	        if (GUI.Button(comLockRect, "CoM Track", comStyle))
-	        {
-	            CoMLock = !CoMLock;
-	        }
-
-
-	        //radar slave
-	        Rect radarSlaveRect = new Rect(startX, controlsStartY + 4 * line, buttonWidth, buttonHeight);
-	        GUIStyle radarSlaveStyle = radarLock ? BDArmorySetup.BDGuiSkin.box : buttonStyle;
-	        if (GUI.Button(radarSlaveRect, "Radar", radarSlaveStyle))
-	        {
-	            radarLock = !radarLock;
-	        }
-
-	        //slave turrets button
-	        Rect slaveRect = new Rect(startX, controlsStartY + 5 * line, buttonWidth, buttonHeight);
-	        if (!slaveTurrets)
-	        {
-	            if (GUI.Button(slaveRect, "Turrets", buttonStyle))
-	            {
-	                SlaveTurrets();
-	            }
-	        }
-	        else
-	        {
-	            if (GUI.Button(slaveRect, "Turrets", BDArmorySetup.BDGuiSkin.box))
-	            {
-	                UnslaveTurrets();
-	            }
-	        }
-
-	        //point to gps button
-	        Rect toGpsRect = new Rect(startX, controlsStartY + 6 * line, buttonWidth, buttonHeight);
-	        if (GUI.Button(toGpsRect, "To GPS", buttonStyle))
-	        {
-	            PointToGPSTarget();
-	        }
-
-
-	        //nv button
-	        float nvStartX = startX;
-	        Rect nvRect = new Rect(nvStartX, controlsStartY + 7 * line, buttonWidth, buttonHeight);
-	        string nvLabel = nvMode ? "NV Off" : "NV On";
-	        GUIStyle nvStyle = nvMode ? BDArmorySetup.BDGuiSkin.box : buttonStyle;
-	        if (GUI.Button(nvRect, nvLabel, nvStyle))
-	        {
-	            ToggleNV();
-	        }
-	    }
-
-	    void ResetCameraButton()
-		{
-			if(!resetting)
-			{
-				StartCoroutine("ResetCamera");
-			}
-		}
-
-		void SendGPS()
-		{
-			if(groundStabilized && weaponManager)
-			{
-				BDATargetManager.GPSTargetList(weaponManager.Team).Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
+        void SendGPS()
+        {
+            if (groundStabilized && weaponManager)
+            {
+                BDATargetManager.GPSTargetList(weaponManager.Team).Add(new GPSTargetInfo(bodyRelativeGTP, "Target"));
                 BDATargetManager.Instance.SaveGPSTargets();
             }
-		}
+        }
 
-		void SlaveTurrets()
-		{
+        void SlaveTurrets()
+        {
             List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
             while (mtc.MoveNext())
             {
                 mtc.Current.slaveTurrets = false;
-			}
+            }
             mtc.Dispose();
 
-			if(weaponManager && weaponManager.vesselRadarData)
-			{
-				weaponManager.vesselRadarData.slaveTurrets = false;
-			}
+            if (weaponManager && weaponManager.vesselRadarData)
+            {
+                weaponManager.vesselRadarData.slaveTurrets = false;
+            }
 
-			slaveTurrets = true;
-		}
+            slaveTurrets = true;
+        }
 
-		void UnslaveTurrets()
-		{
+        void UnslaveTurrets()
+        {
             List<ModuleTargetingCamera>.Enumerator mtc = vessel.FindPartModulesImplementing<ModuleTargetingCamera>().GetEnumerator();
             while (mtc.MoveNext())
             {
                 mtc.Current.slaveTurrets = false;
-			}
+            }
             mtc.Dispose();
 
-			if(weaponManager && weaponManager.vesselRadarData)
-			{
-				weaponManager.vesselRadarData.slaveTurrets = false;
-			}
+            if (weaponManager && weaponManager.vesselRadarData)
+            {
+                weaponManager.vesselRadarData.slaveTurrets = false;
+            }
 
-			if(weaponManager)
-			{
-				weaponManager.slavingTurrets = false;
-			}
-		}
+            if (weaponManager)
+            {
+                weaponManager.slavingTurrets = false;
+            }
+        }
 
-		void UpdateSlaveData()
-		{
-		    if (!slaveTurrets) return;
-		    if (!weaponManager) return;
-		    weaponManager.slavingTurrets = true;
-		    weaponManager.slavedPosition = groundStabilized ? groundTargetPosition : targetPointPosition;
-		    weaponManager.slavedVelocity = Vector3.zero;
-		    weaponManager.slavedAcceleration = Vector3.zero;
-		}
-        
-		internal static void ResizeTargetWindow()
-		{
+        void UpdateSlaveData()
+        {
+            if (!slaveTurrets) return;
+            if (!weaponManager) return;
+            weaponManager.slavingTurrets = true;
+            weaponManager.slavedPosition = groundStabilized ? groundTargetPosition : targetPointPosition;
+            weaponManager.slavedVelocity = Vector3.zero;
+            weaponManager.slavedAcceleration = Vector3.zero;
+        }
 
-	        windowWidth = camImageSize * BDArmorySettings.TARGET_WINDOW_SCALE + (3 * buttonHeight) + 16 + 2 * gap;
-	        windowHeight = camImageSize * BDArmorySettings.TARGET_WINDOW_SCALE + 23;
+        internal static void ResizeTargetWindow()
+        {
+            windowWidth = camImageSize * BDArmorySettings.TARGET_WINDOW_SCALE + (3 * buttonHeight) + 16 + 2 * gap;
+            windowHeight = camImageSize * BDArmorySettings.TARGET_WINDOW_SCALE + 23;
             BDArmorySetup.WindowRectTargetingCam = new Rect(BDArmorySetup.WindowRectTargetingCam.x, BDArmorySetup.WindowRectTargetingCam.y, windowWidth, windowHeight);
-		}
+        }
 
-		void SlewCamera(Vector3 direction)
-		{
-			SlewingButtonCam = true;
-			StartCoroutine(SlewCamRoutine(direction));
-		}
+        void SlewCamera(Vector3 direction)
+        {
+            SlewingButtonCam = true;
+            StartCoroutine(SlewCamRoutine(direction));
+        }
 
-	    IEnumerator SlewMouseCamRoutine(Vector3 direction)
-	    {
+        IEnumerator SlewMouseCamRoutine(Vector3 direction)
+        {
             radarLock = false;
             //invert the x axis.  makes the mouse action more intutitve
             direction.x = -direction.x;
             //direction.y = -direction.y;
-            float velocity = Mathf.Abs(direction.x) > Mathf.Abs(direction.y)? Mathf.Abs(direction.x) : Mathf.Abs(direction.y); 
+            float velocity = Mathf.Abs(direction.x) > Mathf.Abs(direction.y) ? Mathf.Abs(direction.x) : Mathf.Abs(direction.y);
             Vector3 rotationAxis = Matrix4x4.TRS(Vector3.zero, Quaternion.LookRotation(cameraParentTransform.forward, vessel.upAxis), Vector3.one)
                 .MultiplyVector(Quaternion.AngleAxis(90, Vector3.forward) * direction);
-	        float angle = velocity / (1 + currentFovIndex) * Time.deltaTime;
-	        if (angle / (1f + currentFovIndex) < .05f / (1f + currentFovIndex)) angle = .05f / ((1f + currentFovIndex) / 2f);
+            float angle = velocity / (1 + currentFovIndex) * Time.deltaTime;
+            if (angle / (1f + currentFovIndex) < .05f / (1f + currentFovIndex)) angle = .05f / ((1f + currentFovIndex) / 2f);
             Vector3 lookVector = Quaternion.AngleAxis(angle, rotationAxis) * cameraParentTransform.forward;
 
             PointCameraModel(lookVector);
-	        yield return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame();
 
-	        if (groundStabilized)
-	        {
-	            GroundStabilize();
-	            lookVector = groundTargetPosition - cameraParentTransform.position;
-	        }
-	        PointCameraModel(lookVector);
-
+            if (groundStabilized)
+            {
+                GroundStabilize();
+                lookVector = groundTargetPosition - cameraParentTransform.position;
+            }
+            PointCameraModel(lookVector);
         }
 
         IEnumerator SlewCamRoutine(Vector3 direction)
-		{
-			StopResetting();
-			StopPointToPosRoutine();
+        {
+            StopResetting();
+            StopPointToPosRoutine();
 
-			radarLock = false;
-			float slewRate = finalSlewSpeed;
-			Vector3 rotationAxis = Matrix4x4.TRS(Vector3.zero, Quaternion.LookRotation(cameraParentTransform.forward, vessel.upAxis), Vector3.one).MultiplyVector(Quaternion.AngleAxis(90, Vector3.forward) * direction);
-			Vector3 lookVector = Quaternion.AngleAxis(slewRate * Time.deltaTime, rotationAxis) * cameraParentTransform.forward;
-			PointCameraModel(lookVector);
-			yield return new WaitForEndOfFrame();
+            radarLock = false;
+            float slewRate = finalSlewSpeed;
+            Vector3 rotationAxis = Matrix4x4.TRS(Vector3.zero, Quaternion.LookRotation(cameraParentTransform.forward, vessel.upAxis), Vector3.one).MultiplyVector(Quaternion.AngleAxis(90, Vector3.forward) * direction);
+            Vector3 lookVector = Quaternion.AngleAxis(slewRate * Time.deltaTime, rotationAxis) * cameraParentTransform.forward;
+            PointCameraModel(lookVector);
+            yield return new WaitForEndOfFrame();
 
+            if (groundStabilized)
+            {
+                GroundStabilize();
+                lookVector = groundTargetPosition - cameraParentTransform.position;
+            }
 
-			if(groundStabilized)
-			{
-				GroundStabilize();
-				lookVector = groundTargetPosition - cameraParentTransform.position;
-			}
+            PointCameraModel(lookVector);
+        }
 
-			PointCameraModel(lookVector);
-		}
+        void PointToGPSTarget()
+        {
+            if (weaponManager && weaponManager.designatedGPSCoords != Vector3d.zero)
+            {
+                StartCoroutine(PointToPositionRoutine(VectorUtils.GetWorldSurfacePostion(weaponManager.designatedGPSCoords, vessel.mainBody)));
+            }
+        }
 
-		void PointToGPSTarget()
-		{
-			if(weaponManager && weaponManager.designatedGPSCoords != Vector3d.zero)
-			{
-				StartCoroutine(PointToPositionRoutine(VectorUtils.GetWorldSurfacePostion(weaponManager.designatedGPSCoords, vessel.mainBody)));
-			}
-		}
-
-	    private void ResetZoomKeys()
-	    {
-	        ZoomKeysSet = false;
-	        GameSettings.AXIS_MOUSEWHEEL.primary = ZoomKeyP;
-	        GameSettings.AXIS_MOUSEWHEEL.secondary = ZoomKeyS;
-	    }
+        private void ResetZoomKeys()
+        {
+            ZoomKeysSet = false;
+            GameSettings.AXIS_MOUSEWHEEL.primary = ZoomKeyP;
+            GameSettings.AXIS_MOUSEWHEEL.secondary = ZoomKeyS;
+        }
 
         private void SetZoomKeys()
-	    {
-	        ZoomKeysSet = true;
+        {
+            ZoomKeysSet = true;
             GameSettings.AXIS_MOUSEWHEEL.primary = NoZoomKeyP;
-	        GameSettings.AXIS_MOUSEWHEEL.secondary = NoZoomKeyS;
-	    }
+            GameSettings.AXIS_MOUSEWHEEL.secondary = NoZoomKeyS;
+        }
 
         private void SlewRoutine(Vector2 direction)
-	    {
-	        if (SlewingMouseCam)
-	        {
-	            StartCoroutine(SlewMouseCamRoutine(direction));
+        {
+            if (SlewingMouseCam)
+            {
+                StartCoroutine(SlewMouseCamRoutine(direction));
             }
-	    }
+        }
 
-	    void ZoomRoutine(Vector2 zoomAmt)
-	    {
-	        if (zoomAmt.y > 0) ZoomIn();
-	        else ZoomOut();
-            Mouse.delta = new Vector2(0,0);
-	    }
+        void ZoomRoutine(Vector2 zoomAmt)
+        {
+            if (zoomAmt.y > 0) ZoomIn();
+            else ZoomOut();
+            Mouse.delta = new Vector2(0, 0);
+        }
 
-	    void ZoomIn()
-		{
-			StopResetting();
-			if(currentFovIndex < zoomFovs.Length-1)
-			{
-				currentFovIndex++;
-			}
+        void ZoomIn()
+        {
+            StopResetting();
+            if (currentFovIndex < zoomFovs.Length - 1)
+            {
+                currentFovIndex++;
+            }
 
-			//fov = zoomFovs[currentFovIndex];
-		}
+            //fov = zoomFovs[currentFovIndex];
+        }
 
-		void ZoomOut()
-		{
-			StopResetting();
-			if(currentFovIndex > 0)
-			{
-				currentFovIndex--;
-			}
-			
-			//fov = zoomFovs[currentFovIndex];
-		}
+        void ZoomOut()
+        {
+            StopResetting();
+            if (currentFovIndex > 0)
+            {
+                currentFovIndex--;
+            }
 
-		GameObject debugSphere;
-		void CreateDebugSphere()
-		{
-			debugSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-			debugSphere.GetComponent<Collider>().enabled = false;
-		}
+            //fov = zoomFovs[currentFovIndex];
+        }
 
-		void MoveDebugSphere()
-		{
-			if(!debugSphere)
-			{
-				CreateDebugSphere();
-			}
-			debugSphere.transform.position = groundTargetPosition;
-		}
+        GameObject debugSphere;
 
-		void GroundStabilize()
-		{
-			if(vessel.packed) return;
-			StopResetting();
+        void CreateDebugSphere()
+        {
+            debugSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            debugSphere.GetComponent<Collider>().enabled = false;
+        }
 
-			RaycastHit rayHit;
-			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
-			bool raycasted = Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 9076737);
-			if(raycasted)
-			{
-				if(FlightGlobals.getAltitudeAtPos(rayHit.point) < 0)
-				{
-					raycasted = false;
-				}
-				else
-				{
-					groundStabilized = true;
-					groundTargetPosition = rayHit.point;
+        void MoveDebugSphere()
+        {
+            if (!debugSphere)
+            {
+                CreateDebugSphere();
+            }
+            debugSphere.transform.position = groundTargetPosition;
+        }
 
-					if(CoMLock)
-					{
+        void GroundStabilize()
+        {
+            if (vessel.packed) return;
+            StopResetting();
+
+            RaycastHit rayHit;
+            Ray ray = new Ray(cameraParentTransform.position + (50 * cameraParentTransform.forward), cameraParentTransform.forward);
+            bool raycasted = Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 9076737);
+            if (raycasted)
+            {
+                if (FlightGlobals.getAltitudeAtPos(rayHit.point) < 0)
+                {
+                    raycasted = false;
+                }
+                else
+                {
+                    groundStabilized = true;
+                    groundTargetPosition = rayHit.point;
+
+                    if (CoMLock)
+                    {
                         KerbalEVA hitEVA = rayHit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                         Part p = hitEVA ? hitEVA.part : rayHit.collider.GetComponentInParent<Part>();
-						if(p && p.vessel && p.vessel.CoM != Vector3.zero)
-						{
-							groundTargetPosition = p.vessel.CoM + (p.vessel.Velocity() * Time.fixedDeltaTime);
-							StartCoroutine(StabilizeNextFrame());
-						}
-					}
-					Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
-					if(newGTP != Vector3d.zero)
-					{
-						bodyRelativeGTP = newGTP;
-					}
-				}
+                        if (p && p.vessel && p.vessel.CoM != Vector3.zero)
+                        {
+                            groundTargetPosition = p.vessel.CoM + (p.vessel.Velocity() * Time.fixedDeltaTime);
+                            StartCoroutine(StabilizeNextFrame());
+                        }
+                    }
+                    Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+                    if (newGTP != Vector3d.zero)
+                    {
+                        bodyRelativeGTP = newGTP;
+                    }
+                }
             }
 
-			if(!raycasted)
-			{
-				Vector3 upDir = VectorUtils.GetUpDirection(cameraParentTransform.position);
-				double altitude = vessel.altitude; //MissileGuidance.GetRadarAltitude(vessel);
-				double radius = vessel.mainBody.Radius;
-			
-				Vector3d planetCenter = vessel.GetWorldPos3D() - ((vessel.altitude + vessel.mainBody.Radius) * vessel.upAxis);
-				double enter;
-				if(VectorUtils.SphereRayIntersect(ray, planetCenter, radius, out enter))
-				{
-					if(enter > 0)
-					{
-						groundStabilized = true;
-						groundTargetPosition = ray.GetPoint((float)enter);
-						Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
-						if(newGTP != Vector3d.zero)
-						{
-							bodyRelativeGTP = newGTP;
-						}
-					}
-				}
-	
-			}
+            if (!raycasted)
+            {
+                Vector3 upDir = VectorUtils.GetUpDirection(cameraParentTransform.position);
+                double altitude = vessel.altitude; //MissileGuidance.GetRadarAltitude(vessel);
+                double radius = vessel.mainBody.Radius;
 
-			if(BDArmorySettings.DRAW_DEBUG_LABELS)
-			{
-				MoveDebugSphere();
-			}
-		}
+                Vector3d planetCenter = vessel.GetWorldPos3D() - ((vessel.altitude + vessel.mainBody.Radius) * vessel.upAxis);
+                double enter;
+                if (VectorUtils.SphereRayIntersect(ray, planetCenter, radius, out enter))
+                {
+                    if (enter > 0)
+                    {
+                        groundStabilized = true;
+                        groundTargetPosition = ray.GetPoint((float)enter);
+                        Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+                        if (newGTP != Vector3d.zero)
+                        {
+                            bodyRelativeGTP = newGTP;
+                        }
+                    }
+                }
+            }
 
-		IEnumerator StabilizeNextFrame()
-		{
-			yield return new WaitForFixedUpdate();
-			yield return new WaitForEndOfFrame();
-			if(!gimbalLimitReached && surfaceDetected)
-			{
-				GroundStabilize();
-			}
-		}
+            if (BDArmorySettings.DRAW_DEBUG_LABELS)
+            {
+                MoveDebugSphere();
+            }
+        }
 
+        IEnumerator StabilizeNextFrame()
+        {
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForEndOfFrame();
+            if (!gimbalLimitReached && surfaceDetected)
+            {
+                GroundStabilize();
+            }
+        }
 
-		void GetHitPoint()
-		{
-			if(vessel.packed) return;
-			if(delayedEnabling) return;
+        void GetHitPoint()
+        {
+            if (vessel.packed) return;
+            if (delayedEnabling) return;
 
-			RaycastHit rayHit;
-			Ray ray = new Ray(cameraParentTransform.position + (50*cameraParentTransform.forward), cameraParentTransform.forward);
-			if(Physics.Raycast(ray, out rayHit, maxRayDistance-50, 9076737))
-			{
-				targetPointPosition = rayHit.point;
+            RaycastHit rayHit;
+            Ray ray = new Ray(cameraParentTransform.position + (50 * cameraParentTransform.forward), cameraParentTransform.forward);
+            if (Physics.Raycast(ray, out rayHit, maxRayDistance - 50, 9076737))
+            {
+                targetPointPosition = rayHit.point;
 
-				if(!surfaceDetected && groundStabilized && !gimbalLimitReached)
-				{
-					groundStabilized = true;
-					groundTargetPosition = rayHit.point;
-					
-					if(CoMLock)
-					{
+                if (!surfaceDetected && groundStabilized && !gimbalLimitReached)
+                {
+                    groundStabilized = true;
+                    groundTargetPosition = rayHit.point;
+
+                    if (CoMLock)
+                    {
                         KerbalEVA hitEVA = rayHit.collider.gameObject.GetComponentUpwards<KerbalEVA>();
                         Part p = hitEVA ? hitEVA.part : rayHit.collider.GetComponentInParent<Part>();
                         if (p && p.vessel && p.vessel.Landed)
-						{
-							groundTargetPosition = p.vessel.CoM;
-						}
-					}
-					Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
-					if(newGTP != Vector3d.zero)
-					{
-						bodyRelativeGTP = newGTP;
-					}
-				}
+                        {
+                            groundTargetPosition = p.vessel.CoM;
+                        }
+                    }
+                    Vector3d newGTP = VectorUtils.WorldPositionToGeoCoords(groundTargetPosition, vessel.mainBody);
+                    if (newGTP != Vector3d.zero)
+                    {
+                        bodyRelativeGTP = newGTP;
+                    }
+                }
 
-				surfaceDetected = true;
+                surfaceDetected = true;
 
-				if(groundStabilized && !gimbalLimitReached && CMDropper.smokePool!=null)
-				{
-					if(CMSmoke.RaycastSmoke(ray))
-					{
-						surfaceDetected = false;
-					}
-				}
+                if (groundStabilized && !gimbalLimitReached && CMDropper.smokePool != null)
+                {
+                    if (CMSmoke.RaycastSmoke(ray))
+                    {
+                        surfaceDetected = false;
+                    }
+                }
+            }
+            else
+            {
+                targetPointPosition = cameraParentTransform.position + (maxRayDistance * cameraParentTransform.forward);
+                surfaceDetected = false;
+            }
+        }
 
-			}
-			else
-			{
-				targetPointPosition = cameraParentTransform.position + (maxRayDistance*cameraParentTransform.forward);
-				surfaceDetected = false;
-			}
-		}
+        void ClearTarget()
+        {
+            groundStabilized = false;
+        }
 
-		void ClearTarget()
-		{
-			groundStabilized = false;
-		}
+        IEnumerator ResetCamera()
+        {
+            resetting = true;
+            radarLock = false;
+            StopPointToPosRoutine();
 
+            if (groundStabilized)
+            {
+                ClearTarget();
+            }
 
-		IEnumerator ResetCamera()
-		{
-			resetting = true;
-			radarLock = false;
-			StopPointToPosRoutine();
+            currentFovIndex = 0;
+            //fov = zoomFovs[currentFovIndex];
 
-			if(groundStabilized)
-			{
-				ClearTarget();
-			}
+            while (Vector3.Angle(cameraParentTransform.forward, cameraParentTransform.parent.forward) > 0.1f)
+            {
+                Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.forward, cameraParentTransform.parent.forward, 60 * Mathf.Deg2Rad * Time.deltaTime, 0);
+                //cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+                PointCameraModel(newForward);
+                gimbalLimitReached = false;
+                yield return null;
+            }
+            resetting = false;
+        }
 
-			currentFovIndex = 0;
-			//fov = zoomFovs[currentFovIndex];
+        void StopPointToPosRoutine()
+        {
+            if (slewingToPosition)
+            {
+                StartCoroutine(StopPTPRRoutine());
+            }
+        }
 
-			while(Vector3.Angle(cameraParentTransform.forward, cameraParentTransform.parent.forward) > 0.1f)
-			{
-				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.forward, cameraParentTransform.parent.forward, 60*Mathf.Deg2Rad*Time.deltaTime, 0);
-				//cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
-				PointCameraModel(newForward);
-				gimbalLimitReached = false;
-				yield return null;
-			}
-			resetting = false;
-		}
+        IEnumerator StopPTPRRoutine()
+        {
+            stopPTPR = true;
+            yield return null;
+            yield return new WaitForEndOfFrame();
+            stopPTPR = false;
+        }
 
-		void StopPointToPosRoutine()
-		{
-			if(slewingToPosition)
-			{
-				StartCoroutine(StopPTPRRoutine());
-			}
-		}
+        bool stopPTPR;
+        bool slewingToPosition;
 
-		IEnumerator StopPTPRRoutine()
-		{
-			stopPTPR = true;
-			yield return null;
-			yield return new WaitForEndOfFrame();
-			stopPTPR = false;
-		}
+        public IEnumerator PointToPositionRoutine(Vector3 position)
+        {
+            yield return StopPTPRRoutine();
+            stopPTPR = false;
+            slewingToPosition = true;
+            radarLock = false;
+            StopResetting();
+            ClearTarget();
+            while (!stopPTPR && Vector3.Angle(cameraParentTransform.transform.forward, position - (cameraParentTransform.transform.position)) > 0.1f)
+            {
+                Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.transform.forward, position - cameraParentTransform.transform.position, 90 * Mathf.Deg2Rad * Time.fixedDeltaTime, 0);
+                //cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
+                PointCameraModel(newForward);
+                yield return new WaitForFixedUpdate();
+                if (gimbalLimitReached)
+                {
+                    ClearTarget();
+                    StartCoroutine("ResetCamera");
+                    slewingToPosition = false;
+                    yield break;
+                }
+            }
+            if (surfaceDetected && !stopPTPR)
+            {
+                //cameraParentTransform.transform.rotation = Quaternion.LookRotation(position - cameraParentTransform.position, VectorUtils.GetUpDirection(transform.position));
+                PointCameraModel(position - cameraParentTransform.position);
+                GroundStabilize();
+            }
+            slewingToPosition = false;
+            yield break;
+        }
 
-		bool stopPTPR;
-		bool slewingToPosition;
+        void StopResetting()
+        {
+            if (resetting)
+            {
+                StopCoroutine("ResetCamera");
+                resetting = false;
+            }
+        }
 
-	  public IEnumerator PointToPositionRoutine(Vector3 position)
-		{
-			yield return StopPTPRRoutine();
-			stopPTPR = false;
-			slewingToPosition = true;
-			radarLock = false;
-			StopResetting();
-			ClearTarget();
-			while(!stopPTPR && Vector3.Angle(cameraParentTransform.transform.forward, position - (cameraParentTransform.transform.position)) > 0.1f)
-			{
-				Vector3 newForward = Vector3.RotateTowards(cameraParentTransform.transform.forward, position - cameraParentTransform.transform.position, 90 * Mathf.Deg2Rad * Time.fixedDeltaTime, 0);
-				//cameraParentTransform.rotation = Quaternion.LookRotation(newForward, VectorUtils.GetUpDirection(transform.position));
-				PointCameraModel(newForward);
-				yield return new WaitForFixedUpdate();
-				if(gimbalLimitReached)
-				{
-					ClearTarget();
-					StartCoroutine("ResetCamera");
-					slewingToPosition = false;
-					yield break;
-				}
-			}
-			if(surfaceDetected && !stopPTPR)
-			{
-				//cameraParentTransform.transform.rotation = Quaternion.LookRotation(position - cameraParentTransform.position, VectorUtils.GetUpDirection(transform.position));
-				PointCameraModel(position-cameraParentTransform.position);
-				GroundStabilize();
-			}
-			slewingToPosition = false;
-			yield break;
-		}
+        void ParseFovs()
+        {
+            zoomFovs = Misc.Misc.ParseToFloatArray(zoomFOVs);
+        }
 
-		void StopResetting()
-		{
-			if(resetting)
-			{
-				StopCoroutine("ResetCamera");
-				resetting = false;
-			}
-		}
-
-		void ParseFovs()
-		{
-			zoomFovs = Misc.Misc.ParseToFloatArray(zoomFOVs);
-		}
-
-		void OnDestroy()
-		{
-			if(HighLogic.LoadedSceneIsFlight)
-			{
-				windowIsOpen = false;
-				if(wpmr)
-				{
-					if(slaveTurrets)
-					{
-						weaponManager.slavingTurrets = false;
-					}
-				}
+        void OnDestroy()
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                windowIsOpen = false;
+                if (wpmr)
+                {
+                    if (slaveTurrets)
+                    {
+                        weaponManager.slavingTurrets = false;
+                    }
+                }
 
                 GameEvents.onVesselCreate.Remove(Disconnect);
             }
-		}
+        }
 
-		Vector2 TargetAzimuthElevationScreenPos(Rect screenRect, Vector3 targetPosition, float textureSize)
-		{
-			Vector3 localPos = vessel.ReferenceTransform.InverseTransformPoint(targetPosition);
-			Vector3 aziRef = Vector3.up;
-			Vector3 aziPos = Vector3.ProjectOnPlane(localPos, Vector3.forward);
-			float elevation = VectorUtils.SignedAngle(aziPos, localPos, Vector3.forward);
-			float normElevation = elevation / 70;
+        Vector2 TargetAzimuthElevationScreenPos(Rect screenRect, Vector3 targetPosition, float textureSize)
+        {
+            Vector3 localPos = vessel.ReferenceTransform.InverseTransformPoint(targetPosition);
+            Vector3 aziRef = Vector3.up;
+            Vector3 aziPos = Vector3.ProjectOnPlane(localPos, Vector3.forward);
+            float elevation = VectorUtils.SignedAngle(aziPos, localPos, Vector3.forward);
+            float normElevation = elevation / 70;
 
+            float azimuth = VectorUtils.SignedAngle(aziRef, aziPos, Vector3.right);
+            float normAzimuth = Mathf.Clamp(azimuth / 120, -1, 1);
 
-			float azimuth = VectorUtils.SignedAngle(aziRef, aziPos, Vector3.right);
-			float normAzimuth = Mathf.Clamp(azimuth / 120, -1, 1);
+            float x = screenRect.x + (screenRect.width / 2) + (normAzimuth * (screenRect.width / 2)) - (textureSize / 2);
+            float y = screenRect.y + (screenRect.height / 4) + (normElevation * (screenRect.height / 4)) - (textureSize / 2);
 
-			float x = screenRect.x + (screenRect.width/2) + (normAzimuth * (screenRect.width / 2)) - (textureSize/2);
-			float y = screenRect.y + (screenRect.height/4) + (normElevation * (screenRect.height / 4)) - (textureSize/2);
+            x = Mathf.Clamp(x, textureSize / 2, screenRect.width - (textureSize / 2));
+            y = Mathf.Clamp(y, textureSize / 2, (screenRect.height) - (textureSize / 2));
 
-			x = Mathf.Clamp(x, textureSize / 2, screenRect.width - (textureSize / 2));
-			y = Mathf.Clamp(y, textureSize / 2, (screenRect.height) - (textureSize / 2));
-
-			return new Vector2(x, y);
-		}
-
-
-
-
-	}
+            return new Vector2(x, y);
+        }
+    }
 }
-

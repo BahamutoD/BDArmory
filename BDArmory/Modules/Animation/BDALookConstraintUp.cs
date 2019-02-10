@@ -8,10 +8,8 @@ namespace BDArmory.Modules.Animation
 
         [KSPField(isPersistant = false)] public string rotatorsName;
 
-
         Transform target;
         Transform rotator;
-
 
         public void Start()
         {

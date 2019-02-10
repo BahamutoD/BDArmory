@@ -1,20 +1,19 @@
-using BDArmory.Core.Extension;
+using System.Collections.Generic;
 using BDArmory.Control;
+using BDArmory.Core;
+using BDArmory.Core.Extension;
 using BDArmory.CounterMeasure;
 using BDArmory.Misc;
-using BDArmory.Parts;
-using BDArmory.Shaders;
-using BDArmory.UI;
-using System.Collections.Generic;
-using BDArmory.Core;
 using BDArmory.Modules;
+using BDArmory.Shaders;
 using BDArmory.Targeting;
+using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory.Radar
 {
     public static class RadarUtils
-	{
+    {
         private static bool rcsSetupCompleted = false;
         private static int radarResolution = 128;
 
@@ -29,6 +28,7 @@ namespace BDArmory.Radar
         public static Texture2D GetTextureLateral { get { return drawTextureLateral; } }
         private static Texture2D drawTextureVentral;
         public static Texture2D GetTextureVentral { get { return drawTextureVentral; } }
+
         // additional anti-exploit 45° offset renderings
         private static Texture2D drawTextureFrontal45;
         public static Texture2D GetTextureFrontal45 { get { return drawTextureFrontal45; } }
@@ -52,7 +52,6 @@ namespace BDArmory.Radar
         internal const float ACTIVE_MISSILE_PING_PERISTS_TIME = 0.2f;
         internal const float MISSILE_DEFAULT_LOCKABLE_RCS = 5f;
 
-
         /// <summary>
         /// Get a vessel radar siganture, including all modifiers (ECM, stealth, ...)
         /// </summary>
@@ -67,13 +66,12 @@ namespace BDArmory.Radar
             return ti;
         }
 
-
         /// <summary>
         /// Internal method: get a vessel base radar signature
         /// </summary>
         private static TargetInfo GetVesselRadarCrossSection(Vessel v)
         {
-            //read vesseltargetinfo, or render against radar cameras    
+            //read vesseltargetinfo, or render against radar cameras
             TargetInfo ti = v.gameObject.GetComponent<TargetInfo>();
 
             if (ti == null)
@@ -109,7 +107,6 @@ namespace BDArmory.Radar
                 {
                     // perform radar rendering to obtain base cross section
                     ti.radarBaseSignature = RenderVesselRadarSnapshot(v, v.transform);
-
                 }
 
                 ti.radarBaseSignatureNeedsUpdate = false;
@@ -119,7 +116,6 @@ namespace BDArmory.Radar
             return ti;
         }
 
-
         /// <summary>
         /// Internal method: get a vessels siganture modifiers (ecm, stealth, ...)
         /// </summary>
@@ -128,7 +124,7 @@ namespace BDArmory.Radar
             ti.radarModifiedSignature = ti.radarBaseSignature;
             ti.radarLockbreakFactor = 1;
 
-            // 
+            //
             // read vessel ecminfo for active jammers and calculate effects:
             VesselECMJInfo vesseljammer = v.gameObject.GetComponent<VesselECMJInfo>();
             if (vesseljammer)
@@ -145,13 +141,12 @@ namespace BDArmory.Radar
                 ti.radarJammingDistance = ((vesseljammer.jammerStrength / ti.radarBaseSignature / 100) + 1.0f) * vesseljammer.jammerStrength;
 
                 //4) lockbreaking strength relative to jammer's lockbreak strength in relation to vessel rcs signature:
-                // lockbreak_factor = baseSig/modifiedSig x (1 – lopckBreakStrength/baseSig/100)                
+                // lockbreak_factor = baseSig/modifiedSig x (1 – lopckBreakStrength/baseSig/100)
                 ti.radarLockbreakFactor = (ti.radarBaseSignature / ti.radarModifiedSignature) * (1 - (vesseljammer.lockBreakStrength / ti.radarBaseSignature / 100));
             }
 
             return ti.radarModifiedSignature;
         }
-
 
         /// <summary>
         /// Get vessel chaff factor
@@ -173,7 +168,6 @@ namespace BDArmory.Radar
             return chaffFactor;
         }
 
-
         /// <summary>
         /// Get a vessel ecm jamming area (in m) where radar display garbling occurs
         /// </summary>
@@ -189,10 +183,9 @@ namespace BDArmory.Radar
             return jammingDistance;
         }
 
-
         /// <summary>
         /// Internal method: do the actual radar snapshot rendering from 3 sides and store it in a vesseltargetinfo attached to the vessel
-        /// 
+        ///
         /// Note: Transform t is passed separatedly (instead of using v.transform), as the method need to be called from the editor
         ///         and there we dont have a VESSEL, only a SHIPCONSTRUCT, so the EditorRcSWindow passes the transform separately.
         /// </summary>
@@ -243,10 +236,9 @@ namespace BDArmory.Radar
             RenderSinglePass(t, inEditorZoom, t.forward, vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral);
 
             //additional 45° offset renderings:
-            RenderSinglePass(t, inEditorZoom, (t.up+t.right), vesselbounds, radarDistance, radarFOV, rcsRenderingFrontal, drawTextureFrontal45);
-            RenderSinglePass(t, inEditorZoom, (t.right+t.forward), vesselbounds, radarDistance, radarFOV, rcsRenderingLateral, drawTextureLateral45);
-            RenderSinglePass(t, inEditorZoom, (t.forward-t.up), vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral45);
-
+            RenderSinglePass(t, inEditorZoom, (t.up + t.right), vesselbounds, radarDistance, radarFOV, rcsRenderingFrontal, drawTextureFrontal45);
+            RenderSinglePass(t, inEditorZoom, (t.right + t.forward), vesselbounds, radarDistance, radarFOV, rcsRenderingLateral, drawTextureLateral45);
+            RenderSinglePass(t, inEditorZoom, (t.forward - t.up), vesselbounds, radarDistance, radarFOV, rcsRenderingVentral, drawTextureVentral45);
 
             // revert presentation (only if outside editor and thus vessel is a real vessel)
             if (HighLogic.LoadedSceneIsFlight)
@@ -295,7 +287,6 @@ namespace BDArmory.Radar
             return rcsTotal;
         }
 
-
         /// <summary>
         /// Internal helpder method
         /// </summary>
@@ -322,7 +313,6 @@ namespace BDArmory.Radar
             rcsTexture.Apply();
         }
 
-
         /// <summary>
         /// Internal method: get a vessel's bounds
         /// Method implemention adapted from kronal vessel viewer
@@ -344,7 +334,6 @@ namespace BDArmory.Radar
             return result;
         }
 
-
         /// <summary>
         /// Internal method: get a vessel's size (based on it's bounds)
         /// Method implemention adapted from kronal vessel viewer
@@ -354,12 +343,11 @@ namespace BDArmory.Radar
             return CalcVesselBounds(v, t).size;
         }
 
-
         /// <summary>
         /// Initialization of required resources. Necessary once per scene.
         /// </summary>
         public static void SetupResources()
-		{
+        {
             if (!rcsSetupCompleted)
             {
                 //set up rendertargets and textures
@@ -387,7 +375,6 @@ namespace BDArmory.Radar
             }
         }
 
-
         /// <summary>
         /// Release of acquired resources. Necessary once at end of scene.
         /// </summary>
@@ -408,7 +395,6 @@ namespace BDArmory.Radar
                 rcsSetupCompleted = false;
             }
         }
-
 
         /// <summary>
         /// Determine for a vesselposition relative to the radar position how much effect the ground clutter factor will have.
@@ -431,7 +417,6 @@ namespace BDArmory.Radar
 
             return groundClutterMutiplier;
         }
-
 
         /// <summary>
         /// Special scanning method that needs to be set manually on the radar: perform fixed boresight scan with locked fov.
@@ -507,13 +492,11 @@ namespace BDArmory.Radar
                     if (distance < radar.radarMaxDistanceDetect * RWR_PING_RANGE_FACTOR)
                         RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, radar.rwrType, radar.signalPersistTimeForRwr);
                 }
-
             }
             loadedvessels.Dispose();
 
             return hasLocked;
         }
-
 
         /// <summary>
         /// Special scanning method for missiles with active radar homing.
@@ -543,7 +526,7 @@ namespace BDArmory.Radar
                 {
                     if (missile.Team.IsFriendly(wm.Team))
                         continue;
-                }                
+                }
 
                 // ignore self, ignore behind ray
                 Vector3 vectorToTarget = (loadedvessels.Current.transform.position - ray.origin);
@@ -569,7 +552,7 @@ namespace BDArmory.Radar
                     if (distance < missile.activeRadarRange)
                     {
                         //evaluate if we can detect such a signature at that range
-                        float minDetectSig = missile.activeRadarLockTrackCurve.Evaluate(distance/1000f);
+                        float minDetectSig = missile.activeRadarLockTrackCurve.Evaluate(distance / 1000f);
 
                         if (signature > minDetectSig)
                         {
@@ -598,18 +581,15 @@ namespace BDArmory.Radar
                     {
                         if (missile.GetWeaponClass() == WeaponClasses.SLW)
                             RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.TorpedoLock, ACTIVE_MISSILE_PING_PERISTS_TIME);
-
                         else
                             RadarWarningReceiver.PingRWR(loadedvessels.Current, ray.origin, RadarWarningReceiver.RWRThreatTypes.MissileLock, ACTIVE_MISSILE_PING_PERISTS_TIME);
                     }
                 }
-
             }
             loadedvessels.Dispose();
 
             return hasLocked;
         }
-
 
         /// <summary>
         /// Main scanning and locking method called from ModuleRadar.
@@ -695,14 +675,12 @@ namespace BDArmory.Radar
                                     dataIndex++;
                                     hasLocked = true;
                                 }
-
                             }
                         }
 
                         //  our radar ping can be received at a higher range than we can lock/track, according to RWR range ping factor:
                         if (distance < radar.radarMaxDistanceLockTrack * RWR_PING_RANGE_FACTOR)
                             RadarWarningReceiver.PingRWR(loadedvessels.Current, position, radar.rwrType, radar.signalPersistTimeForRwr);
-
                     }
                     else   // SCAN/DETECT TARGETS:
                     {
@@ -731,16 +709,12 @@ namespace BDArmory.Radar
                         if (distance < radar.radarMaxDistanceDetect * RWR_PING_RANGE_FACTOR)
                             RadarWarningReceiver.PingRWR(loadedvessels.Current, position, radar.rwrType, radar.signalPersistTimeForRwr);
                     }
-                    
                 }
-
-
             }
             loadedvessels.Dispose();
 
             return hasLocked;
         }
-
 
         /// <summary>
         /// Update a lock on a tracked target.
@@ -771,7 +745,7 @@ namespace BDArmory.Radar
                          (Vector3.Dot(vectorToTarget, ray.direction) < 0))
                         continue;
 
-                    if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov/2)
+                    if (Vector3.Angle(loadedvessels.Current.CoM - ray.origin, ray.direction) < fov / 2)
                     {
                         float sqrDist = Vector3.SqrMagnitude(loadedvessels.Current.CoM - predictedPos);
                         if (sqrDist < closestSqrDist)
@@ -781,7 +755,6 @@ namespace BDArmory.Radar
                             lockedVessel = loadedvessels.Current;
                         }
                     }
-
                 }
                 loadedvessels.Dispose();
             }
@@ -838,14 +811,13 @@ namespace BDArmory.Radar
             return false;
         }
 
-
         /// <summary>
         /// Scans for targets in direction with field of view.
         /// (Visual Target acquisition)
         /// </summary>
         public static ViewScanResults GuardScanInDirection(MissileFire myWpnManager, Transform referenceTransform, float fov, float maxDistance)
-		{
-			fov *= 1.1f;
+        {
+            fov *= 1.1f;
             var results = new ViewScanResults
             {
                 foundMissile = false,
@@ -859,158 +831,150 @@ namespace BDArmory.Radar
             };
 
             if (!myWpnManager || !referenceTransform)
-			{
-				return results;
-			}
+            {
+                return results;
+            }
 
-			Vector3 position = referenceTransform.position;
-			//Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
-			Vector3 forwardVector = referenceTransform.forward;
-			Vector3 upVector = referenceTransform.up;
-			Vector3 lookDirection = forwardVector;
-
+            Vector3 position = referenceTransform.position;
+            //Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
+            Vector3 forwardVector = referenceTransform.forward;
+            Vector3 upVector = referenceTransform.up;
+            Vector3 lookDirection = forwardVector;
 
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedvessels.MoveNext())
             {
-				if(loadedvessels.Current == null) continue;
+                if (loadedvessels.Current == null) continue;
 
-				if(loadedvessels.Current.loaded)
-				{
-					if(loadedvessels.Current == myWpnManager.vessel) continue; //ignore self
+                if (loadedvessels.Current.loaded)
+                {
+                    if (loadedvessels.Current == myWpnManager.vessel) continue; //ignore self
 
-					Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(loadedvessels.Current.transform.position-position, upVector);
-					Vector3 vesselDirection = loadedvessels.Current.transform.position - position;
+                    Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(loadedvessels.Current.transform.position - position, upVector);
+                    Vector3 vesselDirection = loadedvessels.Current.transform.position - position;
 
-					if(Vector3.Dot(vesselDirection, lookDirection) < 0) continue;   //ignore behind
+                    if (Vector3.Dot(vesselDirection, lookDirection) < 0) continue;   //ignore behind
 
-					float vesselDistance = (loadedvessels.Current.transform.position - position).sqrMagnitude;
-					if (vesselDistance < maxDistance*maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(loadedvessels.Current.transform.position-position, -myWpnManager.transform.forward) < myWpnManager.guardAngle/2)
-					{
-						//Debug.Log("Found vessel: " + vessel.vesselName);
-						if (TerrainCheck(referenceTransform.position, loadedvessels.Current.transform.position))
-                                continue; //blocked by terrain
+                    float vesselDistance = (loadedvessels.Current.transform.position - position).sqrMagnitude;
+                    if (vesselDistance < maxDistance * maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(loadedvessels.Current.transform.position - position, -myWpnManager.transform.forward) < myWpnManager.guardAngle / 2)
+                    {
+                        //Debug.Log("Found vessel: " + vessel.vesselName);
+                        if (TerrainCheck(referenceTransform.position, loadedvessels.Current.transform.position))
+                            continue; //blocked by terrain
 
-						BDATargetManager.ReportVessel(loadedvessels.Current, myWpnManager);
+                        BDATargetManager.ReportVessel(loadedvessels.Current, myWpnManager);
 
-						vesselDistance = Mathf.Sqrt(vesselDistance);
-						Vector3 predictedRelativeDirection = loadedvessels.Current.transform.position - myWpnManager.vessel.PredictPosition(vesselDistance / (950 + Vector3.Dot(myWpnManager.vessel.Velocity(), vesselDirection.normalized)));
+                        vesselDistance = Mathf.Sqrt(vesselDistance);
+                        Vector3 predictedRelativeDirection = loadedvessels.Current.transform.position - myWpnManager.vessel.PredictPosition(vesselDistance / (950 + Vector3.Dot(myWpnManager.vessel.Velocity(), vesselDirection.normalized)));
 
-						TargetInfo tInfo;
-						if((tInfo = loadedvessels.Current.gameObject.GetComponent<TargetInfo>()))
-						{
-							if(tInfo.isMissile)
-							{
-								MissileBase missileBase;
-								if(missileBase = tInfo.MissileBaseModule)
-								{
-									results.foundMissile = true;
-									results.threatVessel = missileBase.vessel;
-									Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missileBase.part.transform.position;
-									Vector3 relV = missileBase.vessel.Velocity() - myWpnManager.vessel.Velocity();
-									bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
-									if(missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.Velocity() * Time.fixedDeltaTime))).sqrMagnitude < 3600)
-									{
-										if(missileBase.TargetingMode == MissileBase.TargetingModes.Heat)
-										{
-											results.foundHeatMissile = true;
-											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
-											results.threatPosition = missileBase.transform.position;
-											break;
-										}
-										else if(missileBase.TargetingMode == MissileBase.TargetingModes.Radar)
-										{
-											results.foundRadarMissile = true;
-											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
-											results.threatPosition = missileBase.transform.position;
-										}
-										else if(missileBase.TargetingMode == MissileBase.TargetingModes.Laser)
-										{
-											results.foundAGM = true;
-											results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
-											break;
-										}
-									}
-									else
-									{
-										break;
-									}
-								}
-							}
-							else
-							{
+                        TargetInfo tInfo;
+                        if ((tInfo = loadedvessels.Current.gameObject.GetComponent<TargetInfo>()))
+                        {
+                            if (tInfo.isMissile)
+                            {
+                                MissileBase missileBase;
+                                if (missileBase = tInfo.MissileBaseModule)
+                                {
+                                    results.foundMissile = true;
+                                    results.threatVessel = missileBase.vessel;
+                                    Vector3 vectorFromMissile = myWpnManager.vessel.CoM - missileBase.part.transform.position;
+                                    Vector3 relV = missileBase.vessel.Velocity() - myWpnManager.vessel.Velocity();
+                                    bool approaching = Vector3.Dot(relV, vectorFromMissile) > 0;
+                                    if (missileBase.HasFired && missileBase.TimeIndex > 1 && approaching && (missileBase.TargetPosition - (myWpnManager.vessel.CoM + (myWpnManager.vessel.Velocity() * Time.fixedDeltaTime))).sqrMagnitude < 3600)
+                                    {
+                                        if (missileBase.TargetingMode == MissileBase.TargetingModes.Heat)
+                                        {
+                                            results.foundHeatMissile = true;
+                                            results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
+                                            results.threatPosition = missileBase.transform.position;
+                                            break;
+                                        }
+                                        else if (missileBase.TargetingMode == MissileBase.TargetingModes.Radar)
+                                        {
+                                            results.foundRadarMissile = true;
+                                            results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
+                                            results.threatPosition = missileBase.transform.position;
+                                        }
+                                        else if (missileBase.TargetingMode == MissileBase.TargetingModes.Laser)
+                                        {
+                                            results.foundAGM = true;
+                                            results.missileThreatDistance = Mathf.Min(results.missileThreatDistance, Vector3.Distance(missileBase.part.transform.position, myWpnManager.part.transform.position));
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
                                 List<ModuleWeapon>.Enumerator weapon = loadedvessels.Current.FindPartModulesImplementing<ModuleWeapon>().GetEnumerator();
                                 while (weapon.MoveNext())
                                 {
-									if(!weapon.Current.recentlyFiring) continue;
-									if(Vector3.Dot(weapon.Current.fireTransforms[0].forward, vesselDirection) > 0) continue;
+                                    if (!weapon.Current.recentlyFiring) continue;
+                                    if (Vector3.Dot(weapon.Current.fireTransforms[0].forward, vesselDirection) > 0) continue;
 
-									if ((Vector3.Angle(weapon.Current.fireTransforms[0].forward, -predictedRelativeDirection) < 6500 / vesselDistance)
-										&& (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
-									{
-										results.firingAtMe = true;
-										results.threatPosition = weapon.Current.vessel.transform.position;
+                                    if ((Vector3.Angle(weapon.Current.fireTransforms[0].forward, -predictedRelativeDirection) < 6500 / vesselDistance)
+                                        && (!results.firingAtMe || (weapon.Current.vessel.ReferenceTransform.position - position).sqrMagnitude < (results.threatPosition - position).sqrMagnitude))
+                                    {
+                                        results.firingAtMe = true;
+                                        results.threatPosition = weapon.Current.vessel.transform.position;
                                         results.threatVessel = weapon.Current.vessel;
                                         results.threatWeaponManager = weapon.Current.weaponManager;
                                         break;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             loadedvessels.Dispose();
             return results;
-		}
-
+        }
 
         /// <summary>
         /// Helper method: check if line intersects terrain
         /// </summary>
 		public static bool TerrainCheck(Vector3 start, Vector3 end)
-		{
-		    if (!BDArmorySettings.IGNORE_TERRAIN_CHECK)
-		    {
-		        return Physics.Linecast(start, end, 1 << 15);
-		    }
-	
-		    return false;
-		    
-		}
+        {
+            if (!BDArmorySettings.IGNORE_TERRAIN_CHECK)
+            {
+                return Physics.Linecast(start, end, 1 << 15);
+            }
 
+            return false;
+        }
 
         /// <summary>
         /// Helper method: map a position onto the radar display
         /// </summary>
         public static Vector2 WorldToRadar(Vector3 worldPosition, Transform referenceTransform, Rect radarRect, float maxDistance)
-		{
-			float scale = maxDistance/(radarRect.height/2);
-			Vector3 localPosition = referenceTransform.InverseTransformPoint(worldPosition);
-			localPosition.y = 0;
-			Vector2 radarPos = new Vector2((radarRect.width/2)+(localPosition.x/scale), ((radarRect.height/2)-(localPosition.z/scale)));
-			return radarPos;
-		}
-
+        {
+            float scale = maxDistance / (radarRect.height / 2);
+            Vector3 localPosition = referenceTransform.InverseTransformPoint(worldPosition);
+            localPosition.y = 0;
+            Vector2 radarPos = new Vector2((radarRect.width / 2) + (localPosition.x / scale), ((radarRect.height / 2) - (localPosition.z / scale)));
+            return radarPos;
+        }
 
         /// <summary>
         /// Helper method: map a position onto the radar display (for non-onmi radars)
         /// </summary>
         public static Vector2 WorldToRadarRadial(Vector3 worldPosition, Transform referenceTransform, Rect radarRect, float maxDistance, float maxAngle)
-		{
-			float scale = maxDistance/(radarRect.height);
-			Vector3 localPosition = referenceTransform.InverseTransformPoint(worldPosition);
-			localPosition.y = 0;
-			float angle = Vector3.Angle(localPosition, Vector3.forward);
-			if(localPosition.x < 0) angle = -angle;
-			float xPos = (radarRect.width/2) + ((angle/maxAngle)*radarRect.width/2);
-			float yPos = radarRect.height - (new Vector2 (localPosition.x, localPosition.z)).magnitude / scale;
-			Vector2 radarPos = new Vector2(xPos, yPos);
-			return radarPos;
-		}
-
-
+        {
+            float scale = maxDistance / (radarRect.height);
+            Vector3 localPosition = referenceTransform.InverseTransformPoint(worldPosition);
+            localPosition.y = 0;
+            float angle = Vector3.Angle(localPosition, Vector3.forward);
+            if (localPosition.x < 0) angle = -angle;
+            float xPos = (radarRect.width / 2) + ((angle / maxAngle) * radarRect.width / 2);
+            float yPos = radarRect.height - (new Vector2(localPosition.x, localPosition.z)).magnitude / scale;
+            Vector2 radarPos = new Vector2(xPos, yPos);
+            return radarPos;
+        }
     }
 }
-
