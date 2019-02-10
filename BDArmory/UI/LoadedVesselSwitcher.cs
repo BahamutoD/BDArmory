@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using BDArmory.Modules;
 using BDArmory.Misc;
+using BDArmory.Modules;
 using UnityEngine;
 
 namespace BDArmory.UI
@@ -52,7 +52,7 @@ namespace BDArmory.UI
 
             // TEST
             FloatingOrigin.fetch.threshold = 20000; //20km
-            FloatingOrigin.fetch.thresholdSqr = 20000*20000; //20km
+            FloatingOrigin.fetch.thresholdSqr = 20000 * 20000; //20km
             Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
 
             //BDArmorySetup.WindowRectVesselSwitcher = new Rect(10, Screen.height / 6f, _windowWidth, 10);
@@ -60,13 +60,13 @@ namespace BDArmory.UI
 
         private void OnDestroy()
         {
-                GameEvents.onVesselCreate.Remove(VesselEventUpdate);
-                GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
-                GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
-                GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
-                MissileFire.OnChangeTeam -= MissileFireOnToggleTeam;
+            GameEvents.onVesselCreate.Remove(VesselEventUpdate);
+            GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
+            GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
+            GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
+            MissileFire.OnChangeTeam -= MissileFireOnToggleTeam;
 
-                _ready = false;
+            _ready = false;
 
             // TEST
             Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
@@ -110,7 +110,7 @@ namespace BDArmory.UI
                 }
 
                 if (_showGui)
-                {                    
+                {
                     Hotkeys();
                 }
             }
@@ -315,13 +315,12 @@ namespace BDArmory.UI
             if (!previousVessel.isActiveVessel)
                 ForceSwitchVessel(previousVessel);
         }
-        
+
         // Extracted method, so we dont have to call these two lines everywhere
         private void ForceSwitchVessel(Vessel v)
         {
             FlightGlobals.ForceSetActiveVessel(v);
             FlightInputHandler.ResumeVesselCtrlState(v);
         }
-
     }
 }

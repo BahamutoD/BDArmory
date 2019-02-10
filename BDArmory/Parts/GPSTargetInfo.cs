@@ -31,7 +31,6 @@ namespace BDArmory.Parts
             this.name = name;
         }
 
-
         public bool EqualsTarget(GPSTargetInfo other)
         {
             return name == other.name && gpsCoordinates == other.gpsCoordinates && gpsVessel == other.gpsVessel;

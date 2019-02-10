@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace BDArmory.UI
 {
-    
     public class BDGUIComboBox
     {
         private static bool forceToUnShow = false;
@@ -33,7 +28,6 @@ namespace BDArmory.UI
             this.listStyle.hover.textColor = Color.black;
             this.comboxbox_height = combo_height;
         }
-
 
         public int Show()
         {
@@ -80,12 +74,12 @@ namespace BDArmory.UI
             if (isClickedComboButton)
             {
                 float items_height = listStyle.CalcHeight(listContent[0], 1.0f) * (listContent.Length + 5);
-                Rect listRect = new Rect(rect.x+5, rect.y + listStyle.CalcHeight(listContent[0], 1.0f), rect.width-20f, items_height);
+                Rect listRect = new Rect(rect.x + 5, rect.y + listStyle.CalcHeight(listContent[0], 1.0f), rect.width - 20f, items_height);
 
                 scrollViewVector = GUI.BeginScrollView(new Rect(rect.x, rect.y + rect.height, rect.width + 10f, comboxbox_height), scrollViewVector,
-                                                        new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), false, false, BDArmorySetup.BDGuiSkin.horizontalScrollbar, BDArmorySetup.BDGuiSkin.verticalScrollbar);
+                                                        new Rect(rect.x, rect.y, rect.width - 10, items_height + rect.height), false, false, BDArmorySetup.BDGuiSkin.horizontalScrollbar, BDArmorySetup.BDGuiSkin.verticalScrollbar);
 
-                GUI.Box(new Rect(rect.x, rect.y, rect.width-10, items_height + rect.height), "", BDArmorySetup.BDGuiSkin.window);
+                GUI.Box(new Rect(rect.x, rect.y, rect.width - 10, items_height + rect.height), "", BDArmorySetup.BDGuiSkin.window);
 
                 int newSelectedItemIndex = GUI.SelectionGrid(listRect, selectedItemIndex, listContent, 2, listStyle);
                 if (newSelectedItemIndex != selectedItemIndex)

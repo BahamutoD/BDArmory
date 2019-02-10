@@ -12,6 +12,7 @@ namespace BDArmory.Core
         public BDAPersistantSettingsField()
         {
         }
+
         public static void Save()
         {
             ConfigNode fileNode = ConfigNode.Load(BDArmorySettings.settingsConfigURL);
@@ -33,6 +34,7 @@ namespace BDArmory.Core
             field.Dispose();
             fileNode.Save(BDArmorySettings.settingsConfigURL);
         }
+
         public static void Load()
         {
             ConfigNode fileNode = ConfigNode.Load(BDArmorySettings.settingsConfigURL);
@@ -55,6 +57,7 @@ namespace BDArmory.Core
             }
             field.Dispose();
         }
+
         public static object ParseValue(Type type, string value)
         {
             if (type == typeof(string))

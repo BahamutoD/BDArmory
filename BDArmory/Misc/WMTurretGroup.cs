@@ -19,7 +19,6 @@ namespace BDArmory.Misc
         public bool guardMode = false;
         public TargetTypes targetType = TargetTypes.All;
 
-
         public void StartFiringOnTarget(Vessel targetVessel, float burstLength)
         {
             List<ModuleWeapon>.Enumerator weapon = weapons.GetEnumerator();

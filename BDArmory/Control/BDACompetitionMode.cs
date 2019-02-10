@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.UI;
-using UniLinq;
 using UnityEngine;
 
 namespace BDArmory.Control
@@ -30,8 +29,7 @@ namespace BDArmory.Control
                 cStyle.fontStyle = FontStyle.Bold;
                 cStyle.fontSize = 22;
                 cStyle.alignment = TextAnchor.UpperCenter;
-                Rect cLabelRect = new Rect(0, Screen.height/6, Screen.width, 100);
-
+                Rect cLabelRect = new Rect(0, Screen.height / 6, Screen.width, 100);
 
                 GUIStyle cShadowStyle = new GUIStyle(cStyle);
                 Rect cShadowRect = new Rect(cLabelRect);
@@ -93,7 +91,7 @@ namespace BDArmory.Control
                         pilot.weaponManager.ToggleGuardMode();
                     }
                 }
-            
+
             //clear target database so pilots don't attack yet
             BDATargetManager.ClearDatabase();
 
@@ -120,7 +118,7 @@ namespace BDArmory.Control
             {
                 ready = true;
                 using (var leader = leaders.GetEnumerator())
-                    while(leader.MoveNext())
+                    while (leader.MoveNext())
                         if (leader.Current != null && !leader.Current.CanEngage())
                         {
                             ready = false;
@@ -144,7 +142,7 @@ namespace BDArmory.Control
             startDirection *= (distance * leaders.Count / 4) + 1250f;
             Quaternion directionStep = Quaternion.AngleAxis(360f / leaders.Count, VectorUtils.GetUpDirection(center));
 
-            for(var i = 0; i < leaders.Count; ++i)
+            for (var i = 0; i < leaders.Count; ++i)
             {
                 leaders[i].CommandFlyTo(VectorUtils.WorldPositionToGeoCoords(startDirection, FlightGlobals.currentMainBody));
                 startDirection = directionStep * startDirection;
@@ -208,7 +206,7 @@ namespace BDArmory.Control
                             pilot.Current.ReleaseCommand();
                             pilot.Current.CommandAttack(centerGPS);
                         }
-            
+
             competitionStatus = "Competition starting!  Good luck!";
             yield return new WaitForSeconds(2);
             competitionStarting = false;

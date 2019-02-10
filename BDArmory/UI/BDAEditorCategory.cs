@@ -1,12 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using KSP.UI.Screens;
-using KSP.UI;
-using BDArmory.Core;
-using BDArmory.Modules;
 using BDArmory.Control;
+using BDArmory.Core;
 using BDArmory.CounterMeasure;
+using BDArmory.Modules;
+using KSP.UI;
+using KSP.UI.Screens;
+using UnityEngine;
 
 namespace BDArmory.UI
 {
@@ -18,6 +18,7 @@ namespace BDArmory.UI
         public const string BDACategoryKey = "bdacategory";
         public const string AutoBDACategoryKey = "autobdacategory";
         public const int SubcategoryGroup = 412440121;
+
         /// <summary>
         /// Adding to this dictionary before the category buttons are created will add more bda categories.
         /// </summary>
@@ -41,6 +42,7 @@ namespace BDArmory.UI
             "Countermeasures",
             "Armor",
         };
+
         public static readonly Dictionary<string, string> CategoryIcons = new Dictionary<string, string>
         {
             {"All", "BDArmory/Textures/Infinity"},
@@ -231,7 +233,6 @@ namespace BDArmory.UI
             }
         }
 
-
         private void DrawSettingsWindow(int id)
         {
             GUI.Box(new Rect(0, 0, SettingsWidth, SettingsHeight), "BDA Category Settings");
@@ -344,18 +345,20 @@ namespace BDArmory.UI
                 // A few special cases.
                 case "All":
                     return part.partConfig.HasValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey);
+
                 case "Legacy":
                     return part.manufacturer == Misc.BDAEditorTools.Manufacturer;
+
                 case "Misc":
                     {
                         string value = null;
-                        return part.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref value) 
+                        return part.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref value)
                             && (value == "Misc" || !Categories.Contains(value));
                     }
                 default:
                     {
                         string value = null;
-                        return part.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref value) 
+                        return part.partConfig.TryGetValue(BDArmorySettings.AUTOCATEGORIZE_PARTS ? AutoBDACategoryKey : BDACategoryKey, ref value)
                             && value == CurrentCategory;
                     }
             }
@@ -405,7 +408,7 @@ namespace BDArmory.UI
 
             if (EditorLogic.fetch != null)
             {
-                if (SettingsOpen 
+                if (SettingsOpen
                     && SettingsWindow.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y))
                     && !CameraMouseLook.GetMouseLook())
                 {

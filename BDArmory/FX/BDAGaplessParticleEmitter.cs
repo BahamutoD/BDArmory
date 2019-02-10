@@ -50,7 +50,7 @@ namespace BDArmory.FX
         {
             if (!part && !rb)
             {
-                internalVelocity = (transform.position - lastPos)/Time.fixedDeltaTime;
+                internalVelocity = (transform.position - lastPos) / Time.fixedDeltaTime;
                 lastPos = transform.position;
                 if (emit && internalVelocity.sqrMagnitude > 562500)
                 {
@@ -60,8 +60,8 @@ namespace BDArmory.FX
 
             if (emit)
             {
-                maxDistance = Mathf.Clamp((pEmitter.minSize/3), 0.3f, 5f) +
-                              (Mathf.Clamp((BDArmorySetup.numberOfParticleEmitters - 1), 0, 20)*0.07f);
+                maxDistance = Mathf.Clamp((pEmitter.minSize / 3), 0.3f, 5f) +
+                              (Mathf.Clamp((BDArmorySetup.numberOfParticleEmitters - 1), 0, 20) * 0.07f);
 
                 Vector3 originalLocalPosition = gameObject.transform.localPosition;
                 Vector3 originalPosition = gameObject.transform.position;
@@ -69,14 +69,14 @@ namespace BDArmory.FX
                 Vector3 startPosition = gameObject.transform.position;
                 if (useInternalV)
                 {
-                    startPosition -= (velocity*Time.fixedDeltaTime);
+                    startPosition -= (velocity * Time.fixedDeltaTime);
                 }
                 else
                 {
-                    startPosition += (velocity*Time.fixedDeltaTime);
+                    startPosition += (velocity * Time.fixedDeltaTime);
                 }
                 float originalGapDistance = Vector3.Distance(originalPosition, startPosition);
-                float intermediateSteps = originalGapDistance/maxDistance;
+                float intermediateSteps = originalGapDistance / maxDistance;
 
                 pEmitter.EmitParticle();
                 gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, startPosition,
@@ -95,9 +95,9 @@ namespace BDArmory.FX
         {
             Vector3 originalLocalPosition = gameObject.transform.localPosition;
             Vector3 originalPosition = gameObject.transform.position;
-            Vector3 startPosition = gameObject.transform.position + (velocity*Time.fixedDeltaTime);
+            Vector3 startPosition = gameObject.transform.position + (velocity * Time.fixedDeltaTime);
             float originalGapDistance = Vector3.Distance(originalPosition, startPosition);
-            float intermediateSteps = originalGapDistance/maxDistance;
+            float intermediateSteps = originalGapDistance / maxDistance;
 
             //gameObject.transform.position = startPosition;
             for (int i = 0; i < intermediateSteps; i++)

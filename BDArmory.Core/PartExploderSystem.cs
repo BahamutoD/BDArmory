@@ -16,7 +16,6 @@ namespace BDArmory.Core
             }
         }
 
-
         private void OnDestroy()
         {
             ExplodingPartsQueue.Clear();
@@ -35,10 +34,7 @@ namespace BDArmory.Core
                 {
                     part.explode();
                 }
-
             } while (Time.time - timeNow < Time.deltaTime && ExplodingPartsQueue.Count > 0);
-
-
         }
     }
 }

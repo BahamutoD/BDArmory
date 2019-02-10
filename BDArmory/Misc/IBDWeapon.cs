@@ -13,12 +13,9 @@ namespace BDArmory.Misc
         Part GetPart();
 
         // extensions for feature_engagementenvelope
-        
     }
 
-
     // extensions for feature_engagementenvelope
-
 
     public enum WeaponClasses
     {

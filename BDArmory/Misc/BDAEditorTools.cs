@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using UnityEngine;
 using System;
+using System.Collections.Generic;
 using BDArmory.Core;
 using BDArmory.Modules;
+using UnityEngine;
 
 namespace BDArmory.Misc
 {
@@ -44,7 +44,6 @@ namespace BDArmory.Misc
                 dumpParts();
         }
 
-
         public static List<ModuleRadar> getRadars()
         {
             List<ModuleRadar> results = new List<ModuleRadar>(150);
@@ -58,7 +57,6 @@ namespace BDArmory.Misc
 
             return results;
         }
-
 
         void dumpParts()
         {
@@ -98,7 +96,6 @@ namespace BDArmory.Misc
             // 3. iterate weapons and write out fields
             foreach (var item in PartLoader.LoadedPartsList)
             {
-
                 weapon = null;
                 missile = null;
                 radar = null;
@@ -159,6 +156,5 @@ namespace BDArmory.Misc
             filejammers.Close();
             Debug.Log("...dumping parts complete.");
         }
-
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace BDArmory.Core.Utils
 {
-    class LayerMask
+    internal class LayerMask
     {
         public static int CreateLayerMask(bool aExclude, params int[] aLayers)
         {
@@ -22,6 +22,5 @@
             }
             return result;
         }
-
     }
 }

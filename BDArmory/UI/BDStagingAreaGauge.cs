@@ -1,5 +1,5 @@
-﻿using KSP.UI.Screens;
-using BDArmory.Core;
+﻿using BDArmory.Core;
+using KSP.UI.Screens;
 using UnityEngine;
 
 namespace BDArmory.UI
@@ -204,7 +204,5 @@ namespace BDArmory.UI
             }
             return g;
         }
-
-
     }
 }

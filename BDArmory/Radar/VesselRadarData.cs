@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.Modules;
-using BDArmory.Parts;
 using BDArmory.Targeting;
 using BDArmory.UI;
 using UnityEngine;
@@ -783,7 +782,6 @@ namespace BDArmory.Radar
                 }
             }
 
-
             if (Event.current.type == EventType.MouseUp && resizingWindow)
             {
                 resizingWindow = false;
@@ -800,15 +798,12 @@ namespace BDArmory.Radar
 
                 BDGUIUtils.UseMouseEventInRect(linkWindowRect);
             }
-
         }
-
 
         //GUI
         //=============================================
         private void WindowRadar(int windowID)
         {
-
             GUI.DragWindow(new Rect(0, 0, BDArmorySetup.WindowRectRadar.width - 18, 30));
             if (GUI.Button(new Rect(BDArmorySetup.WindowRectRadar.width - 18, 2, 16, 16), "X", GUI.skin.button))
             {
@@ -836,7 +831,6 @@ namespace BDArmory.Radar
 
                 // Range Display and control
                 DisplayRange();
-
 
                 //my ship direction icon
                 float directionSize = 16;
@@ -878,7 +872,6 @@ namespace BDArmory.Radar
                                 Vector3.Cross(north, vessel.upAxis));
                             currentAngle += angleFromNorth;
                         }
-
 
                         GUIUtility.RotateAroundPivot(currentAngle, new Vector2((RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE) / 2, (RadarScreenSize * BDArmorySettings.RADAR_WINDOW_SCALE) / 2));
                         if (availableRadars[i].omnidirectional && radarCount == 1)
@@ -982,7 +975,6 @@ namespace BDArmory.Radar
                 GUI.Label(missileDataRect, missileDataString, distanceStyle);
             }
 
-
             //roll indicator
             if (!vessel.Landed)
             {
@@ -993,7 +985,6 @@ namespace BDArmory.Radar
                 GUI.DrawTexture(scanRect, rollIndicatorTexture, ScaleMode.StretchToFill, true);
                 GUI.matrix = Matrix4x4.identity;
             }
-
 
             if (noData)
             {
@@ -1399,7 +1390,6 @@ namespace BDArmory.Radar
             v.Dispose();
         }
 
-
         public void LinkVRD(VesselRadarData vrd)
         {
             if (!externalVRDs.Contains(vrd))
@@ -1434,7 +1424,6 @@ namespace BDArmory.Radar
 
             mr.AddExternalVRD(this);
         }
-
 
         public void AddRadarContact(ModuleRadar radar, TargetSignatureData contactData, bool _locked)
         {
@@ -1706,13 +1695,11 @@ namespace BDArmory.Radar
                     Rect pingRect = new Rect(pingPosition.x - (lockIconSize / 2), pingPosition.y - (lockIconSize / 2),
                         lockIconSize, lockIconSize);
 
-
                     Texture2D txtr = (i == lockedTargetIndexes[activeLockedTargetIndex]) ? lockIconActive : lockIcon;
                     GUI.DrawTexture(pingRect, txtr, ScaleMode.StretchToFill, true);
                     GUI.matrix = Matrix4x4.identity;
                     GUI.Label(new Rect(pingPosition.x + (lockIconSize * 0.35f) + 2, pingPosition.y, 100, 24),
                         (lockedTarget.altitude / 1000).ToString("0"), distanceStyle);
-
 
                     if (!drewLockLabel)
                     {
@@ -1759,7 +1746,6 @@ namespace BDArmory.Radar
                             UpdateLockedTargets();
                         }
                     }
-
 
                     //DLZ
                     if (!lockDirty)
@@ -1993,7 +1979,6 @@ namespace BDArmory.Radar
                         }
                     }
 
-
                     if (GUI.Button(pingRect, GUIContent.none, GUIStyle.none) &&
                         Time.time - guiInputTime > guiInputCooldown)
                     {
@@ -2022,7 +2007,6 @@ namespace BDArmory.Radar
             {
                 return;
             }
-
 
             if (BDInputUtils.GetKey(BDInputSettingsFields.RADAR_SLEW_RIGHT))
             {

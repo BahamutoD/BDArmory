@@ -8,7 +8,6 @@ namespace BDArmory.Modules
 {
     public class ModuleReactiveArmor : PartModule
     {
-
         //[KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Damage Percentage Threshold"),
         // UI_FloatRange(controlEnabled = true, scene = UI_Scene.All, minValue = 0f, maxValue = 100f, stepIncrement = 1f)]
         public float DAMAGEMODIFIER1 = 75;
@@ -37,6 +36,7 @@ namespace BDArmory.Modules
         private bool partCheck = true;
 
         private HitpointTracker hp;
+
         private HitpointTracker GetHP()
         {
             HitpointTracker hp = null;
@@ -45,7 +45,6 @@ namespace BDArmory.Modules
 
             return hp;
         }
-
 
         public override void OnStart(StartState state)
         {
@@ -106,29 +105,38 @@ namespace BDArmory.Modules
             nextTextureEvent();
         }
 
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         [KSPField]
         public string currentTextureName = string.Empty;
+
         [KSPField]
         public string textureRootFolder = string.Empty;
+
         [KSPField]
         public string objectNames = string.Empty;
+
         [KSPField]
         public string textureNames = string.Empty;
+
         [KSPField]
         public string mapNames = string.Empty;
+
         [KSPField]
         public string textureDisplayNames = "Default";
+
         [KSPField(isPersistant = true)]
         public int selectedTexture = 0;
+
         [KSPField(isPersistant = true)]
         public string selectedTextureURL = string.Empty;
+
         [KSPField(isPersistant = true)]
         public string selectedMapURL = string.Empty;
+
         [KSPField]
         public string additionalMapType = "_BumpMap";
+
         [KSPField]
         public bool mapIsNormal = true;
 
@@ -213,8 +221,8 @@ namespace BDArmory.Modules
             targetMat.mainTexture = GameDatabase.Instance.GetTexture(texList[selectedTexture], false);
             selectedTextureURL = texList[selectedTexture];
 
-            currentTextureName = selectedTexture > textureDisplayList.Count - 1 ? 
-                getTextureDisplayName(texList[selectedTexture]) : 
+            currentTextureName = selectedTexture > textureDisplayList.Count - 1 ?
+                getTextureDisplayName(texList[selectedTexture]) :
                 textureDisplayList[selectedTexture];
         }
 

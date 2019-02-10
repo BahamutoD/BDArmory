@@ -1,10 +1,9 @@
-﻿
-namespace BDArmory.Core
+﻿namespace BDArmory.Core
 {
     public class BDArmorySettings
     {
         public static string settingsConfigURL = "GameData/BDArmory/settings.cfg";
-        
+
         [BDAPersistantSettingsField] public static bool INSTAKILL = false;
         [BDAPersistantSettingsField] public static bool BULLET_HITS = true;
         [BDAPersistantSettingsField] public static bool BULLET_DECALS = true;

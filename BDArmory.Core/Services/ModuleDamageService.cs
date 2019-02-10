@@ -1,5 +1,4 @@
-﻿using System;
-using BDArmory.Core.Enum;
+﻿using BDArmory.Core.Enum;
 using BDArmory.Core.Events;
 using BDArmory.Core.Module;
 using UnityEngine;
@@ -18,11 +17,11 @@ namespace BDArmory.Core.Services
             {
                 VesselId = p.vessel.GetInstanceID(),
                 PartId = p.GetInstanceID(),
-                Armor= armorMass,
+                Armor = armorMass,
                 Operation = DamageOperation.Set
             });
         }
-        
+
         public override void SetDamageToPart_svc(Part p, float PartDamage)
         {
             var damageModule = p.Modules.GetModule<HitpointTracker>();
@@ -36,7 +35,7 @@ namespace BDArmory.Core.Services
                 Damage = PartDamage,
                 Operation = DamageOperation.Set
             });
-        }              
+        }
 
         public override void AddDamageToPart_svc(Part p, float PartDamage)
         {
@@ -57,7 +56,7 @@ namespace BDArmory.Core.Services
         {
             var damageModule = kerbal.part.Modules.GetModule<HitpointTracker>();
 
-            damageModule.AddDamageToKerbal(kerbal,damage);
+            damageModule.AddDamageToKerbal(kerbal, damage);
 
             PublishEvent(new DamageEventArgs()
             {
@@ -66,7 +65,6 @@ namespace BDArmory.Core.Services
                 Damage = damage,
                 Operation = DamageOperation.Add
             });
-
         }
 
         public override float GetPartDamage_svc(Part p)
@@ -89,7 +87,7 @@ namespace BDArmory.Core.Services
         {
             return p.Modules.GetModule<HitpointTracker>().GetMaxArmor();
         }
- 
+
         public override void DestroyPart_svc(Part p)
         {
             p.Modules.GetModule<HitpointTracker>().DestroyPart();
@@ -109,7 +107,5 @@ namespace BDArmory.Core.Services
         {
             return p.Modules.GetModule<HitpointTracker>().FireFXLifeTimeInSeconds;
         }
-
-
     }
 }
