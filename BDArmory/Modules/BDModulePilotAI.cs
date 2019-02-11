@@ -389,7 +389,7 @@ namespace BDArmory.Modules
 
                     if (weaponManager)
                     {
-                        if (weaponManager.rwr.rwrEnabled) //use rwr to check missile threat direction
+                        if (weaponManager.rwr?.rwrEnabled ?? false) //use rwr to check missile threat direction
                         {
                             Vector3 missileThreat = Vector3.zero;
                             bool missileThreatDetected = false;
