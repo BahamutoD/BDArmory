@@ -500,14 +500,14 @@ namespace BDArmory.Modules
             {
                 if (omnidirectional)
                 {
-                    referenceTransform.position = vessel.transform.position;
+                    referenceTransform.position = part.transform.position;
                     referenceTransform.rotation =
                         Quaternion.LookRotation(VectorUtils.GetNorthVector(transform.position, vessel.mainBody),
                             VectorUtils.GetUpDirection(transform.position));
                 }
                 else
                 {
-                    referenceTransform.position = vessel.transform.position;
+                    referenceTransform.position = part.transform.position;
                     referenceTransform.rotation = Quaternion.LookRotation(part.transform.up,
                         VectorUtils.GetUpDirection(referenceTransform.position));
                 }

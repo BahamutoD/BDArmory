@@ -971,17 +971,11 @@ namespace BDArmory.Modules
 #if DEBUG
             if (BDArmorySettings.DRAW_DEBUG_LINES && weaponState == WeaponStates.Enabled && vessel && !vessel.packed && !MapView.MapIsEnabled)
             {
-                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.right * 3, targetPosition - transform.right * 3, 2, Color.cyan);
-                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.up * 3, targetPosition - transform.up * 3, 2, Color.cyan);
-                BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + transform.forward * 3, targetPosition - transform.forward * 3, 2, Color.cyan);
-
+                BDGUIUtils.MarkPosition(targetPosition, transform, Color.cyan);
                 BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition, targetPosition + relVelAdj, 2, Color.green);
                 BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + relVelAdj, targetPosition + relVelAdj + accAdj, 2, Color.magenta);
                 BDGUIUtils.DrawLineBetweenWorldPositions(targetPosition + relVelAdj + accAdj, targetPosition + relVelAdj + accAdj + gravAdj, 2, Color.yellow);
-
-                BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.right * 4, finalAimTarget - transform.right * 4, 2, Color.cyan);
-                BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.up * 4, finalAimTarget - transform.up * 4, 2, Color.cyan);
-                BDGUIUtils.DrawLineBetweenWorldPositions(finalAimTarget + transform.forward * 4, finalAimTarget - transform.forward * 4, 2, Color.cyan);
+                BDGUIUtils.MarkPosition(finalAimTarget, transform, Color.cyan, size: 4);
             }
 #endif
         }
