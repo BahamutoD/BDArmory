@@ -3486,17 +3486,12 @@ namespace BDArmory.Modules
 
                         // lock radar if needed
                         if (ml.TargetingMode == MissileBase.TargetingModes.Radar)
-                        {
-                            List<ModuleRadar>.Enumerator rd = radars.GetEnumerator();
-                            while (rd.MoveNext())
-                            {
-                                if (rd.Current == null) continue;
-                                if (!rd.Current.canLock) continue;
-                                rd.Current.EnableRadar();
-                                break;
-                            }
-                            rd.Dispose();
-                        }
+                            using (List<ModuleRadar>.Enumerator rd = radars.GetEnumerator())
+                                while (rd.MoveNext())
+                                {
+                                    if (rd.Current != null || rd.Current.canLock)
+                                        rd.Current.EnableRadar();
+                                }
 
                         // check DLZ
                         MissileLaunchParams dlz = MissileLaunchParams.GetDynamicLaunchParams(ml, guardTarget.Velocity(), guardTarget.transform.position);
