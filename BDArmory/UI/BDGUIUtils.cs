@@ -130,6 +130,15 @@ namespace BDArmory.UI
             GUI.color = originalColor;
         }
 
+        public static void MarkPosition(Transform transform, Color color) => MarkPosition(transform.position, transform, color);
+
+        public static void MarkPosition(Vector3 position, Transform transform, Color color, float size = 3, float thickness = 2)
+        {
+            DrawLineBetweenWorldPositions(position + transform.right * size, position - transform.right * size, thickness, color);
+            DrawLineBetweenWorldPositions(position + transform.up * size, position - transform.up * size, thickness, color);
+            DrawLineBetweenWorldPositions(position + transform.forward * size, position - transform.forward * size, thickness, color);
+        }
+
         public static void UseMouseEventInRect(Rect rect)
         {
             if (Misc.Misc.MouseIsInRect(rect) && Event.current.isMouse && (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp))

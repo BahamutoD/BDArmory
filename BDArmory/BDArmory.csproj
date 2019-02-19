@@ -203,7 +203,6 @@
     <None Include="Distribution\GameData\BDArmory\FX\jetdriveWake.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\PenFX.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\TorpWake.mu" />
-    <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
     <None Include="Distribution\GameData\BDArmory\KSPedia\bdac addons.ksp" />
     <None Include="Distribution\GameData\BDArmory\KSPedia\bdac ammunition.ksp" />
     <None Include="Distribution\GameData\BDArmory\KSPedia\bdac control systems.ksp" />
@@ -394,7 +393,6 @@
     <None Include="Distribution\GameData\BDArmory\Resources\BDAmmo_Universal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\Countermeasures.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\HighExplosive.cfg" />
-    <None Include="Distribution\GameData\BDArmory\settings.cfg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\armOff.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\armOn.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\Artillery_Shot.ogg" />
