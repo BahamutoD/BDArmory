@@ -284,8 +284,6 @@ namespace BDArmory.UI
 
         #endregion Textures
 
-
-
         public static bool GameIsPaused
         {
             get { return PauseMenu.isOpen || Time.timeScale == 0; }
@@ -1475,7 +1473,7 @@ namespace BDArmory.UI
 
                     if (GUI.Button(SRightRect(line), "Start Competition"))
                     {
-                        competitionDist = Mathf.Clamp(competitionDist, 2000f, 20000f);
+                        competitionDist = Mathf.Max(competitionDist, 0);
                         compDistGui = competitionDist.ToString();
                         BDACompetitionMode.Instance.StartCompetitionMode(competitionDist);
                         SaveConfig();
