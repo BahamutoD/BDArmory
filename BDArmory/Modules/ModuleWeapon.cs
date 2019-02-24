@@ -1615,6 +1615,7 @@ namespace BDArmory.Modules
             if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
             {
                 float effectiveVelocity = bulletVelocity;
+                Vector3 relativeVelocity = targetVelocity - part.rb.velocity;
 
                 Quaternion.FromToRotation(targetAccelerationPrevious, targetAcceleration).ToAngleAxis(out float accelDAngle, out Vector3 accelDAxis);
 
@@ -1638,7 +1639,7 @@ namespace BDArmory.Modules
                         var extrapolatedAcceleration =
                             Quaternion.AngleAxis(accelDExtAngle, accelDAxis)
                             * targetAcceleration
-                            * Mathf.Cos(accelDExtAngle * 2.222f);
+                            * Mathf.Cos(accelDExtAngle * Mathf.Deg2Rad * 2.222f);
                         finalTarget += 0.5f * extrapolatedAcceleration * time * time;
 #if DEBUG
                         accAdj = (finalTarget - vc);
@@ -1664,7 +1665,8 @@ namespace BDArmory.Modules
 
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
                         effectiveVelocity = bulletVelocity
-                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
+                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized)
+                            + Vector3.Project(avGrav, finalTarget - fireTransforms[0].position).magnitude * time / 2 * Math.Sign(Vector3.Dot(avGrav, finalTarget - fireTransforms[0].position));
                         finalTarget = intermediateTarget;
 
 #if DEBUG
