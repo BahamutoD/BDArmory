@@ -325,6 +325,14 @@ namespace BDArmory.Misc
             return (KeyBinding)field.GetValue(null);
         }
 
+        public static float GetRadarAltitudeAtPos(Vector3 position)
+        {
+            double latitudeAtPos = FlightGlobals.currentMainBody.GetLatitude(position);
+            double longitudeAtPos = FlightGlobals.currentMainBody.GetLongitude(position);
+            float altitude = (float)(FlightGlobals.currentMainBody.GetAltitude(position));
+            return Mathf.Clamp(altitude - (float)FlightGlobals.currentMainBody.TerrainAltitude(latitudeAtPos, longitudeAtPos), 0, altitude);
+        }
+
         public static string JsonCompat(string json)
         {
             return json.Replace('{', '<').Replace('}', '>');
