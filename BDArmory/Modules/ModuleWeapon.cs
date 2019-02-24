@@ -1616,20 +1616,19 @@ namespace BDArmory.Modules
             {
                 float effectiveVelocity = bulletVelocity;
                 Vector3 relativeVelocity = targetVelocity - part.rb.velocity;
-
                 Quaternion.FromToRotation(targetAccelerationPrevious, targetAcceleration).ToAngleAxis(out float accelDAngle, out Vector3 accelDAxis);
+
+                Vector3 leadTarget = targetPosition;
+                float time = 0;
 
                 int iterations = 6;
                 while (--iterations >= 0)
                 {
-                    float time = targetDistance / effectiveVelocity;
                     finalTarget = targetPosition;
 
                     if (targetAcquired)
                     {
-                        float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            relativeVelocity, effectiveVelocity);
-                        if (time2 > 0) time = time2;
+                        time = (leadTarget - fireTransforms[0].position).magnitude / effectiveVelocity - Time.fixedDeltaTime;
                         finalTarget += relativeVelocity * time;
 #if DEBUG
                         relVelAdj = relativeVelocity * time;
@@ -1647,12 +1646,13 @@ namespace BDArmory.Modules
                     }
                     else if (Misc.Misc.GetRadarAltitudeAtPos(targetPosition) < 2000)
                     {
-                        float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            -(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()), effectiveVelocity);
-                        if (time2 > 0) time = time2;
-                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * time);
+                        time = (leadTarget - fireTransforms[0].position).magnitude / effectiveVelocity - Time.fixedDeltaTime;
                         //this vessel velocity compensation against stationary
+                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * time);
                     }
+
+                    leadTarget = finalTarget;
+
                     if (bulletDrop)
                     {
 #if DEBUG
@@ -1664,9 +1664,10 @@ namespace BDArmory.Modules
                         Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * time * time * up);
 
                         var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
-                        effectiveVelocity = bulletVelocity
-                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized)
-                            + Vector3.Project(avGrav, finalTarget - fireTransforms[0].position).magnitude * time / 2 * Math.Sign(Vector3.Dot(avGrav, finalTarget - fireTransforms[0].position));
+                        if (!avGrav.IsZero())
+                            effectiveVelocity = bulletVelocity
+                                * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized)
+                                + Vector3.Project(avGrav, finalTarget - fireTransforms[0].position).magnitude * time / 2 * Math.Sign(Vector3.Dot(avGrav, finalTarget - fireTransforms[0].position));
                         finalTarget = intermediateTarget;
 
 #if DEBUG
