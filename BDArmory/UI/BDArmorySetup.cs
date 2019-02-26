@@ -538,9 +538,11 @@ namespace BDArmory.UI
 
         void VesselChange(Vessel v)
         {
-            if (!v.isActiveVessel) return;
-            GetWeaponManager();
-            Instance.UpdateCursorState();
+            if (v.isActiveVessel)
+            {
+                GetWeaponManager();
+                Instance.UpdateCursorState();
+            }
         }
 
         void GetWeaponManager()
