@@ -394,17 +394,21 @@ namespace BDArmory.Modules
         {
             guardMode = !guardMode;
 
-            if (guardMode) return;
-            //disable turret firing and guard mode
-            List<ModuleWeapon>.Enumerator weapon = vessel.FindPartModulesImplementing<ModuleWeapon>().GetEnumerator();
-            while (weapon.MoveNext())
+            if (!guardMode)
             {
-                if (weapon.Current == null) continue;
-                weapon.Current.visualTargetVessel = null;
-                weapon.Current.autoFire = false;
-                weapon.Current.aiControlled = false;
+                //disable turret firing and guard mode
+                List<ModuleWeapon>.Enumerator weapon = vessel.FindPartModulesImplementing<ModuleWeapon>().GetEnumerator();
+                while (weapon.MoveNext())
+                {
+                    if (weapon.Current == null) continue;
+                    weapon.Current.visualTargetVessel = null;
+                    weapon.Current.autoFire = false;
+                    weapon.Current.aiControlled = false;
+                }
+                weapon.Dispose();
+                weaponIndex = 0;
+                selectedWeapon = null;
             }
-            weapon.Dispose();
         }
 
         [KSPAction("Toggle Guard Mode")]
@@ -589,6 +593,7 @@ namespace BDArmory.Modules
             {
                 sw = value;
                 selectedWeaponString = GetWeaponName(value);
+                UpdateSelectedWeaponState();
             }
         }
 
@@ -824,7 +829,8 @@ namespace BDArmory.Modules
 
                     DisplaySelectedWeaponMessage();
                 }
-                if (weaponArray.Length > 0) selectedWeapon = weaponArray[weaponIndex];
+                if (weaponArray.Length > 0 && selectedWeapon != weaponArray[weaponIndex])
+                    selectedWeapon = weaponArray[weaponIndex];
 
                 //finding next rocket to shoot (for aimer)
                 //FindNextRocket();
@@ -2113,7 +2119,6 @@ namespace BDArmory.Modules
             PrepareWeapons();
         }
 
-        // EXTRACTED METHOD FROM UpdateList()
         private void PrepareWeapons()
         {
             if (vessel == null) return;
@@ -2146,13 +2151,30 @@ namespace BDArmory.Modules
             if (aMl)
             {
                 selectedWeapon = aMl;
-                CurrentMissile = aMl;
             }
 
             MissileBase rMl = GetRotaryReadyMissile();
             if (rMl)
             {
                 selectedWeapon = rMl;
+            }
+
+            UpdateSelectedWeaponState();
+        }
+
+        private void UpdateSelectedWeaponState()
+        {
+            if (vessel == null) return;
+
+            MissileBase aMl = GetAsymMissile();
+            if (aMl)
+            {
+                CurrentMissile = aMl;
+            }
+
+            MissileBase rMl = GetRotaryReadyMissile();
+            if (rMl)
+            {
                 CurrentMissile = rMl;
             }
 
@@ -2455,21 +2477,13 @@ namespace BDArmory.Modules
         void SetMissileTurrets()
         {
             MissileLauncher cm = CurrentMissile as MissileLauncher;
-            if (cm == null) return;
             List<MissileTurret>.Enumerator mt = vessel.FindPartModulesImplementing<MissileTurret>().GetEnumerator();
             while (mt.MoveNext())
             {
                 if (mt.Current == null) continue;
-                if (weaponIndex > 0 && cm && mt.Current.ContainsMissileOfType(cm))
+                if (weaponIndex > 0 && cm && mt.Current.ContainsMissileOfType(cm) && (!mt.Current.activeMissileOnly || cm.missileTurret == mt.Current))
                 {
-                    if (!mt.Current.activeMissileOnly || cm.missileTurret == mt.Current)
-                    {
-                        mt.Current.EnableTurret();
-                    }
-                    else
-                    {
-                        mt.Current.DisableTurret();
-                    }
+                    mt.Current.EnableTurret();
                 }
                 else
                 {
@@ -2513,7 +2527,7 @@ namespace BDArmory.Modules
 
         void FindNextRocket(RocketLauncher lastFired)
         {
-            if (weaponIndex > 0 && selectedWeapon.GetWeaponClass() == WeaponClasses.Rocket)
+            if (weaponIndex > 0 && selectedWeapon?.GetWeaponClass() == WeaponClasses.Rocket)
             {
                 disabledRocketAimers = false;
 
