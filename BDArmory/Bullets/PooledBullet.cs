@@ -83,7 +83,7 @@ namespace BDArmory.Bullets
         public static Shader bulletShader;
         public static bool shaderInitialized;
         private float impactVelocity;
-        private float dragVelocity;
+        private float dragVelocityFactor;
 
         public bool hasPenetrated = false;
         public bool hasDetonated = false;
@@ -296,10 +296,10 @@ namespace BDArmory.Bullets
                                 hitPart = hitEVA.part;
                                 // relative velocity, separate from the below statement, because the hitpart might be assigned only above
                                 if (hitPart?.rb != null)
-                                    impactVelocity = (currentVelocity * (1 - dragVelocity / currentVelocity.magnitude)
+                                    impactVelocity = (currentVelocity * dragVelocityFactor
                                         - (hitPart.rb.velocity + Krakensbane.GetFrameVelocityV3f())).magnitude;
                                 else
-                                    impactVelocity = currentVelocity.magnitude - dragVelocity;
+                                    impactVelocity = currentVelocity.magnitude * dragVelocityFactor;
                                 ApplyDamage(hitPart, hit, 1, 1);
                                 break;
                             }
@@ -310,7 +310,7 @@ namespace BDArmory.Bullets
                             if (hitPart?.rb != null)
                                 // using relative velocity vector instead of just bullet velocity
                                 // since KSP vessels might move faster than bullets
-                                impactVector = (currentVelocity * (1 - dragVelocity / currentVelocity.magnitude)
+                                impactVector = (currentVelocity * dragVelocityFactor
                                     - (hitPart.rb.velocity + Krakensbane.GetFrameVelocityV3f()));
 
                             float hitAngle = Vector3.Angle(impactVector, -hit.normal);
@@ -540,12 +540,7 @@ namespace BDArmory.Bullets
             analyticDragVelAdjustment = 2 * ballisticCoefficient * initialSpeed / analyticDragVelAdjustment;
             //velocity as a function of time under the assumption of a projectile only acted upon by drag with a constant drag area
 
-            analyticDragVelAdjustment = analyticDragVelAdjustment - initialSpeed;
-            //since the above was velocity as a function of time, but we need a difference in drag, subtract the initial velocity
-            //the above number should be negative...
-            //impactVelocity += analyticDragVelAdjustment; //so add it to the impact velocity
-
-            dragVelocity = analyticDragVelAdjustment;
+            dragVelocityFactor = analyticDragVelAdjustment / initialSpeed;
         }
 
         private float CalculateArmorPenetration(Part hitPart, float anglemultiplier, RaycastHit hit)
