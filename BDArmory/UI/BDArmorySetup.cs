@@ -297,6 +297,14 @@ namespace BDArmory.UI
             if (HighLogic.LoadedSceneIsFlight)
                 maySavethisInstance = true;     //otherwise later we should NOT save the current window positions!
 
+            // Create settings file if not present.
+            if (ConfigNode.Load(BDArmorySettings.settingsConfigURL) == null)
+            {
+                var node = new ConfigNode();
+                node.AddNode("BDASettings");
+                node.Save(BDArmorySettings.settingsConfigURL);
+            }
+
             // window position settings
             WindowRectToolbar = new Rect(Screen.width - toolWindowWidth - 40, 150, toolWindowWidth, toolWindowHeight);
             // Default, if not in file.
