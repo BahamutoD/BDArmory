@@ -838,7 +838,7 @@ namespace BDArmory.Radar
             //Vector3d geoPos = VectorUtils.WorldPositionToGeoCoords(position, FlightGlobals.currentMainBody);
             Vector3 forwardVector = referenceTransform.forward;
             Vector3 upVector = referenceTransform.up;
-            Vector3 lookDirection = forwardVector;
+            Vector3 lookDirection = -forwardVector;
 
             List<Vessel>.Enumerator loadedvessels = BDATargetManager.LoadedVessels.GetEnumerator();
             while (loadedvessels.MoveNext())
@@ -851,8 +851,6 @@ namespace BDArmory.Radar
 
                     Vector3 vesselProjectedDirection = Vector3.ProjectOnPlane(loadedvessels.Current.transform.position - position, upVector);
                     Vector3 vesselDirection = loadedvessels.Current.transform.position - position;
-
-                    if (Vector3.Dot(vesselDirection, lookDirection) < 0) continue;   //ignore behind
 
                     float vesselDistance = (loadedvessels.Current.transform.position - position).sqrMagnitude;
                     if (vesselDistance < maxDistance * maxDistance && Vector3.Angle(vesselProjectedDirection, lookDirection) < fov / 2 && Vector3.Angle(loadedvessels.Current.transform.position - position, -myWpnManager.transform.forward) < myWpnManager.guardAngle / 2)
