@@ -68,6 +68,7 @@ namespace BDArmory.UI
         public static int numberOfParticleEmitters = 0;
         public static BDArmorySetup Instance;
         public static bool GAME_UI_ENABLED = true;
+        public string Version { get; private set; } = "Unknown";
 
         //settings gui
         public static bool windowSettingsEnabled;
@@ -131,6 +132,7 @@ namespace BDArmory.UI
         GUIStyle middleLeftLabelOrange;
         GUIStyle targetModeStyle;
         GUIStyle targetModeStyleSelected;
+        GUIStyle waterMarkStyle;
         GUIStyle redErrorStyle;
         GUIStyle redErrorShadowStyle;
 
@@ -357,6 +359,9 @@ namespace BDArmory.UI
             targetModeStyleSelected = new GUIStyle(targetModeStyle);
             targetModeStyleSelected.normal.textColor = XKCDColors.BloodOrange;
 
+            waterMarkStyle = new GUIStyle(middleLeftLabel);
+            waterMarkStyle.normal.textColor = XKCDColors.LightBlueGrey;
+
             leftLabelRed = new GUIStyle();
             leftLabelRed.alignment = TextAnchor.UpperLeft;
             leftLabelRed.normal.textColor = Color.red;
@@ -402,6 +407,10 @@ namespace BDArmory.UI
 
                         case "PhysicsRangeExtender":
                             PhysicsRangeExtenderLoaded = true;
+                            break;
+
+                        case "BDArmory":
+                            Version = a.Current.GetName().Version.ToString();
                             break;
                     }
                 }
@@ -672,6 +681,9 @@ namespace BDArmory.UI
 
             line += 1.25f;
             line += 0.25f;
+
+            // Version.
+            GUI.Label(new Rect(toolWindowWidth - 30 - 28 - 70, 23, 70, 10), Version, waterMarkStyle);
 
             //SETTINGS BUTTON
             if (!BDKeyBinder.current &&
