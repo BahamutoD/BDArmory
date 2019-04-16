@@ -91,8 +91,9 @@ namespace BDArmory.Modules
         private float targetDistance;
         private Vector3 targetPosition;
         private Vector3 targetVelocity;  // local frame velocity
-        private Vector3 targetAcceleration; // local frame velocity
+        private Vector3 targetAcceleration; // local frame
         private Vector3 targetVelocityPrevious; // for acceleration calculation
+        private Vector3 targetAccelerationPrevious;
         private Vector3 relativeVelocity;
         Vector3 finalAimTarget;
         Vector3 lastFinalAimTarget;
@@ -1614,79 +1615,61 @@ namespace BDArmory.Modules
             if ((BDArmorySettings.AIM_ASSIST || aiControlled) && eWeaponType != WeaponTypes.Laser)
             {
                 float effectiveVelocity = bulletVelocity;
+                Vector3 relativeVelocity = targetVelocity - part.rb.velocity;
+                Quaternion.FromToRotation(targetAccelerationPrevious, targetAcceleration).ToAngleAxis(out float accelDAngle, out Vector3 accelDAxis);
 
-                int iterations = 4;
+                Vector3 leadTarget = targetPosition;
+
+                int iterations = 6;
                 while (--iterations >= 0)
                 {
-                    float time = targetDistance / effectiveVelocity;
                     finalTarget = targetPosition;
+                    float time = (leadTarget - fireTransforms[0].position).magnitude / effectiveVelocity - (Time.fixedDeltaTime * 1.5f);
 
                     if (targetAcquired)
                     {
-                        float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            relativeVelocity, effectiveVelocity);
-                        if (time2 > 0) time = time2;
                         finalTarget += relativeVelocity * time;
 #if DEBUG
                         relVelAdj = relativeVelocity * time;
                         var vc = finalTarget;
 #endif
-
-                        // Assume that any acceleration orthogonal to the velocity vector is transient and do not extrapolate it.
-                        // For cases where it is not transient, extrapolation is hopeless anyway.
-                        var projectedAcceleration = Vector3.Project(targetAcceleration, targetVelocity);
-                        //target vessel relative velocity compensation
-                        if (weaponManager.currentTarget?.Vessel.InOrbit() == true)
-                        {
-                            var geeForceAtTarget = FlightGlobals.getGeeForceAtPosition(targetPosition);
-                            var finalTargetGeeForce = FlightGlobals.getGeeForceAtPosition(finalTarget + 0.5f * (projectedAcceleration
-                                - (FlightGlobals.getGeeForceAtPosition(targetPosition) - FlightGlobals.getGeeForceAtPosition(finalTarget)) / 2)
-                                * time * time);
-                            var cosine = Vector3d.Dot(finalTargetGeeForce.normalized, geeForceAtTarget.normalized);
-                            var avGeeForce = (finalTargetGeeForce + geeForceAtTarget) / 2 / (2 * cosine * cosine - 1);
-                            finalTarget += 0.5f * (projectedAcceleration - geeForceAtTarget + avGeeForce) * time * time;
-                        }
-                        else
-                            // Also clamp the vector to the current velocity, as extreme velocity changes are not usefully predictable,
-                            // and most cases will be ships bobbing in water or parts swaying.
-                            finalTarget += Vector3.ClampMagnitude(
-                                0.5f * projectedAcceleration * time,
-                                (targetVelocity + Krakensbane.GetFrameVelocityV3f()).magnitude
-                            ) * time;
-
+                        var accelDExtAngle = accelDAngle * time / 3;
+                        var extrapolatedAcceleration =
+                            Quaternion.AngleAxis(accelDExtAngle, accelDAxis)
+                            * targetAcceleration
+                            * Mathf.Cos(accelDExtAngle * Mathf.Deg2Rad * 2.222f);
+                        finalTarget += 0.5f * extrapolatedAcceleration * time * time;
 #if DEBUG
                         accAdj = (finalTarget - vc);
 #endif
                     }
-                    else if (vessel.altitude < 6000)
+                    else if (Misc.Misc.GetRadarAltitudeAtPos(targetPosition) < 2000)
                     {
-                        float time2 = VectorUtils.CalculateLeadTime(finalTarget - fireTransforms[0].position,
-                            -(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()), effectiveVelocity);
-                        if (time2 > 0) time = time2;
-                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * time);
                         //this vessel velocity compensation against stationary
+                        finalTarget += (-(part.rb.velocity + Krakensbane.GetFrameVelocityV3f()) * time);
                     }
-                    Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
+
+                    leadTarget = finalTarget;
+
                     if (bulletDrop)
                     {
 #if DEBUG
                         var vc = finalTarget;
 #endif
+                        Vector3 up = (VectorUtils.GetUpDirection(finalTarget) + 2 * VectorUtils.GetUpDirection(fireTransforms[0].position)).normalized;
                         float gAccel = ((float)FlightGlobals.getGeeForceAtPosition(finalTarget).magnitude
-                        + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude) / 2;
-                        Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * time * time * up); //gravity compensation, -fixedDeltaTime is for fixedUpdate granularity
+                            + (float)FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position).magnitude * 2) / 3;
+                        Vector3 intermediateTarget = finalTarget + (0.5f * gAccel * time * time * up);
 
-                        var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 2;
+                        var avGrav = (FlightGlobals.getGeeForceAtPosition(finalTarget) + 2 * FlightGlobals.getGeeForceAtPosition(fireTransforms[0].position)) / 3;
                         effectiveVelocity = bulletVelocity
-                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized);
-                        // effectiveVelocity += (float)Vector3d.Dot(avGrav, (finalTarget - fireTransforms[0].position).normalized) * time * time / 2;
+                            * (float)Vector3d.Dot((intermediateTarget - fireTransforms[0].position).normalized, (finalTarget - fireTransforms[0].position).normalized)
+                            + Vector3.Project(avGrav, finalTarget - fireTransforms[0].position).magnitude * time / 2 * (Vector3.Dot(avGrav, finalTarget - fireTransforms[0].position) < 0 ? -1 : 1);
                         finalTarget = intermediateTarget;
-
 #if DEBUG
                         gravAdj = (finalTarget - vc);
 #endif
                     }
-                    else break;
                 }
 
                 targetDistance = Vector3.Distance(finalTarget, fireTransforms[0].position);
@@ -1774,7 +1757,7 @@ namespace BDArmory.Modules
             if (eWeaponType != WeaponTypes.Laser) yield return new WaitForEndOfFrame();
 
             UpdateTargetVessel();
-            updateAcceleration(targetVelocity);
+            updateAcceleration(targetVelocity, targetPosition);
             relativeVelocity = targetVelocity - vessel.rb_velocity;
 
             RunTrajectorySimulation();
@@ -2105,10 +2088,17 @@ namespace BDArmory.Modules
             }
         }
 
-        void updateAcceleration(Vector3 target_rb_velocity)
+        /// <summary>
+        /// Update target acceleration based on previous velocity.
+        /// Position is used to clamp acceleration for splashed targets, as ksp produces excessive bobbing.
+        /// </summary>
+        void updateAcceleration(Vector3 target_rb_velocity, Vector3 position)
         {
-            targetAcceleration = targetAcceleration * 0.95f
-                + (target_rb_velocity - Krakensbane.GetLastCorrection() - targetVelocityPrevious) / Time.fixedDeltaTime * 0.05f;
+            targetAccelerationPrevious = targetAcceleration;
+            targetAcceleration = (target_rb_velocity - Krakensbane.GetLastCorrection() - targetVelocityPrevious) / Time.fixedDeltaTime;
+            float altitude = (float)FlightGlobals.currentMainBody.GetAltitude(position);
+            if (altitude < 12 && altitude > -10)
+                targetAcceleration = Vector3.ProjectOnPlane(targetAcceleration, VectorUtils.GetUpDirection(position));
             targetVelocityPrevious = target_rb_velocity;
         }
 
