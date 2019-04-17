@@ -30,8 +30,9 @@ namespace BDArmory.Modules
             if (this.part.children.Count != 0)
             {
                 Debug.Log("Not Empty" + this.part.children.Count);
+                return;
             }
-            else
+            if (ammoCount >= 1)
             {
                 List<AvailablePart> availablePart = PartLoader.LoadedPartsList;
                 foreach (AvailablePart AP in availablePart)
@@ -47,7 +48,9 @@ namespace BDArmory.Modules
                                 Debug.Log("Node" + AP.partPrefab.srfAttachNode.originalPosition);
                                 CreatePart(partNode, MissileTransform.transform.position - MissileTransform.TransformDirection(AP.partPrefab.srfAttachNode.originalPosition),
                                     this.part.transform.rotation, this.part, this.part, "srfAttach");
+                                ammoCount -= 1;
                                 StartCoroutine(ResetTurret());
+                                return;
                             }
                         }
                     }
@@ -57,8 +60,6 @@ namespace BDArmory.Modules
 
         IEnumerator ResetTurret()
         {
-            ammoCount -= 1;
-
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
 

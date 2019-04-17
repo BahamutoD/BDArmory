@@ -18,6 +18,7 @@
 	* Recompiled for KSP 1.7.0
 	* Wing commander formation parameters can once again be configured in editor on the weapon manager.
 	* Improved gun ballistic estimation.
+	* BDA will show a small version number on weapon manager.
 * FIXES
 	* AI pilot should now use torpedoes.
 	* Weapons will revert to default weapon group on blank weapon group entry.
@@ -26,6 +27,8 @@
 	* Guard mode no longer stops firing at passed out pilots. (thanks to @SuicidalInsanity)
 	* Missile turrets should properly stop tracking in various circumstances.
 	* Gun safety should no longer prevent firing from aiming too close to self.
+	* Drag no longer causes bullets to speed up.
+	* Reloadable missile rail no longer permits reloading when out of ammo.
 
 v1.2.4
 * NEW FEATURES:
