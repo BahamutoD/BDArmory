@@ -1423,6 +1423,7 @@ namespace BDArmory.Modules
                             yield return StartCoroutine(tgp.Current.PointToPositionRoutine(guardTarget.CoM));
                             if (tgp.Current.groundStabilized && (tgp.Current.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < 20 * 20)
                             {
+			    	tgp.Current.CoMLock = true; // make the designator continue to paint target
                                 break;
                             }
                         }
