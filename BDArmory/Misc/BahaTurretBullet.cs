@@ -1,9 +1,3 @@
-using System;
-using BDArmory.Core.Extension;
-using BDArmory.FX;
-using BDArmory.UI;
-using UnityEngine;
-
 /*
 namespace BDArmory.Misc
 {
@@ -20,29 +14,28 @@ namespace BDArmory.Misc
 		public Vessel sourceVessel;
 		public Color lightColor = Misc.ParseColor255("255, 235, 145, 255");
 		public Color projectileColor;
-		
+
 		public string bulletTexturePath;
-		
+
 		public bool fadeColor;
 		public Color startColor;
 		Color currentColor;
-		
+
 		public bool bulletDrop = true;
-		
+
 		public float tracerStartWidth = 1;
 		public float tracerEndWidth = 1;
 		public float tracerLength = 0;
-		
+
 		public float initialSpeed;
-		
-		
+
 		public Vector3 prevPosition;
 		public Vector3 currPosition;
 
 		//explosive parameters
 		public float radius = 30;
 		public float blastPower = 8;
-		
+
 		public string explModelPath;
 		public string explSoundPath;
 		//
@@ -54,17 +47,16 @@ namespace BDArmory.Misc
 		LineRenderer bulletTrail;
 	//	VectorLine bulletVectorLine;
 		//Material lineMat;
-		
-		
+
 		Vector3 sourceOriginalV;
 		bool hasBounced;
-		
+
 		float maxDistance;
 
 		//bool isUnderwater = false;
 
 		Rigidbody rb;
-		
+
 		void Start()
 		{
 			startPosition = transform.position;
@@ -73,9 +65,9 @@ namespace BDArmory.Misc
 			maxDistance = Mathf.Clamp(BDArmorySetup.PHYSICS_RANGE, 2500, maxLimit);
 			projectileColor.a = projectileColor.a/2;
 			startColor.a = startColor.a/2;
-			
+
 			currentColor = projectileColor;
-			if(fadeColor)	
+			if(fadeColor)
 			{
 				currentColor = startColor;
 			}
@@ -83,14 +75,13 @@ namespace BDArmory.Misc
 			prevPosition = gameObject.transform.position;
 
             sourceOriginalV = sourceVessel.Velocity();
-			
+
 			Light light = gameObject.AddComponent<Light>();
 			light.type = LightType.Point;
 			light.color = lightColor;
 			light.range = 8;
 			light.intensity = 1;
-			
-			
+
 			bulletTrail = gameObject.AddComponent<LineRenderer>();
 			bulletTrail.SetVertexCount(2);
 			bulletTrail.SetPosition(0, transform.position);
@@ -100,15 +91,11 @@ namespace BDArmory.Misc
 			bulletTrail.material = new Material(Shader.Find("KSP/Particles/Alpha Blended"));
 			bulletTrail.material.mainTexture = GameDatabase.Instance.GetTexture(bulletTexturePath, false);
 			bulletTrail.material.SetColor("_TintColor", currentColor);
-			
-			
+
 			rb = GetComponent<Rigidbody> ();
 			rb.useGravity = false;
-			
-		
-			
 		}
-		
+
 		void FixedUpdate()
 		{
 			float distanceFromStart = Vector3.Distance(transform.position, startPosition);
@@ -117,46 +104,43 @@ namespace BDArmory.Misc
 			{
 				rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.fixedDeltaTime;
 			}
-			
-			
+
 			if(tracerLength == 0)
 			{
 				bulletTrail.SetPosition(0, transform.position+(rb.velocity * TimeWarp.fixedDeltaTime)-(FlightGlobals.ActiveVessel.Velocity()*TimeWarp.fixedDeltaTime));
 			}
 			else
 			{
-				bulletTrail.SetPosition(0, transform.position + ((rb.velocity-sourceOriginalV).normalized * tracerLength));	
+				bulletTrail.SetPosition(0, transform.position + ((rb.velocity-sourceOriginalV).normalized * tracerLength));
 			}
 			if(fadeColor)
 			{
 				FadeColor();
 				bulletTrail.material.SetColor("_TintColor", currentColor);
 			}
-			
+
 			float fov = FlightCamera.fetch.mainCamera.fieldOfView;
 			float width1 = (fov/60) * tracerStartWidth * Mathf.Clamp(Vector3.Distance(transform.position, FlightCamera.fetch.mainCamera.transform.position),0,3000)/50;
 			float width2 = (fov/60) * tracerEndWidth * Mathf.Clamp(Vector3.Distance(transform.position, FlightCamera.fetch.mainCamera.transform.position),0,3000)/50;
-			
+
 			bulletTrail.SetWidth(width1, width2);
-			
+
 			bulletTrail.SetPosition(1, transform.position);
-			
-			
-			
+
 			currPosition = gameObject.transform.position;
-			
+
 			if(distanceFromStart > maxDistance)
 			{
 				Destroy(gameObject);
 				return;
 			}
-			
+
 			if(Time.time - startTime > 0.01f)
 			{
 			    Light light = gameObject.GetComponent<Light>();
-                light.intensity = 0;	
+                light.intensity = 0;
 				float dist = initialSpeed*TimeWarp.fixedDeltaTime;
-				
+
 				Ray ray = new Ray(prevPosition, currPosition-prevPosition);
 				RaycastHit hit;
                 //KerbalEVA hitEVA = null;
@@ -185,8 +169,6 @@ namespace BDArmory.Misc
                 //        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //        /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
                 //        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
                 //        float heatDamage = (rb.mass / hitEVA.part.crashTolerance) * rb.velocity.magnitude * 50 * BDArmorySettings.DMG_MULTIPLIER;   //how much heat damage will be applied based on bullet mass, velocity, and part's impact tolerance
 
@@ -254,9 +236,8 @@ namespace BDArmory.Misc
 				{
 					bool penetrated = true;
 
-					
 					//hitting a vessel Part
-					
+
 					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE START//////////////////////////////////////////////////////////////
                     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,7 +261,6 @@ namespace BDArmory.Misc
 							penetrated = false;
 						}
 					}
-
 
 					if(hitPart!=null && !hitPart.partInfo.name.Contains("Strut"))   //when a part is hit, execute damage code (ignores struts to keep those from being abused as armor)(no, because they caused weird bugs :) -BahamutoD)
 					{
@@ -307,13 +287,11 @@ namespace BDArmory.Misc
                         {
                             if (hitPart.vessel != sourceVessel) hitPart.AddDamage(heatDamage);  //apply heat damage to the hit part.
                         }
-
 					}
 
                     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     /////////////////////////////////////////////////[panzer1b] HEAT BASED DAMAGE CODE END////////////////////////////////////////////////////////////////
                     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					
 
 					//hitting a Building
 					DestructibleBuilding hitBuilding = null;
@@ -335,7 +313,7 @@ namespace BDArmory.Misc
 						}
 						if(BDArmorySetup.BDArmorySettings.DRAW_DEBUG_LINES) Debug.Log("[BDArmory]: bullet hit destructible building! Hitpoints: " + (damageToBuilding).ToString("0.00")+ ", total Hitpoints: "+hitBuilding.Damage);
 					}
-					
+
 					if(hitPart == null || (hitPart!=null && hitPart.vessel!=sourceVessel))
 					{
 						if(!penetrated && !hasBounced)
@@ -345,14 +323,14 @@ namespace BDArmory.Misc
 							ifBDArmorySettings.BULLET_HITS)
 							{
 								BulletHitFX.CreateBulletHit(hit.point, hit.normal, true);
-							}	
+							}
 
 							transform.position = hit.point;
 							rb.velocity = Vector3.Reflect(rb.velocity, hit.normal);
 							rb.velocity = hitAngle/150 * rb.velocity * 0.75f;
-							
+
 							Vector3 randomDirection = UnityEngine.Random.rotation * Vector3.one;
-							
+
 							rb.velocity = Vector3.RotateTowards(rb.velocity, randomDirection, UnityEngine.Random.Range(0f,5f)*Mathf.Deg2Rad, 0);
 						}
 						else
@@ -380,10 +358,9 @@ namespace BDArmory.Misc
 				Destroy(gameObject); //destroy bullet on collision
 			}
 
-
 			prevPosition = currPosition;
 		}
-		
+
 		void FadeColor()
 		{
 			Vector4 currentColorV = new Vector4(currentColor.r, currentColor.g, currentColor.b, currentColor.a);

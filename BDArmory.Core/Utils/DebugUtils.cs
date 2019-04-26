@@ -1,8 +1,8 @@
 ﻿namespace BDArmory.Core.Utils
 {
-    class DebugUtils
+    internal class DebugUtils
     {
-        private static readonly ScreenMessage  ScreenMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
+        private static readonly ScreenMessage ScreenMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
 
         public static void DisplayDebugMessage(string message)
         {
@@ -10,7 +10,7 @@
 #if DEBUG
             ScreenMessages.RemoveMessage(ScreenMessage);
             ScreenMessage.message = message;
-            ScreenMessages.PostScreenMessage(ScreenMessage);  
+            ScreenMessages.PostScreenMessage(ScreenMessage);
 #endif
         }
     }

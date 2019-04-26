@@ -7,8 +7,10 @@
     {
         // module name
         string Name { get; }
+
         // is the module enabled
         bool Enabled { get; }
+
         // toggle the module
         void Toggle();
     }

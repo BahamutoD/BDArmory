@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using BDArmory.Core;
 using BDArmory.Guidances;
-using BDArmory.Parts;
 using UniLinq;
 using UnityEngine;
 
@@ -20,7 +19,8 @@ namespace BDArmory.Modules
         [KSPField(guiActive = true, guiName = "Turret Enabled")] public bool turretEnabled;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Auto-Return"),
-         UI_Toggle(scene = UI_Scene.Editor)] public bool autoReturn = true;
+         UI_Toggle(scene = UI_Scene.Editor)]
+        public bool autoReturn = true;
 
         bool hasReturned = true;
 
@@ -155,7 +155,6 @@ namespace BDArmory.Modules
             }
         }
 
-
         public void DisableTurret()
         {
             turretEnabled = false;
@@ -284,7 +283,6 @@ namespace BDArmory.Modules
         {
             base.OnFixedUpdate();
 
-
             if (turretEnabled)
             {
                 hasReturned = false;
@@ -320,7 +318,6 @@ namespace BDArmory.Modules
             pausingAfterShot = (Time.time - timeFired < firePauseTime);
         }
 
-
         void Aim()
         {
             UpdateTarget();
@@ -355,14 +352,12 @@ namespace BDArmory.Modules
             }
         }
 
-
         public void SlavedAim()
         {
             if (pausingAfterShot) return;
 
             turret.AimToTarget(slavedTargetPosition);
         }
-
 
         void MouseAim()
         {
@@ -372,7 +367,7 @@ namespace BDArmory.Modules
             float maxTargetingRange = 5000;
 
             //MouseControl
-            Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
+            Vector3 mouseAim = new Vector3(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height, 0);
             Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
             RaycastHit hit;
             //KerbalEVA hitEVA = null;
@@ -396,12 +391,12 @@ namespace BDArmory.Modules
                 Part p = eva ? eva.part : hit.collider.gameObject.GetComponentInParent<Part>();
                 if (p && p.vessel && p.vessel == vessel)
                 {
-                    targetPosition = ray.direction*maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
+                    targetPosition = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
                 }
             }
             else
             {
-                targetPosition = (ray.direction*(maxTargetingRange + (FlightCamera.fetch.Distance*0.75f))) +
+                targetPosition = (ray.direction * (maxTargetingRange + (FlightCamera.fetch.Distance * 0.75f))) +
                                  FlightCamera.fetch.mainCamera.transform.position;
             }
 
@@ -483,9 +478,6 @@ namespace BDArmory.Modules
                 ml.MissileReferenceTransform = mTf;
                 ml.missileTurret = this;
 
-                ml.decoupleForward = true;
-                ml.dropTime = 0;
-
                 if (!comOffsets.ContainsKey(ml.part.name))
                 {
                     comOffsets.Add(ml.part.name, ml.part.CoMOffset);
@@ -525,7 +517,6 @@ namespace BDArmory.Modules
                 }
             }
         }
-
 
         public void FireMissile(int index)
         {
@@ -571,12 +562,12 @@ namespace BDArmory.Modules
             Vector3 localOrigin = turret.pitchTransform.InverseTransformPoint(ray.origin);
             Vector3 localDirection = turret.pitchTransform.InverseTransformDirection(ray.direction);
             float forwardSpeed = ml.decoupleSpeed;
-            while (ml && Vector3.SqrMagnitude(ml.transform.position - ray.origin) < railLength*railLength)
+            while (ml && Vector3.SqrMagnitude(ml.transform.position - ray.origin) < railLength * railLength)
             {
                 float thrust = ml.TimeIndex < ml.boostTime ? ml.thrust : ml.cruiseThrust;
                 thrust = ml.TimeIndex < ml.boostTime + ml.cruiseTime ? thrust : 0;
-                float accel = thrust/ml.part.mass;
-                forwardSpeed += accel*Time.fixedDeltaTime;
+                float accel = thrust / ml.part.mass;
+                forwardSpeed += accel * Time.fixedDeltaTime;
 
                 ray.origin = turret.pitchTransform.TransformPoint(localOrigin);
                 ray.direction = turret.pitchTransform.TransformDirection(localDirection);
@@ -586,7 +577,7 @@ namespace BDArmory.Modules
                 //Vector3 projVel = Vector3.Project(ml.vessel.Velocity-railVel, ray.direction);
 
                 ml.vessel.SetPosition(projPos);
-                ml.vessel.SetWorldVelocity(railVel + (forwardSpeed*ray.direction));
+                ml.vessel.SetWorldVelocity(railVel + (forwardSpeed * ray.direction));
 
                 yield return new WaitForFixedUpdate();
 
@@ -595,7 +586,6 @@ namespace BDArmory.Modules
             }
         }
 
-
         void PrepMissileForFire(int index)
         {
             Debug.Log("[BDArmory] : Prepping missile for turret fire.");
@@ -603,9 +593,6 @@ namespace BDArmory.Modules
             missileTransforms[index].localRotation = Quaternion.identity;
             missileChildren[index].part.partTransform.position = missileReferenceTransforms[index].position;
             missileChildren[index].part.partTransform.rotation = missileReferenceTransforms[index].rotation;
-
-            missileChildren[index].dropTime = 0;
-            missileChildren[index].decoupleForward = true;
 
             missileChildren[index].part.CoMOffset = comOffsets[missileChildren[index].part.name];
         }

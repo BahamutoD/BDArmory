@@ -17,8 +17,6 @@ namespace BDArmory.Modules
     {
         public bool hasRocket = true;
 
-        [KSPField] public string shortName = string.Empty;
-
         [KSPField(isPersistant = false)] public string rocketType;
 
         [KSPField(isPersistant = false)] public string rocketModelPath;
@@ -55,6 +53,7 @@ namespace BDArmory.Modules
         Transform[] rockets;
 
         public AudioSource sfAudioSource;
+        private BDStagingAreaGauge gauge;
 
         //animation
         [KSPField] public string deployAnimationName;
@@ -98,16 +97,12 @@ namespace BDArmory.Modules
         public Vector3? FiringSolutionVector => targetPosition.IsZero() ? (Vector3?)null : (targetPosition - rockets[0].parent.transform.position).normalized;
 
         double lastRocketsLeft;
+        double rocketsMax;
 
         //weapon interface
         public Part GetPart()
         {
             return part;
-        }
-
-        public string GetShortName()
-        {
-            return shortName;
         }
 
         public WeaponClasses GetWeaponClass()
@@ -124,7 +119,6 @@ namespace BDArmory.Modules
         {
             return string.Empty;
         }
-
 
         [KSPAction("Fire")]
         public void AGFire(KSPActionParam param)
@@ -257,11 +251,12 @@ namespace BDArmory.Modules
             }
         }
 
-
-        public override void OnStart(StartState state)
+        public void Start()
         {
             // extension for feature_engagementenvelope
             InitializeEngagementRange(0, maxTargetingRange);
+
+            SetupAudio();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -269,7 +264,6 @@ namespace BDArmory.Modules
 
                 aimerTexture = BDArmorySetup.Instance.greenPointCircleTexture;
                 // GameDatabase.Instance.GetTexture("BDArmory/Textures/grayCircle", false);
-
 
                 MakeRocketArray();
                 UpdateRocketScales();
@@ -281,6 +275,10 @@ namespace BDArmory.Modules
 
                 UpdateAudio();
                 BDArmorySetup.OnVolumeChange += UpdateAudio;
+
+                gauge = (BDStagingAreaGauge)part.AddModule("BDStagingAreaGauge");
+                gauge.AmmoName = rocketType;
+                gauge.AudioSource = sfAudioSource;
             }
 
             if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
@@ -316,7 +314,6 @@ namespace BDArmory.Modules
                     readyToFire = false;
                 }
             }
-            SetupAudio();
 
             blastForce = BlastPhysicsUtils.CalculateExplosiveMass(blastRadius);
         }
@@ -372,16 +369,9 @@ namespace BDArmory.Modules
             BDArmorySetup.OnVolumeChange -= UpdateAudio;
         }
 
-
-        public override void OnFixedUpdate()
+        public void FixedUpdate()
         {
-            if (GetRocketResource().amount != lastRocketsLeft)
-            {
-                UpdateRocketScales();
-                lastRocketsLeft = GetRocketResource().amount;
-            }
-
-            if (!vessel.IsControllable)
+            if (!HighLogic.LoadedSceneIsFlight || !vessel.IsControllable)
             {
                 return;
             }
@@ -400,9 +390,9 @@ namespace BDArmory.Modules
             }
         }
 
-        public override void OnUpdate()
+        public void Update()
         {
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight && !vessel.packed)
             {
                 if (readyToFire && deployed)
                 {
@@ -417,7 +407,7 @@ namespace BDArmory.Modules
                         if (Time.time - autoFireStartTime < autoFireDuration)
                         {
                             float fireInterval = 0.5f;
-                            if (autoRippleRate > 0) fireInterval = 60f/autoRippleRate;
+                            if (autoRippleRate > 0) fireInterval = 60f / autoRippleRate;
                             if (Time.time - lastAutoFiredTime > fireInterval)
                             {
                                 FireRocket();
@@ -434,6 +424,17 @@ namespace BDArmory.Modules
                             FireRocket();
                         }
                     }
+                }
+
+                if (GetRocketResource().amount != lastRocketsLeft)
+                {
+                    UpdateRocketScales();
+                    lastRocketsLeft = GetRocketResource().amount;
+                }
+
+                if (vessel.isActiveVessel)
+                {
+                    gauge.UpdateAmmoMeter((float)(lastRocketsLeft / rocketsMax));
                 }
             }
         }
@@ -482,10 +483,9 @@ namespace BDArmory.Modules
 
             currentTgtRange = Vector3.Distance(targetPosition, rockets[0].parent.transform.position);
 
-
             targetPosition += trajectoryOffset;
-            targetPosition += targetVel*predictedFlightTime;
-            targetPosition += 0.5f*targetAccel*predictedFlightTime*predictedFlightTime;
+            targetPosition += targetVel * predictedFlightTime;
+            targetPosition += 0.5f * targetAccel * predictedFlightTime * predictedFlightTime;
 
             turret.AimToTarget(targetPosition);
             targetInTurretView = turret.TargetInRange(targetPosition, 2, maxTargetingRange);
@@ -500,7 +500,7 @@ namespace BDArmory.Modules
             float targetDistance;
 
             //MouseControl
-            Vector3 mouseAim = new Vector3(Input.mousePosition.x/Screen.width, Input.mousePosition.y/Screen.height, 0);
+            Vector3 mouseAim = new Vector3(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height, 0);
             Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mouseAim);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, maxTargetingRange, 557057))
@@ -511,14 +511,14 @@ namespace BDArmory.Modules
                 Part p = hit.collider.gameObject.GetComponentInParent<Part>();
                 if (p && p.vessel && p.vessel == vessel)
                 {
-                    targetPosition = ray.direction*maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
+                    targetPosition = ray.direction * maxTargetingRange + FlightCamera.fetch.mainCamera.transform.position;
                 }
 
                 targetDistance = Vector3.Distance(hit.point, rockets[0].parent.position);
             }
             else
             {
-                targetPosition = (ray.direction*(maxTargetingRange + (FlightCamera.fetch.Distance*0.75f))) +
+                targetPosition = (ray.direction * (maxTargetingRange + (FlightCamera.fetch.Distance * 0.75f))) +
                                  FlightCamera.fetch.mainCamera.transform.position;
                 targetDistance = maxTargetingRange;
             }
@@ -526,7 +526,6 @@ namespace BDArmory.Modules
             currentTgtRange = targetDistance;
 
             targetPosition += trajectoryOffset;
-
 
             turret.AimToTarget(targetPosition);
             targetInTurretView = turret.TargetInRange(targetPosition, 2, maxTargetingRange);
@@ -556,9 +555,9 @@ namespace BDArmory.Modules
 
                 GameObject rocketObj = GameDatabase.Instance.GetModel(rocketModelPath);
                 rocketObj =
-                    (GameObject) Instantiate(rocketObj, currentRocketTfm.position, currentRocketTfm.parent.rotation);
+                    (GameObject)Instantiate(rocketObj, currentRocketTfm.position, currentRocketTfm.parent.rotation);
                 rocketObj.transform.rotation = currentRocketTfm.parent.rotation;
-                rocketObj.transform.localScale = part.rescaleFactor*Vector3.one;
+                rocketObj.transform.localScale = part.rescaleFactor * Vector3.one;
                 currentRocketTfm.localScale = Vector3.zero;
                 Rocket rocket = rocketObj.AddComponent<Rocket>();
                 rocket.explModelPath = explModelPath;
@@ -585,7 +584,6 @@ namespace BDArmory.Modules
             }
         }
 
-
         void SimulateTrajectory()
         {
             if ((BDArmorySettings.AIM_ASSIST && BDArmorySettings.DRAW_AIMERS && drawAimer && vessel.isActiveVessel) ||
@@ -595,9 +593,9 @@ namespace BDArmory.Modules
                 Transform fireTransform = rockets[0].parent;
                 Vector3 pointingDirection = fireTransform.forward;
                 Vector3 simVelocity = part.rb.velocity;
-                Vector3 simCurrPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
-                Vector3 simPrevPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
-                Vector3 simStartPos = fireTransform.position + (part.rb.velocity*Time.fixedDeltaTime);
+                Vector3 simCurrPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
+                Vector3 simPrevPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
+                Vector3 simStartPos = fireTransform.position + (part.rb.velocity * Time.fixedDeltaTime);
                 bool simulating = true;
                 float simDeltaTime = 0.02f;
                 List<Vector3> pointPositions = new List<Vector3>();
@@ -605,7 +603,7 @@ namespace BDArmory.Modules
 
                 bool slaved = turret && weaponManager && (weaponManager.slavingTurrets || weaponManager.guardMode);
                 float atmosMultiplier =
-                    Mathf.Clamp01(2.5f*
+                    Mathf.Clamp01(2.5f *
                                   (float)
                                   FlightGlobals.getAtmDensity(vessel.staticPressurekPa, vessel.externalTemperature,
                                       vessel.mainBody));
@@ -623,19 +621,19 @@ namespace BDArmory.Modules
                         simDeltaTime = 0.02f;
                         if (simTime < thrustTime)
                         {
-                            simVelocity += thrust/rocketMass*simDeltaTime*pointingDirection;
+                            simVelocity += thrust / rocketMass * simDeltaTime * pointingDirection;
                         }
 
                         //rotation (aero stabilize)
                         pointingDirection = Vector3.RotateTowards(pointingDirection,
                             simVelocity + Krakensbane.GetFrameVelocity(),
-                            atmosMultiplier*(0.5f*(simTime))*50*simDeltaTime*Mathf.Deg2Rad, 0);
+                            atmosMultiplier * (0.5f * (simTime)) * 50 * simDeltaTime * Mathf.Deg2Rad, 0);
                     }
 
                     //gravity
-                    simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos)*simDeltaTime;
+                    simVelocity += FlightGlobals.getGeeForceAtPosition(simCurrPos) * simDeltaTime;
 
-                    simCurrPos += simVelocity*simDeltaTime;
+                    simCurrPos += simVelocity * simDeltaTime;
                     pointPositions.Add(simCurrPos);
                     if (!mouseAiming && !slaved)
                     {
@@ -654,19 +652,18 @@ namespace BDArmory.Modules
                         }
                     }
 
-
                     simPrevPos = simCurrPos;
 
-                    if ((simStartPos - simCurrPos).sqrMagnitude > currentTgtRange*currentTgtRange)
+                    if ((simStartPos - simCurrPos).sqrMagnitude > currentTgtRange * currentTgtRange)
                     {
-                        rocketPrediction = simStartPos + (simCurrPos - simStartPos).normalized*currentTgtRange;
+                        rocketPrediction = simStartPos + (simCurrPos - simStartPos).normalized * currentTgtRange;
                         //rocketPrediction = simCurrPos;
                         simulating = false;
                     }
                     simTime += simDeltaTime;
                 }
 
-                Vector3 pointingPos = fireTransform.position + (fireTransform.forward*currentTgtRange);
+                Vector3 pointingPos = fireTransform.position + (fireTransform.forward * currentTgtRange);
                 trajectoryOffset = pointingPos - rocketPrediction;
                 predictedFlightTime = simTime;
 
@@ -715,7 +712,7 @@ namespace BDArmory.Modules
                 }
                 else
                 {
-                    rocketPrediction = transform.position + (transform.forward*distance);
+                    rocketPrediction = transform.position + (transform.forward * distance);
                 }
             }
         }
@@ -728,8 +725,8 @@ namespace BDArmory.Modules
 
                 Vector3 aimPosition = FlightCamera.fetch.mainCamera.WorldToViewportPoint(rocketPrediction);
 
-                Rect drawRect = new Rect(aimPosition.x*Screen.width - (0.5f*size),
-                    (1 - aimPosition.y)*Screen.height - (0.5f*size), size, size);
+                Rect drawRect = new Rect(aimPosition.x * Screen.width - (0.5f * size),
+                    (1 - aimPosition.y) * Screen.height - (0.5f * size), size, size);
                 float cameraAngle = Vector3.Angle(FlightCamera.fetch.GetCameraTransform().forward,
                     rocketPrediction - FlightCamera.fetch.mainCamera.transform.position);
                 if (cameraAngle < 90) GUI.DrawTexture(drawRect, aimerTexture);
@@ -752,24 +749,24 @@ namespace BDArmory.Modules
             if (!descendingOrder) Array.Reverse(rockets);
         }
 
-
         public PartResource GetRocketResource()
         {
-            IEnumerator<PartResource> res = part.Resources.GetEnumerator();
-            while (res.MoveNext())
-            {
-                if (res.Current == null) continue;
-                if (res.Current.resourceName == rocketType) return res.Current;
-            }
-            res.Dispose();
+            using (var res = part.Resources.GetEnumerator())
+                while (res.MoveNext())
+                {
+                    if (res.Current == null) continue;
+                    if (res.Current.resourceName == rocketType) return res.Current;
+                }
             return null;
         }
 
         void UpdateRocketScales()
         {
+            // This is a backup method only, rockets will be rescaled to zero on firing,
+            // so this will be called only on start and if something weird happens.
             PartResource rocketResource = GetRocketResource();
-            double rocketsLeft = Math.Floor(rocketResource.amount);
-            double rocketsMax = rocketResource.maxAmount;
+            var rocketsLeft = Math.Floor(rocketResource.amount);
+            rocketsMax = rocketResource.maxAmount;
             for (int i = 0; i < rocketsMax; i++)
             {
                 if (i < rocketsLeft) rockets[i].localScale = Vector3.one;
@@ -794,7 +791,6 @@ namespace BDArmory.Modules
             return output.ToString();
         }
     }
-
 
     public class Rocket : MonoBehaviour
     {
@@ -825,7 +821,6 @@ namespace BDArmory.Modules
         //bool isThrusting = true;
 
         Rigidbody rb;
-
 
         KSPParticleEmitter[] pEmitters;
 
@@ -884,7 +879,6 @@ namespace BDArmory.Modules
                 prevPosition -= FloatingOrigin.OffsetNonKrakensbane;
             }
 
-
             if (Time.time - startTime < stayTime && transform.parent != null)
             {
                 transform.rotation = transform.parent.rotation;
@@ -906,12 +900,12 @@ namespace BDArmory.Modules
                 //physics
                 if (FlightGlobals.RefFrameIsRotating)
                 {
-                    rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*Time.fixedDeltaTime;
+                    rb.velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
                 }
 
                 //guidance and attitude stabilisation scales to atmospheric density.
                 float atmosMultiplier =
-                    Mathf.Clamp01(2.5f*
+                    Mathf.Clamp01(2.5f *
                                   (float)
                                   FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(transform.position),
                                       FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody));
@@ -919,17 +913,15 @@ namespace BDArmory.Modules
                 //model transform. always points prograde
                 transform.rotation = Quaternion.RotateTowards(transform.rotation,
                     Quaternion.LookRotation(rb.velocity + Krakensbane.GetFrameVelocity(), transform.up),
-                    atmosMultiplier*(0.5f*(Time.time - startTime))*50*Time.fixedDeltaTime);
-
+                    atmosMultiplier * (0.5f * (Time.time - startTime)) * 50 * Time.fixedDeltaTime);
 
                 if (Time.time - startTime < thrustTime && Time.time - startTime > stayTime)
                 {
-                    float random = randomThrustDeviation*(1 - (Mathf.PerlinNoise(4*Time.time, randThrustSeed)*2));
-                    float random2 = randomThrustDeviation*(1 - (Mathf.PerlinNoise(randThrustSeed, 4*Time.time)*2));
+                    float random = randomThrustDeviation * (1 - (Mathf.PerlinNoise(4 * Time.time, randThrustSeed) * 2));
+                    float random2 = randomThrustDeviation * (1 - (Mathf.PerlinNoise(randThrustSeed, 4 * Time.time) * 2));
                     rb.AddRelativeForce(new Vector3(random, random2, thrust));
                 }
             }
-
 
             if (Time.time - startTime > thrustTime)
             {
@@ -996,7 +988,6 @@ namespace BDArmory.Modules
                         {
                         }
 
-
                         if (hitPart == null || (hitPart != null && hitPart.vessel != sourceVessel))
                         {
                             Detonate(hit.point);
@@ -1060,7 +1051,6 @@ namespace BDArmory.Modules
             Destroy(gameObject); //destroy rocket on collision
         }
 
-
         void SetupAudio()
         {
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -1068,7 +1058,7 @@ namespace BDArmory.Modules
             audioSource.minDistance = 1;
             audioSource.maxDistance = 2000;
             audioSource.dopplerLevel = 0.5f;
-            audioSource.volume = 0.9f*BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
+            audioSource.volume = 0.9f * BDArmorySettings.BDARMORY_WEAPONS_VOLUME;
             audioSource.pitch = 1f;
             audioSource.priority = 255;
             audioSource.spatialBlend = 1;

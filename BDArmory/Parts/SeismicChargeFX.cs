@@ -8,11 +8,9 @@ namespace BDArmory.Parts
     {
         AudioSource audioSource;
 
-
         public static float originalShipVolume;
         public static float originalMusicVolume;
         public static float originalAmbienceVolume;
-
 
         float startTime;
 
@@ -22,9 +20,8 @@ namespace BDArmory.Parts
 
         void Start()
         {
-            transform.localScale = 2*Vector3.one;
+            transform.localScale = 2 * Vector3.one;
             lightFlare = gameObject.transform.Find("lightFlare");
-
 
             startTime = Time.time;
 
@@ -50,27 +47,26 @@ namespace BDArmory.Parts
             if (Time.time - startTime < 1.25f)
             {
                 //
-                GameSettings.SHIP_VOLUME = Mathf.MoveTowards(GameSettings.SHIP_VOLUME, 0, originalShipVolume/0.7f);
-                GameSettings.MUSIC_VOLUME = Mathf.MoveTowards(GameSettings.MUSIC_VOLUME, 0, originalShipVolume/0.7f);
+                GameSettings.SHIP_VOLUME = Mathf.MoveTowards(GameSettings.SHIP_VOLUME, 0, originalShipVolume / 0.7f);
+                GameSettings.MUSIC_VOLUME = Mathf.MoveTowards(GameSettings.MUSIC_VOLUME, 0, originalShipVolume / 0.7f);
                 GameSettings.AMBIENCE_VOLUME = Mathf.MoveTowards(GameSettings.AMBIENCE_VOLUME, 0,
-                    originalShipVolume/0.7f);
+                    originalShipVolume / 0.7f);
             }
-            else if (Time.time - startTime < 7.35f/audioSource.pitch)
+            else if (Time.time - startTime < 7.35f / audioSource.pitch)
             {
-                //make it fade in more slowly	
+                //make it fade in more slowly
                 GameSettings.SHIP_VOLUME = Mathf.MoveTowards(GameSettings.SHIP_VOLUME, originalShipVolume,
-                    originalShipVolume/3f*Time.fixedDeltaTime);
+                    originalShipVolume / 3f * Time.fixedDeltaTime);
                 GameSettings.MUSIC_VOLUME = Mathf.MoveTowards(GameSettings.MUSIC_VOLUME, originalMusicVolume,
-                    originalMusicVolume/3f*Time.fixedDeltaTime);
+                    originalMusicVolume / 3f * Time.fixedDeltaTime);
                 GameSettings.AMBIENCE_VOLUME = Mathf.MoveTowards(GameSettings.AMBIENCE_VOLUME, originalAmbienceVolume,
-                    originalAmbienceVolume/3f*Time.fixedDeltaTime);
+                    originalAmbienceVolume / 3f * Time.fixedDeltaTime);
             }
             else
             {
                 Destroy(gameObject);
             }
         }
-
 
         void OnTriggerEnter(Collider other)
         {
@@ -107,11 +103,10 @@ namespace BDArmory.Parts
             }
         }
 
-
         public static void CreateSeismicExplosion(Vector3 pos, Quaternion rot)
         {
             GameObject explosionModel = GameDatabase.Instance.GetModel("BDArmory/Models/seismicCharge/seismicExplosion");
-            GameObject explosionObject = (GameObject) Instantiate(explosionModel, pos, rot);
+            GameObject explosionObject = (GameObject)Instantiate(explosionModel, pos, rot);
             explosionObject.SetActive(true);
             explosionObject.AddComponent<SeismicChargeFX>();
         }

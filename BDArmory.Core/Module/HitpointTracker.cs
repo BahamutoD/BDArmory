@@ -7,7 +7,7 @@ namespace BDArmory.Core.Module
     {
         #region KSP Fields
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Hitpoints"),
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = true, guiName = "Hitpoints"),
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None, controlEnabled = false, scene = UI_Scene.All, maxValue = 100000, minValue = 0, requireFullControl = false)]
         public float Hitpoints;
 
@@ -36,7 +36,7 @@ namespace BDArmory.Core.Module
         [KSPField(isPersistant = true)]
         public float FireFXLifeTimeInSeconds = 5f;
 
-        #endregion
+        #endregion KSP Fields
 
         private readonly float hitpointMultiplier = BDArmorySettings.HITPOINT_MULTIPLIER;
 
@@ -45,7 +45,6 @@ namespace BDArmory.Core.Module
         private bool _updateHitpoints = false;
         private bool _forceUpdateHitpointsUI = false;
         private const int HpRounding = 100;
-
 
         public override void OnLoad(ConfigNode node)
         {
@@ -57,19 +56,17 @@ namespace BDArmory.Core.Module
             {
                 // Loading of the prefab from the part config
                 _updateHitpoints = true;
-
             }
             else
             {
-                // Loading of the part from a saved craft                
+                // Loading of the part from a saved craft
                 if (HighLogic.LoadedSceneIsEditor)
                 {
-                    _updateHitpoints = true;    
+                    _updateHitpoints = true;
                 }
                 else
                     enabled = false;
             }
-
         }
 
         public void SetupPrefab()
@@ -78,7 +75,7 @@ namespace BDArmory.Core.Module
             {
                 var maxHitPoints_ = CalculateTotalHitpoints();
 
-                if (!_forceUpdateHitpointsUI &&  previousHitpoints == maxHitPoints_) return;
+                if (!_forceUpdateHitpointsUI && previousHitpoints == maxHitPoints_) return;
 
                 //Add Hitpoints
                 UI_ProgressBar damageFieldFlight = (UI_ProgressBar)Fields["Hitpoints"].uiControlFlight;
@@ -108,7 +105,6 @@ namespace BDArmory.Core.Module
             }
             else
             {
-
                 Debug.Log("[BDArmory]: HitpointTracker::OnStart part is null");
             }
         }
@@ -129,32 +125,28 @@ namespace BDArmory.Core.Module
             GameEvents.onEditorShipModified.Add(ShipModified);
         }
 
-
-
         private void OnDestroy()
         {
-            GameEvents.onEditorShipModified.Remove(ShipModified);   
+            GameEvents.onEditorShipModified.Remove(ShipModified);
         }
 
         public void ShipModified(ShipConstruct data)
         {
             _updateHitpoints = true;
         }
+
         public override void OnUpdate()
         {
-
             RefreshHitPoints();
         }
 
         public void Update()
         {
-
             RefreshHitPoints();
         }
 
         private void RefreshHitPoints()
         {
-
             if (_updateHitpoints)
             {
                 SetupPrefab();
@@ -171,7 +163,6 @@ namespace BDArmory.Core.Module
 
             if (!part.IsMissile())
             {
-
                 var averageSize = part.GetAverageBoundSize();
                 var sphereRadius = averageSize * 0.5f;
                 var sphereSurface = 4 * Mathf.PI * sphereRadius * sphereRadius;
@@ -181,14 +172,19 @@ namespace BDArmory.Core.Module
                 density = Mathf.Clamp(density, 1000, 10000);
                 //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralVolume : " + structuralVolume);
                 //Debug.Log("[BDArmory]: Hitpoint Calc"+part.name+" | Density : " + density);
-                
+
                 var structuralMass = density * structuralVolume;
                 //Debug.Log("[BDArmory]: Hitpoint Calc" + part.name + " | structuralMass : " + structuralMass);
-                //3. final calculations 
+                //3. final calculations
+                hitpoints = structuralMass * hitpointMultiplier * 0.33f;
 
-                hitpoints =  Mathf.Clamp(structuralMass * hitpointMultiplier *0.33f, 0.5f*part.mass*1000f, 1.5f*part.mass*1000f);
+                if (hitpoints > 10 * part.mass * 1000f || hitpoints < 0.1f * part.mass * 1000f)
+                {
+                    Debug.Log($"[BDArmory]: HitpointTracker::Clamping hitpoints for part {part.name}");
+                    hitpoints = hitpointMultiplier * part.mass * 333f;
+                }
+
                 hitpoints = Mathf.Round(hitpoints / HpRounding) * HpRounding;
-
                 if (hitpoints <= 0) hitpoints = HpRounding;
             }
             else
@@ -284,7 +280,6 @@ namespace BDArmory.Core.Module
             }
         }
 
-        #endregion
-
+        #endregion Hitpoints Functions
     }
 }

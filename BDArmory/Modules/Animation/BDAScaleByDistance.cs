@@ -15,7 +15,6 @@ namespace BDArmory.Modules.Animation
 
         public Transform distanceTransform;
 
-
         public override void OnStart(StartState state)
         {
             ParseScale();
@@ -27,14 +26,13 @@ namespace BDArmory.Modules.Animation
         {
             Vector3 finalScaleFactor;
             float distance = Vector3.Distance(transformToScale.position, distanceTransform.position);
-            float sfX = (scaleFactorV.x != 0) ? scaleFactorV.x*distance : 1;
-            float sfY = (scaleFactorV.y != 0) ? scaleFactorV.y*distance : 1;
-            float sfZ = (scaleFactorV.z != 0) ? scaleFactorV.z*distance : 1;
+            float sfX = (scaleFactorV.x != 0) ? scaleFactorV.x * distance : 1;
+            float sfY = (scaleFactorV.y != 0) ? scaleFactorV.y * distance : 1;
+            float sfZ = (scaleFactorV.z != 0) ? scaleFactorV.z * distance : 1;
             finalScaleFactor = new Vector3(sfX, sfY, sfZ);
 
             transformToScale.localScale = finalScaleFactor;
         }
-
 
         void ParseScale()
         {

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace BDArmory.Control
@@ -19,7 +17,6 @@ namespace BDArmory.Control
         public float throttleFactor = 2f;
 
         public Vessel vessel;
-
 
         bool controlEnabled;
 
@@ -65,15 +62,13 @@ namespace BDArmory.Control
                 return;
             }
 
-
-            float currentSpeed = (float) vessel.srfSpeed;
+            float currentSpeed = (float)vessel.srfSpeed;
             float speedError = targetSpeed - currentSpeed;
 
-            float setAccel = speedError*throttleFactor;
+            float setAccel = speedError * throttleFactor;
 
             SetAcceleration(setAccel, s);
         }
-
 
         void SetAcceleration(float accel, FlightCtrlState s)
         {
@@ -93,7 +88,7 @@ namespace BDArmory.Control
 
             requestEngineAccel = Mathf.Clamp(requestEngineAccel, -engineAccel, engineAccel);
 
-            float requestThrottle = (requestEngineAccel - dragAccel)/engineAccel;
+            float requestThrottle = (requestEngineAccel - dragAccel) / engineAccel;
 
             s.mainThrottle = Mathf.Clamp01(requestThrottle);
 
@@ -134,9 +129,9 @@ namespace BDArmory.Control
                 float engineThrust = engines.Current.maxThrust;
                 if (engines.Current.atmChangeFlow)
                 {
-                  engineThrust *= engines.Current.flowMultiplier;
+                    engineThrust *= engines.Current.flowMultiplier;
                 }
-                maxThrust += engineThrust*(engines.Current.thrustPercentage/100f);
+                maxThrust += engineThrust * (engines.Current.thrustPercentage / 100f);
 
                 finalThrust += engines.Current.finalThrust;
             }
@@ -146,8 +141,7 @@ namespace BDArmory.Control
 
             float vesselMass = vessel.GetTotalMass();
 
-            float accel = maxThrust/vesselMass;
-
+            float accel = maxThrust / vesselMass;
 
             //estimate drag
             float estimatedCurrentAccel = finalThrust / vesselMass - GravAccel();
@@ -170,7 +164,7 @@ namespace BDArmory.Control
                         mmes.Current.Events["ModeEvent"].Invoke();
                     }
                 }
-                else if (!allowAfterburner || accel > requestAccel*1.5f)
+                else if (!allowAfterburner || accel > requestAccel * 1.5f)
                 {
                     if (!mmes.Current.runningPrimary)
                     {
@@ -191,7 +185,7 @@ namespace BDArmory.Control
             if (!engine)
             {
                 return false;
-            }      
+            }
             return engine.primaryEngineID == "Dry" && engine.secondaryEngineID == "Wet";
         }
 
@@ -201,7 +195,6 @@ namespace BDArmory.Control
             float gravAccel = geeVector.magnitude * Mathf.Cos(Mathf.Deg2Rad * Vector3.Angle(-geeVector, vessel.velocityD));
             return gravAccel;
         }
-
 
         float possibleAccel;
 
@@ -249,7 +242,7 @@ namespace BDArmory.Control
             {
                 float throttle = zeroPoint + (targetSpeed - (float)vessel.srfSpeed) * gain;
                 lastThrottle = Mathf.Clamp(throttle, -1, 1);
-                zeroPoint = (zeroPoint + lastThrottle * zeroMult) * (1 - zeroMult) ;
+                zeroPoint = (zeroPoint + lastThrottle * zeroMult) * (1 - zeroMult);
                 if (preventNegativeZeroPoint && zeroPoint < 0) zeroPoint = 0;
                 s.wheelThrottle = lastThrottle;
                 vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, throttle < -5f);

@@ -99,7 +99,7 @@ namespace BDArmory.Core
     {
         public int Calls { get; set; }
         public long TotalTicks { get; set; }
-        public float AverageTicks => (float) Math.Round(TotalTicks / (float) Calls, 1);
+        public float AverageTicks => (float)Math.Round(TotalTicks / (float)Calls, 1);
 
         public long MaxTick { get; set; }
         public long MinTick { get; set; }

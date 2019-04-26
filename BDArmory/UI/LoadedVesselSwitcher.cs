@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BDArmory.Misc;
 using BDArmory.Modules;
 using UnityEngine;
 
@@ -25,8 +26,7 @@ namespace BDArmory.UI
         private float _windowHeight; //auto adjusting
         private readonly float _windowWidth = 250;
 
-        private List<MissileFire> _wmgrsA;
-        private List<MissileFire> _wmgrsB;
+        private SortedList<string, List<MissileFire>> weaponManagers = new SortedList<string, List<MissileFire>>();
 
         private MissileFire _wmToSwitchTeam;
 
@@ -45,14 +45,14 @@ namespace BDArmory.UI
             GameEvents.onVesselDestroy.Add(VesselEventUpdate);
             GameEvents.onVesselGoOffRails.Add(VesselEventUpdate);
             GameEvents.onVesselGoOnRails.Add(VesselEventUpdate);
-            MissileFire.OnToggleTeam += MissileFireOnToggleTeam;
+            MissileFire.OnChangeTeam += MissileFireOnToggleTeam;
 
             _ready = false;
             StartCoroutine(WaitForBdaSettings());
 
             // TEST
             FloatingOrigin.fetch.threshold = 20000; //20km
-            FloatingOrigin.fetch.thresholdSqr = 20000*20000; //20km
+            FloatingOrigin.fetch.thresholdSqr = 20000 * 20000; //20km
             Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
 
             //BDArmorySetup.WindowRectVesselSwitcher = new Rect(10, Screen.height / 6f, _windowWidth, 10);
@@ -60,13 +60,13 @@ namespace BDArmory.UI
 
         private void OnDestroy()
         {
-                GameEvents.onVesselCreate.Remove(VesselEventUpdate);
-                GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
-                GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
-                GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
-                MissileFire.OnToggleTeam -= MissileFireOnToggleTeam;
+            GameEvents.onVesselCreate.Remove(VesselEventUpdate);
+            GameEvents.onVesselDestroy.Remove(VesselEventUpdate);
+            GameEvents.onVesselGoOffRails.Remove(VesselEventUpdate);
+            GameEvents.onVesselGoOnRails.Remove(VesselEventUpdate);
+            MissileFire.OnChangeTeam -= MissileFireOnToggleTeam;
 
-                _ready = false;
+            _ready = false;
 
             // TEST
             Debug.Log($"FLOATINGORIGIN: threshold is {FloatingOrigin.fetch.threshold}");
@@ -82,7 +82,7 @@ namespace BDArmory.UI
             _guiCheckIndex = Misc.Misc.RegisterGUIRect(new Rect());
         }
 
-        private void MissileFireOnToggleTeam(MissileFire wm, BDArmorySetup.BDATeams team)
+        private void MissileFireOnToggleTeam(MissileFire wm, BDTeam team)
         {
             if (_showGui)
                 UpdateList();
@@ -110,7 +110,7 @@ namespace BDArmory.UI
                 }
 
                 if (_showGui)
-                {                    
+                {
                     Hotkeys();
                 }
             }
@@ -126,26 +126,23 @@ namespace BDArmory.UI
 
         private void UpdateList()
         {
-            if (_wmgrsA == null) _wmgrsA = new List<MissileFire>();
-            _wmgrsA.Clear();
-
-            if (_wmgrsB == null) _wmgrsB = new List<MissileFire>();
-            _wmgrsB.Clear();
+            weaponManagers.Clear();
 
             List<Vessel>.Enumerator v = FlightGlobals.Vessels.GetEnumerator();
             while (v.MoveNext())
             {
-                if (v.Current == null) continue;
-                if (!v.Current.loaded || v.Current.packed) continue;
-                List<MissileFire>.Enumerator wm = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator();
-                while (wm.MoveNext())
-                {
-                    if (wm.Current == null) continue;
-                    if (!wm.Current.team) _wmgrsA.Add(wm.Current);
-                    else _wmgrsB.Add(wm.Current);
-                    break;
-                }
-                wm.Dispose();
+                if (v.Current == null || !v.Current.loaded || v.Current.packed)
+                    continue;
+                using (var wms = v.Current.FindPartModulesImplementing<MissileFire>().GetEnumerator())
+                    while (wms.MoveNext())
+                        if (wms.Current != null)
+                        {
+                            if (weaponManagers.TryGetValue(wms.Current.Team.Name, out var teamManagers))
+                                teamManagers.Add(wms.Current);
+                            else
+                                weaponManagers.Add(wms.Current.Team.Name, new List<MissileFire> { wms.Current });
+                            break;
+                        }
             }
             v.Dispose();
         }
@@ -171,7 +168,7 @@ namespace BDArmory.UI
                 if (_teamSwitchDirty)
                 {
                     if (_wmToSwitchTeam)
-                        _wmToSwitchTeam.ToggleTeam();
+                        _wmToSwitchTeam.NextTeam();
                     _teamSwitchDirty = false;
                     _wmToSwitchTeam = null;
                 }
@@ -192,116 +189,70 @@ namespace BDArmory.UI
                 BDArmorySetup.Instance.showVSGUI = false;
                 return;
             }
-            float height = 0;
-            float vesselLineA = 0;
-            float vesselLineB = 0;
-            height += _margin + _titleHeight;
-            GUI.Label(new Rect(_margin, height, _windowWidth - 2 * _margin, _buttonHeight), "Team A:", BDArmorySetup.BDGuiSkin.label);
-            height += _buttonHeight;
-            float vesselButtonWidth = _windowWidth - 2 * _margin;
-            vesselButtonWidth -= 3 * _buttonHeight;
+            float height = _titleHeight;
+            float vesselButtonWidth = _windowWidth - 2 * _margin - 3 * _buttonHeight;
 
-            List<MissileFire>.Enumerator wma = _wmgrsA.GetEnumerator();
-            while (wma.MoveNext())
-            {
-                if (wma.Current == null) continue;
-                float lineY = height + vesselLineA * (_buttonHeight + _buttonGap);
-                Rect buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
-                GUIStyle vButtonStyle = wma.Current.vessel.isActiveVessel ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
-
-                string status = UpdateVesselStatus(wma.Current, vButtonStyle);
-
-                if (GUI.Button(buttonRect, status + wma.Current.vessel.GetName(), vButtonStyle))
+            using (var teamManagers = weaponManagers.GetEnumerator())
+                while (teamManagers.MoveNext())
                 {
-                    ForceSwitchVessel(wma.Current.vessel);
+                    height += _margin;
+                    GUI.Label(new Rect(_margin, height, _windowWidth - 2 * _margin, _buttonHeight), $"{teamManagers.Current.Key}:", BDArmorySetup.BDGuiSkin.label);
+                    height += _buttonHeight;
+
+                    using (var wm = teamManagers.Current.Value.GetEnumerator())
+                        while (wm.MoveNext())
+                        {
+                            if (wm.Current == null) continue;
+
+                            Rect buttonRect = new Rect(_margin, height, vesselButtonWidth, _buttonHeight);
+                            GUIStyle vButtonStyle = wm.Current.vessel.isActiveVessel ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
+                            string status = UpdateVesselStatus(wm.Current, vButtonStyle);
+
+                            if (GUI.Button(buttonRect, status + wm.Current.vessel.GetName(), vButtonStyle))
+                                ForceSwitchVessel(wm.Current.vessel);
+
+                            //guard toggle
+                            GUIStyle guardStyle = wm.Current.guardMode ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
+                            Rect guardButtonRect = new Rect(_margin + vesselButtonWidth, height, _buttonHeight, _buttonHeight);
+                            if (GUI.Button(guardButtonRect, "G", guardStyle))
+                                wm.Current.ToggleGuardMode();
+
+                            //AI toggle
+                            if (wm.Current.AI != null)
+                            {
+                                GUIStyle aiStyle = wm.Current.AI.pilotEnabled ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
+                                Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, height, _buttonHeight,
+                                    _buttonHeight);
+                                if (GUI.Button(aiButtonRect, "P", aiStyle))
+                                    wm.Current.AI.TogglePilot();
+                            }
+
+                            //team toggle
+                            Rect teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight * 2, height,
+                                _buttonHeight, _buttonHeight);
+                            if (GUI.Button(teamButtonRect, "T", BDArmorySetup.BDGuiSkin.button))
+                            {
+                                if (Event.current.button == 1)
+                                {
+                                    BDTeamSelector.Instance.Open(wm.Current, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+                                }
+                                else
+                                {
+                                    _wmToSwitchTeam = wm.Current;
+                                    _teamSwitchDirty = true;
+                                }
+                            }
+
+                            height += _buttonHeight + _buttonGap;
+                        }
                 }
 
-                //guard toggle
-                GUIStyle guardStyle = wma.Current.guardMode ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
-                Rect guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
-                if (GUI.Button(guardButtonRect, "G", guardStyle))
-                    wma.Current.ToggleGuardMode();
-
-                //AI toggle
-                if (wma.Current.AI != null)
-                {
-                    GUIStyle aiStyle = wma.Current.AI.pilotEnabled ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
-                    Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
-                        _buttonHeight);
-                    if (GUI.Button(aiButtonRect, "P", aiStyle))
-                        wma.Current.AI.TogglePilot();
-                }
-
-                //team toggle
-                Rect teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight + _buttonHeight, lineY,
-                    _buttonHeight, _buttonHeight);
-                if (GUI.Button(teamButtonRect, "T", BDArmorySetup.BDGuiSkin.button))
-                {
-                    _wmToSwitchTeam = wma.Current;
-                    _teamSwitchDirty = true;
-                }
-                vesselLineA++;
-            }
-            wma.Dispose();
-
-            height += vesselLineA * (_buttonHeight + _buttonGap);
             height += _margin;
-            GUI.Label(new Rect(_margin, height, _windowWidth - 2 * _margin, _buttonHeight), "Team B:", BDArmorySetup.BDGuiSkin.label);
-            height += _buttonHeight;
-
-            List<MissileFire>.Enumerator wmb = _wmgrsB.GetEnumerator();
-            while (wmb.MoveNext())
-            {
-                if (wmb.Current == null) continue;
-                float lineY = height + vesselLineB * (_buttonHeight + _buttonGap);
-
-                Rect buttonRect = new Rect(_margin, lineY, vesselButtonWidth, _buttonHeight);
-                GUIStyle vButtonStyle = wmb.Current.vessel.isActiveVessel ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
-
-                string status = UpdateVesselStatus(wmb.Current, vButtonStyle);
-
-
-                if (GUI.Button(buttonRect, status + wmb.Current.vessel.GetName(), vButtonStyle))
-                {
-                    ForceSwitchVessel(wmb.Current.vessel);
-                }
-
-
-                //guard toggle
-                GUIStyle guardStyle = wmb.Current.guardMode ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
-                Rect guardButtonRect = new Rect(_margin + vesselButtonWidth, lineY, _buttonHeight, _buttonHeight);
-                if (GUI.Button(guardButtonRect, "G", guardStyle))
-                    wmb.Current.ToggleGuardMode();
-
-                //AI toggle
-                if (wmb.Current.AI != null)
-                {
-                    GUIStyle aiStyle = wmb.Current.AI.pilotEnabled ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button;
-                    Rect aiButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight, lineY, _buttonHeight,
-                        _buttonHeight);
-                    if (GUI.Button(aiButtonRect, "P", aiStyle))
-                        wmb.Current.AI.TogglePilot();
-                }
-
-                //team toggle
-                Rect teamButtonRect = new Rect(_margin + vesselButtonWidth + _buttonHeight + _buttonHeight, lineY,
-                    _buttonHeight, _buttonHeight);
-                if (GUI.Button(teamButtonRect, "T", BDArmorySetup.BDGuiSkin.button))
-                {
-                    _wmToSwitchTeam = wmb.Current;
-                    _teamSwitchDirty = true;
-                }
-                vesselLineB++;
-            }
-            height += vesselLineB * (_buttonHeight + _buttonGap);
-            height += _margin;
-
             _windowHeight = height;
-          BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectVesselSwitcher);
+            BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectVesselSwitcher);
+        }
 
-    }
-
-    private string UpdateVesselStatus(MissileFire wm, GUIStyle vButtonStyle)
+        private string UpdateVesselStatus(MissileFire wm, GUIStyle vButtonStyle)
         {
             string status = "";
             if (wm.vessel.LandedOrSplashed)
@@ -321,85 +272,49 @@ namespace BDArmory.UI
 
         private void SwitchToNextVessel()
         {
+            if (weaponManagers.Count == 0) return;
+
             bool switchNext = false;
 
-            List<MissileFire>.Enumerator wma = _wmgrsA.GetEnumerator();
-            while (wma.MoveNext())
-            {
-                if (wma.Current == null) continue;
-                if (switchNext)
-                {
-                    ForceSwitchVessel(wma.Current.vessel);
-                    return;
-                }
-                if (wma.Current.vessel.isActiveVessel) switchNext = true;
-            }
-            wma.Dispose();
-
-            List<MissileFire>.Enumerator wmb = _wmgrsB.GetEnumerator();
-            while (wmb.MoveNext())
-            {
-                if (wmb.Current == null) continue;
-                if (switchNext)
-                {
-                    ForceSwitchVessel(wmb.Current.vessel);
-                    return;
-                }
-                if (wmb.Current.vessel.isActiveVessel) switchNext = true;
-            }
-            wmb.Dispose();
-
-            if (_wmgrsA.Count > 0 && _wmgrsA[0] && !_wmgrsA[0].vessel.isActiveVessel)
-            {
-                ForceSwitchVessel(_wmgrsA[0].vessel);
-            }
-            else if (_wmgrsB.Count > 0 && _wmgrsB[0] && !_wmgrsB[0].vessel.isActiveVessel)
-            {
-                ForceSwitchVessel(_wmgrsB[0].vessel);
-            }
+            using (var teamManagers = weaponManagers.GetEnumerator())
+                while (teamManagers.MoveNext())
+                    using (var wm = teamManagers.Current.Value.GetEnumerator())
+                        while (wm.MoveNext())
+                        {
+                            if (wm.Current.vessel.isActiveVessel)
+                                switchNext = true;
+                            else if (switchNext)
+                            {
+                                ForceSwitchVessel(wm.Current.vessel);
+                                return;
+                            }
+                        }
+            var firstVessel = weaponManagers.Values[0][0].vessel;
+            if (!firstVessel.isActiveVessel)
+                ForceSwitchVessel(firstVessel);
         }
 
         private void SwitchToPreviousVessel()
         {
-            if (_wmgrsB.Count > 0)
-                for (int i = _wmgrsB.Count - 1; i >= 0; i--)
-                    if (_wmgrsB[i].vessel.isActiveVessel)
-                        if (i > 0)
-                        {
-                            ForceSwitchVessel(_wmgrsB[i - 1].vessel);
-                            return;
-                        }
-                        else if (_wmgrsA.Count > 0)
-                        {
-                            ForceSwitchVessel(_wmgrsA[_wmgrsA.Count - 1].vessel);
-                            return;
-                        }
-                        else if (_wmgrsB.Count > 0)
-                        {
-                            ForceSwitchVessel(_wmgrsB[_wmgrsB.Count - 1].vessel);
-                            return;
-                        }
+            if (weaponManagers.Count == 0) return;
 
-            if (_wmgrsA.Count > 0)
-                for (int i = _wmgrsA.Count - 1; i >= 0; i--)
-                    if (_wmgrsA[i].vessel.isActiveVessel)
-                        if (i > 0)
+            Vessel previousVessel = weaponManagers.Values[weaponManagers.Count - 1][weaponManagers.Values[weaponManagers.Count - 1].Count - 1].vessel;
+
+            using (var teamManagers = weaponManagers.GetEnumerator())
+                while (teamManagers.MoveNext())
+                    using (var wm = teamManagers.Current.Value.GetEnumerator())
+                        while (wm.MoveNext())
                         {
-                            ForceSwitchVessel(_wmgrsA[i - 1].vessel);
-                            return;
+                            if (wm.Current.vessel.isActiveVessel)
+                            {
+                                ForceSwitchVessel(previousVessel);
+                                return;
+                            }
+                            previousVessel = wm.Current.vessel;
                         }
-                        else if (_wmgrsB.Count > 0)
-                        {
-                            ForceSwitchVessel(_wmgrsB[_wmgrsB.Count - 1].vessel);
-                            return;
-                        }
-                        else if (_wmgrsA.Count > 0)
-                        {
-                            ForceSwitchVessel(_wmgrsA[_wmgrsA.Count - 1].vessel);
-                            return;
-                        }
+            if (!previousVessel.isActiveVessel)
+                ForceSwitchVessel(previousVessel);
         }
-
 
         // Extracted method, so we dont have to call these two lines everywhere
         private void ForceSwitchVessel(Vessel v)
@@ -407,6 +322,5 @@ namespace BDArmory.UI
             FlightGlobals.ForceSetActiveVessel(v);
             FlightInputHandler.ResumeVesselCtrlState(v);
         }
-
     }
 }

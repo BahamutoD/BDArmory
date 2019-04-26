@@ -71,6 +71,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Misc\BDTeam.cs" />
+    <Compile Include="UI\BDStagingAreaGauge.cs" />
+    <Compile Include="UI\BDAEditorCategory.cs" />
+    <Compile Include="UI\BDTeamSelector.cs" />
     <Compile Include="Modules\ModuleAmmoSwitch.cs" />
     <Compile Include="Misc\BDAcTools.cs" />
     <Compile Include="Control\AIUtils.cs" />
@@ -79,7 +83,6 @@
     <Compile Include="Control\IBDAIControl.cs" />
     <Compile Include="FX\DecalEmitterScript.cs" />
     <Compile Include="FX\DecalGaplessParticleEmitter.cs" />
-    <Compile Include="FX\MissileFX.cs" />
     <Compile Include="Guidances\CruiseGuidance.cs" />
     <Compile Include="Modules\ModuleDrainEC.cs" />
     <Compile Include="Modules\ModuleMissileRearm.cs" />
@@ -141,7 +144,7 @@
     <Compile Include="Targeting\TargetSignatureData.cs" />
     <Compile Include="Modules\ModuleRadar.cs" />
     <Compile Include="Radar\RadarUtils.cs" />
-    <Compile Include="Misc\BDAEditorCategory.cs" />
+    <Compile Include="Misc\BDAEditorTools.cs" />
     <Compile Include="Modules\RadarWarningReceiver.cs" />
     <Compile Include="CounterMeasure\CMChaff.cs" />
     <Compile Include="CounterMeasure\VesselChaffInfo.cs" />
@@ -200,7 +203,6 @@
     <None Include="Distribution\GameData\BDArmory\FX\jetdriveWake.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\PenFX.mu" />
     <None Include="Distribution\GameData\BDArmory\FX\TorpWake.mu" />
-    <None Include="Distribution\GameData\BDArmory\gpsTargets.cfg" />
     <None Include="Distribution\GameData\BDArmory\KSPedia\bdac addons.ksp" />
     <None Include="Distribution\GameData\BDArmory\KSPedia\bdac ammunition.ksp" />
     <None Include="Distribution\GameData\BDArmory\KSPedia\bdac control systems.ksp" />
@@ -391,7 +393,6 @@
     <None Include="Distribution\GameData\BDArmory\Resources\BDAmmo_Universal.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\Countermeasures.cfg" />
     <None Include="Distribution\GameData\BDArmory\Resources\HighExplosive.cfg" />
-    <None Include="Distribution\GameData\BDArmory\settings.cfg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\armOff.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\armOn.ogg" />
     <None Include="Distribution\GameData\BDArmory\Sounds\Artillery_Shot.ogg" />

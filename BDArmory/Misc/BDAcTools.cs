@@ -28,7 +28,7 @@ namespace BDArmory.Misc
         }
 
         public static double Clamp(double value, double min, double max)
-        {     
+        {
             double result = value;
             if (value > max)
                 result = max;
@@ -49,7 +49,7 @@ namespace BDArmory.Misc
             {
                 string[] valueString = keyString[i].Split(',');
                 if (valueString.Length >= 2)
-                {                   
+                {
                     Vector4 key = Vector4.zero;
                     float.TryParse(valueString[0], out key.x);
                     float.TryParse(valueString[1], out key.y);
@@ -59,7 +59,7 @@ namespace BDArmory.Misc
                         float.TryParse(valueString[3], out key.w);
                     }
 
-                    resultCurve.Add(key.x, key.y, key.z, key.w);                    
+                    resultCurve.Add(key.x, key.y, key.z, key.w);
                 }
             }
             return resultCurve;
@@ -83,7 +83,6 @@ namespace BDArmory.Misc
             }
             return newIntList;
         }
-
 
         public static List<float> parseFloats(string stringOfFloats)
         {
@@ -117,12 +116,11 @@ namespace BDArmory.Misc
                 }
                 else
                 {
-                    Debug.Log("FSBDAcTools: invalid float: [len:" + array[i].Length + "] '" + array[i]+ "']");
+                    Debug.Log("FSBDAcTools: invalid float: [len:" + array[i].Length + "] '" + array[i] + "']");
                 }
             }
             return list;
         }
-
 
         public static List<string> ParseNames(string names)
         {
@@ -147,8 +145,8 @@ namespace BDArmory.Misc
             if (trimWhiteSpace)
             {
                 for (int i = 0; i < source.Count; i++)
-                {                    
-                    source[i] = source[i].Trim(' ');                    
+                {
+                    source[i] = source[i].Trim(' ');
                 }
             }
             if (prefix != string.Empty)
@@ -164,11 +162,12 @@ namespace BDArmory.Misc
                 {
                     source[i] = source[i].Replace('\\', '/');
                 }
-            }            
+            }
             return source.ToList<string>();
         }
 
         #region refresh tweakable GUI
+
         // Code from https://github.com/Swamp-Ig/KSPAPIExtensions/blob/master/Source/Utils/KSPUtils.cs#L62
 
         private static FieldInfo windowListField;
@@ -181,7 +180,7 @@ namespace BDArmory.Misc
             if (part == null)
                 return null;
 
-            // We need to do quite a bit of piss-farting about with reflection to 
+            // We need to do quite a bit of piss-farting about with reflection to
             // dig the thing out. We could just use Object.Find, but that requires hitting a heap more objects.
             UIPartActionController controller = UIPartActionController.Instance;
             if (controller == null)
@@ -201,7 +200,7 @@ namespace BDArmory.Misc
                 Debug.LogWarning("*PartUtils* Unable to find UIPartActionWindow list");
                 return null;
             }
-        foundField:
+            foundField:
 
             List<UIPartActionWindow> uiPartActionWindows = (List<UIPartActionWindow>)windowListField.GetValue(controller);
             if (uiPartActionWindows == null)
@@ -210,12 +209,13 @@ namespace BDArmory.Misc
             return uiPartActionWindows.FirstOrDefault(window => window != null && window.part == part);
         }
 
-        #endregion
+        #endregion refresh tweakable GUI
     }
 
     public class MouseEventHandler : MonoBehaviour
     {
         public delegate void GenericDelegate();
+
         public GenericDelegate mouseDownEvent;
 
         public void OnMouseDown()
@@ -255,5 +255,5 @@ namespace BDArmory.Misc
         {
             return ("(" + x + ", " + y + ")");
         }
-    }    
+    }
 }

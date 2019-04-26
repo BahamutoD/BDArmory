@@ -36,7 +36,7 @@ namespace BDArmory.FX
                 gpe.emit = false;
                 EffectBehaviour.RemoveParticleEmitter(gpe.pEmitter);
             }
-            yield return new WaitForSeconds(pEmitter.maxEnergy/10);
+            yield return new WaitForSeconds(pEmitter.maxEnergy / 10);
             Destroy(gameObject);
             yield break;
         }

@@ -60,7 +60,7 @@ namespace BDArmory.CounterMeasure
                     else
                     {
                         EffectBehaviour.AddParticleEmitter(pe.Current);
-                        pEmitters.Add(pe.Current);                     
+                        pEmitters.Add(pe.Current);
                         pe.Current.emit = true;
                     }
                 }
@@ -84,7 +84,6 @@ namespace BDArmory.CounterMeasure
 
             BDArmorySetup.numberOfParticleEmitters++;
 
-
             if (lights == null)
             {
                 lights = gameObject.GetComponentsInChildren<Light>();
@@ -102,8 +101,7 @@ namespace BDArmory.CounterMeasure
             //ksp force applier
             //gameObject.AddComponent<KSPForceApplier>().drag = 0.4f;
 
-
-            BDArmorySetup.Flares.Add(this);            
+            BDArmorySetup.Flares.Add(this);
 
             upDirection = VectorUtils.GetUpDirection(transform.position);
         }
@@ -126,7 +124,6 @@ namespace BDArmory.CounterMeasure
                 transform.rotation = Quaternion.LookRotation(velocity, upDirection);
             }
 
-
             //Particle effects
             //downforce
             Vector3 downForce = (Mathf.Clamp(velocity.magnitude, 0.1f, 150) / 150) * 20 * -upDirection;
@@ -139,7 +136,7 @@ namespace BDArmory.CounterMeasure
                 if (!gEmitter.Current.pEmitter) continue;
                 try
                 {
-                    gEmitter.Current.pEmitter.worldVelocity = 2*ParticleTurbulence.flareTurbulence + downForce;
+                    gEmitter.Current.pEmitter.worldVelocity = 2 * ParticleTurbulence.flareTurbulence + downForce;
                 }
                 catch (NullReferenceException)
                 {
@@ -163,7 +160,7 @@ namespace BDArmory.CounterMeasure
 
             //thermal decay
             thermal = Mathf.MoveTowards(thermal, minThermal,
-                ((thermal - minThermal)/lifeTime)*Time.fixedDeltaTime);
+                ((thermal - minThermal) / lifeTime) * Time.fixedDeltaTime);
 
             if (Time.time - startTime > lifeTime) //stop emitting after lifeTime seconds
             {
@@ -195,7 +192,6 @@ namespace BDArmory.CounterMeasure
                 lgt.Dispose();
             }
 
-
             if (Time.time - startTime > lifeTime + 11) //disable object after x seconds
             {
                 BDArmorySetup.numberOfParticleEmitters--;
@@ -203,27 +199,26 @@ namespace BDArmory.CounterMeasure
                 return;
             }
 
-
             //physics
             //atmospheric drag (stock)
             float simSpeedSquared = velocity.sqrMagnitude;
             Vector3 currPos = transform.position;
             const float mass = 0.001f;
             const float drag = 1f;
-            Vector3 dragForce = (0.008f*mass)*drag*0.5f*simSpeedSquared*
+            Vector3 dragForce = (0.008f * mass) * drag * 0.5f * simSpeedSquared *
                                 (float)
                                 FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(currPos),
-                                    FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody)*
+                                    FlightGlobals.getExternalTemperature(), FlightGlobals.currentMainBody) *
                                 velocity.normalized;
 
-            velocity -= (dragForce/mass)*Time.fixedDeltaTime;
+            velocity -= (dragForce / mass) * Time.fixedDeltaTime;
             //
 
             //gravity
             if (FlightGlobals.RefFrameIsRotating)
-                velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*Time.fixedDeltaTime;
+                velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * Time.fixedDeltaTime;
 
-            transform.position += velocity*Time.fixedDeltaTime;
+            transform.position += velocity * Time.fixedDeltaTime;
         }
     }
 }

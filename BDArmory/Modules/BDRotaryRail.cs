@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using BDArmory.Parts;
 using UniLinq;
 using UnityEngine;
 
@@ -16,7 +15,8 @@ namespace BDArmory.Modules
 
         [KSPField] public float rotationSpeed = 360;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Rails")] public float
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Rails")]
+        public float
             numberOfRails = 8;
 
         float railAngle;
@@ -25,14 +25,12 @@ namespace BDArmory.Modules
 
         [KSPField(isPersistant = true)] public int railIndex;
 
-
         Dictionary<int, int> missileToRailIndex;
         Dictionary<int, int> railToMissileIndex;
 
         [KSPField(isPersistant = true)] public float currentHeight;
 
         [KSPField(isPersistant = true)] public float currentLength;
-
 
         public int missileCount;
         MissileLauncher[] missileChildren;
@@ -41,7 +39,6 @@ namespace BDArmory.Modules
 
         Dictionary<Part, Vector3> comOffsets;
 
-
         float lengthInterval;
         float heightInterval;
 
@@ -49,7 +46,7 @@ namespace BDArmory.Modules
         List<Transform> heightTransforms;
         List<Transform> lengthTransforms;
         List<Transform> rails;
-        int[] railCounts = new int[] {2, 3, 4, 6, 8};
+        int[] railCounts = new int[] { 2, 3, 4, 6, 8 };
 
         [KSPField(isPersistant = true)] public float railCountIndex = 4;
 
@@ -100,7 +97,6 @@ namespace BDArmory.Modules
         {
             DecreaseRails(true);
         }
-
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height++")]
         public void HeightPlus()
@@ -155,7 +151,6 @@ namespace BDArmory.Modules
             }
             p.Dispose();
         }
-
 
         [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length++")]
         public void LengthPlus()
@@ -217,7 +212,6 @@ namespace BDArmory.Modules
             p.Dispose();
         }
 
-
         public void IncreaseRails(bool updateSym)
         {
             railCountIndex = Mathf.Min(railCountIndex + 1, railCounts.Length - 1);
@@ -263,7 +257,7 @@ namespace BDArmory.Modules
                 if (node.Current == null) continue;
                 if (node.Current.nodeType == AttachNode.NodeType.Stack && node.Current.id.ToLower().Contains("move"))
                 {
-                    node.Current.position += offset*Vector3.up;
+                    node.Current.position += offset * Vector3.up;
                 }
             }
             node.Dispose();
@@ -306,17 +300,17 @@ namespace BDArmory.Modules
             heightTransforms.Clear();
             rotationTransforms.Clear();
 
-            railAngle = 360f/(float) railAmount;
+            railAngle = 360f / (float)railAmount;
 
             for (int i = 1; i < railAmount; i++)
             {
-                GameObject newRail = (GameObject) Instantiate(rails[0].gameObject);
+                GameObject newRail = (GameObject)Instantiate(rails[0].gameObject);
                 newRail.name = "newRail";
                 newRail.transform.parent = rails[0].parent;
                 newRail.transform.localPosition = rails[0].localPosition;
                 newRail.transform.localRotation =
-                    Quaternion.AngleAxis((float) i*railAngle,
-                        rails[0].parent.InverseTransformDirection(part.transform.up))*rails[0].localRotation;
+                    Quaternion.AngleAxis((float)i * railAngle,
+                        rails[0].parent.InverseTransformDirection(part.transform.up)) * rails[0].localRotation;
                 rails.Add(newRail.transform);
             }
 
@@ -329,9 +323,11 @@ namespace BDArmory.Modules
                     case "lengthTransform":
                         lengthTransforms.Add(mt.Current);
                         break;
+
                     case "heightTransform":
                         heightTransforms.Add(mt.Current);
                         break;
+
                     case "rotationTransform":
                         rotationTransforms.Add(mt.Current);
                         break;
@@ -345,9 +341,8 @@ namespace BDArmory.Modules
             missileToRailIndex = new Dictionary<int, int>();
             railToMissileIndex = new Dictionary<int, int>();
 
-            lengthInterval = maxLength/intervals;
-            heightInterval = maxHeight/intervals;
-
+            lengthInterval = maxLength / intervals;
+            heightInterval = maxHeight / intervals;
 
             numberOfRails = railCounts[Mathf.RoundToInt(railCountIndex)];
 
@@ -375,7 +370,6 @@ namespace BDArmory.Modules
             UpdateRails(Mathf.RoundToInt(numberOfRails));
         }
 
-
         void UpdateChildrenHeight(float offset)
         {
             List<Part>.Enumerator p = part.children.GetEnumerator();
@@ -385,7 +379,7 @@ namespace BDArmory.Modules
                 Vector3 direction = p.Current.transform.position - part.transform.position;
                 direction = Vector3.ProjectOnPlane(direction, part.transform.up).normalized;
 
-                p.Current.transform.position += direction*offset;
+                p.Current.transform.position += direction * offset;
             }
             p.Dispose();
         }
@@ -409,14 +403,14 @@ namespace BDArmory.Modules
                     if (p.Current == null) continue;
                     if (p.Current.FindModuleImplementing<MissileLauncher>() && p.Current.parent == part) continue;
 
-                    p.Current.transform.position += direction*offset;
+                    p.Current.transform.position += direction * offset;
                 }
                 p.Dispose();
             }
 
             if (parentInFront)
             {
-                part.transform.position += direction*offset;
+                part.transform.position += direction * offset;
             }
         }
 
@@ -480,7 +474,7 @@ namespace BDArmory.Modules
                 int rIndex = 0;
                 for (int r = 0; r < numberOfRails; r++)
                 {
-                    Vector3 railPos = Quaternion.AngleAxis((float) r*railAngle, part.transform.up)*
+                    Vector3 railPos = Quaternion.AngleAxis((float)r * railAngle, part.transform.up) *
                                       part.transform.forward;
                     railPos += part.transform.position;
                     float sqrDist = (missileChildren[i].transform.position - railPos).sqrMagnitude;
@@ -495,7 +489,6 @@ namespace BDArmory.Modules
                 //Debug.Log("Adding to index dictionary: " + i + " : " + rIndex);
             }
         }
-
 
         void RotateToIndex(int index, bool instant)
         {
@@ -539,7 +532,7 @@ namespace BDArmory.Modules
 
             yield return new WaitForSeconds(rotationDelay);
 
-            Quaternion targetRot = Quaternion.Euler(0, 0, (float) index*-railAngle);
+            Quaternion targetRot = Quaternion.Euler(0, 0, (float)index * -railAngle);
 
             if (instant)
             {
@@ -558,7 +551,7 @@ namespace BDArmory.Modules
                     {
                         rotationTransforms[i].localRotation =
                             Quaternion.RotateTowards(rotationTransforms[i].localRotation, targetRot,
-                                rotationSpeed*Time.fixedDeltaTime);
+                                rotationSpeed * Time.fixedDeltaTime);
                     }
 
                     UpdateMissilePositions();
@@ -670,10 +663,8 @@ namespace BDArmory.Modules
                 }
             }
 
-
             //StartCoroutine(RotateToIndexAtEndOfFrame(nextRailIndex, false));
         }
-
 
         IEnumerator RotateToIndexAtEndOfFrame(int index, bool instant)
         {
@@ -687,7 +678,6 @@ namespace BDArmory.Modules
             {
                 return;
             }
-
 
             int index = IndexOfMissile(ml);
             if (index >= 0)
@@ -715,7 +705,6 @@ namespace BDArmory.Modules
 
             return -1;
         }
-
 
         public void UpdateMissileChildren()
         {
@@ -790,10 +779,9 @@ namespace BDArmory.Modules
                 ml.MissileReferenceTransform = mTf;
                 ml.rotaryRail = this;
 
-                    ml.decoupleForward = false;
-                    //ml.decoupleSpeed = Mathf.Max(ml.decoupleSpeed, 4); //removing clamp as some weapons want greater decouple speeds
-                    ml.dropTime = Mathf.Max(ml.dropTime, 0.2f);
-
+                ml.decoupleForward = false;
+                //ml.decoupleSpeed = Mathf.Max(ml.decoupleSpeed, 4); //removing clamp as some weapons want greater decouple speeds
+                ml.dropTime = Mathf.Max(ml.dropTime, 0.2f);
 
                 if (!comOffsets.ContainsKey(ml.part))
                 {
@@ -809,7 +797,6 @@ namespace BDArmory.Modules
 
             UpdateIndexDictionary();
         }
-
 
         void UpdateMissilePositions()
         {

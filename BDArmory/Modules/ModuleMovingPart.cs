@@ -9,7 +9,6 @@ namespace BDArmory.Modules
         Transform parentTransform;
         [KSPField] public string parentTransformName = string.Empty;
 
-
         bool setupComplete;
 
         Part[] children;

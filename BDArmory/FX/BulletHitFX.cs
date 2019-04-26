@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using BDArmory.Core;
-using BDArmory.Misc;
 using BDArmory.Core.Extension;
+using BDArmory.Misc;
 using UniLinq;
 using UnityEngine;
 
@@ -20,17 +20,16 @@ namespace BDArmory.FX
         public GameObject bulletHoleDecalPrefab;
         public static ObjectPool decalPool_small;
         public static ObjectPool decalPool_large;
-        public static Dictionary<Vessel,List<float>> PartsOnFire = new Dictionary<Vessel, List<float>>();
+        public static Dictionary<Vessel, List<float>> PartsOnFire = new Dictionary<Vessel, List<float>>();
         public static Queue<BulletHitFX> HitsLoaded = new Queue<BulletHitFX>();
 
         public static int MaxFiresPerVessel = 3;
         public static float FireLifeTimeInSeconds = 5f;
-        
+
         private bool disabled = false;
 
         public static void SetupShellPool()
         {
-
             GameObject templateShell_large;
             templateShell_large =
                     Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/bulletDecal/BulletDecal2"));
@@ -44,10 +43,9 @@ namespace BDArmory.FX
             templateShell_small.SetActive(false);
             if (decalPool_small == null)
                 decalPool_small = ObjectPool.CreateObjectPool(templateShell_small, BDArmorySettings.MAX_NUM_BULLET_DECALS, true, true);
-            
         }
 
-        public static void SpawnDecal(RaycastHit hit,Part hitPart, float caliber, float penetrationfactor)
+        public static void SpawnDecal(RaycastHit hit, Part hitPart, float caliber, float penetrationfactor)
         {
             if (!BDArmorySettings.BULLET_DECALS) return;
             ObjectPool decalPool_;
@@ -59,17 +57,16 @@ namespace BDArmory.FX
             else
             {
                 decalPool_ = decalPool_small;
-            }            
-            
+            }
+
             //front hit
             GameObject decalFront = decalPool_.GetPooledObject();
             if (decalFront != null && hitPart != null)
             {
                 decalFront.transform.SetParent(hitPart.transform);
-                decalFront.transform.position = hit.point + new Vector3(0.25f, 0f, 0f);                               
+                decalFront.transform.position = hit.point + new Vector3(0.25f, 0f, 0f);
                 decalFront.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
                 decalFront.SetActive(true);
-
             }
             //back hole if fully penetrated
             if (penetrationfactor >= 1)
@@ -89,11 +86,11 @@ namespace BDArmory.FX
                 }
             }
         }
-        
+
         private static bool CanFlamesBeAttached(Part hitPart)
         {
-            if (!BDArmorySettings.FIRE_FX_IN_FLIGHT && !hitPart.vessel.LandedOrSplashed || !hitPart.HasFuel()) 
-                return false;            
+            if (!BDArmorySettings.FIRE_FX_IN_FLIGHT && !hitPart.vessel.LandedOrSplashed || !hitPart.HasFuel())
+                return false;
 
             if (hitPart.vessel.LandedOrSplashed)
             {
@@ -111,13 +108,13 @@ namespace BDArmory.FX
 
             if (!PartsOnFire.ContainsKey(hitPart.vessel))
             {
-                List<float> firesList = new List<float> {Time.time};
+                List<float> firesList = new List<float> { Time.time };
 
                 PartsOnFire.Add(hitPart.vessel, firesList);
             }
             else
             {
-               PartsOnFire[hitPart.vessel].Add(Time.time);
+                PartsOnFire[hitPart.vessel].Add(Time.time);
             }
 
             return true;
@@ -202,11 +199,10 @@ namespace BDArmory.FX
             }
         }
 
-        public static void CreateBulletHit(Part hitPart,Vector3 position, RaycastHit hit, Vector3 normalDirection,
-                                            bool ricochet,float caliber,float penetrationfactor)
+        public static void CreateBulletHit(Part hitPart, Vector3 position, RaycastHit hit, Vector3 normalDirection,
+                                            bool ricochet, float caliber, float penetrationfactor)
         {
             if (HitsLoaded.Count > 5) return;
-
 
             if (decalPool_large == null || decalPool_small == null)
                 SetupShellPool();
@@ -222,13 +218,13 @@ namespace BDArmory.FX
                 go = GameDatabase.Instance.GetModel("BDArmory/FX/PenFX");
             }
 
-            if( (hitPart != null) && caliber !=0 && !hitPart.IgnoreDecal())
+            if ((hitPart != null) && caliber != 0 && !hitPart.IgnoreDecal())
             {
-                SpawnDecal(hit,hitPart,caliber,penetrationfactor); //No bullet decals for laser or ricochet
+                SpawnDecal(hit, hitPart, caliber, penetrationfactor); //No bullet decals for laser or ricochet
             }
 
             GameObject newExplosion =
-                (GameObject) Instantiate(go, position, Quaternion.LookRotation(normalDirection));
+                (GameObject)Instantiate(go, position, Quaternion.LookRotation(normalDirection));
             newExplosion.SetActive(true);
             newExplosion.AddComponent<BulletHitFX>();
             newExplosion.GetComponent<BulletHitFX>().ricochet = ricochet;
@@ -238,7 +234,7 @@ namespace BDArmory.FX
             {
                 if (pe.Current == null) continue;
                 pe.Current.emit = true;
-              
+
                 if (pe.Current.gameObject.name == "sparks")
                 {
                     pe.Current.force = (4.49f * FlightGlobals.getGeeForceAtPosition(position));
@@ -266,11 +262,11 @@ namespace BDArmory.FX
             flameObject.transform.SetParent(hitPart.transform);
             flameObject.AddComponent<DecalEmitterScript>();
 
-            if(hitPart.vessel.LandedOrSplashed && hitPart.GetFireFX() && caliber >= 100f)
+            if (hitPart.vessel.LandedOrSplashed && hitPart.GetFireFX() && caliber >= 100f)
             {
                 DecalEmitterScript.shrinkRateFlame = 0.25f;
                 DecalEmitterScript.shrinkRateSmoke = 0.125f;
-            }             
+            }
 
             foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
@@ -303,7 +299,7 @@ namespace BDArmory.FX
             foreach (var pe in flameObject.GetComponentsInChildren<KSPParticleEmitter>())
             {
                 if (!pe.useWorldSpace) continue;
-                var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();                
+                var gpe = pe.gameObject.AddComponent<DecalGaplessParticleEmitter>();
                 gpe.Emit = true;
             }
         }

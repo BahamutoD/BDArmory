@@ -17,13 +17,12 @@ namespace BDArmory.FX
         {
             get
             {
-                float x = VectorUtils.FullRangePerlinNoise(Time.time*0.5F, 0);
-                float y = VectorUtils.FullRangePerlinNoise(Time.time*1.1f, 35);
-                float z = VectorUtils.FullRangePerlinNoise(Time.time*0.75f, 70);
-                return new Vector3(x, y, z)*5;
+                float x = VectorUtils.FullRangePerlinNoise(Time.time * 0.5F, 0);
+                float y = VectorUtils.FullRangePerlinNoise(Time.time * 1.1f, 35);
+                float z = VectorUtils.FullRangePerlinNoise(Time.time * 0.75f, 70);
+                return new Vector3(x, y, z) * 5;
             }
         }
-
 
         void FixedUpdate()
         {
@@ -51,12 +50,11 @@ namespace BDArmory.FX
 
             flareTurbulence = Vector3.Lerp(flareTurbulence,
                 new Vector3(flareTurbulenceX, flareTurbulenceY, flareTurbulenceZ),
-                Random.Range(2.5f, 7.5f)*TimeWarp.fixedDeltaTime);
+                Random.Range(2.5f, 7.5f) * TimeWarp.fixedDeltaTime);
 
             //wind
 
-
-            //}	
+            //}
         }
     }
 }
