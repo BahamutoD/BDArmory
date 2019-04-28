@@ -963,6 +963,8 @@ namespace BDArmory.Radar
         /// </summary>
         public static Vector2 WorldToRadarRadial(Vector3 worldPosition, Transform referenceTransform, Rect radarRect, float maxDistance, float maxAngle)
         {
+            if (referenceTransform == null) return new Vector2();
+     
             float scale = maxDistance / (radarRect.height);
             Vector3 localPosition = referenceTransform.InverseTransformPoint(worldPosition);
             localPosition.y = 0;

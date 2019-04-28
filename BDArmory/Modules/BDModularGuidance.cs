@@ -991,10 +991,13 @@ namespace BDArmory.Modules
 
         private void AutoDestruction()
         {
-            for (int i = this.vessel.parts.Count - 1; i >= 0; i--)
+            var parts = this.vessel.Parts.ToArray();
+            for (int i = parts.Length - 1; i >= 0; i--)
             {
-                this.vessel.parts[i]?.explode();
+                parts[i]?.explode();
             }
+
+            parts = null;
         }
 
         public override void Detonate()
