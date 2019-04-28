@@ -29,6 +29,7 @@
 	* Gun safety should no longer prevent firing from aiming too close to self.
 	* Drag no longer causes bullets to speed up.
 	* Reloadable missile rail no longer permits reloading when out of ammo.
+	* Modular missiles autodestruction if missed improved
 
 v1.2.4
 * NEW FEATURES:
