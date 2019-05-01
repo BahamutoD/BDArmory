@@ -1,12 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
-using System.Text;
-using System;
-using BDArmory.Core;
 
 namespace BDArmory.CounterMeasure
 {
@@ -58,9 +58,11 @@ namespace BDArmory.CounterMeasure
                 case CountermeasureTypes.Flare:
                     DropFlare();
                     break;
+
                 case CountermeasureTypes.Chaff:
                     DropChaff();
                     break;
+
                 case CountermeasureTypes.Smoke:
                     PopSmoke();
                     break;
@@ -138,7 +140,6 @@ namespace BDArmory.CounterMeasure
             pe.Dispose();
         }
 
-
         PartResource GetCMResource()
         {
             IEnumerator<PartResource> res = part.Resources.GetEnumerator();
@@ -159,14 +160,17 @@ namespace BDArmory.CounterMeasure
                 case "flare":
                     cmType = CountermeasureTypes.Flare;
                     break;
+
                 case "chaff":
                     cmType = CountermeasureTypes.Chaff;
                     break;
+
                 case "smoke":
                     cmType = CountermeasureTypes.Smoke;
                     break;
             }
         }
+
         void SetupCM()
         {
             countermeasureType = countermeasureType.ToLower();
@@ -181,6 +185,7 @@ namespace BDArmory.CounterMeasure
                     }
                     resourceName = "CMFlare";
                     break;
+
                 case "chaff":
                     cmType = CountermeasureTypes.Chaff;
                     cmSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/smokeEject");
@@ -195,6 +200,7 @@ namespace BDArmory.CounterMeasure
                         SetupChaffPool();
                     }
                     break;
+
                 case "smoke":
                     cmType = CountermeasureTypes.Smoke;
                     cmSound = GameDatabase.Instance.GetAudioClip("BDArmory/Sounds/smokeEject");
@@ -247,7 +253,7 @@ namespace BDArmory.CounterMeasure
 
             GameObject cm = chaffPool.GetPooledObject();
             CMChaff chaff = cm.GetComponent<CMChaff>();
-            chaff.Emit(ejectTransform.position, ejectVelocity*ejectTransform.forward);
+            chaff.Emit(ejectTransform.position, ejectVelocity * ejectTransform.forward);
 
             FireParticleEffects();
         }
@@ -276,7 +282,7 @@ namespace BDArmory.CounterMeasure
                              (UnityEngine.Random.Range(-3f, 3f) * transform.forward) +
                              (UnityEngine.Random.Range(-3f, 3f) * transform.right);
             smokeCMObject.SetActive(true);
-            smokeCMObject.transform.position = ejectTransform.position + (10*ejectTransform.forward);
+            smokeCMObject.transform.position = ejectTransform.position + (10 * ejectTransform.forward);
             float longestLife = 0;
             IEnumerator<KSPParticleEmitter> emitter = smokeCMObject.GetComponentsInChildren<KSPParticleEmitter>().Cast<KSPParticleEmitter>().GetEnumerator();
             while (emitter.MoveNext())
@@ -295,7 +301,7 @@ namespace BDArmory.CounterMeasure
 
         void SetupFlarePool()
         {
-            GameObject cm = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMFlare/model"));
+            GameObject cm = (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMFlare/model"));
             cm.SetActive(false);
             cm.AddComponent<CMFlare>();
             flarePool = ObjectPool.CreateObjectPool(cm, 10, true, true);
@@ -304,7 +310,7 @@ namespace BDArmory.CounterMeasure
         void SetupSmokePool()
         {
             GameObject cm =
-                (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMSmoke/cmSmokeModel"));
+                (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMSmoke/cmSmokeModel"));
             cm.SetActive(false);
             cm.AddComponent<CMSmoke>();
 
@@ -313,13 +319,12 @@ namespace BDArmory.CounterMeasure
 
         void SetupChaffPool()
         {
-            GameObject cm = (GameObject) Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMChaff/model"));
+            GameObject cm = (GameObject)Instantiate(GameDatabase.Instance.GetModel("BDArmory/Models/CMChaff/model"));
             cm.SetActive(false);
             cm.AddComponent<CMChaff>();
 
             chaffPool = ObjectPool.CreateObjectPool(cm, 10, true, true);
         }
-
 
         // RMB info in editor
         public override string GetInfo()
@@ -330,7 +335,6 @@ namespace BDArmory.CounterMeasure
             output.Append(Environment.NewLine);
 
             return output.ToString();
-
         }
     }
 }

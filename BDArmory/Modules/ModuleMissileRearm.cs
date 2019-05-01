@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using KSP.UI.Screens;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using KSP.UI.Screens;
 using UnityEngine;
 
 namespace BDArmory.Modules
@@ -30,8 +30,9 @@ namespace BDArmory.Modules
             if (this.part.children.Count != 0)
             {
                 Debug.Log("Not Empty" + this.part.children.Count);
+                return;
             }
-            else
+            if (ammoCount >= 1)
             {
                 List<AvailablePart> availablePart = PartLoader.LoadedPartsList;
                 foreach (AvailablePart AP in availablePart)
@@ -45,9 +46,11 @@ namespace BDArmory.Modules
                                 var partNode = new ConfigNode();
                                 PartSnapshot(AP.partPrefab).CopyTo(partNode);
                                 Debug.Log("Node" + AP.partPrefab.srfAttachNode.originalPosition);
-                                CreatePart(partNode, MissileTransform.transform.position - MissileTransform.TransformDirection(AP.partPrefab.srfAttachNode.originalPosition), 
+                                CreatePart(partNode, MissileTransform.transform.position - MissileTransform.TransformDirection(AP.partPrefab.srfAttachNode.originalPosition),
                                     this.part.transform.rotation, this.part, this.part, "srfAttach");
+                                ammoCount -= 1;
                                 StartCoroutine(ResetTurret());
+                                return;
                             }
                         }
                     }
@@ -57,8 +60,6 @@ namespace BDArmory.Modules
 
         IEnumerator ResetTurret()
         {
-            ammoCount -= 1;
-
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
 
@@ -98,10 +99,9 @@ namespace BDArmory.Modules
 
         public override void OnFixedUpdate()
         {
-
         }
-        [KSPEvent(name = "Resupply", guiName = "Resupply", active = true, guiActive = false)]
 
+        [KSPEvent(name = "Resupply", guiName = "Resupply", active = true, guiActive = false)]
         public static AttachNode GetAttachNodeById(Part p, string id)
         {
             var node = id == "srfAttach" ? p.srfAttachNode : p.FindAttachNode(id);
@@ -169,7 +169,6 @@ namespace BDArmory.Modules
             newVessel.id = Guid.NewGuid();
             if (newVessel.Initialize(false))
             {
-
                 newVessel.vesselName = Vessel.AutoRename(newVessel, originatingVesselName);
                 newVessel.IgnoreGForces(10);
                 newVessel.currentStage = StageManager.RecalculateVesselStaging(newVessel);
@@ -192,7 +191,7 @@ namespace BDArmory.Modules
         public static void AwakePartModule(PartModule module)
         {
             // Private method can only be accessed via reflection when requested on the class that declares
-            // it. So, don't use type of the argument and specify it explicitly. 
+            // it. So, don't use type of the argument and specify it explicitly.
             var moduleAwakeMethod = typeof(PartModule).GetMethod(
                 "Awake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (moduleAwakeMethod != null)
@@ -208,7 +207,7 @@ namespace BDArmory.Modules
         public static void ResetPartModule(PartModule module)
         {
             // Private method can only be accessed via reflection when requested on the class that declares
-            // it. So, don't use type of the argument and specify it explicitly. 
+            // it. So, don't use type of the argument and specify it explicitly.
             var moduleResetMethod = typeof(PartModule).GetMethod(
                 "UpdateMissileChildren", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (moduleResetMethod != null)
@@ -548,4 +547,3 @@ namespace BDArmory.Modules
         }
     }
 }
-

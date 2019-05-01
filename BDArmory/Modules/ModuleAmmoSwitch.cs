@@ -9,47 +9,60 @@ namespace BDArmory.Modules
     {
         [KSPField]
         public string resourceNames = "ElectricCharge;LiquidFuel,Oxidizer;MonoPropellant";
+
         [KSPField]
         public string resourceAmounts = "100;75,25;200";
+
         [KSPField]
         public string initialResourceAmounts = "";
+
         [KSPField]
         public float basePartMass = 0.25f;
+
         [KSPField]
         public string tankMass = "0;0;0;0";
+
         [KSPField]
         public string tankCost = "0; 0; 0; 0";
+
         [KSPField]
         public bool displayCurrentTankCost = false;
+
         [KSPField]
         public bool hasGUI = true;
+
         [KSPField]
         public bool availableInFlight = false;
+
         [KSPField]
         public bool availableInEditor = true;
-        
+
         [KSPField(isPersistant = true)]
         public int selectedTankSetup = -1;
+
         [KSPField(isPersistant = true)]
         public bool hasLaunched = false;
+
         [KSPField]
         public bool showInfo = true; // if false, does not feed info to the part list pop up info menu
 
         [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Added cost")]
         public float addedCost = 0f;
+
         [KSPField(guiActive = false, guiActiveEditor = true, guiName = "Dry mass")]
         public float dryMassInfo = 0f;
         private List<BDAcUniversalAmmo> tankList;
         private List<double> weightList;
         private List<double> tankCostList;
         private bool initialized = false;
-        [KSPField (isPersistant = true)]
+
+        [KSPField(isPersistant = true)]
         public bool configLoaded = false;
 
-        UIPartActionWindow tweakableUI;        
+        UIPartActionWindow tweakableUI;
 
         public override void OnStart(PartModule.StartState state)
-        {            
+        {
             initializeData();
             if (selectedTankSetup == -1)
             {
@@ -124,7 +137,7 @@ namespace BDArmory.Modules
             {
                 selectedTankSetup = 0;
             }
-            assignResourcesToPart(true);            
+            assignResourcesToPart(true);
         }
 
         [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Previous tank setup")]
@@ -133,13 +146,13 @@ namespace BDArmory.Modules
             selectedTankSetup--;
             if (selectedTankSetup < 0)
             {
-                selectedTankSetup = tankList.Count-1;
+                selectedTankSetup = tankList.Count - 1;
             }
             assignResourcesToPart(true);
         }
 
         public void selectTankSetup(int i, bool calledByPlayer)
-        {            
+        {
             initializeData();
             if (selectedTankSetup != i)
             {
@@ -149,7 +162,7 @@ namespace BDArmory.Modules
         }
 
         private void assignResourcesToPart(bool calledByPlayer)
-        {            
+        {
             // destroying a resource messes up the gui in editor, but not in flight.
             setupTankInPart(part, calledByPlayer);
             if (HighLogic.LoadedSceneIsEditor)
@@ -188,7 +201,7 @@ namespace BDArmory.Modules
             //for (int i = 0; i < partResources.Length; i++)
             //{
             //    DestroyImmediate(partResources[i]);
-            //}            
+            //}
 
             for (int tankCount = 0; tankCount < tankList.Count; tankCount++)
             {
@@ -205,14 +218,14 @@ namespace BDArmory.Modules
                             if (calledByPlayer && !HighLogic.LoadedSceneIsEditor)
                             {
                                 newResourceNode.AddValue("amount", 0.0f);
-                            } 
+                            }
                             else
                             {
                                 newResourceNode.AddValue("amount", tankList[tankCount].resources[resourceCount].amount);
                             }
 
                             //Debug.Log("add node to part");
-                            currentPart.AddResource(newResourceNode);                          
+                            currentPart.AddResource(newResourceNode);
                         }
                         else
                         {
@@ -298,7 +311,7 @@ namespace BDArmory.Modules
                     }
                     catch
                     {
-                        Debug.Log("BDAcAmmoSwitch: error parsing resource amount " + tankCount + "/" + amountCount + ": '" + resourceTankArray[amountCount] + "': '" + resourceAmountArray[amountCount].Trim()+"'");
+                        Debug.Log("BDAcAmmoSwitch: error parsing resource amount " + tankCount + "/" + amountCount + ": '" + resourceTankArray[amountCount] + "': '" + resourceAmountArray[amountCount].Trim() + "'");
                     }
                 }
             }
@@ -319,12 +332,12 @@ namespace BDArmory.Modules
                         if (nameCount < resourceList[tankCount].Count)
                         {
                             newResource.maxAmount = resourceList[tankCount][nameCount];
-                            newResource.amount    = initialResourceList[tankCount][nameCount];
+                            newResource.amount = initialResourceList[tankCount][nameCount];
                         }
                     }
                     newTank.resources.Add(newResource);
                 }
-            }            
+            }
         }
 
         public override string GetInfo()
@@ -385,5 +398,4 @@ namespace BDArmory.Modules
             ratio = 1f;
         }
     }
-
 }

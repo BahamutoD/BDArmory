@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using KSP.UI.Screens;
-using BDArmory.Radar;
-using BDArmory.Parts;
 using BDArmory.Misc;
 using BDArmory.Modules;
+using BDArmory.Radar;
+using KSP.UI.Screens;
+using UnityEngine;
 
 namespace BDArmory.UI
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    class BDAEditorAnalysisWindow : MonoBehaviour
+    internal class BDAEditorAnalysisWindow : MonoBehaviour
     {
-
         public static BDAEditorAnalysisWindow Instance = null;
         private ApplicationLauncherButton toolbarButton = null;
 
@@ -50,10 +48,10 @@ namespace BDArmory.UI
 
         private void FillRadarList()
         {
-            radars = BDAEditorCategory.getRadars().ToArray();
+            radars = BDAEditorTools.getRadars().ToArray();
 
             // first pass, then sort
-            for (int i=0; i<radars.Length; i++)
+            for (int i = 0; i < radars.Length; i++)
             {
                 if (string.IsNullOrEmpty(radars[i].radarName)) radars[i].radarName = radars[i].part?.partInfo?.title;
                 GUIContent gui = new GUIContent(radars[i].radarName);
@@ -72,7 +70,6 @@ namespace BDArmory.UI
             radarBoxText.text = "Select Radar... **";
         }
 
-
         private void OnEditorShipModifiedEvent(ShipConstruct data)
         {
             takeSnapshot = true;
@@ -89,7 +86,7 @@ namespace BDArmory.UI
                 ApplicationLauncher.Instance.RemoveModApplication(toolbarButton);
                 toolbarButton = null;
             }
-         }
+        }
 
         IEnumerator ToolbarButtonRoutine()
         {
@@ -133,7 +130,7 @@ namespace BDArmory.UI
         {
             if (showRcsWindow)
             {
-               windowRect = GUI.Window(this.GetInstanceID(), windowRect, WindowRcs, windowTitle, BDArmorySetup.BDGuiSkin.window);
+                windowRect = GUI.Window(this.GetInstanceID(), windowRect, WindowRcs, windowTitle, BDArmorySetup.BDGuiSkin.window);
             }
 
             PreventClickThrough();
@@ -148,7 +145,7 @@ namespace BDArmory.UI
 
             GUI.Label(new Rect(10, 40, 200, 20), "Frontal", BDArmorySetup.BDGuiSkin.box);
             GUI.Label(new Rect(220, 40, 200, 20), "Lateral", BDArmorySetup.BDGuiSkin.box);
-            GUI.Label(new Rect(430, 40, 200, 20), "Ventral",  BDArmorySetup.BDGuiSkin.box);
+            GUI.Label(new Rect(430, 40, 200, 20), "Ventral", BDArmorySetup.BDGuiSkin.box);
 
             if (takeSnapshot)
                 takeRadarSnapshot();
@@ -169,14 +166,13 @@ namespace BDArmory.UI
             else
                 GUI.DrawTexture(new Rect(430, 70, 200, 200), RadarUtils.GetTextureVentral45, ScaleMode.StretchToFill);
 
-
             GUI.Label(new Rect(10, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsFrontal, RadarUtils.rcsFrontal45)) + " m^2", BDArmorySetup.BDGuiSkin.label);
             GUI.Label(new Rect(220, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsLateral, RadarUtils.rcsLateral45)) + " m^2", BDArmorySetup.BDGuiSkin.label);
             GUI.Label(new Rect(430, 275, 200, 20), string.Format("{0:0.00}", Mathf.Max(RadarUtils.rcsVentral, RadarUtils.rcsVentral45)) + " m^2", BDArmorySetup.BDGuiSkin.label);
 
             GUIStyle style = BDArmorySetup.BDGuiSkin.label;
             style.fontStyle = FontStyle.Bold;
-            GUI.Label(new Rect(10, 300, 600, 20), "Base radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal) , style);
+            GUI.Label(new Rect(10, 300, 600, 20), "Base radar cross section for vessel: " + string.Format("{0:0.00} m^2 (without ECM/countermeasures)", RadarUtils.rcsTotal), style);
             GUI.Label(new Rect(10, 320, 600, 20), "Total radar cross section for vessel: " + string.Format("{0:0.00} m^2 (with RCS reduction/stealth/ground clutter)", RadarUtils.rcsTotal * rcsReductionFactor * rcsGCF), style);
 
             style.fontStyle = FontStyle.Normal;
@@ -194,7 +190,7 @@ namespace BDArmory.UI
                 listStyle.fixedHeight = 18; //make list contents slightly smaller
                 radarBox = new BDGUIComboBox(new Rect(10, 350, 600, 20), new Rect(10, 350, 250, 20), radarBoxText, radarsGUI, 124, listStyle);
             }
-            
+
             int selected_index = radarBox.Show();
 
             if ((selected_index != previous_index) || (bNewValue != bLandedSplashed))
@@ -224,7 +220,6 @@ namespace BDArmory.UI
                                 break;
                             }
                         }
-
                     }
                     else
                     {
@@ -242,7 +237,6 @@ namespace BDArmory.UI
                                 break;
                             }
                         }
-
                     }
                     else
                     {
@@ -258,7 +252,6 @@ namespace BDArmory.UI
             GUI.DragWindow();
             BDGUIUtils.RepositionWindow(ref windowRect);
         }
-
 
         void takeRadarSnapshot()
         {
@@ -294,9 +287,8 @@ namespace BDArmory.UI
                 rcsReductionFactor = Mathf.Clamp((rcsReductionFactor * rcsCount), 0.0f, 1);    //same formula as in VesselECMJInfo must be used here!
         }
 
-
-        /// <summary> 
-        /// Lock the model if our own window is shown and has cursor focus to prevent click-through. 
+        /// <summary>
+        /// Lock the model if our own window is shown and has cursor focus to prevent click-through.
         /// Code adapted from FAR Editor GUI
         /// </summary>
         private void PreventClickThrough()
@@ -324,14 +316,11 @@ namespace BDArmory.UI
             }
         }
 
-
         private Vector3 GetMousePos()
         {
             Vector3 mousePos = Input.mousePosition;
             mousePos.y = Screen.height - mousePos.y;
             return mousePos;
         }
-
-
     } //EditorRCsWindow
 }

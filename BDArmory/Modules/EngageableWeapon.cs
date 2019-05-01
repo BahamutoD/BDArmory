@@ -4,6 +4,7 @@ namespace BDArmory.Modules
     {
         [KSPField(isPersistant = true)]
         public bool engageEnabled = true;
+
         // Weapon usage settings
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Range Min"),
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 100f, scene = UI_Scene.Editor)]
@@ -29,21 +30,20 @@ namespace BDArmory.Modules
         UI_Toggle(disabledText = "false", enabledText = "true")]
         public bool engageSLW = true;
 
-        [KSPEvent( guiActive = true, guiActiveEditor = true, guiName = "Disable Engage Options", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Disable Engage Options", active = true)]
         public void ToggleEngageOptions()
         {
-            
             engageEnabled = !engageEnabled;
 
             if (engageEnabled == false)
             {
-                Events["ToggleEngageOptions"].guiName = "Enable Engage Options";        
+                Events["ToggleEngageOptions"].guiName = "Enable Engage Options";
             }
             else
             {
                 Events["ToggleEngageOptions"].guiName = "Disable Engage Options";
             }
-            
+
             Fields["engageRangeMin"].guiActive = engageEnabled;
             Fields["engageRangeMin"].guiActiveEditor = engageEnabled;
             Fields["engageRangeMax"].guiActive = engageEnabled;
@@ -59,6 +59,7 @@ namespace BDArmory.Modules
 
             Misc.Misc.RefreshAssociatedWindows(part);
         }
+
         public void OnRangeUpdated(BaseField field, object obj)
         {
             // ensure max >= min
@@ -68,7 +69,6 @@ namespace BDArmory.Modules
 
         protected void InitializeEngagementRange(float min, float max)
         {
-
             UI_FloatRange rangeMin = (UI_FloatRange)Fields["engageRangeMin"].uiControlEditor;
             rangeMin.minValue = min;
             rangeMin.maxValue = max;
@@ -88,7 +88,7 @@ namespace BDArmory.Modules
                 engageRangeMax = max;
             }
         }
-        
+
         //implementations from Interface
         public float GetEngagementRangeMin()
         {
@@ -114,17 +114,18 @@ namespace BDArmory.Modules
         {
             return engageGround;
         }
+
         public bool GetEngageSLWTargets()
         {
             return engageSLW;
         }
 
-		[KSPField(isPersistant = true)]
-		public string shortName = string.Empty;
+        [KSPField(isPersistant = true)]
+        public string shortName = string.Empty;
 
-		public string GetShortName()
-		{
-			return shortName;
-		}
-	}
+        public string GetShortName()
+        {
+            return shortName;
+        }
+    }
 }

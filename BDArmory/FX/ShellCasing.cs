@@ -1,5 +1,4 @@
 using BDArmory.Core;
-using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory.FX
@@ -18,12 +17,12 @@ namespace BDArmory.FX
         {
             startTime = Time.time;
             velocity = initialV;
-            velocity += transform.rotation*
+            velocity += transform.rotation *
                         new Vector3(Random.Range(-.1f, .1f), Random.Range(-.1f, .1f),
                             Random.Range(6f, 8f));
             angularVelocity =
                 new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f),
-                    Random.Range(-10f, 10f))*10;
+                    Random.Range(-10f, 10f)) * 10;
 
             atmDensity =
                 (float)
@@ -40,24 +39,24 @@ namespace BDArmory.FX
             }
 
             //gravity
-            velocity += FlightGlobals.getGeeForceAtPosition(transform.position)*TimeWarp.fixedDeltaTime
+            velocity += FlightGlobals.getGeeForceAtPosition(transform.position) * TimeWarp.fixedDeltaTime
                 + Krakensbane.GetLastCorrection();
 
             //drag
-            velocity -= 0.005f*(velocity + Krakensbane.GetFrameVelocityV3f())*atmDensity;
+            velocity -= 0.005f * (velocity + Krakensbane.GetFrameVelocityV3f()) * atmDensity;
 
-            transform.rotation *= Quaternion.Euler(angularVelocity*TimeWarp.fixedDeltaTime);
-            transform.position += velocity*TimeWarp.deltaTime;
+            transform.rotation *= Quaternion.Euler(angularVelocity * TimeWarp.fixedDeltaTime);
+            transform.position += velocity * TimeWarp.deltaTime;
 
             if (BDArmorySettings.SHELL_COLLISIONS)
             {
                 RaycastHit hit;
-                if (Physics.Linecast(transform.position, transform.position + velocity*Time.fixedDeltaTime, out hit,
+                if (Physics.Linecast(transform.position, transform.position + velocity * Time.fixedDeltaTime, out hit,
                     557057))
                 {
                     velocity = Vector3.Reflect(velocity, hit.normal);
                     velocity *= 0.55f;
-                    velocity = Quaternion.AngleAxis(Random.Range(0f, 90f), Random.onUnitSphere)*
+                    velocity = Quaternion.AngleAxis(Random.Range(0f, 90f), Random.onUnitSphere) *
                                velocity;
                 }
             }

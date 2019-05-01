@@ -1,4 +1,37 @@
-﻿v1.2.4
+﻿v1.3.0
+* NEW FEATURES:
+	* Multiple teams are now supported by BDA.
+		* Probably breaks ALL the existing addons.
+			The new property is `Team` instead of `team`.
+			Review all existing references and check whether the check is for the same/different team (`==`/`!=`) or enemy/ally (use `IsEnemy` and `IsFriendly`).
+			`TargetDatabase` and `GPSTargets` have gone private and are not guaranteed to contain all the teams anyway. 
+			Use `TargetList` and `GPSTargetList` instead.
+		* Will lose existing saved GPS targets.
+		* Right-click the team button to customize the teams in-game.
+	* Ammo gauges. (thanks to @SuicidalInsanity)
+		* Disabled by default, enable in BDA settings.
+	* Editor subcategories.
+		* Disabled by default, enable in settings or by right clicking the category button.
+		* Any part specifying a `bdacategory` will be accordingly categorized.
+		* Other parts can be inferred from part modules.
+* ENHANCEMENTS:
+	* Recompiled for KSP 1.7.0
+	* Wing commander formation parameters can once again be configured in editor on the weapon manager.
+	* Improved gun ballistic estimation.
+	* BDA will show a small version number on weapon manager.
+* FIXES
+	* AI pilot should now use torpedoes.
+	* Weapons will revert to default weapon group on blank weapon group entry.
+	* Missiles fired from turrets will obey drop time and decouple direction.
+	* Guns with air detonation (flak) should work now. (thanks to @SuicidalInsanity)
+	* Guard mode no longer stops firing at passed out pilots. (thanks to @SuicidalInsanity)
+	* Missile turrets should properly stop tracking in various circumstances.
+	* Gun safety should no longer prevent firing from aiming too close to self.
+	* Drag no longer causes bullets to speed up.
+	* Reloadable missile rail no longer permits reloading when out of ammo.
+	* Modular missiles autodestruction if missed improved
+
+v1.2.4
 * NEW FEATURES:
 	* Weapons groups - different weapons firing in parallel(thanks to @SuicidalInsanity)
 * ENHANCEMENTS:

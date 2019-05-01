@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using BDArmory.Core.Extension;
 using BDArmory.FX;
 using BDArmory.Misc;
-using BDArmory.Parts;
 using UniLinq;
 using UnityEngine;
 
@@ -22,20 +21,19 @@ namespace BDArmory.Modules
 
         [KSPField(isPersistant = false)]
         public string subExplSoundPath = "BDArmory/Sounds/subExplode";
-        
+
         [KSPField(isPersistant = false)]
         public float deployDelay = 2.5f;
-        
+
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Deploy Altitude"),
          UI_FloatRange(minValue = 100f, maxValue = 1000f, stepIncrement = 10f, scene = UI_Scene.Editor)]
         public float deployAltitude = 400;
 
         [KSPField(isPersistant = false)]
         public float submunitionMaxSpeed = 10;
-        
+
         [KSPField(isPersistant = false)]
         public bool swapCollidersOnDeploy = true;
-
 
         public override void OnStart(StartState state)
         {
@@ -55,9 +53,8 @@ namespace BDArmory.Modules
                         subRb = sub.Current.gameObject.AddComponent<Rigidbody>();
                     }
 
-                    subRb.isKinematic = true;                            
-                    subRb.mass = part.mass / part.FindModelTransforms("submunition").Length;                    
-
+                    subRb.isKinematic = true;
+                    subRb.mass = part.mass / part.FindModelTransforms("submunition").Length;
                 }
                 sub.Current.gameObject.SetActive(false);
             }
@@ -80,13 +77,13 @@ namespace BDArmory.Modules
             }
             fairing.Dispose();
 
-            missileLauncher = part.GetComponent<MissileLauncher>();            
+            missileLauncher = part.GetComponent<MissileLauncher>();
         }
 
         public override void OnFixedUpdate()
         {
             if (missileLauncher != null && missileLauncher.HasFired &&
-                missileLauncher.TimeIndex > deployDelay && 
+                missileLauncher.TimeIndex > deployDelay &&
                 !deployed && AltitudeTrigger())
             {
                 DeploySubmunitions();
@@ -111,7 +108,7 @@ namespace BDArmory.Modules
             }
 
             missileLauncher.sfAudioSource.priority = 999;
-            
+
             List<GameObject>.Enumerator sub = submunitions.GetEnumerator();
             while (sub.MoveNext())
             {
@@ -122,7 +119,7 @@ namespace BDArmory.Modules
                 Rigidbody subRB = sub.Current.GetComponent<Rigidbody>();
                 subRB.isKinematic = false;
                 subRB.velocity = part.rb.velocity + Krakensbane.GetFrameVelocityV3f() +
-                                 (UnityEngine.Random.Range(submunitionMaxSpeed/10, submunitionMaxSpeed)*direction);
+                                 (UnityEngine.Random.Range(submunitionMaxSpeed / 10, submunitionMaxSpeed) * direction);
 
                 Submunition subScript = sub.Current.AddComponent<Submunition>();
                 subScript.enabled = true;
@@ -142,7 +139,7 @@ namespace BDArmory.Modules
                 Vector3 direction = (fairing.Current.transform.position - part.transform.position).normalized;
                 Rigidbody fRB = fairing.Current.GetComponent<Rigidbody>();
                 fRB.isKinematic = false;
-                fRB.velocity = part.rb.velocity + Krakensbane.GetFrameVelocityV3f() + ((submunitionMaxSpeed + 2)*direction);
+                fRB.velocity = part.rb.velocity + Krakensbane.GetFrameVelocityV3f() + ((submunitionMaxSpeed + 2) * direction);
                 fairing.Current.AddComponent<KSPForceApplier>();
                 fairing.Current.GetComponent<KSPForceApplier>().drag = 0.2f;
                 ClusterBombFairing fairingScript = fairing.Current.AddComponent<ClusterBombFairing>();
@@ -156,7 +153,6 @@ namespace BDArmory.Modules
 
             part.Destroy();
         }
-
 
         bool AltitudeTrigger()
         {
@@ -224,7 +220,7 @@ namespace BDArmory.Modules
                     Part hitPart = null;
                     try
                     {
-                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();                            
+                        hitPart = hit.collider.gameObject.GetComponentInParent<Part>();
                     }
                     catch (NullReferenceException)
                     {
@@ -240,7 +236,6 @@ namespace BDArmory.Modules
                     {
                         Detonate(currPosition);
                     }
-                        
                 }
                 else if (FlightGlobals.getAltitudeAtPos(currPosition) <= 0)
                 {
@@ -253,8 +248,8 @@ namespace BDArmory.Modules
 
         void Detonate(Vector3 pos)
         {
-            ExplosionFx.CreateExplosion(pos, blastForce, subExplModelPath, subExplSoundPath,true);
-            Destroy(gameObject); 
+            ExplosionFx.CreateExplosion(pos, blastForce, subExplModelPath, subExplSoundPath, true);
+            Destroy(gameObject);
         }
 
         private bool CheckBuildingHit(RaycastHit hit)
@@ -271,7 +266,6 @@ namespace BDArmory.Modules
                 return true;
             }
             return false;
-
         }
     }
 

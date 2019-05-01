@@ -12,7 +12,7 @@ namespace BDArmory.Misc
         IEnumerator SelfDestructRoutine()
         {
             IEnumerator<Collider> col = gameObject.GetComponentsInChildren<Collider>().Cast<Collider>().GetEnumerator();
-            while (col.MoveNext() )
+            while (col.MoveNext())
             {
                 if (col.Current == null) continue;
                 col.Current.enabled = false;
@@ -29,7 +29,7 @@ namespace BDArmory.Misc
             rb = gameObject.AddComponent<Rigidbody>();
             gameObject.AddComponent<KSPForceApplier>();
             rb.velocity = startVelocity;
-            rb.velocity += ejectSpeed*transform.forward;
+            rb.velocity += ejectSpeed * transform.forward;
 
             StartCoroutine(SelfDestructRoutine());
         }

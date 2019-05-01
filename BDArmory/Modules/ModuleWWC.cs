@@ -8,7 +8,6 @@ namespace BDArmory.Modules
          UI_FloatRange(controlEnabled = true, scene = UI_Scene.All, minValue = 0f, maxValue = -200f, stepIncrement = 1f)]
         public float CutOffDepth = -5;
 
-
         public void Update()
         {
             if (HighLogic.LoadedSceneIsFlight && vessel.altitude < CutOffDepth)

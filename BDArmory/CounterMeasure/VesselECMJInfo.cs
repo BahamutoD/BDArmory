@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using BDArmory.Modules;
-using BDArmory.Parts;
-using BDArmory.UI;
 using UnityEngine;
 
 namespace BDArmory.CounterMeasure
@@ -40,7 +38,6 @@ namespace BDArmory.CounterMeasure
         {
             get { return rcsr; }
         }
-
 
         void Awake()
         {
@@ -130,12 +127,12 @@ namespace BDArmory.CounterMeasure
                 if (jammer.Current == null) continue;
                 if (jammer.Current.signalSpam)
                 {
-                    totaljStrength += jSpamFactor* jammer.Current.jammerStrength;
+                    totaljStrength += jSpamFactor * jammer.Current.jammerStrength;
                     jSpamFactor *= 0.75f;
                 }
                 if (jammer.Current.lockBreaker)
                 {
-                    totalLBstrength += lbreakFactor* jammer.Current.lockBreakerStrength;
+                    totalLBstrength += lbreakFactor * jammer.Current.lockBreakerStrength;
                     lbreakFactor *= 0.65f;
                 }
                 if (jammer.Current.rcsReduction)
@@ -151,7 +148,7 @@ namespace BDArmory.CounterMeasure
 
             if (rcsrCount > 0)
             {
-                rcsr = Mathf.Clamp((rcsrTotal*rcsrCount), 0.0f, 1); //allow for 100% stealth (cloaking device)
+                rcsr = Mathf.Clamp((rcsrTotal * rcsrCount), 0.0f, 1); //allow for 100% stealth (cloaking device)
             }
             else
             {
@@ -194,6 +191,5 @@ namespace BDArmory.CounterMeasure
             jam.Dispose();
             UpdateJammerStrength();
         }
-
     }
 }

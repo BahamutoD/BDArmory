@@ -9,13 +9,11 @@ using BDArmory.UI;
 using KSP.UI.Screens;
 using UniLinq;
 using UnityEngine;
-using VehiclePhysics;
 
 namespace BDArmory.Modules
 {
     public class BDModularGuidance : MissileBase
     {
-        
         private bool _missileIgnited;
         private int _nextStage = 1;
 
@@ -33,13 +31,12 @@ namespace BDArmory.Modules
 
         [KSPField]
         public string ForwardTransform = "ForwardNegative";
+
         [KSPField]
         public string UpTransform = "RightPositive";
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
         public string WeaponName;
-
-       
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Guidance Type ", guiActiveEditor = true)]
         public string GuidanceLabel = "AGM/STS";
@@ -68,9 +65,8 @@ namespace BDArmory.Modules
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steer Factor"), UI_FloatRange(minValue = 0.1f, maxValue = 20f, stepIncrement = .1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float SteerMult = 10;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Roll Correction"),UI_Toggle (controlEnabled = true, enabledText = "Roll enabled", disabledText = "Roll disabled" , scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Roll Correction"), UI_Toggle(controlEnabled = true, enabledText = "Roll enabled", disabledText = "Roll disabled", scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public bool RollCorrection = false;
-
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Time Between Stages"),
          UI_FloatRange(minValue = 0f, maxValue = 5f, stepIncrement = 0.5f, scene = UI_Scene.Editor)]
@@ -79,6 +75,18 @@ namespace BDArmory.Modules
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Min Speed before guidance"),
          UI_FloatRange(minValue = 0f, maxValue = 1000f, stepIncrement = 50f, scene = UI_Scene.Editor)]
         public float MinSpeedGuidance = 200f;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Clearance radius", advancedTweakable = true),
+         UI_FloatRange(minValue = 0f, maxValue = 5f, stepIncrement = 0.05f, scene = UI_Scene.Editor)]
+        public float clearanceRadius = 0.14f;
+
+        public override float ClearanceRadius => clearanceRadius;
+
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Clearance length", advancedTweakable = true),
+         UI_FloatRange(minValue = 0f, maxValue = 5f, stepIncrement = 0.05f, scene = UI_Scene.Editor)]
+        public float clearanceLength = 0.14f;
+
+        public override float ClearanceLength => clearanceLength;
 
         private Vector3 initialMissileRollPlane;
         private Vector3 initialMissileForward;
@@ -89,15 +97,16 @@ namespace BDArmory.Modules
         private double lastRollAngle;
         private double angularVelocity;
         private double angularAcceleration;
+
         private double lasAngularVelocity
             ;
 
-        #endregion
+        #endregion KSP FIELDS
 
         public TransformAxisVectors ForwardTransformAxis { get; set; }
         public TransformAxisVectors UpTransformAxis { get; set; }
 
-        public float Mass => (float) vessel.totalMass;
+        public float Mass => (float)vessel.totalMass;
 
         public enum TransformAxisVectors
         {
@@ -108,6 +117,7 @@ namespace BDArmory.Modules
             RightPositive,
             RightNegative
         }
+
         private void RefreshGuidanceMode()
         {
             switch (GuidanceIndex)
@@ -116,14 +126,17 @@ namespace BDArmory.Modules
                     GuidanceMode = GuidanceModes.AAMPure;
                     GuidanceLabel = "AAM";
                     break;
+
                 case 2:
                     GuidanceMode = GuidanceModes.AGM;
                     GuidanceLabel = "AGM/STS";
                     break;
+
                 case 3:
                     GuidanceMode = GuidanceModes.Cruise;
                     GuidanceLabel = "Cruise";
                     break;
+
                 case 4:
                     GuidanceMode = GuidanceModes.AGMBallistic;
                     GuidanceLabel = "Ballistic";
@@ -154,9 +167,9 @@ namespace BDArmory.Modules
             }
             Misc.Misc.RefreshAssociatedWindows(part);
         }
+
         public override void OnFixedUpdate()
         {
-
             if (HasFired && !HasExploded)
             {
                 UpdateGuidance();
@@ -278,7 +291,6 @@ namespace BDArmory.Modules
                 if (_targetDecoupler.part.children.Count == 0) return;
                 _vesselParts.Clear();
                 DisableRecursiveFlow(_targetDecoupler.part.children);
-
             }
         }
 
@@ -302,20 +314,19 @@ namespace BDArmory.Modules
 
         private bool ShouldExecuteNextStage()
         {
-           
             if (!_missileIgnited) return false;
             if (TimeIndex < 1) return false;
 
             // Replaced Linq expression...
             List<Part>.Enumerator parts = vessel.parts.GetEnumerator();
-         
+
             while (parts.MoveNext())
             {
                 if (parts.Current == null || !IsEngine(parts.Current)) continue;
                 if (EngineIgnitedAndHasFuel(parts.Current))
                 {
                     return false;
-                }  
+                }
             }
             parts.Dispose();
 
@@ -325,7 +336,7 @@ namespace BDArmory.Modules
                 MissileState = MissileStates.PostThrust;
                 return false;
             }
-              
+
             return true;
         }
 
@@ -344,7 +355,7 @@ namespace BDArmory.Modules
         public static bool EngineIgnitedAndHasFuel(Part p)
         {
             List<PartModule>.Enumerator m = p.Modules.GetEnumerator();
-            
+
             while (m.MoveNext())
             {
                 PartModule pm = m.Current;
@@ -381,7 +392,6 @@ namespace BDArmory.Modules
 
             activeRadarRange = ActiveRadarRange;
 
-
             //TODO: BDModularGuidance should be configurable?
             heatThreshold = 50;
             lockedSensorFOV = 5;
@@ -395,7 +405,6 @@ namespace BDArmory.Modules
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
                     Debug.Log("[BDArmory]: OnStart missile " + shortName + ": setting default locktrackcurve with maxrange/minrcs: " + activeRadarLockTrackCurve.maxTime + "/" + RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
             }
-           
 
             this._cruiseGuidance = new CruiseGuidance(this);
         }
@@ -432,7 +441,6 @@ namespace BDArmory.Modules
                 Events["SwitchTargetingMode"].guiActiveEditor = false;
                 Events["SwitchGuidanceMode"].guiActiveEditor = false;
                 SetMissileTransform();
-
             }
 
             UI_FloatRange staticMin = (UI_FloatRange)Fields["minStaticLaunchRange"].uiControlEditor;
@@ -449,7 +457,6 @@ namespace BDArmory.Modules
             UI_FloatRange stageOnProximity = (UI_FloatRange)Fields["StageToTriggerOnProximity"].uiControlEditor;
             stageOnProximity.onFieldChanged = OnStageOnProximity;
 
-
             OnStageOnProximity(Fields["StageToTriggerOnProximity"], null);
             InitializeEngagementRange(minStaticLaunchRange, maxStaticLaunchRange);
         }
@@ -460,7 +467,7 @@ namespace BDArmory.Modules
 
             if (StageToTriggerOnProximity != 0)
             {
-                detonationDistance = (UI_FloatRange) Fields["DetonationDistance"].uiControlEditor;
+                detonationDistance = (UI_FloatRange)Fields["DetonationDistance"].uiControlEditor;
 
                 detonationDistance.maxValue = 8000;
 
@@ -497,7 +504,6 @@ namespace BDArmory.Modules
             Misc.Misc.RefreshAssociatedWindows(part);
         }
 
-
         private void OnDestroy()
         {
             WeaponNameWindow.OnActionGroupEditorOpened.Remove(OnActionGroupEditorOpened);
@@ -508,9 +514,9 @@ namespace BDArmory.Modules
         private void SetMissileTransform()
         {
             MissileReferenceTransform = part.transform;
-            ForwardTransformAxis = (TransformAxisVectors) Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
+            ForwardTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), ForwardTransform);
             UpTransformAxis = (TransformAxisVectors)Enum.Parse(typeof(TransformAxisVectors), UpTransform);
-        }      
+        }
 
         void UpdateGuidance()
         {
@@ -526,27 +532,32 @@ namespace BDArmory.Modules
                             TargetAcceleration = _targetVessel.acceleration;
                         }
                         break;
+
                     case TargetingModes.Radar:
                         UpdateRadarTarget();
                         break;
+
                     case TargetingModes.Heat:
                         UpdateHeatTarget();
                         break;
+
                     case TargetingModes.Laser:
                         UpdateLaserTarget();
                         break;
+
                     case TargetingModes.Gps:
-                         UpdateGPSTarget();
+                        UpdateGPSTarget();
                         break;
+
                     case TargetingModes.AntiRad:
                         UpdateAntiRadiationTarget();
                         break;
+
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
             }
-           
-        }        
+        }
 
         private Vector3 AAMGuidance()
         {
@@ -558,7 +569,7 @@ namespace BDArmory.Modules
                 TimeToImpact = timeToImpact;
                 if (Vector3.Angle(aamTarget - vessel.CoM, vessel.transform.forward) > maxOffBoresight * 0.75f)
                 {
-                    Debug.LogFormat("[BDArmory]: Missile with Name={0} has exceeded the max off boresight, checking missed target ",vessel.vesselName);
+                    Debug.LogFormat("[BDArmory]: Missile with Name={0} has exceeded the max off boresight, checking missed target ", vessel.vesselName);
                     aamTarget = TargetPosition;
                 }
                 DrawDebugLine(vessel.CoM, aamTarget);
@@ -599,7 +610,6 @@ namespace BDArmory.Modules
             return agmTarget;
         }
 
-      
         private Vector3 CruiseGuidance()
         {
             //Vector3 cruiseTarget = Vector3.zero;
@@ -628,14 +638,12 @@ namespace BDArmory.Modules
         {
             if (HasMissed) return;
             // if I'm to close to my vessel avoid explosion
-            if ((vessel.CoM - SourceVessel.CoM).sqrMagnitude < 4*DetonationDistance*4*DetonationDistance) return;
+            if ((vessel.CoM - SourceVessel.CoM).magnitude < 4 * DetonationDistance) return;
             // if I'm getting closer to  my target avoid explosion
             if ((vessel.CoM - targetPosition).sqrMagnitude >
-                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - targetPosition + (TargetVelocity * Time.fixedDeltaTime)).sqrMagnitude) return;
+                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - (targetPosition + (TargetVelocity * Time.fixedDeltaTime))).sqrMagnitude) return;
 
-            if (MissileState != MissileStates.PostThrust) return;
-            if (Vector3.Dot(targetPosition - vessel.CoM, vessel.transform.forward) > 0) return;
-
+            if (MissileState != MissileStates.PostThrust ) return;
 
             Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
             HasMissed = true;
@@ -645,12 +653,28 @@ namespace BDArmory.Modules
             detonationTime = TimeIndex + 1.5f;
         }
 
+        private void CheckMiss()
+        {
+            if (HasMissed) return;
+        
+
+            if (MissileState == MissileStates.PostThrust && (vessel.LandedOrSplashed || vessel.Velocity().magnitude < 10f))
+            {
+                Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+                HasMissed = true;
+                guidanceActive = false;
+                TargetMf = null;
+                isTimed = true;
+                detonationTime = TimeIndex + 1.5f;
+            }
+        }
+
+
         public void GuidanceSteer(FlightCtrlState s)
         {
             debugString.Length = 0;
             if (guidanceActive && MissileReferenceTransform != null && _velocityTransform != null)
             {
-
                 if (vessel.Velocity().magnitude < MinSpeedGuidance)
                 {
                     if (!_minSpeedAchieved)
@@ -664,25 +688,26 @@ namespace BDArmory.Modules
                     _minSpeedAchieved = true;
                 }
 
-
                 Vector3 newTargetPosition = new Vector3();
                 switch (GuidanceIndex)
                 {
                     case 1:
                         newTargetPosition = AAMGuidance();
                         break;
+
                     case 2:
                         newTargetPosition = AGMGuidance();
                         break;
+
                     case 3:
                         newTargetPosition = CruiseGuidance();
                         break;
+
                     case 4:
                         newTargetPosition = BallisticGuidance();
                         break;
                 }
                 CheckMiss(newTargetPosition);
-
 
                 //Updating aero surfaces
                 if (TimeIndex > dropTime + 0.5f)
@@ -695,20 +720,21 @@ namespace BDArmory.Modules
                     float steerYaw = SteerMult * targetDirection.x - SteerDamping * -localAngVel.z;
                     float steerPitch = SteerMult * targetDirection.y - SteerDamping * -localAngVel.x;
 
-
                     s.yaw = Mathf.Clamp(steerYaw, -MaxSteer, MaxSteer);
                     s.pitch = Mathf.Clamp(steerPitch, -MaxSteer, MaxSteer);
 
                     if (RollCorrection)
                     {
-                      SetRoll();
+                        SetRoll();
                         s.roll = Roll;
                     }
                 }
                 s.mainThrottle = Throttle;
             }
 
+            CheckMiss();
         }
+
         private void SetRoll()
         {
             var vesselTransform = vessel.transform.position;
@@ -716,7 +742,7 @@ namespace BDArmory.Modules
             Vector3 gravityVector = FlightGlobals.getGeeForceAtPosition(vesselTransform).normalized;
             Vector3 rollVessel = -vessel.transform.right.normalized;
 
-            var currentAngle = Vector3.SignedAngle(rollVessel, gravityVector,Vector3.Cross(rollVessel, gravityVector) ) - 90f;
+            var currentAngle = Vector3.SignedAngle(rollVessel, gravityVector, Vector3.Cross(rollVessel, gravityVector)) - 90f;
 
             debugString.Append($"Roll angle: {currentAngle}");
             debugString.Append(Environment.NewLine);
@@ -809,25 +835,28 @@ namespace BDArmory.Modules
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
-                drawLabels(); 
+                drawLabels();
             }
         }
 
         #region KSP ACTIONS
+
         [KSPAction("Fire Missile")]
         public void AgFire(KSPActionParam param)
-        {            
-            FireMissile();        
+        {
+            FireMissile();
         }
 
-        #endregion
+        #endregion KSP ACTIONS
 
         #region KSP EVENTS
+
         [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
         public void GuiFire()
         {
             FireMissile();
         }
+
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Fire Missile", active = true)]
         public override void FireMissile()
         {
@@ -846,7 +875,7 @@ namespace BDArmory.Modules
                 while (wpm.MoveNext())
                 {
                     if (wpm.Current == null) continue;
-                    Team = wpm.Current.team;
+                    Team = wpm.Current.Team;
                     break;
                 }
                 wpm.Dispose();
@@ -856,7 +885,6 @@ namespace BDArmory.Modules
                 Jettison();
                 AddTargetInfoToVessel();
                 IncreaseTolerance();
-
 
                 this.initialMissileRollPlane = -this.vessel.transform.up;
                 this.initialMissileForward = this.vessel.transform.forward;
@@ -930,38 +958,35 @@ namespace BDArmory.Modules
 
             if (currentIndex < targetingModes.Length - 1)
             {
-                UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[currentIndex + 1]));
+                UpdateTargetingMode((TargetingModes)Enum.Parse(typeof(TargetingModes), targetingModes[currentIndex + 1]));
             }
             else
             {
-                UpdateTargetingMode((TargetingModes) Enum.Parse(typeof(TargetingModes), targetingModes[0]));
+                UpdateTargetingMode((TargetingModes)Enum.Parse(typeof(TargetingModes), targetingModes[0]));
             }
         }
-
 
         [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
         public override void Jettison()
         {
             if (_targetDecoupler == null || !_targetDecoupler || !(_targetDecoupler is IStageSeparator)) return;
 
-
             ModuleDecouple decouple = _targetDecoupler as ModuleDecouple;
             if (decouple != null)
             {
-                decouple.ejectionForce *= 5; 
-                 decouple.Decouple();
+                decouple.ejectionForce *= 5;
+                decouple.Decouple();
             }
             else
             {
-                ((ModuleAnchoredDecoupler) _targetDecoupler).ejectionForce *= 5;
-                ((ModuleAnchoredDecoupler) _targetDecoupler).Decouple();
+                ((ModuleAnchoredDecoupler)_targetDecoupler).ejectionForce *= 5;
+                ((ModuleAnchoredDecoupler)_targetDecoupler).Decouple();
             }
 
             if (BDArmorySetup.Instance.ActiveWeaponManager != null)
                 BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
-     
         public override float GetBlastRadius()
         {
             if (vessel.FindPartModulesImplementing<BDExplosivePart>().Count > 0)
@@ -984,10 +1009,13 @@ namespace BDArmory.Modules
 
         private void AutoDestruction()
         {
-            for (int i = this.vessel.parts.Count - 1; i >= 0; i--)
+            var parts = this.vessel.Parts.ToArray();
+            for (int i = parts.Length - 1; i >= 0; i--)
             {
-                this.vessel.parts[i]?.explode();
+                parts[i]?.explode();
             }
+
+            parts = null;
         }
 
         public override void Detonate()
@@ -995,18 +1023,17 @@ namespace BDArmory.Modules
             if (HasExploded || !HasFired) return;
             if (SourceVessel == null) SourceVessel = vessel;
 
-               HasExploded = true;
+            HasExploded = true;
             if (StageToTriggerOnProximity != 0)
-                {
-                    vessel.ActionGroups.ToggleGroup(
-                        (KSPActionGroup) Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
-                }
-                else
-                {
-                    vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
-                    AutoDestruction();
-                }
-                
+            {
+                vessel.ActionGroups.ToggleGroup(
+                    (KSPActionGroup)Enum.Parse(typeof(KSPActionGroup), "Custom0" + (int)StageToTriggerOnProximity));
+            }
+            else
+            {
+                vessel.FindPartModulesImplementing<BDExplosivePart>().ForEach(explosivePart => explosivePart.DetonateIfPossible());
+                AutoDestruction();
+            }
         }
 
         public override Vector3 GetForwardTransform()
@@ -1020,21 +1047,26 @@ namespace BDArmory.Modules
             {
                 case TransformAxisVectors.UpPositive:
                     return MissileReferenceTransform.up;
+
                 case TransformAxisVectors.UpNegative:
                     return -MissileReferenceTransform.up;
+
                 case TransformAxisVectors.ForwardPositive:
                     return MissileReferenceTransform.forward;
+
                 case TransformAxisVectors.ForwardNegative:
                     return -MissileReferenceTransform.forward;
+
                 case TransformAxisVectors.RightNegative:
                     return -MissileReferenceTransform.right;
+
                 case TransformAxisVectors.RightPositive:
                     return MissileReferenceTransform.right;
+
                 default:
                     return MissileReferenceTransform.forward;
             }
         }
-
 
         [KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Name UI", active = false)]
         public void HideUI()
@@ -1052,13 +1084,14 @@ namespace BDArmory.Modules
 
         void OnCollisionEnter(Collision col)
         {
-           base.CollisionEnter(col);
+            base.CollisionEnter(col);
         }
 
-        #endregion
+        #endregion KSP EVENTS
     }
 
     #region UI
+
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class WeaponNameWindow : MonoBehaviour
     {
@@ -1193,7 +1226,7 @@ namespace BDArmory.Modules
             {
                 if (guiWindowRect.width == 0)
                 {
-                    guiWindowRect = new Rect(430*posMult, 365, 438, 50);
+                    guiWindowRect = new Rect(430 * posMult, 365, 438, 50);
                 }
                 new Rect(guiWindowRect.xMin + 440, mousePos.y - 5, 300, 20);
             }
@@ -1202,7 +1235,7 @@ namespace BDArmory.Modules
                 if (guiWindowRect.width == 0)
                 {
                     //guiWindowRect = new Rect(Screen.width - 8 - 430 * (posMult + 1), 365, 438, (Screen.height - 365));
-                    guiWindowRect = new Rect(Screen.width - 8 - 430*(posMult + 1), 365, 438, 50);
+                    guiWindowRect = new Rect(Screen.width - 8 - 430 * (posMult + 1), 365, 438, 50);
                 }
                 new Rect(guiWindowRect.xMin - (230 - 8), mousePos.y - 5, 220, 20);
             }
@@ -1231,9 +1264,7 @@ namespace BDArmory.Modules
 
             GUILayout.Label("Weapon Name: ");
 
-
             txtName = GUILayout.TextField(txtName);
-
 
             if (GUILayout.Button("Save & Close"))
             {
@@ -1254,7 +1285,7 @@ namespace BDArmory.Modules
             BDGUIUtils.RepositionWindow(ref guiWindowRect);
         }
 
-    private static void InitializeStyles()
+        private static void InitializeStyles()
         {
             if (unchanged == null)
             {
@@ -1296,7 +1327,6 @@ namespace BDArmory.Modules
         public static GUIStyle styleEditorTooltip;
         public static GUIStyle styleEditorPanel;
 
-
         /// <summary>
         ///     This one sets up the styles we use
         /// </summary>
@@ -1321,7 +1351,6 @@ namespace BDArmory.Modules
             styleEditorPanel.fontSize = 12;
         }
 
-
         /// <summary>
         ///     Creates a 1x1 texture
         /// </summary>
@@ -1336,5 +1365,5 @@ namespace BDArmory.Modules
         }
     }
 
-    #endregion
+    #endregion UI
 }

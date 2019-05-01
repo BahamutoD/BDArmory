@@ -22,11 +22,11 @@ namespace BDArmory.Modules
         //[KSPField(guiActive = false, guiActiveEditor = false, guiName = "")]
         public string guiTitle = "WingCommander:";
 
-        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Spread"), UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1, scene = UI_Scene.Editor)]
-        public float spread = 50;
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Formation Spread"), UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1, scene = UI_Scene.Editor)]
+        public float spread = 100;
 
-        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Lag"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
-        public float lag = 10;
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Formation Lag"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
+        public float lag = 7;
 
         [KSPField(isPersistant = true)] public bool commandSelf;
 
@@ -34,7 +34,6 @@ namespace BDArmory.Modules
         bool drawMouseDiamond;
 
         ScreenMessage screenMessage;
-
 
         //int focusIndex = 0;
         List<int> focusIndexes;
@@ -57,7 +56,6 @@ namespace BDArmory.Modules
             ps.Dispose();
         }
 
-
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -74,13 +72,13 @@ namespace BDArmory.Modules
                 GameEvents.onVesselLoaded.Add(OnVesselLoad);
                 GameEvents.onVesselDestroy.Add(OnVesselLoad);
                 GameEvents.onVesselGoOnRails.Add(OnVesselLoad);
-                MissileFire.OnToggleTeam += OnToggleTeam;
+                MissileFire.OnChangeTeam += OnToggleTeam;
 
                 screenMessage = new ScreenMessage("", 2, ScreenMessageStyle.LOWER_CENTER);
             }
         }
 
-        void OnToggleTeam(MissileFire mf, BDArmorySetup.BDATeams team)
+        void OnToggleTeam(MissileFire mf, BDTeam team)
         {
             RefreshFriendlies();
             RefreshWingmen();
@@ -108,7 +106,7 @@ namespace BDArmory.Modules
                 GameEvents.onVesselLoaded.Remove(OnVesselLoad);
                 GameEvents.onVesselDestroy.Remove(OnVesselLoad);
                 GameEvents.onVesselGoOnRails.Remove(OnVesselLoad);
-                MissileFire.OnToggleTeam -= OnToggleTeam;
+                MissileFire.OnChangeTeam -= OnToggleTeam;
             }
         }
 
@@ -131,7 +129,7 @@ namespace BDArmory.Modules
                 if (vs.Current == null) continue;
                 if (!vs.Current.loaded || vs.Current == vessel) continue;
 
-				IBDAIControl pilot = null;
+                IBDAIControl pilot = null;
                 MissileFire wm = null;
                 List<IBDAIControl>.Enumerator ps = vs.Current.FindPartModulesImplementing<IBDAIControl>().GetEnumerator();
                 while (ps.MoveNext())
@@ -151,7 +149,7 @@ namespace BDArmory.Modules
                 }
                 ws.Dispose();
 
-                if (!wm || wm.team != weaponManager.team) continue;
+                if (!wm || wm.Team != weaponManager.Team) continue;
                 friendlies.Add(pilot);
             }
             vs.Dispose();
@@ -176,7 +174,7 @@ namespace BDArmory.Modules
                 focusIndexes.Clear();
                 return;
             }
-            wingmen.RemoveAll(w => w == null || (w.weaponManager && w.weaponManager.team != weaponManager.team));
+            wingmen.RemoveAll(w => w == null || (w.weaponManager && w.weaponManager.Team != weaponManager.Team));
 
             List<int> uniqueIndexes = new List<int>();
             List<int>.Enumerator fIndexes = focusIndexes.GetEnumerator();
@@ -214,7 +212,7 @@ namespace BDArmory.Modules
             wingmen = new List<IBDAIControl>();
 
             if (savedWingmen == string.Empty) return;
-            IEnumerator<string> wingIDs = savedWingmen.Split(new char[] {','}).AsEnumerable().GetEnumerator();
+            IEnumerator<string> wingIDs = savedWingmen.Split(new char[] { ',' }).AsEnumerable().GetEnumerator();
             while (wingIDs.MoveNext())
             {
                 List<Vessel>.Enumerator vs = BDATargetManager.LoadedVessels.GetEnumerator();
@@ -237,7 +235,6 @@ namespace BDArmory.Modules
             }
             wingIDs.Dispose();
         }
-
 
         public bool showGUI;
         bool rectInit;
@@ -262,7 +259,7 @@ namespace BDArmory.Modules
                 {
                     // this Rect initialization ensures any save issues with height or width of the window are resolved
                     BDArmorySetup.WindowRectWingCommander = new Rect(BDArmorySetup.WindowRectWingCommander.x, BDArmorySetup.WindowRectWingCommander.y, windowWidth, windowHeight);
-                    buttonWidth = BDArmorySetup.WindowRectWingCommander.width - (2*margin);
+                    buttonWidth = BDArmorySetup.WindowRectWingCommander.width - (2 * margin);
                     buttonEndY = buttonStartY;
                     wingmanButtonStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
                     wingmanButtonStyle.alignment = TextAnchor.MiddleLeft;
@@ -291,7 +288,7 @@ namespace BDArmory.Modules
                     new Vector2(diamondSize, diamondSize), 0);
                 Vector2 labelPos;
                 if (!BDGUIUtils.WorldToGUIPos(comPos.Current.worldPos, out labelPos)) continue;
-                labelPos.x += diamondSize/2;
+                labelPos.x += diamondSize / 2;
                 labelPos.y -= 10;
                 GUI.Label(new Rect(labelPos.x, labelPos.y, 300, 20), comPos.Current.name);
             }
@@ -299,8 +296,8 @@ namespace BDArmory.Modules
 
             if (!drawMouseDiamond) return;
             Vector2 mouseDiamondPos = Input.mousePosition;
-            Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize/2),
-                Screen.height - mouseDiamondPos.y - (diamondSize/2), diamondSize, diamondSize);
+            Rect mouseDiamondRect = new Rect(mouseDiamondPos.x - (diamondSize / 2),
+                Screen.height - mouseDiamondPos.y - (diamondSize / 2), diamondSize, diamondSize);
             GUI.DrawTexture(mouseDiamondRect, BDArmorySetup.Instance.greenDiamondTexture,
                 ScaleMode.StretchToFill, true);
         }
@@ -314,15 +311,15 @@ namespace BDArmory.Modules
 
             //close buttton
             float xSize = buttonStartY - margin - margin;
-            if (GUI.Button(new Rect(buttonWidth + (2*buttonGap) - xSize, margin, xSize, xSize), "X",
+            if (GUI.Button(new Rect(buttonWidth + (2 * buttonGap) - xSize, margin, xSize, xSize), "X",
                 BDArmorySetup.BDGuiSkin.button))
             {
                 showGUI = false;
             }
 
             GUI.Box(
-                new Rect(margin - buttonGap, buttonStartY - buttonGap, buttonWidth + (2*buttonGap),
-                    Mathf.Max(wingmen.Count*(buttonHeight + buttonGap), 10)), GUIContent.none, BDArmorySetup.BDGuiSkin.box);
+                new Rect(margin - buttonGap, buttonStartY - buttonGap, buttonWidth + (2 * buttonGap),
+                    Mathf.Max(wingmen.Count * (buttonHeight + buttonGap), 10)), GUIContent.none, BDArmorySetup.BDGuiSkin.box);
             buttonEndY = buttonStartY;
             for (int i = 0; i < wingmen.Count; i++)
             {
@@ -338,7 +335,7 @@ namespace BDArmory.Modules
 
             commandSelf =
                 GUI.Toggle(
-                    new Rect(margin, margin + buttonEndY + (commandButtonLine*(buttonHeight + buttonGap)), buttonWidth,
+                    new Rect(margin, margin + buttonEndY + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth,
                         buttonHeight), commandSelf, "Command Self", BDArmorySetup.BDGuiSkin.toggle);
             commandButtonLine++;
 
@@ -354,30 +351,30 @@ namespace BDArmory.Modules
 
             commandButtonLine += 0.5f;
             GUI.Label(
-                new Rect(margin, buttonEndY + margin + (commandButtonLine*(buttonHeight + buttonGap)), buttonWidth, 20),
+                new Rect(margin, buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth, 20),
                 "Formation Settings:", BDArmorySetup.BDGuiSkin.label);
             commandButtonLine++;
             GUI.Label(
-                new Rect(margin, buttonEndY + margin + (commandButtonLine*(buttonHeight + buttonGap)), buttonWidth/3, 20),
+                new Rect(margin, buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth / 3, 20),
                 "Spread: " + spread.ToString("0"), BDArmorySetup.BDGuiSkin.label);
             spread =
                 GUI.HorizontalSlider(
-                    new Rect(margin + (buttonWidth/3),
-                        buttonEndY + margin + (commandButtonLine*(buttonHeight + buttonGap)), 2*buttonWidth/3, 20),
+                    new Rect(margin + (buttonWidth / 3),
+                        buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), 2 * buttonWidth / 3, 20),
                     spread, 1f, 200f, BDArmorySetup.BDGuiSkin.horizontalSlider, BDArmorySetup.BDGuiSkin.horizontalSliderThumb);
             commandButtonLine++;
             GUI.Label(
-                new Rect(margin, buttonEndY + margin + (commandButtonLine*(buttonHeight + buttonGap)), buttonWidth/3, 20),
+                new Rect(margin, buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth / 3, 20),
                 "Lag: " + lag.ToString("0"), BDArmorySetup.BDGuiSkin.label);
             lag =
                 GUI.HorizontalSlider(
-                    new Rect(margin + (buttonWidth/3),
-                        buttonEndY + margin + (commandButtonLine*(buttonHeight + buttonGap)), 2*buttonWidth/3, 20), lag,
+                    new Rect(margin + (buttonWidth / 3),
+                        buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), 2 * buttonWidth / 3, 20), lag,
                     0f, 100f, BDArmorySetup.BDGuiSkin.horizontalSlider, BDArmorySetup.BDGuiSkin.horizontalSliderThumb);
             commandButtonLine++;
 
             //resize window
-            height += ((commandButtonLine - 1)*(buttonHeight + buttonGap));
+            height += ((commandButtonLine - 1) * (buttonHeight + buttonGap));
             BDArmorySetup.WindowRectWingCommander.height = height;
             GUI.DragWindow(BDArmorySetup.WindowRectWingCommander);
             BDGUIUtils.RepositionWindow(ref BDArmorySetup.WindowRectWingCommander);
@@ -386,7 +383,7 @@ namespace BDArmory.Modules
         void WingmanButton(int index, out float buttonEndY)
         {
             int i = index;
-            Rect buttonRect = new Rect(margin, buttonStartY + (i*(buttonHeight + buttonGap)), buttonWidth, buttonHeight);
+            Rect buttonRect = new Rect(margin, buttonStartY + (i * (buttonHeight + buttonGap)), buttonWidth, buttonHeight);
             GUIStyle style = (focusIndexes.Contains(i)) ? wingmanButtonSelectedStyle : wingmanButtonStyle;
             string label = " " + wingmen[i].vessel.vesselName + " (" + wingmen[i].currentStatus + ")";
             if (GUI.Button(buttonRect, label, style))
@@ -400,7 +397,7 @@ namespace BDArmory.Modules
                     focusIndexes.Add(i);
                 }
             }
-            buttonEndY = buttonStartY + ((i + 1.5f)*buttonHeight);
+            buttonEndY = buttonStartY + ((i + 1.5f) * buttonHeight);
         }
 
         void CommandButton(CommandFunction func, string buttonLabel, ref float buttonLine, bool sendToWingmen,
@@ -413,7 +410,7 @@ namespace BDArmory.Modules
         void CommandButton(CommandFunction func, string buttonLabel, ref float buttonLine, float startY, float margin,
             float buttonGap, float buttonWidth, float buttonHeight, bool sendToWingmen, bool pressed, object data)
         {
-            float yPos = startY + margin + ((buttonHeight + buttonGap)*buttonLine);
+            float yPos = startY + margin + ((buttonHeight + buttonGap) * buttonLine);
             if (GUI.Button(new Rect(margin, yPos, buttonWidth, buttonHeight), buttonLabel,
                 pressed ? BDArmorySetup.BDGuiSkin.box : BDArmorySetup.BDGuiSkin.button))
             {
@@ -463,7 +460,7 @@ namespace BDArmory.Modules
             RefreshFriendlies();
             int i = 0;
             List<IBDAIControl>.Enumerator wingman = friendlies.GetEnumerator();
-            while(wingman.MoveNext())
+            while (wingman.MoveNext())
             {
                 if (wingman.Current == null) continue;
                 wingman.Current.CommandFollow(this, i);
@@ -475,14 +472,14 @@ namespace BDArmory.Modules
         void CommandAG(IBDAIControl wingman, int index, object ag)
         {
             //Debug.Log("object to string: "+ag.ToString());
-            KSPActionGroup actionGroup = (KSPActionGroup) ag;
+            KSPActionGroup actionGroup = (KSPActionGroup)ag;
             //Debug.Log("ag to string: " + actionGroup.ToString());
             wingman.CommandAG(actionGroup);
         }
 
         void CommandTakeOff(IBDAIControl wingman, int index, object data)
         {
-			wingman.CommandTakeOff();
+            wingman.CommandTakeOff();
         }
 
         void OpenAGWindow(IBDAIControl wingman, int index, object data)
@@ -506,7 +503,7 @@ namespace BDArmory.Modules
             newHeight += agMargin;
             GUIStyle titleStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.label);
             titleStyle.alignment = TextAnchor.MiddleCenter;
-            GUI.Label(new Rect(agMargin, 5, width - (2*agMargin), 20), "Action Groups", titleStyle);
+            GUI.Label(new Rect(agMargin, 5, width - (2 * agMargin), 20), "Action Groups", titleStyle);
             newHeight += 20;
             float startButtonY = newHeight;
             float buttonLine = 0;
@@ -517,7 +514,7 @@ namespace BDArmory.Modules
                 i++;
                 if (i <= 1) continue;
                 CommandButton(CommandAG, ag.Current.ToString(), ref buttonLine, startButtonY, agMargin, buttonGap,
-                    width - (2*agMargin), buttonHeight, true, false, ag.Current);
+                    width - (2 * agMargin), buttonHeight, true, false, ag.Current);
                 newHeight += buttonHeight + buttonGap;
             }
             ag.Dispose();
@@ -547,7 +544,6 @@ namespace BDArmory.Modules
         {
             StartCoroutine(CommandPosition(wingman, PilotCommands.Attack));
         }
-
 
         bool waitingForFlytoPos;
         bool waitingForAttackPos;
@@ -582,10 +578,10 @@ namespace BDArmory.Modules
                 }
                 if (Input.GetMouseButtonDown(0))
                 {
-                    Vector3 mousePos = new Vector3(Input.mousePosition.x/Screen.width,
-                        Input.mousePosition.y/Screen.height, 0);
+                    Vector3 mousePos = new Vector3(Input.mousePosition.x / Screen.width,
+                        Input.mousePosition.y / Screen.height, 0);
                     Plane surfPlane = new Plane(vessel.upAxis,
-                        vessel.transform.position - (vessel.altitude*vessel.upAxis));
+                        vessel.transform.position - (vessel.altitude * vessel.upAxis));
                     Ray ray = FlightCamera.fetch.mainCamera.ViewportPointToRay(mousePos);
                     float dist;
                     if (surfPlane.Raycast(ray, out dist))
@@ -629,7 +625,6 @@ namespace BDArmory.Modules
             }
             RemoveCommandPos(tInfo);
         }
-
 
         void RemoveCommandPos(GPSTargetInfo tInfo)
         {

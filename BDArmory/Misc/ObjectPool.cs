@@ -14,7 +14,6 @@ namespace BDArmory.Misc
 
         public string poolObjectName;
 
-
         void Awake()
         {
             pool = new List<GameObject>();
@@ -42,7 +41,7 @@ namespace BDArmory.Misc
             {
                 if (!poolObject)
                 {
-                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName +")");
+                    Debug.LogWarning("Tried to instantiate a pool object but prefab is missing! (" + poolObjectName + ")");
                 }
 
                 GameObject obj = Instantiate(poolObject);
@@ -54,13 +53,13 @@ namespace BDArmory.Misc
             }
 
             for (int i = 0; i < pool.Count; i++)
+            {
+                if (!pool[i].activeInHierarchy)
                 {
-                    if (!pool[i].activeInHierarchy)
-                    {                        
-                        return pool[i];
-                    }
+                    return pool[i];
                 }
-                          
+            }
+
             return null;
         }
 
