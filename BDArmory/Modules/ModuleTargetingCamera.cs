@@ -637,7 +637,7 @@ namespace BDArmory.Modules
             if (weaponManager && weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
             {
                 RadarDisplayData tgt = weaponManager.vesselRadarData.lockedTargetData;
-                Vector3 radarTargetPos = tgt.targetData.predictedPosition + (tgt.targetData.velocity * Time.fixedDeltaTime);
+                Vector3 radarTargetPos = tgt.targetData.predictedPosition;
                 Vector3 targetDirection = radarTargetPos - cameraParentTransform.position;
 
                 //Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
@@ -646,7 +646,7 @@ namespace BDArmory.Modules
                     //cameraParentTransform.rotation = lookRotation;
                     if (tgt.vessel)
                     {
-                        targetDirection = ((tgt.vessel.CoM + (tgt.vessel.Velocity() * Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
+                        targetDirection = ((tgt.vessel.CoM) - cameraParentTransform.transform.position);
                     }
                     PointCameraModel(targetDirection);
                     GroundStabilize();
@@ -658,7 +658,7 @@ namespace BDArmory.Modules
                         ClearTarget();
                     }
                     //lookRotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 120*Time.fixedDeltaTime);
-                    Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 300 * Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
+                    Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 1200 * Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
                     PointCameraModel(rotateTwdDirection);
                 }
             }

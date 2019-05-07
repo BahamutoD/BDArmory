@@ -92,9 +92,9 @@ namespace BDArmory.Radar
 
         //range increments
         //TODO:  Determine how to dynamically generate this list from the radar being used.
-        public float[] baseIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, 250000, 500000, 750000, 1000000 };
+        public float[] baseIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, 250000, 500000, 750000, 1000000, 2000000 };
 
-        public float[] rIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, 250000, 500000, 750000, 1000000 };
+        public float[] rIncrements = new float[] { 500, 2500, 5000, 10000, 20000, 40000, 100000, 250000, 500000, 750000, 1000000, 2000000 };
         private int rangeIndex = 0;
 
         //lock cursor
