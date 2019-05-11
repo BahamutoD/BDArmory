@@ -591,6 +591,7 @@ namespace BDArmory.Modules
             }
             set
             {
+                if (sw == value) return;
                 sw = value;
                 selectedWeaponString = GetWeaponName(value);
                 UpdateSelectedWeaponState();
