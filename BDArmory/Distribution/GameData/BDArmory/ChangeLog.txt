@@ -1,4 +1,9 @@
-﻿v1.3.0
+﻿v1.3.1
+* FIXES
+	* All parts have bulkheadProfiles - should stop bulkhead filter NREs.
+	* Rocket pods no longer fire StackOverflows.
+
+v1.3.0
 * NEW FEATURES:
 	* Multiple teams are now supported by BDA.
 		* Probably breaks ALL the existing addons.
