@@ -29,7 +29,7 @@ namespace BDArmory.Guidances
         Hold
     }
 
-    public class CruiseGuidance
+    public class CruiseGuidance : IGuidance
     {
         private readonly MissileBase _missile;
         private double _originalDistance;
@@ -63,7 +63,7 @@ namespace BDArmory.Guidances
 
         public GuidanceState GuidanceState { get; set; }
 
-        public Vector3 CalculateCruiseGuidance(Vector3 targetPosition)
+        public Vector3 GetDirection(MissileBase missile, Vector3 targetPosition)
         {
             //set up
             if (_missile.TimeIndex < 1)

@@ -560,6 +560,8 @@ namespace BDArmory.Modules
             {
                 Fields["BallisticOverShootFactor"].guiActive = false;
                 Fields["BallisticOverShootFactor"].guiActiveEditor = false;
+                Fields["BallisticAngle"].guiActive = false;
+                Fields["BallisticAngle"].guiActiveEditor = false;
             }
 
             if (part.partInfo.title.Contains("Bomb"))
@@ -588,7 +590,6 @@ namespace BDArmory.Modules
             }
 
             SetInitialDetonationDistance();
-            this._cruiseGuidance = new CruiseGuidance(this);
 
             // fill activeRadarLockTrackCurve with default values if not set by part config:
             if ((TargetingMode == TargetingModes.Radar || TargetingModeTerminal == TargetingModes.Radar) && activeRadarRange > 0 && activeRadarLockTrackCurve.minTime == float.MaxValue)
@@ -1542,9 +1543,14 @@ namespace BDArmory.Modules
 
         void CruiseGuidance()
         {
+            if (this._guidance == null)
+            {
+                this._guidance = new CruiseGuidance(this);
+            }
+
             Vector3 cruiseTarget = Vector3.zero;
 
-            cruiseTarget = this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
+            cruiseTarget = this._guidance.GetDirection(this,TargetPosition);
 
             Vector3 upDirection = VectorUtils.GetUpDirection(transform.position);
 

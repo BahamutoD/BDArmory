@@ -159,6 +159,8 @@ namespace BDArmory.Modules
             {
                 Fields["BallisticOverShootFactor"].guiActive = GuidanceMode == GuidanceModes.AGMBallistic;
                 Fields["BallisticOverShootFactor"].guiActiveEditor = GuidanceMode == GuidanceModes.AGMBallistic;
+                Fields["BallisticAngle"].guiActive = GuidanceMode == GuidanceModes.AGMBallistic;
+                Fields["BallisticAngle"].guiActiveEditor = GuidanceMode == GuidanceModes.AGMBallistic;
             }
             if (Fields["SoftAscent"] != null)
             {
@@ -406,7 +408,6 @@ namespace BDArmory.Modules
                     Debug.Log("[BDArmory]: OnStart missile " + shortName + ": setting default locktrackcurve with maxrange/minrcs: " + activeRadarLockTrackCurve.maxTime + "/" + RadarUtils.MISSILE_DEFAULT_LOCKABLE_RCS);
             }
 
-            this._cruiseGuidance = new CruiseGuidance(this);
         }
 
         private void SetupsFields()
@@ -612,26 +613,12 @@ namespace BDArmory.Modules
 
         private Vector3 CruiseGuidance()
         {
-            //Vector3 cruiseTarget = Vector3.zero;
-            //float distanceSqr = (TargetPosition - vessel.CoM).sqrMagnitude;
+            if (this._guidance == null)
+            {
+                this._guidance = new CruiseGuidance(this);
+            }
 
-            //if (distanceSqr < 4500*4500)
-            //{
-            //    cruiseTarget = MissileGuidance.GetAirToGroundTarget(TargetPosition, vessel, 1.85f);
-            //    debugString.Append("Descending On Target");
-            //    debugString.Append(Environment.NewLine);
-            //}
-            //else
-            //{
-            //    cruiseTarget = MissileGuidance.GetCruiseTarget(TargetPosition, vessel, CruiseAltitude);
-            //    debugString.Append("Cruising");
-            //    debugString.Append(Environment.NewLine);
-            //}
-
-            //debugString.Append($"RadarAlt: {MissileGuidance.GetRadarAltitude(vessel)}");
-            //debugString.Append(Environment.NewLine);
-
-            return this._cruiseGuidance.CalculateCruiseGuidance(TargetPosition);
+            return this._guidance.GetDirection(this,TargetPosition);
         }
 
         private void CheckMiss(Vector3 targetPosition)
