@@ -4217,14 +4217,6 @@ namespace BDArmory.Modules
                 }
                 return false;
             }
-            if (turret.yawRange == 360)
-            {
-                if (BDArmorySettings.DRAW_DEBUG_LABELS)
-                {
-                    Debug.Log("[BDArmory]: Checking turret range - turret has full swivel");
-                }
-                return true;
-            }
 
             Transform turretTransform = turret.yawTransform.parent;
             Vector3 direction = guardTarget.transform.position - turretTransform.position;
@@ -4232,13 +4224,8 @@ namespace BDArmory.Modules
             Vector3 directionPitch = Vector3.ProjectOnPlane(direction, turretTransform.right);
 
             float angleYaw = Vector3.Angle(turretTransform.forward, directionYaw);
-            //float anglePitch = Vector3.Angle(-turret.transform.forward, directionPitch);
-            float signedAnglePitch = Misc.Misc.SignedAngle(turretTransform.forward, directionPitch, turretTransform.up);
-            if (Mathf.Abs(signedAnglePitch) > 90)
-            {
-                signedAnglePitch -= Mathf.Sign(signedAnglePitch) * 180;
-            }
-            bool withinPitchRange = (signedAnglePitch >= turret.minPitch && signedAnglePitch <= turret.maxPitch + tolerance);
+            float signedAnglePitch = 90 - Vector3.Angle(turretTransform.up, directionPitch);
+            bool withinPitchRange = (signedAnglePitch >= turret.minPitch - tolerance && signedAnglePitch <= turret.maxPitch + tolerance);
 
             if (angleYaw < (turret.yawRange / 2) + tolerance && withinPitchRange)
             {
