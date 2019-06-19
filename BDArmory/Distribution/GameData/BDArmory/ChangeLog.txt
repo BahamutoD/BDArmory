@@ -1,4 +1,8 @@
-﻿v1.3.1
+﻿v1.3.2
+* FIXES
+	* Turrets with constrained yaw should freak out less when aiming behind them.
+
+v1.3.1
 * FIXES
 	* All parts have bulkheadProfiles - should stop bulkhead filter NREs.
 	* Rocket pods no longer fire StackOverflows.
