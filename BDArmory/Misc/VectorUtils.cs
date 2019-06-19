@@ -33,7 +33,8 @@ namespace BDArmory.Misc
         /// </summary>
         public static float ToAngle(this float angle)
         {
-            return ((angle + 180) % 360) - 180;
+            angle = (angle + 180) % 360;
+            return angle > 0 ? angle - 180 : angle + 180;
         }
 
         //from howlingmoonsoftware.com
