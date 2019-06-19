@@ -180,7 +180,10 @@ namespace BDArmory.Modules
                 yawComponent,
                 Vector3.Cross(yawNormal, referenceTransform.forward));
             float yawOffset = Mathf.Abs(yawError);
-            float targetYawAngle = Mathf.Clamp((currentYaw + yawError).ToAngle(), -yawRange / 2, yawRange / 2); // clamped target yaw
+            float targetYawAngle = (currentYaw + yawError).ToAngle();
+            // clamp target yaw in a non-wobbly way
+            if (Mathf.Abs(targetYawAngle) > yawRange / 2)
+                targetYawAngle = yawRange / 2 * Math.Sign(Vector3.Dot(yawTransform.parent.right, targetDirection + referenceTransform.position - yawTransform.position));
 
             float pitchError = (float)Vector3d.Angle(pitchComponent, yawNormal) - (float)Vector3d.Angle(referenceTransform.forward, yawNormal);
             float currentPitch = -pitchTransform.localEulerAngles.x.ToAngle(); // from current rotation transform
