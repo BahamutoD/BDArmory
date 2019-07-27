@@ -1,3 +1,4 @@
+using System;
 using BDArmory.Core;
 using BDArmory.Misc;
 using BDArmory.UI;
@@ -173,16 +174,19 @@ namespace BDArmory.Modules
             Vector3 pitchNormal = Vector3.Cross(yawComponent, yawNormal);
             Vector3 pitchComponent = Vector3.ProjectOnPlane(targetDirection, pitchNormal);
 
-            float currentYaw = yawTransform.localEulerAngles.y;
+            float currentYaw = yawTransform.localEulerAngles.y.ToAngle();
             float yawError = VectorUtils.SignedAngleDP(
                 Vector3.ProjectOnPlane(referenceTransform.forward, yawNormal),
                 yawComponent,
                 Vector3.Cross(yawNormal, referenceTransform.forward));
             float yawOffset = Mathf.Abs(yawError);
-            float targetYawAngle = Mathf.Clamp((currentYaw + yawError + 180f) % 360f - 180f, -yawRange / 2, yawRange / 2); // clamped target yaw
+            float targetYawAngle = (currentYaw + yawError).ToAngle();
+            // clamp target yaw in a non-wobbly way
+            if (Mathf.Abs(targetYawAngle) > yawRange / 2)
+                targetYawAngle = yawRange / 2 * Math.Sign(Vector3.Dot(yawTransform.parent.right, targetDirection + referenceTransform.position - yawTransform.position));
 
             float pitchError = (float)Vector3d.Angle(pitchComponent, yawNormal) - (float)Vector3d.Angle(referenceTransform.forward, yawNormal);
-            float currentPitch = -((pitchTransform.localEulerAngles.x + 180f) % 360f - 180f); // from current rotation transform
+            float currentPitch = -pitchTransform.localEulerAngles.x.ToAngle(); // from current rotation transform
             float targetPitchAngle = currentPitch - pitchError;
             float pitchOffset = Mathf.Abs(targetPitchAngle - currentPitch);
             targetPitchAngle = Mathf.Clamp(targetPitchAngle, minPitch, maxPitch); // clamp pitch
@@ -206,9 +210,9 @@ namespace BDArmory.Modules
             yawSpeed *= linYawMult;
             pitchSpeed *= linPitchMult;
 
-            if (yawRange < 360 && Mathf.Abs(targetYawAngle) > 90 && Mathf.Sign(currentYaw) != Mathf.Sign(targetYawAngle))
+            if (yawRange < 360 && Mathf.Abs(currentYaw - targetYawAngle) >= 180)
             {
-                targetYawAngle = 5 * Mathf.Sign(targetYawAngle);
+                targetYawAngle = currentYaw - (Math.Sign(currentYaw) * 179);
             }
 
             if (yaw)

@@ -27,6 +27,15 @@ namespace BDArmory.Misc
             float finalAngle = sign * angle;
             return finalAngle;
         }
+        
+        /// <summary>
+        /// Convert an angle to be between -180 and 180.
+        /// </summary>
+        public static float ToAngle(this float angle)
+        {
+            angle = (angle + 180) % 360;
+            return angle > 0 ? angle - 180 : angle + 180;
+        }
 
         //from howlingmoonsoftware.com
         //calculates how long it will take for a target to be where it will be when a bullet fired now can reach it.
