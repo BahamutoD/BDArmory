@@ -770,7 +770,7 @@ namespace BDArmory.Modules
                         (yawRange == 0 || (maxPitch - minPitch) == 0 ||
                          turret.TargetInRange(finalAimTarget, 10, float.MaxValue)))
                     {
-                        if (useRippleFire && (pointingAtSelf || isOverheated))
+                        if (useRippleFire && ((pointingAtSelf || isOverheated) || (aiControlled && engageRangeMax < targetLeadDistance))) // only fire if weapon within weapon's max range
                         {
                             StartCoroutine(IncrementRippleIndex(0));
                             finalFire = false;
