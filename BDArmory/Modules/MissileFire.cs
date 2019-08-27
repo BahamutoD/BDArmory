@@ -1424,6 +1424,7 @@ namespace BDArmory.Modules
                             yield return StartCoroutine(tgp.Current.PointToPositionRoutine(guardTarget.CoM));
                             if (tgp.Current.groundStabilized && (tgp.Current.groundTargetPosition - guardTarget.transform.position).sqrMagnitude < 20 * 20)
                             {
+			    	tgp.Current.CoMLock = true; // make the designator continue to paint target
                                 break;
                             }
                         }
@@ -2888,9 +2889,9 @@ namespace BDArmory.Modules
         }
 
         #endregion Weapon Info
-
+/*
         #region Weapon Choice
-
+        // Unnecessary. Bool Smart Pick now handles Antirad selection
         bool TryPickAntiRad(TargetInfo target)
         {
             CycleWeapon(0); //go to start of array
@@ -2915,7 +2916,7 @@ namespace BDArmory.Modules
         }
 
         #endregion Weapon Choice
-
+*/
         #region Targeting
 
         #region Smart Targeting
@@ -3028,6 +3029,7 @@ namespace BDArmory.Modules
                 {
                     targetsTried.Add(potentialTarget);
                     SetTarget(potentialTarget);
+                    /*
                     if (CrossCheckWithRWR(potentialTarget) && TryPickAntiRad(potentialTarget))
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -3037,6 +3039,7 @@ namespace BDArmory.Modules
                         }
                         return;
                     }
+                    */
                     if (SmartPickWeapon_EngagementEnvelope(potentialTarget))
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -3054,6 +3057,7 @@ namespace BDArmory.Modules
                 {
                     targetsTried.Add(potentialTarget);
                     SetTarget(potentialTarget);
+                    /*
                     if (CrossCheckWithRWR(potentialTarget) && TryPickAntiRad(potentialTarget))
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -3063,6 +3067,7 @@ namespace BDArmory.Modules
                         }
                         return;
                     }
+                    */
                     if (SmartPickWeapon_EngagementEnvelope(potentialTarget))
                     {
                         if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -3174,6 +3179,9 @@ namespace BDArmory.Modules
             float targetWeaponRPM = 0;
             float targetWeaponTDPS = 0;
             float targetWeaponImpact = 0;
+            float targetLaserDamage = 0;
+			float targetYield = 0;
+			float targetRocketPower = 0;
 
             if (target.isMissile)
             {
@@ -3191,24 +3199,36 @@ namespace BDArmory.Modules
                     // weapon usable, if missile continue looking for lasers/guns, else take it
                     WeaponClasses candidateClass = item.Current.GetWeaponClass();
 
-                    if (candidateClass == WeaponClasses.DefenseLaser)
-                    {
-                        // TODO: compare lasers which one is better for AA
-                        targetWeapon = item.Current;
-                        break; //always favour laser
-                    }
+                   if (candidateClass == WeaponClasses.DefenseLaser)
+					{
+						float canidateYTraverse = ((ModuleWeapon)item.Current).yawRange;
+						float canidatePTraverse = ((ModuleWeapon)item.Current).maxPitch;
+
+						if (targetWeapon != null && (canidateYTraverse > 0 || canidatePTraverse > 0)) //prioritize turreted lasers
+						{
+							targetWeapon = item.Current;
+							break;
+						}
+						targetWeapon = item.Current; // then any laser
+						break;
+					}
 
                     if (candidateClass == WeaponClasses.Gun)
-                    {
-                        // For AAA, favour higher RPM
-                        float candidateRPM = ((ModuleWeapon)item.Current).roundsPerMinute;
+					{
+						// For point defense, favor turrets and RoF
+						float candidateRPM = ((ModuleWeapon)item.Current).roundsPerMinute;
+						float canidateYTraverse = ((ModuleWeapon)item.Current).yawRange;
+						float canidatePTraverse = ((ModuleWeapon)item.Current).maxPitch;
+						if (targetWeapon != null && (canidateYTraverse > 0 || canidatePTraverse > 0))
+						{
+							candidateRPM *= 2.0f; // weight selection towards turrets
+						}
+						if ((targetWeapon != null) && (targetWeaponRPM > candidateRPM))
+							continue; //dont replace better guns (but do replace missiles)
 
-                        if ((targetWeapon != null) && (targetWeaponRPM > candidateRPM))
-                            continue; //dont replace better guns (but do replace missiles)
-
-                        targetWeapon = item.Current;
-                        targetWeaponRPM = candidateRPM;
-                    }
+						targetWeapon = item.Current;
+						targetWeaponRPM = candidateRPM;
+					}
 
                     if (candidateClass != WeaponClasses.Missile) continue;
                     // TODO: for AA, favour higher thrust+turnDPS
@@ -3254,24 +3274,46 @@ namespace BDArmory.Modules
                     WeaponClasses candidateClass = item.Current.GetWeaponClass();
 
                     if (candidateClass == WeaponClasses.DefenseLaser)
-                    {
-                        // TODO: compare lasers which one is better for AA
-                        targetWeapon = item.Current;
-                        if (distance <= gunRange)
-                            break;
-                    }
+					{
+						// For AA, favour higher power/turreted
+						float candidatePower = ((ModuleWeapon)item.Current).laserDamage;
+						bool canidateGimbal = ((ModuleWeapon)item.Current).turret;
+						float canidateTraverse = ((ModuleWeapon)item.Current).yawRange;
+						if ((targetWeapon != null) && (canidateGimbal = true && canidateTraverse > 0))
+						{
+							candidatePower *= 1.5f; // weight selection towards turreted lasers
+						}
+						if ((targetWeapon != null) && (targetLaserDamage > candidatePower))
+							continue; //dont replace better guns (but do replace missiles)
+
+						targetWeapon = item.Current;
+						targetLaserDamage = candidatePower;
+						if (distance <= gunRange)
+							break;
+					}
 
                     if (candidateClass == WeaponClasses.Gun)
-                    {
-                        // For AAA, favour higher RPM
-                        float candidateRPM = ((ModuleWeapon)item.Current).roundsPerMinute;
+					{
+						// For AAA, favour higher RPM and turrets
+						float candidateRPM = ((ModuleWeapon)item.Current).roundsPerMinute;
+						bool canidateGimbal = ((ModuleWeapon)item.Current).turret;
+						float canidateTraverse = ((ModuleWeapon)item.Current).yawRange;
+						bool canidatePFuzed = ((ModuleWeapon)item.Current).proximityDetonation;
+						bool canidateVTFuzed = ((ModuleWeapon)item.Current).airDetonation;
+						if ((targetWeapon != null) && (canidateGimbal = true && canidateTraverse > 0))
+						{
+							candidateRPM *= 1.5f; // weight selection towards turrets
+						}
+						if (targetWeapon != null && (canidatePFuzed || canidateVTFuzed))
+						{
+							candidateRPM *= 1.5f; // weight selection towards flak ammo
+						}
+						if ((targetWeapon != null) && (targetWeaponRPM > candidateRPM))
+							continue; //dont replace better guns (but do replace missiles)
 
-                        if ((targetWeapon != null) && (targetWeaponRPM > candidateRPM))
-                            continue; //dont replace better guns (but do replace missiles)
-
-                        targetWeapon = item.Current;
-                        targetWeaponRPM = candidateRPM;
-                    }
+						targetWeapon = item.Current;
+						targetWeaponRPM = candidateRPM;
+					}
 
                     if (candidateClass != WeaponClasses.Missile) continue;
                     MissileLauncher mlauncher = item.Current as MissileLauncher;
@@ -3321,56 +3363,133 @@ namespace BDArmory.Modules
                     WeaponClasses candidateClass = item.Current.GetWeaponClass();
 
                     if (candidateClass == WeaponClasses.Missile)
-                    {
-                        // TODO: compare missiles which one is better for ground attack
-                        // Priority Sequence:
-                        // - Antiradiation
-                        // - guided missiles
-                        // - by blast strength
-                        targetWeapon = item.Current;
-                        if (distance > gunRange)
-                            break;  //definitely use missiles
-                    }
+					{
+						// Priority Sequence:
+						// - Antiradiation
+						// - guided missiles
+						// - by blast strength
+						float canidateYield = ((MissileBase)item.Current).GetBlastRadius();
+						double srfSpeed = currentTarget.Vessel.horizontalSrfSpeed;
+						bool canidateAGM = false;
+						bool canidateAntiRad = false;
+
+						if (srfSpeed < 1) // set higher than 0 in case of physics jitteriness
+						{
+							if (((MissileBase)item.Current).TargetingMode == MissileBase.TargetingModes.Gps ||
+								(((MissileBase)item.Current).GuidanceMode == MissileBase.GuidanceModes.Cruise ||
+								  ((MissileBase)item.Current).GuidanceMode == MissileBase.GuidanceModes.AGMBallistic ||
+								  ((MissileBase)item.Current).GuidanceMode == MissileBase.GuidanceModes.None))
+							{
+								if (targetWeapon != null && targetYield > canidateYield) continue; //prioritize biggest Boom
+								targetYield = canidateYield;
+								canidateAGM = true;
+								targetWeapon = item.Current;
+								if (distance > ((MissileBase)item.Current).engageRangeMin)
+									break;
+							}
+						}
+						if (((MissileBase)item.Current).TargetingMode == MissileBase.TargetingModes.AntiRad && (rwr && rwr.rwrEnabled))
+						{// make it so this only selects antirad when hostile radar
+							for (int i = 0; i < rwr.pingsData.Length; i++)
+							{
+								if (rwr.pingsData[i].signalStrength == 0 || rwr.pingsData[i].signalStrength == 5)
+								{
+									if ((rwr.pingWorldPositions[i] - guardTarget.CoM).sqrMagnitude < 20 * 20) //is current target a hostile radar source?
+									{
+										canidateAntiRad = true;
+									}
+								}
+							}
+							if (canidateAntiRad)
+							{
+								if (targetWeapon != null && targetYield > canidateYield) continue; //prioritize biggest Boom
+								targetYield = canidateYield;
+								targetWeapon = item.Current;
+								canidateAGM = true;
+							}
+						}
+						else if (((MissileBase)item.Current).TargetingMode == MissileBase.TargetingModes.Laser)
+						{
+							if ((targetWeapon != null && targetYield > canidateYield) && !canidateAntiRad) continue;
+							canidateAGM = true;
+							targetYield = canidateYield;
+							targetWeapon = item.Current;
+						}
+						else
+						{
+							if (!canidateAGM)
+							{
+								if (targetWeapon != null && targetYield > canidateYield) continue;
+								targetYield = canidateYield;
+								targetWeapon = item.Current;
+							}
+						}
+					}
 
                     // TargetInfo.isLanded includes splashed but not underwater, for whatever reasons.
                     // If target is splashed, and we have torpedoes, use torpedoes, because, obviously,
                     // torpedoes are the best kind of sausage for splashed targets,
                     // almost as good as STS missiles, which we don't have.
                     if (candidateClass == WeaponClasses.SLW && target.isSplashed)
-                    {
-                        targetWeapon = item.Current;
-                        if (distance > gunRange)
-                            break;
-                    }
+					{
+						float canidateYield = ((MissileBase)item.Current).GetBlastRadius();
+						// not sure on the desired selection priority algorithm, so placeholder By Yield for now
+						float droptime = ((MissileBase)item.Current).dropTime;
+
+						if (droptime > 0) //make sure it's an airdropped torpedo if flying
+						{
+                            if (!vessel.LandedOrSplashed)
+                            {
+							    if (targetYield > canidateYield) continue;
+							    targetYield = canidateYield;
+							    targetWeapon = item.Current;
+							    if (distance > gunRange)
+								    break;
+                            }
+						}
+					}
 
                     if (candidateClass == WeaponClasses.Bomb)
-                    {
-                        // only useful if we are flying
-                        if (!vessel.LandedOrSplashed)
-                        {
-                            if ((targetWeapon != null) && (targetWeapon.GetWeaponClass() == WeaponClasses.Bomb))
-                                // dont replace bombs
-                                break;
-                            else
-                                // TODO: compare bombs which one is better for ground attack
-                                // Priority Sequence:
-                                // - guided (JDAM)
-                                // - by blast strength
-                                targetWeapon = item.Current;
-                        }
-                    }
+					{
+						// only useful if we are flying
+						float canidateYield = ((MissileBase)item.Current).GetBlastRadius();
+						if (!vessel.LandedOrSplashed)
+						{
+							// Priority Sequence:
+							// - guided (JDAM)
+							// - by blast strength
+							// - find way to implement cluster bomb selection priority?
+							if (((MissileBase)item.Current).GuidanceMode == MissileBase.GuidanceModes.AGMBallistic)
+							{
+								if (targetYield > canidateYield) continue; //prioritize biggest Boom
+								targetYield = canidateYield;
+								targetWeapon = item.Current;
+								if (targetWeapon != null && distance > canidateYield) // don't drop bombs when within blast radius
+									break;  //Prioritize guided bombs
+							}
+							if (((MissileBase)item.Current).GuidanceMode == MissileBase.GuidanceModes.None)
+							{
+								if (targetYield > canidateYield) continue;
+								targetYield = canidateYield;
+								targetWeapon = item.Current;
+								if (targetWeapon != null && distance > canidateYield)
+									break;  //then standard
+							}
+						}
+					}
 
                     if (candidateClass == WeaponClasses.Rocket)
-                    {
-                        if ((targetWeapon != null) && (targetWeapon.GetWeaponClass() == WeaponClasses.Bomb))
-                            // dont replace bombs
-                            continue;
-                        else
-                            // TODO: compare bombs which one is better for ground attack
-                            // Priority Sequence:
-                            // - by blast strength
-                            targetWeapon = item.Current;
-                    }
+					{
+						float canidateRocketPower = ((RocketLauncher)item.Current).blastForce;
+
+						if ((targetWeapon != null) && (targetWeapon.GetWeaponClass() == WeaponClasses.Bomb)) continue;
+						// dont replace bombs
+
+						if ((targetWeapon != null) && (targetRocketPower > canidateRocketPower))
+							continue; //don't replace higher yield rockets
+						targetWeapon = item.Current;
+						targetRocketPower = canidateRocketPower;
+					}
 
                     if ((candidateClass != WeaponClasses.Gun)) continue;
                     // Flying: prefer bombs/rockets/missiles
@@ -3411,7 +3530,7 @@ namespace BDArmory.Modules
                         if (item.Current.GetMissileType().ToLower() != "torpedo") continue;
                         targetWeapon = item.Current;
                         break;
-                    }
+                    }                   
                 }
                 item.Dispose();
             }
