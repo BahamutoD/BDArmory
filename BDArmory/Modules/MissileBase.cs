@@ -236,14 +236,26 @@ namespace BDArmory.Modules
         private float _originalDistance = float.MinValue;
         private Vector3 _startPoint;
         Vector3 previousPos;
+        
+		public string Sublabel;
+		public int missilecount = 0; //#191
+
+		public void GetMissileCount() // could stick this in GetSublabel, but that gets called every frame by BDArmorySetup?
+		{
+			missilecount = 0;
+			List<Part>.Enumerator craftPart = vessel.parts.GetEnumerator();
+			while (craftPart.MoveNext())
+			{
+				if (craftPart.Current == null) continue;
+				if (craftPart.Current.name != part.name) continue;
+				missilecount++;
+			}
+			craftPart.Dispose();
+		}
 
         public string GetSubLabel()
         {
-            if (Enum.GetName(typeof(TargetingModes), TargetingMode) == "None")
-            {
-                return string.Empty;
-            }
-            return Enum.GetName(typeof(TargetingModes), TargetingMode);
+			return Sublabel = "Guidance: " + Enum.GetName(typeof(TargetingModes), TargetingMode) + "; Remaining: "+ missilecount; 
         }
 
         public Part GetPart()
