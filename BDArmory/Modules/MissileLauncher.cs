@@ -665,6 +665,15 @@ namespace BDArmory.Modules
         void Update()
         {
             CheckDetonationState();
+            if (HighLogic.LoadedSceneIsFlight)
+			{
+				if (weaponClass == WeaponClasses.SLW && FlightGlobals.getAltitudeAtPos(part.transform.position) > 0) //#710
+				{
+					float a = (float)FlightGlobals.getGeeForceAtPosition(part.transform.position).magnitude;
+					float d = FlightGlobals.getAltitudeAtPos(part.transform.position);
+					dropTime = ((float)Math.Sqrt(a * (a + (8 * d))) - a) / (2 * a) - (Time.fixedDeltaTime * 1.5f); //quadratic equation for accel to find time from known force and vel
+				}// adjusts droptime to delay the MissileRoutine IEnum so torps won't start boosting until splashdown 
+			}
         }
 
         void OnDestroy()
@@ -1171,7 +1180,7 @@ namespace BDArmory.Modules
         void UpdateThrustForces()
         {
             if (MissileState == MissileStates.PostThrust) return;
-
+			if (weaponClass == WeaponClasses.SLW && FlightGlobals.getAltitudeAtPos(part.transform.position) > 0) return; //#710, no torp thrust out of water
             if (currentThrust * Throttle > 0)
             {
                 debugString.Append("Missile thrust=" + currentThrust * Throttle);
@@ -1244,7 +1253,7 @@ namespace BDArmory.Modules
                 while (gpe.MoveNext())
                 {
                     if (gpe.Current == null) continue;
-                    if (!vessel.InVacuum() && Throttle > 0)
+                    if ((!vessel.InVacuum() && Throttle > 0) && weaponClass != WeaponClasses.SLW || (weaponClass == WeaponClasses.SLW && FlightGlobals.getAltitudeAtPos(part.transform.position) < 0 )) //#710
                     {
                         gpe.Current.emit = true;
                         gpe.Current.pEmitter.worldVelocity = 2 * ParticleTurbulence.flareTurbulence;
@@ -1384,7 +1393,14 @@ namespace BDArmory.Modules
                     }
 
                     emitter.Current.maxSize = Mathf.Clamp01(Throttle / Mathf.Clamp((float)vessel.atmDensity, 0.2f, 1f));
-                    emitter.Current.emit = true;
+                    if (weaponClass != WeaponClasses.SLW || (weaponClass == WeaponClasses.SLW && FlightGlobals.getAltitudeAtPos(part.transform.position) < 0)) //#710
+					{
+						emitter.Current.emit = true;
+					}
+					else
+					{
+						emitter.Current.emit = false; // #710, shut down thrust FX for torps out of water
+					}
                 }
                 emitter.Dispose();
 
@@ -1392,9 +1408,16 @@ namespace BDArmory.Modules
                 while (gpe.MoveNext())
                 {
                     if (gpe.Current == null) continue;
-                    gpe.Current.pEmitter.maxSize = Mathf.Clamp01(Throttle / Mathf.Clamp((float)vessel.atmDensity, 0.2f, 1f));
-                    gpe.Current.emit = true;
-                    gpe.Current.pEmitter.worldVelocity = 2 * ParticleTurbulence.flareTurbulence;
+                   if (weaponClass != WeaponClasses.SLW || (weaponClass == WeaponClasses.SLW && FlightGlobals.getAltitudeAtPos(part.transform.position) < 0)) //#710
+					{
+						gpe.Current.pEmitter.maxSize = Mathf.Clamp01(Throttle / Mathf.Clamp((float)vessel.atmDensity, 0.2f, 1f));
+						gpe.Current.emit = true;
+						gpe.Current.pEmitter.worldVelocity = 2 * ParticleTurbulence.flareTurbulence;
+					}
+					else
+					{
+						gpe.Current.emit = false;
+					}
                 }
                 gpe.Dispose();
 
