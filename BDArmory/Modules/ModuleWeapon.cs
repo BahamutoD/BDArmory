@@ -452,7 +452,7 @@ namespace BDArmory.Modules
         public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
-        public float detonationRange = 5f; // give ability to set proximity range
+        public float detonationRange = -1f; // give ability to set proximity range
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
          UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
@@ -742,7 +742,7 @@ namespace BDArmory.Modules
             }
 
             SetupBullet();
-
+			SetInitialDetonationDistance();
             if (bulletInfo == null)
             {
                 if (BDArmorySettings.DRAW_DEBUG_LABELS)
@@ -2251,11 +2251,29 @@ namespace BDArmory.Modules
                 cannonShellHeat = bulletInfo.blastHeat;
                 cannonShellPower = bulletInfo.blastPower;
                 cannonShellRadius = bulletInfo.blastRadius;
-                detonationRange = bulletInfo.tntMass; // get default proxfuze radius
-                detonationRange = (float)((14.8f * Math.Pow(detonationRange, 1 / 3f)) * (2 / 3)); // have to call it this way, using BlastUtils.GetBlastRadius returns 0, setting it to 2/3's tnt blast radius so flak explodes when target inside radius, ratehr than at edge.
             }
             ParseBulletDragType();
         }
+
+        protected void SetInitialDetonationDistance()
+		{
+			if (this.detonationRange == -1)
+			{
+				if (eWeaponType == WeaponTypes.Ballistic && (bulletInfo.tntMass != 0 && (proximityDetonation || airDetonation)))
+				{
+					detonationRange = (BlastPhysicsUtils.CalculateBlastRange(bulletInfo.tntMass) * 0.66f);
+				}
+				else
+				{
+					detonationRange = 0f;
+					proximityDetonation = false;
+				}
+			}
+			if (BDArmorySettings.DRAW_DEBUG_LABELS)
+			{
+				Debug.Log("[BDArmory]: DetonationDistance = : " + detonationRange);
+			}
+		}     
 
         #endregion Bullets
 
