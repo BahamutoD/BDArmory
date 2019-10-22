@@ -8,6 +8,7 @@ using BDArmory.Radar;
 using BDArmory.Targeting;
 using BDArmory.UI;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.Modules
 {
@@ -283,7 +284,7 @@ namespace BDArmory.Modules
 
         void UpdateToggleGuiName()
         {
-            Events["Toggle"].guiName = radarEnabled ? "Disable Radar" : "Enable Radar";
+            Events["Toggle"].guiName = radarEnabled ? Localizer.Format("#autoLOC_bda_1000000") : Localizer.Format("#autoLOC_bda_1000001");		// #autoLOC_bda_1000000 = Disable Radar		// #autoLOC_bda_1000001 = Enable Radar
         }
 
         public void EnsureVesselRadarData()
@@ -1059,25 +1060,25 @@ namespace BDArmory.Modules
             switch (i)
             {
                 case 0:
-                    return "SAM";
+                    return Localizer.Format("#autoLOC_bda_1000002");		// #autoLOC_bda_1000002 = SAM
 
                 case 1:
-                    return "FIGHTER";
+                    return Localizer.Format("#autoLOC_bda_1000003");		// #autoLOC_bda_1000003 = FIGHTER
 
                 case 2:
-                    return "AWACS";
+                    return Localizer.Format("#autoLOC_bda_1000004");		// #autoLOC_bda_1000004 = AWACS
 
                 case 3:
                 case 4:
-                    return "MISSILE";
+                    return Localizer.Format("#autoLOC_bda_1000005");		// #autoLOC_bda_1000005 = MISSILE
 
                 case 5:
-                    return "DETECTION";
+                    return Localizer.Format("#autoLOC_bda_1000006");		// #autoLOC_bda_1000006 = DETECTION
 
                 case 6:
-                    return "SONAR";
+                    return Localizer.Format("#autoLOC_bda_1000017");		// #autoLOC_bda_1000017 = SONAR
             }
-            return "UNKNOWN";
+            return Localizer.Format("#autoLOC_bda_1000007");		// #autoLOC_bda_1000007 = UNKNOWN
             //{SAM = 0, Fighter = 1, AWACS = 2, MissileLaunch = 3, MissileLock = 4, Detection = 5, Sonar = 6}
         }
 
@@ -1088,37 +1089,37 @@ namespace BDArmory.Modules
 
             StringBuilder output = new StringBuilder();
             output.Append(Environment.NewLine);
-            output.AppendLine($"Radar Type: {(isLinkOnly ? "datalink only" : omnidirectional ? "omnidirectional" : "boresight")}");
+            output.AppendLine(Localizer.Format("#autoLOC_bda_1000008", (isLinkOnly ? Localizer.Format("#autoLOC_bda_1000018") : omnidirectional ? Localizer.Format("#autoLOC_bda_1000019") : Localizer.Format("#autoLOC_bda_1000020"))));
 
-            output.AppendLine($"EC/sec: {resourceDrain}");
+            output.AppendLine(Localizer.Format("#autoLOC_bda_1000021", resourceDrain));
             if (!isLinkOnly)
             {
-                output.AppendLine($"Field of view: {directionalFieldOfView}°");
-                output.AppendLine($"RWR Threat Type: {getRWRType(rwrThreatType)}");
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000022", directionalFieldOfView));
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000023", getRWRType(rwrThreatType)));
 
                 output.Append(Environment.NewLine);
-                output.AppendLine($"Capabilities:");
-                output.AppendLine($"- Scanning: {canScan}");
-                output.AppendLine($"- Track-While-Scan: {canTrackWhileScan}");
-                output.AppendLine($"- Locking: {canLock}");
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000024"));
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000025", canScan));
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000026", canTrackWhileScan));
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000027", canLock));
                 if (canLock)
                 {
-                    output.AppendLine($"- Max Locks: {maxLocks}");
+                    output.AppendLine(Localizer.Format("#autoLOC_bda_1000028", maxLocks));
                 }
-                output.AppendLine($"- Receive Data: {canRecieveRadarData}");
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000029", canRecieveRadarData));
 
                 output.Append(Environment.NewLine);
-                output.AppendLine($"Performance:");
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000030"));
 
                 if (canScan)
-                    output.AppendLine($"- Detection: {radarDetectionCurve.Evaluate(radarMaxDistanceDetect)} m^2 @ {radarMaxDistanceDetect} km");
+                    output.AppendLine(Localizer.Format("#autoLOC_bda_1000031", radarDetectionCurve.Evaluate(radarMaxDistanceDetect), radarMaxDistanceDetect));
                 else
-                    output.AppendLine($"- Detection: (none)");
+                    output.AppendLine(Localizer.Format("#autoLOC_bda_1000032"));
                 if (canLock)
-                    output.AppendLine($"- Lock/Track: {radarLockTrackCurve.Evaluate(radarMaxDistanceLockTrack)} m^2 @ {radarMaxDistanceLockTrack} km");
+                    output.AppendLine(Localizer.Format("#autoLOC_bda_1000033", radarLockTrackCurve.Evaluate(radarMaxDistanceLockTrack), radarMaxDistanceLockTrack));
                 else
-                    output.AppendLine($"- Lock/Track: (none)");
-                output.AppendLine($"- Ground clutter factor: {radarGroundClutterFactor}");
+                    output.AppendLine(Localizer.Format("#autoLOC_bda_1000034"));
+                output.AppendLine(Localizer.Format("#autoLOC_bda_1000035", radarGroundClutterFactor));
             }
 
             return output.ToString();
@@ -1135,7 +1136,7 @@ namespace BDArmory.Modules
             double chargeAvailable = part.RequestResource("ElectricCharge", drainAmount, ResourceFlowMode.ALL_VESSEL);
             if (chargeAvailable < drainAmount * 0.95f)
             {
-                ScreenMessages.PostScreenMessage("Radar Requires EC", 5.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#autoLOC_bda_1000016"), 5.0f, ScreenMessageStyle.UPPER_CENTER);		// #autoLOC_bda_1000016 = Radar Requires EC
                 DisableRadar();
             }
         }
