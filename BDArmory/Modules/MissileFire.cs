@@ -2102,6 +2102,13 @@ namespace BDArmory.Modules
                     weaponTypesGround.Add(weapon.Current);
                     weaponTypesSLW.Add(weapon.Current);
                 }
+                
+                	if (weapon.Current.GetWeaponClass() == WeaponClasses.Bomb || 
+					weapon.Current.GetWeaponClass() == WeaponClasses.Missile ||
+					weapon.Current.GetWeaponClass() == WeaponClasses.SLW)
+				{
+					weapon.Current.GetPart().FindModuleImplementing<MissileBase>().GetMissileCount(); // #191, Do it this way so the GetMissileCount only updates when missile fired
+				}
             }
             weapon.Dispose();
 
