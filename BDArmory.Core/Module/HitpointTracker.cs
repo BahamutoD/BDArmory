@@ -11,9 +11,6 @@ namespace BDArmory.Core.Module
         UI_ProgressBar(affectSymCounterparts = UI_Scene.None, controlEnabled = false, scene = UI_Scene.All, maxValue = 100000, minValue = 0, requireFullControl = false)]
         public float Hitpoints;
 
-        [KSPField]
-        bool hasPrefabRun = false;
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Armor Thickness"),
         UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float Armor = 10f;
@@ -41,7 +38,6 @@ namespace BDArmory.Core.Module
         private readonly float hitpointMultiplier = BDArmorySettings.HITPOINT_MULTIPLIER;
 
         private float previousHitpoints;
-        private bool _firstSetup = true;
         private bool _updateHitpoints = false;
         private bool _forceUpdateHitpointsUI = false;
         private const int HpRounding = 100;
@@ -101,7 +97,6 @@ namespace BDArmory.Core.Module
                 if (!ArmorSet) overrideArmorSetFromConfig();
 
                 previousHitpoints = maxHitPoints_;
-                hasPrefabRun = true;
             }
             else
             {

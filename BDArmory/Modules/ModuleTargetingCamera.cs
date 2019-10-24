@@ -765,7 +765,7 @@ namespace BDArmory.Modules
             {
                 if (!SlewingMouseCam) SlewingMouseCam = true;
             }
-            if (Event.current.type == EventType.repaint && SlewingMouseCam)
+            if (Event.current.type == EventType.Repaint && SlewingMouseCam)
             {
                 if (Mouse.delta.x != 0 && Mouse.delta.y != 0)
                 {
@@ -773,7 +773,7 @@ namespace BDArmory.Modules
                 }
             }
 
-            if (Event.current.type == EventType.repaint && imageRect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.Repaint && imageRect.Contains(Event.current.mousePosition))
             {
                 if (!wasZooming) isZooming = true;
             }
@@ -782,7 +782,7 @@ namespace BDArmory.Modules
             {
                 ZoomRoutine(Input.mouseScrollDelta);
             }
-            if (Event.current.type == EventType.repaint && !imageRect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.Repaint && !imageRect.Contains(Event.current.mousePosition))
             {
                 if (wasZooming) isZooming = false;
             }
