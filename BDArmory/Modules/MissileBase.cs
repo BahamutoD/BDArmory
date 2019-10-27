@@ -278,7 +278,9 @@ namespace BDArmory.Modules
 			while (craftPart.MoveNext())
 			{
 				if (craftPart.Current == null) continue;
-				if (craftPart.Current.name != part.name) continue;
+                if (part == null) continue;
+                if (part.name == null) continue;
+                if (craftPart.Current.name != part.name) continue;
 				missilecount++;
 			}
 			craftPart.Dispose();
@@ -401,7 +403,8 @@ namespace BDArmory.Modules
                 TargetAcquired = false;
                 return;
             }
-
+           
+            
             if (heatTarget.exists && lockFailTimer < 0)
             {
                 lockFailTimer = 0;
@@ -409,7 +412,7 @@ namespace BDArmory.Modules
             if (lockFailTimer >= 0)
             {
                 Ray lookRay = new Ray(transform.position, heatTarget.position + (heatTarget.velocity * Time.fixedDeltaTime) - transform.position);
-                heatTarget = BDATargetManager.GetHeatTarget(lookRay, lockedSensorFOV / 2, heatThreshold, allAspect, SourceVessel?.gameObject.GetComponent<MissileFire>());
+                heatTarget = BDATargetManager.GetHeatTarget(SourceVessel, vessel,  lookRay, lockedSensorFOV / 2, heatThreshold, allAspect, SourceVessel?.gameObject?.GetComponent<MissileFire>());
 
                 if (heatTarget.exists)
                 {
@@ -1018,6 +1021,41 @@ namespace BDArmory.Modules
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: DetonationDistanceState = : " + DetonationDistanceState);
+            }
+        }
+
+        public void CheckMiss(Vector3 targetPosition)
+        {
+            if (HasMissed) return;
+            // if I'm to close to my vessel avoid explosion
+            if ((vessel.CoM - SourceVessel.CoM).magnitude < 4 * DetonationDistance) return;
+            // if I'm getting closer to  my target avoid explosion
+            if ((vessel.CoM - targetPosition).sqrMagnitude >
+                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - (targetPosition + (TargetVelocity * Time.fixedDeltaTime))).sqrMagnitude) return;
+
+            if (MissileState != MissileStates.PostThrust) return;
+
+            Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+            HasMissed = true;
+            guidanceActive = false;
+            TargetMf = null;
+            isTimed = true;
+            detonationTime = TimeIndex + 1.5f;
+        }
+
+        public void CheckMiss()
+        {
+            if (HasMissed) return;
+
+
+            if (MissileState == MissileStates.PostThrust && (vessel.LandedOrSplashed || vessel.Velocity().magnitude < 10f))
+            {
+                Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+                HasMissed = true;
+                guidanceActive = false;
+                TargetMf = null;
+                isTimed = true;
+                detonationTime = TimeIndex + 1.5f;
             }
         }
 

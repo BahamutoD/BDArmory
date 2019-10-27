@@ -323,7 +323,7 @@ namespace BDArmory.UI
             return flareTarget;
         }
 
-        public static TargetSignatureData GetHeatTarget(Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null, bool favorGroundTargets = false)
+        public static TargetSignatureData GetHeatTarget(Vessel sourceVessel, Vessel missileVessel,  Ray ray, float scanRadius, float highpassThreshold, bool allAspect, MissileFire mf = null, bool favorGroundTargets = false)
         {
             float minMass = 0.05f;  //otherwise the RAMs have trouble shooting down incoming missiles
             TargetSignatureData finalData = TargetSignatureData.noTarget;
@@ -331,15 +331,32 @@ namespace BDArmory.UI
 
             foreach (Vessel vessel in LoadedVessels)
             {
+                if (vessel == null)
+                {
+                    continue;
+                }
                 if (!vessel || !vessel.loaded)
                 {
                     continue;
                 }
 
-                if (favorGroundTargets && !vessel.LandedOrSplashed) // for AGM heat guidance
+                if (vessel == sourceVessel || vessel == missileVessel)
+                {
                     continue;
+                }
+
+                if (favorGroundTargets && !vessel.LandedOrSplashed)
+                {
+                    // for AGM heat guidance
+                    continue;
+                } 
 
                 TargetInfo tInfo = vessel.gameObject.GetComponent<TargetInfo>();
+
+                if (tInfo == null)
+                {
+                    return finalData;
+                }
                 // If no weaponManager or no target or the target is not a missile with engines on..??? and the target weighs less than 50kg, abort.
                 if (mf == null ||
                     !tInfo ||
@@ -352,7 +369,7 @@ namespace BDArmory.UI
                 }
 
                 // Abort if target is friendly.
-                if (mf != null && tInfo != null)
+                if (mf != null)
                 {
                     if (mf.Team.IsFriendly(tInfo.Team))
                     {

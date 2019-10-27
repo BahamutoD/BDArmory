@@ -917,7 +917,7 @@ namespace BDArmory.Modules
 
                 if (missileBase.SourceVessel != this.vessel) continue;
 
-                if (!missileBase.HasMissed)
+                if (missileBase.MissileState != MissileBase.MissileStates.PostThrust && !missileBase.HasMissed && !missileBase.HasExploded)
                 {
                     tempMissilesAway++;
                 }
@@ -3823,7 +3823,7 @@ namespace BDArmory.Modules
                     return;
                 }
 
-                float scanRadius = CurrentMissile.lockedSensorFOV * 2;
+                float scanRadius = CurrentMissile.lockedSensorFOV * 0.5f;
                 float maxOffBoresight = CurrentMissile.maxOffBoresight * 0.85f;
 
                 if (vesselRadarData && vesselRadarData.locked)
@@ -3836,7 +3836,7 @@ namespace BDArmory.Modules
                     heatTarget.predictedPosition - CurrentMissile.MissileReferenceTransform.position
                     : CurrentMissile.GetForwardTransform();
 
-                heatTarget = BDATargetManager.GetHeatTarget(new Ray(CurrentMissile.MissileReferenceTransform.position + (50 * CurrentMissile.GetForwardTransform()), direction), scanRadius, CurrentMissile.heatThreshold, CurrentMissile.allAspect, this);
+                heatTarget = BDATargetManager.GetHeatTarget(vessel,vessel,  new Ray(CurrentMissile.MissileReferenceTransform.position + (50 * CurrentMissile.GetForwardTransform()), direction), scanRadius, CurrentMissile.heatThreshold, CurrentMissile.allAspect, this);
             }
         }
 
