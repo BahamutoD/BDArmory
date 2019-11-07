@@ -21,7 +21,6 @@ namespace BDArmory.Modules
         /// //////////////////////////////////
         [KSPField(isPersistant = true)]
         public float DetonationOffset = 0.1f;
-        private float _DetonationOffset = 0.1f;
 
         [KSPField(isPersistant = true)]
         public bool autoDetCalc = false;
@@ -32,14 +31,6 @@ namespace BDArmory.Modules
         public WeaponClasses GetWeaponClass()
         {
             return weaponClass;
-        }
-
-        [KSPField(isPersistant = true)]
-        public string shortName = string.Empty;
-
-        public string GetShortName()
-        {
-            return shortName;
         }
 
         public string GetMissileType()
@@ -264,8 +255,6 @@ namespace BDArmory.Modules
         public StringBuilder debugString = new StringBuilder();
 
         private float _throttle = 1f;
-        private float _originalDistance = float.MinValue;
-        private Vector3 _startPoint;
         Vector3 previousPos;
         
 		public string Sublabel;

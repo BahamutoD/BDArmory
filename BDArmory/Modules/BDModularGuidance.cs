@@ -91,15 +91,11 @@ namespace BDArmory.Modules
         private Vector3 initialMissileRollPlane;
         private Vector3 initialMissileForward;
 
-        private float rollError;
 
         private bool _minSpeedAchieved = false;
         private double lastRollAngle;
         private double angularVelocity;
-        private double angularAcceleration;
-
-        private double lasAngularVelocity
-            ;
+            
 
         #endregion KSP FIELDS
 

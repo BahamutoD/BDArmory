@@ -58,7 +58,6 @@ namespace BDArmory.Modules
 
         public bool radarLock;
 
-        float controlPanelHeight = 84;//80
 
         [KSPField(isPersistant = true)]
         public bool groundStabilized;

@@ -11,7 +11,6 @@ namespace BDArmory.FX
         public Rigidbody rb;
         Vector3 internalVelocity;
         Vector3 lastPos;
-        bool useInternalV;
 
         Vector3 velocity
         {
@@ -27,7 +26,6 @@ namespace BDArmory.FX
                 }
                 else
                 {
-                    useInternalV = true;
                     return internalVelocity;
                 }
             }

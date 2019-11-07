@@ -1288,7 +1288,7 @@ namespace BDArmory.Modules
             float chargeAmount = requestResourceAmount * TimeWarp.fixedDeltaTime;
 
             if (!pointingAtSelf && !Misc.Misc.CheckMouseIsOnGui() && WMgrAuthorized() && !isOverheated &&
-                (part.RequestResource(ammoName, chargeAmount) >= chargeAmount || BDArmorySettings.INFINITE_AMMO))
+                (part.RequestResource(ammoName.GetHashCode(), (double)chargeAmount) >= chargeAmount || BDArmorySettings.INFINITE_AMMO))
             {
                 if (!audioSource.isPlaying)
                 {
@@ -1501,7 +1501,7 @@ namespace BDArmory.Modules
                 }
             }
 
-            if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName, requestResourceAmount) > 0))
+            if ((BDArmorySettings.INFINITE_AMMO || part.RequestResource(ammoName.GetHashCode(), (double)requestResourceAmount) > 0))
             {
                 return true;
             }
