@@ -58,7 +58,6 @@ namespace BDArmory.Modules
 
         public bool radarLock;
 
-        float controlPanelHeight = 84;//80
 
         [KSPField(isPersistant = true)]
         public bool groundStabilized;
@@ -637,7 +636,7 @@ namespace BDArmory.Modules
             if (weaponManager && weaponManager.vesselRadarData && weaponManager.vesselRadarData.locked)
             {
                 RadarDisplayData tgt = weaponManager.vesselRadarData.lockedTargetData;
-                Vector3 radarTargetPos = tgt.targetData.predictedPosition + (tgt.targetData.velocity * Time.fixedDeltaTime);
+                Vector3 radarTargetPos = tgt.targetData.predictedPosition;
                 Vector3 targetDirection = radarTargetPos - cameraParentTransform.position;
 
                 //Quaternion lookRotation = Quaternion.LookRotation(radarTargetPos-cameraParentTransform.position, VectorUtils.GetUpDirection(cameraParentTransform.position));
@@ -646,7 +645,7 @@ namespace BDArmory.Modules
                     //cameraParentTransform.rotation = lookRotation;
                     if (tgt.vessel)
                     {
-                        targetDirection = ((tgt.vessel.CoM + (tgt.vessel.Velocity() * Time.fixedDeltaTime)) - cameraParentTransform.transform.position);
+                        targetDirection = ((tgt.vessel.CoM) - cameraParentTransform.transform.position);
                     }
                     PointCameraModel(targetDirection);
                     GroundStabilize();
@@ -658,7 +657,7 @@ namespace BDArmory.Modules
                         ClearTarget();
                     }
                     //lookRotation = Quaternion.RotateTowards(cameraParentTransform.rotation, lookRotation, 120*Time.fixedDeltaTime);
-                    Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 300 * Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
+                    Vector3 rotateTwdDirection = Vector3.RotateTowards(cameraParentTransform.forward, targetDirection, 1200 * Time.fixedDeltaTime * Mathf.Deg2Rad, 0);
                     PointCameraModel(rotateTwdDirection);
                 }
             }
@@ -765,7 +764,7 @@ namespace BDArmory.Modules
             {
                 if (!SlewingMouseCam) SlewingMouseCam = true;
             }
-            if (Event.current.type == EventType.repaint && SlewingMouseCam)
+            if (Event.current.type == EventType.Repaint && SlewingMouseCam)
             {
                 if (Mouse.delta.x != 0 && Mouse.delta.y != 0)
                 {
@@ -773,7 +772,7 @@ namespace BDArmory.Modules
                 }
             }
 
-            if (Event.current.type == EventType.repaint && imageRect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.Repaint && imageRect.Contains(Event.current.mousePosition))
             {
                 if (!wasZooming) isZooming = true;
             }
@@ -782,7 +781,7 @@ namespace BDArmory.Modules
             {
                 ZoomRoutine(Input.mouseScrollDelta);
             }
-            if (Event.current.type == EventType.repaint && !imageRect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.Repaint && !imageRect.Contains(Event.current.mousePosition))
             {
                 if (wasZooming) isZooming = false;
             }

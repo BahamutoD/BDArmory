@@ -100,6 +100,9 @@ namespace BDArmory.Core.Services
 
         public override bool HasFireFX_svc(Part p)
         {
+            if (p == null) return false;
+            if (p.Modules.GetModule<HitpointTracker>() == null) return false;
+
             return p.Modules.GetModule<HitpointTracker>().GetFireFX();
         }
 

@@ -1,6 +1,25 @@
 ﻿v1.3.2
+* NEW FEATURES:
+	* Recompiled for KSP 1.8.1
+	* Munition count to Weapon Manager GUI.
+* ENHANCEMENTS
+	* Enhanced weapon selection.
+	* Beam-guided munition track moving targets.
+	* Improved camera tracking position.
+	* RMB info in editor.
+	* Ballistic guidance overhaul. Now it is possible to also select the angle of the ballistic path.
+	* Turret movement improved.
 * FIXES
+	* Weapons respect engagement range.
+	* Dozen of NRE exceptions.
+	* Fix surface ai description.
+	* Fix turret gimbal calculation.
 	* Turrets with constrained yaw should freak out less when aiming behind them.
+	* Locatization fixes.
+	* Fixed torpedo produces thrust above water. #710
+	* Fixed proximity fuze radius for explosive bullets.
+	* Fixed heat missiles missing target just after being fired.
+
 
 v1.3.1
 * FIXES

@@ -21,7 +21,6 @@ namespace BDArmory.Modules
         /// //////////////////////////////////
         [KSPField(isPersistant = true)]
         public float DetonationOffset = 0.1f;
-        private float _DetonationOffset = 0.1f;
 
         [KSPField(isPersistant = true)]
         public bool autoDetCalc = false;
@@ -32,14 +31,6 @@ namespace BDArmory.Modules
         public WeaponClasses GetWeaponClass()
         {
             return weaponClass;
-        }
-
-        [KSPField(isPersistant = true)]
-        public string shortName = string.Empty;
-
-        public string GetShortName()
-        {
-            return shortName;
         }
 
         public string GetMissileType()
@@ -125,6 +116,11 @@ namespace BDArmory.Modules
          UI_FloatRange(minValue = 0.5f, maxValue = 1.5f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
         public float BallisticOverShootFactor = 0.7f;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ballistic Angle path"),
+         UI_FloatRange(minValue = 5f, maxValue = 60f, stepIncrement = 5f, scene = UI_Scene.Editor)]
+        public float BallisticAngle = 45.0f;
+
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cruise Altitude"), UI_FloatRange(minValue = 1f, maxValue = 500f, stepIncrement = 10f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
         public float CruiseAltitude = 500;
 
@@ -179,7 +175,33 @@ namespace BDArmory.Modules
 
         public bool HasExploded { get; set; } = false;
 
-        protected CruiseGuidance _cruiseGuidance;
+        protected IGuidance _guidance;
+
+        private double _lastVerticalSpeed;
+        private double _lastHorizontalSpeed;
+
+        public double HorizontalAcceleration
+        {
+            get
+            {
+                var result = (vessel.horizontalSrfSpeed - _lastHorizontalSpeed);
+                _lastHorizontalSpeed = vessel.horizontalSrfSpeed;
+                return result;
+
+            }
+        }
+
+        public double VerticalAcceleration
+        {
+            get
+            {
+                var result = (vessel.horizontalSrfSpeed - _lastHorizontalSpeed);
+                _lastVerticalSpeed = vessel.verticalSpeed;
+                return result;
+            }
+        }
+
+       
 
         public float Throttle
         {
@@ -233,8 +255,6 @@ namespace BDArmory.Modules
         public StringBuilder debugString = new StringBuilder();
 
         private float _throttle = 1f;
-        private float _originalDistance = float.MinValue;
-        private Vector3 _startPoint;
         Vector3 previousPos;
         
 		public string Sublabel;
@@ -247,7 +267,9 @@ namespace BDArmory.Modules
 			while (craftPart.MoveNext())
 			{
 				if (craftPart.Current == null) continue;
-				if (craftPart.Current.name != part.name) continue;
+                if (part == null) continue;
+                if (part.name == null) continue;
+                if (craftPart.Current.name != part.name) continue;
 				missilecount++;
 			}
 			craftPart.Dispose();
@@ -325,6 +347,8 @@ namespace BDArmory.Modules
         [KSPField(isPersistant = true, guiName = "GPS Target")]
         public string gpsTargetName = "";
 
+       
+
         void PickGPSTarget()
         {
             gpsSet = true;
@@ -368,7 +392,8 @@ namespace BDArmory.Modules
                 TargetAcquired = false;
                 return;
             }
-
+           
+            
             if (heatTarget.exists && lockFailTimer < 0)
             {
                 lockFailTimer = 0;
@@ -376,7 +401,7 @@ namespace BDArmory.Modules
             if (lockFailTimer >= 0)
             {
                 Ray lookRay = new Ray(transform.position, heatTarget.position + (heatTarget.velocity * Time.fixedDeltaTime) - transform.position);
-                heatTarget = BDATargetManager.GetHeatTarget(lookRay, lockedSensorFOV / 2, heatThreshold, allAspect, SourceVessel.gameObject.GetComponent<MissileFire>());
+                heatTarget = BDATargetManager.GetHeatTarget(SourceVessel, vessel,  lookRay, lockedSensorFOV / 2, heatThreshold, allAspect, SourceVessel?.gameObject?.GetComponent<MissileFire>());
 
                 if (heatTarget.exists)
                 {
@@ -816,99 +841,17 @@ namespace BDArmory.Modules
 
         protected Vector3 CalculateAGMBallisticGuidance(MissileBase missile, Vector3 targetPosition)
         {
-            //set up
-            if (_originalDistance == float.MinValue)
+            if (this._guidance == null)
             {
-                _startPoint = missile.vessel.CoM;
-                _originalDistance = Vector3.Distance(targetPosition, missile.vessel.CoM);
-
-                //calculating expected apogee bases on isosceles triangle
+                _guidance = new BallisticGuidance();
             }
 
-            debugString.Append($"_originalDistance: {_originalDistance}");
-            debugString.Append(Environment.NewLine);
-            debugString.Append($"BallisticOverShootFactor: {BallisticOverShootFactor}");
-            debugString.Append(Environment.NewLine);
-
-            var surfaceDistanceVector = Vector3
-                .Project((missile.vessel.CoM - _startPoint), (targetPosition - _startPoint).normalized);
-
-            var pendingDistance = _originalDistance - surfaceDistanceVector.magnitude;
-
-            debugString.Append($"pendingDistance: {pendingDistance}");
-            debugString.Append(Environment.NewLine);
-
-            if (TimeIndex < 1)
-            {
-                return missile.vessel.CoM + missile.vessel.Velocity() * 10;
-            }
-
-            Vector3 agmTarget;
-            // Getting apoapsis
-            if (missile.vessel.verticalSpeed > 0 && pendingDistance > _originalDistance * 0.5)
-            {
-                debugString.Append($"Ascending");
-                debugString.Append(Environment.NewLine);
-
-                var freeFallTime = CalculateFreeFallTime();
-                debugString.Append($"freeFallTime: {freeFallTime}");
-                debugString.Append(Environment.NewLine);
-
-                var horizontalTime = pendingDistance / missile.vessel.horizontalSrfSpeed;
-                debugString.Append($"horizontalTime: {horizontalTime}");
-                debugString.Append(Environment.NewLine);
-
-                if (freeFallTime >= horizontalTime)
-                {
-                    debugString.Append($"Free fall achieved:");
-                    debugString.Append(Environment.NewLine);
-
-                    missile.Throttle = 0;
-                    agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
-                }
-                else
-                {
-                    debugString.Append($"Free fall not achieved:");
-                    debugString.Append(Environment.NewLine);
-
-                    missile.Throttle = 1;
-                    Vector3 dToTarget = targetPosition - missile.vessel.CoM;
-                    Vector3 direction = Quaternion.AngleAxis(Mathf.Clamp(missile.maxOffBoresight * 0.9f, 0, 45f), Vector3.Cross(dToTarget, VectorUtils.GetUpDirection(missile.vessel.CoM))) * dToTarget;
-                    agmTarget = missile.vessel.CoM + direction;
-                }
-
-                debugString.Append($"Throttle: {missile.Throttle}");
-                debugString.Append(Environment.NewLine);
-            }
-            else
-            {
-                debugString.Append($"Descending");
-                debugString.Append(Environment.NewLine);
-                agmTarget = MissileGuidance.GetAirToGroundTarget(targetPosition, missile.vessel, 1.85f);
-
-                if (missile is BDModularGuidance)
-                {
-                    if (missile.vessel.InVacuum())
-                    {
-                        agmTarget = missile.vessel.CoM + missile.vessel.Velocity() * 10;
-                    }
-                }
-                missile.Throttle = Mathf.Clamp((float)(missile.vessel.atmDensity * 10f), 0.01f, 1f);
-            }
-            return agmTarget;
+            return _guidance.GetDirection(this, targetPosition);
         }
 
-        private double CalculateFreeFallTime()
-        {
-            double vi = -vessel.verticalSpeed;
-            double a = 9.80665f * BallisticOverShootFactor;
-            double d = vessel.altitude;
-
-            double time1 = (-vi + Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
-            double time2 = (-vi - Math.Sqrt(Math.Pow(vi, 2) - 4 * (0.5f * a) * (-d))) / a;
-
-            return Math.Max(time1, time2);
-        }
+      
+        
+       
 
         protected void drawLabels()
         {
@@ -1067,6 +1010,41 @@ namespace BDArmory.Modules
             if (BDArmorySettings.DRAW_DEBUG_LABELS)
             {
                 Debug.Log("[BDArmory]: DetonationDistanceState = : " + DetonationDistanceState);
+            }
+        }
+
+        public void CheckMiss(Vector3 targetPosition)
+        {
+            if (HasMissed) return;
+            // if I'm to close to my vessel avoid explosion
+            if ((vessel.CoM - SourceVessel.CoM).magnitude < 4 * DetonationDistance) return;
+            // if I'm getting closer to  my target avoid explosion
+            if ((vessel.CoM - targetPosition).sqrMagnitude >
+                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - (targetPosition + (TargetVelocity * Time.fixedDeltaTime))).sqrMagnitude) return;
+
+            if (MissileState != MissileStates.PostThrust) return;
+
+            Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+            HasMissed = true;
+            guidanceActive = false;
+            TargetMf = null;
+            isTimed = true;
+            detonationTime = TimeIndex + 1.5f;
+        }
+
+        public void CheckMiss()
+        {
+            if (HasMissed) return;
+
+
+            if (MissileState == MissileStates.PostThrust && (vessel.LandedOrSplashed || vessel.Velocity().magnitude < 10f))
+            {
+                Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+                HasMissed = true;
+                guidanceActive = false;
+                TargetMf = null;
+                isTimed = true;
+                detonationTime = TimeIndex + 1.5f;
             }
         }
 

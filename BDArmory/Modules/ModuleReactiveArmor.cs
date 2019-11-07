@@ -30,10 +30,7 @@ namespace BDArmory.Modules
         private float partArmorMax = 0.0f;
         private float partArmorTotal = 0.0f;
         private double stage = 1;
-        private bool pauseRoutine = false;
 
-        private float HP = 0.0f;
-        private bool partCheck = true;
 
         private HitpointTracker hp;
 
@@ -206,11 +203,6 @@ namespace BDArmory.Modules
                 {
                     currentTextureName = textureDisplayList[selectedTexture];
                 }
-            }
-            if (mapList.Count > selectedTexture) ; // why is this check here? will never happen.
-            else
-            {
-                for (int i = 0; i < mapList.Count; i++) ;
             }
         }
 
