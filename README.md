@@ -7,7 +7,7 @@ Original Author [BahamutoD](https://github.com/BahamutoD)
 
 Original [Forum link](http://forum.kerbalspaceprogram.com/threads/85209-BDArmory)
 
-Current [Forum link](http://forum.kerbalspaceprogram.com/index.php?/topic/155014-13-bdarmory-continued-v0211-5282017-vessel-mover-camera-tools-bdmk22-destruction-effects-burn-together/)
+Current [Forum link](https://forum.kerbalspaceprogram.com/index.php?/topic/184167-17x-bdarmory-continued-v130-05012019/)
 
 Current Maintainers:
 - [PapaJoe](https://github.com/PapaJoesSoup)

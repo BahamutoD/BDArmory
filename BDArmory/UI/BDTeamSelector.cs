@@ -88,7 +88,7 @@ namespace BDArmory.UI
                 GUI.EndScrollView();
 
             // Buttons
-            if (Event.current.type == EventType.keyUp)
+            if (Event.current.type == EventType.KeyUp)
             {
                 if ((Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && !string.IsNullOrEmpty(newTeamName.Trim()))
                 {

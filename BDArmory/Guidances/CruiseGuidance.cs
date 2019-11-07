@@ -29,23 +29,19 @@ namespace BDArmory.Guidances
         Hold
     }
 
-    public class CruiseGuidance
+    public class CruiseGuidance : IGuidance
     {
         private readonly MissileBase _missile;
-        private double _originalDistance;
+       
 
         private float _pitchAngle;
-        private Vector3 _startPoint;
         private double _futureAltitude;
         private double _futureSpeed;
         private double _horizontalAcceleration;
 
         private float _lastDataRead;
         private double _lastHorizontalSpeed;
-        private double _lastPitchTimeDecision;
         private double _lastSpeedDelta;
-        private double _lastThrottleTimeDecision;
-        private float _lastTimeDecision = 0;
         private double _lastVerticalSpeed;
 
         private double _verticalAcceleration;
@@ -63,7 +59,7 @@ namespace BDArmory.Guidances
 
         public GuidanceState GuidanceState { get; set; }
 
-        public Vector3 CalculateCruiseGuidance(Vector3 targetPosition)
+        public Vector3 GetDirection(MissileBase missile, Vector3 targetPosition)
         {
             //set up
             if (_missile.TimeIndex < 1)
