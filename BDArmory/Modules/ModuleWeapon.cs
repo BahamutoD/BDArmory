@@ -701,6 +701,10 @@ namespace BDArmory.Modules
                 if (eWeaponType == WeaponTypes.Laser)
                 {
                     SetupLaserSpecifics();
+                    if (maxTargetingRange < maxEffectiveDistance)
+                    {
+                        maxEffectiveDistance = maxTargetingRange;
+                    }
                 }
             }
             else if (HighLogic.LoadedSceneIsEditor)
@@ -1312,7 +1316,7 @@ namespace BDArmory.Modules
                     {
                         targetDirection = targetPosition + relativeVelocity * Time.fixedDeltaTime * 2 - tf.position;
                         rayDirection = targetDirection;
-                        targetDirectionLR = targetDirection;
+                        targetDirectionLR = targetDirection.normalized;
                     }
 
                     Ray ray = new Ray(tf.position, rayDirection);
