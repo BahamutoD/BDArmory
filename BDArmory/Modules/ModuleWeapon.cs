@@ -1314,7 +1314,7 @@ namespace BDArmory.Modules
                     if (((visualTargetVessel != null && visualTargetVessel.loaded) || slaved)
                         && Vector3.Angle(rayDirection, targetDirection) < 1)
                     {
-                        targetDirection = targetPosition + relativeVelocity * Time.fixedDeltaTime * 2 - tf.position;
+                        targetDirection = targetPosition - tf.position;
                         rayDirection = targetDirection;
                         targetDirectionLR = targetDirection.normalized;
                     }
@@ -1348,7 +1348,7 @@ namespace BDArmory.Modules
 
                         if (Time.time - timeFired > 6 / 120 && BDArmorySettings.BULLET_HITS)
                         {
-                            BulletHitFX.CreateBulletHit(p, hit.point, hit, hit.normal, false, 0, 0);
+                            BulletHitFX.CreateBulletHit(p, laserPoint, hit, hit.normal, false, 0, 0);
                         }
                     }
                     else
