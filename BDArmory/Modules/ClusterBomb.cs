@@ -25,7 +25,7 @@ namespace BDArmory.Modules
         [KSPField(isPersistant = false)]
         public float deployDelay = 2.5f;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Deploy Altitude"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DeployAltitude"),//Deploy Altitude
          UI_FloatRange(minValue = 100f, maxValue = 1000f, stepIncrement = 10f, scene = UI_Scene.Editor)]
         public float deployAltitude = 400;
 

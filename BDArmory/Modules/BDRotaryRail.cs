@@ -15,7 +15,7 @@ namespace BDArmory.Modules
 
         [KSPField] public float rotationSpeed = 360;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Rails")]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_Rails")]//Rails
         public float
             numberOfRails = 8;
 
@@ -86,25 +86,25 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Rails++")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_RailsPlus")]//Rails++
         public void RailsPlus()
         {
             IncreaseRails(true);
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Rails--")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_RailsMinus")]//Rails--
         public void RailsMinus()
         {
             DecreaseRails(true);
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height++")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_IncreaseHeight")]//Height++
         public void HeightPlus()
         {
             IncreaseHeight(true);
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height--")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DecreaseHeight")]//Height--
         public void HeightMinus()
         {
             DecreaseHeight(true);
@@ -152,13 +152,13 @@ namespace BDArmory.Modules
             p.Dispose();
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length++")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_IncreaseLength")]//Length++
         public void LengthPlus()
         {
             IncreaseLength(true);
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length--")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DecreaseLength")]//Length--
         public void LengthMinus()
         {
             DecreaseLength(true);

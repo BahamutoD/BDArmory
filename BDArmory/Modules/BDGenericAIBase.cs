@@ -6,6 +6,7 @@ using BDArmory.Misc;
 using BDArmory.Targeting;
 using BDArmory.UI;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.Modules
 {
@@ -147,10 +148,10 @@ namespace BDArmory.Modules
 
         protected void RefreshPartWindow()
         {
-            Events["TogglePilot"].guiName = pilotEnabled ? "Deactivate Pilot" : "Activate Pilot";
+            Events["TogglePilot"].guiName = pilotEnabled ? Localizer.Format("#LOC_BDArmory_DeactivatePilot") : Localizer.Format("#LOC_BDArmory_ActivatePilot");//"Deactivate Pilot""Activate Pilot"
         }
 
-        [KSPEvent(guiActive = true, guiName = "Toggle Pilot", active = true)]
+        [KSPEvent(guiActive = true, guiName = "#LOC_BDArmory_TogglePilot", active = true)]//Toggle Pilot
         public void TogglePilot()
         {
             if (pilotEnabled)
