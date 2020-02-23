@@ -8,11 +8,11 @@ namespace BDArmory.Modules
 {
     public class BDExplosivePart : PartModule
     {
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "TNT mass equivalent"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_TNTMass"),//TNT mass equivalent
         UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
         public float tntMass = 1;
 
-        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "Blast Radius"),
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_BlastRadius"),//Blast Radius
          UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
         public float blastRadius = 10;
 
@@ -34,7 +34,7 @@ namespace BDArmory.Modules
             Detonate();
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Detonate", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_Detonate", active = true)]//Detonate
         public void DetonateEvent()
         {
             Detonate();

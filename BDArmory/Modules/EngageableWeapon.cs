@@ -1,3 +1,4 @@
+using KSP.Localization;
 namespace BDArmory.Modules
 {
     public abstract class EngageableWeapon : PartModule, IEngageService
@@ -6,42 +7,42 @@ namespace BDArmory.Modules
         public bool engageEnabled = true;
 
         // Weapon usage settings
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Range Min"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_EngageRangeMin"),//Engage Range Min
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 100f, scene = UI_Scene.Editor)]
         public float engageRangeMin;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Range Max"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_EngageRangeMax"),//Engage Range Max
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 100f, scene = UI_Scene.Editor)]
         public float engageRangeMax;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Air"),
-         UI_Toggle(disabledText = "false", enabledText = "true")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_EngageAir"),//Engage Air
+         UI_Toggle(disabledText = "#LOC_BDArmory_false", enabledText = "#LOC_BDArmory_true")]//false--true
         public bool engageAir = true;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Missile"),
-         UI_Toggle(disabledText = "false", enabledText = "true")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_EngageMissile"),//Engage Missile
+         UI_Toggle(disabledText = "#LOC_BDArmory_false", enabledText = "#LOC_BDArmory_true")]//false--true
         public bool engageMissile = true;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage Surface"),
-         UI_Toggle(disabledText = "false", enabledText = "true")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_EngageSurface"),//Engage Surface
+         UI_Toggle(disabledText = "#LOC_BDArmory_false", enabledText = "#LOC_BDArmory_true")]//false--true
         public bool engageGround = true;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Engage SLW"),
-        UI_Toggle(disabledText = "false", enabledText = "true")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_EngageSLW"),//Engage SLW
+        UI_Toggle(disabledText = "#LOC_BDArmory_false", enabledText = "#LOC_BDArmory_true")]//false--true
         public bool engageSLW = true;
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Disable Engage Options", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_DisableEngageOptions", active = true)]//Disable Engage Options
         public void ToggleEngageOptions()
         {
             engageEnabled = !engageEnabled;
 
             if (engageEnabled == false)
             {
-                Events["ToggleEngageOptions"].guiName = "Enable Engage Options";
+                Events["ToggleEngageOptions"].guiName = Localizer.Format("#LOC_BDArmory_EnableEngageOptions");//"Enable Engage Options"
             }
             else
             {
-                Events["ToggleEngageOptions"].guiName = "Disable Engage Options";
+                Events["ToggleEngageOptions"].guiName = Localizer.Format("#LOC_BDArmory_DisableEngageOptions");//"Disable Engage Options"
             }
 
             Fields["engageRangeMin"].guiActive = engageEnabled;

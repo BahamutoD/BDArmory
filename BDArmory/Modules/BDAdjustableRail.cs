@@ -51,7 +51,7 @@ namespace BDArmory.Modules
             UpdateStackNode(false);
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height ++", active = true)]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_IncreaseHeight", active = true)]//Height ++
         public void IncreaseHeight()
         {
             railHeight = Mathf.Clamp(railHeight - 0.02f, -.16f, 0);
@@ -68,7 +68,7 @@ namespace BDArmory.Modules
             sym.Dispose();
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Height --", active = true)]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DecreaseHeight", active = true)]//Height --
         public void DecreaseHeight()
         {
             railHeight = Mathf.Clamp(railHeight + 0.02f, -.16f, 0);
@@ -85,7 +85,7 @@ namespace BDArmory.Modules
             sym.Dispose();
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length ++", active = true)]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_IncreaseLength", active = true)]//Length ++
         public void IncreaseLength()
         {
             railLength = Mathf.Clamp(railLength + 0.2f, 0.4f, 2f);
@@ -99,7 +99,7 @@ namespace BDArmory.Modules
             sym.Dispose();
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Length --", active = true)]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DecreaseLength", active = true)]//Length --
         public void DecreaseLength()
         {
             railLength = Mathf.Clamp(railLength - 0.2f, 0.4f, 2f);

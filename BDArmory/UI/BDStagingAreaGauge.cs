@@ -1,6 +1,7 @@
 ﻿using BDArmory.Core;
 using KSP.UI.Screens;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.UI
 {
@@ -148,7 +149,7 @@ namespace BDArmory.UI
                 return v;
             v.SetMsgBgColor(XKCDColors.DarkGrey);
             v.SetMsgTextColor(XKCDColors.White);
-            v.SetMessage("Reloading");
+            v.SetMessage(Localizer.Format("#LOC_BDArmory_ProtoStageIconInfo_Reloading"));//"Reloading"
             v.SetProgressBarBgColor(XKCDColors.DarkGrey);
             v.SetProgressBarColor(XKCDColors.Silver);
 
@@ -165,7 +166,7 @@ namespace BDArmory.UI
             {
                 v.SetMsgBgColor(XKCDColors.DarkRed);
                 v.SetMsgTextColor(XKCDColors.Orange);
-                v.SetMessage("Overheat");
+                v.SetMessage(Localizer.Format("#LOC_BDArmory_ProtoStageIconInfo_Overheat"));//"Overheat"
                 v.SetProgressBarBgColor(XKCDColors.DarkRed);
                 v.SetProgressBarColor(XKCDColors.Orange);
             }
@@ -198,7 +199,7 @@ namespace BDArmory.UI
             {
                 g.SetMsgBgColor(XKCDColors.AlmostBlack);
                 g.SetMsgTextColor(XKCDColors.Yellow);
-                g.SetMessage("Ammo Depleted");
+                g.SetMessage(Localizer.Format("#LOC_BDArmory_ProtoStageIconInfo_AmmoOut"));//"Ammo Depleted"
                 g.SetProgressBarBgColor(XKCDColors.Yellow);
                 g.SetProgressBarColor(XKCDColors.Black);
             }

@@ -1,4 +1,13 @@
-﻿v1.3.2
+﻿v1.3.3
+* NEW FEATURES:
+	* Recompiled for KSP 1.9.0
+	* Localization en-us and zh-cn (Thanks to tinygrox!)
+* FIXES
+	* Some NRE here and there.
+	* Fixes to Laser accuracy (Thanks to Gedas!)
+	* Part Categories for BDArmory is now activated by default
+
+v1.3.2
 * NEW FEATURES:
 	* Recompiled for KSP 1.8.1
 	* Munition count to Weapon Manager GUI.

@@ -82,11 +82,11 @@ namespace BDArmory.Modules
         [KSPField]
         public float maxAoA = 35;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Direction: "),
-            UI_Toggle(disabledText = "Lateral", enabledText = "Forward")]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_Direction"),//Direction: 
+            UI_Toggle(disabledText = "#LOC_BDArmory_Direction_disabledText", enabledText = "#LOC_BDArmory_Direction_enabledText")]//Lateral--Forward
         public bool decoupleForward = false;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Decouple Speed"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DecoupleSpeed"),//Decouple Speed
                   UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float decoupleSpeed = 0;
 
@@ -134,7 +134,7 @@ namespace BDArmory.Modules
         [KSPField]
         public float rndAngVel = 0;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Max Altitude"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_MaxAltitude"),//Max Altitude
          UI_FloatRange(minValue = 0f, maxValue = 5000f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float maxAltitude = 0f;
 
@@ -153,7 +153,7 @@ namespace BDArmory.Modules
 
         private bool terminalGuidanceActive;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Terminal Guidance: "), UI_Toggle(disabledText = "false", enabledText = "true")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_TerminalGuidance"), UI_Toggle(disabledText = "#LOC_BDArmory_false", enabledText = "#LOC_BDArmory_true")]//Terminal Guidance: false true
         public bool terminalGuidanceShouldActivate = true;
 
         [KSPField]
@@ -277,7 +277,7 @@ namespace BDArmory.Modules
             if (BDArmorySetup.Instance.ActiveWeaponManager != null) BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
-        [KSPEvent(guiActive = true, guiName = "Fire Missile", active = true)]
+        [KSPEvent(guiActive = true, guiName = "#LOC_BDArmory_FireMissile", active = true)]//Fire Missile
         public void GuiFire()
         {
             if (BDArmorySetup.Instance.ActiveWeaponManager != null && BDArmorySetup.Instance.ActiveWeaponManager.vessel == vessel) BDArmorySetup.Instance.ActiveWeaponManager.SendTargetDataToMissile(this);
@@ -296,7 +296,7 @@ namespace BDArmory.Modules
             if (BDArmorySetup.Instance.ActiveWeaponManager != null) BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "Jettison")]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, active = true, guiName = "#LOC_BDArmory_Jettison")]//Jettison
         public override void Jettison()
         {
             if (missileTurret) return;

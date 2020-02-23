@@ -7,6 +7,7 @@ using BDArmory.Parts;
 using BDArmory.UI;
 using UniLinq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.Modules
 {
@@ -22,10 +23,10 @@ namespace BDArmory.Modules
         //[KSPField(guiActive = false, guiActiveEditor = false, guiName = "")]
         public string guiTitle = "WingCommander:";
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Formation Spread"), UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1, scene = UI_Scene.Editor)]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_WingCommander_Guiname1"), UI_FloatRange(minValue = 20f, maxValue = 200f, stepIncrement = 1, scene = UI_Scene.Editor)]//Formation Spread
         public float spread = 100;
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "Formation Lag"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_WingCommander_Guiname2"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1, scene = UI_Scene.Editor)]//Formation Lag
         public float lag = 7;
 
         [KSPField(isPersistant = true)] public bool commandSelf;
@@ -38,7 +39,7 @@ namespace BDArmory.Modules
         //int focusIndex = 0;
         List<int> focusIndexes;
 
-        [KSPEvent(guiActive = true, guiName = "ToggleGUI")]
+        [KSPEvent(guiActive = true, guiName = "#LOC_BDArmory_WingCommander_Guiname3")]//ToggleGUI
         public void ToggleGUI()
         {
             showGUI = !showGUI;
@@ -273,7 +274,7 @@ namespace BDArmory.Modules
                 }
                 // this Rect initialization ensures any save issues with height or width of the window are resolved
                 //BDArmorySetup.WindowRectWingCommander = new Rect(BDArmorySetup.WindowRectWingCommander.x, BDArmorySetup.WindowRectWingCommander.y, windowWidth, windowHeight);
-                BDArmorySetup.WindowRectWingCommander = GUI.Window(1293293, BDArmorySetup.WindowRectWingCommander, WingmenWindow, "WingCommander",
+                BDArmorySetup.WindowRectWingCommander = GUI.Window(1293293, BDArmorySetup.WindowRectWingCommander, WingmenWindow, Localizer.Format("#LOC_BDArmory_WingCommander_Title"),//"WingCommander"
                     BDArmorySetup.BDGuiSkin.window);
 
                 if (showAGWindow) AGWindow();
@@ -330,33 +331,33 @@ namespace BDArmory.Modules
 
             //command buttons
             float commandButtonLine = 0;
-            CommandButton(SelectAll, "Select All", ref commandButtonLine, false, false);
+            CommandButton(SelectAll, Localizer.Format("#LOC_BDArmory_WingCommander_SelectAll"), ref commandButtonLine, false, false);//"Select All"
             //commandButtonLine += 0.25f;
 
             commandSelf =
                 GUI.Toggle(
                     new Rect(margin, margin + buttonEndY + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth,
-                        buttonHeight), commandSelf, "Command Self", BDArmorySetup.BDGuiSkin.toggle);
+                        buttonHeight), commandSelf, Localizer.Format("#LOC_BDArmory_WingCommander_CommandSelf"), BDArmorySetup.BDGuiSkin.toggle);//"Command Self"
             commandButtonLine++;
 
             commandButtonLine += 0.10f;
 
-            CommandButton(CommandFollow, "Follow", ref commandButtonLine, true, false);
-            CommandButton(CommandFlyTo, "Fly To Pos", ref commandButtonLine, true, waitingForFlytoPos);
-            CommandButton(CommandAttack, "Attack Pos", ref commandButtonLine, true, waitingForAttackPos);
-            CommandButton(OpenAGWindow, "Action Group", ref commandButtonLine, false, showAGWindow);
-            CommandButton(CommandTakeOff, "Take Off", ref commandButtonLine, true, false);
+            CommandButton(CommandFollow, Localizer.Format("#LOC_BDArmory_WingCommander_Follow"), ref commandButtonLine, true, false);//"Follow"
+            CommandButton(CommandFlyTo, Localizer.Format("#LOC_BDArmory_WingCommander_FlyToPos"), ref commandButtonLine, true, waitingForFlytoPos);//"Fly To Pos"
+            CommandButton(CommandAttack, Localizer.Format("#LOC_BDArmory_WingCommander_AttackPos"), ref commandButtonLine, true, waitingForAttackPos);//"Attack Pos"
+            CommandButton(OpenAGWindow, Localizer.Format("#LOC_BDArmory_WingCommander_ActionGroup"), ref commandButtonLine, false, showAGWindow);//"Action Group"
+            CommandButton(CommandTakeOff, Localizer.Format("#LOC_BDArmory_WingCommander_TakeOff"), ref commandButtonLine, true, false);//"Take Off"
             commandButtonLine += 0.5f;
-            CommandButton(CommandRelease, "Release", ref commandButtonLine, true, false);
+            CommandButton(CommandRelease, Localizer.Format("#LOC_BDArmory_WingCommander_Release"), ref commandButtonLine, true, false);//"Release"
 
             commandButtonLine += 0.5f;
             GUI.Label(
                 new Rect(margin, buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth, 20),
-                "Formation Settings:", BDArmorySetup.BDGuiSkin.label);
+                Localizer.Format("#LOC_BDArmory_WingCommander_FormationSettings") + ":", BDArmorySetup.BDGuiSkin.label);//Formation Settings
             commandButtonLine++;
             GUI.Label(
                 new Rect(margin, buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth / 3, 20),
-                "Spread: " + spread.ToString("0"), BDArmorySetup.BDGuiSkin.label);
+                Localizer.Format("#LOC_BDArmory_WingCommander_Spread") + ": " + spread.ToString("0"), BDArmorySetup.BDGuiSkin.label);//Spread
             spread =
                 GUI.HorizontalSlider(
                     new Rect(margin + (buttonWidth / 3),
@@ -365,7 +366,7 @@ namespace BDArmory.Modules
             commandButtonLine++;
             GUI.Label(
                 new Rect(margin, buttonEndY + margin + (commandButtonLine * (buttonHeight + buttonGap)), buttonWidth / 3, 20),
-                "Lag: " + lag.ToString("0"), BDArmorySetup.BDGuiSkin.label);
+                Localizer.Format("#LOC_BDArmory_WingCommander_Lag") + ": " + lag.ToString("0"), BDArmorySetup.BDGuiSkin.label);//Lag
             lag =
                 GUI.HorizontalSlider(
                     new Rect(margin + (buttonWidth / 3),
@@ -503,7 +504,7 @@ namespace BDArmory.Modules
             newHeight += agMargin;
             GUIStyle titleStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.label);
             titleStyle.alignment = TextAnchor.MiddleCenter;
-            GUI.Label(new Rect(agMargin, 5, width - (2 * agMargin), 20), "Action Groups", titleStyle);
+            GUI.Label(new Rect(agMargin, 5, width - (2 * agMargin), 20), Localizer.Format("#LOC_BDArmory_WingCommander_ActionGroups"), titleStyle);//"Action Groups"
             newHeight += 20;
             float startButtonY = newHeight;
             float buttonLine = 0;
@@ -555,7 +556,7 @@ namespace BDArmory.Modules
                 yield break;
             }
 
-            DisplayScreenMessage("Select target coordinates.\nRight-click to cancel.");
+            DisplayScreenMessage(Localizer.Format("#LOC_BDArmory_WingCommander_ScreenMessage"));//"Select target coordinates.\nRight-click to cancel."
 
             if (command == PilotCommands.FlyTo)
             {
