@@ -183,7 +183,14 @@ namespace BDArmory.Modules
             float targetYawAngle = (currentYaw + yawError).ToAngle();
             // clamp target yaw in a non-wobbly way
             if (Mathf.Abs(targetYawAngle) > yawRange / 2)
-                targetYawAngle = yawRange / 2 * Math.Sign(Vector3.Dot(yawTransform.parent.right, targetDirection + referenceTransform.position - yawTransform.position));
+            {
+                var nonWooblyWay = Vector3.Dot(yawTransform.parent.right,
+                    targetDirection + referenceTransform.position - yawTransform.position);
+                if (float.IsNaN(nonWooblyWay)) return;
+
+                targetYawAngle = yawRange / 2 * Math.Sign(nonWooblyWay);
+            }
+              
 
             float pitchError = (float)Vector3d.Angle(pitchComponent, yawNormal) - (float)Vector3d.Angle(referenceTransform.forward, yawNormal);
             float currentPitch = -pitchTransform.localEulerAngles.x.ToAngle(); // from current rotation transform
@@ -212,6 +219,11 @@ namespace BDArmory.Modules
 
             if (yawRange < 360 && Mathf.Abs(currentYaw - targetYawAngle) >= 180)
             {
+                if (float.IsNaN(currentYaw))
+                {
+                    return;
+                }
+
                 targetYawAngle = currentYaw - (Math.Sign(currentYaw) * 179);
             }
 
