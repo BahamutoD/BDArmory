@@ -2,6 +2,7 @@
 using BDArmory.Misc;
 using BDArmory.Modules;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.UI
 {
@@ -45,7 +46,7 @@ namespace BDArmory.UI
 
             // New team button
             Rect newTeamButtonRect = new Rect(width - margin - newTeanButtonWidth, height, newTeanButtonWidth, buttonHeight);
-            if (GUI.Button(newTeamButtonRect, "New", BDArmorySetup.BDGuiSkin.button))
+            if (GUI.Button(newTeamButtonRect, Localizer.Format("#LOC_BDArmory_Generic_New"), BDArmorySetup.BDGuiSkin.button))//"New"
             {
                 if (!string.IsNullOrEmpty(newTeamName.Trim()))
                 {

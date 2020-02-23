@@ -26,7 +26,7 @@ namespace BDArmory.CounterMeasure
         public CountermeasureTypes cmType = CountermeasureTypes.Flare;
         [KSPField] public string countermeasureType = "flare";
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Eject Velocity"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_EjectVelocity"),//Eject Velocity
         UI_FloatRange(controlEnabled = true, scene = UI_Scene.Editor, minValue = 1f, maxValue = 200f, stepIncrement = 1f)]
         public float ejectVelocity = 30;
 
@@ -50,7 +50,7 @@ namespace BDArmory.CounterMeasure
             DropCM();
         }
 
-        [KSPEvent(guiActive = true, guiName = "Fire Countermeasure", active = true)]
+        [KSPEvent(guiActive = true, guiName = "#LOC_BDArmory_FireCountermeasure", active = true)]//Fire Countermeasure
         public void DropCM()
         {
             switch (cmType)
