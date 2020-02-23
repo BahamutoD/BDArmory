@@ -4,7 +4,7 @@ namespace BDArmory.Modules
 {
     public class ModuleWWC : PartModule
     {
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Deactivation Depth"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_DeactivationDepth"),//Deactivation Depth
          UI_FloatRange(controlEnabled = true, scene = UI_Scene.All, minValue = 0f, maxValue = -200f, stepIncrement = 1f)]
         public float CutOffDepth = -5;
 

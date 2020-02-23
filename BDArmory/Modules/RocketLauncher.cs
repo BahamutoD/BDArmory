@@ -126,13 +126,13 @@ namespace BDArmory.Modules
             FireRocket();
         }
 
-        [KSPEvent(guiActive = true, guiName = "Fire", active = true)]
+        [KSPEvent(guiActive = true, guiName = "#LOC_BDArmory_Fire", active = true)]//Fire
         public void GuiFire()
         {
             FireRocket();
         }
 
-        [KSPEvent(guiActive = true, guiName = "Jettison", active = true, guiActiveEditor = false)]
+        [KSPEvent(guiActive = true, guiName = "#LOC_BDArmory_Jettison", active = true, guiActiveEditor = false)]//Jettison
         public void Jettison()
         {
             if (turret)
@@ -145,7 +145,7 @@ namespace BDArmory.Modules
                 BDArmorySetup.Instance.ActiveWeaponManager.UpdateList();
         }
 
-        [KSPEvent(guiActive = false, guiName = "Toggle Turret", guiActiveEditor = false)]
+        [KSPEvent(guiActive = false, guiName = "#LOC_BDArmory_ToggleTurret", guiActiveEditor = false)]//Toggle Turret
         public void ToggleTurret()
         {
             if (deployed)

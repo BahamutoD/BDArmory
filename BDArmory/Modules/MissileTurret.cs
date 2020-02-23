@@ -16,9 +16,9 @@ namespace BDArmory.Modules
 
         ModuleTurret turret;
 
-        [KSPField(guiActive = true, guiName = "Turret Enabled")] public bool turretEnabled;
+        [KSPField(guiActive = true, guiName = "#LOC_BDArmory_TurretEnabled")] public bool turretEnabled;//Turret Enabled
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Auto-Return"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_AutoReturn"),//Auto-Return
          UI_Toggle(scene = UI_Scene.Editor)]
         public bool autoReturn = true;
 
@@ -191,7 +191,7 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = false, guiName = "Return Turret")]
+        [KSPEvent(guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_ReturnTurret")]//Return Turret
         public void ReturnTurret()
         {
             if (!turretEnabled)
@@ -201,7 +201,7 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = false, guiName = "Toggle Animation")]
+        [KSPEvent(guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_ToggleAnimation")]//Toggle Animation
         public void EditorToggleAnimation()
         {
             editorDeployed = !editorDeployed;

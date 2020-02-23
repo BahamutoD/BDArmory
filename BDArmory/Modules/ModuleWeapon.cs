@@ -234,7 +234,7 @@ namespace BDArmory.Modules
 
         #region KSPFields
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Weapon Name ", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "#LOC_BDArmory_WeaponName", guiActiveEditor = true), UI_Label(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All)]//Weapon Name 
         public string WeaponName;
 
         [KSPField]
@@ -320,8 +320,8 @@ namespace BDArmory.Modules
         [KSPField]
         public float recoilReduction = 1; //for reducing recoil on large guns with built in compensation
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Fire Limits"),
-         UI_Toggle(disabledText = "None", enabledText = "In range")]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_FireLimits"),//Fire Limits
+         UI_Toggle(disabledText = "#LOC_BDArmory_FireLimits_disabledText", enabledText = "#LOC_BDArmory_FireLimits_enabledText")]//None--In range
         public bool onlyFireInRange = true;
         //prevent firing when gun's turret is trying to exceed gimbal limits
 
@@ -448,13 +448,13 @@ namespace BDArmory.Modules
         [KSPField]
         public bool proximityDetonation = false;
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Fuzed Detonation Range ", guiActiveEditor = false)]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "#LOC_BDArmory_DefaultDetonationRange", guiActiveEditor = false)]//Fuzed Detonation Range 
         public float defaultDetonationRange = 3500; // maxairDetrange works for altitude fuzing, use this for VT fuzing
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Proximity Fuze Radius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_ProximityFuzeRadius"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f, scene = UI_Scene.Editor, affectSymCounterparts = UI_Scene.All)]//Proximity Fuze Radius
         public float detonationRange = -1f; // give ability to set proximity range
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Max Detonation Range"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_MaxDetonationRange"),//Max Detonation Range
          UI_FloatRange(minValue = 500, maxValue = 8000f, stepIncrement = 5f, scene = UI_Scene.All)]
         public float maxAirDetonationRange = 3500; // could probably get rid of this entirely, max engagement range more or less already does this
 
@@ -470,11 +470,11 @@ namespace BDArmory.Modules
         float timeFired;
         public float initialFireDelay = 0; //used to ripple fire multiple weapons of this type
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Barrage")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_Barrage")]//Barrage
         public bool
             useRippleFire = true;
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Toggle Barrage")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_ToggleBarrage")]//Toggle Barrage
         public void ToggleRipple()
         {
             List<Part>.Enumerator craftPart = EditorLogic.fetch.ship.parts.GetEnumerator();
@@ -514,12 +514,12 @@ namespace BDArmory.Modules
             Toggle();
         }
 
-        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Status")]
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_Status")]//Status
         public string guiStatusString =
             "Disabled";
 
         //PartWindow buttons
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Toggle")]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_Toggle")]//Toggle
         public void Toggle()
         {
             if (weaponState == WeaponStates.Disabled || weaponState == WeaponStates.PoweringDown)
@@ -914,14 +914,14 @@ namespace BDArmory.Modules
             Events["ShowUI"].active = true;
         }
 
-        [KSPEvent(guiActiveEditor = true, guiName = "Hide Weapon Group UI", active = false)]
+        [KSPEvent(guiActiveEditor = true, guiName = "#LOC_BDArmory_HideWeaponGroupUI", active = false)]//Hide Weapon Group UI
         public void HideUI()
         {
             WeaponGroupWindow.HideGUI();
             UpdateMenus(false);
         }
 
-        [KSPEvent(guiActiveEditor = true, guiName = "Set Weapon Group UI", active = false)]
+        [KSPEvent(guiActiveEditor = true, guiName = "#LOC_BDArmory_SetWeaponGroupUI", active = false)]//Set Weapon Group UI
         public void ShowUI()
         {
             WeaponGroupWindow.ShowGUI(this);
@@ -2351,7 +2351,7 @@ namespace BDArmory.Modules
 
         private Vector2 scrollPos;
 
-        [KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "Show Group Editor"), UI_Toggle(enabledText = "close Group GUI", disabledText = "open Group GUI")] [NonSerialized] public bool showRFGUI;
+        [KSPField(isPersistant = false, guiActiveEditor = true, guiActive = false, guiName = "#LOC_BDArmory_ShowGroupEditor"), UI_Toggle(enabledText = "#LOC_BDArmory_ShowGroupEditor_enabledText", disabledText = "#LOC_BDArmory_ShowGroupEditor_disabledText")] [NonSerialized] public bool showRFGUI;//Show Group Editor--close Group GUI--open Group GUI
 
         private bool styleSetup;
 

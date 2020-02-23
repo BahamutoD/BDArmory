@@ -138,7 +138,7 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "Toggle Radar")]
+        [KSPEvent(active = true, guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_ToggleRadar")]//Toggle Radar
         public void Toggle()
         {
             if (radarEnabled)
@@ -168,7 +168,7 @@ namespace BDArmory.Modules
         #region Part members
 
         //locks
-        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "Current Locks")]
+        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_CurrentLocks")]//Current Locks
         public int currLocks;
 
         public bool locked

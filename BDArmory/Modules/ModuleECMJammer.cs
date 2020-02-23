@@ -21,7 +21,7 @@ namespace BDArmory.Modules
 
         [KSPField] public bool rcsReduction = false;
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Enabled")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "#LOC_BDArmory_Enabled")]//Enabled
         public bool jammerEnabled = false;
 
         VesselECMJInfo vesselJammer;
@@ -50,7 +50,7 @@ namespace BDArmory.Modules
             Toggle();
         }
 
-        [KSPEvent(guiActiveEditor = false, guiActive = true, guiName = "Toggle")]
+        [KSPEvent(guiActiveEditor = false, guiActive = true, guiName = "#LOC_BDArmory_Toggle")]//Toggle
         public void Toggle()
         {
             if (jammerEnabled)

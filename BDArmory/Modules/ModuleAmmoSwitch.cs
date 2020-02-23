@@ -46,10 +46,10 @@ namespace BDArmory.Modules
         [KSPField]
         public bool showInfo = true; // if false, does not feed info to the part list pop up info menu
 
-        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Added cost")]
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_AddedCost")]//Added cost
         public float addedCost = 0f;
 
-        [KSPField(guiActive = false, guiActiveEditor = true, guiName = "Dry mass")]
+        [KSPField(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_DryMass")]//Dry mass
         public float dryMassInfo = 0f;
         private List<BDAcUniversalAmmo> tankList;
         private List<double> weightList;
@@ -129,7 +129,7 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Next tank setup")]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_NextTankSetup")]//Next tank setup
         public void nextTankSetupEvent()
         {
             selectedTankSetup++;
@@ -140,7 +140,7 @@ namespace BDArmory.Modules
             assignResourcesToPart(true);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Previous tank setup")]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_PreviousTankSetup")]//Previous tank setup
         public void previousTankSetupEvent()
         {
             selectedTankSetup--;

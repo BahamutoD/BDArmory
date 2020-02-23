@@ -360,34 +360,34 @@ namespace BDArmory.Modules
 
         #region KSPFields,events,actions
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Firing Interval"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_FiringInterval"),//Firing Interval
          UI_FloatRange(minValue = 1f, maxValue = 60f, stepIncrement = 1f, scene = UI_Scene.All)]
         public float
             targetScanInterval = 3;
 
         // extension for feature_engagementenvelope: burst length for guns
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Firing Burst Length"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_FiringBurstLength"),//Firing Burst Length
          UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 0.5f, scene = UI_Scene.All)]
         public float fireBurstLength = 0;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Field of View"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_FieldOfView"),//Field of View
          UI_FloatRange(minValue = 10f, maxValue = 360f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float
             guardAngle = 360;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Visual Range"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_VisualRange"),//Visual Range
          UI_FloatRange(minValue = 100f, maxValue = 5000, stepIncrement = 100f, scene = UI_Scene.All)]
         public float
             guardRange = 10000;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Guns Range"),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_GunsRange"),//Guns Range
          UI_FloatRange(minValue = 0f, maxValue = 10000f, stepIncrement = 10f, scene = UI_Scene.All)]
         public float
             gunRange = 2500f;
 
         public const float maxAllowableMissilesOnTarget = 18f;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Missiles/Target"), UI_FloatRange(minValue = 1f, maxValue = maxAllowableMissilesOnTarget, stepIncrement = 1f, scene = UI_Scene.All)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_MissilesORTarget"), UI_FloatRange(minValue = 1f, maxValue = maxAllowableMissilesOnTarget, stepIncrement = 1f, scene = UI_Scene.All)]//Missiles/Target
         public float maxMissilesOnTarget = 1;
 
         public void ToggleGuardMode()
@@ -419,7 +419,7 @@ namespace BDArmory.Modules
 
         //[KSPField(isPersistant = true)] public bool guardMode;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Gaurd Mode: "),
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "#LOC_BDArmory_GaurdMode"),//Gaurd Mode: 
             UI_Toggle(disabledText = "OFF", enabledText = "ON")]
         public bool guardMode;
 
@@ -483,7 +483,7 @@ namespace BDArmory.Modules
         }
 
         // Team name
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Team")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_BDArmory_Team")]//Team
         public string teamString = "Neutral";
 
         // Serialized team
@@ -545,7 +545,7 @@ namespace BDArmory.Modules
             SetTeam(BDTeam.Get(teamList[(teamList.IndexOf(Team.Name) + 1) % teamList.Count]));
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, active = true, guiName = "Select Team")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, active = true, guiName = "#LOC_BDArmory_SelectTeam")]//Select Team
         public void SelectTeam()
         {
             BDTeamSelector.Instance.Open(this, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
@@ -567,7 +567,7 @@ namespace BDArmory.Modules
             else audioSource.PlayOneShot(armOffSound);
         }
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Weapon")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "#LOC_BDArmory_Weapon")]//Weapon
         public string selectedWeaponString =
             "None";
 
@@ -648,7 +648,7 @@ namespace BDArmory.Modules
             CycleWeapon(false);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Open GUI", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_OpenGUI", active = true)]//Open GUI
         public void ToggleToolbarGUI()
         {
             BDArmorySetup.windowBDAToolBarEnabled = !BDArmorySetup.windowBDAToolBarEnabled;

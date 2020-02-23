@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BDArmory.Misc;
 using BDArmory.Modules;
 using UnityEngine;
+using KSP.Localization;
 
 namespace BDArmory.UI
 {
@@ -156,7 +157,7 @@ namespace BDArmory.UI
                     SetNewHeight(_windowHeight);
                     // this Rect initialization ensures any save issues with height or width of the window are resolved
                     BDArmorySetup.WindowRectVesselSwitcher = new Rect(BDArmorySetup.WindowRectVesselSwitcher.x, BDArmorySetup.WindowRectVesselSwitcher.y, _windowWidth, _windowHeight);
-                    BDArmorySetup.WindowRectVesselSwitcher = GUI.Window(10293444, BDArmorySetup.WindowRectVesselSwitcher, WindowVesselSwitcher, "BDA Vessel Switcher",
+                    BDArmorySetup.WindowRectVesselSwitcher = GUI.Window(10293444, BDArmorySetup.WindowRectVesselSwitcher, WindowVesselSwitcher, Localizer.Format("#LOC_BDArmory_BDAVesselSwitcher_Title"),//"BDA Vessel Switcher"
                         BDArmorySetup.BDGuiSkin.window);
                     Misc.Misc.UpdateGUIRect(BDArmorySetup.WindowRectVesselSwitcher, _guiCheckIndex);
                 }
@@ -258,9 +259,9 @@ namespace BDArmory.UI
             if (wm.vessel.LandedOrSplashed)
             {
                 if (wm.vessel.Landed)
-                    status = "(Landed)";
+                    status = Localizer.Format("#LOC_BDArmory_VesselStatus_Landed");//"(Landed)"
                 else
-                    status = "(Splashed)";
+                    status = Localizer.Format("#LOC_BDArmory_VesselStatus_Splashed");//"(Splashed)"
                 vButtonStyle.fontStyle = FontStyle.Italic;
             }
             else

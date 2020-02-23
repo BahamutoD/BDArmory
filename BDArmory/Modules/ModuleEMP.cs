@@ -2,7 +2,7 @@
 {
     public class ModuleEMP : PartModule
     {
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "EMP Blast Radius"),
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "#LOC_BDArmory_EMPBlastRadius"),//EMP Blast Radius
          UI_Label(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
         public float proximity = 5000;
 

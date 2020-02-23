@@ -179,7 +179,7 @@ namespace BDArmory.Modules
             }
         }
 
-        [KSPEvent(guiName = "Enable", guiActive = true, guiActiveEditor = false)]
+        [KSPEvent(guiName = "#LOC_BDArmory_Enable", guiActive = true, guiActiveEditor = false)]//Enable
         public void EnableButton()
         {
             EnableCamera();

@@ -157,7 +157,7 @@ namespace BDArmory.Modules
             return childList;
         }
 
-        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "Next Texture")]
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#LOC_BDArmory_NextTexture")]//Next Texture
         public void nextTextureEvent()
         {
             selectedTexture++;

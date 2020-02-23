@@ -12,10 +12,10 @@ namespace BDArmory.Modules
     {
         private Transform MissileTransform = null;
 
-        [KSPField(guiName = "Ordinance Available", guiActive = true, isPersistant = true)]
+        [KSPField(guiName = "#LOC_BDArmory_OrdinanceAvailable", guiActive = true, isPersistant = true)]//Ordinance Available
         public int ammoCount = 20;
 
-        [KSPField(guiName = "Missile Assign", guiActive = true, isPersistant = true)]
+        [KSPField(guiName = "#LOC_BDArmory_MissileAssign", guiActive = true, isPersistant = true)]//Missile Assign
         private string MissileName = "bahaAim120";
 
         [KSPAction("Resupply", KSPActionGroup.None)]
@@ -24,7 +24,7 @@ namespace BDArmory.Modules
             Resupply();
         }
 
-        [KSPEvent(name = "Resupply", guiName = "Resupply", active = true, guiActive = true)]
+        [KSPEvent(name = "Resupply", guiName = "#LOC_BDArmory_Resupply", active = true, guiActive = true)]//Resupply
         public void Resupply()
         {
             if (this.part.children.Count != 0)
@@ -101,7 +101,7 @@ namespace BDArmory.Modules
         {
         }
 
-        [KSPEvent(name = "Resupply", guiName = "Resupply", active = true, guiActive = false)]
+        [KSPEvent(name = "Resupply", guiName = "#LOC_BDArmory_Resupply", active = true, guiActive = false)]//Resupply
         public static AttachNode GetAttachNodeById(Part p, string id)
         {
             var node = id == "srfAttach" ? p.srfAttachNode : p.FindAttachNode(id);
