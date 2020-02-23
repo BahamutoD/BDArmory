@@ -1486,7 +1486,7 @@ namespace BDArmory.UI
                 if (!BDACompetitionMode.Instance.competitionStarting)
                 {
                     compDistGui = GUI.TextField(SRightRect(line), compDistGui);
-                    GUI.Label(SLeftRect(line), Localizer.Format("#LOC_BDArmory_Settings_CompetitionDistanc"));//"Competition Distance"
+                    GUI.Label(SLeftRect(line), Localizer.Format("#LOC_BDArmory_Settings_CompetitionDistance"));//"Competition Distance"
                     float cDist;
                     if (Single.TryParse(compDistGui, out cDist))
                     {
