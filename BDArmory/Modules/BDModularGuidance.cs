@@ -617,40 +617,40 @@ namespace BDArmory.Modules
             return this._guidance.GetDirection(this,TargetPosition);
         }
 
-        //private void CheckMiss(Vector3 targetPosition)
-        //{
-        //    if (HasMissed) return;
-        //    // if I'm to close to my vessel avoid explosion
-        //    if ((vessel.CoM - SourceVessel.CoM).magnitude < 4 * DetonationDistance) return;
-        //    // if I'm getting closer to  my target avoid explosion
-        //    if ((vessel.CoM - targetPosition).sqrMagnitude >
-        //        (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - (targetPosition + (TargetVelocity * Time.fixedDeltaTime))).sqrMagnitude) return;
+        private void CheckMiss(Vector3 targetPosition)
+        {
+            if (HasMissed) return;
+            // if I'm to close to my vessel avoid explosion
+            if ((vessel.CoM - SourceVessel.CoM).magnitude < 4 * DetonationDistance) return;
+            // if I'm getting closer to  my target avoid explosion
+            if ((vessel.CoM - targetPosition).sqrMagnitude >
+                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - (targetPosition + (TargetVelocity * Time.fixedDeltaTime))).sqrMagnitude) return;
 
-        //    if (MissileState != MissileStates.PostThrust ) return;
+            if (MissileState != MissileStates.PostThrust ) return;
 
-        //    Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-        //    HasMissed = true;
-        //    guidanceActive = false;
-        //    TargetMf = null;
-        //    isTimed = true;
-        //    detonationTime = TimeIndex + 1.5f;
-        //}
+            Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+            HasMissed = true;
+            guidanceActive = false;
+            TargetMf = null;
+            isTimed = true;
+            detonationTime = TimeIndex + 1.5f;
+        }
 
-        //private void CheckMiss()
-        //{
-        //    if (HasMissed) return;
+        private void CheckMiss()
+        {
+            if (HasMissed) return;
         
 
-        //    if (MissileState == MissileStates.PostThrust && (vessel.LandedOrSplashed || vessel.Velocity().magnitude < 10f))
-        //    {
-        //        Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-        //        HasMissed = true;
-        //        guidanceActive = false;
-        //        TargetMf = null;
-        //        isTimed = true;
-        //        detonationTime = TimeIndex + 1.5f;
-        //    }
-        //}
+            if (MissileState == MissileStates.PostThrust && (vessel.LandedOrSplashed || vessel.Velocity().magnitude < 10f))
+            {
+                Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
+                HasMissed = true;
+                guidanceActive = false;
+                TargetMf = null;
+                isTimed = true;
+                detonationTime = TimeIndex + 1.5f;
+            }
+        }
 
 
         public void GuidanceSteer(FlightCtrlState s)
