@@ -27,6 +27,7 @@
 				Pass
 				{
 					CGPROGRAM
+					#pragma target 3.5
 					#pragma vertex vert
 					#pragma fragment frag
 					#pragma fragmentoption ARB_precision_hint_fastest
