@@ -1013,41 +1013,6 @@ namespace BDArmory.Modules
             }
         }
 
-        public void CheckMiss(Vector3 targetPosition)
-        {
-            if (HasMissed) return;
-            // if I'm to close to my vessel avoid explosion
-            if ((vessel.CoM - SourceVessel.CoM).magnitude < 4 * DetonationDistance) return;
-            // if I'm getting closer to  my target avoid explosion
-            if ((vessel.CoM - targetPosition).sqrMagnitude >
-                (vessel.CoM + (vessel.Velocity() * Time.fixedDeltaTime) - (targetPosition + (TargetVelocity * Time.fixedDeltaTime))).sqrMagnitude) return;
-
-            if (MissileState != MissileStates.PostThrust) return;
-
-            Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-            HasMissed = true;
-            guidanceActive = false;
-            TargetMf = null;
-            isTimed = true;
-            detonationTime = TimeIndex + 1.5f;
-        }
-
-        public void CheckMiss()
-        {
-            if (HasMissed) return;
-
-
-            if (MissileState == MissileStates.PostThrust && (vessel.LandedOrSplashed || vessel.Velocity().magnitude < 10f))
-            {
-                Debug.Log("[BDArmory]: Missile CheckMiss showed miss");
-                HasMissed = true;
-                guidanceActive = false;
-                TargetMf = null;
-                isTimed = true;
-                detonationTime = TimeIndex + 1.5f;
-            }
-        }
-
         protected void SetInitialDetonationDistance()
         {
             if (this.DetonationDistance == -1)
