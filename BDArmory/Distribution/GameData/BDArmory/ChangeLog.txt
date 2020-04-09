@@ -1,4 +1,11 @@
-﻿v1.3.3
+﻿v1.3.4
+* NEW FEATURES:
+	* Recompiled for KSP 1.9.1
+* FIXES
+	* Shaders compatibility for Mac / Linux
+	* Missiles problem regarding locking and losing lock affecting heat and radar missiles. (Thanks to TheKurgan to find the problematic commit)
+
+v1.3.3
 * NEW FEATURES:
 	* Recompiled for KSP 1.9.0
 	* Localization en-us and zh-cn (Thanks to tinygrox!)

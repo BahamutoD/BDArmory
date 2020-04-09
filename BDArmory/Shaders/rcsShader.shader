@@ -15,6 +15,7 @@ Shader "Custom/rcsShader"
 			CGPROGRAM
 
 			// DEFINES
+			#pragma target 3.5
 			#pragma vertex RCSVertexShader
 			#pragma fragment RCSFragmentShader
 
