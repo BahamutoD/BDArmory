@@ -1,0 +1,65 @@
+AMMO LIST
+UniversalAmmunition
+
+7.62x39Ammo  		7.62x39mmBullet 
+7.7x56Ammo    		7.7x56mmBullet 
+7.92x57mmMauser  	7.92mmBullet 
+9x19mmParaAmmo  	9mmBullet
+50CalAmmo---BDA----12.7mmBullet
+20x21Ammo    		20mmShortBullet
+20x102Ammo---BDA----20mmBullet 
+20x163Ammo	        20x163mmBullet
+23x115Ammo  		23x115mmBullet
+23x152Ammo   		23x152mmBullet
+25x137Ammo  		25x137mmBullet
+30x165Ammo  		30x165Bullet
+30x173Ammo   		30x173Bullet  
+30x173HEAmmo		30x173HEBullet
+37mmFlaKAmmo	
+40x53Ammo
+40x53HeAmmo			40x53HEBullet
+40x311Ammo
+54cmMortarShells
+57x438Ammo			57mmBullet
+TungstenShell		TungstenBullet
+75x714Ammo			75mmBullet
+76x636Ammo			76x636mmBullet
+76x638Ammo			76x636mmBullet
+3inchShells
+90mmShells			90mmBullet
+100mmShells			100mmBullet 
+4p5inchQFShells
+CannonShells		105mmBullet
+105mmShells			105mmBullet
+105mmHEShells		105mmHEBullet
+120mmAmmo			120mmBullet
+122mmQFShells		122mmBullet
+130Shells
+QF5-25Shell			QF5-25Bullet
+5/62Shell
+138_140Shells
+152Shells
+155Shells			155mmBullet
+180Shells
+203Shells			203HEBullet
+12inShells
+356Shells
+356ApAmmo			356ApBullet
+380Shells
+M65ShellAmmo
+406mmNuclearShells
+16inchShells
+460Shells
+Type4Rocket
+ATRocket
+Hades122rocket
+
+///////////////////////////////////
+Armor pack 1
+1x1 slope 150mm
+1x1 panel 150mm
+2x1 slope 150mm
+2x1 panel 150mm
+3x1 panel 150mm
+4x1 panel 150mm
+/////////////////
