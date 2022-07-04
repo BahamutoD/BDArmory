@@ -1,4 +1,8 @@
-﻿v1.3.4
+﻿v1.3.5_beta
+* NEW FEATURES:
+	* Recompiled for KSP 1.12.3
+	
+v1.3.4
 * NEW FEATURES:
 	* Recompiled for KSP 1.9.1
 * FIXES

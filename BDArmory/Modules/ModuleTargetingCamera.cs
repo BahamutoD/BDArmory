@@ -911,11 +911,18 @@ namespace BDArmory.Modules
 
         private void DrawSideControlButtons(Rect imageRect)
         {
-            GUIStyle dataStyle = new GUIStyle();
-            dataStyle.alignment = TextAnchor.MiddleCenter;
-            dataStyle.normal.textColor = Color.white;
-            GUIStyle buttonStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button);
-            buttonStyle.fontSize = 11;
+            GUIStyle dataStyle = new GUIStyle
+            {
+                alignment = TextAnchor.MiddleCenter,
+                normal =
+                {
+                    textColor = Color.white
+                }
+            };
+            GUIStyle buttonStyle = new GUIStyle(BDArmorySetup.BDGuiSkin.button)
+            {
+                fontSize = 11
+            };
 
             float line = buttonHeight + gap;
             float buttonWidth = 3 * buttonHeight + 4 * gap;
