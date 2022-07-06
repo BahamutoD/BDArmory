@@ -1,0 +1,6692 @@
+ship = BDA - Test Platform - Missile
+version = 1.3.0
+description = 
+type = SPH
+size = 15.917017,9.33362579,11.4446468
+PART
+{
+	part = sasModule_4284270764
+	partName = Part
+	pos = -1.9087882,9.05923176,0.130169347
+	attPos = 0,0,0
+	attPos0 = 1.56324098E-14,-1.56634903,1.78813906E-07
+	rot = 0.707106829,0,0,0.707106829
+	attRot = 0,0,0,1
+	attRot0 = -1,0,4.37113883E-08,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527766
+	attN = bottom,trussPiece3x_4294527766
+	attN = top,probeCoreOcto2_4284205004
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleReactionWheel
+		isEnabled = True
+		actuatorModeCycle = 1
+		authorityLimiter = 100
+		stateString = Active
+		stagingEnabled = True
+		WheelState = Active
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			CycleAction
+			{
+				actionGroup = None
+			}
+			Activate
+			{
+				actionGroup = None
+			}
+			Deactivate
+			{
+				actionGroup = None
+			}
+			Toggle
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 0.625
+		defaultScale = 0.625
+		defaultTransformScale = (0.5, 0.5, 0.5)
+		DryCost = 600
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = probeCoreOcto2_4284205004
+	partName = Part
+	pos = -1.9087882,9.05923176,0.282343626
+	attPos = 0,0,0
+	attPos0 = -1.9087882,9.05923176,0.282343626
+	rot = 0.707106829,0,0,0.707106829
+	attRot = 0,0,0,0.999999881
+	attRot0 = 0.707106769,0,0,0.707106769
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = sasModule_4284270764
+	attN = bottom,sasModule_4284270764
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleCommand
+		isEnabled = True
+		hibernation = False
+		hibernateOnWarp = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			HibernateToggle
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleSAS
+		isEnabled = True
+		standaloneToggle = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleKerbNetAccess
+		isEnabled = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			OpenKerbNetAction
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleDataTransmitter
+		isEnabled = True
+		xmitIncomplete = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			StartTransmissionAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 1479.99988
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleTCA
+		isEnabled = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			onActionUpdate
+			{
+				actionGroup = None
+				active = False
+			}
+			ToggleTCA
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = MechJebCore
+		isEnabled = True
+		running = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			OnOrbitProgradeAction
+			{
+				actionGroup = None
+			}
+			OnOrbitRetrogradeAction
+			{
+				actionGroup = None
+			}
+			OnOrbitNormalAction
+			{
+				actionGroup = None
+			}
+			OnOrbitAntinormalAction
+			{
+				actionGroup = None
+			}
+			OnOrbitRadialInAction
+			{
+				actionGroup = None
+			}
+			OnOrbitRadialOutAction
+			{
+				actionGroup = None
+			}
+			OnKillRotationAction
+			{
+				actionGroup = None
+			}
+			OnDeactivateSmartASSAction
+			{
+				actionGroup = None
+			}
+			OnPanicAction
+			{
+				actionGroup = None
+			}
+			OnTranslatronOffAction
+			{
+				actionGroup = None
+			}
+			OnTranslatronKeepVertAction
+			{
+				actionGroup = None
+			}
+			OnTranslatronZeroSpeedAction
+			{
+				actionGroup = None
+			}
+			OnTranslatronPlusOneSpeedAction
+			{
+				actionGroup = None
+			}
+			OnTranslatronMinusOneSpeedAction
+			{
+				actionGroup = None
+			}
+			OnTranslatronToggleHSAction
+			{
+				actionGroup = None
+			}
+			OnAscentAPToggleAction
+			{
+				actionGroup = None
+			}
+		}
+		MechJebLocalSettings
+		{
+			MechJebModuleMenu
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleAscentAutopilot
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleAscentGuidance
+			{
+				unlockParts = 
+				unlockTechs = unmannedTech
+			}
+			MechJebModuleAscentNavBall
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleAscentPathEditor
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleAttitudeAdjustment
+			{
+				unlockParts = 
+				unlockTechs = advFlightControl
+			}
+			MechJebModuleCustomWindowEditor
+			{
+				unlockParts = 
+				unlockTechs = flightControl
+			}
+			MechJebModuleDebugArrows
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleDockingAutopilot
+			{
+				forceRol = False
+				overrideSafeDistance = False
+				overrideTargetSize = False
+				unlockParts = 
+				unlockTechs = 
+				rol
+				{
+					_val = 0
+					_text = 0
+				}
+			}
+			MechJebModuleDockingGuidance
+			{
+				unlockParts = 
+				unlockTechs = advUnmanned
+			}
+			MechJebModuleInfoItems
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleLandingAutopilot
+			{
+				deployGears = True
+				deployChutes = True
+				rcsAdjustment = True
+				unlockParts = 
+				unlockTechs = 
+				touchdownSpeed
+				{
+					_val = 0.5
+					_text = 0.5
+				}
+				limitGearsStage
+				{
+					val = 0
+					_text = 0
+				}
+				limitChutesStage
+				{
+					val = 0
+					_text = 0
+				}
+			}
+			MechJebModuleLandingGuidance
+			{
+				landingSiteIdx = 0
+				unlockParts = 
+				unlockTechs = unmannedTech
+			}
+			MechJebModuleLandingPredictions
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleManeuverPlanner
+			{
+				unlockParts = 
+				unlockTechs = advFlightControl
+			}
+			MechJebModuleNodeEditor
+			{
+				unlockParts = 
+				unlockTechs = advFlightControl
+			}
+			MechJebModuleNodeExecutor
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleRCSBalancerWindow
+			{
+				unlockParts = 
+				unlockTechs = advFlightControl
+			}
+			MechJebModuleRendezvousAutopilot
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleRendezvousAutopilotWindow
+			{
+				unlockParts = 
+				unlockTechs = advUnmanned
+			}
+			MechJebModuleRendezvousGuidance
+			{
+				unlockParts = 
+				unlockTechs = advUnmanned
+			}
+			MechJebModuleRoverController
+			{
+				ControlHeading = False
+				ControlSpeed = False
+				BrakeOnEject = False
+				BrakeOnEnergyDepletion = False
+				WarpToDaylight = True
+				StabilityControl = False
+				LimitAcceleration = False
+				unlockParts = 
+				unlockTechs = 
+				heading
+				{
+					_val = 0
+					_text = 0
+				}
+				speed
+				{
+					_val = 10
+					_text = 10
+				}
+			}
+			MechJebModuleRoverWindow
+			{
+				unlockParts = 
+				unlockTechs = fieldScience
+			}
+			MechJebModuleScript
+			{
+				minifiedGUI = False
+				selectedSlot = 0
+				activeSavepoint = -1
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleSettings
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleSmartASS
+			{
+				mode = ORBITAL
+				target = OFF
+				advReference = INERTIAL
+				advDirection = FORWARD
+				forceRol = False
+				forcePitch = True
+				forceYaw = True
+				unlockParts = 
+				unlockTechs = flightControl
+				srfHdg
+				{
+					_val = 90
+					_text = 90
+				}
+				srfPit
+				{
+					_val = 90
+					_text = 90
+				}
+				srfRol
+				{
+					_val = 0
+					_text = 0
+				}
+				srfVelYaw
+				{
+					_val = 0
+					_text = 0
+				}
+				srfVelPit
+				{
+					_val = 0
+					_text = 0
+				}
+				srfVelRol
+				{
+					_val = 0
+					_text = 0
+				}
+				rol
+				{
+					_val = 0
+					_text = 0
+				}
+			}
+			MechJebModuleSmartRcs
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleSpaceplaneAutopilot
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleSpaceplaneGuidance
+			{
+				runwayIndex = 0
+				unlockParts = 
+				unlockTechs = unmannedTech
+			}
+			MechJebModuleStageStats
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleTargetController
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleThrustWindow
+			{
+				autostageSavedState = False
+				unlockParts = 
+				unlockTechs = advFlightControl
+			}
+			MechJebModuleTranslatron
+			{
+				unlockParts = 
+				unlockTechs = advFlightControl
+				trans_spd
+				{
+					_val = 0
+					_text = 0
+				}
+			}
+			MechJebModuleWarpHelper
+			{
+				unlockParts = 
+				unlockTechs = advFlightControl
+				phaseAngle
+				{
+					_val = 0
+					_text = 0
+				}
+			}
+			MechJebModuleWaypointWindow
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleWaypointHelpWindow
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			ModExtensionDemo
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleCustomInfoWindow
+			{
+			}
+			MechJebModuleCustomInfoWindow
+			{
+			}
+			MechJebModuleCustomInfoWindow
+			{
+			}
+			MechJebModuleCustomInfoWindow
+			{
+			}
+			MechJebModuleWarpController
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleSolarPanelController
+			{
+				prev_ShouldOpenSolarPanels = False
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleThrustController
+			{
+				limitThrottle = False
+				limiterMinThrottle = False
+				electricThrottle = False
+				unlockParts = 
+				unlockTechs = 
+				maxThrottle
+				{
+					_val = 1
+					_text = 100
+				}
+				minThrottle
+				{
+					_val = 0.050000000000000003
+					_text = 5
+				}
+				electricThrottleLo
+				{
+					_val = 0.050000000000000003
+					_text = 5
+				}
+				electricThrottleHi
+				{
+					_val = 0.14999999999999999
+					_text = 15
+				}
+			}
+			MechJebModuleRCSController
+			{
+				unlockParts = 
+				unlockTechs = 
+				Tf
+				{
+					_val = 1
+					_text = 1
+				}
+				Kp
+				{
+					_val = 0.125
+					_text = 0.125
+				}
+				Ki
+				{
+					_val = 0.070000000000000007
+					_text = 0.07
+				}
+				Kd
+				{
+					_val = 0.53000000000000003
+					_text = 0.53
+				}
+			}
+			MechJebModuleRCSBalancer
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleAttitudeController
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleStagingController
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleFlightRecorder
+			{
+				markUT = 0
+				deltaVExpended = 0
+				dragLosses = 0
+				gravityLosses = 0
+				steeringLosses = 0
+				markLAN = 0
+				markLatitude = 0
+				markLongitude = 0
+				markAltitude = 0
+				markBodyIndex = 1
+				maxDragGees = 0
+				unlockParts = 
+				unlockTechs = 
+			}
+			MechJebModuleFlightRecorderGraph
+			{
+				unlockParts = 
+				unlockTechs = 
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleTripLogger
+		isEnabled = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		Log
+		{
+			flight = 0
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	RESOURCE
+	{
+		name = ElectricCharge
+		amount = 5
+		maxAmount = 5
+		flowState = True
+		isTweakable = True
+		hideFlow = False
+		isVisible = True
+		flowMode = Both
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527766
+	partName = Part
+	pos = -1.9087882,9.0592308,-1.43619597
+	attPos = -1.57232896E-14,-0.0202863198,0.238357604
+	attPos0 = 0,-1.56634903,1.86723398E-07
+	rot = 0.707106829,0,0,-0.707106829
+	attRot = 0.999999881,0,0,0
+	attRot0 = 1,0,0,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527742
+	link = structuralPanel2_4294527598
+	link = structuralPanel2_4294527574
+	attN = bottom,sasModule_4284270764
+	attN = top,trussPiece3x_4294527742
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527742
+	partName = Part
+	pos = -1.9087882,9.0592289,-3.53619766
+	attPos = 0,-0.850475311,1.28207176E-07
+	attPos0 = 0,2.95047593,-3.51724196E-07
+	rot = 0.707106829,0,0,-0.707106829
+	attRot = 0.999999881,0,0,0
+	attRot0 = 0,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527718
+	link = structuralPanel2_4294527646
+	link = structuralPanel2_4294527622
+	attN = bottom,trussPiece3x_4294527766
+	attN = top,trussPiece3x_4294527718
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527718
+	partName = Part
+	pos = -1.9087882,9.0592289,-5.53619957
+	attPos = 0,-0.950474501,-1.25112621E-07
+	attPos0 = 0,2.95047688,-3.51724196E-07
+	rot = 0.707106829,0,0,-0.707106829
+	attRot = 0.999999881,0,0,0
+	attRot0 = 0,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527694
+	link = structuralPanel2_4294527670
+	attN = bottom,trussPiece3x_4294527742
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527694
+	partName = Part
+	pos = -0.908787489,9.38470268,-5.41878223
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1,-0.117423102,0.325475812
+	rot = -2.38418579E-07,0,0,1.00000012
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = -0.70710659,0,0,-0.707107008
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527422
+	link = trussPiece3x_4294527278
+	link = rtg_4294526664
+	link = missileController_4294526838
+	sym = structuralPanel2_4294527670
+	srfN = srfAttach,trussPiece3x_4294527718
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527670
+	partName = Part
+	pos = -2.9087894,9.38470268,-5.41878128
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = -1,-0.117423996,0.325475812
+	rot = 1.0658141E-14,1.00000012,-2.38418579E-07,-4.37113918E-08
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 3.0908609E-08,-0.707107008,-0.70710659,3.09086303E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527398
+	link = rtg_4294526696
+	sym = structuralPanel2_4294527694
+	srfN = srfAttach,trussPiece3x_4294527718
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527646
+	partName = Part
+	pos = -0.908787489,9.38479233,-3.44725728
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.5,-0.0889410973,0.32556349
+	rot = -2.38418579E-07,0,0,1.00000012
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = -0.70710659,0,0,-0.707107008
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527374
+	link = ksp.r.largeBatteryPack_4294526376
+	link = ksp.r.largeBatteryPack_4294526328
+	sym = structuralPanel2_4294527622
+	srfN = srfAttach,trussPiece3x_4294527742
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527622
+	partName = Part
+	pos = -2.90878749,9.38479233,-3.44725633
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = -1.5,-0.0889415666,0.32556349
+	rot = 1.0658141E-14,1.00000012,-2.38418579E-07,-4.37113918E-08
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 3.0908609E-08,-0.707107008,-0.70710659,3.09086303E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527350
+	link = ksp.r.largeBatteryPack_4294526400
+	link = ksp.r.largeBatteryPack_4294526352
+	sym = structuralPanel2_4294527646
+	srfN = srfAttach,trussPiece3x_4294527742
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527598
+	partName = Part
+	pos = -0.908787489,9.38421631,-1.43568683
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.5,-0.000504255295,0.324986488
+	rot = -2.38418579E-07,0,0,1.00000012
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = -0.70710659,0,0,-0.707107008
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527326
+	sym = structuralPanel2_4294527574
+	srfN = srfAttach,trussPiece3x_4294527766
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527574
+	partName = Part
+	pos = -2.90878749,9.38421631,-1.43568683
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = -1.5,-0.000504493713,0.324986488
+	rot = 1.0658141E-14,1.00000012,-2.38418579E-07,-4.37113918E-08
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 3.0908609E-08,-0.707107008,-0.70710659,3.09086303E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294527302
+	link = largeAdapter_4294515742
+	sym = structuralPanel2_4294527598
+	srfN = srfAttach,trussPiece3x_4294527766
+	attN = top,largeAdapter_4294515742
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527422
+	partName = Part
+	pos = 1.08588696,9.401371,-5.41878796
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.99201012,0.0250024796,-1.89840705E-06
+	rot = 1.00000012,0,0,5.96046448E-07
+	attRot = 0.499999911,-0.499999911,-0.499999911,-0.499999911
+	attRot0 = 1,0,0,2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527150
+	link = structuralPanel2_4294525944
+	link = trussPiece3x_4294486074
+	sym = structuralPanel2_4294527398
+	srfN = srfAttach,structuralPanel2_4294527694
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527398
+	partName = Part
+	pos = -4.90348625,9.401371,-5.41878605
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.99201012,0.0250024796,2.1540161E-06
+	rot = -4.37114309E-08,5.96046448E-07,1.00000012,-3.55271368E-14
+	attRot = 0.499999911,-0.499999911,-0.499999911,-0.499999911
+	attRot0 = -1,2.36533898E-16,-8.74227766E-08,2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527126
+	link = structuralPanel2_4294525866
+	link = trussPiece3x_4294479658
+	sym = structuralPanel2_4294527422
+	srfN = srfAttach,structuralPanel2_4294527670
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527374
+	partName = Part
+	pos = 1.05031013,9.40146065,-3.44725919
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.93864489,0.0250024796,-9.4473279E-07
+	rot = 1.00000012,0,0,5.96046448E-07
+	attRot = 0.499999911,-0.499999911,-0.499999911,-0.499999911
+	attRot0 = 1,0,0,2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294526100
+	sym = structuralPanel2_4294527350
+	srfN = srfAttach,structuralPanel2_4294527646
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527350
+	partName = Part
+	pos = -4.86790752,9.40146065,-3.44725823
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.93864608,0.0250024796,1.19567596E-06
+	rot = -4.37114309E-08,5.96046448E-07,1.00000012,-3.55271368E-14
+	attRot = 0.499999911,-0.499999911,-0.499999911,-0.499999911
+	attRot0 = -1,2.36533898E-16,-8.74227766E-08,2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294526022
+	sym = structuralPanel2_4294527374
+	srfN = srfAttach,structuralPanel2_4294527622
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527326
+	partName = Part
+	pos = 1.0801487,9.40088463,-1.43568802
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -1.00000012,0,0,-5.96046448E-07
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527102
+	link = structuralPanel2_4294526304
+	sym = structuralPanel2_4294527302
+	srfN = srfAttach,structuralPanel2_4294527598
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294527302
+	partName = Part
+	pos = -4.89774513,9.40088463,-1.43568778
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,2.45914691E-07
+	rot = -4.37114309E-08,5.96046448E-07,1.00000012,-3.55271368E-14
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,2.36533898E-16,-8.74227766E-08,2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527078
+	link = structuralPanel2_4294526202
+	sym = structuralPanel2_4294527326
+	srfN = srfAttach,structuralPanel2_4294527574
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527278
+	partName = Part
+	pos = -1.92894602,10.8766193,-6.0077858
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = -1.53023696,1.50023997,-0.883486271
+	rot = 5.96046448E-07,0,0,-1.00000012
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 2.67343609E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294527254
+	srfN = srfAttach,structuralPanel2_4294527694
+	attN = top,trussPiece3x_4294527254
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527254
+	partName = Part
+	pos = -1.92894602,13.8271008,-6.00779247
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0,2.95047808,-3.2976601E-07
+	rot = -2.38418579E-07,0,0,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = -4.76837101E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaFlirBall_4294527230
+	link = LgRadialSolarPanel_4294527054
+	link = LgRadialSolarPanel_4294527000
+	link = LgRadialSolarPanel_4294526946
+	link = LgRadialSolarPanel_4294526892
+	srfN = srfAttach,structuralPanel2_4294527694
+	attN = bottom,trussPiece3x_4294527278
+	attN = top,bahaFlirBall_4294527230
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaFlirBall_4294527230
+	partName = Part
+	pos = -1.92894602,15.3804836,-6.00779533
+	attPos = 0,0,0
+	attPos0 = 0,1.55337095,-1.00847001E-06
+	rot = 0.707106829,0,0,-0.707106948
+	attRot = 0.999999881,0,0,0
+	attRot0 = 0.707106829,0,0,-0.707106888
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,trussPiece3x_4294527254
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleTargetingCamera
+		isEnabled = True
+		cameraEnabled = False
+		currentFovIndex = 0
+		slaveTurrets = False
+		CoMLock = False
+		groundStabilized = False
+		savedLat = 0
+		savedLong = 0
+		savedAlt = 0
+		nvMode = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGEnable
+			{
+				actionGroup = Custom01
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (0, 0, 0)
+		DryCost = 600
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527150
+	partName = Part
+	pos = 1.82057095,7.90945816,-6.15348816
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 1.10202599,1.50024104,1.10202599
+	rot = -1.00000012,0,0,-6.85453415E-07
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 3.66099897E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294527126
+	srfN = srfAttach,structuralPanel2_4294527422
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527126
+	partName = Part
+	pos = -5.63817501,7.90945244,-6.15349293
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 1.10202599,1.50024104,-1.10202706
+	rot = 1.00000012,3.26668285E-14,-2.26093422E-14,6.85453415E-07
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 1.02006001E-14,-1,-3.66099897E-07,-4.37113883E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294527150
+	srfN = srfAttach,structuralPanel2_4294527398
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527102
+	partName = Part
+	pos = 1.82191944,7.90897369,-0.693904638
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 1.11265802,1.50023901,-1.11265802
+	rot = 1.00000012,0,0,6.85453415E-07
+	attRot = 0,0,0,0.999999881
+	attRot0 = 3.66099897E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294527078
+	srfN = srfAttach,structuralPanel2_4294527326
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294527078
+	partName = Part
+	pos = -5.63952065,7.90898418,-0.693914652
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 1.11265802,1.50023901,1.11265802
+	rot = 1.00000012,3.26668285E-14,-2.26093422E-14,6.85453415E-07
+	attRot = 0,0,0,0.999999881
+	attRot0 = 1.02006001E-14,-1,-3.66099897E-07,-4.37113883E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294527102
+	srfN = srfAttach,structuralPanel2_4294527302
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = LgRadialSolarPanel_4294527054
+	partName = Part
+	pos = -1.91912293,14.4995003,-6.33236408
+	attPos = 0,0,0
+	attPos0 = 0.00982248783,0.672397614,-0.324572086
+	rot = 0,-1.00000012,5.96046448E-07,0
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 0,-1,2.98023195E-07,0
+	mir = 1,1,1
+	symMethod = Radial
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = LgRadialSolarPanel_4294527000
+	sym = LgRadialSolarPanel_4294526946
+	sym = LgRadialSolarPanel_4294526892
+	srfN = srfAttach,trussPiece3x_4294527254
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleDeployableSolarPanel
+		isEnabled = True
+		efficiencyMult = 1
+		launchUT = -1
+		currentRotation = (0, 0, 0, 1)
+		storedAnimationTime = 0
+		storedAnimationSpeed = 0
+		deployState = EXTENDED
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			ExtendPanelsAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ExtendAction
+			{
+				actionGroup = None
+				active = False
+			}
+			RetractAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 600
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = LgRadialSolarPanel_4294527000
+	partName = Part
+	pos = -2.2535162,14.4994917,-6.01761723
+	attPos = 0,0,0
+	attPos0 = -0.324569792,0.672397614,-0.00982451439
+	rot = -2.98023224E-08,-0.707106948,3.57627869E-07,0.707106829
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 2.107342E-07,-0.707106829,2.107342E-07,0.707106829
+	mir = 1,1,1
+	symMethod = Radial
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = LgRadialSolarPanel_4294527054
+	sym = LgRadialSolarPanel_4294526946
+	sym = LgRadialSolarPanel_4294526892
+	srfN = srfAttach,trussPiece3x_4294527254
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleDeployableSolarPanel
+		isEnabled = True
+		efficiencyMult = 1
+		launchUT = -1
+		currentRotation = (0, 0, 0, 1)
+		storedAnimationTime = 0
+		storedAnimationSpeed = 0
+		deployState = EXTENDED
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			ExtendPanelsAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ExtendAction
+			{
+				actionGroup = None
+				active = False
+			}
+			RetractAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 600
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = LgRadialSolarPanel_4294526946
+	partName = Part
+	pos = -1.93876791,14.499505,-5.68321133
+	attPos = 0,0,0
+	attPos0 = -0.00982248783,0.672397077,0.324568987
+	rot = 1.1920929E-07,4.37114061E-08,-3.55271368E-14,1.00000012
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 2.9802311E-07,4.37113883E-08,-1.30270101E-14,1
+	mir = 1,1,1
+	symMethod = Radial
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = LgRadialSolarPanel_4294527054
+	sym = LgRadialSolarPanel_4294527000
+	sym = LgRadialSolarPanel_4294526892
+	srfN = srfAttach,trussPiece3x_4294527254
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleDeployableSolarPanel
+		isEnabled = True
+		efficiencyMult = 1
+		launchUT = -1
+		currentRotation = (0, 0, 0, 1)
+		storedAnimationTime = 0
+		storedAnimationSpeed = 0
+		deployState = EXTENDED
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			ExtendPanelsAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ExtendAction
+			{
+				actionGroup = None
+				active = False
+			}
+			RetractAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 600
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = LgRadialSolarPanel_4294526892
+	partName = Part
+	pos = -1.60437584,14.4994984,-5.99797153
+	attPos = 0,0,0
+	attPos0 = 0.324569792,0.672397614,0.00982022285
+	rot = -2.98023224E-08,0.707106948,-3.57627869E-07,0.707106829
+	attRot = 0,0,0,-0.999999881
+	attRot0 = 2.107342E-07,0.707106829,-2.107342E-07,0.707106829
+	mir = 1,1,1
+	symMethod = Radial
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = LgRadialSolarPanel_4294527054
+	sym = LgRadialSolarPanel_4294527000
+	sym = LgRadialSolarPanel_4294526946
+	srfN = srfAttach,trussPiece3x_4294527254
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleDeployableSolarPanel
+		isEnabled = True
+		efficiencyMult = 1
+		launchUT = -1
+		currentRotation = (0, 0, 0, 1)
+		storedAnimationTime = 0
+		storedAnimationSpeed = 0
+		deployState = EXTENDED
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			ExtendPanelsAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ExtendAction
+			{
+				actionGroup = None
+				active = False
+			}
+			RetractAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 600
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = rtg_4294526696
+	partName = Part
+	pos = -3.47691321,9.04123211,-5.09077454
+	attPos = 0,0,0
+	attPos0 = 0.568121672,-0.343470216,-0.328006238
+	rot = 4.96417974E-15,0,-1.00000012,-3.12895665E-16
+	attRot = 0,0,0,1
+	attRot0 = 1,-7.10542524E-15,4.37113883E-08,2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = rtg_4294526664
+	srfN = srfAttach,structuralPanel2_4294527670
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleGenerator
+		isEnabled = True
+		generatorIsActive = False
+		throttle = 0
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			ToggleAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ActivateAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ShutdownAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleCoreHeat
+		isEnabled = True
+		CoreTempGoalAdjustment = 0
+		CoreThermalEnergy = 0
+		stagingEnabled = True
+		lastUpdateTime = 0
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 23300
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = rtg_4294526664
+	partName = Part
+	pos = -0.340665102,9.04123211,-5.09077454
+	attPos = 0,0,0
+	attPos0 = 0.568121672,-0.343470216,0.328007311
+	rot = -3.55271368E-15,1.1920929E-07,-1.00000012,3.55271326E-15
+	attRot = 0,0,0,1
+	attRot0 = -3.5527122E-15,3.27825546E-07,-1,3.55271347E-15
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = rtg_4294526696
+	srfN = srfAttach,structuralPanel2_4294527694
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleGenerator
+		isEnabled = True
+		generatorIsActive = False
+		throttle = 0
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			ToggleAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ActivateAction
+			{
+				actionGroup = None
+				active = False
+			}
+			ShutdownAction
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleCoreHeat
+		isEnabled = True
+		CoreTempGoalAdjustment = 0
+		CoreThermalEnergy = 0
+		stagingEnabled = True
+		lastUpdateTime = 0
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 23300
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = ksp.r.largeBatteryPack_4294526400
+	partName = Part
+	pos = -3.28654933,9.3681221,-4.10155582
+	attPos = 0,0,0
+	attPos0 = 0.377760649,-0.0166690387,0.65430063
+	rot = 0.707106829,1.25607405E-15,1.3816815E-14,-0.707106948
+	attRot = 0,0,0,1
+	attRot0 = -3.09086232E-08,0.707107067,0.70710659,3.09086303E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = ksp.r.largeBatteryPack_4294526376
+	srfN = srfAttach,structuralPanel2_4294527622
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 549.992004
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	RESOURCE
+	{
+		name = ElectricCharge
+		amount = 400
+		maxAmount = 400
+		flowState = True
+		isTweakable = True
+		hideFlow = False
+		isVisible = True
+		flowMode = Both
+	}
+}
+PART
+{
+	part = ksp.r.largeBatteryPack_4294526376
+	partName = Part
+	pos = -0.531028271,9.36812305,-4.10156059
+	attPos = 0,0,0
+	attPos0 = 0.377759248,-0.0166690387,-0.654299676
+	rot = -0.707106709,2.96461532E-21,1.25607481E-14,0.707107067
+	attRot = 0,0,0,1
+	attRot0 = -0.707106471,-4.23516423E-22,1.25607464E-14,0.707107186
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = ksp.r.largeBatteryPack_4294526400
+	srfN = srfAttach,structuralPanel2_4294527646
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 549.992004
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	RESOURCE
+	{
+		name = ElectricCharge
+		amount = 400
+		maxAmount = 400
+		flowState = True
+		isTweakable = True
+		hideFlow = False
+		isVisible = True
+		flowMode = Both
+	}
+}
+PART
+{
+	part = ksp.r.largeBatteryPack_4294526352
+	partName = Part
+	pos = -3.2559123,9.36812305,-3.10013223
+	attPos = 0,0,0
+	attPos0 = 0.347124368,-0.0166693665,-0.347122699
+	rot = 0.707106829,1.25607405E-15,1.3816815E-14,-0.707106948
+	attRot = 0,0,0,1
+	attRot0 = -3.09086232E-08,0.707107067,0.70710659,3.09086303E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = ksp.r.largeBatteryPack_4294526328
+	srfN = srfAttach,structuralPanel2_4294527622
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 549.992004
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	RESOURCE
+	{
+		name = ElectricCharge
+		amount = 400
+		maxAmount = 400
+		flowState = True
+		isTweakable = True
+		hideFlow = False
+		isVisible = True
+		flowMode = Both
+	}
+}
+PART
+{
+	part = ksp.r.largeBatteryPack_4294526328
+	partName = Part
+	pos = -0.561664343,9.36812305,-3.10013223
+	attPos = 0,0,0
+	attPos0 = 0.347123265,-0.0166693665,0.347123682
+	rot = -0.707106709,2.96461532E-21,1.25607481E-14,0.707107067
+	attRot = 0,0,0,1
+	attRot0 = -0.707106471,-4.23516423E-22,1.25607464E-14,0.707107186
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = ksp.r.largeBatteryPack_4294526352
+	srfN = srfAttach,structuralPanel2_4294527646
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 549.992004
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	RESOURCE
+	{
+		name = ElectricCharge
+		amount = 400
+		maxAmount = 400
+		flowState = True
+		isTweakable = True
+		hideFlow = False
+		isVisible = True
+		flowMode = Both
+	}
+}
+PART
+{
+	part = structuralPanel2_4294526304
+	partName = Part
+	pos = 2.99442434,9.41755104,-1.43568873
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.91427612,-0.0166683327,5.79530251E-07
+	rot = -8.34465027E-07,0,0,1.00000012
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 1,0,0,2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294526280
+	sym = structuralPanel2_4294526202
+	srfN = srfAttach,structuralPanel2_4294527326
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294526280
+	partName = Part
+	pos = 4.98335886,9.43421936,-1.43568993
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -1.00000012,0,0,-1.1920929E-06
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294526256
+	sym = structuralPanel2_4294526178
+	srfN = srfAttach,structuralPanel2_4294526304
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294526256
+	partName = Part
+	pos = 5.7251296,7.94231272,-0.693905115
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 1.11265802,1.50023901,-1.11265802
+	rot = 1.00000012,0,0,1.28149986E-06
+	attRot = 0,0,0,0.999999881
+	attRot0 = 3.66099897E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294526154
+	srfN = srfAttach,structuralPanel2_4294526280
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294526202
+	partName = Part
+	pos = -6.81202364,9.41755104,-1.43568826
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.91426837,-0.0166683327,-1.72185807E-07
+	rot = 3.55271368E-14,1.00000012,-8.34465027E-07,-4.37113918E-08
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 1,-8.28808102E-15,8.7422805E-08,-2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294526178
+	sym = structuralPanel2_4294526304
+	srfN = srfAttach,structuralPanel2_4294527302
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294526178
+	partName = Part
+	pos = -8.80095673,9.43422127,-1.43568921
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -4.3711502E-08,1.1920929E-06,1.00000012,-4.79616347E-14
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294526154
+	sym = structuralPanel2_4294526280
+	srfN = srfAttach,structuralPanel2_4294526202
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294526154
+	partName = Part
+	pos = -9.5427494,7.94231796,-0.693909883
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 1.11265802,1.50023901,-1.11265802
+	rot = 1.00000012,-3.39240952E-15,5.02429875E-15,1.28149986E-06
+	attRot = 0,0,0,0.999999881
+	attRot0 = 3.66099897E-07,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294526256
+	srfN = srfAttach,structuralPanel2_4294526178
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294526100
+	partName = Part
+	pos = 3.0004015,9.41812897,-3.44726062
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.95009184,-0.016668329,1.1755767E-06
+	rot = -8.34465027E-07,0,0,1.00000012
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294632856
+	sym = structuralPanel2_4294526022
+	srfN = srfAttach,structuralPanel2_4294527374
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294632856
+	partName = Part
+	pos = 4.98933649,9.43479729,-3.44726157
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -1.00000012,0,0,-1.1920929E-06
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = largeAdapter_4294537426
+	link = trussPiece3x_4291278424
+	sym = structuralPanel2_4294525998
+	srfN = srfAttach,structuralPanel2_4294526100
+	attN = bottom,largeAdapter_4294537426
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294526022
+	partName = Part
+	pos = -6.81800127,9.41812897,-3.44726014
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.95008361,-0.016668329,-1.47908884E-06
+	rot = 3.55271368E-14,1.00000012,-8.34465027E-07,-4.37113918E-08
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 1,-8.28808102E-15,8.7422805E-08,-2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294525998
+	sym = structuralPanel2_4294526100
+	srfN = srfAttach,structuralPanel2_4294527350
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294525998
+	partName = Part
+	pos = -8.80693436,9.43479729,-3.4472611
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -4.3711502E-08,1.1920929E-06,1.00000012,-4.79616347E-14
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = largeAdapter_4294524612
+	link = trussPiece3x_4291279714
+	sym = structuralPanel2_4294632856
+	srfN = srfAttach,structuralPanel2_4294526022
+	attN = bottom,largeAdapter_4294524612
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294525944
+	partName = Part
+	pos = 2.92368078,9.41803932,-5.41878891
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.83779407,-0.016668329,9.37158006E-07
+	rot = -8.34465027E-07,0,0,1.00000012
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294525920
+	link = trussPiece3x_4294482400
+	sym = structuralPanel2_4294525866
+	srfN = srfAttach,structuralPanel2_4294527422
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294525920
+	partName = Part
+	pos = 4.91261625,9.43470764,-5.41878986
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -1.00000012,0,0,-1.1920929E-06
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294525764
+	sym = structuralPanel2_4294525842
+	srfN = srfAttach,structuralPanel2_4294525944
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294525866
+	partName = Part
+	pos = -6.74128008,9.41803932,-5.41878891
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 1.83778369,-0.016668329,-2.20280413E-06
+	rot = 3.55271368E-14,1.00000012,-8.34465027E-07,-4.37113918E-08
+	attRot = 0.499999911,0.499999911,-0.499999911,0.499999911
+	attRot0 = 1,-8.28808102E-15,8.7422805E-08,-2.68220873E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = structuralPanel2_4294525842
+	link = trussPiece3x_4294478354
+	sym = structuralPanel2_4294525944
+	srfN = srfAttach,structuralPanel2_4294527398
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = structuralPanel2_4294525842
+	partName = Part
+	pos = -8.73021507,9.43470764,-5.41878986
+	attPos = -0.0130749,1.492257,7.70547715E-08
+	attPos0 = 2.98340201,0.0250024796,-4.67895603E-07
+	rot = -4.3711502E-08,1.1920929E-06,1.00000012,-4.79616347E-14
+	attRot = -0.499999911,0.499999911,0.499999911,0.499999911
+	attRot0 = -1,0,0,-2.38418608E-07
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = trussPiece3x_4294525788
+	sym = structuralPanel2_4294525920
+	srfN = srfAttach,structuralPanel2_4294525866
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 90
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294525788
+	partName = Part
+	pos = -9.38731956,7.9427948,-6.075881
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.657082438,1.49190676,-0.65708214
+	rot = -6.29566217E-15,1.07288361E-06,1.00000012,1.50387125E-14
+	attRot = 0,0,0,0.999999881
+	attRot0 = -8.94069956E-08,-4.37114096E-08,1.29075658E-14,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294525764
+	srfN = srfAttach,structuralPanel2_4294525842
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294525764
+	partName = Part
+	pos = 5.5696969,7.94279528,-6.07588291
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.657081842,1.49190676,0.657081664
+	rot = -2.131626E-14,9.23871994E-07,1.00000012,2.13162567E-14
+	attRot = 0,0,0,0.999999881
+	attRot0 = 2.13162753E-14,-1,-1.49011527E-07,2.13162313E-14
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4294525788
+	srfN = srfAttach,structuralPanel2_4294525920
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = largeAdapter_4294537426
+	partName = Part
+	pos = 4.38933611,10.2347984,-3.44726348
+	attPos = -0.600000381,-0.0175008774,9.21337687E-07
+	attPos0 = 0,-0.782500863,-7.71582791E-07
+	rot = 0,0,0,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = 1,0,0,-1.16229046E-06
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = missileTurretTest_4294617156
+	attN = top,missileTurretTest_4294617156
+	attN = bottom,structuralPanel2_4294632856
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 2.5
+		defaultScale = 2.5
+		defaultTransformScale = (0, 0, 0)
+		DryCost = 500
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = missileTurretTest_4294617156
+	partName = Part
+	pos = 4.38933611,11.421032,-3.44726324
+	attPos = 0,0,0
+	attPos0 = 0,1.18622327,-3.20816298E-08
+	rot = 0,0,0,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = 0,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaAGM-65_4294577354
+	link = bahaAGM-65_4294573086
+	link = bahaAGM-65_4294572060
+	link = bahaAGM-65_4294571044
+	link = bahaAGM-114_4294566604
+	link = bahaAGM-114_4294562796
+	link = bahaAGM-114_4294561794
+	link = bahaAGM-114_4294560802
+	attN = bottom,largeAdapter_4294537426
+	attN = missile1,bahaAGM-114_4294566604
+	attN = missile2,bahaAGM-65_4294573086
+	attN = missile3,bahaAGM-114_4294562796
+	attN = missile4,bahaAGM-65_4294577354
+	attN = missile5,bahaAGM-114_4294560802
+	attN = missile6,bahaAGM-65_4294571044
+	attN = missile7,bahaAGM-114_4294561794
+	attN = missile8,bahaAGM-65_4294572060
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleTurret
+		isEnabled = True
+		maxPitch = 75
+		minPitch = -8
+		yawRange = 360
+		minPitchLimit = -8
+		maxPitchLimit = 75
+		yawRangeLimit = 360
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = MissileTurret
+		isEnabled = True
+		autoReturn = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleRadar
+		isEnabled = True
+		linkedVesselID = 
+		radarEnabled = False
+		rangeIndex = 99
+		currentAngle = 0
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGEnable
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleTurret
+		isEnabled = True
+		maxPitch = 80
+		minPitch = -1
+		yawRange = 360
+		minPitchLimit = -1
+		maxPitchLimit = 80
+		yawRangeLimit = 360
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4294577354
+	partName = Part
+	pos = 5.67863894,12.0108557,-2.47337437
+	attPos = 0,0,0
+	attPos0 = 1.28930259,0.589826941,0.973881423
+	rot = 0,-1.43051147E-06,1.00000012,0
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-1.43051136E-06,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-65
+		maxStaticLaunchRange = 5500
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 5500
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4294573086
+	partName = Part
+	pos = 5.09632826,12.0108557,-2.47337437
+	attPos = 0,0,0
+	attPos0 = 0.706991911,0.589826941,0.973881423
+	rot = 0,-1.43051147E-06,1.00000012,0
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-1.43051136E-06,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-65
+		maxStaticLaunchRange = 5500
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 5500
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4294572060
+	partName = Part
+	pos = 5.67863894,11.3979349,-2.47337532
+	attPos = 0,0,0
+	attPos0 = 1.28930259,-0.023094818,0.973880529
+	rot = 1.43051147E-06,0,0,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 1.43051136E-06,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-65
+		maxStaticLaunchRange = 5500
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 5500
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-65_4294571044
+	partName = Part
+	pos = 5.09632826,11.3979349,-2.47337532
+	attPos = 0,0,0
+	attPos0 = 0.706991911,-0.023094818,0.973880529
+	rot = -1.43051147E-06,0,0,-1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = -1.43051136E-06,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-65
+		maxStaticLaunchRange = 5500
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 5500
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-114_4294566604
+	partName = Part
+	pos = 3.68234396,11.9498587,-2.57337475
+	attPos = 0,0,0
+	attPos0 = -0.706992149,0.528827667,0.873881102
+	rot = 0,-1.43051147E-06,1.00000012,0
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-1.43051136E-06,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-114
+		maxStaticLaunchRange = 4000
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 16
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 4000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-114_4294562796
+	partName = Part
+	pos = 3.10003328,11.9498587,-2.57337475
+	attPos = 0,0,0
+	attPos0 = -1.28930283,0.528827667,0.873881102
+	rot = 0,-1.43051147E-06,1.00000012,0
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-1.43051136E-06,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-114
+		maxStaticLaunchRange = 4000
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 16
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 4000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-114_4294561794
+	partName = Part
+	pos = 3.10003328,11.4589348,-2.5733757
+	attPos = 0,0,0
+	attPos0 = -1.28930283,0.0379054025,0.873880565
+	rot = 1.43051147E-06,0,0,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 1.43051136E-06,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-114
+		maxStaticLaunchRange = 4000
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 16
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 4000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAGM-114_4294560802
+	partName = Part
+	pos = 3.68234396,11.4589348,-2.5733757
+	attPos = 0,0,0
+	attPos0 = -0.706992149,0.0379054025,0.873880565
+	rot = 1.43051147E-06,0,0,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 1.43051136E-06,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294617156
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AGM-114
+		maxStaticLaunchRange = 4000
+		minStaticLaunchRange = 800
+		maxOffBoresight = 50
+		DetonationDistance = 16
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 800
+		engageRangeMax = 4000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = largeAdapter_4294524612
+	partName = Part
+	pos = -8.10693932,10.2348013,-3.44726062
+	attPos = -0.699998379,-0.0174999237,-9.24522169E-07
+	attPos0 = 1.90734852E-06,-0.782500863,9.16869794E-07
+	rot = 0,-1.00485924E-14,0,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = 4.37114238E-08,-1.16229046E-06,-1,-5.23451623E-14
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = missileTurretTest_4294525740
+	attN = top,missileTurretTest_4294525740
+	attN = bottom,structuralPanel2_4294525998
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 2.5
+		defaultScale = 2.5
+		defaultTransformScale = (0, 0, 0)
+		DryCost = 500
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = missileTurretTest_4294525740
+	partName = Part
+	pos = -8.10693932,11.42103,-3.44725895
+	attPos = 0,0,0
+	attPos0 = 0,1.18622279,-6.25239807E-07
+	rot = 0,-1.00485924E-14,0,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = 0,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaAim9_4294525590
+	link = bahaAim9_4294525534
+	link = bahaAim9_4294525478
+	link = bahaAim9_4294525422
+	link = bahaAim120_4294525366
+	link = bahaAim120_4294525326
+	link = bahaAim120_4294525286
+	link = bahaAim120_4294525246
+	attN = bottom,largeAdapter_4294524612
+	attN = missile1,bahaAim120_4294525366
+	attN = missile2,bahaAim9_4294525534
+	attN = missile3,bahaAim120_4294525326
+	attN = missile4,bahaAim9_4294525590
+	attN = missile5,bahaAim120_4294525286
+	attN = missile6,bahaAim9_4294525422
+	attN = missile7,bahaAim120_4294525246
+	attN = missile8,bahaAim9_4294525478
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleTurret
+		isEnabled = True
+		maxPitch = 75
+		minPitch = -8
+		yawRange = 360
+		minPitchLimit = -8
+		maxPitchLimit = 75
+		yawRangeLimit = 360
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = MissileTurret
+		isEnabled = True
+		autoReturn = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleRadar
+		isEnabled = True
+		linkedVesselID = 
+		radarEnabled = False
+		rangeIndex = 99
+		currentAngle = 0
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGEnable
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleTurret
+		isEnabled = True
+		maxPitch = 80
+		minPitch = -1
+		yawRange = 360
+		minPitchLimit = -1
+		maxPitchLimit = 80
+		yawRangeLimit = 360
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim9_4294525590
+	partName = Part
+	pos = -6.81763411,11.9227381,-2.57337213
+	attPos = 0,0,0
+	attPos0 = 1.2893033,0.501708627,0.873880804
+	rot = -3.42353607E-14,-6.85453415E-07,1.00000012,-5.76966656E-15
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-8.34464913E-07,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-9
+		maxStaticLaunchRange = 4200
+		minStaticLaunchRange = 200
+		maxOffBoresight = 50
+		DetonationDistance = 15
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 200
+		engageRangeMax = 4200
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim9_4294525534
+	partName = Part
+	pos = -7.39994478,11.9227371,-2.57337284
+	attPos = 0,0,0
+	attPos0 = 0.706991911,0.501708627,0.873880804
+	rot = -3.42353607E-14,-6.85453415E-07,1.00000012,-5.76966656E-15
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-8.34464913E-07,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-9
+		maxStaticLaunchRange = 4200
+		minStaticLaunchRange = 200
+		maxOffBoresight = 50
+		DetonationDistance = 15
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 200
+		engageRangeMax = 4200
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim9_4294525478
+	partName = Part
+	pos = -6.81763411,11.4860525,-2.57337451
+	attPos = 0,0,0
+	attPos0 = 1.2893033,0.0650239736,0.873880327
+	rot = 6.85453415E-07,-4.52186642E-14,5.02429621E-15,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 8.34464913E-07,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-9
+		maxStaticLaunchRange = 4200
+		minStaticLaunchRange = 200
+		maxOffBoresight = 50
+		DetonationDistance = 15
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 200
+		engageRangeMax = 4200
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim9_4294525422
+	partName = Part
+	pos = -7.39994478,11.4860525,-2.57337189
+	attPos = 0,0,0
+	attPos0 = 0.706991911,0.0650239736,0.873880327
+	rot = 6.85453415E-07,-4.52186642E-14,5.02429621E-15,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 8.34464913E-07,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 0
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-9
+		maxStaticLaunchRange = 4200
+		minStaticLaunchRange = 200
+		maxOffBoresight = 50
+		DetonationDistance = 15
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 200
+		engageRangeMax = 4200
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim120_4294525366
+	partName = Part
+	pos = -8.81393051,11.9508581,-2.39837098
+	attPos = 0,0,0
+	attPos0 = -0.706992149,0.529827535,1.04888082
+	rot = -3.42353607E-14,-6.85453415E-07,1.00000012,-5.76966656E-15
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-8.34464913E-07,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-120
+		maxStaticLaunchRange = 7500
+		minStaticLaunchRange = 500
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0.550000012
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 500
+		engageRangeMax = 7500
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim120_4294525326
+	partName = Part
+	pos = -9.3962574,11.9508581,-2.39837098
+	attPos = 0,0,0
+	attPos0 = -1.28930306,0.529827535,1.04888082
+	rot = -3.42353607E-14,-6.85453415E-07,1.00000012,-5.76966656E-15
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 0,-8.34464913E-07,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-120
+		maxStaticLaunchRange = 7500
+		minStaticLaunchRange = 500
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0.550000012
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 500
+		engageRangeMax = 7500
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim120_4294525286
+	partName = Part
+	pos = -8.81393051,11.4579344,-2.39837337
+	attPos = 0,0,0
+	attPos0 = -0.706992149,0.0369047225,1.04888058
+	rot = 6.85453415E-07,-4.52186642E-14,5.02429621E-15,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 8.34464913E-07,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-120
+		maxStaticLaunchRange = 7500
+		minStaticLaunchRange = 500
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0.550000012
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 500
+		engageRangeMax = 7500
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaAim120_4294525246
+	partName = Part
+	pos = -9.3962574,11.4579344,-2.39837337
+	attPos = 0,0,0
+	attPos0 = -1.28930306,0.0369047225,1.04888058
+	rot = 6.85453415E-07,-4.52186642E-14,5.02429621E-15,1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 8.34464913E-07,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294525740
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = AIM-120
+		maxStaticLaunchRange = 7500
+		minStaticLaunchRange = 500
+		maxOffBoresight = 50
+		DetonationDistance = 20
+		dropTime = 0.550000012
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 500
+		engageRangeMax = 7500
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = largeAdapter_4294515742
+	partName = Part
+	pos = -1.90878272,10.1842165,-1.63568711
+	attPos = -1.00000048,0.0174999833,0.200000197
+	attPos0 = -8.32644399E-15,0.782500565,0
+	rot = 0,-1.00485924E-14,0,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = -1.06581402E-14,-1,2.38418551E-07,-4.37113883E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = missileTurretTest_4294515704
+	attN = top,missileTurretTest_4294515704
+	attN = bottom,structuralPanel2_4294527574
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 2.5
+		defaultScale = 2.5
+		defaultTransformScale = (0, 0, 0)
+		DryCost = 500
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = missileTurretTest_4294515704
+	partName = Part
+	pos = -1.90878463,11.3704472,-1.63568425
+	attPos = 0,0,0
+	attPos0 = -1.90734909E-06,1.18622386,-6.84844963E-07
+	rot = 0,-1.00485924E-14,0,1.00000012
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = 1.00974184E-28,0,0,1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaPac-3_4294502232
+	link = bahaPac-3_4294499620
+	link = bahaPac-3_4294498646
+	link = bahaPac-3_4294497672
+	link = bahaHarm_4294476036
+	link = bahaHarm_4294470466
+	attN = bottom,largeAdapter_4294515742
+	attN = missile2,bahaPac-3_4294497672
+	attN = missile3,bahaHarm_4294476036
+	attN = missile6,bahaPac-3_4294498646
+	attN = missile7,bahaHarm_4294470466
+	attN = missile8,bahaPac-3_4294499620
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = ModuleTurret
+		isEnabled = True
+		maxPitch = 75
+		minPitch = -8
+		yawRange = 360
+		minPitchLimit = -8
+		maxPitchLimit = 75
+		yawRangeLimit = 360
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = MissileTurret
+		isEnabled = True
+		autoReturn = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleRadar
+		isEnabled = True
+		linkedVesselID = 
+		radarEnabled = False
+		rangeIndex = 99
+		currentAngle = 0
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGEnable
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleTurret
+		isEnabled = True
+		maxPitch = 80
+		minPitch = -1
+		yawRange = 360
+		minPitchLimit = -1
+		maxPitchLimit = 80
+		yawRangeLimit = 360
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaPac-3_4294502232
+	partName = Part
+	pos = -0.619477034,11.9445925,-0.761799216
+	attPos = 0,0,0
+	attPos0 = 1.28930402,0.574144244,0.873881459
+	rot = 1.32976075E-14,0,-1.00000012,2.14994546E-14
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 2.54109844E-21,-1.00974184E-28,-1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294515704
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = PAC-3 Intercept Missile
+		maxStaticLaunchRange = 15000
+		minStaticLaunchRange = 2000
+		maxOffBoresight = 50
+		DetonationDistance = 35
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 2000
+		engageRangeMax = 15000
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaPac-3_4294499620
+	partName = Part
+	pos = -0.619477034,11.3630381,-0.761799216
+	attPos = 0,0,0
+	attPos0 = 1.28930402,-0.00741112232,0.873881459
+	rot = 0,1.00485924E-14,0,-1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 1.51461282E-28,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294515704
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = PAC-3 Intercept Missile
+		maxStaticLaunchRange = 15000
+		minStaticLaunchRange = 2000
+		maxOffBoresight = 50
+		DetonationDistance = 35
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 2000
+		engageRangeMax = 15000
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaPac-3_4294498646
+	partName = Part
+	pos = -1.20178771,11.3630362,-0.761799097
+	attPos = 0,0,0
+	attPos0 = 0.706993163,-0.00741112232,0.8738814
+	rot = 0,1.00485924E-14,0,-1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 1.51461282E-28,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294515704
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = PAC-3 Intercept Missile
+		maxStaticLaunchRange = 15000
+		minStaticLaunchRange = 2000
+		maxOffBoresight = 50
+		DetonationDistance = 35
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 2000
+		engageRangeMax = 15000
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaPac-3_4294497672
+	partName = Part
+	pos = -1.20178771,11.9445925,-0.761799216
+	attPos = 0,0,0
+	attPos0 = 0.706993163,0.574144244,0.873881519
+	rot = -1.32976075E-14,0,1.00000012,-2.14994546E-14
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = -2.54109844E-21,1.00974184E-28,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294515704
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = PAC-3 Intercept Missile
+		maxStaticLaunchRange = 15000
+		minStaticLaunchRange = 2000
+		maxOffBoresight = 50
+		DetonationDistance = 35
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 2000
+		engageRangeMax = 15000
+		engageAir = True
+		engageMissile = False
+		engageGround = False
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294486074
+	partName = Part
+	pos = 0.68588686,10.401371,-6.61880016
+	attPos = -0.0248396397,0.146764636,0.0351362228
+	attPos0 = -0.375160456,-1.14676571,1.16486621
+	rot = -0.342020929,0,0,0.939692557
+	attRot = 0.342020124,0,0,-0.939692557
+	attRot0 = -0.939692557,0,0,-0.342020452
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4294487832
+	sym = trussPiece3x_4294479658
+	srfN = srfAttach,structuralPanel2_4294527422
+	attN = top,bahaRBS-15Cruise_4294487832
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4294487832
+	partName = Part
+	pos = 0.68588686,11.7151489,-7.72119427
+	attPos = 0,0,0
+	attPos0 = 0,1.71500969,-1.94222821E-06
+	rot = 0,0.342020929,0.939692557,0
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = 0,0,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = bahaRBS-15Cruise_4294479618
+	attN = top,trussPiece3x_4294486074
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = RBS-15 Cruise Missile
+		maxStaticLaunchRange = 40000
+		minStaticLaunchRange = 700
+		maxOffBoresight = 360
+		DetonationDistance = 30
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 700
+		engageRangeMax = 40000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294479658
+	partName = Part
+	pos = -4.50347233,10.401371,-6.61880207
+	attPos = -0.0248394012,0.146764636,-0.0351382494
+	attPos0 = -0.375174493,-1.14676571,-1.16486788
+	rot = 0.342021078,1.88411129E-14,4.39625922E-14,-0.939692378
+	attRot = 0.342020124,0,0,-0.939692557
+	attRot0 = -4.10753067E-08,-0.342020363,0.939692616,-1.49501851E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4294479618
+	sym = trussPiece3x_4294486074
+	srfN = srfAttach,structuralPanel2_4294527398
+	attN = top,bahaRBS-15Cruise_4294479618
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4294479618
+	partName = Part
+	pos = -4.50347233,11.7151432,-7.72119045
+	attPos = 0,0,0
+	attPos0 = 0,1.71500969,-1.94222821E-06
+	rot = 7.53644431E-15,-0.342021078,-0.939692378,3.76822173E-15
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = 0,0,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = bahaRBS-15Cruise_4294487832
+	attN = top,trussPiece3x_4294479658
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = RBS-15 Cruise Missile
+		maxStaticLaunchRange = 40000
+		minStaticLaunchRange = 700
+		maxOffBoresight = 360
+		DetonationDistance = 30
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 700
+		engageRangeMax = 40000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294482400
+	partName = Part
+	pos = 2.02368069,10.3180408,-6.61880112
+	attPos = -0.046236515,-0.246763706,-0.0229697227
+	attPos0 = -0.85376358,1.14676607,-1.17703223
+	rot = -0.342021435,0,0,0.939692259
+	attRot = 0.342020124,0,0,-0.939692557
+	attRot0 = -0.342020422,0,0,0.939692497
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4294482360
+	sym = trussPiece3x_4294478354
+	srfN = srfAttach,structuralPanel2_4294525944
+	attN = top,bahaRBS-15Cruise_4294482360
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4294482360
+	partName = Part
+	pos = 2.02368069,11.6318169,-7.72119617
+	attPos = 0,0,0
+	attPos0 = 0,1.71500969,-1.94222821E-06
+	rot = 0,0.342021435,0.939692259,0
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = 0,0,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = bahaRBS-15Cruise_4294478308
+	attN = top,trussPiece3x_4294482400
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = RBS-15 Cruise Missile
+		maxStaticLaunchRange = 40000
+		minStaticLaunchRange = 700
+		maxOffBoresight = 360
+		DetonationDistance = 30
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 700
+		engageRangeMax = 40000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4294478354
+	partName = Part
+	pos = -5.84126568,10.3180408,-6.61880302
+	attPos = -0.0462369919,-0.246763706,0.0229715109
+	attPos0 = -0.85376966,1.14676607,1.17703271
+	rot = 0.342021435,1.63289622E-14,2.63775547E-14,-0.939692259
+	attRot = 0.342020124,0,0,-0.939692557
+	attRot0 = -1.49501869E-08,0.939692497,0.342020422,4.10752676E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	link = bahaRBS-15Cruise_4294478308
+	sym = trussPiece3x_4294482400
+	srfN = srfAttach,structuralPanel2_4294525866
+	attN = top,bahaRBS-15Cruise_4294478308
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaRBS-15Cruise_4294478308
+	partName = Part
+	pos = -5.84126568,11.6318102,-7.72119141
+	attPos = 0,0,0
+	attPos0 = 0,1.71500969,-1.94222821E-06
+	rot = -6.28036983E-14,-0.342021435,-0.939692259,1.25607193E-15
+	attRot = 0,-0.707106709,-0.707106709,0
+	attRot0 = 0,0,1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = bahaRBS-15Cruise_4294482360
+	attN = top,trussPiece3x_4294478354
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 1
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = RBS-15 Cruise Missile
+		maxStaticLaunchRange = 40000
+		minStaticLaunchRange = 700
+		maxOffBoresight = 360
+		DetonationDistance = 30
+		dropTime = 0
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 700
+		engageRangeMax = 40000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaHarm_4294476036
+	partName = Part
+	pos = -3.19809151,11.9364891,-0.361796856
+	attPos = 0,0,0
+	attPos0 = -1.28930295,0.566038251,1.27388179
+	rot = 1.32976075E-14,0,-1.00000012,2.14994546E-14
+	attRot = 0,0.707106709,0.707106709,0
+	attRot0 = 2.54109844E-21,-1.00974184E-28,-1,0
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294515704
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = HARM
+		maxStaticLaunchRange = 10000
+		minStaticLaunchRange = 500
+		maxOffBoresight = 50
+		DetonationDistance = 15
+		dropTime = 0.550000012
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 500
+		engageRangeMax = 10000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = bahaHarm_4294470466
+	partName = Part
+	pos = -3.19809151,11.3711452,-0.361797571
+	attPos = 0,0,0
+	attPos0 = -1.28930295,0.000695466995,1.27388203
+	rot = 0,1.00485924E-14,0,-1.00000012
+	attRot = -0.707106709,0,0,0.707106709
+	attRot0 = 1.51461282E-28,0,0,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	attN = top,missileTurretTest_4294515704
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileLauncher
+		isEnabled = True
+		decoupleForward = True
+		decoupleSpeed = 5
+		cruiseAltitude = 500
+		maxAltitude = 0
+		shortName = HARM
+		maxStaticLaunchRange = 10000
+		minStaticLaunchRange = 500
+		maxOffBoresight = 50
+		DetonationDistance = 15
+		dropTime = 0.550000012
+		inCargoBay = False
+		detonationTime = 2
+		engageRangeMin = 500
+		engageRangeMax = 10000
+		engageAir = False
+		engageMissile = False
+		engageGround = True
+		engageSLW = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGFire
+			{
+				actionGroup = None
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4291279714
+	partName = Part
+	pos = -9.48241425,7.94288826,-3.4268117
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.67547369,1.49190831,0.0204465389
+	rot = 1.00000012,-1.3542147E-12,-1.34399891E-12,1.07288361E-06
+	attRot = 0,0,0,0.999999881
+	attRot0 = -1.35559576E-12,-1,1.19209233E-07,-4.37128307E-08
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4291278424
+	srfN = srfAttach,structuralPanel2_4294525998
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = trussPiece3x_4291278424
+	partName = Part
+	pos = 5.66482306,7.94288826,-3.4268117
+	attPos = -0.701286316,-0.0126867704,4.0231148E-06
+	attPos0 = 0.675486326,1.49190831,-0.0204463955
+	rot = 1.00000012,1.35003272E-12,1.35003272E-12,1.07288361E-06
+	attRot = 0,0,0,0.999999881
+	attRot0 = -1.19209233E-07,-1.35003413E-12,1.35003109E-12,-1
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	sym = trussPiece3x_4291279714
+	srfN = srfAttach,structuralPanel2_4294632856
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = TweakScale
+		isEnabled = True
+		currentScale = 100
+		defaultScale = 100
+		defaultTransformScale = (1, 1, 1)
+		DryCost = 75
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
+PART
+{
+	part = missileController_4294526838
+	partName = Part
+	pos = -0.302263737,9.3653698,-5.76896095
+	attPos = 0,0,0
+	attPos0 = 0.606523752,-0.0193332173,-0.350178361
+	rot = -2.32831671E-10,-1.00000012,4.76837158E-07,2.32831671E-10
+	attRot = 0,-0.99999994,0,0
+	attRot0 = -2.32831587E-10,-1,2.38418551E-07,2.32831698E-10
+	mir = 1,1,1
+	symMethod = Mirror
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 1
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	srfN = srfAttach,structuralPanel2_4294527694
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = MissileFire
+		isEnabled = True
+		weaponIndex = 0
+		targetScanInterval = 3
+		fireBurstLength = 0
+		guardAngle = 360
+		guardRange = 5000
+		gunRange = 2000
+		maxMissilesOnTarget = 1
+		guardMode = False
+		team = False
+		isArmed = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			AGToggleGuardMode
+			{
+				actionGroup = Custom09
+			}
+			AGToggleTargetType
+			{
+				actionGroup = None
+			}
+			AGJettisonWeapon
+			{
+				actionGroup = None
+			}
+			AGToggleTeam
+			{
+				actionGroup = None
+			}
+			AGToggleArm
+			{
+				actionGroup = None
+			}
+			AGFire
+			{
+				actionGroup = Custom06
+			}
+			AGFireGunsHold
+			{
+				actionGroup = None
+			}
+			AGFireGunsToggle
+			{
+				actionGroup = None
+			}
+			AGCycle
+			{
+				actionGroup = Custom07
+			}
+			AGCycleBack
+			{
+				actionGroup = Custom08
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = RadarWarningReceiver
+		isEnabled = True
+		rwrEnabled = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleWingCommander
+		isEnabled = True
+		savedWingmen = 
+		commandSelf = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}

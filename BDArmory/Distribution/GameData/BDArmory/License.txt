@@ -1,0 +1,15 @@
+This mod for Kerbal Space Program was originally developed by Paolo Encarnacion (BahamutoD) and distributed under the license CC-BY-SA 2.0.
+This mod is now being maintained in BahamutoD's absence by Joe Korinek (Papa_Joe) and continues to be distributed under the license CC-BY-SA 2.0.
+Please read about the license at
+https://creativecommons.org/licenses/by-sa/2.0/
+before attempting to modify and redistribute it.
+
+BD Armory Continued incorporates the texture switching code from Firespitter. To comply with the requirements of Firespitter's license, 
+the following permission notice, applicable to those parts of the code only, is included below:
+
+License: You may reuse code and textures from this mod, as long as you give credit in the download file and on the download post/page. 
+Reuse of models with permission. No reselling. No redistribution of the whole pack without permission.
+UV map texture guides are included so you can re-skin to your liking.
+For reuse of the plugin, please either direct people to download the dll from my official release, 
+OR recompile the wanted partmodule/class with a new class name to avoid conflicts. 
+https://github.com/snjo/Firespitter
